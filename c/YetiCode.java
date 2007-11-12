@@ -92,14 +92,11 @@ interface YetiCode {
         }
     }
 
-    class Code implements Opcodes {
+    abstract class Code implements Opcodes {
         YetiType.Type type;
         boolean ignoreValue;
 
-        void gen(Ctx ctx) {
-            throw new UnsupportedOperationException(
-                "gen not implemented in " + getClass());
-        }
+        abstract void gen(Ctx ctx);
 
         // Some "functions" may have special kinds of apply
         Code apply(Code arg, YetiType.Type res) {
@@ -115,7 +112,7 @@ interface YetiCode {
         }
     }
 
-    class BindRef extends Code {
+    abstract class BindRef extends Code {
         Binder binder;
     }
 
@@ -180,7 +177,11 @@ interface YetiCode {
 
     class EqBinder implements Binder {
         public BindRef getRef() {
-            BindRef c = new BindRef();
+            BindRef c = new BindRef() {
+                void gen(Ctx ctx) {
+                    throw new UnsupportedOperationException("EqBinder.gen");
+                }
+            };
             c.binder = this;
             c.type = YetiType.EQ_TYPE;
             return c;
@@ -198,6 +199,10 @@ interface YetiCode {
 
         public BindRef getRef() {
             return this;
+        }
+
+        void gen(Ctx ctx) {
+            throw new UnsupportedOperationException("LocalBind.gen");
         }
     }
 
