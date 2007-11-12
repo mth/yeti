@@ -565,8 +565,24 @@ interface YetiCode {
     }
 
     class ListConstructor extends Code {
+        Code[] items;
+
         ListConstructor(YetiType.Type type, Code[] items) {
             this.type = type;
+            this.items = items;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.intConst(items.length);
+            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            for (int i = 0; i < items.length; ++i) {
+                ctx.m.visitInsn(DUP);
+                ctx.intConst(i);
+                items[i].gen(ctx);
+                ctx.m.visitInsn(AASTORE);
+            }
+            ctx.m.visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "asList",
+                                  "([Ljava/lang/Object;)Ljava/util/List;");
         }
     }
 
