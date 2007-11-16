@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - Number interface.
  *
@@ -29,12 +31,18 @@
 package yeti.lang;
 
 public interface Num extends Number {
-	Num add(Num num);
-	Num add(long num);
-	Num mul(Num num);
-	Num mul(long num);
-	Num div(Num num);
-	Num div(long num);
-	Num sub(Num num);
-	Num sub(long num);
+    Num add(Num num);
+    Num add(long num);
+    Num add(RatNum num);
+    Num mul(Num num);
+    Num mul(long num);
+    Num mul(RatNum num);
+    Num div(Num num);
+    Num div(long num);
+    Num divFrom(long num);
+    Num divFrom(RatNum num);
+    Num sub(Num num);
+    Num sub(long num);
+    Num subFrom(long num);
+    Num subFrom(RatNum num);
 }

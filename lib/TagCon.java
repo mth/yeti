@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - Variant tag constructor function.
  *
@@ -29,13 +31,13 @@
 package yeti.lang;
 
 public final class TagCon implements Fun {
-	private final String name;
+    private final String name;
 
-	public TagCon(String aName) {
-		name = aName;
-	}
+    public TagCon(String aName) {
+        name = aName;
+    }
 
-	public final Object apply(Object value) {
-		return new Tag(value, name);
-	}
+    public final Object apply(Object value) {
+        return new Tag(value, name);
+    }
 }

@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - Number interface.
  *
@@ -29,45 +31,69 @@
 package yeti.lang;
 
 public final class IntNum implements Num {
-	private long v;
+    private long v;
 
-	public IntNum(int num) {
-		v = num;
-	}
+    public IntNum(int num) {
+        v = num;
+    }
 
-	public IntNum(long num) {
-		v = num;
-	}
+    public IntNum(long num) {
+        v = num;
+    }
 
-	public Num add(Num num) {
-		return num.add(v);
-	}
+    public Num add(Num num) {
+        return num.add(v);
+    }
 
-	Num add(long num) {
-		return new IntNum(v + num);
-	}
+    public Num add(RatNum num) {
+        num.add(v);
+    }
 
-	Num mul(Num num) {
-		return num.mul(v);
-	}
+    public Num add(long num) {
+        return new IntNum(v + num);
+    }
 
-	Num mul(long num) {
-		return new IntNum(v * num);
-	}
+    public Num mul(Num num) {
+        return num.mul(v);
+    }
 
-	Num div(Num num) {
-	}
+    public Num mul(long num) {
+        return new IntNum(v * num);
+    }
 
-	Num div(long num) {
-	}
+    public Num mul(RatNum num) {
+        return num.mul(v);
+    }
 
-	Num sub(Num num) {
-		return num.add(-v);
-	}
+    public Num div(Num num) {
+        return num.divFrom(v);
+    }
 
-	Num sub(long num) {
-		return new IntNum(v - num);
-	}
+    public Num div(long num) {
+        return new RatNum(v, num);
+    }
+
+    public Num divFrom(long num) {
+        return new RatNum(num, v);
+    }
+
+    public Num divFrom(RatNum num) {
+        return num.div(long num);
+    }
+
+    public Num sub(Num num) {
+        return num.subFrom(v);
+    }
+
+    public Num sub(long num) {
+        return new IntNum(v - num);
+    }
+
+    public Num subFrom(long num) {
+        return new IntNum(num - v);
+    }
+
+    public Num subFrom(RatNum num) {
+        return num.sub(v);
+    }
 }
-
-

@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - structure interface.
  *
@@ -29,26 +31,26 @@
 package yeti.lang;
 
 public class Struct {
-	final Object[] values;
+    final Object[] values;
 
-	// expecting interleaved array field1, value1, field2, value2, ...
-	public Struct(Object[] valueMap) {
-		values = valueMap;
-	}
+    // expecting interleaved array field1, value1, field2, value2, ...
+    public Struct(Object[] valueMap) {
+        values = valueMap;
+    }
 
-	// expecting type system to not allow getting nonexisting fields.
-	// IndexOutOfBoundsException will happen otherwise, speed matters ;)
-	public Object get(String field) {
-		Object[] v = values;
-		int i = 0;
-		for (; v[i] != field; i += 2);
-		return v[i + 1];
-	}
+    // expecting type system to not allow getting nonexisting fields.
+    // IndexOutOfBoundsException will happen otherwise, speed matters ;)
+    public Object get(String field) {
+        Object[] v = values;
+        int i = 0;
+        for (; v[i] != field; i += 2);
+        return v[i + 1];
+    }
 
-	public void set(String field, Object value) {
-		Object[] v = values;
-		int i = 0;
-		for (; v[i] != field; i += 2);
-		v[i + 1] = value;
-	}
+    public void set(String field, Object value) {
+        Object[] v = values;
+        int i = 0;
+        for (; v[i] != field; i += 2);
+        v[i + 1] = value;
+    }
 }

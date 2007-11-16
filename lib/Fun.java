@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - function interface.
  *
@@ -29,5 +31,5 @@
 package yeti.lang;
 
 public interface Fun {
-	Object apply(Object arg);
+    Object apply(Object arg);
 }

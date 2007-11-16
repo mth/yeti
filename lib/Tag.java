@@ -1,3 +1,5 @@
+// ex: se sts=4 sw=4 expandtab:
+
 /**
  * Yeti core library - Variant tag.
  *
@@ -29,11 +31,11 @@
 package yeti.lang;
 
 public final class Tag {
-	public final String name;
-	public final Object value;
+    public final String name;
+    public final Object value;
 
-	public Tag(Object aValue, String aName) {
-		name = aName;
-		value = aValue;
-	}
+    public Tag(Object aValue, String aName) {
+        name = aName;
+        value = aValue;
+    }
 }

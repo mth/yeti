@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library.
+ * Yeti core library - Number interface.
  *
  * Copyright (c) 2007 Madis Janson
  * All rights reserved.
@@ -28,14 +28,68 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package yeti.lang;
 
-public final class Core {
-    public static final Fun PRINTLN = new Fun() {
-        public Object apply(Object x) {
-            System.out.println(x);
-            return null;
-        }
-    };
+public final class RatNum implements Num {
+    private double v;
+
+    public FloatNum(double num) {
+        v = num;
+    }
+
+    public Num add(Num num) {
+        return new FloatNum(v + num.toDouble());
+    }
+
+    public Num add(long num) {
+        return new FloatNum(v + num);
+    }
+
+    public Num add(RatNum num) {
+        return new FloatNum(v + num.toDouble());
+    }
+
+    public Num mul(Num num) {
+        return new FloatNum(v * num.toDouble());
+    }
+
+    public Num mul(long num) {
+        return new FloatNum(v * num);
+    }
+
+    public Num mul(RatNum num) {
+        return new FloatNum(v * num.toDouble());
+    }
+
+    public Num div(Num num) {
+        return new FloatNum(v / num.toDouble());
+    }
+
+    public Num div(long num) {
+        return new FloatNum(v / num);
+    }
+
+    public Num divFrom(long num) {
+        return new FloatNum(num / v);
+    }
+
+    public Num divFrom(RatNum num) {
+        return new FloatNum(num.toDouble() / v);
+    }
+
+    public Num sub(Num num) {
+        return new FloatNum(v - num.toDouble());
+    }
+
+    public Num sub(long num) {
+        return new FloatNum(v - num);
+    }
+
+    public Num subFrom(long num) {
+        return new FloatNum(num - v);
+    }
+
+    public Num subFrom(RatNum num) {
+        return new FloatNum(num.toDouble() - v);
+    }
 }
