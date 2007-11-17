@@ -68,7 +68,7 @@ public final class RatNum implements Num {
     }
 
     public Num add(RatNum num) {
-        long a, b, c;
+        long a, b, c, gcd;
         if ((a = num.numerator * denominator) > 0x3fffffffffffL ||
              a < 0x400000000000L ||
             (b = numerator * num.denominator) > 0x3fffffffffffL ||
@@ -86,10 +86,8 @@ public final class RatNum implements Num {
         long d = denominator * num.denominator;
         if ((c = a + b) > 0x7fffffffL || c < 0x80000000 || 
             d > 0x7ffffffffL || d < 0x80000000L) {
-            long gcd = gcd(c < 0 ? -c : c, d);
-            c /= gcd;
-            d /= gcd;
-            if (c > 0x7fffffffL || c < 0x80000000L ||
+            d /= gcd = gcd(c < 0 ? -c : c, d);
+            if ((c /= gcd) > 0x7fffffffL || c < 0x80000000L ||
                 d > 0x7fffffffL || d < 0x80000000L)
                 return new FloatNum((double) c / d);
             }
