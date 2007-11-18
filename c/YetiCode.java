@@ -177,11 +177,7 @@ interface YetiCode {
 
     class EqBinder implements Binder {
         public BindRef getRef() {
-            BindRef c = new BindRef() {
-                void gen(Ctx ctx) {
-                    throw new UnsupportedOperationException("EqBinder.gen");
-                }
-            };
+            BindRef c = new EqFun();
             c.binder = this;
             c.type = YetiType.EQ_TYPE;
             return c;
@@ -659,6 +655,53 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             throw new UnsupportedOperationException("ArithOpFun.gen!?");
+        }
+    }
+
+    class EqOp extends Code {
+        Code arg1, arg2;
+
+        EqOp(Code arg1, Code arg2) {
+            type = YetiType.BOOL_TYPE;
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+        }
+
+        void gen(Ctx ctx) {
+            arg1.gen(ctx);
+            arg2.gen(ctx);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
+                                  "equals", "(Ljava/lang/Object;)Z");
+            Label label = new Label(), end = new Label();
+            ctx.m.visitJumpInsn(IFEQ, label);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                                 "TRUE", "Ljava/lang/Boolean;");
+            ctx.m.visitJumpInsn(GOTO, end);
+            ctx.m.visitLabel(label);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                                 "FALSE", "Ljava/lang/Boolean;");
+            ctx.m.visitLabel(end);
+        }
+    }
+
+    class EqFun extends BindRef {
+        Code apply(final Code arg1, YetiType.Type res) {
+            Code c = new Code() {
+                Code apply(Code arg2, YetiType.Type res) {
+                    return new EqOp(arg1, arg2);
+                }
+
+                void gen(Ctx ctx) {
+                    throw new UnsupportedOperationException(
+                        "ArithOpFun$.gen!?");
+                }
+            };
+            c.type = res;
+            return c;
+        }
+
+        void gen(Ctx ctx) {
+            throw new UnsupportedOperationException("EqBinder.gen");
         }
     }
 
