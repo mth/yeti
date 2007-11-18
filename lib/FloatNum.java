@@ -152,4 +152,23 @@ public final class FloatNum extends Num {
     public double doubleValue() {
         return v;
     }
+
+    public int compareTo(Object num) {
+        double x = ((Number) num).doubleValue();
+        return v < x ? -1 : v > x ? 1 : 0;
+    }
+
+    public int compareTo(long num) {
+        return v < num ? -1 : v > num ? 1 : 0;
+    }
+
+    public int compareTo(RatNum num) {
+        double x = num.doubleValue();
+        return v < x ? -1 : v > x ? 1 : 0;
+    }
+
+    public int compareTo(BigInteger num) {
+        double x = num.doubleValue();
+        return v < x ? -1 : v > x ? 1 : 0;
+    }
 }

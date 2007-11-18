@@ -32,7 +32,7 @@ package yeti.lang;
 
 import java.math.BigInteger;
 
-public abstract class Num extends Number {
+public abstract class Num extends Number implements Comparable {
     public abstract Num add(Num num);
     public abstract Num add(long num);
     public abstract Num add(RatNum num);
@@ -53,4 +53,7 @@ public abstract class Num extends Number {
     public abstract Num subFrom(long num);
     public abstract Num subFrom(RatNum num);
     public abstract Num subFrom(BigInteger num);
+    public abstract int compareTo(long num);
+    public abstract int compareTo(RatNum num);
+    public abstract int compareTo(BigInteger num);
 }

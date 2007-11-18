@@ -146,4 +146,20 @@ public final class IntNum extends Num {
     public double doubleValue() {
         return v;
     }
+
+    public int compareTo(Object num) {
+        return ((Num) num).compareTo(v);
+    }
+
+    public int compareTo(long num) {
+        return v < num ? -1 : v > num ? 1 : 0;
+    }
+
+    public int compareTo(RatNum num) {
+        return -num.compareTo(v);
+    }
+
+    public int compareTo(BigInteger num) {
+        return BigInteger.valueOf(v).compareTo(num);
+    }
 }
