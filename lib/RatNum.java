@@ -31,8 +31,8 @@
 package yeti.lang;
 
 public final class RatNum implements Num {
-    private long numerator;
-    private long denominator;
+    private final long numerator;
+    private final long denominator;
 
     public RatNum(int numerator, int denominator) {
         if (denominator == 0) {
@@ -65,24 +65,12 @@ public final class RatNum implements Num {
         return a;
     }
 
-    private void reduce() {
-        long gcd = gcd(numerator < 0 ? -numerator : numerator, denominator);
-        numerator /= gcd;
-        denominator /= gcd;
-    }
-
     public Num add(long num) {
         long a, c, gcd;
-        if (num > 0x7fffffffL || num < -0x7fffffffL) {
-            return new FloatNum((double) numerator / denominator + num);
-        }
-        if ((a = num * denominator) > 0x3fffffffffffffffL ||
+        if (num > 0x7fffffffL || num < -0x7fffffffL ||
+            (a = num * denominator) > 0x3fffffffffffffffL ||
              a < -0x3fffffffffffffffL) {
-            reduce();
-            if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x3fffffffffffffffL) {
-                return new FloatNum((double) numerator / denominator + num);
-            }
+            return new FloatNum((double) numerator / denominator + num);
         }
         if ((c = a + numerator) > 0x7fffffffL || c < -0x7fffffff) {
             long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
@@ -100,15 +88,8 @@ public final class RatNum implements Num {
              a < -0x3fffffffffffffffL ||
             (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
              b < -0x3fffffffffffffffL) {
-            reduce();
-            num.reduce();
-            if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x3fffffffffffffffL ||
-                (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-                 b < -0x3fffffffffffffffL) {
-                return new FloatNum((double) numerator / denominator +
-                    (double) num.numerator / num.denominator);
-            }
+            return new FloatNum((double) numerator / denominator +
+                (double) num.numerator / num.denominator);
         }
         long d = denominator * num.denominator;
         if ((c = a + b) > 0x7fffffffL || c < -0x7fffffff || 
@@ -191,7 +172,6 @@ public final class RatNum implements Num {
     }
 
     public Num divFrom(RatNum num) {
-        return num.mul(denominator, numerator);
         long a, b = numerator * num.denominator, gcd;
         if ((a = denominator * num.numenator) > 0x7fffffffL
             || a < -0x7fffffffL || b > 0x7fffffffL || b < -0x7fffffff) {
@@ -214,17 +194,11 @@ public final class RatNum implements Num {
 
     public Num subFrom(long num) {
         long a, c, gcd;
-        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+        if (num > 0x7fffffffL || num < -0x7fffffffL ||
+            (a = num * denominator) > 0x3fffffffffffffffL ||
+             a < -0x3fffffffffffffffL) {
             return new FloatNum((double) num -
                 (double) numerator / denominator);
-        }
-        if ((a = num * denominator) > 0x3fffffffffffffffL ||
-             a < -0x3fffffffffffffffL) {
-            reduce();
-            if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x3fffffffffffffffL) {
-                return new FloatNum((double) numerator / denominator + num);
-            }
         }
         if ((c = a - numerator) > 0x7fffffffL || c < -0x7fffffff) {
             long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
@@ -242,15 +216,8 @@ public final class RatNum implements Num {
              a < -0x3fffffffffffffffL ||
             (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
              b < -0x3fffffffffffffffL) {
-            reduce();
-            num.reduce();
-            if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x3fffffffffffffffL ||
-                (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-                 b < -0x3fffffffffffffffL) {
-                return new FloatNum((double) numerator / denominator +
-                    (double) num.numerator / num.denominator);
-            }
+            return new FloatNum((double) numerator / denominator +
+                (double) num.numerator / num.denominator);
         }
         long d = denominator * num.denominator;
         if ((c = a - b) > 0x7fffffffL || c < -0x7fffffff || 
