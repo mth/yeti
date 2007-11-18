@@ -38,7 +38,7 @@ public final class RatNum implements Num {
     }
 
     public Num add(Num num) {
-        return new FloatNum(v + num.toDouble());
+        return new FloatNum(v + num.doubleValue());
     }
 
     public Num add(long num) {
@@ -46,11 +46,11 @@ public final class RatNum implements Num {
     }
 
     public Num add(RatNum num) {
-        return new FloatNum(v + num.toDouble());
+        return new FloatNum(v + num.doubleValue());
     }
 
     public Num mul(Num num) {
-        return new FloatNum(v * num.toDouble());
+        return new FloatNum(v * num.doubleValue());
     }
 
     public Num mul(long num) {
@@ -58,11 +58,11 @@ public final class RatNum implements Num {
     }
 
     public Num mul(RatNum num) {
-        return new FloatNum(v * num.toDouble());
+        return new FloatNum(v * num.doubleValue());
     }
 
     public Num div(Num num) {
-        return new FloatNum(v / num.toDouble());
+        return new FloatNum(v / num.doubleValue());
     }
 
     public Num div(long num) {
@@ -74,11 +74,11 @@ public final class RatNum implements Num {
     }
 
     public Num divFrom(RatNum num) {
-        return new FloatNum(num.toDouble() / v);
+        return new FloatNum(num.doubleValue() / v);
     }
 
     public Num sub(Num num) {
-        return new FloatNum(v - num.toDouble());
+        return new FloatNum(v - num.doubleValue());
     }
 
     public Num sub(long num) {
@@ -90,6 +90,6 @@ public final class RatNum implements Num {
     }
 
     public Num subFrom(RatNum num) {
-        return new FloatNum(num.toDouble() - v);
+        return new FloatNum(num.doubleValue() - v);
     }
 }

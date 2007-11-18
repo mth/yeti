@@ -70,15 +70,15 @@ public final class IntNum implements Num {
     }
 
     public Num div(long num) {
-        return new RatNum(v, num);
+        return RatNum.div(v, num);
     }
 
     public Num divFrom(long num) {
-        return new RatNum(num, v);
+        return RatNum.div(num, v);
     }
 
     public Num divFrom(RatNum num) {
-        return num.div(long num);
+        return num.div(v);
     }
 
     public Num sub(Num num) {

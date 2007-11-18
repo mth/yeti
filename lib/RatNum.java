@@ -35,11 +35,19 @@ public final class RatNum implements Num {
     private long denominator;
 
     public RatNum(int numerator, int denominator) {
-        this.numerator = numerator;
-        this.denominator = denominator;
+        if (denominator == 0) {
+            throw new IllegalArgumentException(numerator + "/0");
+        }
+        if (denominator < 0) {
+            this.numerator = -(long) numerator;
+            this.denominator = -(long) denominator;
+        } else {
+            this.numerator = numerator;
+            this.denominator = denominator;
+        }
     }
 
-    RatNum(long numerator, long denominator) {
+    private RatNum(long numerator, long denominator) {
         this.numenator = numenator;
         this.denominator = denominator;
     }
@@ -65,17 +73,20 @@ public final class RatNum implements Num {
 
     public Num add(long num) {
         long a, c, gcd;
+        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+            return new FloatNum((double) numerator / denominator + num);
+        }
         if ((a = num * denominator) > 0x3fffffffffffffffL ||
-             a < -0x4000000000000000L) {
+             a < -0x3fffffffffffffffL) {
             reduce();
             if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x4000000000000000L) {
+                 a < -0x3fffffffffffffffL) {
                 return new FloatNum((double) numerator / denominator + num);
             }
         }
-        if ((c = a + numerator) > 0x7fffffffL || c < -0x80000000) {
+        if ((c = a + numerator) > 0x7fffffffL || c < -0x7fffffff) {
             long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
-            if ((c /= gcd) > 0x7fffffffL || c < -0x80000000L) {
+            if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
             return new RatNum(c, d);
@@ -86,25 +97,25 @@ public final class RatNum implements Num {
     public Num add(RatNum num) {
         long a, b, c, gcd;
         if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-             a < -0x4000000000000000L ||
+             a < -0x3fffffffffffffffL ||
             (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-             b < -0x4000000000000000L) {
+             b < -0x3fffffffffffffffL) {
             reduce();
             num.reduce();
             if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x4000000000000000L ||
+                 a < -0x3fffffffffffffffL ||
                 (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-                 b < -0x4000000000000000L) {
+                 b < -0x3fffffffffffffffL) {
                 return new FloatNum((double) numerator / denominator +
                     (double) num.numerator / num.denominator);
             }
         }
         long d = denominator * num.denominator;
-        if ((c = a + b) > 0x7fffffffL || c < -0x80000000 || 
-            d > 0x7ffffffffL || d < -0x80000000L) {
+        if ((c = a + b) > 0x7fffffffL || c < -0x7fffffff || 
+            d > 0x7ffffffffL || d < -0x7fffffffL) {
             d /= gcd = gcd(c < 0 ? -c : c, d);
-            if ((c /= gcd) > 0x7fffffffL || c < -0x80000000L ||
-                d > 0x7fffffffL || d < -0x80000000L) {
+            if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL ||
+                d > 0x7fffffffL || d < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
         }
@@ -117,9 +128,12 @@ public final class RatNum implements Num {
 
     public Num mul(long num) {
         long a;
-        if ((a = numerator * num) > 0x7fffffffL || a < -0x80000000L) {
+        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+            return new FloatNum((double) numerator / denominator * num);
+        }
+        if ((a = numerator * num) > 0x7fffffffL || a < -0x7fffffffL) {
             long gcd, b = denominator / (gcd = gcd(a, denominator));
-            if ((a /= gcd) > 0x7fffffffL || a < -0x80000000L) {
+            if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL) {
                 return new FloatNum((double) a / b);
             }
             return new RatNum(a, b);
@@ -130,10 +144,10 @@ public final class RatNum implements Num {
     public Num mul(RatNum num) {
         long a, b = denominator * num.denominator, gcd;
         if ((a = numenator * num.numenator) > 0x7fffffffL
-            || a < -0x80000000L || b > 0x7fffffffL || b < -0x80000000) {
+            || a < -0x7fffffffL || b > 0x7fffffffL || b < -0x7fffffff) {
             b /= gcd = gcd(a, b);
-            if ((a /= gcd) > 0x7fffffffL || a < -0x80000000L ||
-                b > 0x7fffffffL || b < -0x80000000L) {
+            if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL ||
+                b > 0x7fffffffL || b < -0x7fffffffL) {
                 return new FloatNum((double) a / b);
             }
         }
@@ -146,9 +160,13 @@ public final class RatNum implements Num {
 
     public Num div(long num) {
         long a;
-        if ((a = denominator * num) > 0x7fffffffL || a < -0x80000000L) {
+        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+            return new FloatNum((double) numerator /
+                        ((double) denominator * num));
+        }
+        if ((a = denominator * num) > 0x7fffffffL || a < -0x7fffffffL) {
             long gcd, b = numerator / (gcd = gcd(a, numerator));
-            if ((a /= gcd) > 0x7fffffffL || a < -0x80000000L) {
+            if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL) {
                 return new FloatNum((double) b / a);
             }
             return new RatNum(b, a);
@@ -159,9 +177,12 @@ public final class RatNum implements Num {
     // num / this
     public Num divFrom(long num) {
         long a;
-        if ((a = denominator * num) > 0x7fffffffL || a < -0x80000000L) {
+        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+            return new FloatNum((double) num / numerator * denominator);
+        }
+        if ((a = denominator * num) > 0x7fffffffL || a < -0x7fffffffL) {
             long gcd, b = numerator / (gcd = gcd(a, numerator));
-            if ((a /= gcd) > 0x7fffffffL || a < -0x80000000L) {
+            if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL) {
                 return new FloatNum((double) b / a);
             }
             return new RatNum(a, b);
@@ -173,10 +194,10 @@ public final class RatNum implements Num {
         return num.mul(denominator, numerator);
         long a, b = numerator * num.denominator, gcd;
         if ((a = denominator * num.numenator) > 0x7fffffffL
-            || a < -0x80000000L || b > 0x7fffffffL || b < -0x80000000) {
+            || a < -0x7fffffffL || b > 0x7fffffffL || b < -0x7fffffff) {
             b /= gcd = gcd(a, b);
-            if ((a /= gcd) > 0x7fffffffL || a < -0x80000000L ||
-                b > 0x7fffffffL || b < -0x80000000L) {
+            if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL ||
+                b > 0x7fffffffL || b < -0x7fffffffL) {
                 return new FloatNum((double) a / b);
             }
         }
@@ -193,17 +214,21 @@ public final class RatNum implements Num {
 
     public Num subFrom(long num) {
         long a, c, gcd;
+        if (num > 0x7fffffffL || num < -0x7fffffffL) {
+            return new FloatNum((double) num -
+                (double) numerator / denominator);
+        }
         if ((a = num * denominator) > 0x3fffffffffffffffL ||
-             a < -0x4000000000000000L) {
+             a < -0x3fffffffffffffffL) {
             reduce();
             if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x4000000000000000L) {
+                 a < -0x3fffffffffffffffL) {
                 return new FloatNum((double) numerator / denominator + num);
             }
         }
-        if ((c = a - numerator) > 0x7fffffffL || c < -0x80000000) {
+        if ((c = a - numerator) > 0x7fffffffL || c < -0x7fffffff) {
             long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
-            if ((c /= gcd) > 0x7fffffffL || c < -0x80000000L) {
+            if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
             return new RatNum(c, d);
@@ -214,25 +239,25 @@ public final class RatNum implements Num {
     public Num subFrom(RatNum num) {
         long a, b, c, gcd;
         if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-             a < -0x4000000000000000L ||
+             a < -0x3fffffffffffffffL ||
             (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-             b < -0x4000000000000000L) {
+             b < -0x3fffffffffffffffL) {
             reduce();
             num.reduce();
             if ((a = num.numerator * denominator) > 0x3fffffffffffffffL ||
-                 a < -0x4000000000000000L ||
+                 a < -0x3fffffffffffffffL ||
                 (b = numerator * num.denominator) > 0x3fffffffffffffffL ||
-                 b < -0x4000000000000000L) {
+                 b < -0x3fffffffffffffffL) {
                 return new FloatNum((double) numerator / denominator +
                     (double) num.numerator / num.denominator);
             }
         }
         long d = denominator * num.denominator;
-        if ((c = a - b) > 0x7fffffffL || c < -0x80000000 || 
-            d > 0x7ffffffffL || d < -0x80000000L) {
+        if ((c = a - b) > 0x7fffffffL || c < -0x7fffffff || 
+            d > 0x7ffffffffL || d < -0x7fffffffL) {
             d /= gcd = gcd(c < 0 ? -c : c, d);
-            if ((c /= gcd) > 0x7fffffffL || c < -0x80000000L ||
-                d > 0x7fffffffL || d < -0x80000000L) {
+            if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL ||
+                d > 0x7fffffffL || d < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
         }
@@ -261,5 +286,22 @@ public final class RatNum implements Num {
 
     public double doubleValue() {
         return (double) numerator / (double) denominator;
+    }
+
+    public static Num div(long numerator, long denominator) {
+        if (denominator == 0) {
+            throw new IllegalArgumentException("division by zero");
+        }
+        if (numerator > 0x7fffffff || numerator < -0x7fffffff ||
+            denominator > 0x7fffffff || denominator < -0x7fffffff) {
+            long gcd;
+            denominator /= gcd = gcd(numerator, denominator);
+            if ((numerator /= gcd) > 0x7fffffff || numerator < -0x7fffffff ||
+                denominator > 0x7fffffff || denominator < -0x7fffffff) {
+                return new FloatNum((double) numerator / denominator);
+            }
+        }
+        return denominator < 0 ? new RatNum(-numerator, -denominator)
+                               : new RatNum(numerator, denominator);
     }
 }
