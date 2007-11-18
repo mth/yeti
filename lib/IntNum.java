@@ -61,7 +61,7 @@ public final class IntNum implements Num {
         return new IntNum(v * num);
     }
 
-    public Num mul(RatNum num) {
+    public Num mul(RatNum v) {
         return num.mul(v);
     }
 
