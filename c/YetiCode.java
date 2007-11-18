@@ -60,11 +60,11 @@ interface YetiCode {
             this.className = className;
         }
 
-        Ctx newClass(int flags, String name, String[] interfaces) {
+        Ctx newClass(int flags, String name, String extend) {
             Ctx ctx = new Ctx(compilation,
                 new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
             ctx.cw.visit(V1_2, flags, name, null,
-                         "java/lang/Object", interfaces);
+                         extend == null ? "java/lang/Object" : extend, null);
             if (compilation.classes.put(name, ctx) != null) {
                 throw new IllegalStateException("Duplicate class: " + name);
             }
@@ -206,8 +206,6 @@ interface YetiCode {
         }
     }
 
-    String[] FUN_INTERFACE = { "yeti/lang/Fun" };
-
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);
@@ -276,8 +274,8 @@ interface YetiCode {
             for (int i = 0; classes.containsKey(name); ++i) {
                 name = ctx.className + '$' + bindName + i;
             }
-            Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name, FUN_INTERFACE);
-
+            Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
+                                   "yeti/lang/Fun");
             StringBuffer carg = new StringBuffer("(");
             for (Capture c = captures; c != null; c = c.next) {
                 carg.append("Ljava/lang/Object;");
@@ -290,7 +288,7 @@ interface YetiCode {
             MethodVisitor init = // constructor
                 fun.cw.visitMethod(0, "<init>", cargt, null, null);
             init.visitVarInsn(ALOAD, 0); // this.
-            init.visitMethodInsn(INVOKESPECIAL, "java/lang/Object",
+            init.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun",
                                  "<init>", "()V"); // super();
             int n = 0; // copy constructor arguments to fields
             for (Capture c = captures; c != null; c = c.next) {
@@ -331,8 +329,9 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             fun.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
             arg.gen(ctx);
-            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Fun",
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                 "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
     }

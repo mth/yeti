@@ -30,7 +30,9 @@
  */
 package yeti.lang;
 
-public final class RatNum implements Num {
+import java.math.BigInteger;
+
+public final class RatNum extends Num {
     private final long numerator;
     private final long denominator;
 
@@ -48,12 +50,12 @@ public final class RatNum implements Num {
     }
 
     private RatNum(long numerator, long denominator) {
-        this.numenator = numenator;
+        this.numerator = numerator;
         this.denominator = denominator;
     }
 
     public Num add(Num num) {
-        return num.add(numerator, denominator);
+        return num.add(this);
     }
 
     private static long gcd(long a, long b) {
@@ -73,7 +75,7 @@ public final class RatNum implements Num {
             return new FloatNum((double) numerator / denominator + num);
         }
         if ((c = a + numerator) > 0x7fffffffL || c < -0x7fffffff) {
-            long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
+            long d = denominator / (gcd = gcd(c < 0 ? -c : c, denominator));
             if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
@@ -103,8 +105,13 @@ public final class RatNum implements Num {
         return new RatNum(c, d);
     }
 
+    public Num add(BigInteger num) {
+        return new FloatNum((double) numerator / denominator
+                            + num.doubleValue());
+    }
+
     public Num mul(Num num) {
-        return num.mul((int) numerator, (int) denominator);
+        return num.mul(this);
     }
 
     public Num mul(long num) {
@@ -124,7 +131,7 @@ public final class RatNum implements Num {
 
     public Num mul(RatNum num) {
         long a, b = denominator * num.denominator, gcd;
-        if ((a = numenator * num.numenator) > 0x7fffffffL
+        if ((a = numerator * num.numerator) > 0x7fffffffL
             || a < -0x7fffffffL || b > 0x7fffffffL || b < -0x7fffffff) {
             b /= gcd = gcd(a, b);
             if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL ||
@@ -133,6 +140,11 @@ public final class RatNum implements Num {
             }
         }
         return new RatNum(a, b);
+    }
+
+    public Num mul(BigInteger num) {
+        return new FloatNum((double) numerator / denominator
+                            * num.doubleValue());
     }
 
     public Num div(Num num) {
@@ -173,7 +185,7 @@ public final class RatNum implements Num {
 
     public Num divFrom(RatNum num) {
         long a, b = numerator * num.denominator, gcd;
-        if ((a = denominator * num.numenator) > 0x7fffffffL
+        if ((a = denominator * num.numerator) > 0x7fffffffL
             || a < -0x7fffffffL || b > 0x7fffffffL || b < -0x7fffffff) {
             b /= gcd = gcd(a, b);
             if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL ||
@@ -182,6 +194,19 @@ public final class RatNum implements Num {
             }
         }
         return new RatNum(a, b);
+    }
+
+    public Num intDiv(Num num) {
+        return num.intDivFrom(numerator / denominator);
+    }
+
+    public Num intDivFrom(long num) {
+        return new IntNum(num / (numerator / denominator));
+    }
+
+    public Num intDivFrom(BigInteger num) {
+        return new BigNum(num.divide(
+                            BigInteger.valueOf(numerator / denominator)));
     }
 
     public Num sub(Num num) {
@@ -201,7 +226,7 @@ public final class RatNum implements Num {
                 (double) numerator / denominator);
         }
         if ((c = a - numerator) > 0x7fffffffL || c < -0x7fffffff) {
-            long d = denominator / (gcd = gcd(c < 0 ? -c : c, d));
+            long d = denominator / (gcd = gcd(c < 0 ? -c : c, denominator));
             if ((c /= gcd) > 0x7fffffffL || c < -0x7fffffffL) {
                 return new FloatNum((double) c / d);
             }
@@ -270,5 +295,10 @@ public final class RatNum implements Num {
         }
         return denominator < 0 ? new RatNum(-numerator, -denominator)
                                : new RatNum(numerator, denominator);
+    }
+
+    public Num subFrom(BigInteger num) {
+        return new FloatNum((double) numerator / denominator
+                            - num.doubleValue());
     }
 }

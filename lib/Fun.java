@@ -30,6 +30,6 @@
  */
 package yeti.lang;
 
-public interface Fun {
-    Object apply(Object arg);
+public abstract class Fun {
+    public abstract Object apply(Object arg);
 }

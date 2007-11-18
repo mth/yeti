@@ -30,8 +30,10 @@
  */
 package yeti.lang;
 
-public final class RatNum implements Num {
-    private double v;
+import java.math.BigInteger;
+
+public final class FloatNum extends Num {
+    private final double v;
 
     public FloatNum(double num) {
         v = num;
@@ -49,6 +51,10 @@ public final class RatNum implements Num {
         return new FloatNum(v + num.doubleValue());
     }
 
+    public Num add(BigInteger num) {
+        return new FloatNum(v + num.doubleValue());
+    }
+
     public Num mul(Num num) {
         return new FloatNum(v * num.doubleValue());
     }
@@ -58,6 +64,10 @@ public final class RatNum implements Num {
     }
 
     public Num mul(RatNum num) {
+        return new FloatNum(v * num.doubleValue());
+    }
+
+    public Num mul(BigInteger num) {
         return new FloatNum(v * num.doubleValue());
     }
 
@@ -77,6 +87,28 @@ public final class RatNum implements Num {
         return new FloatNum(num.doubleValue() / v);
     }
 
+    public Num intDiv(Num num) {
+        double res = (v >= 0 ? Math.floor(v) : Math.ceil(v)) /
+                     num.doubleValue();
+        return res > 2147483647.0 || res < -2147483647.0
+            ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
+            : new IntNum((long) res);
+    }
+
+    public Num intDivFrom(long num) {
+        return new IntNum((long)
+            (num / (v >= 0 ? Math.floor(v) : Math.ceil(v))));
+    }
+
+    public Num intDivFrom(BigInteger num) {
+        // XXX
+        double res = num.doubleValue() /
+                    (v >= 0 ? Math.floor(v) : Math.ceil(v));
+        return res > 2147483647.0 || res < -2147483647.0
+            ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
+            : new IntNum((long) res);
+    }
+
     public Num sub(Num num) {
         return new FloatNum(v - num.doubleValue());
     }
@@ -91,5 +123,33 @@ public final class RatNum implements Num {
 
     public Num subFrom(RatNum num) {
         return new FloatNum(num.doubleValue() - v);
+    }
+
+    public Num subFrom(BigInteger num) {
+        return new FloatNum(num.doubleValue() - v);
+    }
+
+    public byte byteValue() {
+        return (byte) v;
+    }
+
+    public short shortValue() {
+        return (short) v;
+    }
+
+    public int intValue() {
+        return (int) v;
+    }
+
+    public long longValue() {
+        return (long) v;
+    }
+
+    public float floatValue() {
+        return (float) v;
+    }
+
+    public double doubleValue() {
+        return v;
     }
 }

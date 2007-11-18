@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-public final class TagCon implements Fun {
+public final class TagCon extends Fun {
     private final String name;
 
     public TagCon(String aName) {

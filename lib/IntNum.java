@@ -30,8 +30,10 @@
  */
 package yeti.lang;
 
-public final class IntNum implements Num {
-    private long v;
+import java.math.BigInteger;
+
+public final class IntNum extends Num {
+    private final long v;
 
     public IntNum(int num) {
         v = num;
@@ -46,11 +48,15 @@ public final class IntNum implements Num {
     }
 
     public Num add(RatNum num) {
-        num.add(v);
+        return num.add(v);
     }
 
     public Num add(long num) {
         return new IntNum(v + num);
+    }
+
+    public Num add(BigInteger num) {
+        return new BigNum(BigInteger.valueOf(v).add(num));
     }
 
     public Num mul(Num num) {
@@ -61,7 +67,11 @@ public final class IntNum implements Num {
         return new IntNum(v * num);
     }
 
-    public Num mul(RatNum v) {
+    public Num mul(BigInteger num) {
+        return new BigNum(BigInteger.valueOf(v).multiply(num));
+    }
+
+    public Num mul(RatNum num) {
         return num.mul(v);
     }
 
@@ -81,6 +91,18 @@ public final class IntNum implements Num {
         return num.div(v);
     }
 
+    public Num intDiv(Num num) {
+        return num.intDivFrom(v);
+    }
+
+    public Num intDivFrom(long num) {
+        return new IntNum(num / v);
+    }
+
+    public Num intDivFrom(BigInteger num) {
+        return new BigNum(num.divide(BigInteger.valueOf(v)));
+    }
+
     public Num sub(Num num) {
         return num.subFrom(v);
     }
@@ -95,5 +117,33 @@ public final class IntNum implements Num {
 
     public Num subFrom(RatNum num) {
         return num.sub(v);
+    }
+
+    public Num subFrom(BigInteger num) {
+        return new BigNum(num.subtract(BigInteger.valueOf(v)));
+    }
+
+    public byte byteValue() {
+        return (byte) v;
+    }
+
+    public short shortValue() {
+        return (short) v;
+    }
+
+    public int intValue() {
+        return (int) v;
+    }
+
+    public long longValue() {
+        return v;
+    }
+
+    public float floatValue() {
+        return v;
+    }
+
+    public double doubleValue() {
+        return v;
     }
 }

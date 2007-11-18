@@ -30,19 +30,27 @@
  */
 package yeti.lang;
 
-public interface Num extends Number {
-    Num add(Num num);
-    Num add(long num);
-    Num add(RatNum num);
-    Num mul(Num num);
-    Num mul(long num);
-    Num mul(RatNum num);
-    Num div(Num num);
-    Num div(long num);
-    Num divFrom(long num);
-    Num divFrom(RatNum num);
-    Num sub(Num num);
-    Num sub(long num);
-    Num subFrom(long num);
-    Num subFrom(RatNum num);
+import java.math.BigInteger;
+
+public abstract class Num extends Number {
+    public abstract Num add(Num num);
+    public abstract Num add(long num);
+    public abstract Num add(RatNum num);
+    public abstract Num add(BigInteger num);
+    public abstract Num mul(Num num);
+    public abstract Num mul(long num);
+    public abstract Num mul(RatNum num);
+    public abstract Num mul(BigInteger num);
+    public abstract Num div(Num num);
+    public abstract Num div(long num);
+    public abstract Num divFrom(long num);
+    public abstract Num divFrom(RatNum num);
+    public abstract Num intDiv(Num num);
+    public abstract Num intDivFrom(long num);
+    public abstract Num intDivFrom(BigInteger num);
+    public abstract Num sub(Num num);
+    public abstract Num sub(long num);
+    public abstract Num subFrom(long num);
+    public abstract Num subFrom(RatNum num);
+    public abstract Num subFrom(BigInteger num);
 }
