@@ -337,4 +337,9 @@ public final class RatNum extends Num {
     public String toString() {
         return numerator + "/" + denominator;
     }
+
+    public int hashCode() {
+        long bits = Double.doubleToLongBits((double) numerator / denominator);
+        return (int)(bits ^ (bits >>> 32));
+    }
 }

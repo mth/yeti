@@ -175,4 +175,16 @@ public final class FloatNum extends Num {
     public String toString() {
         return Double.toString(v);
     }
+
+    public int hashCode() {
+        if (v == 0) { // some weird positive and negative doubles...
+            return 0; // ... just return 0 for all of them
+        }
+        long bits = Double.doubleToLongBits(v);
+        return (int) (bits ^ (bits >>> 32));
+    }
+
+    public boolean equals(Object num) {
+        return v == ((Number) num).doubleValue();
+    }
 }

@@ -56,4 +56,8 @@ public abstract class Num extends Number implements Comparable {
     public abstract int compareTo(long num);
     public abstract int compareTo(RatNum num);
     public abstract int compareTo(BigInteger num);
+
+    public boolean equals(Object x) {
+        return x instanceof Num && compareTo(x) == 0;
+    }
 }
