@@ -333,4 +333,8 @@ public final class RatNum extends Num {
         double a = (double) numerator / denominator, b = num.doubleValue();
         return a < b ? -1 : a > b ? 1 : 0;
     }
+
+    public String toString() {
+        return numerator + "/" + denominator;
+    }
 }

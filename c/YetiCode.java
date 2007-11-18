@@ -125,10 +125,10 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "java/lang/Double");
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/FloatNum");
             ctx.m.visitInsn(DUP);
             ctx.m.visitLdcInsn(num);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "java/lang/Double",
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
                                   "<init>", "(D)V");
         }
     }
@@ -605,6 +605,60 @@ interface YetiCode {
         void gen(Ctx ctx) {
             ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "PRINTLN",
                     "Lyeti/lang/Fun;");
+        }
+    }
+
+    class ArithOp extends Code {
+        String method;
+        Code arg1;
+        Code arg2;
+
+        ArithOp(String method, Code arg1, Code arg2, YetiType.Type type) {
+            this.type = type;
+            this.method = method;
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+        }
+
+        void gen(Ctx ctx) {
+            arg1.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            arg2.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
+        }
+    }
+
+    class ArithOpFun extends BindRef implements Binder {
+        String method;
+
+        public ArithOpFun(String method, YetiType.Type type) {
+            this.type = type;
+            this.method = method;
+        }
+
+        public BindRef getRef() {
+            return this; // XXX should copy for type?
+        }
+
+        Code apply(final Code arg1, YetiType.Type res) {
+            Code c = new Code() {
+                Code apply(Code arg2, YetiType.Type res) {
+                    return new ArithOp(method, arg1, arg2, res);
+                }
+
+                void gen(Ctx ctx) {
+                    throw new UnsupportedOperationException(
+                        "ArithOpFun$.gen!?");
+                }
+            };
+            c.type = res;
+            return c;
+        }
+
+        void gen(Ctx ctx) {
+            throw new UnsupportedOperationException("ArithOpFun.gen!?");
         }
     }
 

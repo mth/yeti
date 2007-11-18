@@ -58,6 +58,9 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type A_TO_UNIT = new Type(FUN, new Type[] { A, UNIT_TYPE });
     static final Type EQ_TYPE = new Type(FUN,
                 new Type[] { A, new Type(FUN, new Type[] { A, BOOL_TYPE }) });
+    static final Type NUMOP_TYPE = new Type(FUN,
+            new Type[] { NUM_TYPE, new Type(FUN, new Type[] { NUM_TYPE,
+                                                              NUM_TYPE }) });
 
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
@@ -66,8 +69,16 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Scope ROOT_SCOPE =
         bindPoly("==", EQ_TYPE, new EqBinder(), 0,
         bindPoly("println", A_TO_UNIT, new PrintlnFun(), 0,
-        new Scope(new Scope(null, "false", new BooleanConstant(false)),
-                                  "true", new BooleanConstant(true))));
+        bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
+        bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
+        bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
+        bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
+        bindScope("false", new BooleanConstant(false),
+        bindScope("true", new BooleanConstant(true), null))))))));
+
+    static Scope bindScope(String name, Binder binder, Scope scope) {
+        return new Scope(scope, name, binder);
+    }
 
     static final class Type {
         int type;

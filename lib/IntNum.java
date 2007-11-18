@@ -162,4 +162,8 @@ public final class IntNum extends Num {
     public int compareTo(BigInteger num) {
         return BigInteger.valueOf(v).compareTo(num);
     }
+
+    public String toString() {
+        return Long.toString(v);
+    }
 }

@@ -171,4 +171,8 @@ public final class FloatNum extends Num {
         double x = num.doubleValue();
         return v < x ? -1 : v > x ? 1 : 0;
     }
+
+    public String toString() {
+        return Double.toString(v);
+    }
 }
