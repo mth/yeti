@@ -329,6 +329,8 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             fun.gen(ctx);
+            // XXX this cast could be optimised away sometimes
+            //  - when the fun really is Fun by java types
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
             arg.gen(ctx);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
