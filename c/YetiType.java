@@ -443,6 +443,7 @@ public final class YetiType implements YetiParser, YetiCode {
                     // recursive binding
                     Function lambda = new Function(new Type(depth + 1));
                     BindExpr binder = new BindExpr(lambda);
+                    lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
                                new Scope(scope, bind.name, binder), depth + 1);
                     scope = bindPoly(bind.name, lambda.type, binder,

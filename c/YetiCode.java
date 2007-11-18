@@ -227,9 +227,11 @@ interface YetiCode {
     }
 
     class Function extends Code implements Binder, Closure {
+        Binder selfBind;
         Code body;
         String bindName;
         Capture captures;
+        BindRef selfRef;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -247,6 +249,24 @@ interface YetiCode {
         }
 
         public BindRef refProxy(BindRef code) {
+            // TODO cruel hack. should define special interface
+            // for those special things
+            if (code instanceof ArithOpFun ||
+                code instanceof EqFun) {
+                return code;
+            }
+            if (selfBind == code.binder) {
+                if (selfRef == null) {
+                    selfRef = new BindRef() {
+                        void gen(Ctx ctx) {
+                            ctx.m.visitVarInsn(ALOAD, 0);
+                        }
+                    };
+                    selfRef.binder = selfBind;
+                    selfRef.type = code.type;
+                }
+                return selfRef;
+            }
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.binder == code.binder) {
                     return c;
@@ -646,7 +666,7 @@ interface YetiCode {
 
                 void gen(Ctx ctx) {
                     throw new UnsupportedOperationException(
-                        "ArithOpFun$.gen!?");
+                        "ArithOpFun$.gen!? " + method);
                 }
             };
             c.type = res;
@@ -654,7 +674,8 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            throw new UnsupportedOperationException("ArithOpFun.gen!?");
+            throw new UnsupportedOperationException("ArithOpFun.gen!?"
+                        + method);
         }
     }
 
