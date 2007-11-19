@@ -168,7 +168,6 @@ public final class IntNum extends Num {
     }
 
     public int hashCode() {
-        long bits = Double.doubleToLongBits(v);
-        return (int) (bits ^ (bits >>> 32));
+        return (int) (v ^ (v >>> 32));
     }
 }

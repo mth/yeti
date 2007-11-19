@@ -177,14 +177,13 @@ public final class FloatNum extends Num {
     }
 
     public int hashCode() {
-        if (v == 0) { // some weird positive and negative doubles...
-            return 0; // ... just return 0 for all of them
-        }
-        long bits = Double.doubleToLongBits(v);
-        return (int) (bits ^ (bits >>> 32));
+        // hashCode must be same when equals is same
+        // a bit rough, but hopefully it satisfies that condition ;)
+        long x = (long) v;
+        return (int) (x ^ (x >>> 32));
     }
 
     public boolean equals(Object num) {
-        return v == ((Number) num).doubleValue();
+        return num instanceof Num && v == ((Num) num).doubleValue();
     }
 }
