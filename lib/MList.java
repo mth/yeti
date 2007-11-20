@@ -53,7 +53,7 @@ public class MList extends AList {
             return (p = start + 1) < size ? new SubList(p) : null;
         }
 
-        public AIter iter() {
+        public AIter next() {
             int p;
             return (p = start + 1) < size ? new Iter(p) : null;
         }
@@ -101,5 +101,45 @@ public class MList extends AList {
 
     public AIter next() {
         return size > 1 ? new Iter(1) : null;
+    }
+
+    public int hashCode() {
+        int hashCode = 1;
+        for (int i = 0; i < size; ++i) {
+            Object x = array[i];
+            hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
+        }
+        return hashCode;
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return size == 0;
+        }
+        if (!(obj instanceof AList)) {
+            return false;
+        }
+        AIter j = (AList) obj;
+        Object x, y;
+        for (int i = 0; i < size; ++i) {
+            if (j == null ||
+                (x = array[i]) != (y = j.first()) &&
+                (x == null || !x.equals(j))) {
+                return false;
+            }
+        }
+        return j == null;
+    }
+
+    public String toString() {
+        StringBuffer buf = new StringBuffer("[");
+        for (int i = 0; i < size; ++i) {
+            if (i != 0) {
+                buf.append(',');
+            }
+            buf.append(array[i]);
+        }
+        buf.append(']');
+        return buf.toString();
     }
 }

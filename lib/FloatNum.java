@@ -92,7 +92,7 @@ public final class FloatNum extends Num {
                      num.doubleValue();
         return res > 2147483647.0 || res < -2147483647.0
             ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
-            : new IntNum((long) res);
+            : (Num) new IntNum((long) res);
     }
 
     public Num intDivFrom(long num) {
@@ -106,7 +106,7 @@ public final class FloatNum extends Num {
                     (v >= 0 ? Math.floor(v) : Math.ceil(v));
         return res > 2147483647.0 || res < -2147483647.0
             ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
-            : new IntNum((long) res);
+            : (Num) new IntNum((long) res);
     }
 
     public Num sub(Num num) {

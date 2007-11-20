@@ -32,16 +32,8 @@ package yeti.lang;
 
 /** Yeti core library - List. */
 public abstract class AList extends AIter {
-        /**
-         * Return rest of the list. Must not modify the current list.
-         */
-        public abstract AList rest();
-
-        /**
-         * Iterators next. Default implementation for lists returns rest.
-         * Some lists may have more efficient iterator implementation.
-         */
-        public AIter next() {
-            return rest();
-        }
+    /**
+     * Return rest of the list. Must not modify the current list.
+     */
+    public abstract AList rest();
 }

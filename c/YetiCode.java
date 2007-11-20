@@ -595,18 +595,23 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.intConst(items.length);
-            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            for (int i = 0; i < items.length; ++i) {
-                ctx.m.visitInsn(DUP);
-                ctx.intConst(i);
-                items[i].gen(ctx);
-                ctx.m.visitInsn(AASTORE);
+            if (items.length == 0) {
+                ctx.m.visitInsn(ACONST_NULL);
+                return;
             }
-            ctx.m.visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "asList",
-                                  "([Ljava/lang/Object;)Ljava/util/List;");
+            for (int i = 0; i < items.length; ++i) {
+                ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
+                ctx.m.visitInsn(DUP);
+                items[i].gen(ctx);
+            }
+            ctx.m.visitInsn(ACONST_NULL);
+            for (int i = items.length; --i >= 0;) {
+                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
+                    "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+            }
         }
     }
+
 
     class PrintlnFun extends BindRef implements Binder {
         PrintlnFun() {

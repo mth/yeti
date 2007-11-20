@@ -32,19 +32,60 @@ package yeti.lang;
 
 /** Yeti core library - List. */
 public class LList extends AList {
-        private Object first;
-        private AList rest;
+    private Object first;
+    private AList rest;
 
-        public LList(Object first, AList rest) {
-            this.first = first;
-            this.rest = rest;
-        }
+    public LList(Object first, AList rest) {
+        this.first = first;
+        this.rest = rest;
+    }
 
-        public Object first() {
-            return first;
-        }
+    public Object first() {
+        return first;
+    }
 
-        public AList rest() {
-            return rest;
+    public AList rest() {
+        return rest;
+    }
+
+    /**
+     * Iterators next. Default implementation for lists returns rest.
+     * Some lists may have more efficient iterator implementation.
+     */
+    public AIter next() {
+        return rest();
+    }
+
+    public int hashCode() {
+        int hashCode = 1;
+        AIter i = this;
+        do {
+            Object x = i.first();
+            hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
+        } while ((i = i.next()) != null);      
+        return hashCode;
+    }
+
+    public boolean equals(Object obj) {
+        if (!(obj instanceof AList)) {
+            return false;
         }
+        AIter i = (AList) obj, j = this;
+        Object x, y;
+        while (i != null && j != null &&
+               ((x = i.first()) == (y = j.first()) ||
+                x != null && x.equals(j)));
+        return i == null && j == null;
+    }
+
+    public String toString() {
+        StringBuffer buf = new StringBuffer("[");
+        buf.append(first);
+        for (AIter i = rest; i != null; i = i.next()) {
+            buf.append(',');
+            buf.append(i.first());
+        }
+        buf.append(']');
+        return buf.toString();
+    }
 }
