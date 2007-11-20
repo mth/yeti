@@ -462,9 +462,11 @@ interface YetiCode {
         Bind[] binds;
 
         private static class Bind extends BindRef implements Binder {
+            boolean used;
             int var;
 
             public BindRef getRef() {
+                used = true;
                 return this;
             }
 
@@ -490,9 +492,13 @@ interface YetiCode {
         void gen(Ctx ctx) {
             for (int i = 0; i < binds.length; ++i) {
                 if (binds[i] != null) {
-                    ((Function) values[i]).prepareGen(ctx);
-                    ctx.m.visitVarInsn(ASTORE,
-                        binds[i].var = ctx.localVarCount++);
+                    if (binds[i].used) {
+                        ((Function) values[i]).prepareGen(ctx);
+                        ctx.m.visitVarInsn(ASTORE,
+                            binds[i].var = ctx.localVarCount++);
+                    } else {
+                        binds[i] = null;
+                    }
                 }
             }
             ctx.m.visitTypeInsn(NEW, "yeti/lang/Struct");
