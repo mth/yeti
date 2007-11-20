@@ -184,24 +184,6 @@ interface YetiCode {
         }
     }
 
-    class LocalBind extends BindRef implements Binder {
-        Code code;
-
-        LocalBind(Code code) {
-            this.code = code;
-            type = code.type;
-            binder = this;
-        }
-
-        public BindRef getRef() {
-            return this;
-        }
-
-        void gen(Ctx ctx) {
-            throw new UnsupportedOperationException("LocalBind.gen");
-        }
-    }
-
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);
@@ -227,6 +209,7 @@ interface YetiCode {
     }
 
     class Function extends Code implements Binder, Closure {
+        private String name;
         Binder selfBind;
         Code body;
         String bindName;
@@ -281,38 +264,26 @@ interface YetiCode {
             return c;
         }
 
-        void gen(Ctx ctx) {
+        void prepareGen(Ctx ctx) {
             if (bindName == null) {
                 bindName = "";
             }
-            String name = ctx.className + '$' + bindName;
+            name = ctx.className + '$' + bindName;
             Map classes = ctx.compilation.classes;
             for (int i = 0; classes.containsKey(name); ++i) {
                 name = ctx.className + '$' + bindName + i;
             }
             Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
                                    "yeti/lang/Fun");
-            StringBuffer carg = new StringBuffer("(");
             for (Capture c = captures; c != null; c = c.next) {
-                carg.append("Ljava/lang/Object;");
-                fun.cw.visitField(ACC_PRIVATE | ACC_FINAL, c.getId(fun),
+                fun.cw.visitField(0, c.getId(fun),
                                   "Ljava/lang/Object;", null, null).visitEnd();
             }
-            carg.append(")V");
-            String cargt = carg.toString();
-
             MethodVisitor init = // constructor
-                fun.cw.visitMethod(0, "<init>", cargt, null, null);
+                fun.cw.visitMethod(0, "<init>", "()V", null, null);
             init.visitVarInsn(ALOAD, 0); // this.
             init.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun",
                                  "<init>", "()V"); // super();
-            int n = 0; // copy constructor arguments to fields
-            for (Capture c = captures; c != null; c = c.next) {
-                init.visitVarInsn(ALOAD, 0);
-                init.visitVarInsn(ALOAD, ++n);
-                init.visitFieldInsn(PUTFIELD, fun.className, c.getId(fun),
-                                     "Ljava/lang/Object;");
-            }
             init.visitInsn(RETURN);
             init.visitMaxs(0, 0);
             init.visitEnd();
@@ -326,11 +297,22 @@ interface YetiCode {
 
             ctx.m.visitTypeInsn(NEW, name);
             ctx.m.visitInsn(DUP);
+            ctx.m.visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V");
+        }
+
+        void finishGen(Ctx ctx) {
             // Capture a closure
             for (Capture c = captures; c != null; c = c.next) {
+                ctx.m.visitInsn(DUP);
                 c.ref.gen(ctx);
+                ctx.m.visitFieldInsn(PUTFIELD, name, c.getId(null),
+                                     "Ljava/lang/Object;");
             }
-            ctx.m.visitMethodInsn(INVOKESPECIAL, name, "<init>", cargt);
+        }
+
+        void gen(Ctx ctx) {
+            prepareGen(ctx);
+            finishGen(ctx);
         }
     }
 
@@ -477,14 +459,42 @@ interface YetiCode {
     class StructConstructor extends Code {
         String[] names;
         Code[] values;
+        Bind[] binds;
 
-        StructConstructor(YetiType.Type type, String[] names, Code[] values) {
-            this.type = type;
+        private static class Bind extends BindRef implements Binder {
+            int var;
+
+            public BindRef getRef() {
+                return this;
+            }
+
+            void gen(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, var);
+            }
+        }
+
+        StructConstructor(String[] names, Code[] values) {
             this.names = names;
             this.values = values;
+            binds = new Bind[names.length];
+        }
+
+        Binder bind(int num, Code code) {
+            Bind bind = new Bind();
+            bind.type = code.type;
+            bind.binder = bind;
+            binds[num] = bind;
+            return bind;
         }
 
         void gen(Ctx ctx) {
+            for (int i = 0; i < binds.length; ++i) {
+                if (binds[i] != null) {
+                    ((Function) values[i]).prepareGen(ctx);
+                    ctx.m.visitVarInsn(ASTORE,
+                        binds[i].var = ctx.localVarCount++);
+                }
+            }
             ctx.m.visitTypeInsn(NEW, "yeti/lang/Struct");
             ctx.m.visitInsn(DUP);
             ctx.intConst(names.length * 2);
@@ -496,7 +506,12 @@ interface YetiCode {
                 ctx.m.visitInsn(AASTORE);
                 ctx.m.visitInsn(DUP);
                 ctx.intConst(i * 2 + 1);
-                values[i].gen(ctx);
+                if (binds[i] != null) {
+                    binds[i].gen(ctx);
+                    ((Function) values[i]).finishGen(ctx);
+                } else {
+                    values[i].gen(ctx);
+                }
                 ctx.m.visitInsn(AASTORE);
             }
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",

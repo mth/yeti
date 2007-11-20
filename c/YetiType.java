@@ -506,6 +506,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Map codeFields = new HashMap();
         String[] names = new String[nodes.length];
         Code[] values  = new Code[nodes.length];
+        StructConstructor result = new StructConstructor(names, values);
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             if (!(nodes[i] instanceof Bind)) {
@@ -522,7 +523,7 @@ public final class YetiType implements YetiParser, YetiCode {
                         : analyze(field.expr, scope, depth);
             names[i] = field.name;
             fields.put(field.name, code.type);
-            local = new Scope(local, field.name, new LocalBind(code));
+            local = new Scope(local, field.name, result.bind(i, code));
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
@@ -530,10 +531,10 @@ public final class YetiType implements YetiParser, YetiCode {
                 lambda((Function) values[i], (Lambda) field.expr, local, depth);
             }
         }
-        Type result = new Type(STRUCT,
+        result.type = new Type(STRUCT,
             (Type[]) fields.values().toArray(new Type[fields.size()]));
-        result.finalMembers = fields;
-        return new StructConstructor(result, names, values);
+        result.type.finalMembers = fields;
+        return result;
     }
 
     static Scope badPattern(Node pattern) {
