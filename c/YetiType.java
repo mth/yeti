@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.objectweb.asm.Opcodes;
 
 public final class YetiType implements YetiParser, YetiCode {
     static final int VAR  = 0;
@@ -49,15 +50,21 @@ public final class YetiType implements YetiParser, YetiCode {
     static final int STRUCT = 7;
     static final int VARIANT = 8;
 
+    static final int FL_ORDERED_REQUIRED = 1;
+
     static final Type[] NO_PARAM = {};
     static final Type UNIT_TYPE = new Type(UNIT, NO_PARAM);
     static final Type NUM_TYPE  = new Type(NUM,  NO_PARAM);
     static final Type STR_TYPE  = new Type(STR,  NO_PARAM);
     static final Type BOOL_TYPE = new Type(BOOL, NO_PARAM);
+    static final Type ORDERED = orderedVar(1);
     static final Type A = new Type(1);
     static final Type A_TO_UNIT = new Type(FUN, new Type[] { A, UNIT_TYPE });
     static final Type EQ_TYPE = new Type(FUN,
-                new Type[] { A, new Type(FUN, new Type[] { A, BOOL_TYPE }) });
+            new Type[] { A, new Type(FUN, new Type[] { A, BOOL_TYPE }) });
+    static final Type LG_TYPE = new Type(FUN,
+            new Type[] { ORDERED,
+                         new Type(FUN, new Type[] { ORDERED, BOOL_TYPE }) });
     static final Type NUMOP_TYPE = new Type(FUN,
             new Type[] { NUM_TYPE, new Type(FUN, new Type[] { NUM_TYPE,
                                                               NUM_TYPE }) });
@@ -67,17 +74,26 @@ public final class YetiType implements YetiParser, YetiCode {
           "variant" };
     
     static final Scope ROOT_SCOPE =
-        bindPoly("==", EQ_TYPE, new EqBinder(), 0,
+        bindCompare("==", EQ_TYPE, Opcodes.IFNE, // equals returns 0 for false
+        bindCompare("!=", EQ_TYPE, Opcodes.IFEQ, // equals returns 0 for false
+        bindCompare("<" , LG_TYPE, Opcodes.IFLT,
+        bindCompare("<=", LG_TYPE, Opcodes.IFLE,
+        bindCompare(">" , LG_TYPE, Opcodes.IFGT,
+        bindCompare(">=", LG_TYPE, Opcodes.IFGE,
         bindPoly("println", A_TO_UNIT, new PrintlnFun(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null))))))));
+        bindScope("true", new BooleanConstant(true), null)))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
+    }
+
+    static Scope bindCompare(String op, Type type, int code, Scope scope) {
+        return bindPoly(op, type, new Compare(type, code), 0, scope);
     }
 
     static final class Type {
@@ -88,6 +104,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Type[] param;
         Type ref;
         int depth;
+        int flags;
 
         Type(int depth) {
             this.depth = depth;
@@ -148,6 +165,12 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
+    static Type orderedVar(int maxDepth) {
+        Type type = new Type(maxDepth);
+        type.flags = FL_ORDERED_REQUIRED;
+        return type;
+    }
+
     static void limitDepth(Type type, int maxDepth) {
         if (type.type != VAR) {
             for (int i = type.param.length; --i >= 0;) {
@@ -181,6 +204,15 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static void unifyMembers(Type a, Type b) {
         Map ff;
+        if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
+            // VARIANT types are sometimes ordered.
+            // when all their variant parameters are ordered types.
+            if ((a.flags & FL_ORDERED_REQUIRED) != 0) {
+                requireOrdered(b);
+            } else {
+                requireOrdered(a);
+            }
+        }
         if (a.finalMembers == null) {
             ff = b.finalMembers;
         } else if (b.finalMembers == null) {
@@ -229,16 +261,60 @@ public final class YetiType implements YetiParser, YetiCode {
         b.ref = a;
     }
 
+    static void requireOrdered(Type type) {
+        switch (type.type) {
+            case VARIANT:
+                if ((type.flags & FL_ORDERED_REQUIRED) == 0) {
+                    if (type.partialMembers != null) {
+                        Iterator i = type.partialMembers.values().iterator();
+                        while (i.hasNext()) {
+                            requireOrdered((Type) i.next());
+                        }
+                    }
+                    if (type.finalMembers != null) {
+                        Iterator i = type.finalMembers.values().iterator();
+                        while (i.hasNext()) {
+                            requireOrdered((Type) i.next());
+                        }
+                        type.flags |= FL_ORDERED_REQUIRED;
+                    }
+                }
+                return;
+            case LIST:
+                requireOrdered(type.param[0]);
+                return;
+            case VAR:
+                if (type.ref != null) {
+                    requireOrdered(type.ref);
+                } else {
+                    type.flags |= FL_ORDERED_REQUIRED;
+                }
+            case NUM:
+            case STR:
+            case BOOL:
+            case UNIT:
+                return;
+            default:
+                throw new RuntimeException(type + " is not an ordered type");
+        }
+    }
+
+    static void unifyToVar(Type var, Type from) {
+        if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
+            requireOrdered(from);
+        }
+        limitDepth(from, var.depth);
+        var.ref = from;
+    }
+
     static void unify(Type a, Type b) {
         a = a.deref();
         b = b.deref();
         if (a == b) {
         } else if (a.type == VAR) {
-            limitDepth(b, a.depth);
-            a.ref = b;
+            unifyToVar(a, b);
         } else if (b.type == VAR) {
-            limitDepth(a, b.depth);
-            b.ref = a;
+            unifyToVar(b, a);
         } else if (a.type != b.type) {
             mismatch(a, b);
         } else if (a.type == STRUCT || a.type == VARIANT) {
@@ -296,7 +372,9 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
                 HashMap vars = new HashMap();
                 for (int i = scope.free.length; --i >= 0;) {
-                    vars.put(scope.free[i], new Type(depth));
+                    Type free = new Type(depth);
+                    free.flags = scope.free[i].flags;
+                    vars.put(scope.free[i], free);
                 }
                 ref.type = copyType(ref.type, vars, new HashMap());
                 return ref;

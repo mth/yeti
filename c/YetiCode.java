@@ -175,15 +175,6 @@ interface YetiCode {
         }
     }
 
-    class EqBinder implements Binder {
-        public BindRef getRef() {
-            BindRef c = new EqFun();
-            c.binder = this;
-            c.type = YetiType.EQ_TYPE;
-            return c;
-        }
-    }
-
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);
@@ -235,7 +226,7 @@ interface YetiCode {
             // TODO cruel hack. should define special interface
             // for those special things
             if (code instanceof ArithOpFun ||
-                code instanceof EqFun) {
+                code instanceof CompareFun) {
                 return code;
             }
             if (selfBind == code.binder) {
@@ -650,29 +641,37 @@ interface YetiCode {
         }
     }
 
-    class ArithOp extends Code {
-        String method;
-        Code arg1;
-        Code arg2;
+    abstract class BinOpRef extends BindRef {
+        Code apply(final Code arg1, YetiType.Type res) {
+            Code c = new Code() {
+                Code apply(final Code arg2, YetiType.Type res) {
+                    Code code = new Code() {
+                        void gen(Ctx ctx) {
+                            binGen(ctx, arg1, arg2);
+                        }
+                    };
+                    code.type = res;
+                    return code;
+                }
 
-        ArithOp(String method, Code arg1, Code arg2, YetiType.Type type) {
-            this.type = type;
-            this.method = method;
-            this.arg1 = arg1;
-            this.arg2 = arg2;
+                void gen(Ctx ctx) {
+                    throw new UnsupportedOperationException(
+                        "BinOpRef: " + BinOpRef.this.getClass() + ".gen()!");
+                }
+            };
+            c.type = res;
+            return c;
         }
 
         void gen(Ctx ctx) {
-            arg1.gen(ctx);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            arg2.gen(ctx);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
+            throw new UnsupportedOperationException(
+                        "BinOpRef: " + this.getClass() + ".gen()");
         }
+
+        abstract void binGen(Ctx ctx, Code arg1, Code arg2);
     }
 
-    class ArithOpFun extends BindRef implements Binder {
+    class ArithOpFun extends BinOpRef implements Binder {
         String method;
 
         public ArithOpFun(String method, YetiType.Type type) {
@@ -684,71 +683,56 @@ interface YetiCode {
             return this; // XXX should copy for type?
         }
 
-        Code apply(final Code arg1, YetiType.Type res) {
-            Code c = new Code() {
-                Code apply(Code arg2, YetiType.Type res) {
-                    return new ArithOp(method, arg1, arg2, res);
-                }
-
-                void gen(Ctx ctx) {
-                    throw new UnsupportedOperationException(
-                        "ArithOpFun$.gen!? " + method);
-                }
-            };
-            c.type = res;
-            return c;
-        }
-
-        void gen(Ctx ctx) {
-            throw new UnsupportedOperationException("ArithOpFun.gen!?"
-                        + method);
+        void binGen(Ctx ctx, Code arg1, Code arg2) {
+            arg1.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            arg2.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
         }
     }
 
-    class EqOp extends Code {
-        Code arg1, arg2;
+    class CompareFun extends BinOpRef {
+        int op;
 
-        EqOp(Code arg1, Code arg2) {
-            type = YetiType.BOOL_TYPE;
-            this.arg1 = arg1;
-            this.arg2 = arg2;
-        }
-
-        void gen(Ctx ctx) {
+        void binGen(Ctx ctx, Code arg1, Code arg2) {
             arg1.gen(ctx);
             arg2.gen(ctx);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
-                                  "equals", "(Ljava/lang/Object;)Z");
+            if (op == IFEQ || op == IFNE) {
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
+                                      "equals", "(Ljava/lang/Object;)Z");
+            } else {
+                ctx.m.visitMethodInsn(INVOKEINTERFACE, "java/lang/Comparable",
+                                      "compareTo", "(Ljava/lang/Object;)I");
+            }
             Label label = new Label(), end = new Label();
-            ctx.m.visitJumpInsn(IFEQ, label);
+            ctx.m.visitJumpInsn(op, label);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "TRUE", "Ljava/lang/Boolean;");
+                                 "FALSE", "Ljava/lang/Boolean;");
             ctx.m.visitJumpInsn(GOTO, end);
             ctx.m.visitLabel(label);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "FALSE", "Ljava/lang/Boolean;");
+                                 "TRUE", "Ljava/lang/Boolean;");
             ctx.m.visitLabel(end);
         }
     }
 
-    class EqFun extends BindRef {
-        Code apply(final Code arg1, YetiType.Type res) {
-            Code c = new Code() {
-                Code apply(Code arg2, YetiType.Type res) {
-                    return new EqOp(arg1, arg2);
-                }
+    class Compare implements Binder {
+        YetiType.Type type;
+        int op;
 
-                void gen(Ctx ctx) {
-                    throw new UnsupportedOperationException(
-                        "ArithOpFun$.gen!?");
-                }
-            };
-            c.type = res;
-            return c;
+        public Compare(YetiType.Type type, int op) {
+            this.op = op;
+            this.type = type;
         }
 
-        void gen(Ctx ctx) {
-            throw new UnsupportedOperationException("EqBinder.gen");
+        public BindRef getRef() {
+            CompareFun c = new CompareFun();
+            c.binder = this;
+            c.type = type;
+            c.op = op;
+            return c;
         }
     }
 

@@ -30,12 +30,28 @@
  */
 package yeti.lang;
 
-public final class Tag {
+public final class Tag implements Comparable {
     public final String name;
     public final Object value;
 
     public Tag(Object aValue, String aName) {
         name = aName;
         value = aValue;
+    }
+
+    public int hashCode() {
+        return name.hashCode() - (value == null ? 0 : value.hashCode() * 17);
+    }
+
+    public boolean equals(Object other) {
+        Tag o;
+        return other instanceof Tag && name == (o = (Tag) other).name &&
+               (value == o.value || value != null && value.equals(o.value));
+    }
+
+    public int compareTo(Object other) {
+        Tag o = (Tag) other;
+        return name == o.name ? ((Comparable) value).compareTo(o.value)
+                              : name.compareTo(o.name);
     }
 }
