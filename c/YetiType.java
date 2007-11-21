@@ -291,7 +291,6 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
             case NUM:
             case STR:
-            case BOOL:
             case UNIT:
                 return;
             default:
