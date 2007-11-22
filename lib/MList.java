@@ -87,7 +87,7 @@ abstract class AMList extends AList {
             if (j == null) {
                 return 1;
             }
-            if ((a = j.first()) != (b = array[i])) {
+            if ((b = j.first()) != (a = array[i])) {
                 if (a == null) {
                     return -1;
                 }
