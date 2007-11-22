@@ -365,6 +365,24 @@ interface YetiCode {
         }
     }
 
+    class KeyRefExpr extends Code {
+        Code val;
+        Code key;
+
+        KeyRefExpr(YetiType.Type type, Code val, Code key) {
+            this.type = type;
+            this.val = val;
+            this.key = key;
+        }
+
+        void gen(Ctx ctx) {
+            val.gen(ctx);
+            key.gen(ctx);
+            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+                     "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+    }
+
     class ConditionalExpr extends Code {
         Code[][] choices;
 
@@ -625,19 +643,22 @@ interface YetiCode {
     }
 
 
-    class PrintlnFun extends BindRef implements Binder {
-        PrintlnFun() {
-            this.type = YetiType.A_TO_UNIT;
+    class CoreFun extends BindRef implements Binder {
+        String field;
+
+        CoreFun(YetiType.Type type, String field) {
+            this.type = type;
+            this.field = field;
             binder = this;
         }
 
         public BindRef getRef() {
-            return new PrintlnFun();
+            return new CoreFun(type, field);
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "PRINTLN",
-                    "Lyeti/lang/Fun;");
+            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", field,
+                                 "Lyeti/lang/Fun;");
         }
     }
 

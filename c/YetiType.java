@@ -45,10 +45,13 @@ public final class YetiType implements YetiParser, YetiCode {
     static final int STR  = 2;
     static final int NUM  = 3;
     static final int BOOL = 4;
-    static final int FUN  = 5;
-    static final int LIST = 6;
+    static final int FUN  = 5; // a -> b
+    static final int MAP  = 6; // value, index, (LIST | MAP)
     static final int STRUCT = 7;
     static final int VARIANT = 8;
+    static final int NONE = 9;
+    static final int LIST_MARKER = 10;
+    static final int MAP_MARKER  = 11;
 
     static final int FL_ORDERED_REQUIRED = 1;
 
@@ -57,8 +60,12 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type NUM_TYPE  = new Type(NUM,  NO_PARAM);
     static final Type STR_TYPE  = new Type(STR,  NO_PARAM);
     static final Type BOOL_TYPE = new Type(BOOL, NO_PARAM);
+    static final Type NO_TYPE   = new Type(NONE, NO_PARAM);
+    static final Type LIST_TYPE = new Type(LIST_MARKER, NO_PARAM);
+    static final Type MAP_TYPE  = new Type(MAP_MARKER, NO_PARAM);
     static final Type ORDERED = orderedVar(1);
     static final Type A = new Type(1);
+    static final Type B = new Type(1);
     static final Type A_TO_UNIT = new Type(FUN, new Type[] { A, UNIT_TYPE });
     static final Type EQ_TYPE = new Type(FUN,
             new Type[] { A, new Type(FUN, new Type[] { A, BOOL_TYPE }) });
@@ -68,10 +75,13 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type NUMOP_TYPE = new Type(FUN,
             new Type[] { NUM_TYPE, new Type(FUN, new Type[] { NUM_TYPE,
                                                               NUM_TYPE }) });
+    static final Type TO_ARRAY_TYPE = new Type(FUN, new Type[] {
+            new Type(MAP, new Type[] { A, B, LIST_TYPE }),
+            new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE }) });
 
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
-          "variant" };
+          "variant", "<>" };
     
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, Opcodes.IFNE, // equals returns 0 for false
@@ -80,13 +90,14 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare("<=", LG_TYPE, Opcodes.IFLE,
         bindCompare(">" , LG_TYPE, Opcodes.IFGT,
         bindCompare(">=", LG_TYPE, Opcodes.IFGE,
-        bindPoly("println", A_TO_UNIT, new PrintlnFun(), 0,
+        bindCore("println", A_TO_UNIT, "PRINTLN",
+        bindCore("array", TO_ARRAY_TYPE, "ARRAY",
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null)))))))))))));
+        bindScope("true", new BooleanConstant(true), null))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -94,6 +105,10 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Scope bindCompare(String op, Type type, int code, Scope scope) {
         return bindPoly(op, type, new Compare(type, code), 0, scope);
+    }
+
+    static Scope bindCore(String name, Type type, String field, Scope scope) {
+        return bindPoly(name, type, new CoreFun(type, field), 0, scope);
     }
 
     static final class Type {
@@ -280,7 +295,8 @@ public final class YetiType implements YetiParser, YetiCode {
                     }
                 }
                 return;
-            case LIST:
+            case MAP:
+                requireOrdered(type.param[2]);
                 requireOrdered(type.param[0]);
                 return;
             case VAR:
@@ -292,6 +308,7 @@ public final class YetiType implements YetiParser, YetiCode {
             case NUM:
             case STR:
             case UNIT:
+            case LIST_MARKER:
                 return;
             default:
                 throw new RuntimeException(type + " is not an ordered type");
@@ -413,6 +430,10 @@ public final class YetiType implements YetiParser, YetiCode {
                              analyze(op.right, scope, depth), depth);
             }
             if (op.op == ".") {
+                if (op.right instanceof NList) {
+                    return keyRefExpr(analyze(op.left, scope, depth),
+                                      (NList) op.right, scope, depth);
+                }
                 return selectMember(op, scope, depth);
             }
             // TODO: unary -
@@ -466,6 +487,16 @@ public final class YetiType implements YetiParser, YetiCode {
         Code src = analyze(op.left, scope, depth);
         unify(arg, src.type);
         return new SelectMember(res, src, field);
+    }
+
+    static Code keyRefExpr(Code val, NList keyList, Scope scope, int depth) {
+        if (keyList.items.length == 0) {
+            throw new RuntimeException(".[] - missing key expression");
+        }
+        Code key = analSeq(keyList.items, scope, depth);
+        Type[] param = { new Type(depth), key.type, new Type(depth) };
+        unify(val.type, new Type(MAP, param));
+        return new KeyRefExpr(param[0], val, key);
     }
 
     static Code cond(Condition condition, Scope scope, int depth) {
@@ -693,8 +724,9 @@ public final class YetiType implements YetiParser, YetiCode {
         if (type == null) {
             type = new Type(depth);
         }
-        return new ListConstructor(new Type(LIST, new Type[] { type }),
-                                   codeItems);
+        return new ListConstructor(
+            new Type(MAP, new Type[] { type, NO_TYPE, LIST_TYPE }),
+            codeItems);
     }
 
     public static Code toCode(char[] src) {

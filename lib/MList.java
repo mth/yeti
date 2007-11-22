@@ -30,14 +30,87 @@
  */
 package yeti.lang;
 
+abstract class AMList extends AList {
+    int start;
+
+    abstract int _size();
+    abstract Object[] array();
+
+    public int hashCode() {
+        int hashCode = 1;
+        Object[] array = array();
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            Object x = array[i];
+            hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
+        }
+        return hashCode;
+    }
+
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return _size() <= start;
+        }
+        if (!(obj instanceof AList)) {
+            return false;
+        }
+        Object[] array = array();
+        AIter j = (AList) obj;
+        Object x, y;
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            if (j == null ||
+                (x = array[i]) != (y = j.first()) &&
+                (x == null || !x.equals(j))) {
+                return false;
+            }
+        }
+        return j == null;
+    }
+
+    public String toString() {
+        Object[] array = array();
+        StringBuffer buf = new StringBuffer("[");
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            if (i != 0) {
+                buf.append(',');
+            }
+            buf.append(array[i]);
+        }
+        buf.append(']');
+        return buf.toString();
+    }
+
+    public int compareTo(Object o) {
+        AIter j = (AIter) o;
+        Object[] array = array();
+        for (int r, cnt = _size(), i = start; i < cnt; ++i) {
+            Object a, b;
+            if (j == null) {
+                return 1;
+            }
+            if ((a = j.first()) != (b = array[i])) {
+                if (a == null) {
+                    return -1;
+                }
+                if (b == null) {
+                    return 1;
+                }
+                if ((r = ((Comparable) a).compareTo(b)) != 0) {
+                    return r;
+                }
+            }
+            j = j.next();
+        }
+        return j == null ? 0 : -1;
+    }
+}
+
 /** Yeti core library - List. */
-public class MList extends AList {
+public class MList extends AMList implements ByKey {
     private Object[] array;
     private int size;
 
-    private class SubList extends AList {
+    private class SubList extends AMList {
         Object first;
-        int start;
 
         private SubList(int start) {
             this.first = array[start];
@@ -56,6 +129,14 @@ public class MList extends AList {
         public AIter next() {
             int p;
             return (p = start + 1) < size ? new Iter(p) : null;
+        }
+
+        int _size() {
+            return size;
+        }
+
+        Object[] array() {
+            return array;
         }
     }
 
@@ -88,6 +169,23 @@ public class MList extends AList {
         size = array.length;
     }
 
+    public MList(AIter iter) {
+        array = new Object[10];
+        while (iter != null) {
+            add(iter.first());
+            iter = iter.next();
+        }
+    }
+
+    public void add(Object o) {
+        if (size >= array.length) {
+            Object[] tmp = new Object[size * 3 / 2];
+            System.arraycopy(array, 0, tmp, 0, array.length);
+            array = tmp;
+        }
+        array[size++] = o;
+    }
+
     public Object first() {
         if (size == 0) {
             throw new IllegalStateException("No first element in empty list");
@@ -103,43 +201,28 @@ public class MList extends AList {
         return size > 1 ? new Iter(1) : null;
     }
 
-    public int hashCode() {
-        int hashCode = 1;
-        for (int i = 0; i < size; ++i) {
-            Object x = array[i];
-            hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
+    public Object get(Object index) {
+        int i;
+        if ((i = ((Number) index).intValue()) >= size) {
+            throw new ArrayIndexOutOfBoundsException(i);
         }
-        return hashCode;
+        return array[i];
     }
 
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return size == 0;
+    public Object put(Object index, Object value) {
+        int i;
+        if ((i = ((Number) index).intValue()) >= size) {
+            throw new ArrayIndexOutOfBoundsException(i);
         }
-        if (!(obj instanceof AList)) {
-            return false;
-        }
-        AIter j = (AList) obj;
-        Object x, y;
-        for (int i = 0; i < size; ++i) {
-            if (j == null ||
-                (x = array[i]) != (y = j.first()) &&
-                (x == null || !x.equals(j))) {
-                return false;
-            }
-        }
-        return j == null;
+        array[i] = value;
+        return null;
     }
 
-    public String toString() {
-        StringBuffer buf = new StringBuffer("[");
-        for (int i = 0; i < size; ++i) {
-            if (i != 0) {
-                buf.append(',');
-            }
-            buf.append(array[i]);
-        }
-        buf.append(']');
-        return buf.toString();
+    int _size() {
+        return size;
+    }
+
+    Object[] array() {
+        return array;
     }
 }

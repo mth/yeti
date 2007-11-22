@@ -74,7 +74,10 @@ public class LList extends AList {
         Object x, y;
         while (i != null && j != null &&
                ((x = i.first()) == (y = j.first()) ||
-                x != null && x.equals(j)));
+                x != null && x.equals(j))) {
+            i = i.next();
+            j = j.next();
+        }
         return i == null && j == null;
     }
 
@@ -87,5 +90,18 @@ public class LList extends AList {
         }
         buf.append(']');
         return buf.toString();
+    }
+
+    public int compareTo(Object obj) {
+        AIter i = this, j = (AIter) obj;
+        while (i != null && j != null) {
+            int r;
+            if ((r = ((Comparable) i.first()).compareTo(j.first())) != 0) {
+                return r;
+            }
+            i = i.next();
+            j = j.next();
+        }
+        return i != null ? 1 : j != null ? -1 : 0;
     }
 }

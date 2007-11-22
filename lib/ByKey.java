@@ -30,10 +30,15 @@
  */
 package yeti.lang;
 
-/** Yeti core library - List. */
-public abstract class AList extends AIter implements Comparable {
+/** Yeti core library - ByKey. */
+public interface ByKey {
     /**
-     * Return rest of the list. Must not modify the current list.
+     * Get object by key.
      */
-    public abstract AList rest();
+    Object get(Object key);
+
+    /**
+     * Put object by key.
+     */
+    Object put(Object key, Object value);
 }

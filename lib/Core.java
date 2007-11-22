@@ -38,4 +38,10 @@ public final class Core {
             return null;
         }
     };
+
+    public static final Fun ARRAY = new Fun() {
+        public Object apply(Object x) {
+            return new MList((AIter) x);
+        }
+    };
 }
