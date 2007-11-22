@@ -78,17 +78,30 @@ interface YetiParser {
     class SeqOp extends Node {
     }
 
+    class VarSym extends Node {
+    }
+
     class Bind extends Node {
         String name;
         Node expr;
+        boolean var;
 
         Bind(List args, Node expr) {
+            int first = 1;
             Node nameNode = (Node) args.get(0);
+            if (nameNode instanceof VarSym) {
+                if (args.size() == 1) {
+                    throw new RuntimeException("missing variable name");
+                }
+                nameNode = (Node) args.get(1);
+                first = 2;
+                var = true;
+            }
             if (!(nameNode instanceof Sym)) {
                 throw new RuntimeException("illegal binding name: " + nameNode);
             }
             this.name = ((Sym) nameNode).sym;
-            for (int i = args.size(); --i > 0;) {
+            for (int i = args.size(); --i >= first;) {
                 expr = new Lambda((Node) args.get(i), expr,
                                   i == 1 ? name : null);
             }
@@ -329,6 +342,7 @@ interface YetiParser {
             { "*", "/" },
             { "+", "-" },
             { "<", ">", "<=", ">=", "==", "!=" },
+            { ":=" },
             { ":" }
         };
         private static final Eof EOF = new Eof();
@@ -406,6 +420,9 @@ interface YetiParser {
             }
             if (s == "done") {
                 return new Done();
+            }
+            if (s == "var") {
+                return new VarSym();
             }
             for (i = OPS.length; --i >= 0;) {
                 for (int j = OPS[i].length; --j >= 0;) {

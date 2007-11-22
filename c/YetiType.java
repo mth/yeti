@@ -81,7 +81,7 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
-          "variant", "<>" };
+          "variant", "<>", "<list>", "<map>" };
     
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, Opcodes.IFNE, // equals returns 0 for false
@@ -436,6 +436,9 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
                 return selectMember(op, scope, depth);
             }
+            if (op.op == ":=") {
+                return assignOp(op, scope, depth);
+            }
             // TODO: unary -
             return apply(apply(resolve(op.op, scope, depth),
                                analyze(op.left, scope, depth), depth),
@@ -499,6 +502,19 @@ public final class YetiType implements YetiParser, YetiCode {
         return new KeyRefExpr(param[0], val, key);
     }
 
+    static Code assignOp(BinOp op, Scope scope, int depth) {
+        Code left = analyze(op.left, scope, depth);
+        Code right = analyze(op.right, scope, depth);
+        unify(left.type, right.type);
+        Code assign = left.assign(right);
+        if (assign == null) {
+            throw new RuntimeException(op.left.str()
+                + " is not an lvalue: " + left);
+        }
+        assign.type = UNIT_TYPE;
+        return assign;
+    }
+
     static Code cond(Condition condition, Scope scope, int depth) {
         Node[][] choices = condition.choices;
         Code[][] conds = new Code[choices.length][];
@@ -550,7 +566,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (bind.expr instanceof Lambda) {
                     // recursive binding
                     Function lambda = new Function(new Type(depth + 1));
-                    BindExpr binder = new BindExpr(lambda);
+                    BindExpr binder = new BindExpr(lambda, false);
                     lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
                                new Scope(scope, bind.name, binder), depth + 1);
@@ -559,7 +575,7 @@ public final class YetiType implements YetiParser, YetiCode {
                     cur = binder;
                 } else {
                     Code code = analyze(bind.expr, scope, depth /* + 1 */);
-                    BindExpr binder = new BindExpr(code);
+                    BindExpr binder = new BindExpr(code, bind.var);
                     scope = new Scope(scope, bind.name, binder);
                     cur = binder;
                 }

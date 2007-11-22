@@ -62,9 +62,9 @@ interface YetiCode {
 
         Ctx newClass(int flags, String name, String extend) {
             Ctx ctx = new Ctx(compilation,
-                new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
+                    new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
             ctx.cw.visit(V1_2, flags, name, null,
-                         extend == null ? "java/lang/Object" : extend, null);
+                    extend == null ? "java/lang/Object" : extend, null);
             if (compilation.classes.put(name, ctx) != null) {
                 throw new IllegalStateException("Duplicate class: " + name);
             }
@@ -82,7 +82,7 @@ interface YetiCode {
             m.visitMaxs(0, 0);
             m.visitEnd();
         }
-        
+
         void intConst(int n) {
             if (n >= -1 && n <= 5) {
                 m.visitInsn(n + 3);
@@ -110,6 +110,10 @@ interface YetiCode {
         void ignoreValue() {
             ignoreValue = true;
         }
+
+        Code assign(Code value) {
+            return null;
+        }
     }
 
     abstract class BindRef extends Code {
@@ -129,7 +133,7 @@ interface YetiCode {
             ctx.m.visitInsn(DUP);
             ctx.m.visitLdcInsn(num);
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
-                                  "<init>", "(D)V");
+                    "<init>", "(D)V");
         }
     }
 
@@ -171,7 +175,7 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
+                    val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
         }
     }
 
@@ -188,7 +192,7 @@ interface YetiCode {
         void gen(Ctx ctx) {
             ctx.m.visitVarInsn(ALOAD, 0); // this
             ctx.m.visitFieldInsn(GETFIELD, ctx.className, getId(ctx),
-                                 "Ljava/lang/Object;");
+                    "Ljava/lang/Object;");
         }
 
         String getId(Ctx ctx) {
@@ -226,7 +230,7 @@ interface YetiCode {
             // TODO cruel hack. should define special interface
             // for those special things
             if (code instanceof ArithOpFun ||
-                code instanceof CompareFun) {
+                    code instanceof CompareFun) {
                 return code;
             }
             if (selfBind == code.binder) {
@@ -265,22 +269,22 @@ interface YetiCode {
                 name = ctx.className + '$' + bindName + i;
             }
             Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
-                                   "yeti/lang/Fun");
+                    "yeti/lang/Fun");
             for (Capture c = captures; c != null; c = c.next) {
                 fun.cw.visitField(0, c.getId(fun),
-                                  "Ljava/lang/Object;", null, null).visitEnd();
+                        "Ljava/lang/Object;", null, null).visitEnd();
             }
             MethodVisitor init = // constructor
                 fun.cw.visitMethod(0, "<init>", "()V", null, null);
             init.visitVarInsn(ALOAD, 0); // this.
             init.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun",
-                                 "<init>", "()V"); // super();
+                    "<init>", "()V"); // super();
             init.visitInsn(RETURN);
             init.visitMaxs(0, 0);
             init.visitEnd();
 
             Ctx apply = fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
-                                      "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    "(Ljava/lang/Object;)Ljava/lang/Object;");
             apply.localVarCount = 2; // this, arg
             body.gen(apply);
             apply.m.visitInsn(ARETURN);
@@ -297,7 +301,7 @@ interface YetiCode {
                 ctx.m.visitInsn(DUP);
                 c.ref.gen(ctx);
                 ctx.m.visitFieldInsn(PUTFIELD, name, c.getId(null),
-                                     "Ljava/lang/Object;");
+                        "Ljava/lang/Object;");
             }
         }
 
@@ -323,13 +327,13 @@ interface YetiCode {
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
             arg.gen(ctx);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
-                "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
     }
 
-/*    class Argument extends Code {
-    }
-*/
+    /*    class Argument extends Code {
+          }
+          */
     class VariantConstructor extends Code {
         String name;
 
@@ -343,7 +347,7 @@ interface YetiCode {
             ctx.m.visitInsn(DUP);
             ctx.m.visitLdcInsn(name);
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
-                                  "<init>", "(Ljava/lang/String;)V");
+                    "<init>", "(Ljava/lang/String;)V");
         }
     }
 
@@ -361,7 +365,7 @@ interface YetiCode {
             st.gen(ctx);
             ctx.m.visitLdcInsn(name);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
-                "get", "(Ljava/lang/String;)Ljava/lang/Object;");
+                    "get", "(Ljava/lang/String;)Ljava/lang/Object;");
         }
     }
 
@@ -379,7 +383,20 @@ interface YetiCode {
             val.gen(ctx);
             key.gen(ctx);
             ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
-                     "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+
+        Code assign(final Code setValue) {
+            return new Code() {
+                void gen(Ctx ctx) {
+                    val.gen(ctx);
+                    key.gen(ctx);
+                    setValue.gen(ctx);
+                    ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+                            "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
+                            "Ljava/lang/Object;");
+                }
+            };
         }
     }
 
@@ -394,7 +411,7 @@ interface YetiCode {
         void gen(Ctx ctx) {
             Label end = new Label();
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "TRUE", "Ljava/lang/Boolean;");
+                    "TRUE", "Ljava/lang/Boolean;");
             for (int i = 0, last = choices.length - 1; i <= last; ++i) {
                 Label jmpNext = i < last ? new Label() : end;
                 if (choices[i].length == 2) {
@@ -438,9 +455,11 @@ interface YetiCode {
 
     class BindExpr extends SeqExpr implements Binder {
         private int id;
+        private boolean var;
 
-        BindExpr(Code expr) {
+        BindExpr(Code expr, boolean var) {
             super(expr);
+            this.var = var;
         }
 
         public BindRef getRef() {
@@ -449,6 +468,19 @@ interface YetiCode {
                 res = new BindRef() {
                     void gen(Ctx ctx) {
                         ctx.m.visitVarInsn(ALOAD, id);
+                    }
+
+                    Code assign(final Code value) {
+                        if (!var) {
+                            return null;
+                        }
+                        return new Code() {
+                            void gen(Ctx ctx) {
+                                value.gen(ctx);
+                                ctx.m.visitVarInsn(ASTORE, id);
+                                ctx.m.visitInsn(ACONST_NULL);
+                            }
+                        };
                     }
                 };
                 res.binder = this;
