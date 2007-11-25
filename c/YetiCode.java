@@ -118,7 +118,6 @@ interface YetiCode {
 
     abstract class BindRef extends Code {
         Binder binder;
-//        Object binder;
 
         // some bindrefs care about being captured. most wont.
         CaptureWrapper capture() {
