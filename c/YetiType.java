@@ -558,27 +558,40 @@ public final class YetiType implements YetiParser, YetiCode {
         return scope;
     }
 
+    static void registerVar(BindExpr binder, Scope scope) {
+        while (scope != null) {
+            if (scope.closure != null) {
+                scope.closure.addVar(binder);
+                return;
+            }
+            scope = scope.outer;
+        }
+    }
+
     static Code analSeq(Node[] nodes, Scope scope, int depth) {
         SeqExpr result = null, last = null, cur;
         for (int i = 0; i < nodes.length - 1; ++i) {
             if (nodes[i] instanceof Bind) {
                 Bind bind = (Bind) nodes[i];
+                BindExpr binder;
                 if (bind.expr instanceof Lambda) {
                     // recursive binding
                     Function lambda = new Function(new Type(depth + 1));
-                    BindExpr binder = new BindExpr(lambda, false);
+                    binder = new BindExpr(lambda, false);
                     lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
                                new Scope(scope, bind.name, binder), depth + 1);
                     scope = bindPoly(bind.name, lambda.type, binder,
                                      depth, scope);
-                    cur = binder;
                 } else {
                     Code code = analyze(bind.expr, scope, depth /* + 1 */);
-                    BindExpr binder = new BindExpr(code, bind.var);
+                    binder = new BindExpr(code, bind.var);
                     scope = new Scope(scope, bind.name, binder);
-                    cur = binder;
                 }
+                if (bind.var) {
+                    registerVar(binder, scope.outer);
+                }
+                cur = binder;
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 unify(UNIT_TYPE, code.type);
@@ -748,7 +761,11 @@ public final class YetiType implements YetiParser, YetiCode {
     public static Code toCode(char[] src) {
         Node n = new Parser(src).readSeq(' ');
         System.err.println(n.show());
-        return analyze(n, ROOT_SCOPE, 0);
+        RootClosure root = new RootClosure();
+        Scope scope = new Scope(ROOT_SCOPE, null, null);
+        scope.closure = root;
+        root.code = analyze(n, scope, 0);
+        return root;
     }
 
     public static void main(String[] args) {

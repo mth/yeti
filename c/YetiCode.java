@@ -118,6 +118,17 @@ interface YetiCode {
 
     abstract class BindRef extends Code {
         Binder binder;
+//        Object binder;
+
+        // some bindrefs care about being captured. most wont.
+        CaptureWrapper capture() {
+            return null;
+        }
+
+        // mark as used lvalue
+        boolean assign() {
+            return false;
+        }
     }
 
     class NumericConstant extends Code {
@@ -182,17 +193,23 @@ interface YetiCode {
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);
+        void addVar(BindExpr binder);
     }
 
-    class Capture extends BindRef {
-        private String id;
+    class Capture extends BindRef implements CaptureWrapper {
+        String id;
         Capture next;
+        CaptureWrapper wrapper;
         BindRef ref;
+        Object identity;
 
         void gen(Ctx ctx) {
             ctx.m.visitVarInsn(ALOAD, 0); // this
-            ctx.m.visitFieldInsn(GETFIELD, ctx.className, getId(ctx),
-                    "Ljava/lang/Object;");
+            ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
+                    captureType());
+            if (wrapper != null) {
+                wrapper.genGet(ctx);
+            }
         }
 
         String getId(Ctx ctx) {
@@ -201,15 +218,85 @@ interface YetiCode {
             }
             return id;
         }
+
+        boolean assign() {
+            return ref.assign();
+        }
+
+        Code assign(final Code value) {
+            if (!ref.assign()) {
+                return null;
+            }
+            return new Code() {
+                void gen(Ctx ctx) {
+                    genPreGet(ctx);
+                    wrapper.genSet(ctx, value);
+                    ctx.m.visitInsn(ACONST_NULL);
+                }
+            };
+        }
+
+        public void genPreGet(Ctx ctx) {
+            ctx.m.visitVarInsn(ALOAD, 0);
+            ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
+                captureType());
+        }
+
+        public void genGet(Ctx ctx) {
+            wrapper.genGet(ctx);
+        }
+
+        public void genSet(Ctx ctx, Code value) {
+            wrapper.genSet(ctx, value);
+        }
+
+        public CaptureWrapper capture() {
+            return wrapper == null ? null : this;
+        }
+
+        public Object captureIdentity() {
+            return wrapper == null ? this : wrapper;
+        }
+
+        public String captureType() {
+            return wrapper == null ? "Ljava/lang/Object;"
+                                   : wrapper.captureType();
+        }
     }
 
-    class Function extends Code implements Binder, Closure {
+    abstract class AClosure extends Code implements Closure {
+        private List vars = new ArrayList();
+
+        public void addVar(BindExpr binder) {
+            vars.add(binder);
+        }
+
+        public void genClosureInit(Ctx ctx) {
+            int id = -1, mvarcount = 0;
+            for (int i = vars.size(); --i >= 0;) {
+                BindExpr bind = (BindExpr) vars.get(i);
+                if (bind.assigned && bind.captured) {
+                    if (id == -1) {
+                        id = ctx.localVarCount++;
+                    }
+                    bind.setMVarId(this, id, mvarcount++);
+                }
+            }
+            if (mvarcount > 0) {
+                ctx.intConst(mvarcount);
+                ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+                ctx.m.visitVarInsn(ASTORE, id);
+            }
+        }
+    }
+
+    class Function extends AClosure implements Binder {
         private String name;
         Binder selfBind;
         Code body;
         String bindName;
-        Capture captures;
-        BindRef selfRef;
+        private Capture captures;
+        private BindRef selfRef;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -254,6 +341,7 @@ interface YetiCode {
             c.binder = code.binder;
             c.type = code.type;
             c.ref = code;
+            c.wrapper = code.capture();
             c.next = captures;
             captures = c;
             return c;
@@ -270,9 +358,21 @@ interface YetiCode {
             }
             Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
                     "yeti/lang/Fun");
+            Capture prev = null;
+        next_capture:
             for (Capture c = captures; c != null; c = c.next) {
+                Object identity = c.identity = c.captureIdentity();
+                // remove shared captures
+                for (Capture i = captures; i != c; i = i.next) {
+                    if (i.identity == identity) {
+                        c.id = i.id; // copy old one's id
+                        prev.next = c.next;
+                        continue next_capture;
+                    }
+                }
                 fun.cw.visitField(0, c.getId(fun),
-                        "Ljava/lang/Object;", null, null).visitEnd();
+                        c.captureType(), null, null).visitEnd();
+                prev = c;
             }
             MethodVisitor init = // constructor
                 fun.cw.visitMethod(0, "<init>", "()V", null, null);
@@ -286,6 +386,7 @@ interface YetiCode {
             Ctx apply = fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
             apply.localVarCount = 2; // this, arg
+            genClosureInit(apply);
             body.gen(apply);
             apply.m.visitInsn(ARETURN);
             apply.closeMethod();
@@ -299,15 +400,32 @@ interface YetiCode {
             // Capture a closure
             for (Capture c = captures; c != null; c = c.next) {
                 ctx.m.visitInsn(DUP);
-                c.ref.gen(ctx);
-                ctx.m.visitFieldInsn(PUTFIELD, name, c.getId(null),
-                        "Ljava/lang/Object;");
+                if (c.wrapper == null) {
+                    c.ref.gen(ctx);
+                } else {
+                    c.wrapper.genPreGet(ctx);
+                }
+                ctx.m.visitFieldInsn(PUTFIELD, name, c.id,
+                        c.captureType());
             }
         }
 
         void gen(Ctx ctx) {
             prepareGen(ctx);
             finishGen(ctx);
+        }
+    }
+
+    class RootClosure extends AClosure {
+        Code code;
+
+        public BindRef refProxy(BindRef code) {
+            return code;
+        }
+
+        void gen(Ctx ctx) {
+            genClosureInit(ctx);
+            code.gen(ctx);
         }
     }
 
@@ -331,9 +449,6 @@ interface YetiCode {
         }
     }
 
-    /*    class Argument extends Code {
-          }
-          */
     class VariantConstructor extends Code {
         String name;
 
@@ -453,13 +568,30 @@ interface YetiCode {
         BindRef getRef();
     }
 
-    class BindExpr extends SeqExpr implements Binder {
+    interface CaptureWrapper {
+        void genPreGet(Ctx ctx);
+        void genGet(Ctx ctx);
+        void genSet(Ctx ctx, Code value);
+        Object captureIdentity();
+        String captureType();
+    }
+
+    class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         private int id;
-        private boolean var;
+        private int mvar = -1;
+        private final boolean var;
+        private Closure closure;
+        boolean assigned;
+        boolean captured;
 
         BindExpr(Code expr, boolean var) {
             super(expr);
             this.var = var;
+        }
+
+        void setMVarId(Closure closure, int arrayId, int index) {
+            mvar = arrayId;
+            id = index;
         }
 
         public BindRef getRef() {
@@ -467,20 +599,30 @@ interface YetiCode {
             if (res == null) {
                 res = new BindRef() {
                     void gen(Ctx ctx) {
-                        ctx.m.visitVarInsn(ALOAD, id);
+                        genPreGet(ctx);
+                        genGet(ctx);
                     }
 
                     Code assign(final Code value) {
                         if (!var) {
                             return null;
                         }
+                        assigned = true;
                         return new Code() {
                             void gen(Ctx ctx) {
-                                value.gen(ctx);
-                                ctx.m.visitVarInsn(ASTORE, id);
+                                genLocalSet(ctx, value);
                                 ctx.m.visitInsn(ACONST_NULL);
                             }
                         };
+                    }
+
+                    boolean assign() {
+                        return var ? assigned = true : false;
+                    }
+
+                    CaptureWrapper capture() {
+                        captured = true;
+                        return var ? BindExpr.this : null;
                     }
                 };
                 res.binder = this;
@@ -489,10 +631,48 @@ interface YetiCode {
             return res;
         }
 
+        public Object captureIdentity() {
+            return mvar == -1 ? this : closure;
+        }
+
+        public String captureType() {
+            return mvar == -1 ? "Ljava/lang/Object;" : "[Ljava/lang/Object;";
+        }
+
+        public void genPreGet(Ctx ctx) {
+            ctx.m.visitVarInsn(ALOAD, mvar == -1 ? id : mvar);
+        }
+
+        public void genGet(Ctx ctx) {
+            if (mvar != -1) {
+                ctx.intConst(id);
+                ctx.m.visitInsn(AALOAD);
+            }
+        }
+
+        public void genSet(Ctx ctx, Code value) {
+            ctx.intConst(id);
+            value.gen(ctx);
+            ctx.m.visitInsn(AASTORE);
+        }
+
+        private void genLocalSet(Ctx ctx, Code value) {
+            if (mvar == -1) {
+                value.gen(ctx);
+                ctx.m.visitVarInsn(ASTORE, id);
+            } else {
+                ctx.m.visitVarInsn(ALOAD, mvar);
+                ctx.intConst(id);
+                value.gen(ctx);
+                ctx.m.visitInsn(AASTORE);
+            }
+        }
+
         void gen(Ctx ctx) {
-            id = ctx.localVarCount++;
-            st.gen(ctx);
-            ctx.m.visitVarInsn(ASTORE, id);
+            if (mvar == -1) {
+                id = ctx.localVarCount++;
+            }
+            genLocalSet(ctx, st);
             result.gen(ctx);
         }
     }
@@ -819,3 +999,4 @@ interface YetiCode {
         }
     }
 }
+
