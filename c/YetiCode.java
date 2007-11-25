@@ -320,7 +320,7 @@ interface YetiCode {
                     code instanceof CompareFun) {
                 return code;
             }
-            if (selfBind == code.binder) {
+            if (selfBind == code.binder && !code.assign()) {
                 if (selfRef == null) {
                     selfRef = new BindRef() {
                         void gen(Ctx ctx) {

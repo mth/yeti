@@ -577,7 +577,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (bind.expr instanceof Lambda) {
                     // recursive binding
                     Function lambda = new Function(new Type(depth + 1));
-                    binder = new BindExpr(lambda, false);
+                    binder = new BindExpr(lambda, bind.var);
                     lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
                                new Scope(scope, bind.name, binder), depth + 1);

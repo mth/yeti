@@ -103,7 +103,7 @@ interface YetiParser {
             this.name = ((Sym) nameNode).sym;
             for (int i = args.size(); --i >= first;) {
                 expr = new Lambda((Node) args.get(i), expr,
-                                  i == 1 ? name : null);
+                                  i == first ? name : null);
             }
             this.expr = expr;
         }
