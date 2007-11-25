@@ -254,7 +254,7 @@ interface YetiCode {
         }
 
         public Object captureIdentity() {
-            return wrapper == null ? this : wrapper;
+            return wrapper == null ? this : wrapper.captureIdentity();
         }
 
         public String captureType() {
@@ -589,6 +589,7 @@ interface YetiCode {
         }
 
         void setMVarId(Closure closure, int arrayId, int index) {
+            this.closure = closure;
             mvar = arrayId;
             id = index;
         }
