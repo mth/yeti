@@ -978,11 +978,6 @@ interface YetiCode {
                         "([Ljava/lang/String;)V");
             ctx.localVarCount++;
             codeTree.gen(ctx);
-            /*            m.visitFieldInsn(GETSTATIC, "java/lang/System",
-                          "out", "Ljava/io/PrintStream;");
-                          m.visitLdcInsn("Hello world!");
-                          m.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream",
-                          "println", "(Ljava/lang/String;)V"); */
             ctx.m.visitInsn(RETURN);
             ctx.closeMethod();
 
