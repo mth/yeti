@@ -704,17 +704,51 @@ interface YetiCode {
         Code[] values;
         Bind[] binds;
 
-        private static class Bind extends BindRef implements Binder {
+        private class Bind extends BindRef
+                implements Binder, CaptureWrapper {
+            boolean mutable;
             boolean used;
             int var;
+            int index;
 
             public BindRef getRef() {
                 used = true;
                 return this;
             }
 
+            public CaptureWrapper capture() {
+                return mutable ? this : null;
+            }
+
+            public boolean assign() {
+                return mutable;
+            }
+
             void gen(Ctx ctx) {
                 ctx.m.visitVarInsn(ALOAD, var);
+            }
+
+            public void genPreGet(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, var);
+            }
+
+            public void genGet(Ctx ctx) {
+                ctx.intConst(index);
+                ctx.m.visitInsn(AALOAD);
+            }
+
+            public void genSet(Ctx ctx, Code value) {
+                ctx.intConst(index);
+                value.gen(ctx);
+                ctx.m.visitInsn(AASTORE);
+            }
+
+            public Object captureIdentity() {
+                return StructConstructor.this;
+            }
+
+            public String captureType() {
+                return "[Ljava/lang/Object;";
             }
         }
 
@@ -724,22 +758,29 @@ interface YetiCode {
             binds = new Bind[names.length];
         }
 
-        Binder bind(int num, Code code) {
+        Binder bind(int num, Code code, boolean mutable) {
             Bind bind = new Bind();
             bind.type = code.type;
             bind.binder = bind;
+            bind.mutable = mutable;
             binds[num] = bind;
             return bind;
         }
 
         void gen(Ctx ctx) {
+            int arrayVar = -1;
             for (int i = 0; i < binds.length; ++i) {
                 if (binds[i] != null) {
-                    if (binds[i].used) {
+                    if (binds[i].used && !binds[i].mutable) {
                         ((Function) values[i]).prepareGen(ctx);
                         ctx.m.visitVarInsn(ASTORE,
                             binds[i].var = ctx.localVarCount++);
                     } else {
+                        if (arrayVar == -1) {
+                            arrayVar = ctx.localVarCount++;
+                        }
+                        binds[i].index = i * 2 + 1;
+                        binds[i].var = arrayVar;
                         binds[i] = null;
                     }
                 }
@@ -748,6 +789,10 @@ interface YetiCode {
             ctx.m.visitInsn(DUP);
             ctx.intConst(names.length * 2);
             ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            if (arrayVar != -1) {
+                ctx.m.visitVarInsn(ASTORE, arrayVar);
+                ctx.m.visitVarInsn(ALOAD, arrayVar);
+            }
             for (int i = 0, cnt = names.length - 1; i <= cnt; ++i) {
                 ctx.m.visitInsn(DUP);
                 ctx.intConst(i * 2);

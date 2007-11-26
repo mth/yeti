@@ -704,7 +704,8 @@ public final class YetiType implements YetiParser, YetiCode {
             fields.put(field.name,
                 field.var ? new MutableFieldType(depth, code.type)
                           : code.type);
-            local = new Scope(local, field.name, result.bind(i, code));
+            local = new Scope(local, field.name,
+                              result.bind(i, code, field.var));
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
