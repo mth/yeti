@@ -465,7 +465,8 @@ interface YetiCode {
         }
     }
 
-    class SelectMember extends Code {
+    abstract class SelectMember extends Code {
+        private boolean assigned = false;
         Code st;
         String name;
 
@@ -477,10 +478,31 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             st.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
             ctx.m.visitLdcInsn(name);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                     "get", "(Ljava/lang/String;)Ljava/lang/Object;");
         }
+
+        Code assign(final Code setValue) {
+            if (!assigned && !mayAssign()) {
+                return null;
+            }
+            assigned = true;
+            return new Code() {
+                void gen(Ctx ctx) {
+                    st.gen(ctx);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+                    ctx.m.visitLdcInsn(name);
+                    setValue.gen(ctx);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                            "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
+                    ctx.m.visitInsn(ACONST_NULL);
+                }
+            };
+        }
+
+        abstract boolean mayAssign();
     }
 
     class KeyRefExpr extends Code {
@@ -632,7 +654,7 @@ interface YetiCode {
         }
 
         public Object captureIdentity() {
-            return mvar == -1 ? this : closure;
+            return mvar == -1 ? (Object) this : closure;
         }
 
         public String captureType() {

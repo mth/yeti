@@ -111,7 +111,7 @@ public final class YetiType implements YetiParser, YetiCode {
         return bindPoly(name, type, new CoreFun(type, field), 0, scope);
     }
 
-    static final class Type {
+    static class Type {
         int type;
         Map partialMembers;
         Map finalMembers;
@@ -166,6 +166,20 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
+    // used by structs to mark some field as mutable
+    static final class MutableFieldType extends Type {
+        MutableFieldType(int depth, Type ref) {
+            super(depth);
+            this.ref = ref.deref();
+        }
+
+        MutableFieldType(Type src) {
+            super(src.depth);
+            this.ref = src.ref;
+            this.flags = src.flags;
+        }
+    }
+
     static final class Scope {
         Scope outer;
         String name;
@@ -213,6 +227,11 @@ public final class YetiType implements YetiParser, YetiCode {
                 throw new RuntimeException("Type mismatch: " + src + " => "
                         + partial + " (field missing: " + entry.getKey() + ")");
             }
+            if (entry.getValue() instanceof MutableFieldType &&
+                !(ff instanceof MutableFieldType)) {
+                throw new RuntimeException("Field '" + entry.getKey()
+                    + "' constness mismatch: " + src + " => " + partial);
+            }
             unify((Type) entry.getValue(), ff);
         }
     }
@@ -240,6 +259,10 @@ public final class YetiType implements YetiParser, YetiCode {
                 Type f = (Type) b.finalMembers.get(entry.getKey());
                 if (f != null) {
                     unify(f, (Type) entry.getValue());
+                    // constness spreads
+                    if (entry.getValue() instanceof MutableFieldType) {
+                        entry.setValue(f);
+                    }
                 } else {
                     i.remove();
                 }
@@ -260,6 +283,10 @@ public final class YetiType implements YetiParser, YetiCode {
                 Type f = (Type) b.partialMembers.get(entry.getKey());
                 if (f != null) {
                     unify((Type) entry.getValue(), f);
+                    // mutability spreads
+                    if (f instanceof MutableFieldType) {
+                        entry.setValue(f);
+                    }
                 }
             }
             a.partialMembers.putAll(b.partialMembers);
@@ -482,14 +509,29 @@ public final class YetiType implements YetiParser, YetiCode {
         if (!(op.right instanceof Sym)) {
             throw new RuntimeException("Illegal ." + op.right.show());
         }
-        String field = ((Sym) op.right).sym;
-        Type res = new Type(depth);
+        final String field = ((Sym) op.right).sym;
+        final Type res = new Type(depth);
         Type arg = new Type(STRUCT, new Type[] { res });
         arg.partialMembers = new HashMap();
         arg.partialMembers.put(field, res);
         Code src = analyze(op.left, scope, depth);
         unify(arg, src.type);
-        return new SelectMember(res, src, field);
+        return new SelectMember(res, src, field) {
+            boolean mayAssign() {
+                Type t = st.type.deref();
+                Object given;
+                if (t.finalMembers != null &&
+                    (given = t.finalMembers.get(field)) != null &&
+                    !(given instanceof MutableFieldType)) {
+                    return false;
+                }
+                Type self = (Type) t.partialMembers.get(field);
+                if (!(self instanceof MutableFieldType)) {
+                    t.partialMembers.put(field, new MutableFieldType(res));
+                }
+                return true;
+            }
+        };
     }
 
     static Code keyRefExpr(Code val, NList keyList, Scope scope, int depth) {
@@ -659,7 +701,9 @@ public final class YetiType implements YetiParser, YetiCode {
                         ? new Function(new Type(depth))
                         : analyze(field.expr, scope, depth);
             names[i] = field.name;
-            fields.put(field.name, code.type);
+            fields.put(field.name,
+                field.var ? new MutableFieldType(depth, code.type)
+                          : code.type);
             local = new Scope(local, field.name, result.bind(i, code));
         }
         for (int i = 0; i < nodes.length; ++i) {
