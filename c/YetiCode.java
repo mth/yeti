@@ -791,14 +791,21 @@ interface YetiCode {
             ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             if (arrayVar != -1) {
                 ctx.m.visitVarInsn(ASTORE, arrayVar);
-                ctx.m.visitVarInsn(ALOAD, arrayVar);
             }
             for (int i = 0, cnt = names.length - 1; i <= cnt; ++i) {
-                ctx.m.visitInsn(DUP);
+                if (arrayVar != -1) {
+                    ctx.m.visitVarInsn(ALOAD, arrayVar);
+                } else {
+                    ctx.m.visitInsn(DUP);
+                }
                 ctx.intConst(i * 2);
                 ctx.m.visitLdcInsn(names[i]);
                 ctx.m.visitInsn(AASTORE);
-                ctx.m.visitInsn(DUP);
+                if (arrayVar != -1) {
+                    ctx.m.visitVarInsn(ALOAD, arrayVar);
+                } else {
+                    ctx.m.visitInsn(DUP);
+                }
                 ctx.intConst(i * 2 + 1);
                 if (binds[i] != null) {
                     binds[i].gen(ctx);
@@ -807,6 +814,9 @@ interface YetiCode {
                     values[i].gen(ctx);
                 }
                 ctx.m.visitInsn(AASTORE);
+            }
+            if (arrayVar != -1) {
+                ctx.m.visitVarInsn(ALOAD, arrayVar);
             }
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
                                   "<init>", "([Ljava/lang/Object;)V");
