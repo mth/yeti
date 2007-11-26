@@ -623,8 +623,12 @@ public final class YetiType implements YetiParser, YetiCode {
                     lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
                                new Scope(scope, bind.name, binder), depth + 1);
-                    scope = bindPoly(bind.name, lambda.type, binder,
-                                     depth, scope);
+                    if (bind.var) {
+                        scope = new Scope(scope, bind.name, binder);
+                    } else {
+                        scope = bindPoly(bind.name, lambda.type, binder,
+                                         depth, scope);
+                    }
                 } else {
                     Code code = analyze(bind.expr, scope, depth /* + 1 */);
                     binder = new BindExpr(code, bind.var);
