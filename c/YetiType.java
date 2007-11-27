@@ -74,6 +74,9 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type NUMOP_TYPE = new Type(FUN,
             new Type[] { NUM_TYPE, new Type(FUN, new Type[] { NUM_TYPE,
                                                               NUM_TYPE }) });
+    static final Type BOOLOP_TYPE = new Type(FUN,
+            new Type[] { BOOL_TYPE, new Type(FUN, new Type[] { BOOL_TYPE,
+                                                               BOOL_TYPE }) });
     static final Type TO_ARRAY_TYPE = new Type(FUN, new Type[] {
             new Type(MAP, new Type[] { A, B, LIST_TYPE }),
             new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE }) });
@@ -95,8 +98,10 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
+        bindScope("and", new BoolOpFun(false),
+        bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null))))))))))))));
+        bindScope("true", new BooleanConstant(true), null))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

@@ -121,11 +121,11 @@ interface YetiCode {
             return null;
         }
 
-        void genIf(Ctx ctx, Label to, boolean ifNot) {
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
             gen(ctx);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     "TRUE", "Ljava/lang/Boolean;");
-            ctx.m.visitJumpInsn(ifNot ? IF_ACMPNE : IF_ACMPEQ, to);
+            ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
         }
     }
 
@@ -201,8 +201,8 @@ interface YetiCode {
                     val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
         }
 
-        void genIf(Ctx ctx, Label to, boolean ifNot) {
-            if (val != ifNot) {
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            if (val == ifTrue) {
                 ctx.m.visitJumpInsn(GOTO, to);
             }
         }
@@ -568,7 +568,7 @@ interface YetiCode {
             for (int i = 0, last = choices.length - 1; i <= last; ++i) {
                 Label jmpNext = i < last ? new Label() : end;
                 if (choices[i].length == 2) {
-                    choices[i][1].genIf(ctx, jmpNext, true); // condition
+                    choices[i][1].genIf(ctx, jmpNext, false); // condition
                     choices[i][0].gen(ctx); // body
                     ctx.m.visitJumpInsn(GOTO, end);
                 } else {
@@ -969,8 +969,8 @@ interface YetiCode {
                             binGen(ctx, arg1, arg2);
                         }
 
-                        void genIf(Ctx ctx, Label to, boolean ifNot) {
-                            binGenIf(ctx, arg1, arg2, to, ifNot);
+                        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                            binGenIf(ctx, arg1, arg2, to, ifTrue);
                         }
                     };
                     code.type = res;
@@ -994,7 +994,7 @@ interface YetiCode {
         abstract void binGen(Ctx ctx, Code arg1, Code arg2);
 
         void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                               Label to, boolean ifNot) {
+                               Label to, boolean ifTrue) {
             throw new UnsupportedOperationException("binGenIf");
         }
     }
@@ -1005,6 +1005,7 @@ interface YetiCode {
         public ArithOpFun(String method, YetiType.Type type) {
             this.type = type;
             this.method = method;
+            binder = this;
         }
 
         public BindRef getRef() {
@@ -1021,14 +1022,28 @@ interface YetiCode {
         }
     }
 
-    class CompareFun extends BinOpRef {
+    abstract class BoolBinOp extends BinOpRef {
+        void binGen(Ctx ctx, Code arg1, Code arg2) {
+            Label label = new Label(), end = new Label();
+            binGenIf(ctx, arg1, arg2, label, false);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                                 "TRUE", "Ljava/lang/Boolean;");
+            ctx.m.visitJumpInsn(GOTO, end);
+            ctx.m.visitLabel(label);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                                 "FALSE", "Ljava/lang/Boolean;");
+            ctx.m.visitLabel(end);
+        }
+    }
+
+    class CompareFun extends BoolBinOp {
         static final int[] OPS = { IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE };
         int op;
 
         void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                      Label to, boolean ifNot) {
+                      Label to, boolean ifTrue) {
             int op = this.op;
-            if (ifNot) {
+            if (!ifTrue) {
                 op ^= COND_NOT;
             }
             arg1.gen(ctx);
@@ -1042,18 +1057,6 @@ interface YetiCode {
                                       "compareTo", "(Ljava/lang/Object;)I");
             }
             ctx.m.visitJumpInsn(OPS[op], to);
-        }
-
-        void binGen(Ctx ctx, Code arg1, Code arg2) {
-            Label label = new Label(), end = new Label();
-            binGenIf(ctx, arg1, arg2, label, true);
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "TRUE", "Ljava/lang/Boolean;");
-            ctx.m.visitJumpInsn(GOTO, end);
-            ctx.m.visitLabel(label);
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "FALSE", "Ljava/lang/Boolean;");
-            ctx.m.visitLabel(end);
         }
     }
 
@@ -1072,6 +1075,33 @@ interface YetiCode {
             c.type = type;
             c.op = op;
             return c;
+        }
+    }
+
+    class BoolOpFun extends BoolBinOp implements Binder {
+        boolean orOp;
+
+        BoolOpFun(boolean orOp) {
+            this.type = YetiType.BOOLOP_TYPE;
+            this.orOp = orOp;
+            binder = this;
+        }
+
+        public BindRef getRef() {
+            return this;
+        }
+
+        void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                      Label to, boolean ifTrue) {
+            if (orOp == ifTrue) {
+                arg1.genIf(ctx, to, orOp);
+                arg2.genIf(ctx, to, orOp);
+            } else {
+                Label noJmp = new Label();
+                arg1.genIf(ctx, noJmp, orOp);
+                arg2.genIf(ctx, to, !orOp);
+                ctx.m.visitLabel(noJmp);
+            }
         }
     }
 
