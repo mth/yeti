@@ -41,6 +41,12 @@ import java.util.List;
 import java.util.ArrayList;
 
 interface YetiCode {
+    int COND_EQ  = 0;
+    int COND_NOT = 1;
+    int COND_LT  = 2;
+    int COND_GT  = 4;
+    int COND_LE  = COND_NOT | COND_GT;
+    int COND_GE  = COND_NOT | COND_LT;
 
     class CompileCtx {
         Map classes = new HashMap();
@@ -114,6 +120,13 @@ interface YetiCode {
         Code assign(Code value) {
             return null;
         }
+
+        void genIf(Ctx ctx, Label to, boolean ifNot) {
+            gen(ctx);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                    "TRUE", "Ljava/lang/Boolean;");
+            ctx.m.visitJumpInsn(ifNot ? IF_ACMPNE : IF_ACMPEQ, to);
+        }
     }
 
     abstract class BindRef extends Code {
@@ -186,6 +199,12 @@ interface YetiCode {
         void gen(Ctx ctx) {
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
+        }
+
+        void genIf(Ctx ctx, Label to, boolean ifNot) {
+            if (val != ifNot) {
+                ctx.m.visitJumpInsn(GOTO, to);
+            }
         }
     }
 
@@ -546,20 +565,10 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             Label end = new Label();
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                    "TRUE", "Ljava/lang/Boolean;");
             for (int i = 0, last = choices.length - 1; i <= last; ++i) {
                 Label jmpNext = i < last ? new Label() : end;
                 if (choices[i].length == 2) {
-                    boolean dup = i < last && choices[i + 1].length != 1;
-                    if (dup) {
-                        ctx.m.visitInsn(DUP); // copy TRUE value
-                    }
-                    choices[i][1].gen(ctx); // condition
-                    ctx.m.visitJumpInsn(IF_ACMPNE, jmpNext);
-                    if (dup) {
-                        ctx.m.visitInsn(POP);
-                    }
+                    choices[i][1].genIf(ctx, jmpNext, true); // condition
                     choices[i][0].gen(ctx); // body
                     ctx.m.visitJumpInsn(GOTO, end);
                 } else {
@@ -959,6 +968,10 @@ interface YetiCode {
                         void gen(Ctx ctx) {
                             binGen(ctx, arg1, arg2);
                         }
+
+                        void genIf(Ctx ctx, Label to, boolean ifNot) {
+                            binGenIf(ctx, arg1, arg2, to, ifNot);
+                        }
                     };
                     code.type = res;
                     return code;
@@ -979,6 +992,11 @@ interface YetiCode {
         }
 
         abstract void binGen(Ctx ctx, Code arg1, Code arg2);
+
+        void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                               Label to, boolean ifNot) {
+            throw new UnsupportedOperationException("binGenIf");
+        }
     }
 
     class ArithOpFun extends BinOpRef implements Binder {
@@ -1004,26 +1022,37 @@ interface YetiCode {
     }
 
     class CompareFun extends BinOpRef {
+        static final int[] OPS = { IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE };
         int op;
 
-        void binGen(Ctx ctx, Code arg1, Code arg2) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                      Label to, boolean ifNot) {
+            int op = this.op;
+            if (ifNot) {
+                op ^= COND_NOT;
+            }
             arg1.gen(ctx);
             arg2.gen(ctx);
-            if (op == IFEQ || op == IFNE) {
+            if ((op & (COND_LT | COND_GT)) == 0) {
+                op ^= COND_NOT;
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
                                       "equals", "(Ljava/lang/Object;)Z");
             } else {
                 ctx.m.visitMethodInsn(INVOKEINTERFACE, "java/lang/Comparable",
                                       "compareTo", "(Ljava/lang/Object;)I");
             }
+            ctx.m.visitJumpInsn(OPS[op], to);
+        }
+
+        void binGen(Ctx ctx, Code arg1, Code arg2) {
             Label label = new Label(), end = new Label();
-            ctx.m.visitJumpInsn(op, label);
+            binGenIf(ctx, arg1, arg2, label, true);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "FALSE", "Ljava/lang/Boolean;");
+                                 "TRUE", "Ljava/lang/Boolean;");
             ctx.m.visitJumpInsn(GOTO, end);
             ctx.m.visitLabel(label);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                                 "TRUE", "Ljava/lang/Boolean;");
+                                 "FALSE", "Ljava/lang/Boolean;");
             ctx.m.visitLabel(end);
         }
     }

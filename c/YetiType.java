@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import org.objectweb.asm.Opcodes;
 
 public final class YetiType implements YetiParser, YetiCode {
     static final int VAR  = 0;
@@ -84,12 +83,12 @@ public final class YetiType implements YetiParser, YetiCode {
           "variant", "<>", "<list>", "<map>" };
     
     static final Scope ROOT_SCOPE =
-        bindCompare("==", EQ_TYPE, Opcodes.IFNE, // equals returns 0 for false
-        bindCompare("!=", EQ_TYPE, Opcodes.IFEQ, // equals returns 0 for false
-        bindCompare("<" , LG_TYPE, Opcodes.IFLT,
-        bindCompare("<=", LG_TYPE, Opcodes.IFLE,
-        bindCompare(">" , LG_TYPE, Opcodes.IFGT,
-        bindCompare(">=", LG_TYPE, Opcodes.IFGE,
+        bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
+        bindCompare("!=", EQ_TYPE, COND_NOT, // equals returns 0 for false
+        bindCompare("<" , LG_TYPE, COND_LT,
+        bindCompare("<=", LG_TYPE, COND_LE,
+        bindCompare(">" , LG_TYPE, COND_GT,
+        bindCompare(">=", LG_TYPE, COND_GE,
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("array", TO_ARRAY_TYPE, "ARRAY",
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
