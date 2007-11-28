@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti language compiler java bytecode generator.
  *
  * Copyright (c) 2007 Madis Janson
