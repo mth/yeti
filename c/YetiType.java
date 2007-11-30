@@ -441,8 +441,8 @@ public final class YetiType implements YetiParser, YetiCode {
             }
             return resolve(sym, scope, depth);
         }
-        if (node instanceof Num) {
-            return new NumericConstant(((Num) node).num);
+        if (node instanceof NumLit) {
+            return new NumericConstant(((NumLit) node).num);
         }
         if (node instanceof Str) {
             return new StringConstant(((Str) node).str);

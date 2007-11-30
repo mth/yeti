@@ -1,5 +1,5 @@
 compile: YetiParser.java YetiType.java YetiCode.java
-	javac -d . -classpath asm-3.1.jar $+
+	javac -d . -classpath asm-3.1.jar:. $+
 
 .PHONY: lib
 

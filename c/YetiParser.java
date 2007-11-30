@@ -43,6 +43,8 @@ package yeti.lang.compiler;
 
 import java.util.List;
 import java.util.ArrayList;
+import yeti.lang.Core;
+import yeti.lang.Num;
 
 interface YetiParser {
     class Node {
@@ -240,10 +242,10 @@ interface YetiParser {
         }
     }
 
-    class Num extends Node {
-        Number num;
+    class NumLit extends Node {
+        Num num;
 
-        Num(Number num) {
+        NumLit(Num num) {
             this.num = num;
         }
 
@@ -386,16 +388,21 @@ interface YetiParser {
                 case '"':
                     return readStr();
             }
-            --p;
-            for (char c; ++i < src.length && (c = src[i]) != '(' && c != ')' &&
-                         c != ';' && c > ' ' && c != '[' && c != ']' &&
-                         c != '{' && c != '}' && c != '.' &&
-                         (c != ':' || i + 1 < src.length && src[i + 1] > ' '););
-            String s = new String(src, p, i - p);
-            if (src[p] >= '0' && src[p] <= '9') {
+            p = i;
+            char c;
+            if ((c = src[i]) >= '0' && c <= '9') {
+                while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
+                       c != '[' && c != ']' && c != '{' && c != '}' &&
+                       c != ':' && c != ';' && c > ' ');
+                String s = new String(src, p, i - p);
                 p = i;
-                return new Num(new Double(s));
+                return new NumLit(Core.parseNum(s));
             }
+            while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
+                   c != ';' && c > ' ' && c != '[' && c != ']' &&
+                   c != '{' && c != '}' && c != '.' &&
+                   (c != ':' || i + 1 < src.length && src[i + 1] > ' '));
+            String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
             if (s == "if") {

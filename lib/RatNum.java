@@ -302,6 +302,14 @@ public final class RatNum extends Num {
                             - num.doubleValue());
     }
 
+    public int numerator() {
+        return (int) numerator;
+    }
+
+    public int denominator() {
+        return (int) denominator;
+    }
+
     public int compareTo(Object num) {
         return ((Num) num).compareTo(this);
     }
@@ -335,7 +343,10 @@ public final class RatNum extends Num {
     }
 
     public String toString() {
-        return numerator + "/" + denominator;
+        if (numerator % denominator == 0) {
+            return Integer.toString((int) numerator / (int) denominator);
+        }
+        return Double.toString((double) numerator / (double) denominator);
     }
 
     public int hashCode() {

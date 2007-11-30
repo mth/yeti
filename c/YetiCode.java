@@ -39,6 +39,10 @@ import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import yeti.lang.Num;
+import yeti.lang.RatNum;
+import yeti.lang.IntNum;
+import yeti.lang.BigNum;
 
 interface YetiCode {
     int COND_EQ  = 0;
@@ -144,19 +148,43 @@ interface YetiCode {
     }
 
     class NumericConstant extends Code {
-        Number num;
+        Num num;
 
-        NumericConstant(Number num) {
+        NumericConstant(Num num) {
             type = YetiType.NUM_TYPE;
             this.num = num;
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/FloatNum");
+            if (num instanceof RatNum) {
+                ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
+                ctx.m.visitInsn(DUP);
+                RatNum rat = (RatNum) num;
+                ctx.intConst(rat.numerator());
+                ctx.intConst(rat.denominator());
+                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
+                                      "<init>", "(II)V");
+                return;
+            }
+            String type, sig;
+            Object val;
+            if (num instanceof IntNum) {
+                type = "yeti/lang/IntNum";
+                val = new Long(num.longValue());
+                sig = "(J)V";
+            } else if (num instanceof BigNum) {
+                type = "yeti/lang/BigNum";
+                val = num.toString();
+                sig = "(Ljava/lang/String;)V";
+            } else {
+                type = "yeti/lang/FloatNum";
+                val = num.doubleValue();
+                sig = "(D)V";
+            }
+            ctx.m.visitTypeInsn(NEW, type);
             ctx.m.visitInsn(DUP);
-            ctx.m.visitLdcInsn(num);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
-                    "<init>", "(D)V");
+            ctx.m.visitLdcInsn(val);
+            ctx.m.visitMethodInsn(INVOKESPECIAL, type, "<init>", sig);
         }
     }
 
