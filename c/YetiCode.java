@@ -159,7 +159,7 @@ interface YetiCode {
             if (num instanceof RatNum) {
                 ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
                 ctx.m.visitInsn(DUP);
-                RatNum rat = (RatNum) num;
+                RatNum rat = ((RatNum) num).reduce();
                 ctx.intConst(rat.numerator());
                 ctx.intConst(rat.denominator());
                 ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",

@@ -256,6 +256,11 @@ public final class RatNum extends Num {
         return new RatNum(c, d);
     }
 
+    public RatNum reduce() {
+        long gcd = gcd(numerator, denominator);
+        return new RatNum(numerator / gcd, denominator / gcd);
+    }
+
     public byte byteValue() {
         return (byte) (numerator / denominator);
     }
