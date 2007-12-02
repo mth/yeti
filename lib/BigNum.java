@@ -152,19 +152,19 @@ public final class BigNum extends Num {
     }
 
     public int compareTo(Object num) {
-        return ((Num) num).compareTo(v);
+        return ((Num) num).rCompare(v);
     }
 
-    public int compareTo(long num) {
-        return v.compareTo(BigInteger.valueOf(num));
+    public int rCompare(long num) {
+        return BigInteger.valueOf(num).compareTo(v);
     }
 
-    public int compareTo(RatNum num) {
-        return -num.compareTo(v);
+    public int rCompare(RatNum num) {
+        return -num.rCompare(v);
     }
 
-    public int compareTo(BigInteger num) {
-        return v.compareTo(num);
+    public int rCompare(BigInteger num) {
+        return num.compareTo(v);
     }
 
     public String toString() {

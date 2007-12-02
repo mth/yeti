@@ -131,6 +131,9 @@ interface YetiCode {
                     "TRUE", "Ljava/lang/Boolean;");
             ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
         }
+
+        void markTail() {
+        }
     }
 
     abstract class BindRef extends Code {
@@ -178,7 +181,7 @@ interface YetiCode {
                 sig = "(Ljava/lang/String;)V";
             } else {
                 type = "yeti/lang/FloatNum";
-                val = num.doubleValue();
+                val = new Double(num.doubleValue());
                 sig = "(D)V";
             }
             ctx.m.visitTypeInsn(NEW, type);
@@ -343,6 +346,7 @@ interface YetiCode {
         String bindName;
         private Capture captures;
         private BindRef selfRef;
+        private Label restart;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -362,8 +366,7 @@ interface YetiCode {
         public BindRef refProxy(BindRef code) {
             // TODO cruel hack. should define special interface
             // for those special things
-            if (code instanceof ArithOpFun ||
-                    code instanceof CompareFun) {
+            if (code instanceof BinOpRef) {
                 return code;
             }
             if (selfBind == code.binder && !code.assign()) {
@@ -371,6 +374,26 @@ interface YetiCode {
                     selfRef = new BindRef() {
                         void gen(Ctx ctx) {
                             ctx.m.visitVarInsn(ALOAD, 0);
+                        }
+
+                        Code apply(Code arg, YetiType.Type res) {
+                            return new Apply(res, this, arg) {
+                                boolean tail;
+
+                                void gen(Ctx ctx) {
+                                    if (!tail || restart == null) {
+                                        super.gen(ctx);
+                                        return;
+                                    }
+                                    arg.gen(ctx);
+                                    ctx.m.visitVarInsn(ASTORE, 1);
+                                    ctx.m.visitJumpInsn(GOTO, restart);
+                                }
+
+                                void markTail() {
+                                    tail = true;
+                                }
+                            };
                         }
                     };
                     selfRef.binder = selfBind;
@@ -433,7 +456,9 @@ interface YetiCode {
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
             apply.localVarCount = 2; // this, arg
             genClosureInit(apply);
+            apply.m.visitLabel(restart = new Label());
             body.gen(apply);
+            restart = null;
             apply.m.visitInsn(ARETURN);
             apply.closeMethod();
 
@@ -605,6 +630,12 @@ interface YetiCode {
                 ctx.m.visitLabel(jmpNext);
             }
         }
+
+        void markTail() {
+            for (int i = choices.length; --i >= 0;) {
+                choices[i][0].markTail();
+            }
+        }
     }
 
     class SeqExpr extends Code {
@@ -619,6 +650,10 @@ interface YetiCode {
             st.gen(ctx);
             ctx.m.visitInsn(POP); // ignore the result of st expr
             result.gen(ctx);
+        }
+
+        void markTail() {
+            result.markTail();
         }
     }
 
@@ -939,6 +974,12 @@ interface YetiCode {
             }
             ctx.m.visitInsn(ACONST_NULL);
             ctx.m.visitLabel(end);
+        }
+
+        void markTail() {
+            for (int i = choices.size(); --i >= 0;) {
+                ((Variant) choices.get(i)).expr.markTail();
+            }
         }
     }
 

@@ -680,6 +680,7 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         to.type = fun;
         to.bindName = lambda.bindName;
+        to.body.markTail();
         return to;
     }
 

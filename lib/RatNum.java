@@ -316,35 +316,35 @@ public final class RatNum extends Num {
     }
 
     public int compareTo(Object num) {
-        return ((Num) num).compareTo(this);
+        return ((Num) num).rCompare(this);
     }
 
-    public int compareTo(long num) {
+    public int rCompare(long num) {
         if (-0x7fffffff <= num && num <= 0x7fffffff) {
             long x = num * denominator;
-            return numerator < x ? -1 : numerator > x ? 1 : 0;
+            return numerator < x ? 1 : numerator > x ? -1 : 0;
         }
         long gcd = gcd(numerator, denominator);
         if (gcd == denominator && numerator / gcd == num) {
             return 0;
         }
-        return (double) numerator / denominator < (double) num ? -1 : 1;
+        return (double) numerator / denominator < (double) num ? 1 : -1;
     }
 
-    public int compareTo(RatNum num) {
+    public int rCompare(RatNum num) {
         long a = numerator * num.denominator;
         long b = num.numerator * denominator;
-        return a < b ? -1 : a > b ? 1 : 0;
+        return a < b ? 1 : a > b ? -1 : 0;
     }
 
-    public int compareTo(BigInteger num) {
+    public int rCompare(BigInteger num) {
         long gcd = gcd(numerator, denominator);
         if (gcd == denominator &&
             BigInteger.valueOf(numerator / gcd).equals(num)) {
             return 0;
         }
         double a = (double) numerator / denominator, b = num.doubleValue();
-        return a < b ? -1 : a > b ? 1 : 0;
+        return a < b ? 1 : a > b ? -1 : 0;
     }
 
     public String toString() {

@@ -158,18 +158,18 @@ public final class FloatNum extends Num {
         return v < x ? -1 : v > x ? 1 : 0;
     }
 
-    public int compareTo(long num) {
-        return v < num ? -1 : v > num ? 1 : 0;
+    public int rCompare(long num) {
+        return v < num ? 1 : v > num ? -1 : 0;
     }
 
-    public int compareTo(RatNum num) {
+    public int rCompare(RatNum num) {
         double x = num.doubleValue();
-        return v < x ? -1 : v > x ? 1 : 0;
+        return v < x ? 1 : v > x ? -1 : 0;
     }
 
-    public int compareTo(BigInteger num) {
+    public int rCompare(BigInteger num) {
         double x = num.doubleValue();
-        return v < x ? -1 : v > x ? 1 : 0;
+        return v < x ? 1 : v > x ? -1 : 0;
     }
 
     public String toString() {
