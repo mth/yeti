@@ -324,10 +324,6 @@ public final class RatNum extends Num {
             long x = num * denominator;
             return numerator < x ? 1 : numerator > x ? -1 : 0;
         }
-        long gcd = gcd(numerator, denominator);
-        if (gcd == denominator && numerator / gcd == num) {
-            return 0;
-        }
         return (double) numerator / denominator < (double) num ? 1 : -1;
     }
 
@@ -338,9 +334,8 @@ public final class RatNum extends Num {
     }
 
     public int rCompare(BigInteger num) {
-        long gcd = gcd(numerator, denominator);
-        if (gcd == denominator &&
-            BigInteger.valueOf(numerator / gcd).equals(num)) {
+        if (numerator % denominator == 0 &&
+            BigInteger.valueOf(numerator / denominator).equals(num)) {
             return 0;
         }
         double a = (double) numerator / denominator, b = num.doubleValue();
