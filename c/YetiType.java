@@ -592,6 +592,9 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void getFreeVar(List vars, Type type, int depth) {
+        if (type instanceof MutableFieldType) {
+            return;
+        }
         type = type.deref();
         if (type.type != VAR) {
             for (int i = type.param.length; --i >= 0;) {
