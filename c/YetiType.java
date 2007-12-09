@@ -502,7 +502,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code apply(Code fun, Code arg, int depth) {
-        Type[] applyFun = { arg.type, new Type(depth) };
+        Type[] applyFun = { arg.type, new Type(depth - 1) };
         unify(fun.type, new Type(FUN, applyFun));
         return fun.apply(arg, applyFun[1]);
     }
