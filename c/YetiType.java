@@ -607,7 +607,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope bindPoly(String name, Type valueType, Binder value,
-                   int depth, boolean forcePoly, Scope scope) {
+                          int depth, boolean forcePoly, Scope scope) {
         List free = new ArrayList(), deny = forcePoly ? null : new ArrayList();
         getFreeVar(free, deny, valueType, depth);
         if (!forcePoly) {
