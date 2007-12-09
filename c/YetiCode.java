@@ -1174,6 +1174,25 @@ interface YetiCode {
         }
     }
 
+    class Cons implements Binder {
+        public BindRef getRef() {
+            BindRef r = new BinOpRef() {
+                void binGen(Ctx ctx, Code arg1, Code arg2) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
+                    ctx.m.visitInsn(DUP);
+                    arg1.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
+                        "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                }
+            };
+            r.type = YetiType.CONS_TYPE;
+            r.binder = this;
+            return r;
+        }
+    }
+
     class Test implements Opcodes {
         public static void main(String[] argv) throws Exception {
             Code codeTree = YetiType.toCode(argv[0].toCharArray());

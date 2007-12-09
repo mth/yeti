@@ -1,4 +1,4 @@
-// ex: se sts=4 sw=4 expandtab:
+// ex: set sts=4 sw=4 expandtab:
 
 /**
  * Yeti type analyzer.
@@ -81,6 +81,12 @@ public final class YetiType implements YetiParser, YetiCode {
             new Type(MAP, new Type[] { A, B, LIST_TYPE }),
             new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE }) });
 
+    static final Type CONS_TYPE = new Type(FUN, new Type[] { A,
+            new Type(FUN, new Type[] {
+                new Type(MAP, new Type[] { A, B, LIST_TYPE }),
+                new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE }) }) });
+            
+
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
           "variant", "<>", "<list>", "<map>" };
@@ -94,6 +100,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare(">=", LG_TYPE, COND_GE,
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("array", TO_ARRAY_TYPE, "ARRAY",
+        bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
@@ -101,7 +108,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null))))))))))))))));
+        bindScope("true", new BooleanConstant(true), null)))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -626,17 +633,16 @@ public final class YetiType implements YetiParser, YetiCode {
                     binder = new BindExpr(lambda, bind.var);
                     lambda.selfBind = binder;
                     lambda(lambda, (Lambda) bind.expr,
-                               new Scope(scope, bind.name, binder), depth + 1);
-                    if (bind.var) {
-                        scope = new Scope(scope, bind.name, binder);
-                    } else {
-                        scope = bindPoly(bind.name, lambda.type, binder,
-                                         depth, scope);
-                    }
+                           new Scope(scope, bind.name, binder), depth + 1);
                 } else {
-                    Code code = analyze(bind.expr, scope, depth /* + 1 */);
+                    Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
+                }
+                if (bind.var) {
                     scope = new Scope(scope, bind.name, binder);
+                } else {
+                    scope = bindPoly(bind.name, binder.st.type, binder,
+                                     depth, scope);
                 }
                 if (bind.var) {
                     registerVar(binder, scope.outer);

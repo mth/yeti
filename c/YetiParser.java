@@ -343,6 +343,7 @@ interface YetiParser {
         private static final String[][] OPS = {
             { "*", "/" },
             { "+", "-" },
+            { "::" },
             { "<", ">", "<=", ">=", "==", "!=" },
             { "and", "or" },
             { ":=" },
@@ -401,7 +402,8 @@ interface YetiParser {
             while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                    c != ';' && c > ' ' && c != '[' && c != ']' &&
                    c != '{' && c != '}' && c != '.' &&
-                   (c != ':' || i + 1 < src.length && src[i + 1] > ' '));
+                   (c != ':' || i + 1 < src.length && src[i + 1] > ' '
+                             || i > 0 && src[i - 1] == ':'));
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
