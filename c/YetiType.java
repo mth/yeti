@@ -212,6 +212,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void limitDepth(Type type, int maxDepth) {
+        type = type.deref();
         if (type.type != VAR) {
             for (int i = type.param.length; --i >= 0;) {
                 limitDepth(type.param[i], maxDepth);
