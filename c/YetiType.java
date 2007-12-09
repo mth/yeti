@@ -100,7 +100,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare(">=", LG_TYPE, COND_GE,
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("array", TO_ARRAY_TYPE, "ARRAY",
-        bindPoly("::", CONS_TYPE, new Cons(), 0,
+        bindPoly("::", CONS_TYPE, new Cons(), 0, true,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
@@ -115,11 +115,11 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope bindCompare(String op, Type type, int code, Scope scope) {
-        return bindPoly(op, type, new Compare(type, code), 0, scope);
+        return bindPoly(op, type, new Compare(type, code), 0, true, scope);
     }
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
-        return bindPoly(name, type, new CoreFun(type, field), 0, scope);
+        return bindPoly(name, type, new CoreFun(type, field), 0, true, scope);
     }
 
     static class Type {
@@ -592,11 +592,15 @@ public final class YetiType implements YetiParser, YetiCode {
         return new ConditionalExpr(result, conds);
     }
 
-    static void getFreeVar(List vars, Type type, int depth) {
+    static void getFreeVar(List vars, List deny, Type type, int depth) {
+        if (deny != null && type instanceof MutableFieldType) {
+            deny.add(type.deref());
+            return;
+        }
         type = type.deref();
         if (type.type != VAR) {
             for (int i = type.param.length; --i >= 0;) {
-                getFreeVar(vars, type.param[i], depth);
+                getFreeVar(vars, deny, type.param[i], depth);
             }
         } else if (type.depth > depth && vars.indexOf(type) < 0) {
             vars.add(type);
@@ -604,9 +608,16 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope bindPoly(String name, Type valueType, Binder value,
-                   int depth, Scope scope) {
-        List free = new ArrayList();
-        getFreeVar(free, valueType, depth);
+                   int depth, boolean forcePoly, Scope scope) {
+        List free = new ArrayList(), deny = forcePoly ? null : new ArrayList();
+        getFreeVar(free, deny, valueType, depth);
+        if (!forcePoly) {
+            for (int i = free.size(); --i >= 0;) {
+                if (deny.indexOf(free.get(i)) >= 0) {
+                    free.remove(i);
+                }
+            }
+        }
         scope = new Scope(scope, name, value);
         scope.free = (Type[]) free.toArray(new Type[free.size()]);
         return scope;
@@ -641,7 +652,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
                 if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
-                                     depth, scope);
+                                     depth, bind.expr instanceof Lambda, scope);
                 } else {
                     scope = new Scope(scope, bind.name, binder);
                 }
@@ -715,7 +726,6 @@ public final class YetiType implements YetiParser, YetiCode {
                 throw new RuntimeException("Duplicate field " + field.name
                     + " in the structure");
             }
-            result.polymorph &= !field.var;
             Code code = values[i] = field.expr instanceof Lambda
                         ? new Function(new Type(depth))
                         : analyze(field.expr, scope, depth);
