@@ -105,6 +105,7 @@ interface YetiCode {
     abstract class Code implements Opcodes {
         YetiType.Type type;
         boolean ignoreValue;
+        boolean polymorph;
 
         abstract void gen(Ctx ctx);
 
@@ -544,6 +545,7 @@ interface YetiCode {
 
         SelectMember(YetiType.Type type, Code st, String name) {
             this.type = type;
+            this.polymorph = st.polymorph;
             this.st = st;
             this.name = name;
         }
@@ -986,8 +988,7 @@ interface YetiCode {
     class ListConstructor extends Code {
         Code[] items;
 
-        ListConstructor(YetiType.Type type, Code[] items) {
-            this.type = type;
+        ListConstructor(Code[] items) {
             this.items = items;
         }
 

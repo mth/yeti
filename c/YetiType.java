@@ -503,7 +503,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code apply(Code fun, Code arg, int depth) {
-        Type[] applyFun = { arg.type, new Type(depth - 1) };
+        Type[] applyFun = { arg.type, new Type(depth) };
         unify(fun.type, new Type(FUN, applyFun));
         return fun.apply(arg, applyFun[1]);
     }
@@ -593,9 +593,6 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void getFreeVar(List vars, Type type, int depth) {
-        if (type instanceof MutableFieldType) {
-            return;
-        }
         type = type.deref();
         if (type.type != VAR) {
             for (int i = type.param.length; --i >= 0;) {
@@ -642,11 +639,11 @@ public final class YetiType implements YetiParser, YetiCode {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
                 }
-                if (bind.var) {
-                    scope = new Scope(scope, bind.name, binder);
-                } else {
+                if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
                                      depth, scope);
+                } else {
+                    scope = new Scope(scope, bind.name, binder);
                 }
                 if (bind.var) {
                     registerVar(binder, scope.outer);
@@ -680,6 +677,7 @@ public final class YetiType implements YetiParser, YetiCode {
         if (!(lambda.arg instanceof Sym)) {
             throw new RuntimeException("Bad argument: " + lambda.arg);
         }
+        to.polymorph = true;
         to.arg.type = new Type(depth);
         Scope bodyScope = new Scope(scope, ((Sym) lambda.arg).sym, to);
         bodyScope.closure = to;
@@ -705,6 +703,7 @@ public final class YetiType implements YetiParser, YetiCode {
         String[] names = new String[nodes.length];
         Code[] values  = new Code[nodes.length];
         StructConstructor result = new StructConstructor(names, values);
+        result.polymorph = true;
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             if (!(nodes[i] instanceof Bind)) {
@@ -716,6 +715,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 throw new RuntimeException("Duplicate field " + field.name
                     + " in the structure");
             }
+            result.polymorph &= !field.var;
             Code code = values[i] = field.expr instanceof Lambda
                         ? new Function(new Type(depth))
                         : analyze(field.expr, scope, depth);
@@ -817,9 +817,10 @@ public final class YetiType implements YetiParser, YetiCode {
         if (type == null) {
             type = new Type(depth);
         }
-        return new ListConstructor(
-            new Type(MAP, new Type[] { type, NO_TYPE, LIST_TYPE }),
-            codeItems);
+        Code res = new ListConstructor(codeItems);
+        res.type = new Type(MAP, new Type[] { type, NO_TYPE, LIST_TYPE });
+        res.polymorph = true;
+        return res;
     }
 
     public static Code toCode(char[] src) {
