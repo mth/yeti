@@ -594,8 +594,7 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {
         if (deny != null && type instanceof MutableFieldType) {
-            deny.add(type.deref());
-            return;
+            vars = deny; // anything under mutable field is evil
         }
         type = type.deref();
         if (type.type != VAR) {
