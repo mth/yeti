@@ -653,6 +653,8 @@ public final class YetiType implements YetiParser, YetiCode {
                     binder = new BindExpr(code, bind.var);
                 }
                 if (binder.st.polymorph && !bind.var) {
+                    // TODO such instanceof probably sucks - there
+                    // may be later g = f; with then loses some polymorphism
                     scope = bindPoly(bind.name, binder.st.type, binder,
                                      depth, bind.expr instanceof Lambda, scope);
                 } else {
