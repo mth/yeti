@@ -614,9 +614,10 @@ interface YetiCode {
     class ConditionalExpr extends Code {
         Code[][] choices;
 
-        ConditionalExpr(YetiType.Type type, Code[][] choices) {
+        ConditionalExpr(YetiType.Type type, Code[][] choices, boolean poly) {
             this.type = type;
             this.choices = choices;
+            this.polymorph = poly;
         }
 
         void gen(Ctx ctx) {

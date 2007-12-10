@@ -574,6 +574,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Node[][] choices = condition.choices;
         Code[][] conds = new Code[choices.length][];
         Type result = null;
+        boolean poly = true;
         for (int i = 0; i < choices.length; ++i) {
             Node[] choice = choices[i];
             Code val = analyze(choice[0], scope, depth);
@@ -584,13 +585,14 @@ public final class YetiType implements YetiParser, YetiCode {
                 unify(BOOL_TYPE, cond.type);
                 conds[i] = new Code[] { val, cond };
             }
+            poly &= val.polymorph;
             if (result == null) {
                 result = val.type;
             } else {
                 unify(result, val.type);
             }
         }
-        return new ConditionalExpr(result, conds);
+        return new ConditionalExpr(result, conds, poly);
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {
@@ -681,6 +683,7 @@ public final class YetiType implements YetiParser, YetiCode {
             cur.type = code.type;
         }
         last.result = code;
+        result.polymorph = code.polymorph;
         return result;
     }
 
@@ -761,6 +764,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Code val = analyze(ex.value, scope, depth);
         Map variants = new HashMap();
         CaseExpr result = new CaseExpr(val);
+        result.polymorph = true;
         for (int i = 0; i < choices.length; ++i) {
             Scope local = scope;
             BinOp choice;
@@ -798,6 +802,7 @@ public final class YetiType implements YetiParser, YetiCode {
             
             // nothing intresting, just get option expr and merge to result
             Code opt = analyze(choice.right, local, depth);
+            result.polymorph &= opt.polymorph;
             if (result.type == null) {
                 result.type = opt.type;
             } else {
