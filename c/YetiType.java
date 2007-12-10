@@ -650,7 +650,6 @@ public final class YetiType implements YetiParser, YetiCode {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
                 }
-                System.err.println(binder.st.polymorph);
                 if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
                                      depth, bind.expr instanceof Lambda, scope);
