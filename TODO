@@ -1,0 +1,27 @@
+   Yeti TODO.
+~~~~~~~~~~~~~~~~~
+
+* Fix overly strict polymorfism restriction for mutability
+  (currently only lambda bindings are polymorphic).
+* Occurs check (var fields and tags shouldn't be considered?)
+* Compilation from files
+* Report error locations
+* Add source line information to the generated class files
+* Modules
+* Built-in hash maps
+* Fix tail-call optimisation
+* Function compose operator
+* Revise allowed symbols for identifiers
+* Some IntNum methods are too eager on going to BigNum
+  (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)
+* Embedded expressions in strings. "foo = \(foo)\n"
+* Syntactic sugar for const-lambda. \foo == do: foo done
+* Real pattern matching in case
+* Better error messages
+* Built-in regex support
+* Some standard library
+* Foreign interface
+* Lambda inlineing optimisation
+* Direct double optimisation, when it can be deducted,
+  that there are always floats.
+* Direct struct-ref optimisation, when only known structs are accessed
