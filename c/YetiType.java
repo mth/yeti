@@ -435,7 +435,8 @@ public final class YetiType implements YetiParser, YetiCode {
                 return ref;
             }
             if (scope.closure != null) {
-                return scope.closure.refProxy(resolve(sym, scope.outer, depth));
+                BindRef ref = scope.closure.refProxy(resolve(sym, scope.outer, depth));
+                return ref;
             }
         }
         throw new RuntimeException("Unknown identifier: " + sym);
@@ -649,6 +650,7 @@ public final class YetiType implements YetiParser, YetiCode {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
                 }
+                System.err.println(binder.st.polymorph);
                 if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
                                      depth, bind.expr instanceof Lambda, scope);

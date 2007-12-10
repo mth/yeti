@@ -437,7 +437,7 @@ interface YetiParser {
             for (i = OPS.length; --i >= 0;) {
                 for (int j = OPS[i].length; --j >= 0;) {
                     if (OPS[i][j] == s) {
-                        return new BinOp(s, i + 3, true);
+                        return new BinOp(s, i + 3, s != "::");
                     }
                 }
             }

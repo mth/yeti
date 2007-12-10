@@ -410,6 +410,7 @@ interface YetiCode {
             Capture c = new Capture();
             c.binder = code.binder;
             c.type = code.type;
+            c.polymorph = code.polymorph;
             c.ref = code;
             c.wrapper = code.capture();
             c.next = captures;
@@ -724,6 +725,7 @@ interface YetiCode {
                 res.binder = this;
                 res.type = st.type;
             }
+            res.polymorph = !var && st.polymorph;
             return res;
         }
 
@@ -1017,6 +1019,7 @@ interface YetiCode {
         CoreFun(YetiType.Type type, String field) {
             this.type = type;
             this.field = field;
+            polymorph = true;
             binder = this;
         }
 
@@ -1144,6 +1147,7 @@ interface YetiCode {
             c.binder = this;
             c.type = type;
             c.op = op;
+            c.polymorph = true;
             return c;
         }
     }
@@ -1190,6 +1194,7 @@ interface YetiCode {
             };
             r.type = YetiType.CONS_TYPE;
             r.binder = this;
+            r.polymorph = true;
             return r;
         }
     }
