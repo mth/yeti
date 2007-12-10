@@ -537,6 +537,12 @@ interface YetiCode {
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
                     "<init>", "(Ljava/lang/String;)V");
         }
+
+        Code apply(Code arg, YetiType.Type res) {
+            Code apply = new Apply(res, this, arg);
+            apply.polymorph = arg.polymorph;
+            return apply;
+        }
     }
 
     abstract class SelectMember extends Code {
