@@ -14,7 +14,6 @@
 * Some IntNum methods are too eager on going to BigNum
   (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)
 * Embedded expressions in strings. "foo = \(foo)\n"
-* Syntactic sugar for const-lambda. \foo == do: foo done
 * Real pattern matching in case
 * Better error messages
 * Built-in regex support
