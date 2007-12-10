@@ -66,25 +66,16 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type A = new Type(1);
     static final Type B = new Type(1);
     static final Type A_TO_UNIT = new Type(FUN, new Type[] { A, UNIT_TYPE });
-    static final Type EQ_TYPE = new Type(FUN,
-            new Type[] { A, new Type(FUN, new Type[] { A, BOOL_TYPE }) });
-    static final Type LG_TYPE = new Type(FUN,
-            new Type[] { ORDERED,
-                         new Type(FUN, new Type[] { ORDERED, BOOL_TYPE }) });
-    static final Type NUMOP_TYPE = new Type(FUN,
-            new Type[] { NUM_TYPE, new Type(FUN, new Type[] { NUM_TYPE,
-                                                              NUM_TYPE }) });
-    static final Type BOOLOP_TYPE = new Type(FUN,
-            new Type[] { BOOL_TYPE, new Type(FUN, new Type[] { BOOL_TYPE,
-                                                               BOOL_TYPE }) });
+    static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
+    static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
+    static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
+    static final Type BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
     static final Type TO_ARRAY_TYPE = new Type(FUN, new Type[] {
             new Type(MAP, new Type[] { A, B, LIST_TYPE }),
             new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE }) });
-
-    static final Type CONS_TYPE = new Type(FUN, new Type[] { A,
-            new Type(FUN, new Type[] {
-                new Type(MAP, new Type[] { A, B, LIST_TYPE }),
-                new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE }) }) });
+    static final Type CONS_TYPE = fun2Arg(A,
+            new Type(MAP, new Type[] { A, B, LIST_TYPE }),
+            new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE }));
             
 
     static final String[] TYPE_NAMES =
@@ -100,7 +91,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare(">=", LG_TYPE, COND_GE,
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("array", TO_ARRAY_TYPE, "ARRAY",
-        bindPoly("::", CONS_TYPE, new Cons(), 0, true,
+        bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
@@ -115,11 +106,16 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope bindCompare(String op, Type type, int code, Scope scope) {
-        return bindPoly(op, type, new Compare(type, code), 0, true, scope);
+        return bindPoly(op, type, new Compare(type, code), 0, scope);
     }
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
-        return bindPoly(name, type, new CoreFun(type, field), 0, true, scope);
+        return bindPoly(name, type, new CoreFun(type, field), 0, scope);
+    }
+
+    static Type fun2Arg(Type a, Type b, Type res) {
+        return new Type(FUN,
+            new Type[] { a, new Type(FUN, new Type[] { b, res }) });
     }
 
     static class Type {
@@ -601,6 +597,9 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         type = type.deref();
         if (type.type != VAR) {
+            if (type.type == FUN) {
+                deny = null;
+            }
             for (int i = type.param.length; --i >= 0;) {
                 getFreeVar(vars, deny, type.param[i], depth);
             }
@@ -610,10 +609,10 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope bindPoly(String name, Type valueType, Binder value,
-                          int depth, boolean forcePoly, Scope scope) {
-        List free = new ArrayList(), deny = forcePoly ? null : new ArrayList();
+                          int depth, Scope scope) {
+        List free = new ArrayList(), deny = new ArrayList();
         getFreeVar(free, deny, valueType, depth);
-        if (!forcePoly) {
+        if (deny.size() != 0) {
             for (int i = free.size(); --i >= 0;) {
                 if (deny.indexOf(free.get(i)) >= 0) {
                     free.remove(i);
@@ -653,10 +652,8 @@ public final class YetiType implements YetiParser, YetiCode {
                     binder = new BindExpr(code, bind.var);
                 }
                 if (binder.st.polymorph && !bind.var) {
-                    // TODO such instanceof probably sucks - there
-                    // may be later g = f; with then loses some polymorphism
                     scope = bindPoly(bind.name, binder.st.type, binder,
-                                     depth, bind.expr instanceof Lambda, scope);
+                                     depth, scope);
                 } else {
                     scope = new Scope(scope, bind.name, binder);
                 }
