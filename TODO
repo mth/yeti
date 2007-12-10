@@ -1,8 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix overly strict polymorfism restriction for mutability
-  (currently only lambda bindings are polymorphic).
 * Occurs check (var fields and tags shouldn't be considered?)
 * Compilation from files
 * Report error locations
@@ -10,6 +8,7 @@
 * Modules
 * Built-in hash maps
 * Fix tail-call optimisation
+* Comments
 * Function compose operator
 * Revise allowed symbols for identifiers
 * Some IntNum methods are too eager on going to BigNum
