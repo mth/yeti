@@ -475,6 +475,11 @@ public final class YetiType implements YetiParser, YetiCode {
             if (op.op == ":=") {
                 return assignOp(op, scope, depth);
             }
+            if (op.op == "\\") {
+                return lambda(new Function(null),
+                              new Lambda(new Sym("_"), op.right, null),
+                              scope, depth);
+            }
             // TODO: unary -
             return apply(apply(resolve(op.op, scope, depth),
                                analyze(op.left, scope, depth), depth),

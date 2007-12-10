@@ -299,7 +299,11 @@ interface YetiParser {
 
         private void addOp(BinOp op) {
             BinOp to = cur;
-            if (op.op == "-" && lastOp) {
+            if (op.op == "-" && lastOp || op.op == "\\") {
+                if (!lastOp) {
+                    addOp(new BinOp("", 2, true));
+                    to = cur;
+                }
                 op.prio = 1;
                 to.left = to.right;
             } else if (lastOp) {
@@ -388,6 +392,8 @@ interface YetiParser {
                     return new Struct(readMany('}'));
                 case '"':
                     return readStr();
+                case '\\':
+                    return new BinOp("\\", 1, false);
             }
             p = i;
             char c;
