@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Occurs check (var fields and tags shouldn't be considered?)
 * Compilation from files
 * Report error locations
 * Add source line information to the generated class files
