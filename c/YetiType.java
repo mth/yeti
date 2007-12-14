@@ -127,6 +127,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Type ref;
         int depth;
         int flags;
+        boolean seen;
 
         Type(int depth) {
             this.depth = depth;
@@ -210,9 +211,14 @@ public final class YetiType implements YetiParser, YetiCode {
     static void limitDepth(Type type, int maxDepth) {
         type = type.deref();
         if (type.type != VAR) {
+            if (type.seen) {
+                return;
+            }
+            type.seen = true;
             for (int i = type.param.length; --i >= 0;) {
                 limitDepth(type.param[i], maxDepth);
             }
+            type.seen = false;
         } else if (type.depth > maxDepth) {
             type.depth = maxDepth;
         }
@@ -350,7 +356,20 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
+    static void occursCheck(Type type, Type var) {
+        type = type.deref();
+        if (type == var) {
+            throw new RuntimeException("Cyclic type");
+        }
+        if (type.param != null && type.type != VARIANT) {
+            for (int i = type.param.length; --i >= 0;) {
+                occursCheck(type.param[i], var);
+            }
+        }
+    }
+
     static void unifyToVar(Type var, Type from) {
+        occursCheck(from, var);
         if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
             requireOrdered(from);
         }
@@ -401,10 +420,11 @@ public final class YetiType implements YetiParser, YetiCode {
             return copy;
         }
         Type[] param = new Type[type.param.length];
+        copy = new Type(type.type, param);
+        known.put(type, copy);
         for (int i = param.length; --i >= 0;) {
             param[i] = copyType(type.param[i], free, known);
         }
-        copy = new Type(type.type, param);
         if (type.partialMembers != null) {
             copy.partialMembers = copyTypeMap(type.partialMembers, free, known);
         }
@@ -597,19 +617,24 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {
+        if (type.seen) {
+            return;
+        }
         if (deny != null && type instanceof MutableFieldType) {
             vars = deny; // anything under mutable field is evil
         }
-        type = type.deref();
-        if (type.type != VAR) {
-            if (type.type == FUN) {
+        Type t = type.deref();
+        if (t.type != VAR) {
+            if (t.type == FUN) {
                 deny = null;
             }
-            for (int i = type.param.length; --i >= 0;) {
-                getFreeVar(vars, deny, type.param[i], depth);
+            type.seen = true;
+            for (int i = t.param.length; --i >= 0;) {
+                getFreeVar(vars, deny, t.param[i], depth);
             }
-        } else if (type.depth > depth && vars.indexOf(type) < 0) {
-            vars.add(type);
+            type.seen = false;
+        } else if (t.depth > depth && vars.indexOf(t) < 0) {
+            vars.add(t);
         }
     }
 
