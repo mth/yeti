@@ -52,8 +52,41 @@ interface YetiCode {
     int COND_LE  = COND_NOT | COND_GT;
     int COND_GE  = COND_NOT | COND_LT;
 
-    class CompileCtx {
+    class CompileCtx implements Opcodes {
+        private CodeWriter writer;
         Map classes = new HashMap();
+
+        CompileCtx(CodeWriter writer) {
+            this.writer = writer;
+        }
+
+        void compile(String name, char[] code, boolean module) {
+            Code codeTree = YetiType.toCode(code);
+            Ctx ctx = new Ctx(this, null, null)
+                .newClass(ACC_PUBLIC, name, null);
+            if (module) {
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "eval",
+                                    "()Ljava/lang/Object;");
+                codeTree.gen(ctx);
+                ctx.m.visitInsn(ARETURN);
+            } else {
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
+                                    "([Ljava/lang/String;)V");
+                ctx.localVarCount++;
+                codeTree.gen(ctx);
+                ctx.m.visitInsn(POP);
+                ctx.m.visitInsn(RETURN);
+            }
+            ctx.closeMethod();
+        }
+
+        void write() throws Exception {
+            Iterator i = classes.values().iterator();
+            while (i.hasNext()) {
+                Ctx c = (Ctx) i.next();
+                writer.writeClass(c.className + ".class", c.cw.toByteArray());
+            }
+        }
     }
 
     class Ctx implements Opcodes {
@@ -1208,26 +1241,16 @@ interface YetiCode {
 
     class Test implements Opcodes {
         public static void main(String[] argv) throws Exception {
-            Code codeTree = YetiType.toCode(argv[0].toCharArray());
-            CompileCtx compilation = new CompileCtx();
-            Ctx ctx = new Ctx(compilation, null, null)
-                .newClass(ACC_PUBLIC, "Test", null)
-                .newMethod(ACC_PUBLIC | ACC_STATIC, "main",
-                        "([Ljava/lang/String;)V");
-            ctx.localVarCount++;
-            codeTree.gen(ctx);
-            ctx.m.visitInsn(RETURN);
-            ctx.closeMethod();
-
-            Iterator i = compilation.classes.values().iterator();
-            while (i.hasNext()) {
-                Ctx c = (Ctx) i.next();
-                byte[] code = c.cw.toByteArray();
-                FileOutputStream out =
-                    new FileOutputStream(c.className + ".class");
-                out.write(code);
-                out.close();
-            }
+            CompileCtx compilation = new CompileCtx(new CodeWriter() {
+                public void writeClass(String name, byte[] code)
+                        throws Exception {
+                    FileOutputStream out = new FileOutputStream(name);
+                    out.write(code);
+                    out.close();
+                }
+            });
+            compilation.compile("Test", argv[0].toCharArray(), false);
+            compilation.write();
         }
     }
 }
