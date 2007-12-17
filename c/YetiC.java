@@ -157,15 +157,21 @@ public class YetiC {
         compilation.write();
         if (exec) {
             Class c = Class.forName(mainClass, true, (ClassLoader) writer);
-            if (eval) {
-                Object res = c.getMethod("eval", new Class[] {})
-                              .invoke(null, new Object[] {});
-                if (res != null) {
-                    System.out.println(res);
+            try {
+                if (eval) {
+                    Object res = c.getMethod("eval", new Class[] {})
+                                  .invoke(null, new Object[] {});
+                    if (res != null) {
+                        System.out.println(res);
+                    }
+                } else {
+                    c.getMethod("main", new Class[] { String[].class })
+                     .invoke(null, new Object[] { evalArgs });
                 }
-            } else {
-                c.getMethod("main", new Class[] { String[].class })
-                 .invoke(null, new Object[] { evalArgs });
+            } catch (java.lang.reflect.InvocationTargetException ex) {
+                Throwable t = ex.getCause();
+                (t == null ? ex : t).printStackTrace();
+                System.exit(2);
             }
         }
     }
