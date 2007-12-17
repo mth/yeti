@@ -71,7 +71,7 @@ abstract class AMList extends AList {
         StringBuffer buf = new StringBuffer("[");
         for (int cnt = _size(), i = start; i < cnt; ++i) {
             if (i != 0) {
-                buf.append(',');
+                buf.append(';');
             }
             buf.append(array[i]);
         }

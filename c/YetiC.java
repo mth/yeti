@@ -117,7 +117,7 @@ public class YetiC {
                 + expect.substring(expectCounter));
             System.exit(1);
         }
-        CodeWriter writer = eval ? new Loader() : new ToFile();
+        CodeWriter writer = eval ? (CodeWriter) new Loader() : new ToFile();
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
         compilation.compile("Program", src, eval);
         compilation.write();
