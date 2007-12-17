@@ -109,6 +109,7 @@ public class YetiC {
                                 + argv[i].charAt(j) + "'");
                             System.exit(1);
                         }
+                        vflag = false;
                         continue;
                     }
                     switch (argv[i].charAt(j)) {
