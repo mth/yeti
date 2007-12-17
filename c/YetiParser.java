@@ -358,8 +358,10 @@ interface YetiParser {
         private int p;
         private Node eofWas;
         private int flags;
+        private String sourceName;
 
-        Parser(char[] src, int flags) {
+        Parser(String sourceName, char[] src, int flags) {
+            this.sourceName = sourceName;
             this.src = src;
             this.flags = flags;
         }

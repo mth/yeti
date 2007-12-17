@@ -867,8 +867,8 @@ public final class YetiType implements YetiParser, YetiCode {
         return res;
     }
 
-    public static Code toCode(char[] src, int flags) {
-        Node n = new Parser(src, flags).readSeq(' ');
+    public static Code toCode(String sourceName, char[] src, int flags) {
+        Node n = new Parser(sourceName, src, flags).readSeq(' ');
         if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
             System.err.println(n.show());
         }

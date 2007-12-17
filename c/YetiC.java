@@ -144,14 +144,14 @@ public class YetiC {
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
         if (eval) {
             flags |= CF_COMPILE_MODULE;
-            compilation.compile(mainClass, src, flags);
+            compilation.compile(null, mainClass, src, flags);
         } else {
             for (int i = 0, cnt = sources.size(); i < cnt; ++i) {
                 String srcName = (String) sources.get(i);
                 src = loadFile(srcName).toCharArray();
                 int dot = srcName.lastIndexOf('.');
                 mainClass = dot < 0 ? srcName : srcName.substring(0, dot);
-                compilation.compile(mainClass, src, flags);
+                compilation.compile(srcName, mainClass, src, flags);
             }
         }
         compilation.write();

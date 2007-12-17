@@ -60,10 +60,10 @@ interface YetiCode {
             this.writer = writer;
         }
 
-        void compile(String name, char[] code, int flags) {
+        void compile(String sourceName, String name, char[] code, int flags) {
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
-            Code codeTree = YetiType.toCode(code, flags);
-            Ctx ctx = new Ctx(this, null, null)
+            Code codeTree = YetiType.toCode(sourceName, code, flags);
+            Ctx ctx = new Ctx(this, sourceName, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             if (module) {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "eval",
@@ -92,23 +92,27 @@ interface YetiCode {
 
     class Ctx implements Opcodes {
         CompileCtx compilation;
+        String sourceName;
         String className;
         ClassWriter cw;
         MethodVisitor m;
         int localVarCount;
         int fieldCounter;
 
-        Ctx(CompileCtx compilation, ClassWriter writer, String className) {
+        Ctx(CompileCtx compilation, String sourceName,
+                ClassWriter writer, String className) {
             this.compilation = compilation;
+            this.sourceName = sourceName;
             this.cw = writer;
             this.className = className;
         }
 
         Ctx newClass(int flags, String name, String extend) {
-            Ctx ctx = new Ctx(compilation,
+            Ctx ctx = new Ctx(compilation, sourceName,
                     new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
             ctx.cw.visit(V1_2, flags, name, null,
                     extend == null ? "java/lang/Object" : extend, null);
+            ctx.cw.visitSource(sourceName, null);
             if (compilation.classes.put(name, ctx) != null) {
                 throw new IllegalStateException("Duplicate class: " + name);
             }
@@ -116,7 +120,7 @@ interface YetiCode {
         }
 
         Ctx newMethod(int flags, String name, String type) {
-            Ctx ctx = new Ctx(compilation, cw, className);
+            Ctx ctx = new Ctx(compilation, sourceName, cw, className);
             ctx.m = cw.visitMethod(flags, name, type, null, null);
             ctx.m.visitCode();
             return ctx;
