@@ -58,9 +58,9 @@ class Loader extends ClassLoader implements CodeWriter {
 }
 
 public class YetiC {
-    String inCharset = "UTF-8";
+    static String inCharset = "UTF-8";
 
-    public String loadFile(String name) throws IOException {
+    public static String loadFile(String name) throws IOException {
         StringBuffer buf = new StringBuffer();
         InputStream stream = new FileInputStream(name);
         try {
@@ -76,11 +76,13 @@ public class YetiC {
     }
     
     public static void main(String[] argv) throws Exception {
-        boolean eval = false;
+        boolean eval = false, exec = true;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
         char[] src = null;
+        List sources = new ArrayList();
         String[] evalArgs = {};
+        String mainClass = "Program";
 
         for (int i = 0; i < argv.length; ++i) {
             if (expectCounter < expect.length()) {
@@ -106,27 +108,43 @@ public class YetiC {
                 }
                 continue;
             }
-            if (eval) {
+            if (eval || exec && !sources.isEmpty()) {
                 evalArgs = new String[argv.length - i];
                 System.arraycopy(argv, i, evalArgs, 0, evalArgs.length);
                 break;
             }
+            sources.add(argv[i]);
         }
         if (expectCounter < expect.length()) {
             System.err.println("Expecting arguments for option(s): "
                 + expect.substring(expectCounter));
             System.exit(1);
         }
-        CodeWriter writer = eval ? (CodeWriter) new Loader() : new ToFile();
+        CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
-        compilation.compile("Program", src, eval);
-        compilation.write();
         if (eval) {
-            Class c = Class.forName("Program", true, (ClassLoader) writer);
-            Object res = c.getMethod("eval", new Class[] {})
-                 .invoke(null, new Object[] {});
-            if (res != null) {
-                System.out.println(res);
+            compilation.compile(mainClass, src, true);
+        } else {
+            for (int i = 0, cnt = sources.size(); i < cnt; ++i) {
+                String srcName = (String) sources.get(i);
+                src = loadFile(srcName).toCharArray();
+                int dot = srcName.lastIndexOf('.');
+                mainClass = dot < 0 ? srcName : srcName.substring(0, dot);
+                compilation.compile(mainClass, src, false);
+            }
+        }
+        compilation.write();
+        if (exec) {
+            Class c = Class.forName(mainClass, true, (ClassLoader) writer);
+            if (eval) {
+                Object res = c.getMethod("eval", new Class[] {})
+                              .invoke(null, new Object[] {});
+                if (res != null) {
+                    System.out.println(res);
+                }
+            } else {
+                c.getMethod("main", new Class[] { String[].class })
+                 .invoke(null, new Object[] { evalArgs });
             }
         }
     }
