@@ -76,11 +76,11 @@ public class YetiC {
     }
     
     public static void main(String[] argv) throws Exception {
-        boolean exec = false;
+        boolean eval = false;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
         char[] src = null;
-        String[] execArgs = {};
+        String[] evalArgs = {};
 
         for (int i = 0; i < argv.length; ++i) {
             if (expectCounter < expect.length()) {
@@ -95,7 +95,7 @@ public class YetiC {
                 for (int j = 1, cnt = argv[i].length(); j < cnt; ++j) {
                     switch (argv[i].charAt(j)) {
                     case 'e':
-                        exec = true;
+                        eval = true;
                         expect.append('e');
                         break;
                     default:
@@ -106,9 +106,9 @@ public class YetiC {
                 }
                 continue;
             }
-            if (exec) {
-                execArgs = new String[argv.length - i];
-                System.arraycopy(argv, i, execArgs, 0, execArgs.length);
+            if (eval) {
+                evalArgs = new String[argv.length - i];
+                System.arraycopy(argv, i, evalArgs, 0, evalArgs.length);
                 break;
             }
         }
@@ -117,14 +117,17 @@ public class YetiC {
                 + expect.substring(expectCounter));
             System.exit(1);
         }
-        CodeWriter writer = exec ? new Loader() : new ToFile();
+        CodeWriter writer = eval ? new Loader() : new ToFile();
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
-        compilation.compile("Program", src, false);
+        compilation.compile("Program", src, eval);
         compilation.write();
-        if (exec) {
+        if (eval) {
             Class c = Class.forName("Program", true, (ClassLoader) writer);
-            c.getMethod("main", String[].class)
-             .invoke(null, new Object[] { execArgs });
+            Object res = c.getMethod("eval", new Class[] {})
+                 .invoke(null, new Object[] {});
+            if (res != null) {
+                System.out.println(res);
+            }
         }
     }
 }
