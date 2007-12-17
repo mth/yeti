@@ -60,8 +60,9 @@ interface YetiCode {
             this.writer = writer;
         }
 
-        void compile(String name, char[] code, boolean module) {
-            Code codeTree = YetiType.toCode(code, !module);
+        void compile(String name, char[] code, int flags) {
+            boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
+            Code codeTree = YetiType.toCode(code, flags);
             Ctx ctx = new Ctx(this, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             if (module) {

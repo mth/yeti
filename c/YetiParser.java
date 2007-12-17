@@ -357,9 +357,11 @@ interface YetiParser {
         private char[] src;
         private int p;
         private Node eofWas;
+        private int flags;
 
-        Parser(char[] src) {
+        Parser(char[] src, int flags) {
             this.src = src;
+            this.flags = flags;
         }
 
         private Node fetch() {

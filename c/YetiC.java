@@ -58,6 +58,8 @@ class Loader extends ClassLoader implements CodeWriter {
 }
 
 public class YetiC {
+    public static final int CF_COMPILE_MODULE   = 1;
+    public static final int CF_PRINT_PARSE_TREE = 2;
     static String inCharset = "UTF-8";
 
     public static String loadFile(String name) throws IOException {
@@ -83,6 +85,7 @@ public class YetiC {
         List sources = new ArrayList();
         String[] evalArgs = {};
         String mainClass = "Program";
+        int flags = 0;
 
         for (int i = 0; i < argv.length; ++i) {
             if (expectCounter < expect.length()) {
@@ -94,11 +97,27 @@ public class YetiC {
                 continue;
             }
             if (argv[i].startsWith("-")) {
+                boolean vflag = false;
                 for (int j = 1, cnt = argv[i].length(); j < cnt; ++j) {
+                    if (vflag) {
+                        switch (argv[i].charAt(j)) {
+                        case 'p':
+                            flags |= CF_PRINT_PARSE_TREE;
+                            break;
+                        default:
+                            System.err.println("Unexpected option 'v"
+                                + argv[i].charAt(j) + "'");
+                            System.exit(1);
+                        }
+                        continue;
+                    }
                     switch (argv[i].charAt(j)) {
                     case 'e':
                         eval = true;
                         expect.append('e');
+                        break;
+                    case 'v':
+                        vflag = true;
                         break;
                     default:
                         System.err.println("Unknown option '"
@@ -123,14 +142,15 @@ public class YetiC {
         CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
         if (eval) {
-            compilation.compile(mainClass, src, true);
+            flags |= CF_COMPILE_MODULE;
+            compilation.compile(mainClass, src, flags);
         } else {
             for (int i = 0, cnt = sources.size(); i < cnt; ++i) {
                 String srcName = (String) sources.get(i);
                 src = loadFile(srcName).toCharArray();
                 int dot = srcName.lastIndexOf('.');
                 mainClass = dot < 0 ? srcName : srcName.substring(0, dot);
-                compilation.compile(mainClass, src, false);
+                compilation.compile(mainClass, src, flags);
             }
         }
         compilation.write();

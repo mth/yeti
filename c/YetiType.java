@@ -867,24 +867,19 @@ public final class YetiType implements YetiParser, YetiCode {
         return res;
     }
 
-    public static Code toCode(char[] src, boolean expectUnit) {
-        Node n = new Parser(src).readSeq(' ');
-        System.err.println(n.show());
+    public static Code toCode(char[] src, int flags) {
+        Node n = new Parser(src, flags).readSeq(' ');
+        if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
+            System.err.println(n.show());
+        }
         RootClosure root = new RootClosure();
         Scope scope = new Scope(ROOT_SCOPE, null, null);
         scope.closure = root;
         root.code = analyze(n, scope, 0);
         root.type = root.code.type;
-        if (expectUnit) {
+        if ((flags & YetiC.CF_COMPILE_MODULE) == 0) {
             unify(root.type, UNIT_TYPE);
         }
         return root;
-    }
-
-    public static void main(String[] args) {
-        Node n = new Parser(args[0].toCharArray()).readSeq(' ');
-        System.err.println(n.show());
-        Code t = analyze(n, ROOT_SCOPE, 0);
-        System.err.println(t.type);
     }
 }
