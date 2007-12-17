@@ -28,23 +28,103 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package yeti.lang.compiler;
 
 import java.io.*;
+import java.util.*;
+
+class ToFile implements CodeWriter {
+    public void writeClass(String name, byte[] code) throws Exception {
+        FileOutputStream out = new FileOutputStream(name);
+        out.write(code);
+        out.close();
+    }
+}
+
+class Loader extends ClassLoader implements CodeWriter {
+    private Map classes = new HashMap();
+
+    public void writeClass(String name, byte[] code) {
+        classes.put(name, code);
+    }
+
+    public Class findClass(String name) throws ClassNotFoundException {
+        byte[] code = (byte[]) classes.get(name + ".class");
+        if (code == null) {
+            throw new ClassNotFoundException(name);
+        }
+        return defineClass(name, code, 0, code.length);
+    }
+}
 
 public class YetiC {
-    public String loadFile(String name) {
+    String inCharset = "UTF-8";
+
+    public String loadFile(String name) throws IOException {
         StringBuffer buf = new StringBuffer();
         InputStream stream = new FileInputStream(name);
         try {
             Reader reader = new java.io.InputStreamReader(stream, inCharset);
             char[] cbuf = new char[0x8000];
             for (int n; (n = reader.read(cbuf)) >= 0; ) {
-            buf.append(cbuf, 0, n);
+                buf.append(cbuf, 0, n);
+            }
         } finally {
-            stream.close;
+            stream.close();
         }
         return buf.toString();
     }
-
     
+    public static void main(String[] argv) throws Exception {
+        boolean exec = false;
+        StringBuffer expect = new StringBuffer();
+        int expectCounter = 0;
+        char[] src = null;
+        String[] execArgs = {};
+
+        for (int i = 0; i < argv.length; ++i) {
+            if (expectCounter < expect.length()) {
+                switch (expect.charAt(expectCounter++)) {
+                case 'e':
+                    src = argv[i].toCharArray();
+                    break;
+                }
+                continue;
+            }
+            if (argv[i].startsWith("-")) {
+                for (int j = 1, cnt = argv[i].length(); j < cnt; ++j) {
+                    switch (argv[i].charAt(j)) {
+                    case 'e':
+                        exec = true;
+                        expect.append('e');
+                        break;
+                    default:
+                        System.err.println("Unknown option '"
+                            + argv[i].charAt(j) + "'");
+                        System.exit(1);
+                    }
+                }
+                continue;
+            }
+            if (exec) {
+                execArgs = new String[argv.length - i];
+                System.arraycopy(argv, i, execArgs, 0, execArgs.length);
+                break;
+            }
+        }
+        if (expectCounter < expect.length()) {
+            System.err.println("Expecting arguments for option(s): "
+                + expect.substring(expectCounter));
+            System.exit(1);
+        }
+        CodeWriter writer = exec ? new Loader() : new ToFile();
+        YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
+        compilation.compile("Program", src, false);
+        compilation.write();
+        if (exec) {
+            Class c = Class.forName("Program", true, (ClassLoader) writer);
+            c.getMethod("main", String[].class)
+             .invoke(null, new Object[] { execArgs });
+        }
+    }
 }

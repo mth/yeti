@@ -1238,20 +1238,5 @@ interface YetiCode {
             return r;
         }
     }
-
-    class Test implements Opcodes {
-        public static void main(String[] argv) throws Exception {
-            CompileCtx compilation = new CompileCtx(new CodeWriter() {
-                public void writeClass(String name, byte[] code)
-                        throws Exception {
-                    FileOutputStream out = new FileOutputStream(name);
-                    out.write(code);
-                    out.close();
-                }
-            });
-            compilation.compile("Test", argv[0].toCharArray(), false);
-            compilation.write();
-        }
-    }
 }
 
