@@ -61,7 +61,7 @@ interface YetiCode {
         }
 
         void compile(String name, char[] code, boolean module) {
-            Code codeTree = YetiType.toCode(code);
+            Code codeTree = YetiType.toCode(code, !module);
             Ctx ctx = new Ctx(this, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             if (module) {

@@ -867,13 +867,17 @@ public final class YetiType implements YetiParser, YetiCode {
         return res;
     }
 
-    public static Code toCode(char[] src) {
+    public static Code toCode(char[] src, boolean expectUnit) {
         Node n = new Parser(src).readSeq(' ');
         System.err.println(n.show());
         RootClosure root = new RootClosure();
         Scope scope = new Scope(ROOT_SCOPE, null, null);
         scope.closure = root;
         root.code = analyze(n, scope, 0);
+        root.type = root.code.type;
+        if (expectUnit) {
+            unify(root.type, UNIT_TYPE);
+        }
         return root;
     }
 
