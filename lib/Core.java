@@ -58,9 +58,9 @@ public final class Core {
     };
 
     public static final Fun READLN = new Fun() {
-        public Object apply(Object x) {
+        public synchronized Object apply(Object x) {
             if (stdin == null) {
-                initStdin();
+                stdin = new BufferedReader(new InputStreamReader(System.in));
             }
             try {
                 return stdin.readLine();
@@ -102,12 +102,6 @@ public final class Core {
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();
-        }
-    }
-
-    private static synchronized void initStdin() {
-        if (stdin == null) {
-            stdin = new BufferedReader(new InputStreamReader(System.in));
         }
     }
 
