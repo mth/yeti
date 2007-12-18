@@ -31,9 +31,16 @@
 
 package yeti.lang;
 
+import java.util.Random;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
+    private static Random rnd = null;
+    private static BufferedReader stdin = null;
 
     public static final Fun PRINTLN = new Fun() {
         public Object apply(Object x) {
@@ -42,11 +49,67 @@ public final class Core {
         }
     };
 
+    public static final Fun PRINT = new Fun() {
+        public Object apply(Object x) {
+            System.out.print(x);
+            System.out.flush();
+            return null;
+        }
+    };
+
+    public static final Fun READLN = new Fun() {
+        public Object apply(Object x) {
+            if (stdin == null) {
+                initStdin();
+            }
+            try {
+                return stdin.readLine();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    };
+
     public static final Fun ARRAY = new Fun() {
         public Object apply(Object x) {
             return new MList((AIter) x);
         }
     };
+
+    public static final Fun NUM = new Fun() {
+        public Object apply(Object x) {
+            return parseNum((String) x);
+        }
+    };
+
+    public static final Fun RANDINT = new Fun() {
+        public Object apply(Object x) {
+            if (rnd == null) {
+                initRandom();
+            }
+            Num n = (Num) x;
+            if (n.rCompare(0x7fffffffL) > 0) {
+                return new IntNum(rnd.nextInt(n.intValue()));
+            }
+            if (n.rCompare(Long.MAX_VALUE) > 0) {
+                return new IntNum((long) (n.doubleValue() * rnd.nextDouble()));
+            }
+            // XXX
+            return new FloatNum(Math.floor(n.doubleValue() * rnd.nextDouble()));
+        }
+    };
+
+    private static synchronized void initRandom() {
+        if (rnd == null) {
+            rnd = new Random();
+        }
+    }
+
+    private static synchronized void initStdin() {
+        if (stdin == null) {
+            stdin = new BufferedReader(new InputStreamReader(System.in));
+        }
+    }
 
     public static Num parseNum(String str) {
         String s = str.trim();

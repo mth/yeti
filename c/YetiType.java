@@ -65,7 +65,6 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type ORDERED = orderedVar(1);
     static final Type A = new Type(1);
     static final Type B = new Type(1);
-    static final Type A_TO_UNIT = new Type(FUN, new Type[] { A, UNIT_TYPE });
     static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
     static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
     static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
@@ -89,7 +88,11 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare("<=", LG_TYPE, COND_LE,
         bindCompare(">" , LG_TYPE, COND_GT,
         bindCompare(">=", LG_TYPE, COND_GE,
-        bindCore("println", A_TO_UNIT, "PRINTLN",
+        bindCore("print", fun(A, UNIT_TYPE), "PRINT",
+        bindCore("println", fun(A, UNIT_TYPE), "PRINTLN",
+        bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
+        bindCore("number", fun(STR_TYPE, NUM_TYPE), "NUM",
+        bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
         bindCore("array", TO_ARRAY_TYPE, "ARRAY",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
@@ -99,7 +102,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null)))))))))))))))));
+        bindScope("true", new BooleanConstant(true), null)))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -111,6 +114,10 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
         return bindPoly(name, type, new CoreFun(type, field), 0, scope);
+    }
+
+    static Type fun(Type a, Type res) {
+        return new Type(FUN, new Type[] { a, res });
     }
 
     static Type fun2Arg(Type a, Type b, Type res) {
