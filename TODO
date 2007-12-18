@@ -1,9 +1,7 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Compilation from files
 * Report error locations
-* Add source line information to the generated class files
 * Modules
 * Built-in hash maps
 * Fix tail-call optimisation

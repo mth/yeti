@@ -47,6 +47,8 @@ import yeti.lang.Core;
 import yeti.lang.Num;
 
 interface YetiParser {
+    ThreadLocal currentSrc = new ThreadLocal();
+
     class Node {
         int line;
         int col;
@@ -57,10 +59,6 @@ interface YetiParser {
 
         String str() {
             return toString();
-        }
-
-        public String toString() {
-            return ":" + line + ":" + col + ":" + getClass().getName();
         }
 
         String showList(char open, char close, Node[] list) {
@@ -80,6 +78,22 @@ interface YetiParser {
             this.line = line;
             this.col = col;
             return this;
+        }
+
+        public String toString() {
+            char[] s = (char[]) currentSrc.get();
+            if (s == null)
+                return getClass().getName();
+            int p = 0, l = line;
+            if (--l > 0)
+                while (p < s.length && (s[p++] != '\n' || --l > 0));
+            p += col - 1;
+            int e = p;
+            char c;
+            while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
+                    c != ';' && c != '.' && c != '(' && c != ')' &&
+                    c != '[' && c != ']' && c != '{' && c != '}'));
+            return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
         }
     }
 
@@ -102,15 +116,19 @@ interface YetiParser {
             Node nameNode = (Node) args.get(0);
             if (nameNode instanceof VarSym) {
                 if (args.size() == 1) {
-                    throw new RuntimeException("missing variable name");
+                    throw new CompileException(nameNode,
+                        "Variable name is missing");
                 }
                 nameNode = (Node) args.get(1);
                 first = 2;
                 var = true;
             }
             if (!(nameNode instanceof Sym)) {
-                throw new RuntimeException("illegal binding name: " + nameNode);
+                throw new CompileException(nameNode,
+                    "Illegal binding name: " + nameNode);
             }
+            line = nameNode.line;
+            col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
             for (int i = args.size(); --i >= first;) {
                 expr = new Lambda((Node) args.get(i), expr,
@@ -325,7 +343,7 @@ interface YetiParser {
                 op.prio = 1;
                 to.left = to.right;
             } else if (lastOp) {
-                throw new RuntimeException("Do not stack operators");
+                throw new CompileException(op, "Do not stack operators");
             } else {
                 while (to.parent != null && (to.prio < op.prio
                                         || to.prio == op.prio && op.toRight)) {
@@ -355,7 +373,7 @@ interface YetiParser {
         Node result() {
             if (cur.left == null && cur.prio != -1 && cur.prio != 1 ||
                 cur.right == null) {
-                throw new RuntimeException("Expecting some value");
+                throw new CompileException(cur, "Expecting some value");
             }
             return root.right;
         }
@@ -371,7 +389,11 @@ interface YetiParser {
             { ":=" },
             { ":" }
         };
-        private static final Eof EOF = new Eof();
+        private static final Eof EOF = new Eof() {
+            public String toString() {
+                return "EOF";
+            }
+        };
         private char[] src;
         private int p;
         private Node eofWas;
@@ -391,11 +413,11 @@ interface YetiParser {
             int i = p;
             char c;
             while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
-                ++i;
                 if (c == '\n') {
                     ++line;
                     lineStart = i;
                 }
+                ++i;
             }
             if (i >= src.length || src[i] == ')'
                 || src[i] == ']' || src[i] == '}') {
@@ -403,7 +425,7 @@ interface YetiParser {
                 return EOF;
             }
             p = i + 1;
-            int line = this.line, col = p - lineStart;
+            int line = this.line, col = i - lineStart;
             switch (src[i]) {
                 case '.':
                     return new BinOp(".", 0, true).pos(line, col);
@@ -491,11 +513,12 @@ interface YetiParser {
             for (List res = new ArrayList();;) {
                 Node node = fetch();
                 if (node instanceof Eof) {
-                    throw new RuntimeException(to + " expected, not " + node);
+                    throw new CompileException(node,
+                                    to + " expected, not " + node);
                 }
                 if (node instanceof Sym && to == ((Sym) node).sym) {
                     if (res.isEmpty()) {
-                        throw new RuntimeException("no condition?");
+                        throw new CompileException(node, "no condition?");
                     }
                     return def(null, res);
                 }
@@ -513,7 +536,8 @@ interface YetiParser {
                 eofWas instanceof Else ? readSeq(' ')
                                        : new Seq(new Node[] {}) });
             if (!(eofWas instanceof Fi)) {
-                throw new RuntimeException("Unexpected " + eofWas.show());
+                throw new CompileException(eofWas,
+                    "Expected fi, found " + eofWas);
             }
             return new Condition((Node[][]) branches.toArray(
                             new Node[branches.size()][]));
@@ -523,7 +547,8 @@ interface YetiParser {
             Node val = readExpr("of");
             Node[] choices = readMany(' ');
             if (!(eofWas instanceof Esac)) {
-                throw new RuntimeException("Unexpected " + eofWas.show());
+                throw new CompileException(eofWas,
+                    "Expected esac, found " + eofWas);
             }
             return new Case(val, choices);
         }
@@ -532,13 +557,13 @@ interface YetiParser {
             for (List args = new ArrayList();;) {
                 Node arg = fetch();
                 if (arg instanceof Eof) {
-                    throw new RuntimeException("Unexpected " + arg.show());
+                    throw new CompileException(arg, "Unexpected " + arg);
                 }
                 if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
                     Node expr = readSeq(' ');
                     if (!(eofWas instanceof Done)) {
-                        throw new RuntimeException("Unexpected "
-                                                 + eofWas.show());
+                        throw new CompileException(eofWas,
+                                    "Expected done, found " + eofWas);
                     }
                     if (args.isEmpty()) {
                         return new Lambda(new Sym("_"), expr, null);
@@ -574,7 +599,8 @@ interface YetiParser {
             }
             eofWas = sym;
             if (end != ' ' && (p >= src.length || src[p++] != end)) {
-                throw new RuntimeException("Expecting " + end);
+                throw new CompileException(line, p - lineStart,
+                                           "Expecting " + end);
             }
             if (!l.isEmpty()) {
                 res.add(def(args, l));
@@ -595,11 +621,16 @@ interface YetiParser {
         private Node readStr() {
             int st = p;
             String res = "";
+            int sline = line, scol = p - lineStart - 1;
             for (; p < src.length && src[p] != '"'; ++p) {
+                if (src[p] == '\n') {
+                    lineStart = p;
+                    ++line;
+                }
                 if (src[p] == '\\') {
-                    res = res.concat(new String(src, st, p));
-                    st = p;
-                    if (++p >= src.length) {
+                    res = res.concat(new String(src, st, p - st));
+                    st = ++p;
+                    if (p >= src.length) {
                         break;
                     }
                     switch (src[p]) {
@@ -616,13 +647,14 @@ interface YetiParser {
                             res = res.concat("\t");
                             break;
                         default:
-                            throw new RuntimeException("WTF");
+                            throw new CompileException(line, p - lineStart - 1,
+                                "Unexpected escape: \\" + src[p]);
                     }
                     ++st;
                 }
             }
             if (p >= src.length) {
-                throw new RuntimeException("Unclosed \"");
+                throw new CompileException(sline, scol, "Unclosed \"");
             }
             return new Str(res.concat(new String(src, st, p++ - st)));
         }

@@ -1,4 +1,5 @@
-compile: CodeWriter.java YetiParser.java YetiType.java YetiCode.java YetiC.java
+compile: CodeWriter.java YetiParser.java YetiType.java YetiCode.java YetiC.java\
+         CompileException.java
 	javac -d . -classpath asm-3.1.jar:. $+
 
 .PHONY: lib

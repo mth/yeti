@@ -4,7 +4,7 @@ guess n =
 	(print "> ";
 	v = number (readln ());
 	if v == given then
-		print "Correct! Guessed with ";
+		print "Correct! ";
 		print n;
 		println " tries."
 	else

@@ -441,10 +441,10 @@ public final class YetiType implements YetiParser, YetiCode {
         return copy;
     }
 
-    static BindRef resolve(String sym, int line, Scope scope, int depth) {
+    static BindRef resolve(String sym, Node where, Scope scope, int depth) {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == sym) {
-                BindRef ref = scope.binder.getRef(line);
+                BindRef ref = scope.binder.getRef(where.line);
                 if (scope.free == null || scope.free.length == 0) {
                     return ref;
                 }
@@ -459,11 +459,11 @@ public final class YetiType implements YetiParser, YetiCode {
             }
             if (scope.closure != null) {
                 BindRef ref = scope.closure.refProxy(
-                                resolve(sym, line, scope.outer, depth));
+                                resolve(sym, where, scope.outer, depth));
                 return ref;
             }
         }
-        throw new RuntimeException("Unknown identifier: " + sym);
+        throw new CompileException(where, "Unknown identifier: " + sym);
     }
 
     static Code analyze(Node node, Scope scope, int depth) {
@@ -472,7 +472,7 @@ public final class YetiType implements YetiParser, YetiCode {
             if (Character.isUpperCase(sym.charAt(0))) {
                 return variantConstructor(sym, depth);
             }
-            return resolve(sym, node.line, scope, depth);
+            return resolve(sym, node, scope, depth);
         }
         if (node instanceof NumLit) {
             return new NumericConstant(((NumLit) node).num);
@@ -510,7 +510,7 @@ public final class YetiType implements YetiParser, YetiCode {
             }
             // TODO: unary -
             return apply(op.right.line,
-                         apply(op.line, resolve(op.op, op.line, scope, depth),
+                         apply(op.line, resolve(op.op, op, scope, depth),
                                analyze(op.left, scope, depth), depth),
                          analyze(op.right, scope, depth), depth);
         }
@@ -529,8 +529,8 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof Case) {
             return caseType((Case) node, scope, depth);
         }
-        throw new IllegalArgumentException("Don't know what to do with "
-                        + node);
+        throw new CompileException(node,
+            "I think that this " + node + " should not be here.");
     }
 
     static Code apply(int line, Code fun, Code arg, int depth) {
@@ -550,7 +550,10 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Code selectMember(BinOp op, Scope scope, int depth) {
         if (!(op.right instanceof Sym)) {
-            throw new RuntimeException("Illegal ." + op.right.show());
+            if (op.right == null) {
+                throw new CompileException(op, "What's that dot doing here?");
+            }
+            throw new CompileException(op.right, "Illegal ." + op.right);
         }
         final String field = ((Sym) op.right).sym;
         final Type res = new Type(depth);
@@ -579,7 +582,7 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Code keyRefExpr(Code val, NList keyList, Scope scope, int depth) {
         if (keyList.items.length == 0) {
-            throw new RuntimeException(".[] - missing key expression");
+            throw new CompileException(keyList, ".[] - missing key expression");
         }
         Code key = analSeq(keyList.items, scope, depth);
         Type[] param = { new Type(depth), key.type, new Type(depth) };
@@ -593,8 +596,8 @@ public final class YetiType implements YetiParser, YetiCode {
         unify(left.type, right.type);
         Code assign = left.assign(right);
         if (assign == null) {
-            throw new RuntimeException(op.left.str()
-                + " is not an lvalue: " + left);
+            throw new CompileException(op,
+                "Non-mutable value on the left of the assign operator :=");
         }
         assign.type = UNIT_TYPE;
         return assign;
@@ -674,6 +677,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code analSeq(Node[] nodes, Scope scope, int depth) {
+        BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr result = null, last = null, cur;
         for (int i = 0; i < nodes.length - 1; ++i) {
             if (nodes[i] instanceof Bind) {
@@ -699,6 +703,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (bind.var) {
                     registerVar(binder, scope.outer);
                 }
+                bindings[i] = binder;
                 cur = binder;
             } else {
                 Code code = analyze(nodes[i], scope, depth);
@@ -714,6 +719,12 @@ public final class YetiType implements YetiParser, YetiCode {
             }
         }
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
+        for (int i = bindings.length; --i >= 0;) {
+            if (bindings[i] != null && !bindings[i].used) {
+                throw new CompileException(nodes[i],
+                    "Unused binding: " + ((Bind) nodes[i]).name);
+            }
+        }
         if (last == null) {
             return code;
         }
@@ -727,7 +738,8 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Code lambda(Function to, Lambda lambda, Scope scope, int depth) {
         if (!(lambda.arg instanceof Sym)) {
-            throw new RuntimeException("Bad argument: " + lambda.arg);
+            throw new CompileException(lambda.arg,
+                                       "Bad argument: " + lambda.arg);
         }
         to.polymorph = true;
         to.arg.type = new Type(depth);
@@ -747,7 +759,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static Code structType(Struct st, Scope scope, int depth) {
         Node[] nodes = st.fields;
         if (nodes.length == 0) {
-            throw new RuntimeException("No sense in empty struct");
+            throw new CompileException(st, "No sense in empty struct");
         }
         Scope local = scope;
         Map fields = new HashMap();
@@ -759,13 +771,14 @@ public final class YetiType implements YetiParser, YetiCode {
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             if (!(nodes[i] instanceof Bind)) {
-                throw new RuntimeException("Unexpected beast in the structure ("
-                    + nodes[i] + "), please give me some field binding.");
+                throw new CompileException(nodes[i],
+                    "Unexpected beast in the structure (" + nodes[i] +
+                    "), please give me some field binding.");
             }
             Bind field = (Bind) nodes[i];
             if (fields.containsKey(field.name)) {
-                throw new RuntimeException("Duplicate field " + field.name
-                    + " in the structure");
+                throw new CompileException(field, "Duplicate field "
+                    + field.name + " in the structure");
             }
             Code code = values[i] = field.expr instanceof Lambda
                         ? new Function(new Type(depth))
@@ -790,14 +803,14 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Scope badPattern(Node pattern) {
-        throw new RuntimeException("Bad case pattern: " + pattern.show());
+        throw new CompileException(pattern, "Bad case pattern: " + pattern);
     }
 
     // oh holy fucking shit, this code sucks. horrible abuse of BinOps...
     static Code caseType(Case ex, Scope scope, int depth) {
         Node[] choices = ex.choices;
         if (choices.length == 0) {
-            throw new RuntimeException("case expects some option!");
+            throw new CompileException(ex, "case expects some option!");
         }
         Code val = analyze(ex.value, scope, depth);
         Map variants = new HashMap();
@@ -808,8 +821,8 @@ public final class YetiType implements YetiParser, YetiCode {
             BinOp choice;
             if (!(choices[i] instanceof BinOp) ||
                 (choice = (BinOp) choices[i]).op != ":") {
-                throw new RuntimeException("Expecting option, not a "
-                                           + choices[i].show());
+                throw new CompileException(choices[i],
+                    "Expecting option, not a " + choices[i]);
             }
             if (!(choice.left instanceof BinOp)) {
                 badPattern(choice.left); // TODO
@@ -877,18 +890,29 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     public static Code toCode(String sourceName, char[] src, int flags) {
-        Node n = new Parser(sourceName, src, flags).readSeq(' ');
-        if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
-            System.err.println(n.show());
+        Object oldSrc = currentSrc.get();
+        currentSrc.set(src);
+        try {
+            Node n = new Parser(sourceName, src, flags).readSeq(' ');
+            if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
+                System.err.println(n.show());
+            }
+            RootClosure root = new RootClosure();
+            Scope scope = new Scope(ROOT_SCOPE, null, null);
+            scope.closure = root;
+            root.code = analyze(n, scope, 0);
+            root.type = root.code.type;
+            if ((flags & YetiC.CF_COMPILE_MODULE) == 0) {
+                unify(root.type, UNIT_TYPE);
+            }
+            return root;
+        } catch (CompileException ex) {
+            if (ex.fn == null) {
+                ex.fn = sourceName;
+            }
+            throw ex;
+        } finally {
+            currentSrc.set(oldSrc);
         }
-        RootClosure root = new RootClosure();
-        Scope scope = new Scope(ROOT_SCOPE, null, null);
-        scope.closure = root;
-        root.code = analyze(n, scope, 0);
-        root.type = root.code.type;
-        if ((flags & YetiC.CF_COMPILE_MODULE) == 0) {
-            unify(root.type, UNIT_TYPE);
-        }
-        return root;
     }
 }

@@ -747,6 +747,7 @@ interface YetiCode {
         private Closure closure;
         boolean assigned;
         boolean captured;
+        boolean used;
 
         BindExpr(Code expr, boolean var) {
             super(expr);
@@ -760,6 +761,7 @@ interface YetiCode {
         }
 
         public BindRef getRef(int line) {
+            used = true;
             BindRef res = st.bindRef();
             if (res == null) {
                 res = new BindRef() {
