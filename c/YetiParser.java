@@ -48,6 +48,9 @@ import yeti.lang.Num;
 
 interface YetiParser {
     class Node {
+        int line;
+        int col;
+
         String show() {
             return str();
         }
@@ -57,7 +60,7 @@ interface YetiParser {
         }
 
         public String toString() {
-            return getClass().getName();
+            return ":" + line + ":" + col + ":" + getClass().getName();
         }
 
         String showList(char open, char close, Node[] list) {
@@ -71,6 +74,12 @@ interface YetiParser {
             }
             res.append(close);
             return res.toString();
+        }
+
+        Node pos(int line, int col) {
+            this.line = line;
+            this.col = col;
+            return this;
         }
     }
 
@@ -124,6 +133,8 @@ interface YetiParser {
             this.arg = arg;
             this.expr = expr;
             this.bindName = name;
+            line = arg.line;
+            col = arg.col;
         }
 
         String str() {
@@ -297,11 +308,18 @@ interface YetiParser {
         private BinOp root = new BinOp(null, -1, false);
         private BinOp cur = root;
 
+        private void apply(Node node) {
+            BinOp apply = new BinOp("", 2, true);
+            apply.line = node.line;
+            apply.col = node.col;
+            addOp(apply);
+        }
+
         private void addOp(BinOp op) {
             BinOp to = cur;
             if (op.op == "-" && lastOp || op.op == "\\") {
                 if (!lastOp) {
-                    addOp(new BinOp("", 2, true));
+                    apply(op);
                     to = cur;
                 }
                 op.prio = 1;
@@ -326,7 +344,7 @@ interface YetiParser {
                 addOp((BinOp) node);
             } else {
                 if (!lastOp) {
-                    addOp(new BinOp("", 2, true));
+                    apply(node);
                 }
                 lastOp = false;
                 cur.left = cur.right;
@@ -359,6 +377,8 @@ interface YetiParser {
         private Node eofWas;
         private int flags;
         private String sourceName;
+        private int line = 1;
+        private int lineStart;
 
         Parser(String sourceName, char[] src, int flags) {
             this.sourceName = sourceName;
@@ -369,8 +389,13 @@ interface YetiParser {
         private Node fetch() {
             char[] src = this.src;
             int i = p;
-            while (i < src.length && src[i] >= '\000' && src[i] <= ' ') {
+            char c;
+            while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
                 ++i;
+                if (c == '\n') {
+                    ++line;
+                    lineStart = i;
+                }
             }
             if (i >= src.length || src[i] == ')'
                 || src[i] == ']' || src[i] == '}') {
@@ -378,36 +403,36 @@ interface YetiParser {
                 return EOF;
             }
             p = i + 1;
+            int line = this.line, col = p - lineStart;
             switch (src[i]) {
                 case '.':
-                    return new BinOp(".", 0, true);
+                    return new BinOp(".", 0, true).pos(line, col);
                 case '=':
                     if (p < src.length && src[p] > ' ') {
                         break;
                     }
-                    return new BindOp();
+                    return new BindOp().pos(line, col);
                 case ';':
-                    return new SeqOp();
+                    return new SeqOp().pos(line, col);
                 case '(':
                     return readSeq(')');
                 case '[':
-                    return new NList(readMany(']'));
+                    return new NList(readMany(']')).pos(line, col);
                 case '{':
-                    return new Struct(readMany('}'));
+                    return new Struct(readMany('}')).pos(line, col);
                 case '"':
-                    return readStr();
+                    return readStr().pos(line, col);
                 case '\\':
-                    return new BinOp("\\", 1, false);
+                    return new BinOp("\\", 1, false).pos(line, col);
             }
             p = i;
-            char c;
             if ((c = src[i]) >= '0' && c <= '9') {
                 while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                        c != '[' && c != ']' && c != '{' && c != '}' &&
                        c != ':' && c != ';' && c > ' ');
                 String s = new String(src, p, i - p);
                 p = i;
-                return new NumLit(Core.parseNum(s));
+                return new NumLit(Core.parseNum(s)).pos(line, col);
             }
             while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                    c != ';' && c > ' ' && c != '[' && c != ']' &&
@@ -417,41 +442,37 @@ interface YetiParser {
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
+            Node res;
             if (s == "if") {
-                return readIf();
-            }
-            if (s == "elif") {
-                return new Elif();
-            }
-            if (s == "else") {
-                return new Else();
-            }
-            if (s == "fi") {
-                return new Fi();
-            }
-            if (s == "case") {
-                return readCase();
-            }
-            if (s == "esac") {
-                return new Esac();
-            }
-            if (s == "do") {
-                return readDo();
-            }
-            if (s == "done") {
-                return new Done();
-            }
-            if (s == "var") {
-                return new VarSym();
-            }
-            for (i = OPS.length; --i >= 0;) {
-                for (int j = OPS[i].length; --j >= 0;) {
-                    if (OPS[i][j] == s) {
-                        return new BinOp(s, i + 3, s != "::");
+                res = readIf();
+            } else if (s == "elif") {
+                res = new Elif();
+            } else if (s == "else") {
+                res = new Else();
+            } else if (s == "fi") {
+                res = new Fi();
+            } else if (s == "case") {
+                res = readCase();
+            } else if (s == "esac") {
+                res = new Esac();
+            } else if (s == "do") {
+                res = readDo();
+            } else if (s == "done") {
+                res = new Done();
+            } else if (s == "var") {
+                res = new VarSym();
+            } else {
+                for (i = OPS.length; --i >= 0;) {
+                    for (int j = OPS[i].length; --j >= 0;) {
+                        if (OPS[i][j] == s) {
+                            return new BinOp(s, i + 3, s != "::")
+                                         .pos(line, col);
+                        }
                     }
                 }
+                res = new Sym(s);
             }
-            return new Sym(s);
+            return res.pos(line, col);
         }
 
         private Node def(List args, List expr) {
@@ -562,11 +583,13 @@ interface YetiParser {
         }
 
         Node readSeq(char end) {
+            int line = this.line;
+            int col = p - lineStart;
             Node[] list = readMany(end);
             if (list.length == 1) {
                 return list[0];
             }
-            return new Seq(list);
+            return new Seq(list).pos(line, col);
         }
 
         private Node readStr() {

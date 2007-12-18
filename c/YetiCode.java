@@ -98,6 +98,7 @@ interface YetiCode {
         MethodVisitor m;
         int localVarCount;
         int fieldCounter;
+        int lastLine;
 
         Ctx(CompileCtx compilation, String sourceName,
                 ClassWriter writer, String className) {
@@ -138,6 +139,14 @@ interface YetiCode {
                 m.visitLdcInsn(new Integer(n));
             }
         }
+
+        void visitLine(int line) {
+            if (line != 0 && lastLine != line) {
+                Label label = new Label();
+                m.visitLabel(label);
+                m.visitLineNumber(line, label);
+            }
+        }
     }
 
     abstract class Code implements Opcodes {
@@ -148,8 +157,8 @@ interface YetiCode {
         abstract void gen(Ctx ctx);
 
         // Some "functions" may have special kinds of apply
-        Code apply(Code arg, YetiType.Type res) {
-            return new Apply(res, this, arg);
+        Code apply(Code arg, YetiType.Type res, int line) {
+            return new Apply(res, this, arg, line);
         }
 
         BindRef bindRef() {
@@ -262,7 +271,7 @@ interface YetiCode {
             this.val = val;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             return this;
         }
 
@@ -398,7 +407,7 @@ interface YetiCode {
             arg.binder = this;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             return arg;
         }
 
@@ -415,8 +424,8 @@ interface YetiCode {
                             ctx.m.visitVarInsn(ALOAD, 0);
                         }
 
-                        Code apply(Code arg, YetiType.Type res) {
-                            return new Apply(res, this, arg) {
+                        Code apply(Code arg, YetiType.Type res, int line) {
+                            return new Apply(res, this, arg, line) {
                                 boolean tail;
 
                                 void gen(Ctx ctx) {
@@ -542,19 +551,23 @@ interface YetiCode {
 
     class Apply extends Code {
         Code fun, arg;
+        int line;
 
-        Apply(YetiType.Type res, Code fun, Code arg) {
+        Apply(YetiType.Type res, Code fun, Code arg, int line) {
             type = res;
             this.fun = fun;
             this.arg = arg;
+            this.line = line;
         }
 
         void gen(Ctx ctx) {
             fun.gen(ctx);
             // XXX this cast could be optimised away sometimes
             //  - when the fun really is Fun by java types
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
             arg.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                     "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
@@ -576,8 +589,8 @@ interface YetiCode {
                     "<init>", "(Ljava/lang/String;)V");
         }
 
-        Code apply(Code arg, YetiType.Type res) {
-            Code apply = new Apply(res, this, arg);
+        Code apply(Code arg, YetiType.Type res, int line) {
+            Code apply = new Apply(res, this, arg, line);
             apply.polymorph = arg.polymorph;
             return apply;
         }
@@ -587,16 +600,19 @@ interface YetiCode {
         private boolean assigned = false;
         Code st;
         String name;
+        int line;
 
-        SelectMember(YetiType.Type type, Code st, String name) {
+        SelectMember(YetiType.Type type, Code st, String name, int line) {
             this.type = type;
             this.polymorph = st.polymorph;
             this.st = st;
             this.name = name;
+            this.line = line;
         }
 
         void gen(Ctx ctx) {
             st.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
             ctx.m.visitLdcInsn(name);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
@@ -611,9 +627,11 @@ interface YetiCode {
             return new Code() {
                 void gen(Ctx ctx) {
                     st.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
                     ctx.m.visitLdcInsn(name);
                     setValue.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                             "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
                     ctx.m.visitInsn(ACONST_NULL);
@@ -627,16 +645,19 @@ interface YetiCode {
     class KeyRefExpr extends Code {
         Code val;
         Code key;
+        int line;
 
-        KeyRefExpr(YetiType.Type type, Code val, Code key) {
+        KeyRefExpr(YetiType.Type type, Code val, Code key, int line) {
             this.type = type;
             this.val = val;
             this.key = key;
+            this.line = line;
         }
 
         void gen(Ctx ctx) {
             val.gen(ctx);
             key.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                     "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
@@ -647,6 +668,7 @@ interface YetiCode {
                     val.gen(ctx);
                     key.gen(ctx);
                     setValue.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                             "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
                             "Ljava/lang/Object;");
@@ -706,7 +728,7 @@ interface YetiCode {
     }
 
     interface Binder {
-        BindRef getRef();
+        BindRef getRef(int line);
     }
 
     interface CaptureWrapper {
@@ -736,7 +758,7 @@ interface YetiCode {
             id = index;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             BindRef res = st.bindRef();
             if (res == null) {
                 res = new BindRef() {
@@ -832,7 +854,7 @@ interface YetiCode {
             int var;
             int index;
 
-            public BindRef getRef() {
+            public BindRef getRef(int line) {
                 used = true;
                 return this;
             }
@@ -959,7 +981,7 @@ interface YetiCode {
         }
 
         class Bind extends BindRef implements Binder {
-            public BindRef getRef() {
+            public BindRef getRef(int line) {
                 binder = this;
                 return this;
             }
@@ -1060,6 +1082,7 @@ interface YetiCode {
 
     class CoreFun extends BindRef implements Binder {
         String field;
+        int line;
 
         CoreFun(YetiType.Type type, String field) {
             this.type = type;
@@ -1068,20 +1091,23 @@ interface YetiCode {
             binder = this;
         }
 
-        public BindRef getRef() {
-            return new CoreFun(type, field);
+        public BindRef getRef(int line) {
+            CoreFun res = new CoreFun(type, field);
+            res.line = line;
+            return res;
         }
 
         void gen(Ctx ctx) {
+            ctx.visitLine(line);
             ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", field,
                                  "Lyeti/lang/Fun;");
         }
     }
 
     abstract class BinOpRef extends BindRef {
-        Code apply(final Code arg1, YetiType.Type res) {
+        Code apply(final Code arg1, YetiType.Type res, int line) {
             Code c = new Code() {
-                Code apply(final Code arg2, YetiType.Type res) {
+                Code apply(final Code arg2, YetiType.Type res, int line) {
                     Code code = new Code() {
                         void gen(Ctx ctx) {
                             binGen(ctx, arg1, arg2);
@@ -1126,7 +1152,7 @@ interface YetiCode {
             binder = this;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             return this; // XXX should copy for type?
         }
 
@@ -1157,6 +1183,7 @@ interface YetiCode {
     class CompareFun extends BoolBinOp {
         static final int[] OPS = { IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE };
         int op;
+        int line;
 
         void binGenIf(Ctx ctx, Code arg1, Code arg2,
                       Label to, boolean ifTrue) {
@@ -1166,6 +1193,7 @@ interface YetiCode {
             }
             arg1.gen(ctx);
             arg2.gen(ctx);
+            ctx.visitLine(line);
             if ((op & (COND_LT | COND_GT)) == 0) {
                 op ^= COND_NOT;
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
@@ -1187,12 +1215,13 @@ interface YetiCode {
             this.type = type;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             CompareFun c = new CompareFun();
             c.binder = this;
             c.type = type;
             c.op = op;
             c.polymorph = true;
+            c.line = line;
             return c;
         }
     }
@@ -1206,7 +1235,7 @@ interface YetiCode {
             binder = this;
         }
 
-        public BindRef getRef() {
+        public BindRef getRef(int line) {
             return this;
         }
 
@@ -1225,13 +1254,15 @@ interface YetiCode {
     }
 
     class Cons implements Binder {
-        public BindRef getRef() {
+        public BindRef getRef(final int line) {
             BindRef r = new BinOpRef() {
                 void binGen(Ctx ctx, Code arg1, Code arg2) {
+                    ctx.visitLine(line);
                     ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
                     ctx.m.visitInsn(DUP);
                     arg1.gen(ctx);
                     arg2.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
                     ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
                         "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");

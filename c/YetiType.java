@@ -434,10 +434,10 @@ public final class YetiType implements YetiParser, YetiCode {
         return copy;
     }
 
-    static BindRef resolve(String sym, Scope scope, int depth) {
+    static BindRef resolve(String sym, int line, Scope scope, int depth) {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == sym) {
-                BindRef ref = scope.binder.getRef();
+                BindRef ref = scope.binder.getRef(line);
                 if (scope.free == null || scope.free.length == 0) {
                     return ref;
                 }
@@ -451,7 +451,8 @@ public final class YetiType implements YetiParser, YetiCode {
                 return ref;
             }
             if (scope.closure != null) {
-                BindRef ref = scope.closure.refProxy(resolve(sym, scope.outer, depth));
+                BindRef ref = scope.closure.refProxy(
+                                resolve(sym, line, scope.outer, depth));
                 return ref;
             }
         }
@@ -464,7 +465,7 @@ public final class YetiType implements YetiParser, YetiCode {
             if (Character.isUpperCase(sym.charAt(0))) {
                 return variantConstructor(sym, depth);
             }
-            return resolve(sym, scope, depth);
+            return resolve(sym, node.line, scope, depth);
         }
         if (node instanceof NumLit) {
             return new NumericConstant(((NumLit) node).num);
@@ -482,7 +483,7 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             if (op.op == "") {
-                return apply(analyze(op.left, scope, depth),
+                return apply(node.line, analyze(op.left, scope, depth),
                              analyze(op.right, scope, depth), depth);
             }
             if (op.op == ".") {
@@ -497,11 +498,12 @@ public final class YetiType implements YetiParser, YetiCode {
             }
             if (op.op == "\\") {
                 return lambda(new Function(null),
-                              new Lambda(new Sym("_"), op.right, null),
-                              scope, depth);
+                              new Lambda(new Sym("_").pos(op.line, op.col),
+                                         op.right, null), scope, depth);
             }
             // TODO: unary -
-            return apply(apply(resolve(op.op, scope, depth),
+            return apply(op.right.line,
+                         apply(op.line, resolve(op.op, op.line, scope, depth),
                                analyze(op.left, scope, depth), depth),
                          analyze(op.right, scope, depth), depth);
         }
@@ -524,10 +526,10 @@ public final class YetiType implements YetiParser, YetiCode {
                         + node);
     }
 
-    static Code apply(Code fun, Code arg, int depth) {
+    static Code apply(int line, Code fun, Code arg, int depth) {
         Type[] applyFun = { arg.type, new Type(depth) };
         unify(fun.type, new Type(FUN, applyFun));
-        return fun.apply(arg, applyFun[1]);
+        return fun.apply(arg, applyFun[1], line);
     }
 
     static Code variantConstructor(String name, int depth) {
@@ -550,7 +552,7 @@ public final class YetiType implements YetiParser, YetiCode {
         arg.partialMembers.put(field, res);
         Code src = analyze(op.left, scope, depth);
         unify(arg, src.type);
-        return new SelectMember(res, src, field) {
+        return new SelectMember(res, src, field, op.line) {
             boolean mayAssign() {
                 Type t = st.type.deref();
                 Object given;
@@ -575,7 +577,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Code key = analSeq(keyList.items, scope, depth);
         Type[] param = { new Type(depth), key.type, new Type(depth) };
         unify(val.type, new Type(MAP, param));
-        return new KeyRefExpr(param[0], val, key);
+        return new KeyRefExpr(param[0], val, key, keyList.line);
     }
 
     static Code assignOp(BinOp op, Scope scope, int depth) {
