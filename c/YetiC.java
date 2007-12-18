@@ -58,7 +58,7 @@ class Loader extends ClassLoader implements CodeWriter {
             if (code == null) {
                 return super.loadClass(name, resolve);
             }
-            c = defineClass(name, code, 0, code.length);
+            loaded = defineClass(name, code, 0, code.length);
         }
         if (resolve) {
             resolveClass(loaded);
