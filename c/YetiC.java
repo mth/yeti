@@ -52,8 +52,8 @@ class Loader extends ClassLoader implements CodeWriter {
     // even when it already exists in current classpath
     protected synchronized Class loadClass(String name, boolean resolve)
             throws ClassNotFoundException {
-        Class c = findLoadedClass(name);
-        if (c == null) {
+        Class loaded = findLoadedClass(name);
+        if (loaded == null) {
             byte[] code = (byte[]) classes.get(name + ".class");
             if (code == null) {
                 return super.loadClass(name, resolve);
@@ -61,9 +61,9 @@ class Loader extends ClassLoader implements CodeWriter {
             c = defineClass(name, code, 0, code.length);
         }
         if (resolve) {
-            resolveClass(c);
+            resolveClass(loaded);
         }
-        return c;
+        return loaded;
     }
 }
 
