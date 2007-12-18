@@ -145,6 +145,7 @@ interface YetiCode {
                 Label label = new Label();
                 m.visitLabel(label);
                 m.visitLineNumber(line, label);
+                lastLine = line;
             }
         }
     }

@@ -120,6 +120,9 @@ public class YetiC {
                     case 'v':
                         vflag = true;
                         break;
+                    case 'C':
+                        exec = false;
+                        break;
                     default:
                         System.err.println("Unknown option '"
                             + argv[i].charAt(j) + "'");
