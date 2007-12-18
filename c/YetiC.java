@@ -48,12 +48,22 @@ class Loader extends ClassLoader implements CodeWriter {
         classes.put(name, code);
     }
 
-    public Class findClass(String name) throws ClassNotFoundException {
-        byte[] code = (byte[]) classes.get(name + ".class");
-        if (code == null) {
-            throw new ClassNotFoundException(name);
+    // override loadClass to ensure loading our own class
+    // even when it already exists in current classpath
+    protected synchronized Class loadClass(String name, boolean resolve)
+            throws ClassNotFoundException {
+        Class c = findLoadedClass(name);
+        if (c == null) {
+            byte[] code = (byte[]) classes.get(name + ".class");
+            if (code == null) {
+                return super.loadClass(name, resolve);
+            }
+            c = defineClass(name, code, 0, code.length);
         }
-        return defineClass(name, code, 0, code.length);
+        if (resolve) {
+            resolveClass(c);
+        }
+        return c;
     }
 }
 
