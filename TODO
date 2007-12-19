@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Report error locations
 * Modules
 * Built-in hash maps
 * Fix tail-call optimisation
