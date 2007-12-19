@@ -86,8 +86,19 @@ public class YetiC {
         }
         return buf.toString();
     }
-    
+
+    private static void help() {
+        System.out.println("yeti -flags... files\n\n" +
+            "  -h      Print this help\n" +
+            "  -C      Compile to classes\n" +
+            "  -e expr Evaluate expr and print result\n");
+        System.exit(0);
+    }
+
     public static void main(String[] argv) throws Exception {
+        if(argv.length == 0) {
+            help();
+        }
         boolean eval = false, exec = true;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
@@ -105,6 +116,9 @@ public class YetiC {
                     break;
                 }
                 continue;
+            }
+            if ("-h".equals(argv[i]) || "--help".equals(argv[i])) {
+                help();
             }
             if (argv[i].startsWith("-")) {
                 boolean vflag = false;
