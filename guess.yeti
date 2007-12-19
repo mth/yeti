@@ -7,7 +7,6 @@ guess n =
         print "Correct! ";
         print n;
         println " tries.";
-	guess
     else
         println if v < given then "Too small." else "Too big." fi;
         guess (n + 1);

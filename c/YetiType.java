@@ -581,7 +581,7 @@ public final class YetiType implements YetiParser, YetiCode {
             unify(arg, src.type);
         } catch (TypeException ex) {
             throw new CompileException(op.right,
-                src.type + " do not have ." + field + " field\n");
+                src.type + " do not have ." + field + " field\n", ex);
         }
         return new SelectMember(res, src, field, op.line) {
             boolean mayAssign() {
@@ -611,7 +611,7 @@ public final class YetiType implements YetiParser, YetiCode {
             unify(val.type, new Type(MAP, param));
         } catch (TypeException ex) {
             throw new CompileException(keyList, val.type +
-                " cannot be referenced by " + key.type + " key");
+                " cannot be referenced by " + key.type + " key", ex);
         }
         return new KeyRefExpr(param[0], val, key, keyList.line);
     }
@@ -663,7 +663,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 } catch (TypeException ex) {
                     throw new CompileException(choice[0],
                         "This if branch has a " + val.type +
-                        " type, while another was a " + result);
+                        " type, while another was a " + result, ex);
                 }
             }
         }
