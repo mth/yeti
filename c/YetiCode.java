@@ -183,6 +183,10 @@ interface YetiCode {
 
         void markTail() {
         }
+
+        boolean isEmptyList() {
+            return true;
+        }
     }
 
     abstract class BindRef extends Code {
@@ -1080,6 +1084,10 @@ interface YetiCode {
                         "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
             }
         }
+
+        boolean isEmptyList() {
+            return items.length == 0;
+        }
     }
 
 
@@ -1209,10 +1217,12 @@ interface YetiCode {
                 ctx.m.visitInsn(DUP); // 2-1-1
                 ctx.m.visitJumpInsn(IFNONNULL, nonull); // 2-1
                 // reach here, when 1 was null
-                if (op == COND_GT || op == COND_LE) {
+                if (op == COND_GT || op == COND_LE ||
+                    arg2.isEmptyList() && (op == COND_EQ || op == COND_NOT)) {
                     // null is never greater and always less or equal
                     ctx.m.visitInsn(POP2);
-                    ctx.m.visitJumpInsn(GOTO, op == COND_GT ? nojmp : to);
+                    ctx.m.visitJumpInsn(GOTO,
+                        op == COND_LE || op == COND_EQ ? to : nojmp);
                 } else {
                     ctx.m.visitInsn(POP); // 2
                     ctx.m.visitJumpInsn(op == COND_EQ || op == COND_GE
