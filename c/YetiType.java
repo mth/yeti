@@ -231,7 +231,7 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
-    static class TypeException extends RuntimeException {
+    static class TypeException extends Exception {
         boolean special;
 
         TypeException(String what) {
@@ -795,7 +795,12 @@ public final class YetiType implements YetiParser, YetiCode {
         to.body = analyze(lambda.expr, bodyScope, depth);
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
-            unify(fun, to.type);
+            try {
+                unify(fun, to.type);
+            } catch (TypeException ex) {
+                throw new CompileException(lambda,
+                    ex.getMessage() + " (on recursive binding)");
+            }
         }
         to.type = fun;
         to.bindName = lambda.bindName;
@@ -895,7 +900,11 @@ public final class YetiType implements YetiParser, YetiCode {
                               caseChoice.bindParam(variantArg));
             Type old = (Type) variants.put(variant, variantArg);
             if (old != null) { // same constructor already. shall be same type.
-                unify(old, variantArg);
+                try {
+                    unify(old, variantArg);
+                } catch (TypeException e) {
+                    throw new CompileException(pat.right, e.getMessage());
+                }
             }
             
             // nothing intresting, just get option expr and merge to result
@@ -904,14 +913,27 @@ public final class YetiType implements YetiParser, YetiCode {
             if (result.type == null) {
                 result.type = opt.type;
             } else {
-                unify(result.type, opt.type);
+                try {
+                    unify(result.type, opt.type);
+                } catch (TypeException e) {
+                    throw new CompileException(choice.right,
+                        "This choice has a " + opt.type +
+                        " type, while another was a " + result.type, e);
+                }
             }
             caseChoice.setExpr(opt);
         }
         Type variantType = new Type(VARIANT,
             (Type[]) variants.values().toArray(new Type[variants.size()]));
         variantType.finalMembers = variants;
-        unify(val.type, variantType);
+        try {
+            unify(val.type, variantType);
+        } catch (TypeException e) {
+            throw new CompileException(ex.value,
+                "Inferred type for case argument is " + variantType +
+                ", but a " + val.type + " is given\n    (" +
+                e.getMessage() + ")");
+        }
         return result;
     }
 
@@ -924,7 +946,13 @@ public final class YetiType implements YetiParser, YetiCode {
             if (type == null) {
                 type = codeItems[i].type;
             } else {
-                unify(type, codeItems[i].type);
+                try {
+                    unify(type, codeItems[i].type);
+                } catch (TypeException ex) {
+                    throw new CompileException(items[i],
+                        "This list element is " + codeItems[i].type +
+                        ", but others have been " + type, ex);
+                }
             }
         }
         if (type == null) {
@@ -950,7 +978,13 @@ public final class YetiType implements YetiParser, YetiCode {
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             if ((flags & YetiC.CF_COMPILE_MODULE) == 0) {
-                unify(root.type, UNIT_TYPE);
+                try {
+                    unify(root.type, UNIT_TYPE);
+                } catch (TypeException ex) {
+                    throw new CompileException(n,
+                        "Program body must have a unit type, " +
+                        "not a " + root.type, ex);
+                }
             }
             return root;
         } catch (CompileException ex) {
