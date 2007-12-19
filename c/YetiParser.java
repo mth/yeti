@@ -611,13 +611,19 @@ interface YetiParser {
         }
 
         Node readSeq(char end) {
-            int line = this.line;
-            int col = p - lineStart + 1;
             Node[] list = readMany(end);
             if (list.length == 1) {
                 return list[0];
             }
-            return new Seq(list).pos(line, col);
+            if (list.length == 0) {
+                return new Seq(list).pos(line, p - lineStart);
+            }
+            Node w = list[list.length - 1];
+            for (BinOp bo; w instanceof BinOp &&
+                           (bo = (BinOp) w).left != null;) {
+                w = bo.left;
+            }
+            return new Seq(list).pos(w.line, w.col);
         }
 
         private Node readStr() {

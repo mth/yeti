@@ -9,6 +9,6 @@ guess n =
         println " tries.";
     else
         println if v < given then "Too small." else "Too big." fi;
-        guess (n a + 1);
+        guess (n + 1);
     fi);
 guess 1;
