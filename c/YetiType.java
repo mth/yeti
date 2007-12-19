@@ -231,11 +231,19 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
-    static void mismatch(Type a, Type b) {
-        throw new RuntimeException("Type mismatch: " + a + " <> " + b);
+    static class TypeException extends RuntimeException {
+        boolean special;
+
+        TypeException(String what) {
+            super(what);
+        }
     }
 
-    static void finalizeStruct(Type partial, Type src) {
+    static void mismatch(Type a, Type b) throws TypeException {
+        throw new TypeException("Type mismatch: " + a + " <> " + b);
+    }
+
+    static void finalizeStruct(Type partial, Type src) throws TypeException {
         if (src.finalMembers == null || partial.partialMembers == null ||
                 partial.finalMembers != null) {
             return; // nothing to check
@@ -245,19 +253,19 @@ public final class YetiType implements YetiParser, YetiCode {
             Map.Entry entry = (Map.Entry) i.next();
             Type ff = (Type) src.finalMembers.get(entry.getKey());
             if (ff == null) {
-                throw new RuntimeException("Type mismatch: " + src + " => "
+                throw new TypeException("Type mismatch: " + src + " => "
                         + partial + " (field missing: " + entry.getKey() + ")");
             }
             if (entry.getValue() instanceof MutableFieldType &&
                 !(ff instanceof MutableFieldType)) {
-                throw new RuntimeException("Field '" + entry.getKey()
+                throw new TypeException("Field '" + entry.getKey()
                     + "' constness mismatch: " + src + " => " + partial);
             }
             unify((Type) entry.getValue(), ff);
         }
     }
 
-    static void unifyMembers(Type a, Type b) {
+    static void unifyMembers(Type a, Type b) throws TypeException {
         Map ff;
         if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
             // VARIANT types are sometimes ordered.
@@ -324,7 +332,7 @@ public final class YetiType implements YetiParser, YetiCode {
         b.ref = a;
     }
 
-    static void requireOrdered(Type type) {
+    static void requireOrdered(Type type) throws TypeException {
         switch (type.type) {
             case VARIANT:
                 if ((type.flags & FL_ORDERED_REQUIRED) == 0) {
@@ -359,14 +367,16 @@ public final class YetiType implements YetiParser, YetiCode {
             case LIST_MARKER:
                 return;
             default:
-                throw new RuntimeException(type + " is not an ordered type");
+                throw new TypeException(type + " is not an ordered type");
         }
     }
 
-    static void occursCheck(Type type, Type var) {
+    static void occursCheck(Type type, Type var) throws TypeException {
         type = type.deref();
         if (type == var) {
-            throw new RuntimeException("Cyclic type");
+            TypeException ex = new TypeException("Cyclic type");
+            ex.special = true;
+            throw ex;
         }
         if (type.param != null && type.type != VARIANT) {
             for (int i = type.param.length; --i >= 0;) {
@@ -375,7 +385,7 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
-    static void unifyToVar(Type var, Type from) {
+    static void unifyToVar(Type var, Type from) throws TypeException {
         occursCheck(from, var);
         if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
             requireOrdered(from);
@@ -384,7 +394,7 @@ public final class YetiType implements YetiParser, YetiCode {
         var.ref = from;
     }
 
-    static void unify(Type a, Type b) {
+    static void unify(Type a, Type b) throws TypeException {
         a = a.deref();
         b = b.deref();
         if (a == b) {
@@ -490,7 +500,7 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             if (op.op == "") {
-                return apply(node.line, analyze(op.left, scope, depth),
+                return apply(node, analyze(op.left, scope, depth),
                              analyze(op.right, scope, depth), depth);
             }
             if (op.op == ".") {
@@ -509,8 +519,8 @@ public final class YetiType implements YetiParser, YetiCode {
                                          op.right, null), scope, depth);
             }
             // TODO: unary -
-            return apply(op.right.line,
-                         apply(op.line, resolve(op.op, op, scope, depth),
+            return apply(op.right,
+                         apply(op, resolve(op.op, op, scope, depth),
                                analyze(op.left, scope, depth), depth),
                          analyze(op.right, scope, depth), depth);
         }
@@ -533,10 +543,16 @@ public final class YetiType implements YetiParser, YetiCode {
             "I think that this " + node + " should not be here.");
     }
 
-    static Code apply(int line, Code fun, Code arg, int depth) {
+    static Code apply(Node where, Code fun, Code arg, int depth) {
         Type[] applyFun = { arg.type, new Type(depth) };
-        unify(fun.type, new Type(FUN, applyFun));
-        return fun.apply(arg, applyFun[1], line);
+        try {
+            unify(fun.type, new Type(FUN, applyFun));
+        } catch (TypeException ex) {
+            throw new CompileException(where,
+                "Cannot apply " + arg.type + " to a " + fun.type + "\n    " +
+                ex.getMessage());
+        }
+        return fun.apply(arg, applyFun[1], where.line);
     }
 
     static Code variantConstructor(String name, int depth) {
