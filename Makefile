@@ -19,3 +19,6 @@ yeti.jar: clean lib compile
 clean:
 	-rm -f yeti.jar
 	-rm -r yeti
+
+g:
+	./yc guess.yeti

@@ -577,7 +577,12 @@ public final class YetiType implements YetiParser, YetiCode {
         arg.partialMembers = new HashMap();
         arg.partialMembers.put(field, res);
         Code src = analyze(op.left, scope, depth);
-        unify(arg, src.type);
+        try {
+            unify(arg, src.type);
+        } catch (TypeException ex) {
+            throw new CompileException(op.right,
+                src.type + " do not have ." + field + " field\n");
+        }
         return new SelectMember(res, src, field, op.line) {
             boolean mayAssign() {
                 Type t = st.type.deref();
@@ -602,14 +607,23 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         Code key = analSeq(keyList.items, scope, depth);
         Type[] param = { new Type(depth), key.type, new Type(depth) };
-        unify(val.type, new Type(MAP, param));
+        try {
+            unify(val.type, new Type(MAP, param));
+        } catch (TypeException ex) {
+            throw new CompileException(keyList, val.type +
+                " cannot be referenced by " + key.type + " key");
+        }
         return new KeyRefExpr(param[0], val, key, keyList.line);
     }
 
     static Code assignOp(BinOp op, Scope scope, int depth) {
         Code left = analyze(op.left, scope, depth);
         Code right = analyze(op.right, scope, depth);
-        unify(left.type, right.type);
+        try {
+            unify(left.type, right.type);
+        } catch (TypeException ex) {
+            throw new CompileException(op, ex.getMessage());
+        }
         Code assign = left.assign(right);
         if (assign == null) {
             throw new CompileException(op,
@@ -631,14 +645,26 @@ public final class YetiType implements YetiParser, YetiCode {
                 conds[i] = new Code[] { val };
             } else {
                 Code cond = analyze(choice[1], scope, depth);
-                unify(BOOL_TYPE, cond.type);
+                try {
+                    unify(BOOL_TYPE, cond.type);
+                } catch (TypeException ex) {
+                    throw new CompileException(choice[1],
+                        "if condition must have a boolean type (but here was a "
+                        + cond.type + ")");
+                }
                 conds[i] = new Code[] { val, cond };
             }
             poly &= val.polymorph;
             if (result == null) {
                 result = val.type;
             } else {
-                unify(result, val.type);
+                try {
+                    unify(result, val.type);
+                } catch (TypeException ex) {
+                    throw new CompileException(choice[0],
+                        "This if branch has a " + val.type +
+                        " type, while another was a " + result);
+                }
             }
         }
         return new ConditionalExpr(result, conds, poly);
@@ -723,7 +749,12 @@ public final class YetiType implements YetiParser, YetiCode {
                 cur = binder;
             } else {
                 Code code = analyze(nodes[i], scope, depth);
-                unify(UNIT_TYPE, code.type);
+                try {
+                    unify(UNIT_TYPE, code.type);
+                } catch (TypeException ex) {
+                    throw new CompileException(nodes[i],
+                        "Unit type expected here, not a " + code.type);
+                }
                 code.ignoreValue();
                 cur = new SeqExpr(code);
             }
