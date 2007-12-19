@@ -69,13 +69,13 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
     static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
     static final Type BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
-    static final Type TO_ARRAY_TYPE = new Type(FUN, new Type[] {
-            new Type(MAP, new Type[] { A, B, LIST_TYPE }),
-            new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE }) });
-    static final Type CONS_TYPE = fun2Arg(A,
-            new Type(MAP, new Type[] { A, B, LIST_TYPE }),
-            new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE }));
-            
+    static final Type A_B_LIST_TYPE =
+        new Type(MAP, new Type[] { A, B, LIST_TYPE });
+    static final Type A_LIST_TYPE =
+        new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
+    static final Type A_MLIST_TYPE =
+        new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
+    static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
 
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
@@ -93,7 +93,9 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
         bindCore("number", fun(STR_TYPE, NUM_TYPE), "NUM",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
-        bindCore("array", TO_ARRAY_TYPE, "ARRAY",
+        bindCore("array", fun(A_B_LIST_TYPE, A_MLIST_TYPE), "ARRAY",
+        bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
+        bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
@@ -102,7 +104,8 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
-        bindScope("true", new BooleanConstant(true), null)))))))))))))))))))));
+        bindScope("true", new BooleanConstant(true),
+        null)))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

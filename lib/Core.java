@@ -99,6 +99,27 @@ public final class Core {
         }
     };
 
+    private static final class Head extends Fun {
+        public Object apply(Object x) {
+            if (x == null) {
+                throw new IllegalArgumentException("Empty list");
+            }
+            return ((AList) x).first();
+        }
+    }
+
+    private static final class Tail extends Fun {
+        public Object apply(Object x) {
+            if (x == null) {
+                throw new IllegalArgumentException("Empty list");
+            }
+            return ((AList) x).rest();
+        }
+    }
+
+    public static final Fun HEAD = new Head();
+    public static final Fun TAIL = new Tail();
+
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();
