@@ -88,6 +88,8 @@ interface YetiParser {
             if (--l > 0)
                 while (p < s.length && (s[p++] != '\n' || --l > 0));
             p += col - 1;
+            if (p < 0)
+                p = 0;
             int e = p;
             char c;
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
@@ -413,11 +415,11 @@ interface YetiParser {
             int i = p;
             char c;
             while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
+                ++i;
                 if (c == '\n') {
                     ++line;
                     lineStart = i;
                 }
-                ++i;
             }
             if (i >= src.length || src[i] == ')'
                 || src[i] == ']' || src[i] == '}') {
@@ -425,7 +427,7 @@ interface YetiParser {
                 return EOF;
             }
             p = i + 1;
-            int line = this.line, col = i - lineStart;
+            int line = this.line, col = p - lineStart;
             switch (src[i]) {
                 case '.':
                     return new BinOp(".", 0, true).pos(line, col);
@@ -599,7 +601,7 @@ interface YetiParser {
             }
             eofWas = sym;
             if (end != ' ' && (p >= src.length || src[p++] != end)) {
-                throw new CompileException(line, p - lineStart,
+                throw new CompileException(line, p - lineStart + 1,
                                            "Expecting " + end);
             }
             if (!l.isEmpty()) {
@@ -610,7 +612,7 @@ interface YetiParser {
 
         Node readSeq(char end) {
             int line = this.line;
-            int col = p - lineStart;
+            int col = p - lineStart + 1;
             Node[] list = readMany(end);
             if (list.length == 1) {
                 return list[0];
@@ -621,10 +623,10 @@ interface YetiParser {
         private Node readStr() {
             int st = p;
             String res = "";
-            int sline = line, scol = p - lineStart - 1;
+            int sline = line, scol = p - lineStart;
             for (; p < src.length && src[p] != '"'; ++p) {
                 if (src[p] == '\n') {
-                    lineStart = p;
+                    lineStart = p + 1;
                     ++line;
                 }
                 if (src[p] == '\\') {
@@ -647,7 +649,7 @@ interface YetiParser {
                             res = res.concat("\t");
                             break;
                         default:
-                            throw new CompileException(line, p - lineStart - 1,
+                            throw new CompileException(line, p - lineStart,
                                 "Unexpected escape: \\" + src[p]);
                     }
                     ++st;
