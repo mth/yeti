@@ -76,6 +76,12 @@ public final class Core {
         }
     };
 
+    public static final Fun IGNORE = new Fun() {
+        public Object apply(Object x) {
+            return null;
+        }
+    };
+
     private static final class Number extends Fun {
         public Object apply(Object x) {
             return parseNum((String) x);

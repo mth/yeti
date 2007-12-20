@@ -1115,9 +1115,31 @@ interface YetiCode {
         }
     }
 
-    abstract class BinOpRef extends BindRef {
+    class Ignore extends CoreFun {
+        Ignore() {
+            super(YetiType.A_TO_UNIT, "IGNORE");
+        }
+
+        public BindRef getRef(int line) {
+            Ignore res = new Ignore();
+            res.line = line;
+            return res;
+        }
+
         Code apply(final Code arg1, YetiType.Type res, int line) {
-            Code c = new Code() {
+            return new Code() {
+                { type = YetiType.UNIT_TYPE; }
+                void gen(Ctx ctx) {
+                    arg1.gen(ctx);
+                }
+            };
+        }
+    }
+
+    abstract class BinOpRef extends BindRef {
+        Code apply(final Code arg1, final YetiType.Type res, int line) {
+            return new Code() {
+                { type = res; }
                 Code apply(final Code arg2, YetiType.Type res, int line) {
                     Code code = new Code() {
                         void gen(Ctx ctx) {
@@ -1137,8 +1159,6 @@ interface YetiCode {
                             "BinOpRef: " + BinOpRef.this.getClass() + ".gen()!");
                 }
             };
-            c.type = res;
-            return c;
         }
 
         void gen(Ctx ctx) {

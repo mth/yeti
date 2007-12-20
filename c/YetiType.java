@@ -76,6 +76,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type A_MLIST_TYPE =
         new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
+    static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
 
     static final String[] TYPE_NAMES =
         { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
@@ -88,8 +89,8 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare("<=", LG_TYPE, COND_LE,
         bindCompare(">" , LG_TYPE, COND_GT,
         bindCompare(">=", LG_TYPE, COND_GE,
-        bindCore("print", fun(A, UNIT_TYPE), "PRINT",
-        bindCore("println", fun(A, UNIT_TYPE), "PRINTLN",
+        bindCore("print", A_TO_UNIT, "PRINT",
+        bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
         bindCore("number", fun(STR_TYPE, NUM_TYPE), "NUM",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
@@ -97,6 +98,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
+        bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
@@ -105,7 +107,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))));
+        null))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
