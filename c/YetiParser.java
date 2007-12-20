@@ -456,7 +456,12 @@ interface YetiParser {
                        c != ':' && c != ';' && c > ' ');
                 String s = new String(src, p, i - p);
                 p = i;
-                return new NumLit(Core.parseNum(s)).pos(line, col);
+                try {
+                    return new NumLit(Core.parseNum(s)).pos(line, col);
+                } catch (Exception e) {
+                    throw new CompileException(line, col,
+                        "Bad number literal '" + s + "'");
+                }
             }
             while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                    c != ';' && c > ' ' && c != '[' && c != ']' &&
