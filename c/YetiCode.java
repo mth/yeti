@@ -1199,16 +1199,14 @@ interface YetiCode {
         void binGenIf(Ctx ctx, Code arg1, Code arg2,
                 Label to, boolean ifTrue) {
             YetiType.Type t = arg1.type.deref();
-            boolean mayNull = t.type == YetiType.VAR ||
-                t.type == YetiType.MAP &&
-                t.param[2] == YetiType.LIST_TYPE &&
-                t.param[1] != YetiType.NUM_TYPE;
             int op = this.op;
             if (!ifTrue) {
                 op ^= COND_NOT;
             }
             Label nojmp = null;
-            if (mayNull) {
+            if (t.type == YetiType.VAR || t.type == YetiType.MAP &&
+                    t.param[2] == YetiType.LIST_TYPE &&
+                    t.param[1] != YetiType.NUM_TYPE) {
                 Label nonull = new Label();
                 nojmp = new Label();
                 arg2.gen(ctx);
