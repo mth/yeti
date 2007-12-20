@@ -1137,11 +1137,13 @@ interface YetiCode {
     }
 
     abstract class BinOpRef extends BindRef {
-        Code apply(final Code arg1, final YetiType.Type res, int line) {
+        Code apply(final Code arg1, final YetiType.Type res1, int line) {
             return new Code() {
-                { type = res; }
-                Code apply(final Code arg2, YetiType.Type res, int line) {
-                    Code code = new Code() {
+                { type = res1; }
+                Code apply(final Code arg2, final YetiType.Type res, int line) {
+                    return new Code() {
+                        { type = res; }
+
                         void gen(Ctx ctx) {
                             binGen(ctx, arg1, arg2);
                         }
@@ -1150,8 +1152,6 @@ interface YetiCode {
                             binGenIf(ctx, arg1, arg2, to, ifTrue);
                         }
                     };
-                    code.type = res;
-                    return code;
                 }
 
                 void gen(Ctx ctx) {
@@ -1318,7 +1318,13 @@ interface YetiCode {
 
     class Cons implements Binder {
         public BindRef getRef(final int line) {
-            BindRef r = new BinOpRef() {
+            return new BinOpRef() {
+                {
+                    type = YetiType.CONS_TYPE;
+                    binder = Cons.this;
+                    polymorph = true;
+                }
+
                 void binGen(Ctx ctx, Code arg1, Code arg2) {
                     ctx.visitLine(line);
                     ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
@@ -1331,11 +1337,6 @@ interface YetiCode {
                         "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
                 }
             };
-            r.type = YetiType.CONS_TYPE;
-            r.binder = this;
-            r.polymorph = true;
-            return r;
         }
     }
 }
-
