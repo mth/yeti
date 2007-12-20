@@ -419,7 +419,7 @@ interface YetiCode {
         public BindRef refProxy(BindRef code) {
             // TODO cruel hack. should define special interface
             // for those special things
-            if (code instanceof BinOpRef) {
+            if (code instanceof BinOpRef || code instanceof CoreFun) {
                 return code;
             }
             if (selfBind == code.binder && !code.assign()) {
