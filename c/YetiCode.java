@@ -1129,6 +1129,7 @@ interface YetiCode {
         Code apply(final Code arg1, YetiType.Type res, int line) {
             return new Code() {
                 { type = YetiType.UNIT_TYPE; }
+
                 void gen(Ctx ctx) {
                     arg1.gen(ctx);
                 }
@@ -1140,6 +1141,7 @@ interface YetiCode {
         Code apply(final Code arg1, final YetiType.Type res1, int line) {
             return new Code() {
                 { type = res1; }
+
                 Code apply(final Code arg2, final YetiType.Type res, int line) {
                     return new Code() {
                         { type = res; }
