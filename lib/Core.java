@@ -76,11 +76,13 @@ public final class Core {
         }
     };
 
-    public static final Fun NUM = new Fun() {
+    private static final class Number extends Fun {
         public Object apply(Object x) {
             return parseNum((String) x);
         }
-    };
+    }
+
+    public static final Fun NUM = new Number();
 
     public static final Fun RANDINT = new Fun() {
         public Object apply(Object x) {

@@ -369,9 +369,10 @@ public final class YetiType implements YetiParser, YetiCode {
             case UNIT:
             case LIST_MARKER:
                 return;
-            default:
-                throw new TypeException(type + " is not an ordered type");
         }
+        TypeException ex = new TypeException(type + " is not an ordered type");
+        ex.special = true;
+        throw ex;
     }
 
     static void occursCheck(Type type, Type var) throws TypeException {
