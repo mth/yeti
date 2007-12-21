@@ -44,13 +44,14 @@ public final class YetiType implements YetiParser, YetiCode {
     static final int STR  = 2;
     static final int NUM  = 3;
     static final int BOOL = 4;
-    static final int FUN  = 5; // a -> b
-    static final int MAP  = 6; // value, index, (LIST | MAP)
-    static final int STRUCT = 7;
-    static final int VARIANT = 8;
-    static final int NONE = 9;
-    static final int LIST_MARKER = 10;
-    static final int MAP_MARKER  = 11;
+    static final int CHAR = 5;
+    static final int NONE = 6;
+    static final int LIST_MARKER = 7;
+    static final int MAP_MARKER  = 8;
+    static final int FUN  = 9; // a -> b
+    static final int MAP  = 10; // value, index, (LIST | MAP)
+    static final int STRUCT = 11;
+    static final int VARIANT = 12;
 
     static final int FL_ORDERED_REQUIRED = 1;
 
@@ -59,6 +60,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type NUM_TYPE  = new Type(NUM,  NO_PARAM);
     static final Type STR_TYPE  = new Type(STR,  NO_PARAM);
     static final Type BOOL_TYPE = new Type(BOOL, NO_PARAM);
+    static final Type CHAR_TYPE = new Type(CHAR, NO_PARAM);
     static final Type NO_TYPE   = new Type(NONE, NO_PARAM);
     static final Type LIST_TYPE = new Type(LIST_MARKER, NO_PARAM);
     static final Type MAP_TYPE  = new Type(MAP_MARKER, NO_PARAM);
@@ -78,10 +80,14 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
 
+    static final Type[] PRIMITIVES =
+        { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
+          NO_TYPE, LIST_TYPE, MAP_TYPE };
+
     static final String[] TYPE_NAMES =
-        { "var", "unit", "string", "number", "bool", "fun", "list", "struct",
-          "variant", "<>", "<list>", "<map>" };
-    
+        { "var", "unit", "string", "number", "bool", "char",
+          "<>", "<list>", "<map>", "fun", "list", "struct", "variant" };
+
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
         bindCompare("!=", EQ_TYPE, COND_NOT, // equals returns 0 for false
