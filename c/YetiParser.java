@@ -108,6 +108,12 @@ interface YetiParser {
     class VarSym extends Node {
     }
 
+    class UnitLiteral extends Node {
+        String str() {
+            return "()";
+        }
+    }
+
     class Bind extends Node {
         String name;
         Node expr;
@@ -644,7 +650,7 @@ interface YetiParser {
                 return list[0];
             }
             if (list.length == 0) {
-                return new Seq(list).pos(line, p - lineStart);
+                return new UnitLiteral().pos(line, p - lineStart);
             }
             Node w = list[list.length - 1];
             for (BinOp bo; w instanceof BinOp &&

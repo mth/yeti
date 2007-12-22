@@ -504,12 +504,11 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof Str) {
             return new StringConstant(((Str) node).str);
         }
+        if (node instanceof UnitLiteral) {
+            return new UnitConstant();
+        }
         if (node instanceof Seq) {
-            Seq seq = (Seq) node;
-            if (seq.st.length == 0) {
-                return new UnitConstant();
-            }
-            return analSeq(seq.st, scope, depth);
+            return analSeq(((Seq) node).st, scope, depth);
         }
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
@@ -809,13 +808,18 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code lambda(Function to, Lambda lambda, Scope scope, int depth) {
-        if (!(lambda.arg instanceof Sym)) {
+        to.polymorph = true;
+        Scope bodyScope;
+        if (lambda.arg instanceof Sym) {
+            to.arg.type = new Type(depth);
+            bodyScope = new Scope(scope, ((Sym) lambda.arg).sym, to);
+        } else if (lambda.arg instanceof UnitLiteral) {
+            to.arg.type = UNIT_TYPE;
+            bodyScope = new Scope(scope, null, to);
+        } else {
             throw new CompileException(lambda.arg,
                                        "Bad argument: " + lambda.arg);
         }
-        to.polymorph = true;
-        to.arg.type = new Type(depth);
-        Scope bodyScope = new Scope(scope, ((Sym) lambda.arg).sym, to);
         bodyScope.closure = to;
         to.body = analyze(lambda.expr, bodyScope, depth);
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
