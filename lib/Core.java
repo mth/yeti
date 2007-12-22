@@ -171,4 +171,22 @@ public final class Core {
         }
         return new BigNum(s);
     }
+
+    public static String concat(String[] param) {
+        int l = 0;
+        for (int i = param.length; --i >= 0;) {
+            l += param[i].length();
+        }
+        if (l == 0) {
+            return "";
+        }
+        char[] res = new char[l];
+        int p = 0;
+        for (int i = 0, cnt = param.length; i < cnt; ++i) {
+            String s = param[i];
+            s.getChars(0, l = s.length(), res, p);
+            p += l;
+        }
+        return new String(res);
+    }
 }

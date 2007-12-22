@@ -155,6 +155,12 @@ interface YetiCode {
         boolean ignoreValue;
         boolean polymorph;
 
+        /**
+         * Generates into ctx a bytecode that (when executed in the JVM)
+         * results in a value pushed into stack.
+         * That value is of course the value of that code snippet
+         * after evaluation.
+         */
         abstract void gen(Ctx ctx);
 
         // Some "functions" may have special kinds of apply
@@ -162,18 +168,25 @@ interface YetiCode {
             return new Apply(res, this, arg, line);
         }
 
+        // Not used currently. Should allow some custom behaviour
+        // on binding (possibly useful for inline-optimisations).
         BindRef bindRef() {
             return null;
         }
 
+        // Not used currently. Tells to code snippet, if it's value will be
+        // ignored. Probably should be deleted together with that flag.
         void ignoreValue() {
             ignoreValue = true;
         }
 
+        // When the code is a lvalue, then this method returns code that
+        // performs the lvalue assigment of the value given as argument.
         Code assign(Code value) {
             return null;
         }
 
+        // Boolean codes have ability to generate jumps.
         void genIf(Ctx ctx, Label to, boolean ifTrue) {
             gen(ctx);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
@@ -181,11 +194,14 @@ interface YetiCode {
             ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
         }
 
+        // Used to tell that this code is at tail position in a function.
+        // Useful for doing tail call optimisations.
         void markTail() {
         }
 
+        // Comparision operators use this for some optimisation.
         boolean isEmptyList() {
-            return true;
+            return false;
         }
     }
 
@@ -289,6 +305,40 @@ interface YetiCode {
             if (val == ifTrue) {
                 ctx.m.visitJumpInsn(GOTO, to);
             }
+        }
+    }
+
+    class ConcatStrings extends Code {
+        Code[] param;
+
+        ConcatStrings(Code[] param) {
+            type = YetiType.STR_TYPE;
+            this.param = param;
+        }
+
+        void gen(Ctx ctx) {
+            if (param.length == 1) {
+                param[0].gen(ctx);
+                if (param[0].type.deref().type != YetiType.STR) {
+                    ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                        "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
+                }
+                return;
+            }
+            ctx.intConst(param.length);
+            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            for (int i = 0; i < param.length; ++i) {
+                ctx.m.visitInsn(DUP);
+                ctx.intConst(i);
+                param[i].gen(ctx);
+                if (param[i].type.deref().type != YetiType.STR) {
+                    ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                        "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
+                }
+                ctx.m.visitInsn(AASTORE);
+            }
+            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                "concat", "([Ljava/lang/String;)Ljava/lang/String;");
         }
     }
 

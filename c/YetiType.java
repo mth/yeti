@@ -551,6 +551,9 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof Case) {
             return caseType((Case) node, scope, depth);
         }
+        if (node instanceof ConcatStr) {
+            return concatStr((ConcatStr) node, scope, depth);
+        }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
     }
@@ -643,6 +646,14 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         assign.type = UNIT_TYPE;
         return assign;
+    }
+
+    static Code concatStr(ConcatStr concat, Scope scope, int depth) {
+        Code[] parts = new Code[concat.param.length];
+        for (int i = 0; i < parts.length; ++i) {
+            parts[i] = analyze(concat.param[i], scope, depth);
+        }
+        return new ConcatStrings(parts);
     }
 
     static Code cond(Condition condition, Scope scope, int depth) {

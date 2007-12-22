@@ -273,6 +273,29 @@ interface YetiParser {
         }
     }
 
+    class ConcatStr extends Node {
+        Node[] param;
+
+        ConcatStr(Node[] param) {
+            this.param = param;
+        }
+
+        String show() {
+            StringBuffer buf = new StringBuffer("\"");
+            for (int i = 0; i < param.length; ++i) {
+                if (param[i] instanceof Str) {
+                    buf.append(((Str) param[i]).str);
+                } else {
+                    buf.append("\\(");
+                    buf.append(param[i].show());
+                    buf.append(")");
+                }
+            }
+            buf.append('"');
+            return buf.toString();
+        }
+    }
+
     class NumLit extends Node {
         Num num;
 
@@ -633,6 +656,7 @@ interface YetiParser {
 
         private Node readStr() {
             int st = p;
+            List parts = null;
             String res = "";
             int sline = line, scol = p - lineStart;
             for (; p < src.length && src[p] != '"'; ++p) {
@@ -659,6 +683,18 @@ interface YetiParser {
                         case 't':
                             res = res.concat("\t");
                             break;
+                        case '(':
+                            ++p;
+                            if (parts == null) {
+                                parts = new ArrayList();
+                            }
+                            if (res.length() != 0) {
+                                parts.add(new Str(res));
+                            }
+                            parts.add(readSeq(')'));
+                            res = "";
+                            st = --p;
+                            break;
                         default:
                             throw new CompileException(line, p - lineStart,
                                 "Unexpected escape: \\" + src[p]);
@@ -669,7 +705,15 @@ interface YetiParser {
             if (p >= src.length) {
                 throw new CompileException(sline, scol, "Unclosed \"");
             }
-            return new Str(res.concat(new String(src, st, p++ - st)));
+            res = res.concat(new String(src, st, p++ - st));
+            if (parts == null) {
+                return new Str(res);
+            }
+            if (res.length() != 0) {
+                parts.add(new Str(res));
+            }
+            return new ConcatStr((Node[]) parts.toArray(
+                                            new Node[parts.size()]));
         }
     }
 }
