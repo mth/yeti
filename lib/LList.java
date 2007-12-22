@@ -104,4 +104,10 @@ public class LList extends AList {
         }
         return i != null ? 1 : j != null ? -1 : 0;
     }
+
+    public void forEach(Fun f) {
+        for (AIter i = this; i != null; i = i.next()) {
+            f.apply(i.first());
+        }
+    }
 }

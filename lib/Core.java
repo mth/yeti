@@ -125,8 +125,22 @@ public final class Core {
         }
     }
 
+    private static final class For extends Fun {
+        public Object apply(final Object list) {
+            return new Fun() {
+                public Object apply(Object f) {
+                    if (list != null) {
+                        ((AList) list).forEach((Fun) f);
+                    }
+                    return null;
+                }
+            };
+        }
+    }
+
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
+    public static final Fun FOR  = new For();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

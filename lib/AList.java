@@ -36,4 +36,6 @@ public abstract class AList extends AIter implements Comparable {
      * Return rest of the list. Must not modify the current list.
      */
     public abstract AList rest();
+
+    public abstract void forEach(Fun f);
 }

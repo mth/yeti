@@ -79,6 +79,13 @@ abstract class AMList extends AList {
         return buf.toString();
     }
 
+    public void forEach(Fun f) {
+        Object[] array = array();
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            f.apply(array[i]);
+        }
+    }
+
     public int compareTo(Object o) {
         AIter j = (AIter) o;
         Object[] array = array();

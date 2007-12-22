@@ -103,6 +103,8 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("array", fun(A_B_LIST_TYPE, A_MLIST_TYPE), "ARRAY",
         bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
+        bindCore("for",
+            fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE), "FOR",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
@@ -113,7 +115,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))));
+        null)))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

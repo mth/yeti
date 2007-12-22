@@ -4,9 +4,7 @@ guess n =
    (print "> ";
     v = number (readln ());
     if v == given then
-        print "Correct! ";
-        print n;
-        println " tries.";
+        println "Correct! \(n) tries.";
     else
         println if v < given then "Too small." else "Too big." fi;
         guess (n + 1);
