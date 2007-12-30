@@ -55,6 +55,9 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static final int FL_ORDERED_REQUIRED = 1;
 
+    static final int FIELD_NON_POLYMORPHIC = 1;
+    static final int FIELD_MUTABLE = 2;
+
     static final Type[] NO_PARAM = {};
     static final Type UNIT_TYPE = new Type(UNIT, NO_PARAM);
     static final Type NUM_TYPE  = new Type(NUM,  NO_PARAM);
@@ -138,7 +141,7 @@ public final class YetiType implements YetiParser, YetiCode {
             new Type[] { a, new Type(FUN, new Type[] { b, res }) });
     }
 
-    static class Type {
+    static final class Type {
         int type;
         Map partialMembers;
         Map finalMembers;
@@ -147,6 +150,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Type ref;
         int depth;
         int flags;
+        int field;
         boolean seen;
 
         Type(int depth) {
@@ -192,26 +196,22 @@ public final class YetiType implements YetiParser, YetiCode {
             }
             return res;
         }
+
     }
 
-    // used by structs to mark some field as non-polymorphic
-    static class NPFieldType extends Type {
-        NPFieldType(int depth, Type ref) {
-            super(depth);
-            this.ref = ref.deref();
-        }
+    static Type mutableFieldRef(Type src) {
+        Type t = new Type(src.depth);
+        t.ref = src.ref;
+        t.flags = src.flags;
+        t.field = FIELD_MUTABLE;
+        return t;
     }
 
-    // used by structs to mark some field as mutable
-    static final class MutableFieldType extends NPFieldType {
-        MutableFieldType(int depth, Type ref) {
-            super(depth, ref);
-        }
-
-        MutableFieldType(Type src) {
-            super(src.depth, src.ref);
-            this.flags = src.flags;
-        }
+    static Type mutableFieldRef(int depth, Type ref) {
+        Type t = new Type(depth);
+        t.ref = ref.deref();
+        t.field = FIELD_MUTABLE;
+        return t;
     }
 
     static final class Scope {
@@ -275,12 +275,12 @@ public final class YetiType implements YetiParser, YetiCode {
                 throw new TypeException("Type mismatch: " + src + " => "
                         + partial + " (field missing: " + entry.getKey() + ")");
             }
-            if (entry.getValue() instanceof MutableFieldType &&
-                !(ff instanceof MutableFieldType)) {
+            Type entryType = (Type) entry.getValue();
+            if (entryType.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
                 throw new TypeException("Field '" + entry.getKey()
                     + "' constness mismatch: " + src + " => " + partial);
             }
-            unify((Type) entry.getValue(), ff);
+            unify(entryType, ff);
         }
     }
 
@@ -308,7 +308,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (f != null) {
                     unify(f, (Type) entry.getValue());
                     // constness spreads
-                    if (entry.getValue() instanceof MutableFieldType) {
+                    if (((Type) entry.getValue()).field == FIELD_MUTABLE) {
                         entry.setValue(f);
                     }
                 } else {
@@ -332,7 +332,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (f != null) {
                     unify((Type) entry.getValue(), f);
                     // mutability spreads
-                    if (f instanceof MutableFieldType) {
+                    if (f.field == FIELD_MUTABLE) {
                         entry.setValue(f);
                     }
                 }
@@ -612,15 +612,15 @@ public final class YetiType implements YetiParser, YetiCode {
         return new SelectMember(res, src, field, op.line) {
             boolean mayAssign() {
                 Type t = st.type.deref();
-                Object given;
+                Type given;
                 if (t.finalMembers != null &&
-                    (given = t.finalMembers.get(field)) != null &&
-                    !(given instanceof MutableFieldType)) {
+                    (given = (Type) t.finalMembers.get(field)) != null &&
+                    (given.field != FIELD_MUTABLE)) {
                     return false;
                 }
                 Type self = (Type) t.partialMembers.get(field);
-                if (!(self instanceof MutableFieldType)) {
-                    t.partialMembers.put(field, new MutableFieldType(res));
+                if (self.field != FIELD_MUTABLE) {
+                    t.partialMembers.put(field, mutableFieldRef(res));
                 }
                 return true;
             }
@@ -708,7 +708,7 @@ public final class YetiType implements YetiParser, YetiCode {
         if (type.seen) {
             return;
         }
-        if (deny != null && type instanceof MutableFieldType) {
+        if (deny != null && type.field == FIELD_MUTABLE) {
             vars = deny; // anything under mutable field is evil
         }
         Type t = type.deref();
@@ -894,7 +894,7 @@ public final class YetiType implements YetiParser, YetiCode {
                         : analyze(field.expr, scope, depth);
             names[i] = field.name;
             fields.put(field.name,
-                field.var ? new MutableFieldType(depth, code.type)
+                field.var ? mutableFieldRef(depth, code.type)
                           : code.type);
             local = new Scope(local, field.name,
                               result.bind(i, code, field.var));

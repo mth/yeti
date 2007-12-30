@@ -60,7 +60,7 @@ class YetiTypeAttr extends Attribute {
                 for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
                     Map.Entry e = (Map.Entry) i.next();
                     YetiType.Type t = (YetiType.Type) e.getValue();
-                    if (t instanceof YetiType.MutableFieldType) {
+                    if (t.field == YetiType.FIELD_MUTABLE) {
                         buf.putByte(MUTABLE);
                     }
                     write(t);
@@ -182,7 +182,7 @@ class YetiTypeAttr extends Attribute {
                 return (YetiType.Type) refs.get(v);
             }
             case MUTABLE:
-                return new YetiType.MutableFieldType(1, read());
+                return YetiType.mutableFieldRef(1, read());
             }
             if (tv < YetiType.PRIMITIVES.length &&
                 (t = YetiType.PRIMITIVES[tv]) != null) {
