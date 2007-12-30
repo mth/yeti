@@ -207,10 +207,10 @@ public final class YetiType implements YetiParser, YetiCode {
         return t;
     }
 
-    static Type mutableFieldRef(int depth, Type ref) {
+    static Type fieldRef(int depth, Type ref, int kind) {
         Type t = new Type(depth);
         t.ref = ref.deref();
-        t.field = FIELD_MUTABLE;
+        t.field = kind;
         return t;
     }
 
@@ -275,12 +275,12 @@ public final class YetiType implements YetiParser, YetiCode {
                 throw new TypeException("Type mismatch: " + src + " => "
                         + partial + " (field missing: " + entry.getKey() + ")");
             }
-            Type entryType = (Type) entry.getValue();
-            if (entryType.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
+            Type partField = (Type) entry.getValue();
+            if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
                 throw new TypeException("Field '" + entry.getKey()
                     + "' constness mismatch: " + src + " => " + partial);
             }
-            unify(entryType, ff);
+            unify(partField, ff);
         }
     }
 
@@ -306,10 +306,14 @@ public final class YetiType implements YetiParser, YetiCode {
                 Map.Entry entry = (Map.Entry) i.next();
                 Type f = (Type) b.finalMembers.get(entry.getKey());
                 if (f != null) {
-                    unify(f, (Type) entry.getValue());
+                    Type t = (Type) entry.getValue();
+                    unify(f, t);
                     // constness spreads
-                    if (((Type) entry.getValue()).field == FIELD_MUTABLE) {
-                        entry.setValue(f);
+                    if (t.field != f.field) {
+                        if (t.field == 0) {
+                            entry.setValue(t = f);
+                        }
+                        t.field = FIELD_NON_POLYMORPHIC;
                     }
                 } else {
                     i.remove();
@@ -332,7 +336,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 if (f != null) {
                     unify((Type) entry.getValue(), f);
                     // mutability spreads
-                    if (f.field == FIELD_MUTABLE) {
+                    if (f.field >= FIELD_NON_POLYMORPHIC) {
                         entry.setValue(f);
                     }
                 }
@@ -609,7 +613,9 @@ public final class YetiType implements YetiParser, YetiCode {
             throw new CompileException(op.right,
                 src.type + " do not have ." + field + " field\n", ex);
         }
-        return new SelectMember(res, src, field, op.line) {
+        boolean poly = src.polymorph && src.type.finalMembers != null &&
+            ((Type) src.type.finalMembers.get(field)).field == 0;
+        return new SelectMember(res, src, field, op.line, poly) {
             boolean mayAssign() {
                 Type t = st.type.deref();
                 Type given;
@@ -709,7 +715,7 @@ public final class YetiType implements YetiParser, YetiCode {
         if (type.seen) {
             return;
         }
-        if (deny != null && type.field == FIELD_MUTABLE) {
+        if (deny != null && type.field >= FIELD_NON_POLYMORPHIC) {
             vars = deny; // anything under mutable field is evil
         }
         Type t = type.deref();
@@ -895,8 +901,9 @@ public final class YetiType implements YetiParser, YetiCode {
                         : analyze(field.expr, scope, depth);
             names[i] = field.name;
             fields.put(field.name,
-                field.var ? mutableFieldRef(depth, code.type)
-                          : code.type);
+                field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
+                code.polymorph || field.expr instanceof Lambda ? code.type
+                        : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
             local = new Scope(local, field.name,
                               result.bind(i, code, field.var));
         }
@@ -1049,8 +1056,8 @@ public final class YetiType implements YetiParser, YetiCode {
             } else { // MODULE
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type, -1);
-                System.err.println("checked module type, free are " + free
-                        + ", deny " + deny);
+                //System.err.println("checked module type, free are " + free
+                //        + ", deny " + deny);
                 if (!deny.isEmpty() ||
                     !free.isEmpty() && !root.code.polymorph) {
                     throw new CompileException(n,

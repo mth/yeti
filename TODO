@@ -2,7 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Modules
-  + parametric types correctly, disallow unknown types in module signature
   + dotted package names, dirs
   + depends on build
 * Built-in hash maps

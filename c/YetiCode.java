@@ -717,9 +717,10 @@ interface YetiCode {
         String name;
         int line;
 
-        SelectMember(YetiType.Type type, Code st, String name, int line) {
+        SelectMember(YetiType.Type type, Code st, String name, int line,
+                     boolean polymorph) {
             this.type = type;
-            this.polymorph = st.polymorph;
+            this.polymorph = polymorph;
             this.st = st;
             this.name = name;
             this.line = line;
