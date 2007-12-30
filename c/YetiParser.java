@@ -178,7 +178,7 @@ interface YetiParser {
         }
 
         String str() {
-            return "load " + moduleName;
+            return "load " + moduleName.replace('/', '.');
         }
     }
 
@@ -545,7 +545,7 @@ interface YetiParser {
             } else if (s == "var") {
                 res = new VarSym();
             } else if (s == "load") {
-                res = readLoad();
+                res = new Load(readDotted(false));
             } else {
                 for (i = OPS.length; --i >= 0;) {
                     for (int j = OPS[i].length; --j >= 0;) {
@@ -640,20 +640,30 @@ interface YetiParser {
             }
         }
 
-        private Load readLoad() {
-            Node x = fetch();
-            if (!(x instanceof Sym)) {
-                throw new CompileException(x,
-                        "Symbol expected after 'load', not a " + x);
+        private String readDotted(boolean decl) {
+            String result = "";
+            for (;;) {
+                Node n = fetch();
+                if (!(n instanceof Sym)) {
+                    throw new CompileException(n,
+                        (decl ? "Expected module name, not a " :
+                            "Expected module name after 'load', not a ") + n);
+                }
+                result += ((Sym) n).sym;
+                n = fetch();
+                if (!(n instanceof BinOp) || ((BinOp) n).op != ".") {
+                    if (!decl) {
+                        prefetched = new LList(n, prefetched);
+                        return result;
+                    }
+                    if (n instanceof SeqOp) {
+                        return result;
+                    }
+                    throw new CompileException(n,
+                        "Expected ';', not a " + n);
+                }
+                result += "/";
             }
-            Load load = new Load(((Sym) x).sym);
-            x = fetch();
-            if (!(x instanceof Eof || x instanceof SeqOp)) {
-                throw new CompileException(x,
-                        "Unexpected " + x + " in load statement");
-            }
-            prefetched = new LList(x, prefetched);
-            return load;
         }
 
         private Node[] readMany(char end) {
@@ -768,16 +778,7 @@ interface YetiParser {
         Node parse() {
             Node n = fetch();
             if (n instanceof Sym && ((Sym) n).sym == "module") {
-                n = fetch();
-                if (!(n instanceof Sym)) {
-                    throw new CompileException(n,
-                            "Expected module name, not a " + n);
-                }
-                moduleName = ((Sym) n).sym;
-                n = fetch();
-                if (!(n instanceof SeqOp)) {
-                    throw new CompileException(n, "Expected ';', not a " + n);
-                }
+                moduleName = readDotted(true);
             } else {
                 prefetched = new LList(n, prefetched);
             }

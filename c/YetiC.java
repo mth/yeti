@@ -35,6 +35,10 @@ import java.util.*;
 
 class ToFile implements CodeWriter {
     public void writeClass(String name, byte[] code) throws Exception {
+        int sl = name.lastIndexOf('/');
+        if (sl > 0) {
+            new File(name.substring(0, sl)).mkdirs();
+        }
         FileOutputStream out = new FileOutputStream(name);
         out.write(code);
         out.close();

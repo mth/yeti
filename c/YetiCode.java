@@ -82,7 +82,10 @@ interface YetiCode {
         void compile(String sourceName, String name, char[] code, int flags) {
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
             RootClosure codeTree = YetiType.toCode(sourceName, code, flags);
-            module |= codeTree.moduleName != null;
+            if (codeTree.moduleName != null) {
+                name = codeTree.moduleName;
+                module = true;
+            }
             Ctx ctx = new Ctx(this, sourceName, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             if (module) {
@@ -966,6 +969,7 @@ interface YetiCode {
         LoadModule(String moduleName, YetiType.Type type) {
             this.type = type;
             this.moduleName = moduleName;
+            polymorph = true;
         }
 
         void gen(Ctx ctx) {
