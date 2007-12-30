@@ -2,7 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Modules
-  + dotted package names, dirs
   + depends on build
 * Built-in hash maps
 * Fix tail-call optimisation
