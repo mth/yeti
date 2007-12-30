@@ -114,6 +114,9 @@ public class YetiC {
                 case 'e':
                     src = argv[i].toCharArray();
                     break;
+                case 'm':
+                    System.out.println(YetiTypeVisitor.getType(null, argv[i]));
+                    break;
                 }
                 continue;
             }
@@ -121,10 +124,13 @@ public class YetiC {
                 help();
             }
             if (argv[i].startsWith("-")) {
-                boolean vflag = false;
+                boolean xflag = false;
                 for (int j = 1, cnt = argv[i].length(); j < cnt; ++j) {
-                    if (vflag) {
+                    if (xflag) {
                         switch (argv[i].charAt(j)) {
+                        case 'm':
+                            expect.append('m');
+                            break;
                         case 'p':
                             flags |= CF_PRINT_PARSE_TREE;
                             break;
@@ -133,7 +139,7 @@ public class YetiC {
                                 + argv[i].charAt(j) + "'");
                             System.exit(1);
                         }
-                        vflag = false;
+                        xflag = false;
                         continue;
                     }
                     switch (argv[i].charAt(j)) {
@@ -141,8 +147,8 @@ public class YetiC {
                         eval = true;
                         expect.append('e');
                         break;
-                    case 'v':
-                        vflag = true;
+                    case 'x':
+                        xflag = true;
                         break;
                     case 'C':
                         exec = false;
@@ -166,6 +172,9 @@ public class YetiC {
             System.err.println("Expecting arguments for option(s): "
                 + expect.substring(expectCounter));
             System.exit(1);
+        }
+        if (sources.isEmpty() && src  == null) {
+            return;
         }
         CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
         YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);

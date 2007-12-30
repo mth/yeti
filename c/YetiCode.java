@@ -60,15 +60,39 @@ interface YetiCode {
             this.writer = writer;
         }
 
+        private void generateModuleFields(Map fields, Ctx ctx) {
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+            for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
+                Map.Entry entry = (Map.Entry) i.next();
+                String name = (String) entry.getKey();
+                String type = Code.javaType((YetiType.Type) entry.getValue());
+                String descr = 'L' + type + ';';
+                ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, name,
+                        descr, null, null).visitEnd();
+                ctx.m.visitInsn(DUP);
+                ctx.m.visitLdcInsn(name);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                    "get", "(Ljava/lang/String;)Ljava/lang/Object;");
+                ctx.m.visitTypeInsn(CHECKCAST, type);
+                ctx.m.visitFieldInsn(PUTSTATIC, ctx.className,
+                    name, descr);
+            }
+        }
+
         void compile(String sourceName, String name, char[] code, int flags) {
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
-            Code codeTree = YetiType.toCode(sourceName, code, flags);
+            RootClosure codeTree = YetiType.toCode(sourceName, code, flags);
+            module |= codeTree.moduleName != null;
             Ctx ctx = new Ctx(this, sourceName, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             if (module) {
+                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type));
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "eval",
                                     "()Ljava/lang/Object;");
                 codeTree.gen(ctx);
+                if (codeTree.type.type == YetiType.STRUCT) {
+                    generateModuleFields(codeTree.type.finalMembers, ctx);
+                }
                 ctx.m.visitInsn(ARETURN);
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
@@ -203,6 +227,18 @@ interface YetiCode {
         boolean isEmptyList() {
             return false;
         }
+
+        static final String javaType(YetiType.Type t) {
+            switch (t.deref().type) {
+                case YetiType.STR: return "java/lang/String";
+                case YetiType.NUM: return "yeti/lang/Num";
+                case YetiType.CHAR: return "java/lang/Character";
+                case YetiType.FUN: return "yeti/lang/Fun";
+                case YetiType.STRUCT: return "yeti/lang/Struct";
+                case YetiType.VARIANT: return "yeti/lang/Tag";
+            }
+            return "Ljava/lang/Object;";
+        }
     }
 
     abstract class BindRef extends Code {
@@ -216,6 +252,31 @@ interface YetiCode {
         // mark as used lvalue
         boolean assign() {
             return false;
+        }
+    }
+
+    interface DirectBind {
+    }
+
+    class StaticRef extends BindRef implements DirectBind {
+        private String className;
+        private String name;
+        private int line;
+       
+        StaticRef(String className, String fieldName, YetiType.Type type,
+                  Binder binder, boolean polymorph, int line) {
+            this.type = type;
+            this.binder = binder;
+            this.className = className;
+            this.name = fieldName;
+            this.polymorph = polymorph;
+            this.line = line;
+        }
+        
+        void gen(Ctx ctx) {
+            ctx.visitLine(line);
+            ctx.m.visitFieldInsn(GETSTATIC, className, name,
+                                 'L' + javaType(type) + ';');
         }
     }
 
@@ -467,9 +528,7 @@ interface YetiCode {
         }
 
         public BindRef refProxy(BindRef code) {
-            // TODO cruel hack. should define special interface
-            // for those special things
-            if (code instanceof BinOpRef || code instanceof CoreFun) {
+            if (code instanceof DirectBind) {
                 return code;
             }
             if (selfBind == code.binder && !code.assign()) {
@@ -593,6 +652,7 @@ interface YetiCode {
 
     class RootClosure extends AClosure {
         Code code;
+        String moduleName;
 
         public BindRef refProxy(BindRef code) {
             return code;
@@ -899,6 +959,29 @@ interface YetiCode {
         }
     }
 
+    class LoadModule extends Code {
+        String moduleName;
+
+        LoadModule(String moduleName, YetiType.Type type) {
+            this.type = type;
+            this.moduleName = moduleName;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.m.visitMethodInsn(INVOKESTATIC, moduleName,
+                "eval", "()Ljava/lang/Object;");
+        }
+
+        Binder bindField(final String name, final YetiType.Type type) {
+            return new Binder() {
+                public BindRef getRef(int line) {
+                    return new StaticRef(moduleName, name, type,
+                                         this, true, line);
+                }
+            };
+        }
+    }
+
     class StructConstructor extends Code {
         String[] names;
         Code[] values;
@@ -1141,53 +1224,39 @@ interface YetiCode {
     }
 
 
-    class CoreFun extends BindRef implements Binder {
-        String field;
-        int line;
+    class CoreFun implements Binder {
+        private YetiType.Type type;
+        private String name;
 
         CoreFun(YetiType.Type type, String field) {
             this.type = type;
-            this.field = field;
-            polymorph = true;
-            binder = this;
+            name = field;
         }
 
         public BindRef getRef(int line) {
-            CoreFun res = new CoreFun(type, field);
-            res.line = line;
-            return res;
-        }
-
-        void gen(Ctx ctx) {
-            ctx.visitLine(line);
-            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", field,
-                    "Lyeti/lang/Fun;");
+            return new StaticRef("yeti/lang/Core", name,
+                                 type, this, true, line);
         }
     }
 
-    class Ignore extends CoreFun {
-        Ignore() {
-            super(YetiType.A_TO_UNIT, "IGNORE");
-        }
-
+    class Ignore implements Binder {
         public BindRef getRef(int line) {
-            Ignore res = new Ignore();
-            res.line = line;
-            return res;
-        }
+            return new StaticRef("yeti/lang/Core", "IGNORE",
+                        YetiType.A_TO_UNIT, this, true, line) {
+                Code apply(final Code arg1, YetiType.Type res, int line) {
+                    return new Code() {
+                        { type = YetiType.UNIT_TYPE; }
 
-        Code apply(final Code arg1, YetiType.Type res, int line) {
-            return new Code() {
-                { type = YetiType.UNIT_TYPE; }
-
-                void gen(Ctx ctx) {
-                    arg1.gen(ctx);
+                        void gen(Ctx ctx) {
+                            arg1.gen(ctx);
+                        }
+                    };
                 }
             };
         }
     }
 
-    abstract class BinOpRef extends BindRef {
+    abstract class BinOpRef extends BindRef implements DirectBind {
         Code apply(final Code arg1, final YetiType.Type res1, int line) {
             return new Code() {
                 { type = res1; }

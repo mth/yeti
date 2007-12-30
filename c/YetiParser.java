@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.ArrayList;
 import yeti.lang.Core;
 import yeti.lang.Num;
+import yeti.lang.AList;
+import yeti.lang.LList;
 
 interface YetiParser {
     ThreadLocal currentSrc = new ThreadLocal();
@@ -168,6 +170,18 @@ interface YetiParser {
         }
     }
 
+    class Load extends Node {
+        String moduleName;
+
+        Load(String moduleName) {
+            this.moduleName = moduleName;
+        }
+
+        String str() {
+            return "load " + moduleName;
+        }
+    }
+
     class Seq extends Node {
         Node[] st;
 
@@ -263,6 +277,10 @@ interface YetiParser {
         }
 
         String str() {
+            return sym;
+        }
+
+        public String toString() {
             return sym;
         }
     }
@@ -432,6 +450,8 @@ interface YetiParser {
         private String sourceName;
         private int line = 1;
         private int lineStart;
+        private AList prefetched;
+        String moduleName;
 
         Parser(String sourceName, char[] src, int flags) {
             this.sourceName = sourceName;
@@ -440,6 +460,12 @@ interface YetiParser {
         }
 
         private Node fetch() {
+            Node res;
+            if (prefetched != null) {
+                res = (Node) prefetched.first();
+                prefetched = prefetched.rest();
+                return res;
+            }
             char[] src = this.src;
             int i = p;
             char c;
@@ -500,7 +526,6 @@ interface YetiParser {
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
-            Node res;
             if (s == "if") {
                 res = readIf();
             } else if (s == "elif") {
@@ -519,6 +544,8 @@ interface YetiParser {
                 res = new Done();
             } else if (s == "var") {
                 res = new VarSym();
+            } else if (s == "load") {
+                res = readLoad();
             } else {
                 for (i = OPS.length; --i >= 0;) {
                     for (int j = OPS[i].length; --j >= 0;) {
@@ -613,6 +640,22 @@ interface YetiParser {
             }
         }
 
+        private Load readLoad() {
+            Node x = fetch();
+            if (!(x instanceof Sym)) {
+                throw new CompileException(x,
+                        "Symbol expected after 'load', not a " + x);
+            }
+            Load load = new Load(((Sym) x).sym);
+            x = fetch();
+            if (!(x instanceof Eof || x instanceof SeqOp)) {
+                throw new CompileException(x,
+                        "Unexpected " + x + " in load statement");
+            }
+            prefetched = new LList(x, prefetched);
+            return load;
+        }
+
         private Node[] readMany(char end) {
             List res = new ArrayList();
             List args = null;
@@ -644,7 +687,7 @@ interface YetiParser {
             return (Node[]) res.toArray(new Node[res.size()]);
         }
 
-        Node readSeq(char end) {
+        private Node readSeq(char end) {
             Node[] list = readMany(end);
             if (list.length == 1) {
                 return list[0];
@@ -720,6 +763,25 @@ interface YetiParser {
             }
             return new ConcatStr((Node[]) parts.toArray(
                                             new Node[parts.size()]));
+        }
+
+        Node parse() {
+            Node n = fetch();
+            if (n instanceof Sym && ((Sym) n).sym == "module") {
+                n = fetch();
+                if (!(n instanceof Sym)) {
+                    throw new CompileException(n,
+                            "Expected module name, not a " + n);
+                }
+                moduleName = ((Sym) n).sym;
+                n = fetch();
+                if (!(n instanceof SeqOp)) {
+                    throw new CompileException(n, "Expected ';', not a " + n);
+                }
+            } else {
+                prefetched = new LList(n, prefetched);
+            }
+            return readSeq(' ');
         }
     }
 }

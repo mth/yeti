@@ -2,6 +2,9 @@
 ~~~~~~~~~~~~~~~~~
 
 * Modules
+  + parametric types correctly, disallow unknown types in module signature
+  + dotted package names, dirs
+  + depends on build
 * Built-in hash maps
 * Fix tail-call optimisation
 * Comments
@@ -13,6 +16,7 @@
 * Better error messages
 * Built-in regex support
 * Some standard library
+* Struct properties
 * Foreign interface
 * Lambda inlineing optimisation
 * Direct double optimisation, when it can be deducted,

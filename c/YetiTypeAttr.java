@@ -32,6 +32,8 @@ package yeti.lang.compiler;
 
 import java.util.*;
 import org.objectweb.asm.*;
+import java.io.IOException;
+import java.io.InputStream;
 
 class YetiTypeAttr extends Attribute {
     static final byte END = -1;
@@ -40,6 +42,7 @@ class YetiTypeAttr extends Attribute {
     static final byte MUTABLE = -4;
 
     YetiType.Type type;
+    private ByteVector encoded;
 
     YetiTypeAttr(YetiType.Type type) {
         super("YetiModuleType");
@@ -53,14 +56,17 @@ class YetiTypeAttr extends Attribute {
         Map vars = new HashMap();
 
         void writeMap(Map m) {
-            for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
-                Map.Entry e = (Map.Entry) i.next();
-                YetiType.Type t = (YetiType.Type) e.getValue();
-                if (t instanceof YetiType.MutableFieldType) {
-                    buf.putByte(MUTABLE);
+            if (m != null) {
+                for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
+                    Map.Entry e = (Map.Entry) i.next();
+                    YetiType.Type t = (YetiType.Type) e.getValue();
+                    if (t instanceof YetiType.MutableFieldType) {
+                        buf.putByte(MUTABLE);
+                    }
+                    write(t);
+                    int name = cw.newUTF8((String) e.getKey());
+                    buf.putShort(name);
                 }
-                write(t);
-                buf.putShort(cw.newUTF8((String) e.getKey()));
             }
             buf.putByte(END);
         }
@@ -97,6 +103,7 @@ class YetiTypeAttr extends Attribute {
                 buf.putShort(id.intValue());
                 return;
             }
+            refs.put(type, new Integer(refs.size()));
             buf.putByte(type.type);
             if (type.type == YetiType.FUN) {
                 write(type.param[0]);
@@ -132,10 +139,14 @@ class YetiTypeAttr extends Attribute {
         }
 
         Map readMap() {
+            if (in[p] == END) {
+                ++p;
+                return null;
+            }
             HashMap res = new HashMap();
             while (in[p] != END) {
                 YetiType.Type t = read();
-                res.put(cr.readUTF8(cr.readUnsignedShort(p), buf), t);
+                res.put(cr.readUTF8(p, buf), t);
                 p += 2;
             }
             ++p;
@@ -191,9 +202,17 @@ class YetiTypeAttr extends Attribute {
             } else if (tv == YetiType.STRUCT || tv == YetiType.VARIANT) {
                 t.finalMembers = readMap();
                 t.partialMembers = readMap();
-                Map param = new HashMap(t.finalMembers);
-                param.putAll(t.partialMembers);
-                t.param = (YetiType.Type[]) param.values().toArray(
+                Map param;
+                if (t.finalMembers == null) {
+                    param = t.partialMembers;
+                } else if (t.partialMembers == null) {
+                    param = t.finalMembers;
+                } else {
+                    param = new HashMap(t.finalMembers);
+                    param.putAll(t.partialMembers);
+                }
+                t.param = param == null ? YetiType.NO_PARAM :
+                           (YetiType.Type[]) param.values().toArray(
                                               new YetiType.Type[param.size()]);
             } else {
                 throw new RuntimeException("Unknown type: " + tv);
@@ -204,15 +223,23 @@ class YetiTypeAttr extends Attribute {
 
     protected Attribute read(ClassReader cr, int off, int len, char[] buf,
                              int codeOff, Label[] labels) {
-        return new YetiTypeAttr(new DecodeType(cr, off, len, buf).read());
+        if (cr.b[off] != 0) {
+            throw new RuntimeException("Unknown type encoding: " + cr.b[off]);
+        }
+        return new YetiTypeAttr(
+                    new DecodeType(cr, off + 1, len - 1, buf).read());
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
                                 int maxStack, int maxLocals) {
+        if (encoded != null) {
+            return encoded;
+        }
         EncodeType enc = new EncodeType();
         enc.cw = cw;
+        enc.buf.putByte(0); // encoding version
         enc.write(type);
-        return enc.buf;
+        return encoded = enc.buf;
     }
 
 }
@@ -233,7 +260,7 @@ class YetiTypeVisitor implements ClassVisitor {
 
     public void visitAttribute(Attribute attr) {
         if (attr.type == "YetiModuleType") {
-            if (attr != null) {
+            if (typeAttr != null) {
                 throw new RuntimeException(
                     "Multiple YetiModuleType attributes are forbidden");
             }
@@ -265,6 +292,25 @@ class YetiTypeVisitor implements ClassVisitor {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
         reader.accept(visitor, new Attribute[] { new YetiTypeAttr(null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
-        return visitor.typeAttr.type;
+        return visitor.typeAttr == null ? null : visitor.typeAttr.type;
+    }
+
+    static YetiType.Type getType(YetiParser.Node node, String name) {
+        InputStream in = Thread.currentThread().getContextClassLoader()
+                            .getResourceAsStream(name + ".class");
+        try {
+            YetiType.Type t = readType(new ClassReader(in));
+            in.close();
+            if (t == null) {
+                throw new RuntimeException("`" + name +
+                            "' is not a yeti module");
+            }
+            return t;
+        } catch (IOException ex) {
+            if (node == null) {
+                throw new RuntimeException(ex);
+            }
+            throw new CompileException(node, ex.getMessage());
+        }
     }
 }

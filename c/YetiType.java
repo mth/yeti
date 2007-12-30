@@ -194,16 +194,22 @@ public final class YetiType implements YetiParser, YetiCode {
         }
     }
 
-    // used by structs to mark some field as mutable
-    static final class MutableFieldType extends Type {
-        MutableFieldType(int depth, Type ref) {
+    // used by structs to mark some field as non-polymorphic
+    static class NPFieldType extends Type {
+        NPFieldType(int depth, Type ref) {
             super(depth);
             this.ref = ref.deref();
         }
+    }
+
+    // used by structs to mark some field as mutable
+    static final class MutableFieldType extends NPFieldType {
+        MutableFieldType(int depth, Type ref) {
+            super(depth, ref);
+        }
 
         MutableFieldType(Type src) {
-            super(src.depth);
-            this.ref = src.ref;
+            super(src.depth, src.ref);
             this.flags = src.flags;
         }
     }
@@ -555,6 +561,10 @@ public final class YetiType implements YetiParser, YetiCode {
         if (node instanceof ConcatStr) {
             return concatStr((ConcatStr) node, scope, depth);
         }
+        if (node instanceof Load) {
+            String name = ((Load) node).moduleName;
+            return new LoadModule(name, YetiTypeVisitor.getType(node, name));
+        }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
     }
@@ -643,7 +653,7 @@ public final class YetiType implements YetiParser, YetiCode {
         Code assign = left.assign(right);
         if (assign == null) {
             throw new CompileException(op,
-                "Non-mutable value on the left of the assign operator :=");
+                "Non-mutable expression on the left of the assign operator :=");
         }
         assign.type = UNIT_TYPE;
         return assign;
@@ -771,6 +781,24 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
                 bindings[i] = binder;
                 cur = binder;
+            } else if (nodes[i] instanceof Load) {
+                LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
+                if (m.type.type == STRUCT) {
+                    Iterator j = m.type.finalMembers.entrySet().iterator();
+                    while (j.hasNext()) {
+                        Map.Entry e = (Map.Entry) j.next();
+                        String name = ((String) e.getKey()).intern();
+                        Type t = (Type) e.getValue();
+                        scope = bindPoly(name, t, m.bindField(name, t),
+                                         depth, scope);
+                    }
+                } else if (m.type.type != UNIT) {
+                    throw new CompileException(nodes[i],
+                        "Expected module with struct or unit type here (" +
+                        ((Load) nodes[i]).moduleName + " has type " + m.type +
+                        ", but only structs can be exploded)");
+                }
+                cur = new SeqExpr(m);
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {
@@ -993,11 +1021,12 @@ public final class YetiType implements YetiParser, YetiCode {
         return res;
     }
 
-    public static Code toCode(String sourceName, char[] src, int flags) {
+    public static RootClosure toCode(String sourceName, char[] src, int flags) {
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
-            Node n = new Parser(sourceName, src, flags).readSeq(' ');
+            Parser parser = new Parser(sourceName, src, flags);
+            Node n = parser.parse();
             if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.show());
             }
@@ -1006,13 +1035,25 @@ public final class YetiType implements YetiParser, YetiCode {
             scope.closure = root;
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
-            if ((flags & YetiC.CF_COMPILE_MODULE) == 0) {
+            root.moduleName = parser.moduleName;
+            if ((flags & YetiC.CF_COMPILE_MODULE) == 0 &&
+                parser.moduleName == null) {
                 try {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {
                     throw new CompileException(n,
                         "Program body must have a unit type, " +
                         "not a " + root.type, ex);
+                }
+            } else { // MODULE
+                List free = new ArrayList(), deny = new ArrayList();
+                getFreeVar(free, deny, root.type, -1);
+                System.err.println("checked module type, free are " + free
+                        + ", deny " + deny);
+                if (!deny.isEmpty() ||
+                    !free.isEmpty() && !root.code.polymorph) {
+                    throw new CompileException(n,
+                        "Module type is not fully defined");
                 }
             }
             return root;
