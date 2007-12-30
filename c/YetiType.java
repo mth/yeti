@@ -620,6 +620,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 }
                 Type self = (Type) t.partialMembers.get(field);
                 if (self.field != FIELD_MUTABLE) {
+                    // XXX couldn't we get along with res.field = FIELD_MUTABLE?
                     t.partialMembers.put(field, mutableFieldRef(res));
                 }
                 return true;
