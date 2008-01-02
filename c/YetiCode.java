@@ -1262,6 +1262,8 @@ interface YetiCode {
     }
 
     abstract class BinOpRef extends BindRef implements DirectBind {
+        boolean markTail2;
+
         Code apply(final Code arg1, final YetiType.Type res1, int line) {
             return new Code() {
                 { type = res1; }
@@ -1276,6 +1278,12 @@ interface YetiCode {
 
                         void genIf(Ctx ctx, Label to, boolean ifTrue) {
                             binGenIf(ctx, arg1, arg2, to, ifTrue);
+                        }
+
+                        void markTail() {
+                            if (markTail2) {
+                                arg2.markTail();
+                            }
                         }
                     };
                 }
@@ -1422,10 +1430,26 @@ interface YetiCode {
             this.type = YetiType.BOOLOP_TYPE;
             this.orOp = orOp;
             binder = this;
+            markTail2 = true;
         }
 
         public BindRef getRef(int line) {
             return this;
+        }
+
+        void binGen(Ctx ctx, Code arg1, Code arg2) {
+            if (arg2 instanceof CompareFun) {
+                super.binGen(ctx, arg1, arg2);
+            } else {
+                Label label = new Label(), end = new Label();
+                arg1.genIf(ctx, label, orOp);
+                arg2.gen(ctx);
+                ctx.m.visitJumpInsn(GOTO, end);
+                ctx.m.visitLabel(label);
+                ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                        orOp ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
+                ctx.m.visitLabel(end);
+            }
         }
 
         void binGenIf(Ctx ctx, Code arg1, Code arg2,
