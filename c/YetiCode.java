@@ -52,11 +52,16 @@ interface YetiCode {
     int COND_LE  = COND_NOT | COND_GT;
     int COND_GE  = COND_NOT | COND_LT;
 
+    ThreadLocal currentCompileCtx = new ThreadLocal();
+
     class CompileCtx implements Opcodes {
         private CodeWriter writer;
+        private SourceReader reader;
         Map classes = new HashMap();
+        Map types = new HashMap();
 
-        CompileCtx(CodeWriter writer) {
+        CompileCtx(SourceReader reader, CodeWriter writer) {
+            this.reader = reader;
             this.writer = writer;
         }
 
@@ -79,9 +84,27 @@ interface YetiCode {
             }
         }
 
+        String compile(String srcName, int flags) throws Exception {
+            char[] src = reader.getSource(srcName);
+            int dot = srcName.lastIndexOf('.');
+            String className = dot < 0 ? srcName : srcName.substring(0, dot);
+            compile(srcName, className, src, flags);
+            return className;
+        }
+
         void compile(String sourceName, String name, char[] code, int flags) {
+            if (classes.containsKey(name)) {
+                throw new RuntimeException("Duplicate module name: " + name);
+            }
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
-            RootClosure codeTree = YetiType.toCode(sourceName, code, flags);
+            RootClosure codeTree;
+            Object oldCompileCtx = currentCompileCtx.get();
+            currentCompileCtx.set(this);
+            try {
+                codeTree = YetiType.toCode(sourceName, code, flags);
+            } finally {
+                currentCompileCtx.set(oldCompileCtx);
+            }
             if (codeTree.moduleName != null) {
                 name = codeTree.moduleName;
                 module = true;
@@ -97,6 +120,7 @@ interface YetiCode {
                     generateModuleFields(codeTree.type.finalMembers, ctx);
                 }
                 ctx.m.visitInsn(ARETURN);
+                types.put(name, codeTree.type);
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");

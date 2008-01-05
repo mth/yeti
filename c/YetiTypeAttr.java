@@ -296,18 +296,38 @@ class YetiTypeVisitor implements ClassVisitor {
     }
 
     static YetiType.Type getType(YetiParser.Node node, String name) {
+        YetiCode.CompileCtx ctx =
+            (YetiCode.CompileCtx) YetiCode.currentCompileCtx.get();
+        YetiType.Type t = (YetiType.Type) ctx.types.get(name);
+        if (t != null) {
+            return t;
+        }
         InputStream in = Thread.currentThread().getContextClassLoader()
                             .getResourceAsStream(name + ".class");
         try {
-            YetiType.Type t = readType(new ClassReader(in));
-            in.close();
-            if (t == null) {
-                throw new RuntimeException("`" + name +
-                            "' is not a yeti module");
+            if (in == null) {
+                ctx.compile(name + ".yeti", 0);
+                t = (YetiType.Type) ctx.types.get(name);
+                if (t == null) {
+                    throw new Exception("Could compile to `" + name
+                                      + "' module");
+                }
+            } else {
+                t = readType(new ClassReader(in));
+                in.close();
+                if (t == null) {
+                    throw new Exception("`" + name + "' is not a yeti module");
+                }
             }
+            ctx.types.put(name, t);
             return t;
-        } catch (IOException ex) {
+        } catch (CompileException ex) {
+            throw ex;
+        } catch (Exception ex) {
             if (node == null) {
+                if (ex instanceof RuntimeException) {
+                    throw (RuntimeException) ex;
+                }
                 throw new RuntimeException(ex);
             }
             throw new CompileException(node, ex.getMessage());

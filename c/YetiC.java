@@ -71,24 +71,30 @@ class Loader extends ClassLoader implements CodeWriter {
     }
 }
 
-public class YetiC {
+public class YetiC implements SourceReader {
     public static final int CF_COMPILE_MODULE   = 1;
     public static final int CF_PRINT_PARSE_TREE = 2;
     static String inCharset = "UTF-8";
 
-    public static String loadFile(String name) throws IOException {
-        StringBuffer buf = new StringBuffer();
+    public char[] getSource(String name) throws IOException {
+        char[] buf = new char[0x8000];
+        int l = 0;
         InputStream stream = new FileInputStream(name);
         try {
             Reader reader = new java.io.InputStreamReader(stream, inCharset);
-            char[] cbuf = new char[0x8000];
-            for (int n; (n = reader.read(cbuf)) >= 0; ) {
-                buf.append(cbuf, 0, n);
+            for (int n; (n = reader.read(buf, l, buf.length - l)) >= 0; ) {
+                if (buf.length - (l += n) < 0x1000) {
+                    char[] tmp = new char[buf.length << 1];
+                    System.arraycopy(buf, 0, tmp, 0, l);
+                    buf = tmp;
+                }
             }
         } finally {
             stream.close();
         }
-        return buf.toString();
+        char[] r = new char[l];
+        System.arraycopy(buf, 0, r, 0, l);
+        return r;
     }
 
     private static void help() {
@@ -181,18 +187,16 @@ public class YetiC {
             return;
         }
         CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
-        YetiCode.CompileCtx compilation = new YetiCode.CompileCtx(writer);
+        YetiCode.CompileCtx compilation =
+            new YetiCode.CompileCtx(new YetiC(), writer);
         try {
             if (eval) {
                 flags |= CF_COMPILE_MODULE;
                 compilation.compile(null, mainClass, src, flags);
             } else {
                 for (int i = 0, cnt = sources.size(); i < cnt; ++i) {
-                    String srcName = (String) sources.get(i);
-                    src = loadFile(srcName).toCharArray();
-                    int dot = srcName.lastIndexOf('.');
-                    mainClass = dot < 0 ? srcName : srcName.substring(0, dot);
-                    compilation.compile(srcName, mainClass, src, flags);
+                    mainClass =
+                        compilation.compile((String) sources.get(i), flags);
                 }
             }
         } catch (CompileException ex) {
