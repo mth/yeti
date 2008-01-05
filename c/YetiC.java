@@ -49,7 +49,14 @@ class Loader extends ClassLoader implements CodeWriter {
     private Map classes = new HashMap();
 
     public void writeClass(String name, byte[] code) {
-        classes.put(name, code);
+        // to a dotted classname used by loadClass
+        char[] cn = name.substring(0, name.length() - 6).toCharArray();
+        for (int i = cn.length; i > 0;) {
+            if (cn[--i] == '/') {
+                cn[i] = '.';
+            }
+        }
+        classes.put(new String(cn), code);
     }
 
     // override loadClass to ensure loading our own class
@@ -58,7 +65,7 @@ class Loader extends ClassLoader implements CodeWriter {
             throws ClassNotFoundException {
         Class loaded = findLoadedClass(name);
         if (loaded == null) {
-            byte[] code = (byte[]) classes.get(name + ".class");
+            byte[] code = (byte[]) classes.get(name);
             if (code == null) {
                 return super.loadClass(name, resolve);
             }
@@ -79,7 +86,20 @@ public class YetiC implements SourceReader {
     public char[] getSource(String name) throws IOException {
         char[] buf = new char[0x8000];
         int l = 0;
-        InputStream stream = new FileInputStream(name);
+        InputStream stream;
+        try {
+            stream = new FileInputStream(name);
+        } catch (IOException ex) {
+            int p = name.lastIndexOf('/');
+            if (p <= 0) {
+                throw ex;
+            }
+            try {
+                stream = new FileInputStream(name.substring(p + 1));
+            } catch (IOException e) {
+                throw ex;
+            }            
+        }
         try {
             Reader reader = new java.io.InputStreamReader(stream, inCharset);
             for (int n; (n = reader.read(buf, l, buf.length - l)) >= 0; ) {
