@@ -94,8 +94,11 @@ interface YetiCode {
 
         void compile(String sourceName, String name, char[] code, int flags) {
             if (classes.containsKey(name)) {
-                throw new RuntimeException("Duplicate module name: " + name);
+                throw new RuntimeException(classes.get(name) == null
+                    ? "Circular module dependency: " + name
+                    : "Duplicate module name: " + name);
             }
+            classes.put(name, null);
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
             RootClosure codeTree;
             Object oldCompileCtx = currentCompileCtx.get();

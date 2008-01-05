@@ -1,8 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Modules
-  + depends on build
 * Built-in hash maps
 * Fix tail-call optimisation
 * Comments
