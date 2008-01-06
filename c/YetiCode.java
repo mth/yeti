@@ -1255,6 +1255,40 @@ interface YetiCode {
         }
     }
 
+    class MapConstructor extends Code {
+        Code[] keyItems;
+        Code[] items;
+
+        MapConstructor(Code[] keyItems, Code[] items) {
+            this.keyItems = keyItems;
+            this.items = items;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/Hash");
+            ctx.m.visitInsn(DUP);
+            if (items.length > 16) {
+                ctx.intConst(items.length);
+                ctx.m.visitMethodInsn(INVOKESPECIAL,
+                        "yeti/lang/Hash", "<init>", "(I)V");
+            } else {
+                ctx.m.visitMethodInsn(INVOKESPECIAL,
+                        "yeti/lang/Hash", "<init>", "()V");
+            }
+            for (int i = 0; i < items.length; ++i) {
+                ctx.m.visitInsn(DUP);
+                keyItems[i].gen(ctx);
+                items[i].gen(ctx);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash", "put",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                ctx.m.visitInsn(POP);
+            }
+        }
+
+        boolean isEmptyList() {
+            return items.length == 0;
+        }
+    }
 
     class CoreFun implements Binder {
         private YetiType.Type type;

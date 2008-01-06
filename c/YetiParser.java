@@ -66,11 +66,15 @@ interface YetiParser {
         String showList(char open, char close, Node[] list) {
             StringBuffer res = new StringBuffer();
             res.append(open);
-            for (int i = 0; i < list.length; ++i) {
-                if (i != 0) {
-                    res.append(", ");
+            if (list == null) {
+                res.append(':');
+            } else {
+                for (int i = 0; i < list.length; ++i) {
+                    if (i != 0) {
+                        res.append(", ");
+                    }
+                    res.append(list[i].show());
                 }
-                res.append(list[i].show());
             }
             res.append(close);
             return res.toString();
@@ -145,6 +149,11 @@ interface YetiParser {
             line = nameNode.line;
             col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
+            if (first < args.size() && args.get(first) instanceof BinOp &&
+                ((BinOp) args.get(first)).op == ".") {
+                throw new CompileException((BinOp) args.get(first),
+                    "Bad argument on binding (use := for assignment, not =)");
+            }
             for (int i = args.size(); --i >= first;) {
                 expr = new Lambda((Node) args.get(i), expr,
                                   i == first ? name : null);
@@ -504,6 +513,11 @@ interface YetiParser {
                 case '(':
                     return readSeq(')');
                 case '[':
+                    if (i + 2 < src.length && src[i + 1] == ':' &&
+                        src[i + 2] == ']') {
+                        p = i + 3;
+                        return new NList(null).pos(line,col);
+                    }
                     return new NList(readMany(',', ']')).pos(line, col);
                 case '{':
                     return new Struct(readMany(';', '}')).pos(line, col);

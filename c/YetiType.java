@@ -635,7 +635,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code keyRefExpr(Code val, NList keyList, Scope scope, int depth) {
-        if (keyList.items.length == 0) {
+        if (keyList.items == null || keyList.items.length == 0) {
             throw new CompileException(keyList, ".[] - missing key expression");
         }
         if (keyList.items.length != 1) {
@@ -1006,29 +1006,72 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code list(NList list, Scope scope, int depth) {
-        Node[] items = list.items;
+        Node[] items = list.items == null ? new Node[0] : list.items;
+        Code[] keyItems = null;
         Code[] codeItems = new Code[items.length];
         Type type = null;
+        Type keyType = NO_TYPE;
+        Type kind = null;
+        BinOp bin;
         for (int i = 0; i < items.length; ++i) {
-            codeItems[i] = analyze(items[i], scope, depth);
+            if (items[i] instanceof BinOp &&
+                (bin = (BinOp) items[i]).op == ":") {
+                Code key = analyze(bin.left, scope, depth);
+                if (kind != MAP_TYPE) {
+                    if (kind != null) {
+                        throw new CompileException(bin,
+                            "Unexpected : in list" + (i != 1 ? "" :
+                            " (or the key is missing on the first item?)"));
+                    }
+                    keyType = key.type;
+                    kind = MAP_TYPE;
+                    keyItems = new Code[items.length];
+                } else {
+                    try {
+                        unify(keyType, key.type);
+                    } catch (TypeException ex) {
+                        throw new CompileException(items[i],
+                            "This map element has " + keyType +
+                            "key, but others have had " + keyType, ex);
+                    }
+                }
+                keyItems[i] = key;
+                codeItems[i] = analyze(bin.right, scope, depth);
+            } else {
+                if (kind == MAP_TYPE) {
+                    throw new CompileException(items[i],
+                                "Map item is missing a key");
+                }
+                kind = LIST_TYPE;
+                codeItems[i] = analyze(items[i], scope, depth);
+            }
             if (type == null) {
                 type = codeItems[i].type;
             } else {
                 try {
                     unify(type, codeItems[i].type);
                 } catch (TypeException ex) {
-                    throw new CompileException(items[i],
-                        "This list element is " + codeItems[i].type +
-                        ", but others have been " + type, ex);
+                    throw new CompileException(items[i], (kind == LIST_TYPE
+                         ? "This list element is " : "This map element is ") +
+                         codeItems[i].type + ", but others have been " + type,
+                        ex);
                 }
             }
         }
         if (type == null) {
             type = new Type(depth);
         }
-        Code res = new ListConstructor(codeItems);
-        res.type = new Type(MAP, new Type[] { type, NO_TYPE, LIST_TYPE });
-        res.polymorph = true;
+        if (kind == null) {
+            kind = LIST_TYPE;
+        }
+        if (list.items == null) {
+            keyType = new Type(depth);
+            kind = MAP_TYPE;
+        }
+        Code res = kind == LIST_TYPE ? new ListConstructor(codeItems)
+                                     : new MapConstructor(keyItems, codeItems);
+        res.type = new Type(MAP, new Type[] { type, keyType, kind });
+        res.polymorph = kind == LIST_TYPE;
         return res;
     }
 

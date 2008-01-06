@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Built-in hash maps
 * Fix tail-call optimisation
 * Comments
 * Function compose operator
