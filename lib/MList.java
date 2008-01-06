@@ -208,18 +208,18 @@ public class MList extends AMList implements ByKey {
         return size > 1 ? new Iter(1) : null;
     }
 
-    public Object get(Object index) {
+    public Object vget(Object index) {
         int i;
-        if ((i = ((Number) index).intValue()) >= size) {
-            throw new ArrayIndexOutOfBoundsException(i);
+        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
+            throw new NoSuchKeyException(i, size);
         }
         return array[i];
     }
 
     public Object put(Object index, Object value) {
         int i;
-        if ((i = ((Number) index).intValue()) >= size) {
-            throw new ArrayIndexOutOfBoundsException(i);
+        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
+            throw new NoSuchKeyException(i, size);
         }
         array[i] = value;
         return null;

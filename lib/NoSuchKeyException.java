@@ -30,15 +30,14 @@
  */
 package yeti.lang;
 
-/** Yeti core library - ByKey. */
-public interface ByKey {
-    /**
-     * Get object by key. Throw an Exception on error.
-     */
-    Object vget(Object key);
+/** Yeti core library - No such key exception. */
+public class NoSuchKeyException extends IndexOutOfBoundsException {
+    public NoSuchKeyException(String message) {
+        super(message);
+    }
 
-    /**
-     * Put object by key.
-     */
-    Object put(Object key, Object value);
+    public NoSuchKeyException(int i, int size) {
+        super("Array index " + i + (size > 0 ? " out of range 0.." + (size - 1)
+                                             : " out of empty range"));
+    }
 }

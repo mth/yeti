@@ -805,7 +805,7 @@ interface YetiCode {
             key.gen(ctx);
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
-                    "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    "vget", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
         Code assign(final Code setValue) {
