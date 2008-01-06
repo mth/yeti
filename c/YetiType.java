@@ -638,7 +638,10 @@ public final class YetiType implements YetiParser, YetiCode {
         if (keyList.items.length == 0) {
             throw new CompileException(keyList, ".[] - missing key expression");
         }
-        Code key = analSeq(keyList.items, scope, depth);
+        if (keyList.items.length != 1) {
+            throw new CompileException(keyList, "Unexpected , inside .[]");
+        }
+        Code key = analyze(keyList.items[0], scope, depth);
         Type[] param = { new Type(depth), key.type, new Type(depth) };
         try {
             unify(val.type, new Type(MAP, param));
