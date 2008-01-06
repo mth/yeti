@@ -76,6 +76,8 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
     static final Type A_B_LIST_TYPE =
         new Type(MAP, new Type[] { A, B, LIST_TYPE });
+    static final Type A_B_MAP_TYPE =
+        new Type(MAP, new Type[] { B, A, MAP_TYPE });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
     static final Type A_MLIST_TYPE =
@@ -108,6 +110,9 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
         bindCore("for",
             fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE), "FOR",
+        bindCore("forHash",
+            fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
+            "FORHASH",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
@@ -118,7 +123,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))));
+        null))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

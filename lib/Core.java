@@ -31,6 +31,7 @@
 
 package yeti.lang;
 
+import java.util.Map;
 import java.util.Random;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
@@ -138,9 +139,26 @@ public final class Core {
         }
     }
 
+    private static final class ForHash extends Fun {
+        public Object apply(final Object map) {
+            return new Fun() {
+                public Object apply(Object fun) {
+                    Fun f = (Fun) fun;
+                    java.util.Iterator i = ((Map) map).entrySet().iterator();
+                    while (i.hasNext()) {
+                        Map.Entry e = (Map.Entry) i.next();
+                        ((Fun) f.apply(e.getKey())).apply(e.getValue());
+                    }
+                    return null;
+                }
+            };
+        }
+    }
+
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
+    public static final Fun FORHASH = new ForHash();
 
     private static synchronized void initRandom() {
         if (rnd == null) {
