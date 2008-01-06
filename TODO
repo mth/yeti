@@ -9,12 +9,15 @@
 * Some IntNum methods are too eager on going to BigNum
   (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)
 * Fix MList == [] / != []
+* Type declarations
+  + Better type descriptions in error messages
 * Real pattern matching in case
 * Better error messages
 * Built-in regex support
 * Some standard library
 * Struct properties
 * Foreign interface
+* Extendable structs?
 * Lambda inlineing optimisation
 * Direct double optimisation, when it can be deducted,
   that there are always floats.
