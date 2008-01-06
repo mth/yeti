@@ -68,7 +68,7 @@ interface YetiParser {
             res.append(open);
             for (int i = 0; i < list.length; ++i) {
                 if (i != 0) {
-                    res.append("; ");
+                    res.append(", ");
                 }
                 res.append(list[i].show());
             }
@@ -95,7 +95,7 @@ interface YetiParser {
             int e = p;
             char c;
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
-                    c != ';' && c != '.' && c != '(' && c != ')' &&
+                    c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
                     c != '[' && c != ']' && c != '{' && c != '}'));
             return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
         }
@@ -104,7 +104,12 @@ interface YetiParser {
     class BindOp extends Node {
     }
 
-    class SeqOp extends Node {
+    class SepOp extends Node {
+        char sep;
+
+        SepOp(char sep) {
+            this.sep = sep;
+        }
     }
 
     class VarSym extends Node {
@@ -435,6 +440,7 @@ interface YetiParser {
             { "::" },
             { "<", ">", "<=", ">=", "==", "!=" },
             { "and", "or" },
+            { "," },
             { ":=" },
             { ":" }
         };
@@ -492,13 +498,15 @@ interface YetiParser {
                     }
                     return new BindOp().pos(line, col);
                 case ';':
-                    return new SeqOp().pos(line, col);
+                    return new SepOp(';').pos(line, col);
+                case ',':
+                    return new SepOp(',').pos(line, col);
                 case '(':
                     return readSeq(')');
                 case '[':
-                    return new NList(readMany(']')).pos(line, col);
+                    return new NList(readMany(',', ']')).pos(line, col);
                 case '{':
-                    return new Struct(readMany('}')).pos(line, col);
+                    return new Struct(readMany(';', '}')).pos(line, col);
                 case '"':
                     return readStr().pos(line, col);
                 case '\\':
@@ -508,7 +516,7 @@ interface YetiParser {
             if ((c = src[i]) >= '0' && c <= '9') {
                 while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                        c != '[' && c != ']' && c != '{' && c != '}' &&
-                       c != ':' && c != ';' && c > ' ');
+                       c != ':' && c != ';' && c != ',' && c > ' ');
                 String s = new String(src, p, i - p);
                 p = i;
                 try {
@@ -520,7 +528,7 @@ interface YetiParser {
             }
             while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                    c != ';' && c > ' ' && c != '[' && c != ']' &&
-                   c != '{' && c != '}' && c != '.' &&
+                   c != '{' && c != '}' && c != '.' && c != ',' &&
                    (c != ':' || i + 1 < src.length && src[i + 1] > ' '
                              || i > 0 && src[i - 1] == ':'));
             String s = new String(src, p, i - p);
@@ -608,7 +616,7 @@ interface YetiParser {
 
         private Node readCase() {
             Node val = readExpr("of");
-            Node[] choices = readMany(' ');
+            Node[] choices = readMany(';', ' ');
             if (!(eofWas instanceof Esac)) {
                 throw new CompileException(eofWas,
                     "Expected esac, found " + eofWas);
@@ -656,7 +664,7 @@ interface YetiParser {
                         prefetched = new LList(n, prefetched);
                         return result;
                     }
-                    if (n instanceof SeqOp) {
+                    if (n instanceof SepOp && ((SepOp) n).sep == ';') {
                         return result;
                     }
                     throw new CompileException(n,
@@ -666,7 +674,7 @@ interface YetiParser {
             }
         }
 
-        private Node[] readMany(char end) {
+        private Node[] readMany(char sep, char end) {
             List res = new ArrayList();
             List args = null;
             List l = new ArrayList();
@@ -678,7 +686,7 @@ interface YetiParser {
                     l = new ArrayList();
                     continue;
                 }
-                if (sym instanceof SeqOp) {
+                if (sym instanceof SepOp && ((SepOp) sym).sep == sep) {
                     res.add(def(args, l));
                     args = null;
                     l = new ArrayList();
@@ -698,7 +706,7 @@ interface YetiParser {
         }
 
         private Node readSeq(char end) {
-            Node[] list = readMany(end);
+            Node[] list = readMany(';', end);
             if (list.length == 1) {
                 return list[0];
             }

@@ -85,7 +85,7 @@ public class LList extends AList {
         StringBuffer buf = new StringBuffer("[");
         buf.append(first);
         for (AIter i = rest; i != null; i = i.next()) {
-            buf.append(';');
+            buf.append(',');
             buf.append(i.first());
         }
         buf.append(']');
