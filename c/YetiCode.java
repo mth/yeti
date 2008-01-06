@@ -3,7 +3,7 @@
 /*
  * Yeti language compiler java bytecode generator.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -601,10 +601,16 @@ interface YetiCode {
                 }
                 return selfRef;
             }
-            for (Function f = outer; f != null; f = f.outer) {
+            int argc = -1, argc_ = 2;
+            for (Function f = outer; f != null; f = f.outer, ++argc_) {
                 if (f.selfBind == code.binder) {
-                    System.err.println("Detected rec ref use");
+                    argc = argc_;
+                    break;
                 }
+            }
+            if (argc != -1) {
+                System.out.println("Rec bind used at " + argc);
+                new Exception().printStackTrace();
             }
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.binder == code.binder) {

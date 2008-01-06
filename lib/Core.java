@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package yeti.lang;
 
 import java.util.Map;

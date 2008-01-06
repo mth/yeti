@@ -4,7 +4,7 @@
  * Yeti type analyzer.
  * Uses Hindley-Milner type inference algorithm
  * with extensions for polymorphic structs and variants.
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -864,7 +864,14 @@ public final class YetiType implements YetiParser, YetiCode {
                                        "Bad argument: " + lambda.arg);
         }
         bodyScope.closure = to;
-        to.setBody(analyze(lambda.expr, bodyScope, depth));
+        if (lambda.expr instanceof Lambda) {
+            Function f = new Function(null);
+            // make f to know about its outer scope before processing it
+            to.setBody(f);
+            lambda(f, (Lambda) lambda.expr, bodyScope, depth);
+        } else {
+            to.setBody(analyze(lambda.expr, bodyScope, depth));
+        }
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
             try {
