@@ -619,7 +619,7 @@ interface YetiParser {
             } while (eofWas instanceof Elif);
             branches.add(new Node[] {
                 eofWas instanceof Else ? readSeq(' ')
-                    : new Seq(new Node[] {}).pos(eofWas.line, eofWas.col) });
+                    : new UnitLiteral().pos(eofWas.line, eofWas.col) });
             if (!(eofWas instanceof Fi)) {
                 throw new CompileException(eofWas,
                     "Expected fi, found " + eofWas);

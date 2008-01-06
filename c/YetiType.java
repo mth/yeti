@@ -864,7 +864,7 @@ public final class YetiType implements YetiParser, YetiCode {
                                        "Bad argument: " + lambda.arg);
         }
         bodyScope.closure = to;
-        to.body = analyze(lambda.expr, bodyScope, depth);
+        to.setBody(analyze(lambda.expr, bodyScope, depth));
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
             try {

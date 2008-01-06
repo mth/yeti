@@ -541,6 +541,7 @@ interface YetiCode {
         private Capture captures;
         private BindRef selfRef;
         private Label restart;
+        private Function outer;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -555,6 +556,13 @@ interface YetiCode {
 
         public BindRef getRef(int line) {
             return arg;
+        }
+
+        void setBody(Code body) {
+            this.body = body;
+            if (body instanceof Function) {
+                ((Function) body).outer = this;
+            }
         }
 
         public BindRef refProxy(BindRef code) {
@@ -592,6 +600,11 @@ interface YetiCode {
                     selfRef.type = code.type;
                 }
                 return selfRef;
+            }
+            for (Function f = outer; f != null; f = f.outer) {
+                if (f.selfBind == code.binder) {
+                    System.err.println("Detected rec ref use");
+                }
             }
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.binder == code.binder) {
