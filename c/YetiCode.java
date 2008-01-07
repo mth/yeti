@@ -565,6 +565,10 @@ interface YetiCode {
             }
         }
 
+        // When function body refers to bindings outside of it,
+        // at each closure border on the way out (to the binding),
+        // a refProxy (of the ending closure) is called, possibly
+        // transforming the BindRef.
         public BindRef refProxy(BindRef code) {
             if (code instanceof DirectBind) {
                 return code;
@@ -608,14 +612,14 @@ interface YetiCode {
                     break;
                 }
             }
-            if (argc != -1) {
-                System.out.println("Rec bind used at " + argc);
-                new Exception().printStackTrace();
-            }
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.binder == code.binder) {
                     return c;
                 }
+            }
+            if (argc != -1) {
+                System.out.println("Rec bind used at " + argc + " " + this
+                    + " " + code.binder + " " + code);
             }
             Capture c = new Capture();
             c.binder = code.binder;
