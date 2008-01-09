@@ -440,37 +440,49 @@ interface YetiCode {
     }
 
     abstract class CaptureRef extends BindRef {
-        Function fun;
+        Function capturer;
         BindRef ref;
 
         class SelfApply extends Apply {
             boolean tail;
+            int depth;
 
-            SelfApply(YetiType.Type type, Code arg, int line) {
-                super(type, CaptureRef.this, arg, line);
+            SelfApply(YetiType.Type type, Code f, Code arg,
+                      int line, int depth) {
+                super(type, f, arg, line);
+                this.depth = depth;
             }
 
             void gen(Ctx ctx) {
-                if (!tail || CaptureRef.this.fun.restart == null) {
+                if (!tail || depth != 0 || capturer.restart == null) {
                     super.gen(ctx);
                     return;
                 }
                 System.err.println("Tailcall");
                 arg.gen(ctx);
+                // TODO set all args involved...
                 ctx.m.visitVarInsn(ASTORE, 1);
-                ctx.m.visitJumpInsn(GOTO, CaptureRef.this.fun.restart);
+                ctx.m.visitJumpInsn(GOTO, capturer.restart);
             }
 
             void markTail() {
                 tail = true;
             }
-        }
 
+            Code apply(Code arg, YetiType.Type res, int line) {
+/*                if (depth > 0) {
+                    return new SelfApply(res, this, arg, line, depth - 1);
+                }*/
+                return new Apply(res, this, arg, line);
+            }
+        }
+        
         Code apply(Code arg, YetiType.Type res, int line) {
-            for (Function f = fun; f != null; f = f.outer) {
+            int n = 0;
+            for (Function f = capturer; f != null; ++n, f = f.outer) {
                 if (f.selfBind == ref.binder) {
                     System.err.println("Discovered self-apply");
-                    return new SelfApply(res, arg, line);
+                    return new SelfApply(res, this, arg, line, n);
                 }
             }
             return new Apply(res, this, arg, line);
@@ -620,7 +632,7 @@ interface YetiCode {
                     selfRef.binder = selfBind;
                     selfRef.type = code.type;
                     selfRef.ref = code;
-                    selfRef.fun = this;
+                    selfRef.capturer = this;
                 }
                 return selfRef;
             }
@@ -636,7 +648,7 @@ interface YetiCode {
             c.ref = code;
             c.wrapper = code.capture();
             c.next = captures;
-            c.fun = this;
+            c.capturer = this;
             captures = c;
             return c;
         }
