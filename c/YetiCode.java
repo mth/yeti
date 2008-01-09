@@ -439,11 +439,48 @@ interface YetiCode {
         void addVar(BindExpr binder);
     }
 
-    class Capture extends BindRef implements CaptureWrapper {
+    abstract class CaptureRef extends BindRef {
+        Function fun;
+        BindRef ref;
+
+        class SelfApply extends Apply {
+            boolean tail;
+
+            SelfApply(YetiType.Type type, Code arg, int line) {
+                super(type, CaptureRef.this, arg, line);
+            }
+
+            void gen(Ctx ctx) {
+                if (!tail || CaptureRef.this.fun.restart == null) {
+                    super.gen(ctx);
+                    return;
+                }
+                System.err.println("Tailcall");
+                arg.gen(ctx);
+                ctx.m.visitVarInsn(ASTORE, 1);
+                ctx.m.visitJumpInsn(GOTO, CaptureRef.this.fun.restart);
+            }
+
+            void markTail() {
+                tail = true;
+            }
+        }
+
+        Code apply(Code arg, YetiType.Type res, int line) {
+            for (Function f = fun; f != null; f = f.outer) {
+                if (f.selfBind == ref.binder) {
+                    System.err.println("Discovered self-apply");
+                    return new SelfApply(res, arg, line);
+                }
+            }
+            return new Apply(res, this, arg, line);
+        }
+    }
+
+    class Capture extends CaptureRef implements CaptureWrapper {
         String id;
         Capture next;
         CaptureWrapper wrapper;
-        BindRef ref;
         Object identity;
 
         void gen(Ctx ctx) {
@@ -539,9 +576,9 @@ interface YetiCode {
         Code body;
         String bindName;
         private Capture captures;
-        private BindRef selfRef;
-        private Label restart;
-        private Function outer;
+        private CaptureRef selfRef;
+        Label restart;
+        Function outer;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -575,51 +612,22 @@ interface YetiCode {
             }
             if (selfBind == code.binder && !code.assign()) {
                 if (selfRef == null) {
-                    selfRef = new BindRef() {
+                    selfRef = new CaptureRef() {
                         void gen(Ctx ctx) {
                             ctx.m.visitVarInsn(ALOAD, 0);
-                        }
-
-                        Code apply(Code arg, YetiType.Type res, int line) {
-                            return new Apply(res, this, arg, line) {
-                                boolean tail;
-
-                                void gen(Ctx ctx) {
-                                    if (!tail || restart == null) {
-                                        super.gen(ctx);
-                                        return;
-                                    }
-                                    arg.gen(ctx);
-                                    ctx.m.visitVarInsn(ASTORE, 1);
-                                    ctx.m.visitJumpInsn(GOTO, restart);
-                                }
-
-                                void markTail() {
-                                    tail = true;
-                                }
-                            };
                         }
                     };
                     selfRef.binder = selfBind;
                     selfRef.type = code.type;
+                    selfRef.ref = code;
+                    selfRef.fun = this;
                 }
                 return selfRef;
-            }
-            int argc = -1, argc_ = 2;
-            for (Function f = outer; f != null; f = f.outer, ++argc_) {
-                if (f.selfBind == code.binder) {
-                    argc = argc_;
-                    break;
-                }
             }
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.binder == code.binder) {
                     return c;
                 }
-            }
-            if (argc != -1) {
-                System.out.println("Rec bind used at " + argc + " " + this
-                    + " " + code.binder + " " + code);
             }
             Capture c = new Capture();
             c.binder = code.binder;
@@ -628,6 +636,7 @@ interface YetiCode {
             c.ref = code;
             c.wrapper = code.capture();
             c.next = captures;
+            c.fun = this;
             captures = c;
             return c;
         }
