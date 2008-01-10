@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /*
- * Yeti core library.
+ * Yeti language compiler java bytecode generator.
  *
  * Copyright (c) 2007 Madis Janson
  * All rights reserved.
@@ -28,16 +28,37 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package yeti.lang;
+package yeti.lang.compiler;
 
-/** Yeti core library - List. */
-public abstract class AList extends AIter implements Comparable {
-    /**
-     * Return rest of the list. Must not modify the current list.
-     */
-    public abstract AList rest();
+public class CompileException extends RuntimeException {
+    String fn;
+    int line;
+    int col;
+    String what;
 
-    public abstract void forEach(Fun f);
+    public CompileException(int line, int col, String what) {
+        this.line = line;
+        this.col = col;
+        this.what = what;
+    }
 
-    public abstract AList reverse();
+    public CompileException(YetiParser.Node pos, String what) {
+        line = pos.line;
+        col = pos.col;
+        this.what = what;
+    }
+
+    public CompileException(YetiParser.Node pos, String what,
+                            YetiType.TypeException ex) {
+        line = pos.line;
+        col = pos.col;
+        if (ex.special) {
+            what += " (" + ex.getMessage() + ")";
+        }
+        this.what = what;
+    }
+
+    public String getMessage() {
+        return (fn == null ? "" : fn) + ":" + line + ":" + col + ": " + what;
+    }
 }

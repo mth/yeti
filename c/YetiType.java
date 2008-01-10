@@ -70,6 +70,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type ORDERED = orderedVar(1);
     static final Type A = new Type(1);
     static final Type B = new Type(1);
+    static final Type C = new Type(1);
     static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
     static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
     static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
@@ -80,6 +81,8 @@ public final class YetiType implements YetiParser, YetiCode {
         new Type(MAP, new Type[] { B, A, MAP_TYPE });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
+    static final Type C_LIST_TYPE =
+        new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
     static final Type A_MLIST_TYPE =
         new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
@@ -106,6 +109,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("number", fun(STR_TYPE, NUM_TYPE), "NUM",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
         bindCore("array", fun(A_B_LIST_TYPE, A_MLIST_TYPE), "ARRAY",
+        bindCore("reverse", fun(A_B_LIST_TYPE, A_LIST_TYPE), "REVERSE",
         bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
         bindCore("for",
@@ -113,17 +117,21 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("forHash",
             fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
             "FORHASH",
+        bindCore("mapHash",
+            fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
+        bindScope("%", new ArithOpFun("rem", NUMOP_TYPE),
+        bindScope("div", new ArithOpFun("intDiv", NUMOP_TYPE),
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -1055,7 +1063,24 @@ public final class YetiType implements YetiParser, YetiCode {
                                 "Map item is missing a key");
                 }
                 kind = LIST_TYPE;
-                codeItems[i] = analyze(items[i], scope, depth);
+                if (items[i] instanceof BinOp &&
+                    (bin = (BinOp) items[i]).op == "..") {
+                    Code from = analyze(bin.left, scope, depth);
+                    Code to = analyze(bin.right, scope, depth);
+                    Node n = null; Type t = null;
+                    try {
+                        n = bin.left;
+                        unify(t = from.type, NUM_TYPE);
+                        n = bin.right;
+                        unify(t = to.type, NUM_TYPE);
+                    } catch (TypeException ex) {
+                        throw new CompileException(n, ".. range expects " +
+                                    "limit to be number, not a " + t, ex);
+                    }
+                    codeItems[i] = new Range(from, to);
+                } else {
+                    codeItems[i] = analyze(items[i], scope, depth);
+                }
             }
             if (type == null) {
                 type = codeItems[i].type;
@@ -1080,7 +1105,7 @@ public final class YetiType implements YetiParser, YetiCode {
             keyType = new Type(depth);
             kind = MAP_TYPE;
         }
-        Code res = kind == LIST_TYPE ? new ListConstructor(codeItems)
+        Code res = kind == LIST_TYPE ? (Code) new ListConstructor(codeItems)
                                      : new MapConstructor(keyItems, codeItems);
         res.type = new Type(MAP, new Type[] { type, keyType, kind });
         res.polymorph = kind == LIST_TYPE;

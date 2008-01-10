@@ -444,11 +444,12 @@ interface YetiParser {
 
     class Parser {
         private static final String[][] OPS = {
-            { "*", "/" },
+            { "*", "/", "%", "div" },
             { "+", "-" },
             { "::" },
             { "<", ">", "<=", ">=", "==", "!=" },
             { "and", "or" },
+            { ".." },
             { "," },
             { ":=" },
             { ":" }
@@ -500,7 +501,10 @@ interface YetiParser {
             int line = this.line, col = p - lineStart;
             switch (src[i]) {
                 case '.':
-                    return new BinOp(".", 0, true).pos(line, col);
+                    while (p < src.length && src[p] == '.')
+                        ++p;
+                    return new BinOp(new String(src, i, p - i).intern(),
+                                     0, true).pos(line, col);
                 case '=':
                     if (p < src.length && src[p] > ' ') {
                         break;

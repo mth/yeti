@@ -31,38 +31,41 @@
 package yeti.lang;
 
 /** Yeti core library - List. */
-public class LList extends AList {
-    private Object first;
-    private AList rest;
+public class ListRange extends AList {
+    Num first;
+    Num last;
+    AList rest;
+    int inc = 1;
 
-    public LList(Object first, AList rest) {
-        this.first = first;
-        this.rest = rest;
+    public ListRange(Object first, Object last, AList rest) {
+        this.first = (Num) first;
+        this.last  = (Num) last;
+        this.rest  = rest;
     }
 
     public Object first() {
-        return first;
+        return first.compareTo(last) * inc > 0 ? rest.first() : first;
     }
 
     public AList rest() {
-        return rest;
+        int n = first.compareTo(last) * inc;
+        return n > 0 ? rest.rest() : n == 0 ? rest :
+               new ListRange(first.add(inc), last, rest);
     }
 
-    /**
-     * Iterators next. Default implementation for lists returns rest.
-     * Some lists may have more efficient iterator implementation.
-     */
     public AIter next() {
-        return rest();
+        return rest(); // TODO
     }
 
     public int hashCode() {
         int hashCode = 1;
-        AIter i = this;
-        do {
+        for (Num i = first; i.compareTo(last) <= 0; i = i.add(inc)) {
+            hashCode = 31 * hashCode + i.hashCode();
+        }
+        for (AIter i = rest; i != null; i = i.next()) {
             Object x = i.first();
             hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
-        } while ((i = i.next()) != null);      
+        }
         return hashCode;
     }
 
@@ -83,9 +86,21 @@ public class LList extends AList {
 
     public String toString() {
         StringBuffer buf = new StringBuffer("[");
-        buf.append(first);
+        boolean f = true;
+        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            if (f) {
+                f = false;
+            } else {
+                buf.append(',');
+            }
+            buf.append(i);
+        }
         for (AIter i = rest; i != null; i = i.next()) {
-            buf.append(',');
+            if (f) {
+                f = false;
+            } else {
+                buf.append(',');
+            }
             buf.append(i.first());
         }
         buf.append(']');
@@ -106,14 +121,19 @@ public class LList extends AList {
     }
 
     public void forEach(Fun f) {
-        for (AIter i = this; i != null; i = i.next()) {
+        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            f.apply(i);
+        }
+        for (AIter i = rest; i != null; i = i.next()) {
             f.apply(i.first());
         }
     }
 
     public AList reverse() {
-        AList l = null;
-        for (AIter i = this; i != null; i = i.next()) {
+        ListRange r = new ListRange(last, first, rest);
+        r.inc = -inc;
+        AList l = r;
+        for (AIter i = rest; i != null; i = i.next()) {
             l = new LList(i.first(), l);
         }
         return l;

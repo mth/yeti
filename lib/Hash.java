@@ -41,14 +41,6 @@ public class Hash extends java.util.HashMap implements ByKey {
         super(initialCapacity);
     }
 
-    public Object vget(Object key) {
-        Object x;
-        if ((x = get(key)) == null && !containsKey(key)) {
-            throw new NoSuchKeyException("Key not found (" + key + ")");
-        }
-        return x;
-    }
-
     public String toString() {
         int n, size = size();
         if (size == 0) {

@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2007 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,6 +109,15 @@ abstract class AMList extends AList {
         }
         return j == null ? 0 : -1;
     }
+
+    // TODO ineffective
+    public AList reverse() {
+        AList l = null;
+        for (AIter i = this; i != null; i = i.next()) {
+            l = new LList(i.first(), l);
+        }
+        return l;
+    }
 }
 
 /** Yeti core library - List. */
@@ -208,18 +217,18 @@ public class MList extends AMList implements ByKey {
         return size > 1 ? new Iter(1) : null;
     }
 
-    public Object vget(Object index) {
+    public Object get(Object index) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
-            throw new NoSuchKeyException(i, size);
+        if ((i = ((Number) index).intValue()) >= size) {
+            throw new ArrayIndexOutOfBoundsException(i);
         }
         return array[i];
     }
 
     public Object put(Object index, Object value) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
-            throw new NoSuchKeyException(i, size);
+        if ((i = ((Number) index).intValue()) >= size) {
+            throw new ArrayIndexOutOfBoundsException(i);
         }
         array[i] = value;
         return null;

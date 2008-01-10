@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/*
+/**
  * Yeti core library.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2007 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package yeti.lang;
 
 import java.util.Map;
@@ -73,6 +74,12 @@ public final class Core {
     public static final Fun ARRAY = new Fun() {
         public Object apply(Object x) {
             return new MList((AIter) x);
+        }
+    };
+
+    public static final Fun REVERSE = new Fun() {
+        public Object apply(Object x) {
+            return x == null ? null : ((AList) x).reverse();
         }
     };
 
@@ -154,10 +161,29 @@ public final class Core {
         }
     }
 
+    private static final class MapHash extends Fun {
+        public Object apply(final Object fun) {
+            return new Fun() {
+                public Object apply(Object map) {
+                    Map m = (Map) map;
+                    Object[] a = new Object[m.size()];
+                    Fun f = (Fun) fun;
+                    java.util.Iterator i = m.entrySet().iterator();
+                    for (int n = 0; i.hasNext(); ++n) {
+                        Map.Entry e = (Map.Entry) i.next();
+                        a[n] = ((Fun) f.apply(e.getKey())).apply(e.getValue());
+                    }
+                    return new MList(a);
+                }
+            };
+        }
+    }
+
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
     public static final Fun FORHASH = new ForHash();
+    public static final Fun MAPHASH = new MapHash();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

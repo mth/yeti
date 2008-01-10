@@ -102,7 +102,29 @@ public final class FloatNum extends Num {
 
     public Num intDivFrom(BigInteger num) {
         // XXX
-        double res = num.doubleValue() /
+        double res = num.doubleValue() %
+                    (v >= 0 ? Math.floor(v) : Math.ceil(v));
+        return res > 2147483647.0 || res < -2147483647.0
+            ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
+            : (Num) new IntNum((long) res);
+    }
+
+    public Num rem(Num num) {
+        double res = (v >= 0 ? Math.floor(v) : Math.ceil(v)) %
+                     num.doubleValue();
+        return res > 2147483647.0 || res < -2147483647.0
+            ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))
+            : (Num) new IntNum((long) res);
+    }
+
+    public Num remFrom(long num) {
+        return new IntNum((long)
+            (num / (v >= 0 ? Math.floor(v) : Math.ceil(v))));
+    }
+
+    public Num remFrom(BigInteger num) {
+        // XXX
+        double res = num.doubleValue() %
                     (v >= 0 ? Math.floor(v) : Math.ceil(v));
         return res > 2147483647.0 || res < -2147483647.0
             ? new FloatNum(res >= 0 ? Math.floor(res) : Math.ceil(res))

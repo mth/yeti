@@ -452,6 +452,9 @@ interface YetiCode {
                       int line, int depth) {
                 super(type, f, arg, line);
                 this.depth = depth;
+                if (depth == 0 && capturer.varArgs == null) {
+                    capturer.varArgs = args;
+                }
             }
 
             void gen(Ctx ctx) {
@@ -472,12 +475,9 @@ interface YetiCode {
             }
 
             Code apply(Code arg, YetiType.Type res, int line) {
-                if (depth > 0) {
+            /*    if (depth > 0) {
                     return new SelfApply(res, this, arg, line, depth - 1);
-                }
-                if (capturer.varArgs != null) {
-                    capturer.varArgs = args;
-                }
+                }*/
                 return new Apply(res, this, arg, line);
             }
         }
@@ -489,7 +489,7 @@ interface YetiCode {
             int n = 0;
             for (Function f = capturer; f != null; ++n, f = f.outer) {
                 if (f.selfBind == ref.binder) {
-                    System.err.println("Discovered self-apply");
+                  //  System.err.println("Discovered self-apply");
                     args = new Binder[n];
                     f = capturer.outer;
                     for (int i = 0; i < n; ++i, f = f.outer) {
@@ -1284,6 +1284,24 @@ interface YetiCode {
         }
     }
 
+    class Range extends Code {
+        private Code from;
+        private Code to;
+
+        Range(Code from, Code to) {
+            type = YetiType.NUM_TYPE;
+            this.from = from;
+            this.to = to;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/ListRange");
+            ctx.m.visitInsn(DUP);
+            from.gen(ctx);
+            to.gen(ctx);
+        }
+    }
+
     class ListConstructor extends Code {
         Code[] items;
 
@@ -1297,14 +1315,22 @@ interface YetiCode {
                 return;
             }
             for (int i = 0; i < items.length; ++i) {
-                ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
-                ctx.m.visitInsn(DUP);
+                if (!(items[i] instanceof Range)) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
+                    ctx.m.visitInsn(DUP);
+                }
                 items[i].gen(ctx);
             }
             ctx.m.visitInsn(ACONST_NULL);
             for (int i = items.length; --i >= 0;) {
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
-                        "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                if (items[i] instanceof Range) {
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/ListRange",
+                            "<init>", "(Ljava/lang/Object;Ljava/lang/Object;"
+                                    + "Lyeti/lang/AList;)V");
+                } else {
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
+                            "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                }
             }
         }
 

@@ -209,6 +209,19 @@ public final class RatNum extends Num {
                             BigInteger.valueOf(numerator / denominator)));
     }
 
+    public Num rem(Num num) {
+        return num.remFrom(numerator / denominator);
+    }
+
+    public Num remFrom(long num) {
+        return new IntNum(num % (numerator / denominator));
+    }
+
+    public Num remFrom(BigInteger num) {
+        return new BigNum(num.remainder(
+                            BigInteger.valueOf(numerator / denominator)));
+    }
+
     public Num sub(Num num) {
         return num.subFrom(this);
     }
