@@ -455,7 +455,8 @@ interface YetiCode {
             }
 
             void gen(Ctx ctx) {
-                if (!tail || depth != 0 || capturer.restart == null) {
+                if (!tail || depth != 0 || capturer.varArgs != args ||
+                                           capturer.restart == null) {
                     super.gen(ctx);
                     return;
                 }
@@ -474,11 +475,8 @@ interface YetiCode {
                 if (depth > 0) {
                     return new SelfApply(res, this, arg, line, depth - 1);
                 }
-                if (capturer.varArgs == null) {
-                    capturer.varArgs = new HashMap();
-                }
-                for (int i = 0; i < args.length; ++i) {
-                    capturer.varArgs.put(args[i], null);
+                if (capturer.varArgs != null) {
+                    capturer.varArgs = args;
                 }
                 return new Apply(res, this, arg, line);
             }
@@ -606,7 +604,7 @@ interface YetiCode {
         private CaptureRef selfRef;
         Label restart;
         Function outer;
-        Map varArgs;
+        Binder[] varArgs;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
