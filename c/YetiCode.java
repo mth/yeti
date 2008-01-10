@@ -442,6 +442,7 @@ interface YetiCode {
     abstract class CaptureRef extends BindRef {
         Function capturer;
         BindRef ref;
+        Binder[] args;
 
         class SelfApply extends Apply {
             boolean tail;
@@ -459,8 +460,8 @@ interface YetiCode {
                     return;
                 }
                 System.err.println("Tailcall");
-                arg.gen(ctx);
                 // TODO set all args involved...
+                arg.gen(ctx);
                 ctx.m.visitVarInsn(ASTORE, 1);
                 ctx.m.visitJumpInsn(GOTO, capturer.restart);
             }
@@ -470,18 +471,32 @@ interface YetiCode {
             }
 
             Code apply(Code arg, YetiType.Type res, int line) {
-/*                if (depth > 0) {
+                if (depth > 0) {
                     return new SelfApply(res, this, arg, line, depth - 1);
-                }*/
+                }
+                if (capturer.varArgs == null) {
+                    capturer.varArgs = new HashMap();
+                }
+                for (int i = 0; i < args.length; ++i) {
+                    capturer.varArgs.put(args[i], null);
+                }
                 return new Apply(res, this, arg, line);
             }
         }
         
         Code apply(Code arg, YetiType.Type res, int line) {
+            if (args != null) {
+                return new SelfApply(res, this, arg, line, args.length);
+            }
             int n = 0;
             for (Function f = capturer; f != null; ++n, f = f.outer) {
                 if (f.selfBind == ref.binder) {
                     System.err.println("Discovered self-apply");
+                    args = new Binder[n];
+                    f = capturer.outer;
+                    for (int i = 0; i < n; ++i, f = f.outer) {
+                        args[i] = f;
+                    }
                     return new SelfApply(res, this, arg, line, n);
                 }
             }
@@ -591,6 +606,7 @@ interface YetiCode {
         private CaptureRef selfRef;
         Label restart;
         Function outer;
+        Map varArgs;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
