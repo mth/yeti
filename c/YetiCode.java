@@ -481,7 +481,7 @@ interface YetiCode {
                 return new Apply(res, this, arg, line);
             }
         }
-        
+
         Code apply(Code arg, YetiType.Type res, int line) {
             if (args != null) {
                 return new SelfApply(res, this, arg, line, args.length);
