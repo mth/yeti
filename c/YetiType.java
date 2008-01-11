@@ -976,16 +976,20 @@ public final class YetiType implements YetiParser, YetiCode {
                     (variant = ((Sym) pat.left).sym).charAt(0))) {
                 badPattern(pat); // binop pat should be a variant
             }
-            if (!(pat.right instanceof Sym)) {
-                badPattern(pat); // TODO
-            }
-
             Choice caseChoice = result.addVariantChoice(variant);
-            Type variantArg = new Type(depth);
-
-            // got some constructor, store to map.
-            local = new Scope(local, ((Sym) pat.right).sym,
-                              caseChoice.bindParam(variantArg));
+            Type variantArg = null;
+            if (!(pat.right instanceof Sym)) {
+                if (pat.right instanceof UnitLiteral) {
+                    variantArg = UNIT_TYPE;
+                } else {
+                    badPattern(pat); // TODO
+                }
+            } else {
+                variantArg = new Type(depth);
+                // got some constructor, store to map.
+                local = new Scope(local, ((Sym) pat.right).sym,
+                                  caseChoice.bindParam(variantArg));
+            }
             Type old = (Type) variants.put(variant, variantArg);
             if (old != null) { // same constructor already. shall be same type.
                 try {
