@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix tail-call optimisation
 * Comments
 * Function compose operator
 * Revise allowed symbols for identifiers

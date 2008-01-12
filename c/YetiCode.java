@@ -443,6 +443,7 @@ interface YetiCode {
         Function capturer;
         BindRef ref;
         Binder[] args;
+        Capture[] argCaptures;
 
         class SelfApply extends Apply {
             boolean tail;
@@ -452,21 +453,29 @@ interface YetiCode {
                       int line, int depth) {
                 super(type, f, arg, line);
                 this.depth = depth;
-                if (depth == 0 && capturer.varArgs == null) {
-                    capturer.varArgs = args;
+            }
+
+            void genArg(Ctx ctx, int i) {
+                if (i > 0) {
+                    ((SelfApply) fun).genArg(ctx, i - 1);
                 }
+                arg.gen(ctx);
             }
 
             void gen(Ctx ctx) {
-                if (!tail || depth != 0 || capturer.varArgs != args ||
-                                           capturer.restart == null) {
+                if (!tail || depth != 0 ||
+                    capturer.argCaptures != argCaptures ||
+                    capturer.restart == null) {
                     super.gen(ctx);
                     return;
                 }
-                System.err.println("Tailcall");
-                // TODO set all args involved...
-                arg.gen(ctx);
+                genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
                 ctx.m.visitVarInsn(ASTORE, 1);
+                if (argCaptures != null) {
+                    for (int i = argCaptures.length; --i >= 0;) {
+                        ctx.m.visitVarInsn(ASTORE, argCaptures[i].localVar);
+                    }
+                }
                 ctx.m.visitJumpInsn(GOTO, capturer.restart);
             }
 
@@ -475,10 +484,25 @@ interface YetiCode {
             }
 
             Code apply(Code arg, YetiType.Type res, int line) {
-            /*    if (depth > 0) {
-                    return new SelfApply(res, this, arg, line, depth - 1);
-                }*/
-                return new Apply(res, this, arg, line);
+                if (depth < 0) {
+                    return new Apply(res, this, arg, line);
+                }
+                if (depth == 1) {
+                    if (capturer.argCaptures == null) {
+                        argCaptures = new Capture[args.length];
+                        for (Capture c = capturer.captures; c != null;
+                             c = c.next) {
+                            for (int i = args.length; --i >= 0;) {
+                                if (c.binder == args[i]) {
+                                    argCaptures[i] = c;
+                                    break;
+                                }
+                            }
+                        }
+                        capturer.argCaptures = argCaptures;
+                    }
+                }
+                return new SelfApply(res, this, arg, line, depth - 1);
             }
         }
 
@@ -489,10 +513,9 @@ interface YetiCode {
             int n = 0;
             for (Function f = capturer; f != null; ++n, f = f.outer) {
                 if (f.selfBind == ref.binder) {
-                  //  System.err.println("Discovered self-apply");
                     args = new Binder[n];
                     f = capturer.outer;
-                    for (int i = 0; i < n; ++i, f = f.outer) {
+                    for (int i = n; --i >= 0; f = f.outer) {
                         args[i] = f;
                     }
                     return new SelfApply(res, this, arg, line, n);
@@ -507,11 +530,10 @@ interface YetiCode {
         Capture next;
         CaptureWrapper wrapper;
         Object identity;
+        int localVar; // 0 - this - not copied
 
         void gen(Ctx ctx) {
-            ctx.m.visitVarInsn(ALOAD, 0); // this
-            ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
-                    captureType());
+            genPreGet(ctx);
             if (wrapper != null) {
                 wrapper.genGet(ctx);
             }
@@ -542,13 +564,17 @@ interface YetiCode {
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.m.visitVarInsn(ALOAD, 0);
-            ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
-                captureType());
+            ctx.m.visitVarInsn(ALOAD, localVar);
+            if (localVar == 0) {
+                ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
+                    captureType());
+            }
         }
 
         public void genGet(Ctx ctx) {
-            wrapper.genGet(ctx);
+            if (localVar == 0) {
+                wrapper.genGet(ctx);
+            }
         }
 
         public void genSet(Ctx ctx, Code value) {
@@ -604,7 +630,7 @@ interface YetiCode {
         private CaptureRef selfRef;
         Label restart;
         Function outer;
-        Binder[] varArgs;
+        Capture[] argCaptures;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -706,6 +732,13 @@ interface YetiCode {
             Ctx apply = fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
             apply.localVarCount = 2; // this, arg
+            if (argCaptures != null) {
+                for (int i = 0; i < argCaptures.length; ++i) {
+                    argCaptures[i].gen(apply);
+                    argCaptures[i].localVar = apply.localVarCount;
+                    apply.m.visitVarInsn(ASTORE, apply.localVarCount++);
+                }
+            }
             genClosureInit(apply);
             apply.m.visitLabel(restart = new Label());
             body.gen(apply);
