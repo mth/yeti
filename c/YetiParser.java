@@ -30,7 +30,7 @@
  */
 
 /*
-Syntax.
+   Syntax.
 
 binding: foo a b c... = <expr>
 expr: <application> | <constant>
@@ -99,8 +99,8 @@ interface YetiParser {
             int e = p;
             char c;
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
-                    c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
-                    c != '[' && c != ']' && c != '{' && c != '}'));
+                        c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
+                        c != '[' && c != ']' && c != '{' && c != '}'));
             return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
         }
     }
@@ -136,7 +136,7 @@ interface YetiParser {
             if (nameNode instanceof VarSym) {
                 if (args.size() == 1) {
                     throw new CompileException(nameNode,
-                        "Variable name is missing");
+                            "Variable name is missing");
                 }
                 nameNode = (Node) args.get(1);
                 first = 2;
@@ -144,19 +144,19 @@ interface YetiParser {
             }
             if (!(nameNode instanceof Sym)) {
                 throw new CompileException(nameNode,
-                    "Illegal binding name: " + nameNode);
+                        "Illegal binding name: " + nameNode);
             }
             line = nameNode.line;
             col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
             if (first < args.size() && args.get(first) instanceof BinOp &&
-                ((BinOp) args.get(first)).op == ".") {
+                    ((BinOp) args.get(first)).op == ".") {
                 throw new CompileException((BinOp) args.get(first),
-                    "Bad argument on binding (use := for assignment, not =)");
+                        "Bad argument on binding (use := for assignment, not =)");
             }
             for (int i = args.size(); --i >= first;) {
                 expr = new Lambda((Node) args.get(i), expr,
-                                  i == first ? name : null);
+                        i == first ? name : null);
             }
             this.expr = expr;
         }
@@ -485,12 +485,41 @@ interface YetiParser {
             char[] src = this.src;
             int i = p;
             char c;
-            while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
-                ++i;
-                if (c == '\n') {
-                    ++line;
-                    lineStart = i;
+            for (;;) {
+                while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
+                    ++i;
+                    if (c == '\n') {
+                        ++line;
+                        lineStart = i;
+                    }
                 }
+                if (i + 1 < src.length && src[i] == '/') {
+                    if (src[i + 1] == '/') {
+                        while (i < src.length && src[i] != '\n'
+                                              && src[i] != '\r') ++i;
+                        continue;
+                    }
+                    if (src[i + 1] == '*') {
+                        int l = line, col = i - lineStart + 1;
+                        i += 2;
+                        for (int level = 1; level > 0;) {
+                            if (++i >= src.length) {
+                                throw new CompileException(l, col,
+                                    "Unclosed /* comment");
+                            }
+                            if ((c = src[i - 1]) == '\n') {
+                                ++line;
+                                lineStart = i - 1;
+                            } else if (c == '*' && src[i] == '/') {
+                                ++i; --level;
+                            } else if (c == '/' && src[i] == '*') {
+                                ++i; ++level;
+                            }
+                        }
+                        continue;
+                    }
+                }
+                break;
             }
             if (i >= src.length || src[i] == ')'
                 || src[i] == ']' || src[i] == '}') {
@@ -534,7 +563,9 @@ interface YetiParser {
             if ((c = src[i]) >= '0' && c <= '9') {
                 while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
                        c != '[' && c != ']' && c != '{' && c != '}' &&
-                       c != ':' && c != ';' && c != ',' && c > ' ');
+                       c != ':' && c != ';' && c != ',' && c > ' ' &&
+                       (c != '/' || i + 1 > src.length ||
+                        src[i + 1] != '*' && src[i + 1] != '/'));
                 String s = new String(src, p, i - p);
                 p = i;
                 try {
@@ -548,7 +579,9 @@ interface YetiParser {
                    c != ';' && c > ' ' && c != '[' && c != ']' &&
                    c != '{' && c != '}' && c != '.' && c != ',' &&
                    (c != ':' || i + 1 < src.length && src[i + 1] > ' '
-                             || i > 0 && src[i - 1] == ':'));
+                             || i > 0 && src[i - 1] == ':') &&
+                   (c != '/' || i + 1 > src.length ||
+                    src[i + 1] != '*' && src[i + 1] != '/'));
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings

@@ -1,8 +1,18 @@
 fact x =
-	if x == 0 then
-		1
-	else
-		x * fact (x - 1)
-	fi;
+    if x == 0 then
+        1
+    else
+        x * fact (x - 1)
+    fi;
+
+fact_ x =
+   (f x acc =
+        if x == 0 then
+            acc
+        else
+            f (x - 1) (acc * x)
+        fi;
+    f x 1);
 
 println (fact 5);
+println (fact_ 1000);
