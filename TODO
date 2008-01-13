@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Comments
 * Function compose operator
 * Revise allowed symbols for identifiers
 * Some IntNum methods are too eager on going to BigNum
