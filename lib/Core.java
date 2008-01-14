@@ -230,8 +230,22 @@ public final class Core {
         public Object apply(final Object v) {
             return new Fun() {
                 public Object apply(Object list) {
-                    return list != null && ((AList) list).contains(v)
+                    return list != null && ((AList) list).index(v) != null
                             ? Boolean.TRUE : Boolean.FALSE;
+                }
+            };
+        }
+    }
+
+    private static final class Index extends Fun {
+        public Object apply(final Object v) {
+            return new Fun() {
+                public Object apply(Object list) {
+                    if (list == null) {
+                        return IntNum.__1;
+                    }
+                    Num n = ((AList) list).index(v);
+                    return n == null ? IntNum.__1 : n;
                 }
             };
         }
@@ -246,6 +260,7 @@ public final class Core {
     public static final Fun FOLD = new Fold();
     public static final Fun FIND = new Find();
     public static final Fun CONTAINS = new Contains();
+    public static final Fun INDEX = new Index();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

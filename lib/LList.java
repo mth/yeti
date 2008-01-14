@@ -126,20 +126,23 @@ public class LList extends AList {
         return l;
     }
 
-    public boolean contains(Object v) {
+    public Num index(Object v) {
+        int n = 0;
         if (v == null) {
             for (AIter i = this; i != null; i = i.next()) {
                 if (i.first() == null) {
-                    return true;
+                    return new IntNum(n);
                 }
+                ++n;
             }
-            return false;
+            return null;
         }
         for (AIter i = this; i != null; i = i.next()) {
             if (v.equals(i.first())) {
-                return true;
+                return new IntNum(n);
             }
+            ++n;
         }
-        return false;
+        return null;
     }
 }

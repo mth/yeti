@@ -163,9 +163,12 @@ public class ListRange extends AList {
         return l;
     }
 
-    public boolean contains(Object v) {
-        return inc > 0
-            ? first.compareTo(v) <= 0 && last.compareTo(v) >= 0
-            : last.compareTo(v) <= 0 && first.compareTo(v) >= 0;
+    public Num index(Object v) {
+        if (inc > 0) {
+            return first.compareTo(v) <= 0 && last.compareTo(v) >= 0
+                    ? ((Num) v).sub(first) : null;
+        }
+        return last.compareTo(v) <= 0 && first.compareTo(v) >= 0
+                ? ((Num) v).sub(last) : null;
     }
 }

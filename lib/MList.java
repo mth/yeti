@@ -94,22 +94,23 @@ abstract class AMList extends AList {
         return v;
     }
 
-    public boolean contains(Object v) {
+    public Num index(Object v) {
         Object[] array = array();
+        int cnt = _size();
         if (v == null) {
-            for (int cnt = _size(), i = start; i < cnt; ++i) {
+            for (int i = start; i < cnt; ++i) {
                 if (array[i] == null) {
-                    return true;
+                    return new IntNum(i - start);
                 }
             }
-            return false;
+            return null;
         }
-        for (int cnt = _size(), i = start; i < cnt; ++i) {
+        for (int i = start; i < cnt; ++i) {
             if (v.equals(array[i])) {
-                return true;
+                return new IntNum(i - start);
             }
         }
-        return false;
+        return null;
     }
 
     public AList map(Fun f) {
