@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/*
- * Yeti core library.
+/**
+ * Yeti core library - function interface.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,20 +30,6 @@
  */
 package yeti.lang;
 
-/** Yeti core library - List. */
-public abstract class AList extends AIter implements Comparable {
-    /**
-     * Return rest of the list. Must not modify the current list.
-     */
-    public abstract AList rest();
-
-    public abstract void forEach(Fun f);
-
-    public abstract Object fold(FunX f, Fun g, Object v);
-
-    public abstract AList reverse();
-
-    public AList map(Fun f) {
-        return new MapList(this, f);
-    }
+public abstract class FunX extends Fun {
+    public abstract Object apply(Object arg1, Object arg2, Fun orig);
 }

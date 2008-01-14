@@ -30,20 +30,41 @@
  */
 package yeti.lang;
 
-/** Yeti core library - List. */
-public abstract class AList extends AIter implements Comparable {
-    /**
-     * Return rest of the list. Must not modify the current list.
-     */
-    public abstract AList rest();
+/** Yeti core library - Map list. */
+public class MapList extends LList {
+    private volatile boolean mappedFirst;
+    private volatile boolean mappedRest;
+    private AIter src;
+    private Fun f;
 
-    public abstract void forEach(Fun f);
+    public MapList(AIter src, Fun f) {
+        super(null, null);
+        this.src = src;
+        this.f = f;
+    }
 
-    public abstract Object fold(FunX f, Fun g, Object v);
+    public Object first() {
+        if (!mappedFirst) {
+            synchronized (f) {
+                if (!mappedFirst) {
+                    first = f.apply(src.first());
+                }
+            }
+            mappedFirst = true;
+        }
+        return first;
+    }
 
-    public abstract AList reverse();
-
-    public AList map(Fun f) {
-        return new MapList(this, f);
+    public AList rest() {
+        if (!mappedRest) {
+            synchronized (src) {
+                if (!mappedRest) {
+                    AIter i = src.next();
+                    rest = i == null ? null : new MapList(i, f);
+                }
+            }
+            mappedRest = true;
+        }
+        return rest;
     }
 }

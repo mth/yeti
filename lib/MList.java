@@ -86,6 +86,24 @@ abstract class AMList extends AList {
         }
     }
 
+    public Object fold(FunX f, Fun g, Object v) {
+        Object[] array = array();
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            v = f.apply(v, array[i], g);
+        }
+        return v;
+    }
+
+    public AList map(Fun f) {
+        int cnt;
+        Object[] array = array();
+        Object[] result = new Object[cnt = array.length];
+        for (int i = start; i < cnt; ++i) {
+            result[i] = f.apply(array[i]);
+        }
+        return new MList(result);
+    }
+
     public int compareTo(Object o) {
         AIter j = (AIter) o;
         Object[] array = array();

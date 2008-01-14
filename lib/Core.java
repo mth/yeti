@@ -161,6 +161,19 @@ public final class Core {
         }
     }
 
+    private static final class Map_ extends Fun {
+        public Object apply(final Object f) {
+            return new Fun() {
+                public Object apply(Object list) {
+                    if (list == null) {
+                        return null;
+                    }
+                    return ((AList) list).map((Fun) f);
+                }
+            };
+        }
+    }
+
     private static final class MapHash extends Fun {
         public Object apply(final Object fun) {
             return new Fun() {
@@ -179,11 +192,34 @@ public final class Core {
         }
     }
 
+    private static final class Fold extends Fun {
+        public Object apply(final Object f) {
+            return new Fun() {
+                public Object apply(final Object v) {
+                    return new FunX() {
+                        public Object apply(Object list) {
+                            if (list == null) {
+                                return v;
+                            }
+                            return ((AList) list).fold(this, (Fun) f, v);
+                        }
+
+                        public Object apply(Object a, Object b, Fun f) {
+                            return ((Fun) f.apply(a)).apply(b);
+                        }
+                    };
+                }
+            };
+        }
+    }
+
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
     public static final Fun FORHASH = new ForHash();
+    public static final Fun MAP  = new Map_();
     public static final Fun MAPHASH = new MapHash();
+    public static final Fun FOLD = new Fold();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

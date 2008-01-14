@@ -32,8 +32,8 @@ package yeti.lang;
 
 /** Yeti core library - List. */
 public class LList extends AList {
-    private Object first;
-    private AList rest;
+    Object first;
+    AList rest;
 
     public LList(Object first, AList rest) {
         this.first = first;
@@ -83,8 +83,8 @@ public class LList extends AList {
 
     public String toString() {
         StringBuffer buf = new StringBuffer("[");
-        buf.append(first);
-        for (AIter i = rest; i != null; i = i.next()) {
+        buf.append(first());
+        for (AIter i = rest(); i != null; i = i.next()) {
             buf.append(',');
             buf.append(i.first());
         }
@@ -109,6 +109,13 @@ public class LList extends AList {
         for (AIter i = this; i != null; i = i.next()) {
             f.apply(i.first());
         }
+    }
+
+    public Object fold(FunX f, Fun g, Object v) {
+        for (AIter i = this; i != null; i = i.next()) {
+            v = f.apply(v, i.first(), g);
+        }
+        return v;
     }
 
     public AList reverse() {

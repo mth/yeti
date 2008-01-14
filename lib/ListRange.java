@@ -129,6 +129,16 @@ public class ListRange extends AList {
         }
     }
 
+    public Object fold(FunX f, Fun g, Object v) {
+        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            v = f.apply(v, i, g);
+        }
+        for (AIter i = rest; i != null; i = i.next()) {
+            v = f.apply(v, i.first(), g);
+        }
+        return v;
+    }
+
     public AList reverse() {
         ListRange r = new ListRange(last, first, rest);
         r.inc = -inc;
