@@ -126,6 +126,8 @@ public final class YetiType implements YetiParser, YetiCode {
             fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
+        bindCore("filter",
+            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FILTER",
         bindCore("find",
             fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FIND",
         bindCore("contains", fun2Arg(A, A_B_LIST_TYPE, BOOL_TYPE), "CONTAINS",
@@ -147,7 +149,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

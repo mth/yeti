@@ -213,6 +213,16 @@ public final class Core {
         }
     }
 
+    private static final class Filter extends Fun {
+        public Object apply(final Object f) {
+            return new Fun() {
+                public Object apply(Object list) {
+                    return FilterList.filter((AList) list, (Fun) f);
+                }
+            };
+        }
+    }
+
     private static final class Find extends Fun {
         public Object apply(final Object f) {
             return new Fun() {
@@ -293,6 +303,7 @@ public final class Core {
     public static final Fun MAP  = new Map_();
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
+    public static final Fun FILTER = new Filter();
     public static final Fun FIND = new Find();
     public static final Fun CONTAINS = new Contains();
     public static final Fun ALL  = new All();

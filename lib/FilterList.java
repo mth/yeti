@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,31 +31,28 @@
 package yeti.lang;
 
 /** Yeti core library - Map list. */
-public class MapList extends LList {
-    private boolean mappedFirst;
-    private boolean mappedRest;
+public class FilterList extends LList {
+    private boolean checked;
     private AIter src;
     private Fun f;
 
-    public MapList(AIter src, Fun f) {
-        super(null, null);
+    private FilterList(Object v, AIter src, Fun f) {
+        super(v, null);
         this.src = src;
         this.f = f;
     }
 
-    public synchronized Object first() {
-        if (!mappedFirst) {
-            first = f.apply(src.first());
-            mappedFirst = true;
-        }
-        return first;
+    public static AList filter(AIter src, Fun f) {
+        Object first = null;
+        while (src != null && f.apply(first = src.first()) != Boolean.TRUE)
+            src = src.next();
+        return src == null ? null : new FilterList(first, src, f);
     }
 
     public synchronized AList rest() {
-        if (!mappedRest) {
-            AIter i = src.next();
-            rest = i == null ? null : new MapList(i, f);
-            mappedRest = true;
+        if (!checked) {
+            rest = filter(src.next(), f);
+            checked = true;
         }
         return rest;
     }
