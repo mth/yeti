@@ -1601,6 +1601,30 @@ interface YetiCode {
         }
     }
 
+    class InOpFun extends BoolBinOp {
+        int line;
+
+        void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                Label to, boolean ifTrue) {
+            arg2.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Hash");
+            arg1.gen(ctx);
+            ctx.visitLine(line);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash",
+                                  "containsKey", "(Ljava/lang/Object;)Z");
+            ctx.m.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+        }
+    }
+
+    class InOp implements Binder {
+        public BindRef getRef(int line) {
+            InOpFun f = new InOpFun();
+            f.type = YetiType.IN_TYPE;
+            f.line = line;
+            return f;
+        }
+    }
+
     class BoolOpFun extends BoolBinOp implements Binder {
         boolean orOp;
 

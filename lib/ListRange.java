@@ -148,4 +148,24 @@ public class ListRange extends AList {
         }
         return l;
     }
+
+    public AList find(Fun pred) {
+        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            if (pred.apply(i) == Boolean.TRUE) {
+                ListRange l = new ListRange(i, last, rest);
+                l.inc = inc;
+                return l;
+            }
+        }
+        AList l = rest;
+        while (l != null && pred.apply(l.first()) != Boolean.TRUE)
+            l = l.rest();
+        return l;
+    }
+
+    public boolean contains(Object v) {
+        return inc > 0
+            ? first.compareTo(v) <= 0 && last.compareTo(v) >= 0
+            : last.compareTo(v) <= 0 && first.compareTo(v) >= 0;
+    }
 }

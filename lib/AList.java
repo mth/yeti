@@ -43,7 +43,16 @@ public abstract class AList extends AIter implements Comparable {
 
     public abstract AList reverse();
 
+    public abstract boolean contains(Object v);
+
     public AList map(Fun f) {
         return new MapList(this, f);
+    }
+
+    public AList find(Fun pred) {
+        AList l = this;
+        while (l != null && pred.apply(l.first()) != Boolean.TRUE)
+            l = l.rest();
+        return l;
     }
 }

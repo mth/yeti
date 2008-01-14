@@ -89,6 +89,7 @@ public final class YetiType implements YetiParser, YetiCode {
         new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
+    static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -125,6 +126,10 @@ public final class YetiType implements YetiParser, YetiCode {
             fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
+        bindCore("find",
+            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FIND",
+        bindCore("contains", fun2Arg(A, A_B_LIST_TYPE, BOOL_TYPE), "CONTAINS",
+        bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
@@ -137,7 +142,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

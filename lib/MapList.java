@@ -32,8 +32,8 @@ package yeti.lang;
 
 /** Yeti core library - Map list. */
 public class MapList extends LList {
-    private volatile boolean mappedFirst;
-    private volatile boolean mappedRest;
+    private boolean mappedFirst;
+    private boolean mappedRest;
     private AIter src;
     private Fun f;
 
@@ -43,28 +43,20 @@ public class MapList extends LList {
         this.f = f;
     }
 
-    public Object first() {
+    public synchronized Object first() {
         if (!mappedFirst) {
-            synchronized (f) {
-                if (!mappedFirst) {
-                    first = f.apply(src.first());
-                }
-            }
-            mappedFirst = true;
+            first = f.apply(src.first());
         }
+        mappedFirst = true;
         return first;
     }
 
-    public AList rest() {
+    public synchronized AList rest() {
         if (!mappedRest) {
-            synchronized (src) {
-                if (!mappedRest) {
-                    AIter i = src.next();
-                    rest = i == null ? null : new MapList(i, f);
-                }
-            }
-            mappedRest = true;
+            AIter i = src.next();
+            rest = i == null ? null : new MapList(i, f);
         }
+        mappedRest = true;
         return rest;
     }
 }

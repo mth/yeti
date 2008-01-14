@@ -213,6 +213,30 @@ public final class Core {
         }
     }
 
+    private static final class Find extends Fun {
+        public Object apply(final Object f) {
+            return new Fun() {
+                public Object apply(Object list) {
+                    if (list == null) {
+                        return null;
+                    }
+                    return ((AList) list).find((Fun) f);
+                }
+            };
+        }
+    }
+
+    private static final class Contains extends Fun {
+        public Object apply(final Object v) {
+            return new Fun() {
+                public Object apply(Object list) {
+                    return list != null && ((AList) list).contains(v)
+                            ? Boolean.TRUE : Boolean.FALSE;
+                }
+            };
+        }
+    }
+
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
@@ -220,6 +244,8 @@ public final class Core {
     public static final Fun MAP  = new Map_();
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
+    public static final Fun FIND = new Find();
+    public static final Fun CONTAINS = new Contains();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

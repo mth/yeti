@@ -125,4 +125,21 @@ public class LList extends AList {
         }
         return l;
     }
+
+    public boolean contains(Object v) {
+        if (v == null) {
+            for (AIter i = this; i != null; i = i.next()) {
+                if (i.first() == null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (AIter i = this; i != null; i = i.next()) {
+            if (v.equals(i.first())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

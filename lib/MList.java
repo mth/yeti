@@ -94,6 +94,24 @@ abstract class AMList extends AList {
         return v;
     }
 
+    public boolean contains(Object v) {
+        Object[] array = array();
+        if (v == null) {
+            for (int cnt = _size(), i = start; i < cnt; ++i) {
+                if (array[i] == null) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        for (int cnt = _size(), i = start; i < cnt; ++i) {
+            if (v.equals(array[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public AList map(Fun f) {
         int cnt;
         Object[] array = array();
@@ -172,6 +190,15 @@ public class MList extends AMList implements ByKey {
         Object[] array() {
             return array;
         }
+
+        public AList find(Fun pred) {
+            for (int cnt = size, i = start; i < cnt; ++i) {
+                if (pred.apply(array[i]) == Boolean.TRUE) {
+                    return new SubList(i);
+                }
+            }
+            return null;
+        }
     }
 
     private class Iter extends AIter {
@@ -249,6 +276,15 @@ public class MList extends AMList implements ByKey {
             throw new ArrayIndexOutOfBoundsException(i);
         }
         array[i] = value;
+        return null;
+    }
+
+    public AList find(Fun pred) {
+        for (int cnt = size, i = 0; i < cnt; ++i) {
+            if (pred.apply(array[i]) == Boolean.TRUE) {
+                return new SubList(i);
+            }
+        }
         return null;
     }
 
