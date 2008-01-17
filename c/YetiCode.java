@@ -1441,8 +1441,23 @@ interface YetiCode {
 
     abstract class BinOpRef extends BindRef implements DirectBind {
         boolean markTail2;
+        String coreFun;
 
-        Code apply(final Code arg1, final YetiType.Type res1, int line) {
+        Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {
+            return new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.visitLine(line);
+                    BinOpRef.this.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/BinFun",
+                        "apply2nd", "(Ljava/lang/Object;)Lyeti/lang/Fun;");
+                }
+            };
+        }
+
+        Code apply(final Code arg1, final YetiType.Type res1, final int line) {
             return new Code() {
                 { type = res1; }
 
@@ -1467,15 +1482,18 @@ interface YetiCode {
                 }
 
                 void gen(Ctx ctx) {
-                    throw new UnsupportedOperationException(
-                            "BinOpRef: " + BinOpRef.this.getClass() + ".gen()!");
+                    BinOpRef.this.gen(ctx);
+                    arg1.gen(ctx);
+                    ctx.visitLine(line);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
+                        "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
                 }
             };
         }
 
         void gen(Ctx ctx) {
-            throw new UnsupportedOperationException(
-                    "BinOpRef: " + this.getClass() + ".gen()");
+            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                                 coreFun, "Lyeti/lang/BinFun;");
         }
 
         abstract void binGen(Ctx ctx, Code arg1, Code arg2);
@@ -1493,6 +1511,7 @@ interface YetiCode {
             this.type = type;
             this.method = method;
             binder = this;
+            coreFun = method.toUpperCase() + "_OP";
         }
 
         public BindRef getRef(int line) {
@@ -1633,6 +1652,7 @@ interface YetiCode {
             this.orOp = orOp;
             binder = this;
             markTail2 = true;
+            coreFun = orOp ? "OR_OP" : "AND_OP";
         }
 
         public BindRef getRef(int line) {

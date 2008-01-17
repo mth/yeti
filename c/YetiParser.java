@@ -384,6 +384,20 @@ interface YetiParser {
         }
     }
 
+    class RSection extends Node {
+        String sym;
+        Node arg;
+
+        RSection(String sym, Node arg) {
+            this.sym = sym;
+            this.arg = arg;
+        }
+
+        String str() {
+            return "(" + sym + " " + arg.str() + ")";
+        }
+    }
+
     class ParseExpr {
         private boolean lastOp = true;
         private BinOp root = new BinOp(null, -1, false);
@@ -620,11 +634,27 @@ interface YetiParser {
         }
 
         private Node def(List args, List expr) {
+            String s = null;
+            int i = 0;
+            if (expr.size() > 0) {
+                Object o = expr.get(0);
+                if (o instanceof BinOp) {
+                    s = ((BinOp) o).op;
+                    if (s == "-" || s == "//") {
+                        s = null;
+                    } else {
+                        i = 1;
+                    }
+                }
+            }
             ParseExpr parseExpr = new ParseExpr();
-            for (int i = 0, cnt = expr.size(); i < cnt; ++i) {
+            for (int cnt = expr.size(); i < cnt; ++i) {
                 parseExpr.add((Node) expr.get(i));
             }
             Node e = parseExpr.result();
+            if (s != null) {
+                e = new RSection(s, e);
+            }
             if (args == null) {
                 return e;
             }

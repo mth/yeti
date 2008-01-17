@@ -310,6 +310,56 @@ public final class Core {
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
 
+    public static final BinFun ADD_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).add((Num) b);
+        }
+    };
+
+    public static final BinFun SUB_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).sub((Num) b);
+        }
+    };
+
+    public static final BinFun MUL_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).mul((Num) b);
+        }
+    };
+
+    public static final BinFun DIV_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).div((Num) b);
+        }
+    };
+
+    public static final BinFun INTDIV_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).intDiv((Num) b);
+        }
+    };
+
+    public static final BinFun REM_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).rem((Num) b);
+        }
+    };
+
+    public static final BinFun AND_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a == Boolean.TRUE && b == Boolean.TRUE
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun OR_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a == Boolean.TRUE || b == Boolean.TRUE
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();

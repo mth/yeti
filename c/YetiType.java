@@ -600,6 +600,9 @@ public final class YetiType implements YetiParser, YetiCode {
             String name = ((Load) node).moduleName;
             return new LoadModule(name, YetiTypeVisitor.getType(node, name));
         }
+        if (node instanceof RSection) {
+            return rsection((RSection) node, scope, depth);
+        }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
     }
@@ -614,6 +617,21 @@ public final class YetiType implements YetiParser, YetiCode {
                 ex.getMessage());
         }
         return fun.apply(arg, applyFun[1], where.line);
+    }
+
+    static Code rsection(RSection section, Scope scope, int depth) {
+        BinOpRef fun = (BinOpRef) resolve(section.sym, section, scope, depth);
+        Code arg = analyze(section.arg, scope, depth);
+        Type[] r = { new Type(depth), new Type(depth) };
+        Type[] afun = { r[0], new Type(FUN, new Type[] { arg.type, r[1] }) };
+        try {
+            unify(fun.type, new Type(FUN, afun));
+        } catch (TypeException ex) {
+            throw new CompileException(section,
+                "Cannot apply " + arg.type + " as a 2nd argument to a " +
+                fun.type + "\n    " + ex.getMessage());
+        }
+        return fun.apply2nd(arg, new Type(FUN, r), section.line);
     }
 
     static Code variantConstructor(String name, int depth) {
