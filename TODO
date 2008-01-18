@@ -15,6 +15,7 @@
   + lazy list constructors
 * Struct properties
 * Foreign interface
+* Optimise Foo and (.foo) into constants
 * Extendable structs?
 * Lambda inlineing optimisation
 * Direct double optimisation, when it can be deducted,
