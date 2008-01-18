@@ -677,6 +677,11 @@ interface YetiParser {
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
                            (partial = (BinOp) o).parent == null) {
                     s = partial.op;
+                    if (s == FIELD_OP) {
+                        throw new CompileException(partial,
+                                "Unexpected '.' here. Add space before it, " +
+                                "if you want a compose section.");
+                    }
                     --cnt;
                 }
             }
