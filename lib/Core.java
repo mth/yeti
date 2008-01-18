@@ -37,6 +37,12 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+class Id extends Fun {
+    public Object apply(Object a) {
+        return a;
+    }
+}
+
 abstract class Fun2 extends Fun {
     abstract Object apply2(Object a, Object b);
 
@@ -274,6 +280,7 @@ public final class Core {
         }
     }
 
+    public static final Fun ID = new Id();
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
@@ -287,6 +294,7 @@ public final class Core {
     public static final Fun ALL  = new All();
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
+    public static final Fun COMPOSE = new FCompose();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {

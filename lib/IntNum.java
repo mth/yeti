@@ -33,7 +33,18 @@ package yeti.lang;
 import java.math.BigInteger;
 
 public final class IntNum extends Num {
-    public static final Num __1 = new IntNum(-1);
+    public static final IntNum __2 = new IntNum(-2);
+    public static final IntNum __1 = new IntNum(-1);
+    public static final IntNum _0 = new IntNum(0);
+    public static final IntNum _1 = new IntNum(1);
+    public static final IntNum _2 = new IntNum(2);
+    public static final IntNum _3 = new IntNum(3);
+    public static final IntNum _4 = new IntNum(4);
+    public static final IntNum _5 = new IntNum(5);
+    public static final IntNum _6 = new IntNum(6);
+    public static final IntNum _7 = new IntNum(7);
+    public static final IntNum _8 = new IntNum(8);
+    public static final IntNum _9 = new IntNum(9);
 
     private final long v;
 

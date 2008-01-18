@@ -333,6 +333,14 @@ interface YetiCode {
             Object val;
             if (num instanceof IntNum) {
                 type = "yeti/lang/IntNum";
+                if (IntNum.__1.compareTo(num) <= 0 &&
+                    IntNum._9.compareTo(num) >= 0) {
+                    ctx.m.visitFieldInsn(GETSTATIC, type,
+                        IntNum.__1.equals(num) ? "__1" :
+                        IntNum.__2.equals(num) ? "__2" : "_" + num,
+                        "Lyeti/lang/IntNum;");
+                    return;
+                }
                 val = new Long(num.longValue());
                 sig = "(J)V";
             } else if (num instanceof BigNum) {
@@ -877,6 +885,24 @@ interface YetiCode {
         }
 
         abstract boolean mayAssign();
+    }
+
+    class SelectMemberFun extends Code {
+        String name;
+        
+        SelectMemberFun(YetiType.Type type, String name) {
+            this.type = type;
+            this.name = name;
+            this.polymorph = true;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitLdcInsn(name);
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selector",
+                                  "<init>", "(Ljava/lang/String;)V");
+        }
     }
 
     class KeyRefExpr extends Code {

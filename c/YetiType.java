@@ -108,6 +108,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare(">" , LG_TYPE, COND_GT,
         bindCompare(">=", LG_TYPE, COND_GE,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
+        bindCore("id", fun(A, A), "ID",
         bindCore("print", A_TO_UNIT, "PRINT",
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
@@ -151,7 +152,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -622,6 +623,12 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static Code rsection(RSection section, Scope scope, int depth) {
+        if (section.sym == FIELD_OP) {
+            Type res = new Type(depth);
+            Type arg = selectMemberType(res, section, section.arg, depth);
+            return new SelectMemberFun(new Type(FUN, new Type[] { arg, res }),
+                                       ((Sym) section.arg).sym);
+        }
         BinOpRef fun = (BinOpRef) resolve(section.sym, section, scope, depth);
         Code arg = analyze(section.arg, scope, depth);
         Type[] r = { new Type(depth), new Type(depth) };
@@ -645,18 +652,23 @@ public final class YetiType implements YetiParser, YetiCode {
         return new VariantConstructor(new Type(FUN, fun), name);
     }
 
-    static Code selectMember(BinOp op, Scope scope, int depth) {
-        if (!(op.right instanceof Sym)) {
-            if (op.right == null) {
+    static Type selectMemberType(Type res, Node op, Node sym, int depth) {
+        if (!(sym instanceof Sym)) {
+            if (sym == null) {
                 throw new CompileException(op, "What's that dot doing here?");
             }
-            throw new CompileException(op.right, "Illegal ." + op.right);
+            throw new CompileException(sym, "Illegal ." + sym);
         }
-        final String field = ((Sym) op.right).sym;
-        final Type res = new Type(depth);
         Type arg = new Type(STRUCT, new Type[] { res });
         arg.partialMembers = new HashMap();
-        arg.partialMembers.put(field, res);
+        arg.partialMembers.put(((Sym) sym).sym, res);
+        return arg;
+    }
+
+    static Code selectMember(BinOp op, Scope scope, int depth) {
+        final Type res = new Type(depth);
+        Type arg = selectMemberType(res, op, op.right, depth);
+        final String field = ((Sym) op.right).sym;
         Code src = analyze(op.left, scope, depth);
         try {
             unify(arg, src.type);
