@@ -37,6 +37,18 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+abstract class Fun2 extends Fun {
+    abstract Object apply2(Object a, Object b);
+
+    public Object apply(final Object a) {
+        return new Fun() {
+            public Object apply(Object b) {
+                return apply2(a, b);
+            }
+        };
+    }
+}
+
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
@@ -145,116 +157,84 @@ public final class Core {
         }
     }
 
-    private static final class ForHash extends Fun {
-        public Object apply(final Object map) {
-            return new Fun() {
-                public Object apply(Object fun) {
-                    Fun f = (Fun) fun;
-                    java.util.Iterator i = ((Map) map).entrySet().iterator();
-                    while (i.hasNext()) {
-                        Map.Entry e = (Map.Entry) i.next();
-                        ((Fun) f.apply(e.getKey())).apply(e.getValue());
-                    }
-                    return null;
-                }
-            };
+    private static final class ForHash extends Fun2 {
+        Object apply2(Object map, Object fun) {
+            Fun f = (Fun) fun;
+            java.util.Iterator i = ((Map) map).entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                ((Fun) f.apply(e.getKey())).apply(e.getValue());
+            }
+            return null;
         }
     }
 
-    private static final class Map_ extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
+    private static final class Map_ extends Fun2 {
+        Object apply2(Object f, Object list) {
+            if (list == null) {
+                return null;
+            }
+            return ((AList) list).map((Fun) f);
+        }
+    }
+
+    private static final class MapHash extends Fun2 {
+        Object apply2(Object fun, Object map) {
+            Map m = (Map) map;
+            Object[] a = new Object[m.size()];
+            Fun f = (Fun) fun;
+            java.util.Iterator i = m.entrySet().iterator();
+            for (int n = 0; i.hasNext(); ++n) {
+                Map.Entry e = (Map.Entry) i.next();
+                a[n] = ((Fun) f.apply(e.getKey())).apply(e.getValue());
+            }
+            return new MList(a);
+        }
+    }
+
+    private static final class Fold extends Fun2 {
+        Object apply2(final Object f, final Object v) {
+            return new FunX() {
                 public Object apply(Object list) {
                     if (list == null) {
-                        return null;
+                        return v;
                     }
-                    return ((AList) list).map((Fun) f);
+                    return ((AList) list).fold(this, (Fun) f, v);
+                }
+
+                public Object apply(Object a, Object b, Fun f) {
+                    return ((Fun) f.apply(a)).apply(b);
                 }
             };
         }
     }
 
-    private static final class MapHash extends Fun {
-        public Object apply(final Object fun) {
-            return new Fun() {
-                public Object apply(Object map) {
-                    Map m = (Map) map;
-                    Object[] a = new Object[m.size()];
-                    Fun f = (Fun) fun;
-                    java.util.Iterator i = m.entrySet().iterator();
-                    for (int n = 0; i.hasNext(); ++n) {
-                        Map.Entry e = (Map.Entry) i.next();
-                        a[n] = ((Fun) f.apply(e.getKey())).apply(e.getValue());
-                    }
-                    return new MList(a);
-                }
-            };
+    private static final class Filter extends Fun2 {
+        Object apply2(Object f, Object list) {
+            return FilterList.filter((AList) list, (Fun) f);
         }
     }
 
-    private static final class Fold extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
-                public Object apply(final Object v) {
-                    return new FunX() {
-                        public Object apply(Object list) {
-                            if (list == null) {
-                                return v;
-                            }
-                            return ((AList) list).fold(this, (Fun) f, v);
-                        }
-
-                        public Object apply(Object a, Object b, Fun f) {
-                            return ((Fun) f.apply(a)).apply(b);
-                        }
-                    };
-                }
-            };
+    private static final class Find extends Fun2 {
+        Object apply2(Object f, Object list) {
+            if (list == null) {
+                return null;
+            }
+            return ((AList) list).find((Fun) f);
         }
     }
 
-    private static final class Filter extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    return FilterList.filter((AList) list, (Fun) f);
-                }
-            };
+    private static final class Contains extends Fun2 {
+        Object apply2(Object v, Object list) {
+            return list != null && ((AList) list).index(v) != null
+                    ? Boolean.TRUE : Boolean.FALSE;
         }
     }
 
-    private static final class Find extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    if (list == null) {
-                        return null;
-                    }
-                    return ((AList) list).find((Fun) f);
-                }
-            };
-        }
-    }
-
-    private static final class Contains extends Fun {
-        public Object apply(final Object v) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    return list != null && ((AList) list).index(v) != null
-                            ? Boolean.TRUE : Boolean.FALSE;
-                }
-            };
-        }
-    }
-
-    private static final class Any extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    return list != null && ((AList) list).find((Fun) f) != null
-                        ? Boolean.TRUE : Boolean.FALSE;
-                }
-            };
+    private static final class Any extends Fun2 {
+        Object apply2(Object f, Object list) {
+            return list != null && ((AList) list).find((Fun) f) != null
+                ? Boolean.TRUE : Boolean.FALSE;
         }
     }
 
@@ -266,33 +246,25 @@ public final class Core {
         }
     }
 
-    private static final class All extends Fun {
-        public Object apply(final Object f) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    if (list == null) {
-                        return Boolean.FALSE;
-                    }
-                    NotPred p = new NotPred();
-                    p.f = (Fun) f;
-                    return ((AList) list).find((Fun) p) == null
-                        ? Boolean.TRUE : Boolean.FALSE;
-                }
-            };
+    private static final class All extends Fun2 {
+        public Object apply2(Object f, Object list) {
+            if (list == null) {
+                return Boolean.FALSE;
+            }
+            NotPred p = new NotPred();
+            p.f = (Fun) f;
+            return ((AList) list).find((Fun) p) == null
+                ? Boolean.TRUE : Boolean.FALSE;
         }
     }
 
-    private static final class Index extends Fun {
-        public Object apply(final Object v) {
-            return new Fun() {
-                public Object apply(Object list) {
-                    if (list == null) {
-                        return IntNum.__1;
-                    }
-                    Num n = ((AList) list).index(v);
-                    return n == null ? IntNum.__1 : n;
-                }
-            };
+    private static final class Index extends Fun2 {
+        public Object apply2(Object v, Object list) {
+            if (list == null) {
+                return IntNum.__1;
+            }
+            Num n = ((AList) list).index(v);
+            return n == null ? IntNum.__1 : n;
         }
     }
 
