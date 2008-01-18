@@ -34,6 +34,7 @@ package yeti.lang.compiler;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -624,10 +625,23 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static Code rsection(RSection section, Scope scope, int depth) {
         if (section.sym == FIELD_OP) {
-            Type res = new Type(depth);
-            Type arg = selectMemberType(res, section, section.arg, depth);
+            LinkedList parts = new LinkedList();
+            Node x = section.arg;
+            for (BinOp op; x instanceof BinOp; x = op.left) {
+                op = (BinOp) x;
+                checkSelectorSym(op, op.right);
+                parts.addFirst(((Sym) op.right).sym);
+            }
+            checkSelectorSym(section, x);
+            parts.addFirst(((Sym) x).sym);
+            String[] fields =
+                (String[]) parts.toArray(new String[parts.size()]);
+            Type res = new Type(depth), arg = res;
+            for (int i = fields.length; --i >= 0;) {
+                arg = selectMemberType(arg, fields[i], depth);
+            }
             return new SelectMemberFun(new Type(FUN, new Type[] { arg, res }),
-                                       ((Sym) section.arg).sym);
+                                       fields);
         }
         BinOpRef fun = (BinOpRef) resolve(section.sym, section, scope, depth);
         Code arg = analyze(section.arg, scope, depth);
@@ -652,23 +666,27 @@ public final class YetiType implements YetiParser, YetiCode {
         return new VariantConstructor(new Type(FUN, fun), name);
     }
 
-    static Type selectMemberType(Type res, Node op, Node sym, int depth) {
+    static void checkSelectorSym(Node op, Node sym) {
         if (!(sym instanceof Sym)) {
             if (sym == null) {
                 throw new CompileException(op, "What's that dot doing here?");
             }
             throw new CompileException(sym, "Illegal ." + sym);
         }
+    }
+
+    static Type selectMemberType(Type res, String field, int depth) {
         Type arg = new Type(STRUCT, new Type[] { res });
         arg.partialMembers = new HashMap();
-        arg.partialMembers.put(((Sym) sym).sym, res);
+        arg.partialMembers.put(field, res);
         return arg;
     }
 
     static Code selectMember(BinOp op, Scope scope, int depth) {
         final Type res = new Type(depth);
-        Type arg = selectMemberType(res, op, op.right, depth);
+        checkSelectorSym(op, op.right);
         final String field = ((Sym) op.right).sym;
+        Type arg = selectMemberType(res, field, depth);
         Code src = analyze(op.left, scope, depth);
         try {
             unify(arg, src.type);

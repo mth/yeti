@@ -888,20 +888,35 @@ interface YetiCode {
     }
 
     class SelectMemberFun extends Code {
-        String name;
+        String[] names;
         
-        SelectMemberFun(YetiType.Type type, String name) {
+        SelectMemberFun(YetiType.Type type, String[] names) {
             this.type = type;
-            this.name = name;
+            this.names = names;
             this.polymorph = true;
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
+            if (names.length == 1) {
+                ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
+                ctx.m.visitInsn(DUP);
+                ctx.m.visitLdcInsn(names[0]);
+                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selector",
+                                      "<init>", "(Ljava/lang/String;)V");
+                return;
+            }
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/Selectors");
             ctx.m.visitInsn(DUP);
-            ctx.m.visitLdcInsn(name);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selector",
-                                  "<init>", "(Ljava/lang/String;)V");
+            ctx.intConst(names.length);
+            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            for (int i = 0; i < names.length; ++i) {
+                ctx.m.visitInsn(DUP);
+                ctx.intConst(i);
+                ctx.m.visitLdcInsn(names[i]);
+                ctx.m.visitInsn(AASTORE);
+            }
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
+                                  "<init>", "([Ljava/lang/String;)V");
         }
     }
 
