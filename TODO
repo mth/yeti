@@ -1,6 +1,8 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* (.foo.bar.baz)
+* comparision operators as functions (<) etc
 * Revise allowed symbols for identifiers
 * Some IntNum methods are too eager on going to BigNum
   (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)
