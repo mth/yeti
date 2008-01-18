@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Function compose operator
 * Revise allowed symbols for identifiers
 * Some IntNum methods are too eager on going to BigNum
   (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)

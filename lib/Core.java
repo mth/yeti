@@ -126,6 +126,12 @@ public final class Core {
         }
     };
 
+    private static final class FCompose extends Fun2 {
+        Object apply2(Object f, Object g) {
+            return new Compose(f, g);
+        }
+    }
+
     private static final class Head extends Fun {
         public Object apply(Object x) {
             if (x == null) {

@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/*
- * Yeti core library.
+/**
+ * Yeti core library - function interface.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,24 +30,16 @@
  */
 package yeti.lang;
 
-/** Yeti core library - Map list. */
-public class MapList extends LList {
-    private boolean mappedRest;
-    private AIter src;
+public class Compose extends Fun {
     private Fun f;
+    private Fun g;
 
-    public MapList(AIter src, Fun f) {
-        super(f.apply(src.first()), null);
-        this.src = src;
-        this.f = f;
+    public Compose(Object f, Object g) {
+        this.f = (Fun) f;
+        this.g = (Fun) g;
     }
 
-    public synchronized AList rest() {
-        if (!mappedRest) {
-            AIter i = src.next();
-            rest = i == null ? null : new MapList(i, f);
-            mappedRest = true;
-        }
-        return rest;
+    public Object apply(Object v) {
+        return f.apply(g.apply(v));
     }
 }

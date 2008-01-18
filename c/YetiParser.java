@@ -51,6 +51,8 @@ import yeti.lang.LList;
 interface YetiParser {
     ThreadLocal currentSrc = new ThreadLocal();
 
+    String FIELD_OP = new String(".");
+
     class Node {
         int line;
         int col;
@@ -150,7 +152,7 @@ interface YetiParser {
             col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
             if (first < args.size() && args.get(first) instanceof BinOp &&
-                    ((BinOp) args.get(first)).op == ".") {
+                    ((BinOp) args.get(first)).op == FIELD_OP) {
                 throw new CompileException((BinOp) args.get(first),
                         "Bad argument on binding (use := for assignment, not =)");
             }
@@ -463,11 +465,13 @@ interface YetiParser {
             { "::" },
             { "<", ">", "<=", ">=", "==", "!=", "in" },
             { "and", "or" },
-            { ".." },
+            { "." },
             { "," },
             { ":=" },
             { ":" }
         };
+        private static final int FIRST_OP_LEVEL = 3;
+        private static final int DOT_OP_LEVEL = dotOpLevel();
         private static final Eof EOF = new Eof() {
             public String toString() {
                 return "EOF";
@@ -483,10 +487,28 @@ interface YetiParser {
         private AList prefetched;
         String moduleName;
 
+        private static int dotOpLevel() {
+            int i = 0;
+            while (OPS[i][0] != ".")
+                ++i;
+            return i;
+        }
+
         Parser(String sourceName, char[] src, int flags) {
             this.sourceName = sourceName;
             this.src = src;
             this.flags = flags;
+        }
+
+        private boolean isSep(char ch) {
+            if (ch <= ' ') // space
+                return true;
+            switch (ch) {
+                case '(': case ')': case '[': case ']':
+                case '{': case '}': case ':': case ';':
+                    return true;
+            }
+            return false;
         }
 
         private Node fetch() {
@@ -544,10 +566,18 @@ interface YetiParser {
             int line = this.line, col = p - lineStart;
             switch (src[i]) {
                 case '.':
+                    if ((i <= 0 || isSep(src[i - 1])) &&
+                        (i >= src.length || isSep(src[i + 1]))) {
+                        return new BinOp(".", DOT_OP_LEVEL, true)
+                                    .pos(line, col);
+                    }
                     while (p < src.length && src[p] == '.')
                         ++p;
+                    if (p - i == 1) {
+                        return new BinOp(FIELD_OP, 0, true).pos(line, col);
+                    }
                     return new BinOp(new String(src, i, p - i).intern(),
-                                     0, true).pos(line, col);
+                                     DOT_OP_LEVEL, true).pos(line, col);
                 case '=':
                     if (p < src.length && src[p] > ' ') {
                         break;
@@ -623,7 +653,7 @@ interface YetiParser {
                 for (i = OPS.length; --i >= 0;) {
                     for (int j = OPS[i].length; --j >= 0;) {
                         if (OPS[i][j] == s) {
-                            return new BinOp(s, i + 3, s != "::")
+                            return new BinOp(s, i + FIRST_OP_LEVEL, s != "::")
                                          .pos(line, col);
                         }
                     }
@@ -634,30 +664,42 @@ interface YetiParser {
         }
 
         private Node def(List args, List expr) {
-            BinOp first = null;
+            BinOp partial = null;
             String s = null;
-            int i = 0;
-            if (expr.size() > 0) {
+            int i = 0, cnt = expr.size();
+            if (cnt > 0) {
                 Object o = expr.get(0);
-                if (o instanceof BinOp) {
-                    s = (first = (BinOp) o).op;
-                    if (s == "-" || s == "\\") {
-                        s = null;
-                    } else {
-                        i = 1;
-                    }
+                if (o instanceof BinOp
+                    && (partial = (BinOp) o).parent == null
+                    && partial.op != "\\") {
+                    s = partial.op;
+                    i = 1;
+                } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
+                           (partial = (BinOp) o).parent == null) {
+                    s = partial.op;
+                    --cnt;
                 }
             }
-            ParseExpr parseExpr = new ParseExpr();
-            for (int cnt = expr.size(); i < cnt; ++i) {
-                parseExpr.add((Node) expr.get(i));
+            if (s != null && i >= cnt) {
+                return new Sym(s);
             }
-            Node e = s == null ? parseExpr.result() :
-                     i == 1 ? new Sym(s) :
-                     new RSection(s, parseExpr.result());
-            if (first != null) {
-                e.line = first.line;
-                e.col = first.col;
+            ParseExpr parseExpr = new ParseExpr();
+            while (i < cnt) {
+                parseExpr.add((Node) expr.get(i++));
+            }
+            Node e = parseExpr.result();
+            if (s != null) {
+                if  (cnt < expr.size()) {
+                    BinOp r = new BinOp("", 2, true);
+                    r.left = new Sym(s);
+                    r.right = e;
+                    r.parent = r; // so it would be considered "processed"
+                    e = r;
+                } else {
+                    e = new RSection(s, parseExpr.result());
+                }
+                e.line = partial.line;
+                e.col = partial.col;
             }
             return args == null ? e : new Bind(args, e);
         }

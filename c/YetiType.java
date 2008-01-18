@@ -90,6 +90,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
+    static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -106,6 +107,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCompare("<=", LG_TYPE, COND_LE,
         bindCompare(">" , LG_TYPE, COND_GT,
         bindCompare(">=", LG_TYPE, COND_GE,
+        bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("print", A_TO_UNIT, "PRINT",
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
@@ -149,7 +151,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -557,7 +559,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 return apply(node, analyze(op.left, scope, depth),
                              analyze(op.right, scope, depth), depth);
             }
-            if (op.op == ".") {
+            if (op.op == FIELD_OP) {
                 if (op.right instanceof NList) {
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (NList) op.right, scope, depth);

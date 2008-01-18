@@ -1439,6 +1439,39 @@ interface YetiCode {
         }
     }
 
+    class Compose implements Binder {
+        public BindRef getRef(final int line) {
+            return new StaticRef("yeti/lang/Core", "COMPOSE",
+                                 YetiType.COMPOSE_TYPE, this, true, line) {
+                Code apply(final Code arg1, YetiType.Type res,
+                           final int line1) {
+                    return new Apply(res, this, arg1, line1) {
+                        Code apply(final Code arg2, final YetiType.Type res,
+                                   final int line2) {
+                            return new Code() {
+                                { type = res; }
+
+                                void gen(Ctx ctx) {
+                                    ctx.visitLine(line);
+                                    ctx.m.visitTypeInsn(NEW,
+                                        "yeti/lang/Compose");
+                                    ctx.m.visitInsn(DUP);
+                                    ctx.visitLine(line1);
+                                    arg1.gen(ctx);
+                                    ctx.visitLine(line2);
+                                    arg2.gen(ctx);
+                                    ctx.m.visitMethodInsn(INVOKESPECIAL,
+                                     "yeti/lang/Compose", "<init>",
+                                     "(Ljava/lang/Object;Ljava/lang/Object;)V");
+                                }
+                            };
+                        }
+                    };
+                }
+            };
+        }
+    }
+
     abstract class BinOpRef extends BindRef implements DirectBind {
         boolean markTail2;
         String coreFun;
