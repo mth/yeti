@@ -12,6 +12,7 @@
 * Better error messages
 * Built-in regex support
 * Some standard library
+  + lazy list constructors
 * Struct properties
 * Foreign interface
 * Extendable structs?

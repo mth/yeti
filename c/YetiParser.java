@@ -634,13 +634,14 @@ interface YetiParser {
         }
 
         private Node def(List args, List expr) {
+            BinOp first = null;
             String s = null;
             int i = 0;
             if (expr.size() > 0) {
                 Object o = expr.get(0);
                 if (o instanceof BinOp) {
-                    s = ((BinOp) o).op;
-                    if (s == "-" || s == "//") {
+                    s = (first = (BinOp) o).op;
+                    if (s == "-" || s == "\\") {
                         s = null;
                     } else {
                         i = 1;
@@ -651,14 +652,14 @@ interface YetiParser {
             for (int cnt = expr.size(); i < cnt; ++i) {
                 parseExpr.add((Node) expr.get(i));
             }
-            Node e = parseExpr.result();
-            if (s != null) {
-                e = new RSection(s, e);
+            Node e = s == null ? parseExpr.result() :
+                     i == 1 ? new Sym(s) :
+                     new RSection(s, parseExpr.result());
+            if (first != null) {
+                e.line = first.line;
+                e.col = first.col;
             }
-            if (args == null) {
-                return e;
-            }
-            return new Bind(args, e);
+            return args == null ? e : new Bind(args, e);
         }
 
         private Node readExpr(String to) {
