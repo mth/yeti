@@ -629,6 +629,10 @@ public final class YetiType implements YetiParser, YetiCode {
             Node x = section.arg;
             for (BinOp op; x instanceof BinOp; x = op.left) {
                 op = (BinOp) x;
+                if (op.op != FIELD_OP) {
+                    throw new CompileException(op,
+                        "Unexpected " + op.op + " in field selector");
+                }
                 checkSelectorSym(op, op.right);
                 parts.addFirst(((Sym) op.right).sym);
             }
