@@ -17,6 +17,6 @@
 * Optimise Foo and (.foo) into constants
 * Extendable structs?
 * Lambda inlineing optimisation
-* Direct double optimisation, when it can be deducted,
+* Direct double optimisation, when it can be deduced,
   that there are always floats.
 * Direct struct-ref optimisation, when only known structs are accessed
