@@ -346,6 +346,48 @@ public final class Core {
         }
     };
 
+    public static final BinFun EQ = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a == b || a != null && a.equals(b)
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun NE = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a != b && (a == null || !a.equals(b))
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun LT = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a != b && (a == null || ((Comparable) a).compareTo(b) < 0)
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun LE = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a == b || a == null || ((Comparable) a).compareTo(b) <= 0
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun GT = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a != b && a != null && ((Comparable) a).compareTo(b) > 0
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
+    public static final BinFun GE = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return a == b || (a != null && ((Comparable) a).compareTo(b) >= 0)
+                    ? Boolean.TRUE : Boolean.FALSE;
+        }
+    };
+
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();

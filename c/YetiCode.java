@@ -1675,6 +1675,7 @@ interface YetiCode {
     }
 
     class Compare implements Binder {
+        static final String[] FUN = { "EQ", "NE", "LT", "GE", "GT", "LE" };
         YetiType.Type type;
         int op;
 
@@ -1690,6 +1691,7 @@ interface YetiCode {
             c.op = op;
             c.polymorph = true;
             c.line = line;
+            c.coreFun = FUN[op];
             return c;
         }
     }
