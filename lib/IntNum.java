@@ -118,6 +118,10 @@ public final class IntNum extends Num {
         return num.intDivFrom(v);
     }
 
+    public Num intDiv(int num) {
+        return new IntNum(v / num);
+    }
+
     public Num intDivFrom(long num) {
         return new IntNum(num / v);
     }
@@ -128,6 +132,10 @@ public final class IntNum extends Num {
 
     public Num rem(Num num) {
         return num.remFrom(v);
+    }
+
+    public Num rem(int num) {
+        return new IntNum(v % num);
     }
 
     public Num remFrom(long num) {

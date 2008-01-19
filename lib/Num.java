@@ -46,9 +46,11 @@ public abstract class Num extends Number implements Comparable {
     public abstract Num divFrom(long num);
     public abstract Num divFrom(RatNum num);
     public abstract Num intDiv(Num num);
+    public abstract Num intDiv(int num);
     public abstract Num intDivFrom(long num);
     public abstract Num intDivFrom(BigInteger num);
     public abstract Num rem(Num num);
+    public abstract Num rem(int num);
     public abstract Num remFrom(long num);
     public abstract Num remFrom(BigInteger num);
     public abstract Num sub(Num num);

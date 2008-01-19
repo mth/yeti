@@ -99,6 +99,10 @@ public final class BigNum extends Num {
         return num.intDivFrom(v);
     }
 
+    public Num intDiv(int num) {
+        return new BigNum(v.divide(BigInteger.valueOf(num)));
+    }
+
     public Num intDivFrom(BigInteger num) {
         return new BigNum(num.divide(v));
     }
@@ -109,6 +113,10 @@ public final class BigNum extends Num {
 
     public Num rem(Num num) {
         return num.remFrom(v);
+    }
+
+    public Num rem(int num) {
+        return new IntNum(v.remainder(BigInteger.valueOf(num)).longValue());
     }
 
     public Num remFrom(BigInteger num) {

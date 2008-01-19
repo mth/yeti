@@ -318,6 +318,22 @@ interface YetiCode {
             this.num = num;
         }
 
+        boolean genInt(Ctx ctx, boolean small) {
+            if (!(num instanceof IntNum)) {
+                return false;
+            }
+            long n = num.longValue();
+            if (!small) {
+                ctx.m.visitLdcInsn(new Long(n));
+            } else if (n >= (long) Integer.MIN_VALUE &&
+                       n <= (long) Integer.MAX_VALUE) {
+                ctx.intConst((int) n);
+            } else {
+                return false;
+            }
+            return true;
+        }
+
         void gen(Ctx ctx) {
             if (num instanceof RatNum) {
                 ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
@@ -1595,6 +1611,13 @@ interface YetiCode {
         void binGen(Ctx ctx, Code arg1, Code arg2) {
             arg1.gen(ctx);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            boolean ii = method == "intDiv" || method == "rem";
+            if (arg2 instanceof NumericConstant &&
+                ((NumericConstant) arg2).genInt(ctx, ii)) {
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                    method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
+                return;
+            }
             arg2.gen(ctx);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",

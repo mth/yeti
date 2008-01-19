@@ -55,6 +55,12 @@ abstract class Fun2 extends Fun {
     }
 }
 
+class Const extends Fun2 {
+    Object apply2(Object a, Object b) {
+        return a;
+    }
+}
+
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
@@ -281,6 +287,7 @@ public final class Core {
     }
 
     public static final Fun ID = new Id();
+    public static final Fun CONST = new Const();
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();

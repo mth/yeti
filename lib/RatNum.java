@@ -200,6 +200,10 @@ public final class RatNum extends Num {
         return num.intDivFrom(numerator / denominator);
     }
 
+    public Num intDiv(int num) {
+        return new IntNum(numerator / denominator / num);
+    }
+
     public Num intDivFrom(long num) {
         return new IntNum(num / (numerator / denominator));
     }
@@ -211,6 +215,10 @@ public final class RatNum extends Num {
 
     public Num rem(Num num) {
         return num.remFrom(numerator / denominator);
+    }
+
+    public Num rem(int num) {
+        return new IntNum((numerator / denominator) % num);
     }
 
     public Num remFrom(long num) {
