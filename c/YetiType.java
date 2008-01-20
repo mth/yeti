@@ -92,6 +92,7 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
+    static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -150,11 +151,12 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
         bindScope("%", new ArithOpFun("rem", NUMOP_TYPE),
         bindScope("div", new ArithOpFun("intDiv", NUMOP_TYPE),
+        bindScope("not", new NotOp(),
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

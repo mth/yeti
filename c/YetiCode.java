@@ -202,6 +202,17 @@ interface YetiCode {
                 lastLine = line;
             }
         }
+
+        void genBoolean(Label label) {
+            m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                    "TRUE", "Ljava/lang/Boolean;");
+            Label end = new Label();
+            m.visitJumpInsn(GOTO, end);
+            m.visitLabel(label);
+            m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                    "FALSE", "Ljava/lang/Boolean;");
+            m.visitLabel(end);
+        }
     }
 
     abstract class Code implements Opcodes {
@@ -1667,15 +1678,9 @@ interface YetiCode {
 
     abstract class BoolBinOp extends BinOpRef {
         void binGen(Ctx ctx, Code arg1, Code arg2) {
-            Label label = new Label(), end = new Label();
+            Label label = new Label();
             binGenIf(ctx, arg1, arg2, label, false);
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                    "TRUE", "Ljava/lang/Boolean;");
-            ctx.m.visitJumpInsn(GOTO, end);
-            ctx.m.visitLabel(label);
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                    "FALSE", "Ljava/lang/Boolean;");
-            ctx.m.visitLabel(end);
+            ctx.genBoolean(label);
         }
     }
 
@@ -1783,6 +1788,29 @@ interface YetiCode {
         }
     }
 
+    class NotOp implements Binder {
+        public BindRef getRef(int line) {
+            return new StaticRef("yeti/lang/Core", "NOT",
+                                 YetiType.BOOL_TO_BOOL, this, false, line) {
+                Code apply(final Code arg, YetiType.Type res, int line) {
+                    return new Code() {
+                        { type = YetiType.BOOL_TYPE; }
+
+                        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                            arg.genIf(ctx, to, !ifTrue);
+                        }
+
+                        void gen(Ctx ctx) {
+                            Label label = new Label();
+                            arg.genIf(ctx, label, true);
+                            ctx.genBoolean(label);
+                        }
+                    };
+                }
+            };
+        }
+    }
+
     class BoolOpFun extends BoolBinOp implements Binder {
         boolean orOp;
 
@@ -1833,6 +1861,7 @@ interface YetiCode {
                 {
                     type = YetiType.CONS_TYPE;
                     binder = Cons.this;
+                    coreFun = "CONS";
                     polymorph = true;
                 }
 

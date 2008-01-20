@@ -265,7 +265,7 @@ public final class Core {
     }
 
     private static final class All extends Fun2 {
-        public Object apply2(Object f, Object list) {
+        Object apply2(Object f, Object list) {
             if (list == null) {
                 return Boolean.FALSE;
             }
@@ -277,12 +277,24 @@ public final class Core {
     }
 
     private static final class Index extends Fun2 {
-        public Object apply2(Object v, Object list) {
+        Object apply2(Object v, Object list) {
             if (list == null) {
                 return IntNum.__1;
             }
             Num n = ((AList) list).index(v);
             return n == null ? IntNum.__1 : n;
+        }
+    }
+
+    private static final class Cons extends Fun2 {
+        Object apply2(Object v, Object list) {
+            return new LList(v, (AList) list);
+        }
+    }
+
+    private static final class Not extends Fun {
+        public Object apply(Object v) {
+            return v == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
         }
     }
 
@@ -302,6 +314,8 @@ public final class Core {
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
     public static final Fun COMPOSE = new FCompose();
+    public static final Fun CONS = new Cons();
+    public static final Fun NOT = new Not();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
