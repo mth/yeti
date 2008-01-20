@@ -70,17 +70,17 @@ interface YetiCode {
             for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
                 Map.Entry entry = (Map.Entry) i.next();
                 String name = (String) entry.getKey();
+                String jname = Code.mangle(name);
                 String type = Code.javaType((YetiType.Type) entry.getValue());
                 String descr = 'L' + type + ';';
-                ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, name,
+                ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, jname,
                         descr, null, null).visitEnd();
                 ctx.m.visitInsn(DUP);
                 ctx.m.visitLdcInsn(name);
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                     "get", "(Ljava/lang/String;)Ljava/lang/Object;");
                 ctx.m.visitTypeInsn(CHECKCAST, type);
-                ctx.m.visitFieldInsn(PUTSTATIC, ctx.className,
-                    name, descr);
+                ctx.m.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
             }
         }
 
@@ -1180,7 +1180,7 @@ interface YetiCode {
         Binder bindField(final String name, final YetiType.Type type) {
             return new Binder() {
                 public BindRef getRef(int line) {
-                    return new StaticRef(moduleName, name, type,
+                    return new StaticRef(moduleName, mangle(name), type,
                                          this, true, line);
                 }
             };

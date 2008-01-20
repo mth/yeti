@@ -807,7 +807,7 @@ interface YetiParser {
                 }
                 result += ((Sym) n).sym;
                 n = fetch();
-                if (!(n instanceof BinOp) || ((BinOp) n).op != ".") {
+                if (!(n instanceof BinOp) || ((BinOp) n).op != FIELD_OP) {
                     if (!decl) {
                         prefetched = new LList(n, prefetched);
                         return result;
