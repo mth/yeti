@@ -269,6 +269,31 @@ interface YetiCode {
             }
             return "Ljava/lang/Object;";
         }
+
+        static final char[] mangle =
+            "jQh$oBz  apCmds          cSlegqt".toCharArray();
+
+        static final String mangle(String s) {
+            char[] a = s.toCharArray();
+            char[] to = new char[a.length * 2];
+            int l = 0;
+            for (int i = 0, cnt = a.length; i < cnt; ++i, ++l) {
+                char c = a[i];
+                if (c > ' ' && c < 'A' && (to[l + 1] = mangle[c - 33]) != ' ') {
+                } else if (c == '^') {
+                    to[l + 1] = 'v';
+                } else if (c == '|') {
+                    to[l + 1] = 'I';
+                } else if (c == '~') {
+                    to[l + 1] = '_';
+                } else {
+                    to[l] = c;
+                    continue;
+                }
+                to[l++] = '$';
+            }
+            return new String(to, 0, l);
+        }
     }
 
     abstract class BindRef extends Code {
@@ -721,7 +746,7 @@ interface YetiCode {
             if (bindName == null) {
                 bindName = "";
             }
-            name = ctx.className + '$' + bindName;
+            name = ctx.className + '$' + mangle(bindName);
             Map classes = ctx.compilation.classes;
             for (int i = 0; classes.containsKey(name); ++i) {
                 name = ctx.className + '$' + bindName + i;
