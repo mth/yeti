@@ -473,9 +473,9 @@ interface YetiParser {
     class Parser {
         private static final char[] CHS =
            ("                                " + // 0x
-            " .'....x()..,../xxxxxxxxxx.;...x" + // 2x
-            ".xxxxxxxxxxxxxxxxxxxxxxxxxx[.].x" + // 4x
-            "`xxxxxxxxxxxxxxxxxxxxxxxxxx{.}. ").toCharArray();
+            " .'....x  .. ../xxxxxxxxxx. ...x" + // 2x
+            ".xxxxxxxxxxxxxxxxxxxxxxxxxx . .x" + // 4x
+            "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
         private static final String[][] OPS = {
             { "*", "/", "%" },
@@ -518,17 +518,6 @@ interface YetiParser {
             this.sourceName = sourceName;
             this.src = src;
             this.flags = flags;
-        }
-
-        private boolean isSep(char ch) {
-            if (ch <= ' ') // space
-                return true;
-            switch (ch) {
-                case '(': case ')': case '[': case ']':
-                case '{': case '}': case ':': case ';':
-                    return true;
-            }
-            return false;
         }
 
         private Node fetch() {
@@ -584,8 +573,9 @@ interface YetiParser {
             int line = this.line, col = p - lineStart;
             switch (src[i]) {
                 case '.':
-                    if ((i <= 0 || isSep(src[i - 1])) &&
-                        (i >= src.length || isSep(src[i + 1])))
+                    if ((i <= 0 || (c = src[i - 1]) < '~' && CHS[c] == ' ' &&
+                        (i >= src.length ||
+                            (c = src[i + 1]) < '~' && CHS[c] == ' ')))
                         return new BinOp(".", DOT_OP_LEVEL, true)
                                     .pos(line, col);
                     break;
