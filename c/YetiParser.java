@@ -474,7 +474,7 @@ interface YetiParser {
         private static final char[] CHS =
            ("                                " + // 0x
             " .'....x  .. ../xxxxxxxxxx. ...x" + // 2x
-            ".xxxxxxxxxxxxxxxxxxxxxxxxxx . .x" + // 4x
+            ".xxxxxxxxxxxxxxxxxxxxxxxxxx   .x" + // 4x
             "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
         private static final String[][] OPS = {
@@ -639,7 +639,7 @@ interface YetiParser {
             }
             if (src[i] == '`' && i + 1 < src.length)
                 ++i;
-            while (++i < src.length && (c = src[i]) <= 'z' && CHS[c] == 'x');
+            while (++i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'));
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
