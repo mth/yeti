@@ -938,7 +938,11 @@ interface YetiParser {
             } else {
                 prefetched = new LList(n, prefetched);
             }
-            return readSeq(' ');
+            Node res = readSeq(' ');
+            if (eofWas != EOF) {
+                throw new CompileException(eofWas, "Unexpected " + eofWas);
+            }
+            return res;
         }
     }
 }
