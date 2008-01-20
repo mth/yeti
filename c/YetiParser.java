@@ -482,10 +482,9 @@ interface YetiParser {
             { "+", "-" },
             { "::" },
             { "<", ">", "<=", ">=", "==", "!=" },
-            { null },
-            { null },
+            { null }, // and or
+            { null }, // non-standard operators
             { "." },
-            { "," },
             { ":=" },
             { ":" }
         };
