@@ -101,8 +101,8 @@ interface YetiParser {
             int e = p;
             char c;
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
-                        c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
-                        c != '[' && c != ']' && c != '{' && c != '}'));
+                     c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
+                     c != '[' && c != ']' && c != '{' && c != '}'));
             return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
         }
     }
@@ -351,6 +351,18 @@ interface YetiParser {
     class Eof extends Node {
     }
 
+    class CloseBracket extends Eof {
+        char c;
+
+        CloseBracket(char c) {
+            this.c = c;
+        }
+
+        String show() {
+            return new String(new char[] { c });
+        }
+    }
+
     class Elif extends Eof {
     }
 
@@ -459,19 +471,27 @@ interface YetiParser {
     }
 
     class Parser {
+        private static final char[] CHS =
+           ("                                " + // 0x
+            " .'....x()..,../xxxxxxxxxx.;...x" + // 2x
+            ".xxxxxxxxxxxxxxxxxxxxxxxxxx[.].x" + // 4x
+            "!xxxxxxxxxxxxxxxxxxxxxxxxxx{.}. ").toCharArray();
+
         private static final String[][] OPS = {
-            { "*", "/", "%", "div" },
+            { "*", "/", "%" },
             { "+", "-" },
             { "::" },
-            { "<", ">", "<=", ">=", "==", "!=", "in" },
-            { "and", "or" },
+            { "<", ">", "<=", ">=", "==", "!=" },
+            { null },
+            { null },
             { "." },
             { "," },
             { ":=" },
             { ":" }
         };
         private static final int FIRST_OP_LEVEL = 3;
-        private static final int DOT_OP_LEVEL = dotOpLevel();
+        private static final int COMP_OP_LEVEL = opLevel("<");
+        private static final int DOT_OP_LEVEL = opLevel(".");
         private static final Eof EOF = new Eof() {
             public String toString() {
                 return "EOF";
@@ -487,11 +507,11 @@ interface YetiParser {
         private AList prefetched;
         String moduleName;
 
-        private static int dotOpLevel() {
+        private static int opLevel(String op) {
             int i = 0;
-            while (OPS[i][0] != ".")
+            while (OPS[i][0] != op)
                 ++i;
-            return i;
+            return i + FIRST_OP_LEVEL;
         }
 
         Parser(String sourceName, char[] src, int flags) {
@@ -557,9 +577,7 @@ interface YetiParser {
                 }
                 break;
             }
-            if (i >= src.length || src[i] == ')'
-                || src[i] == ']' || src[i] == '}') {
-                p = i;
+            if (i >= src.length) {
                 return EOF;
             }
             p = i + 1;
@@ -567,22 +585,10 @@ interface YetiParser {
             switch (src[i]) {
                 case '.':
                     if ((i <= 0 || isSep(src[i - 1])) &&
-                        (i >= src.length || isSep(src[i + 1]))) {
+                        (i >= src.length || isSep(src[i + 1])))
                         return new BinOp(".", DOT_OP_LEVEL, true)
                                     .pos(line, col);
-                    }
-                    while (p < src.length && src[p] == '.')
-                        ++p;
-                    if (p - i == 1) {
-                        return new BinOp(FIELD_OP, 0, true).pos(line, col);
-                    }
-                    return new BinOp(new String(src, i, p - i).intern(),
-                                     DOT_OP_LEVEL, true).pos(line, col);
-                case '=':
-                    if (p < src.length && src[p] > ' ') {
-                        break;
-                    }
-                    return new BindOp().pos(line, col);
+                    break;
                 case ';':
                     return new SepOp(';').pos(line, col);
                 case ',':
@@ -598,18 +604,40 @@ interface YetiParser {
                     return new NList(readMany(',', ']')).pos(line, col);
                 case '{':
                     return new Struct(readMany(';', '}')).pos(line, col);
+                case ')': case ']': case '}':
+                    p = i;
+                    return new CloseBracket(src[i]).pos(line, col);
                 case '"':
                     return readStr().pos(line, col);
                 case '\\':
                     return new BinOp("\\", 1, false).pos(line, col);
             }
             p = i;
+            while (i < src.length && (c = src[i]) <= '~' && (CHS[c] == '.' ||
+                   c == '/' && (i + 1 >= src.length ||
+                                (c = src[i + 1]) != '/' && c != '*'))) ++i;
+            if (i != p) {
+                String s = new String(src, p, i - p).intern();
+                p = i;
+                if (s == "=")
+                    return new BindOp().pos(line, col);
+                if (s == ".")
+                    return new BinOp(FIELD_OP, 0, true).pos(line, col);
+                for (i = OPS.length; --i >= 0;) {
+                    for (int j = OPS[i].length; --j >= 0;) {
+                        if (OPS[i][j] == s) {
+                            return new BinOp(s, i + FIRST_OP_LEVEL, s != "::")
+                                         .pos(line, col);
+                        }
+                    }
+                }
+                return new BinOp(s, DOT_OP_LEVEL - 1, true).pos(line, col);
+            }
             if ((c = src[i]) >= '0' && c <= '9') {
-                while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
-                       c != '[' && c != ']' && c != '{' && c != '}' &&
-                       c != ':' && c != ';' && c != ',' && c > ' ' &&
-                       (c != '/' || i + 1 > src.length ||
-                        src[i + 1] != '*' && src[i + 1] != '/'));
+                while (++i < src.length && ((c = src[i]) <= 'z' &&
+                       (CHS[c] == 'x' || c == '.' ||
+                        ((c == '+' || c == '-') &&
+                         (src[i - 1] == 'e' || src[i - 1] == 'E')))));
                 String s = new String(src, p, i - p);
                 p = i;
                 try {
@@ -619,13 +647,7 @@ interface YetiParser {
                         "Bad number literal '" + s + "'");
                 }
             }
-            while (++i < src.length && (c = src[i]) != '(' && c != ')' &&
-                   c != ';' && c > ' ' && c != '[' && c != ']' &&
-                   c != '{' && c != '}' && c != '.' && c != ',' &&
-                   (c != ':' || i + 1 < src.length && src[i + 1] > ' '
-                             || i > 0 && src[i - 1] == ':') &&
-                   (c != '/' || i + 1 > src.length ||
-                    src[i + 1] != '*' && src[i + 1] != '/'));
+            while (++i < src.length && (c = src[i]) <= 'z' && CHS[c] == 'x');
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
@@ -645,19 +667,17 @@ interface YetiParser {
                 res = readDo();
             } else if (s == "done") {
                 res = new Done();
+            } else if (s == "and" || s == "or") {
+                res = new BinOp(s, COMP_OP_LEVEL + 1, true);
+            } else if (s == "in") {
+                res = new BinOp(s, COMP_OP_LEVEL, true);
+            } else if (s == "div") {
+                res = new BinOp(s, FIRST_OP_LEVEL, true);
             } else if (s == "var") {
                 res = new VarSym();
             } else if (s == "load") {
                 res = new Load(readDotted(false));
             } else {
-                for (i = OPS.length; --i >= 0;) {
-                    for (int j = OPS[i].length; --j >= 0;) {
-                        if (OPS[i][j] == s) {
-                            return new BinOp(s, i + FIRST_OP_LEVEL, s != "::")
-                                         .pos(line, col);
-                        }
-                    }
-                }
                 res = new Sym(s);
             }
             return res.pos(line, col);
