@@ -222,6 +222,21 @@ interface YetiCode {
             return new Apply(res, this, arg, line);
         }
 
+        Code apply2nd(final Code arg2, final YetiType.Type t, int line) {
+            return new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Bind2nd");
+                    ctx.m.visitInsn(DUP);
+                    Code.this.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Bind2nd",
+                        "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+                }
+            };
+        }
+
         // Not used currently. Should allow some custom behaviour
         // on binding (possibly useful for inline-optimisations).
         BindRef bindRef() {

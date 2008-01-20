@@ -648,7 +648,7 @@ public final class YetiType implements YetiParser, YetiCode {
             return new SelectMemberFun(new Type(FUN, new Type[] { arg, res }),
                                        fields);
         }
-        BinOpRef fun = (BinOpRef) resolve(section.sym, section, scope, depth);
+        Code fun = resolve(section.sym, section, scope, depth);
         Code arg = analyze(section.arg, scope, depth);
         Type[] r = { new Type(depth), new Type(depth) };
         Type[] afun = { r[0], new Type(FUN, new Type[] { arg.type, r[1] }) };
