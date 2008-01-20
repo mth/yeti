@@ -475,7 +475,7 @@ interface YetiParser {
            ("                                " + // 0x
             " .'....x()..,../xxxxxxxxxx.;...x" + // 2x
             ".xxxxxxxxxxxxxxxxxxxxxxxxxx[.].x" + // 4x
-            "!xxxxxxxxxxxxxxxxxxxxxxxxxx{.}. ").toCharArray();
+            "`xxxxxxxxxxxxxxxxxxxxxxxxxx{.}. ").toCharArray();
 
         private static final String[][] OPS = {
             { "*", "/", "%" },
@@ -647,6 +647,8 @@ interface YetiParser {
                         "Bad number literal '" + s + "'");
                 }
             }
+            if (src[i] == '`' && i + 1 < src.length)
+                ++i;
             while (++i < src.length && (c = src[i]) <= 'z' && CHS[c] == 'x');
             String s = new String(src, p, i - p);
             p = i;
@@ -678,7 +680,15 @@ interface YetiParser {
             } else if (s == "load") {
                 res = new Load(readDotted(false));
             } else {
-                res = new Sym(s);
+                if (s.charAt(0) != '`') {
+                    res = new Sym(s);
+                } else if (s.length() > 1 && p < src.length && src[p] == '`') {
+                    ++p;
+                    res = new BinOp(s.substring(1).intern(),
+                                    DOT_OP_LEVEL - 1, true);
+                } else {
+                    throw new CompileException(line, col, "Syntax error");
+                }
             }
             return res.pos(line, col);
         }
