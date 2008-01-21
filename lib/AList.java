@@ -37,7 +37,7 @@ public abstract class AList extends AIter implements Comparable {
      */
     public abstract AList rest();
 
-    public abstract void forEach(Fun f);
+    public abstract ListIter iter();
 
     public abstract Object fold(FunX f, Fun g, Object v);
 

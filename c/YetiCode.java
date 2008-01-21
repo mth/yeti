@@ -346,7 +346,7 @@ interface YetiCode {
     class StaticRef extends BindRef implements DirectBind {
         private String className;
         private String name;
-        private int line;
+        int line;
        
         StaticRef(String className, String fieldName, YetiType.Type type,
                   Binder binder, boolean polymorph, int line) {
@@ -1570,12 +1570,19 @@ interface YetiCode {
         }
     }
 
-    class Compose implements Binder {
-        public BindRef getRef(final int line) {
-            return new StaticRef("yeti/lang/Core", "COMPOSE",
-                                 YetiType.COMPOSE_TYPE, this, true, line) {
-                Code apply(final Code arg1, YetiType.Type res,
-                           final int line1) {
+    abstract class Bind2Core implements Binder, Opcodes {
+        private String coreFun;
+        private YetiType.Type type;
+
+        Bind2Core(String fun, YetiType.Type type) {
+            coreFun = fun;
+            this.type = type;
+        }
+
+        public BindRef getRef(int line) {
+            return new StaticRef("yeti/lang/Core", coreFun,
+                                 type, this, true, line) {
+                Code apply(final Code arg1, YetiType.Type res, int line1) {
                     return new Apply(res, this, arg1, line1) {
                         Code apply(final Code arg2, final YetiType.Type res,
                                    final int line2) {
@@ -1583,23 +1590,60 @@ interface YetiCode {
                                 { type = res; }
 
                                 void gen(Ctx ctx) {
-                                    ctx.visitLine(line);
-                                    ctx.m.visitTypeInsn(NEW,
-                                        "yeti/lang/Compose");
-                                    ctx.m.visitInsn(DUP);
-                                    ctx.visitLine(line1);
-                                    arg1.gen(ctx);
-                                    ctx.visitLine(line2);
-                                    arg2.gen(ctx);
-                                    ctx.m.visitMethodInsn(INVOKESPECIAL,
-                                     "yeti/lang/Compose", "<init>",
-                                     "(Ljava/lang/Object;Ljava/lang/Object;)V");
+                                    genApply2(ctx, arg1, arg2, line2);
                                 }
                             };
                         }
                     };
                 }
             };
+        }
+
+        abstract void genApply2(Ctx ctx, Code arg1, Code arg2, int line);
+    }
+
+    class For extends Bind2Core {
+        For() {
+            super("FOR", YetiType.FOR_TYPE);
+        }
+
+        void genApply2(Ctx ctx, Code list, Code fun, int line) {
+            Label nop = new Label(), end = new Label();
+            list.gen(ctx);
+            fun.gen(ctx);
+            ctx.visitLine(line);
+            ctx.m.visitInsn(SWAP);
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitJumpInsn(IFNULL, nop);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                  "iter", "()Lyeti/lang/ListIter;");
+            ctx.m.visitInsn(DUP_X2);
+            ctx.m.visitInsn(POP);
+            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ListIter",
+                    "forEach", "(Ljava/lang/Object;Lyeti/lang/AIter;)V");
+            ctx.m.visitJumpInsn(GOTO, end);
+            ctx.m.visitLabel(nop);
+            ctx.m.visitInsn(POP2);
+            ctx.m.visitLabel(end);
+            ctx.m.visitInsn(ACONST_NULL);
+        }
+    }
+
+    class Compose extends Bind2Core {
+        Compose() {
+            super("COMPOSE", YetiType.COMPOSE_TYPE);
+        }
+
+        void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/Compose");
+            ctx.m.visitInsn(DUP);
+            arg1.gen(ctx);
+            arg2.gen(ctx);
+            ctx.visitLine(line);
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Compose",
+                    "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
         }
     }
 

@@ -93,6 +93,8 @@ public final class YetiType implements YetiParser, YetiCode {
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
+    static final Type FOR_TYPE =
+        fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -121,8 +123,6 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("reverse", fun(A_B_LIST_TYPE, A_LIST_TYPE), "REVERSE",
         bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
-        bindCore("for",
-            fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE), "FOR",
         bindCore("forHash",
             fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
             "FORHASH",
@@ -145,6 +145,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
+        bindPoly("for", FOR_TYPE, new For(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
         bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
         bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),

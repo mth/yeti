@@ -163,11 +163,12 @@ public final class Core {
     }
 
     private static final class For extends Fun {
-        public Object apply(final Object list) {
+        public Object apply(Object list) {
+            final AList l = (AList) list;
             return new Fun() {
                 public Object apply(Object f) {
-                    if (list != null) {
-                        ((AList) list).forEach((Fun) f);
+                    if (l != null) {
+                        l.iter().forEach(f, l);
                     }
                     return null;
                 }

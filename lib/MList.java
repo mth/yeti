@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-abstract class AMList extends AList {
+abstract class AMList extends AList implements ListIter {
     int start;
 
     abstract int _size();
@@ -79,11 +79,16 @@ abstract class AMList extends AList {
         return buf.toString();
     }
 
-    public void forEach(Fun f) {
+    public void forEach(Object fun, AIter iter) {
+        Fun f = (Fun) fun;
         Object[] array = array();
         for (int cnt = _size(), i = start; i < cnt; ++i) {
             f.apply(array[i]);
         }
+    }
+
+    public ListIter iter() {
+        return this;
     }
 
     public Object fold(FunX f, Fun g, Object v) {

@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - List. */
-public class ListRange extends AList {
+public class ListRange extends AList implements ListIter {
     Num first;
     Num last;
     AList rest;
@@ -120,7 +120,8 @@ public class ListRange extends AList {
         return i != null ? 1 : j != null ? -1 : 0;
     }
 
-    public void forEach(Fun f) {
+    public void forEach(Object fun, AIter iter) {
+        Fun f = (Fun) fun;
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
             if (first.compareTo(last) <= 0) {
@@ -145,6 +146,10 @@ public class ListRange extends AList {
         for (AIter i = rest; i != null; i = i.next()) {
             f.apply(i.first());
         }
+    }
+
+    public ListIter iter() {
+        return this;
     }
 
     public Object fold(FunX f, Fun g, Object v) {
