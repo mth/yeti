@@ -284,6 +284,10 @@ interface YetiCode {
             return false;
         }
 
+        boolean isIntNum() {    
+            return false;
+        }
+
         static final String javaType(YetiType.Type t) {
             switch (t.deref().type) {
                 case YetiType.STR: return "java/lang/String";
@@ -367,6 +371,10 @@ interface YetiCode {
         NumericConstant(Num num) {
             type = YetiType.NUM_TYPE;
             this.num = num;
+        }
+
+        boolean isIntNum() {
+            return num instanceof IntNum;
         }
 
         boolean genInt(Ctx ctx, boolean small) {
@@ -1701,6 +1709,7 @@ interface YetiCode {
 
     class CompareFun extends BoolBinOp {
         static final int[] OPS = { IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE };
+        static final int[] ROP = { IFEQ, IFNE, IFGT, IFLE, IFLT, IFGE };
         int op;
         int line;
 
@@ -1739,6 +1748,15 @@ interface YetiCode {
                 ctx.m.visitInsn(SWAP); // 1-2
             } else {
                 arg1.gen(ctx);
+                if (arg2.isIntNum()) {
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                    ((NumericConstant) arg2).genInt(ctx, false);
+                    ctx.visitLine(line);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                            "yeti/lang/Num", "rCompare", "(J)I");
+                    ctx.m.visitJumpInsn(ROP[op], to);
+                    return;
+                }
                 arg2.gen(ctx);
                 ctx.visitLine(line);
             }

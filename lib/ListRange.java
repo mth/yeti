@@ -121,8 +121,26 @@ public class ListRange extends AList {
     }
 
     public void forEach(Fun f) {
-        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-            f.apply(i);
+        if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
+                       last.rCompare(Integer.MAX_VALUE) > 0) {
+            if (first.compareTo(last) <= 0) {
+                for (int i = first.intValue(), e = last.intValue();
+                     i <= e; ++i) {
+                    f.apply(new IntNum(i));
+                }
+            }
+        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+                   last.rCompare(Integer.MIN_VALUE) < 0) {
+            if (first.compareTo(last) >= 0) {
+                for (int i = first.intValue(), e = last.intValue();
+                     i >= e; --i) {
+                    f.apply(new IntNum(i));
+                }
+            }
+        } else {
+            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+                f.apply(i);
+            }
         }
         for (AIter i = rest; i != null; i = i.next()) {
             f.apply(i.first());
@@ -130,8 +148,26 @@ public class ListRange extends AList {
     }
 
     public Object fold(FunX f, Fun g, Object v) {
-        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-            v = f.apply(v, i, g);
+        if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
+                       last.rCompare(Integer.MAX_VALUE) > 0) {
+            if (first.compareTo(last) <= 0) {
+                for (int i = first.intValue(), e = last.intValue();
+                     i <= e; ++i) {
+                    v = f.apply(v, new IntNum(i), g);
+                }
+            }
+        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+                   last.rCompare(Integer.MIN_VALUE) < 0) {
+            if (first.compareTo(last) >= 0) {
+                for (int i = first.intValue(), e = last.intValue();
+                     i >= e; --i) {
+                    v = f.apply(v, new IntNum(i), g);
+                }
+            }
+        } else {
+            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+                v = f.apply(v, i, g);
+            }
         }
         for (AIter i = rest; i != null; i = i.next()) {
             v = f.apply(v, i.first(), g);
