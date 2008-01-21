@@ -1046,6 +1046,21 @@ interface YetiCode {
             }
         }
 
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            Label end = new Label();
+            for (int i = 0, last = choices.length - 1; i <= last; ++i) {
+                Label jmpNext = i < last ? new Label() : end;
+                if (choices[i].length == 2) {
+                    choices[i][1].genIf(ctx, jmpNext, false); // condition
+                    choices[i][0].genIf(ctx, to, ifTrue); // body
+                    ctx.m.visitJumpInsn(GOTO, end);
+                } else {
+                    choices[i][0].genIf(ctx, to, ifTrue);
+                }
+                ctx.m.visitLabel(jmpNext);
+            }
+        }
+
         void markTail() {
             for (int i = choices.length; --i >= 0;) {
                 choices[i][0].markTail();

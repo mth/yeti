@@ -65,8 +65,8 @@ public final class IntNum extends Num {
     }
 
     public Num add(long num) {
-        if (num < -0x3fffffffffffffffL || num > 0x3fffffffffffffffL ||
-            v < -0x3fffffffffffffffL || v > 0x3fffffffffffffffL) {
+        if (num > 0 ? num > 0x3fffffffffffffffL || v > 0x3fffffffffffffffL
+                    : num < -0x3fffffffffffffffL || v < -0x3fffffffffffffffL) {
             return new BigNum(BigInteger.valueOf(v).add(
                                 BigInteger.valueOf(num)));
         }
@@ -151,8 +151,9 @@ public final class IntNum extends Num {
     }
 
     public Num sub(long num) {
-        if (num < -0x3fffffffffffffffL || num > 0x3fffffffffffffffL ||
-            v < -0x3fffffffffffffffL || v > 0x3fffffffffffffffL) {
+        long n;
+        if (num < 0 ? num < -0x3fffffffffffffffL || v > 0x3fffffffffffffffL
+                    : num > 0x3fffffffffffffffL || v < -0x3fffffffffffffffL) {
             return new BigNum(BigInteger.valueOf(v).subtract(
                                 BigInteger.valueOf(num)));
         }
@@ -160,8 +161,8 @@ public final class IntNum extends Num {
     }
 
     public Num subFrom(long num) {
-        if (num < -0x3fffffffffffffffL || num > 0x3fffffffffffffffL ||
-            v < -0x3fffffffffffffffL || v > 0x3fffffffffffffffL) {
+        if (num < 0 ? num < -0x3fffffffffffffffL || v > 0x3fffffffffffffffL
+                    : num > 0x3fffffffffffffffL || v < -0x3fffffffffffffffL) {
             return new BigNum(BigInteger.valueOf(num).subtract(
                                 BigInteger.valueOf(v)));
         }

@@ -1,8 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Some IntNum methods are too eager on going to BigNum
-  (|-MAXINT + MAXINT| < MAXINT) (probably RatNum too)
 * Fix MList == [] / != []
 * Type declarations
   + Better type descriptions in error messages
