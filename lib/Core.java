@@ -212,13 +212,23 @@ public final class Core {
     }
 
     private static final class Fold extends Fun2 {
-        Object apply2(final Object f, final Object v) {
+        Object apply2(final Object f, final Object value) {
             return new FunX() {
                 public Object apply(Object list) {
                     if (list == null) {
+                        return value;
+                    }
+                    if (list instanceof LList) {
+                        AIter i = (AIter) list;
+                        Fun fun = (Fun) f;
+                        list = null; // give it free for gc
+                        Object v;
+                        for (v = value; i != null; i = i.next()) {
+                            v = ((Fun) fun.apply(v)).apply(i.first());
+                        }
                         return v;
                     }
-                    return ((AList) list).fold(this, (Fun) f, v);
+                    return ((AList) list).fold(this, (Fun) f, value);
                 }
 
                 public Object apply(Object a, Object b, Fun f) {

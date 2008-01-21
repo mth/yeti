@@ -120,11 +120,8 @@ public class LList extends AList {
         return LListIter.ITER;
     }
 
-    public Object fold(FunX f, Fun g, Object v) {
-        for (AIter i = this; i != null; i = i.next()) {
-            v = f.apply(v, i.first(), g);
-        }
-        return v;
+    public Object fold(FunX f, Fun g, Object value) {
+        throw new UnsupportedOperationException();
     }
 
     public AList reverse() {

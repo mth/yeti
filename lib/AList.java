@@ -39,11 +39,11 @@ public abstract class AList extends AIter implements Comparable {
 
     public abstract ListIter iter();
 
-    public abstract Object fold(FunX f, Fun g, Object v);
-
     public abstract AList reverse();
 
     public abstract Num index(Object v);
+
+    public abstract Object fold(FunX f, Fun g, Object v);
 
     public AList map(Fun f) {
         return new MapList(this, f);
