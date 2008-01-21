@@ -46,6 +46,8 @@ public class MapList extends LList {
         if (!mappedRest) {
             AIter i = src.next();
             rest = i == null ? null : new MapList(i, f);
+            src = null;
+            f = null;
             mappedRest = true;
         }
         return rest;
