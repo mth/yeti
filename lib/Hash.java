@@ -34,11 +34,24 @@ import java.util.Map;
 
 /** Yeti core library - Hash. */
 public class Hash extends java.util.HashMap implements ByKey {
+    Fun defaultFun;
+
     public Hash() {
     }
 
     public Hash(int initialCapacity) {
         super(initialCapacity);
+    }
+
+    public Object vget(Object key) {
+        Object x;
+        if ((x = get(key)) == null && !containsKey(key)) {
+            if (defaultFun != null) {
+                return defaultFun.apply(key);
+            }
+            throw new NoSuchKeyException("Key not found (" + key + ")");
+        }
+        return x;
     }
 
     public String toString() {

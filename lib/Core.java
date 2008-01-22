@@ -113,6 +113,13 @@ public final class Core {
         }
     };
 
+    public static final Fun SET_HASH_DEFAULT = new Fun2() {
+        Object apply2(Object h, Object f) {
+            ((Hash) h).defaultFun = (Fun) f;
+            return null;
+        }
+    };
+
     private static final class Number extends Fun {
         public Object apply(Object x) {
             return parseNum((String) x);

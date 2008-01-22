@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,9 @@ package yeti.lang;
 /** Yeti core library - ByKey. */
 public interface ByKey {
     /**
-     * Get object by key.
+     * Get object by key. Throw an Exception on error.
      */
-    Object get(Object key);
+    Object vget(Object key);
 
     /**
      * Put object by key.
