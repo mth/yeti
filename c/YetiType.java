@@ -101,8 +101,8 @@ public final class YetiType implements YetiParser, YetiCode {
           NO_TYPE, LIST_TYPE, MAP_TYPE };
 
     static final String[] TYPE_NAMES =
-        { "var", "unit", "string", "number", "bool", "char",
-          "<>", "<list>", "<map>", "fun", "list", "struct", "variant" };
+        { "var", "()", "string", "number", "bool", "char",
+          "none", "list", "map", "fun", "list", "struct", "variant" };
 
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
@@ -144,6 +144,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
         bindCore("setHashDefault",
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
+        bindCore("at", fun2Arg(A_B_MAP_TYPE, A, B), "AT",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
@@ -159,7 +160,7 @@ public final class YetiType implements YetiParser, YetiCode {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -211,19 +212,28 @@ public final class YetiType implements YetiParser, YetiCode {
                 case VAR:
                     return '\'' + Integer.toString(hashCode(), 36);
                 case FUN:
-                    return param[0] + " -> " + param[1];
+                    return (param[0].type == FUN
+                        ? "(" + param[0] + ")" : param[0]) + " -> " + param[1];
                 case STRUCT:
-                    return "{" + partialMembers + " < " + finalMembers + "}";
+                    return "{" + partialMembers + " <= " + finalMembers + "}";
                 case VARIANT:
-                    return "[" + partialMembers + " > " + finalMembers + "]";
+                    return "[" + partialMembers + " => " + finalMembers + "]";
+                case MAP:
+                    if (param[2].type == LIST_MARKER) {
+                        if (param[1].type == NUM) {
+                            return "array<" + param[0] + ">";
+                        }
+                        return "list<" + param[0] + ">";
+                    } 
+                    if (param[2].type == MAP_MARKER) {
+                        return "hash<" + param[1] + ", " + param[0] + ">";
+                    }
+                    if (param[1].type == VAR) {
+                        return "collection<" + param[0] + ">";
+                    }
+                    return "collection<" + param[1] + ", " + param[0] + ">";
             }
-            StringBuffer result = new StringBuffer();
-            for (int i = 0; i < param.length; ++i) {
-                result.append(param[i]);
-                result.append(' ');
-            }
-            result.append(TYPE_NAMES[type]);
-            return result.toString();
+            return TYPE_NAMES[type];
         }
         
         Type deref() {

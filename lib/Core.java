@@ -145,6 +145,12 @@ public final class Core {
         }
     };
 
+    private static final class At extends Fun2 {
+        Object apply2(Object hash, Object key) {
+            return ((Hash) hash).vget(key);
+        }
+    }
+
     private static final class FCompose extends Fun2 {
         Object apply2(Object f, Object g) {
             return new Compose(f, g);
@@ -334,6 +340,7 @@ public final class Core {
     public static final Fun COMPOSE = new FCompose();
     public static final Fun CONS = new Cons();
     public static final Fun NOT = new Not();
+    public static final Fun AT = new At();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
