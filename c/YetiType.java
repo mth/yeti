@@ -254,7 +254,8 @@ public final class YetiType implements YetiParser, YetiCode {
                         ? (param[1].type == NONE ? "list<" :
                                 param[1].type == NUM ? "array<" : "list?<")
                           + param[0].str(vars) + ">"
-                        : param[2].type == MAP_MARKER
+                        : param[2].type == MAP_MARKER ||
+                          param[1].type != NUM && param[1].type != VAR
                             ? "hash<" + param[1].str(vars) + ", "
                                       + param[0].str(vars) + ">"
                             :  "map<" + param[1].str(vars) + ", "
