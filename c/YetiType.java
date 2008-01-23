@@ -102,7 +102,7 @@ public final class YetiType implements YetiParser, YetiCode {
 
     static final String[] TYPE_NAMES =
         { "var", "()", "string", "number", "bool", "char",
-          "none", "list", "map", "fun", "list", "struct", "variant" };
+          "none", "list", "hash", "fun", "list", "struct", "variant" };
 
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
@@ -204,36 +204,67 @@ public final class YetiType implements YetiParser, YetiCode {
             this.param = param;
         }
 
-        public String toString() {
+        private static String hstr(Map m, Map vars) {
+            if (m == null) {
+                return "";
+            }
+            StringBuffer res = new StringBuffer();
+            for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
+                Map.Entry e = (Map.Entry) i.next();
+                if (res.length() != 0) {
+                    res.append(", ");
+                }
+                res.append(e.getKey());
+                res.append(" is ");
+                res.append(((Type) e.getValue()).str(vars));
+            }
+            return res.toString();
+        }
+
+        private String str(Map vars) {
             if (ref != null) {
                 return ref.toString();
             }
             switch (type) {
-                case VAR:
-                    return '\'' + Integer.toString(hashCode(), 36);
+                case VAR: {
+                    String v = (String) vars.get(this);
+                    if (v == null) {
+                        v = "";
+                        int n = vars.size();
+                        do {
+                            v += (char) ('a' + n % 26);
+                            n /= 26;
+                        } while (n > 0);
+                        vars.put(this, v);
+                    }
+                    return v;
+                }
                 case FUN:
                     return (param[0].type == FUN
-                        ? "(" + param[0] + ")" : param[0]) + " -> " + param[1];
+                        ? "(" + param[0].str(vars) + ")"
+                        : param[0].str(vars)) + " -> " + param[1].str(vars);
                 case STRUCT:
-                    return "{" + partialMembers + " <= " + finalMembers + "}";
+                    return "{" + hstr(partialMembers, vars)
+                         + " <= " + hstr(finalMembers, vars) + "}";
                 case VARIANT:
-                    return "[" + partialMembers + " => " + finalMembers + "]";
+                    return "[" + hstr(partialMembers, vars)
+                         + " => " + hstr(finalMembers, vars) + "]";
                 case MAP:
-                    if (param[2].type == LIST_MARKER) {
-                        if (param[1].type == NUM) {
-                            return "array<" + param[0] + ">";
-                        }
-                        return "list<" + param[0] + ">";
-                    } 
-                    if (param[2].type == MAP_MARKER) {
-                        return "hash<" + param[1] + ", " + param[0] + ">";
-                    }
-                    if (param[1].type == VAR) {
-                        return "collection<" + param[0] + ">";
-                    }
-                    return "collection<" + param[1] + ", " + param[0] + ">";
+                    return param[2].type == LIST_MARKER
+                        ? (param[1].type == NONE ? "list<" :
+                                param[1].type == NUM ? "array<" : "list?<")
+                          + param[0].str(vars) + ">"
+                        : param[2].type == MAP_MARKER
+                            ? "hash<" + param[1].str(vars) + ", "
+                                      + param[0].str(vars) + ">"
+                            :  "map<" + param[1].str(vars) + ", "
+                                      + param[0].str(vars) + ">";
             }
             return TYPE_NAMES[type];
+        }
+
+        public String toString() {
+            return str(new HashMap());
         }
         
         Type deref() {
@@ -633,7 +664,7 @@ public final class YetiType implements YetiParser, YetiCode {
             unify(fun.type, new Type(FUN, applyFun));
         } catch (TypeException ex) {
             throw new CompileException(where,
-                "Cannot apply " + arg.type + " to a " + fun.type + "\n    " +
+                "Cannot apply " + arg.type + " to " + fun.type + "\n    " +
                 ex.getMessage());
         }
         return fun.apply(arg, applyFun[1], where.line);
@@ -671,7 +702,7 @@ public final class YetiType implements YetiParser, YetiCode {
             unify(fun.type, new Type(FUN, afun));
         } catch (TypeException ex) {
             throw new CompileException(section,
-                "Cannot apply " + arg.type + " as a 2nd argument to a " +
+                "Cannot apply " + arg.type + " as a 2nd argument to " +
                 fun.type + "\n    " + ex.getMessage());
         }
         return fun.apply2nd(arg, new Type(FUN, r), section.line);
