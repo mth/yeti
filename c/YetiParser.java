@@ -991,6 +991,7 @@ interface YetiParser {
                                             new Node[parts.size()]));
         }
 
+        // ugly all-in-one bastard type expression parser
         TypeNode readType(boolean checkVariant) {
             int i = skipSpace();
             if (p >= src.length || src[i] == ')' || src[i] == '>') {
@@ -998,9 +999,10 @@ interface YetiParser {
                 return null;
             }
             int sline = line, scol = i - lineStart;
+            TypeNode res;
             if (src[i] == '(') {
                 p = i + 1;
-                TypeNode res = readType(true);
+                res = readType(true);
                 if (p >= src.length || src[p] != ')') {
                     if (res == null)
                         throw new CompileException(sline, scol, "Unclosed (");
@@ -1008,54 +1010,58 @@ interface YetiParser {
                                                "Expecting ) here");
                 }
                 ++p;
-                return res != null ? res
-                        : (TypeNode) new TypeNode("()", null).pos(sline, scol);
-            }
-            int start = i;
-            char c;
-            while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'))
-                ++i;
-            if (i == start)
-                throw new CompileException(sline, scol,
-                            "Expected type identifier, not '" +
-                            src[i] + "' in the type expression");
-            p = i;
-            String sym = new String(src, start, i - start).intern();
-            ArrayList param = new ArrayList();
-            if (Character.isUpperCase(src[start])) {
-                TypeNode node = readType(false);
-                if (node == null)
-                    throw new CompileException(line, p - lineStart,
-                                    "Expecting variant argument");
-                node =  new TypeNode(sym, new TypeNode[] { node });
-                node.pos(sline, scol);
-                if (!checkVariant) {
-                    return node;
+                if (res == null) {
+                    res = new TypeNode("()", null);
+                    res.pos(sline, scol);
                 }
-                param.add(node);
-                while ((p = skipSpace() + 1) < src.length &&
-                       src[p - 1] == '|' &&
-                       (node = readType(false)) != null)
+            } else {
+                int start = i;
+                char c;
+                while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'))
+                    ++i;
+                if (i == start)
+                    throw new CompileException(sline, scol,
+                                "Expected type identifier, not '" +
+                                src[i] + "' in the type expression");
+                p = i;
+                String sym = new String(src, start, i - start).intern();
+                ArrayList param = new ArrayList();
+                if (Character.isUpperCase(src[start])) {
+                    TypeNode node = readType(false);
+                    if (node == null)
+                        throw new CompileException(line, p - lineStart,
+                                        "Expecting variant argument");
+                    node =  new TypeNode(sym, new TypeNode[] { node });
+                    node.pos(sline, scol);
+                    if (!checkVariant) {
+                        return node;
+                    }
                     param.add(node);
-                --p;
-                return (TypeNode) new TypeNode("|", (TypeNode[]) param.toArray(
+                    while ((p = skipSpace() + 1) < src.length &&
+                           src[p - 1] == '|' &&
+                           (node = readType(false)) != null)
+                        param.add(node);
+                    --p;
+                    return (TypeNode)
+                        new TypeNode("|", (TypeNode[]) param.toArray(
                                 new TypeNode[param.size()])).pos(sline, scol);
-            }
-            if ((p = skipSpace()) < src.length && src[p] == '<') {
-                ++p;
-                for (TypeNode node; (node = readType(true)) != null; ++p) {
-                    param.add(node);
-                    if ((p = skipSpace()) >= src.length || src[p] != ',')
-                        break;
                 }
-                if (p >= src.length || src[p] != '>')
-                    throw new CompileException(line, p - lineStart,
-                                               "Expecting > here");
-                ++p;
-            }
-            TypeNode res = new TypeNode(sym,
+                if ((p = skipSpace()) < src.length && src[p] == '<') {
+                    ++p;
+                    for (TypeNode node; (node = readType(true)) != null; ++p) {
+                        param.add(node);
+                        if ((p = skipSpace()) >= src.length || src[p] != ',')
+                            break;
+                    }
+                    if (p >= src.length || src[p] != '>')
+                        throw new CompileException(line, p - lineStart,
+                                                   "Expecting > here");
+                    ++p;
+                }
+                res = new TypeNode(sym,
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
-            res.pos(sline, scol);
+                res.pos(sline, scol);
+            }
             if ((p = skipSpace()) + 1 >= src.length ||
                     src[p] != '-' || src[p + 1] != '>')
                 return res;
