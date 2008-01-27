@@ -412,6 +412,53 @@ interface YetiParser {
         }
     }
 
+    class TypeNode extends Node {
+        String name;
+        TypeNode[] param;
+
+        TypeNode(String name, TypeNode[] param) {
+            this.name = name;
+            this.param = param;
+        }
+
+        String str() {
+            if (name == "->")
+                return "(" + param[0].str() + " -> " + param[1].str() + ")";
+            StringBuffer buf = new StringBuffer();
+            if (name == "|") {
+                for (int i = 0; i < param.length; ++i) {
+                    if (i != 0)
+                        buf.append(" | ");
+                    buf.append(param[i].str());
+                }
+                return buf.toString();
+            }
+            if (param == null || param.length == 0)
+                return name;
+            buf.append(name);
+            buf.append('<');
+            for (int i = 0; i < param.length; ++i) {
+                if (i != 0)
+                    buf.append(", ");
+                buf.append(param[i].str());
+            }
+            buf.append('>');
+            return buf.toString();
+        }
+    }
+
+    class IsOp extends Node {
+        TypeNode type;
+
+        IsOp(TypeNode type) {
+            this.type = type;
+        }
+
+        String str() {
+            return "is " + type.str();
+        }
+    }
+
     class ParseExpr {
         private boolean lastOp = true;
         private BinOp root = new BinOp(null, -1, false);
@@ -519,13 +566,7 @@ interface YetiParser {
             this.flags = flags;
         }
 
-        private Node fetch() {
-            Node res;
-            if (prefetched != null) {
-                res = (Node) prefetched.first();
-                prefetched = prefetched.rest();
-                return res;
-            }
+        private int skipSpace() {
             char[] src = this.src;
             int i = p;
             char c;
@@ -563,11 +604,23 @@ interface YetiParser {
                         continue;
                     }
                 }
-                break;
+                return i;
             }
+        }
+
+        private Node fetch() {
+            Node res;
+            if (prefetched != null) {
+                res = (Node) prefetched.first();
+                prefetched = prefetched.rest();
+                return res;
+            }
+            int i = skipSpace();
             if (i >= src.length) {
                 return EOF;
             }
+            char[] src = this.src;
+            char c;
             p = i + 1;
             int line = this.line, col = p - lineStart;
             switch (src[i]) {
@@ -664,6 +717,13 @@ interface YetiParser {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
             } else if (s == "div") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
+            } else if (s == "is") {
+                TypeNode t = readType(true);
+                if (t == null) {
+                    throw new CompileException(line, col,
+                                "Expecting type expression");
+                }
+                return new IsOp(t).pos(line, col);
             } else if (s == "var") {
                 res = new VarSym();
             } else if (s == "load") {
@@ -929,6 +989,84 @@ interface YetiParser {
             }
             return new ConcatStr((Node[]) parts.toArray(
                                             new Node[parts.size()]));
+        }
+
+        TypeNode readType(boolean checkVariant) {
+            int i = skipSpace();
+            if (p >= src.length || src[i] == ')' || src[i] == '>') {
+                p = i;
+                return null;
+            }
+            int sline = line, scol = i - lineStart;
+            if (src[i] == '(') {
+                p = i + 1;
+                TypeNode res = readType(true);
+                if (p >= src.length || src[p] != ')') {
+                    if (res == null)
+                        throw new CompileException(sline, scol, "Unclosed (");
+                    throw new CompileException(line, p - lineStart,
+                                               "Expecting ) here");
+                }
+                ++p;
+                return res != null ? res
+                        : (TypeNode) new TypeNode("()", null).pos(sline, scol);
+            }
+            int start = i;
+            char c;
+            while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'))
+                ++i;
+            if (i == start)
+                throw new RuntimeException(sline +":"+ scol +
+                            "Expected type identifier, not '" +
+                            src[i] + "' in the type expression");
+            p = i;
+            String sym = new String(src, start, i - start).intern();
+            ArrayList param = new ArrayList();
+            if (Character.isUpperCase(src[start])) {
+                TypeNode node = readType(false);
+                if (node == null)
+                    throw new CompileException(line, p - lineStart,
+                                    "Expecting variant argument");
+                node =  new TypeNode(sym, new TypeNode[] { node });
+                node.pos(sline, scol);
+                if (!checkVariant) {
+                    return node;
+                }
+                param.add(node);
+                while ((p = skipSpace() + 1) < src.length &&
+                       src[p - 1] == '|' &&
+                       (node = readType(false)) != null)
+                    param.add(node);
+                --p;
+                return (TypeNode) new TypeNode("|", (TypeNode[]) param.toArray(
+                                new TypeNode[param.size()])).pos(sline, scol);
+            }
+            if ((p = skipSpace()) < src.length && src[p] == '<') {
+                ++p;
+                for (TypeNode node; (node = readType(true)) != null;) {
+                    param.add(node);
+                    if ((p = skipSpace()) >= src.length || src[p] != ',')
+                        break;
+                }
+                if (p >= src.length || src[p] != '>')
+                    throw new CompileException(line, p - lineStart,
+                                               "Expecting > here");
+            }
+            TypeNode res = new TypeNode(sym,
+                        (TypeNode[]) param.toArray(new TypeNode[param.size()]));
+            res.pos(sline, scol);
+            if ((p = skipSpace()) + 1 >= src.length ||
+                    src[p] != '-' || src[p + 1] != '>')
+                return res;
+            sline = line;
+            scol = p - lineStart;
+            p += 2;
+            TypeNode arg = readType(false);
+            if (arg == null)
+                throw new CompileException(sline, scol,
+                                "Expecting argument type after ->");
+            return (TypeNode) new TypeNode("->", new TypeNode[] { res, arg })
+                            .pos(sline, scol);
         }
 
         Node parse() {
