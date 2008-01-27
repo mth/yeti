@@ -1016,7 +1016,7 @@ interface YetiParser {
             while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'))
                 ++i;
             if (i == start)
-                throw new RuntimeException(sline +":"+ scol +
+                throw new CompileException(sline, scol,
                             "Expected type identifier, not '" +
                             src[i] + "' in the type expression");
             p = i;
@@ -1043,7 +1043,7 @@ interface YetiParser {
             }
             if ((p = skipSpace()) < src.length && src[p] == '<') {
                 ++p;
-                for (TypeNode node; (node = readType(true)) != null;) {
+                for (TypeNode node; (node = readType(true)) != null; ++p) {
                     param.add(node);
                     if ((p = skipSpace()) >= src.length || src[p] != ',')
                         break;
@@ -1051,6 +1051,7 @@ interface YetiParser {
                 if (p >= src.length || src[p] != '>')
                     throw new CompileException(line, p - lineStart,
                                                "Expecting > here");
+                ++p;
             }
             TypeNode res = new TypeNode(sym,
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
