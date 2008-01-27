@@ -433,8 +433,24 @@ interface YetiParser {
                 }
                 return buf.toString();
             }
+            if (name == "") {
+                buf.append('{');
+                for (int i = 0; i < param.length; ++i) {
+                    if (i != 0) {
+                        buf.append("; ");
+                    }
+                    buf.append(param[i].name);
+                    buf.append(" is ");
+                    buf.append(param[i].param[0].str());
+                }
+                buf.append('}');
+                return buf.toString();
+            }
             if (param == null || param.length == 0)
                 return name;
+            if (Character.isUpperCase(name.charAt(0))) {
+                return "(" + name + " " + param[0].str() + ")";
+            }
             buf.append(name);
             buf.append('<');
             for (int i = 0; i < param.length; ++i) {
@@ -1014,6 +1030,30 @@ interface YetiParser {
                     res = new TypeNode("()", null);
                     res.pos(sline, scol);
                 }
+            } else if (src[i] == '{') {
+                p = i + 1;
+                Node t, field = null;
+                ArrayList param = new ArrayList();
+                String expect = "Expecting field name or '}' here, not ";
+                while ((field = fetch()) instanceof Sym) {
+                    if (!((t = fetch()) instanceof IsOp)) {
+                        throw new CompileException(t,
+                            "Expecting 'is' after field name, not " + t);
+                    }
+                    param.add(new TypeNode(((Sym) field).sym,
+                                new TypeNode[] { ((IsOp) t).type }));
+                    if (!((field = fetch()) instanceof SepOp) ||
+                        ((SepOp) field).sep != ';') {
+                        expect = "Expecting ';' or '}' here, not ";
+                        break;
+                    }
+                }
+                if (!(field instanceof CloseBracket) || src[p++] != '}') {
+                    throw new CompileException(field, expect + field);
+                }
+                res = new TypeNode("",
+                        (TypeNode[]) param.toArray(new TypeNode[param.size()]));
+                res.pos(sline, scol);
             } else {
                 int start = i;
                 char c;

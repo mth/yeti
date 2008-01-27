@@ -129,7 +129,7 @@ public class YetiC implements SourceReader {
         if(argv.length == 0) {
             help();
         }
-        boolean eval = false, exec = true;
+        boolean eval = false, exec = true, printType = false;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
         char[] src = null;
@@ -144,9 +144,6 @@ public class YetiC implements SourceReader {
                 case 'e':
                     src = argv[i].toCharArray();
                     break;
-                case 'm':
-                    System.out.println(YetiTypeVisitor.getType(null, argv[i]));
-                    break;
                 }
                 continue;
             }
@@ -159,7 +156,7 @@ public class YetiC implements SourceReader {
                     if (xflag) {
                         switch (argv[i].charAt(j)) {
                         case 'm':
-                            expect.append('m');
+                            printType = true;
                             break;
                         case 'p':
                             flags |= CF_PRINT_PARSE_TREE;
@@ -213,6 +210,20 @@ public class YetiC implements SourceReader {
             if (eval) {
                 flags |= CF_COMPILE_MODULE;
                 compilation.compile(null, mainClass, src, flags);
+                if (printType) {
+                    System.out.println((YetiType.Type)
+                        compilation.types.get(mainClass));
+                    return;
+                }
+            } else if (printType) {
+                if (exec) {
+                    YetiCode.currentCompileCtx.set(compilation);
+                }
+                for (int i = 0; i < sources.size(); ++i) {
+                    System.out.println(YetiTypeVisitor.getType(null,
+                        (String) sources.get(i)));
+                }
+                return;
             } else {
                 for (int i = 0, cnt = sources.size(); i < cnt; ++i) {
                     mainClass =
