@@ -204,19 +204,36 @@ public final class YetiType implements YetiParser, YetiCode {
             this.param = param;
         }
 
-        private static String hstr(Map m, Map vars) {
-            if (m == null) {
-                return "";
-            }
+        private String hstr(Map vars) {
             StringBuffer res = new StringBuffer();
-            for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
-                Map.Entry e = (Map.Entry) i.next();
-                if (res.length() != 0) {
-                    res.append(", ");
+            boolean variant = type == VARIANT;
+            if (partialMembers != null) {
+                for (Iterator i = partialMembers.entrySet().iterator();
+                     i.hasNext();) {
+                    Map.Entry e = (Map.Entry) i.next();
+                    if (res.length() != 0) {
+                        res.append(variant ? " | " : "; ");
+                    }
+                    res.append(e.getKey());
+                    res.append(variant ? " " : " is ");
+                    res.append(((Type) e.getValue()).str(vars));
                 }
-                res.append(e.getKey());
-                res.append(" is ");
-                res.append(((Type) e.getValue()).str(vars));
+            }
+            if (finalMembers != null) {
+                for (Iterator i = finalMembers.entrySet().iterator();
+                     i.hasNext();) {
+                    Map.Entry e = (Map.Entry) i.next();
+                    if (partialMembers != null &&
+                        partialMembers.containsKey(e.getKey())) {
+                        continue;
+                    }
+                    if (res.length() != 0) {
+                        res.append(variant ? " | " : "; .");
+                    }
+                    res.append(e.getKey());
+                    res.append(variant ? " " : " is ");
+                    res.append(((Type) e.getValue()).str(vars));
+                }
             }
             return res.toString();
         }
@@ -244,11 +261,9 @@ public final class YetiType implements YetiParser, YetiCode {
                         ? "(" + param[0].str(vars) + ")"
                         : param[0].str(vars)) + " -> " + param[1].str(vars);
                 case STRUCT:
-                    return "{" + hstr(partialMembers, vars)
-                         + " <= " + hstr(finalMembers, vars) + "}";
+                    return "{" + hstr(vars) + "}";
                 case VARIANT:
-                    return "[" + hstr(partialMembers, vars)
-                         + " => " + hstr(finalMembers, vars) + "]";
+                    return hstr(vars);
                 case MAP:
                     return param[2].type == LIST_MARKER
                         ? (param[1].type == NONE ? "list<" :
@@ -346,8 +361,8 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void finalizeStruct(Type partial, Type src) throws TypeException {
-        if (src.finalMembers == null || partial.partialMembers == null ||
-                partial.finalMembers != null) {
+        if (src.finalMembers == null || partial.partialMembers == null /*||
+                partial.finalMembers != null*/) {
             return; // nothing to check
         }
         Iterator i = partial.partialMembers.entrySet().iterator();
@@ -356,7 +371,7 @@ public final class YetiType implements YetiParser, YetiCode {
             Type ff = (Type) src.finalMembers.get(entry.getKey());
             if (ff == null) {
                 throw new TypeException("Type mismatch: " + src + " => "
-                        + partial + " (field missing: " + entry.getKey() + ")");
+                       + partial + " (member missing: " + entry.getKey() + ")");
             }
             Type partField = (Type) entry.getValue();
             if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
@@ -675,7 +690,7 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         Type result = new Type(type, tp);
         result.partialMembers = members;
-        result.finalMembers = members;
+        result.finalMembers = new HashMap(members);
         return result;
     }
 
