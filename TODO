@@ -2,8 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Fix MList == [] / != []
-* Type declarations
-  + Better type descriptions in error messages
 * Real pattern matching in case
 * Better error messages
 * Built-in regex support

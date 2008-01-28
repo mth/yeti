@@ -1125,7 +1125,7 @@ interface YetiParser {
             TypeNode arg = readType(false);
             if (arg == null)
                 throw new CompileException(sline, scol,
-                                "Expecting argument type after ->");
+                                "Expecting return type after ->");
             return (TypeNode) new TypeNode("->", new TypeNode[] { res, arg })
                             .pos(sline, scol);
         }

@@ -1016,14 +1016,14 @@ public final class YetiType implements YetiParser, YetiCode {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
                 }
+                if (bind.type != null) {
+                    isOp(bind, bind.type, binder.st, depth);
+                }
                 if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
                                      depth, scope);
                 } else {
                     scope = new Scope(scope, bind.name, binder);
-                }
-                if (bind.type != null) {
-                    isOp(bind, bind.type, binder.st, depth);
                 }
                 if (bind.var) {
                     registerVar(binder, scope.outer);
