@@ -695,7 +695,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void expectsParam(TypeNode t, int count) {
-        if (t.param.length != count) {
+        if (t.param == null ? count != 0 : t.param.length != count) {
             throw new CompileException(t, "type " + t.name + " expects "
                                           + count + " parameters");
         }
