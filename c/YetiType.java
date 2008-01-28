@@ -1025,14 +1025,14 @@ public final class YetiType implements YetiParser, YetiCode {
                     Function lambda = new Function(new Type(depth + 1));
                     binder = new BindExpr(lambda, bind.var);
                     lambda.selfBind = binder;
-                    lambda(lambda, (Lambda) bind.expr,
-                           new Scope(scope, bind.name, binder), depth + 1);
+                    lambdaBind(lambda, bind,
+                               new Scope(scope, bind.name, binder), depth + 1);
                 } else {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
-                }
-                if (bind.type != null) {
-                    isOp(bind, bind.type, binder.st, depth);
+                    if (bind.type != null) {
+                        isOp(bind, bind.type, binder.st, depth);
+                    }
                 }
                 if (binder.st.polymorph && !bind.var) {
                     scope = bindPoly(bind.name, binder.st.type, binder,
@@ -1099,11 +1099,23 @@ public final class YetiType implements YetiParser, YetiCode {
         return result;
     }
 
+    static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
+        if (bind.type != null) {
+            isOp(bind, bind.type, to, depth);
+        }
+        return lambda(to, (Lambda) bind.expr, scope, depth);
+    } 
+
     static Code lambda(Function to, Lambda lambda, Scope scope, int depth) {
+        Type expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
         Scope bodyScope;
         if (lambda.arg instanceof Sym) {
-            to.arg.type = new Type(depth);
+            if (expected != null && expected.type == FUN) {
+                to.arg.type = expected.param[0];
+            } else {
+                to.arg.type = new Type(depth);
+            }
             bodyScope = new Scope(scope, ((Sym) lambda.arg).sym, to);
         } else if (lambda.arg instanceof UnitLiteral) {
             to.arg.type = UNIT_TYPE;
@@ -1114,7 +1126,8 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         bodyScope.closure = to;
         if (lambda.expr instanceof Lambda) {
-            Function f = new Function(null);
+            Function f = new Function(expected != null && expected.type == FUN
+                                      ? expected.param[1] : null);
             // make f to know about its outer scope before processing it
             to.setBody(f);
             lambda(f, (Lambda) lambda.expr, bodyScope, depth);
@@ -1127,7 +1140,8 @@ public final class YetiType implements YetiParser, YetiCode {
                 unify(fun, to.type);
             } catch (TypeException ex) {
                 throw new CompileException(lambda,
-                    ex.getMessage() + " (on recursive binding)");
+                        "Function type " + fun + " is not " + to.type
+                        + " (self-binding)\n    " + ex.getMessage());
             }
         }
         to.type = fun;
@@ -1174,7 +1188,7 @@ public final class YetiType implements YetiParser, YetiCode {
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
             if (field.expr instanceof Lambda) {
-                lambda((Function) values[i], (Lambda) field.expr, local, depth);
+                lambdaBind((Function) values[i], field, local, depth);
             }
         }
         result.type = new Type(STRUCT,
