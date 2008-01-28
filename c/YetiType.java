@@ -101,7 +101,7 @@ public final class YetiType implements YetiParser, YetiCode {
           NO_TYPE, LIST_TYPE, MAP_TYPE };
 
     static final String[] TYPE_NAMES =
-        { "var", "()", "string", "number", "bool", "char",
+        { "var", "()", "string", "number", "boolean", "char",
           "none", "list", "hash", "fun", "list", "struct", "variant" };
 
     static final Scope ROOT_SCOPE =
@@ -229,7 +229,7 @@ public final class YetiType implements YetiParser, YetiCode {
                 case VAR: {
                     String v = (String) vars.get(this);
                     if (v == null) {
-                        v = "";
+                        v = "'";
                         int n = vars.size();
                         do {
                             v += (char) ('a' + n % 26);
@@ -342,7 +342,7 @@ public final class YetiType implements YetiParser, YetiCode {
     }
 
     static void mismatch(Type a, Type b) throws TypeException {
-        throw new TypeException("Type mismatch: " + a + " <> " + b);
+        throw new TypeException("Type mismatch: " + a + " is not " + b);
     }
 
     static void finalizeStruct(Type partial, Type src) throws TypeException {
@@ -624,6 +624,10 @@ public final class YetiType implements YetiParser, YetiCode {
                               new Lambda(new Sym("_").pos(op.line, op.col),
                                          op.right, null), scope, depth);
             }
+            if (op.op == "is") {
+                return isOp(op, ((IsOp) op).type,
+                            analyze(op.right, scope, depth), depth);
+            }
             // TODO: unary -
             return apply(op.right,
                          apply(op, resolve(op.op, op, scope, depth),
@@ -657,6 +661,105 @@ public final class YetiType implements YetiParser, YetiCode {
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
+    }
+
+    static Type nodeToMembers(int type, TypeNode[] param, Map free, int depth) {
+        Map members = new HashMap();
+        Type[] tp = new Type[param.length];
+        for (int i = 0; i < param.length; ++i) {
+            tp[i] = nodeToType(param[i].param[0], free, depth);
+            if (members.put(param[i].name, tp[i]) != null) {
+                throw new CompileException(param[i], "Duplicate field name "
+                                    + param[i].name + " in structure type");
+            }
+        }
+        Type result = new Type(type, tp);
+        result.partialMembers = members;
+        result.finalMembers = members;
+        return result;
+    }
+
+    static void expectsParam(TypeNode t, int count) {
+        if (t.param.length != count) {
+            throw new CompileException(t, "type " + t.name + " expects "
+                                          + count + " parameters");
+        }
+    }
+
+    static final Object[][] PRIMITIVE_TYPE_MAPPING = {
+        { "()",      UNIT_TYPE },
+        { "boolean", BOOL_TYPE },
+        { "char",    CHAR_TYPE },
+        { "number",  NUM_TYPE  },
+        { "string",  STR_TYPE  }
+    };
+
+    static Type nodeToType(TypeNode node, Map free, int depth) {
+        String name = node.name;
+        for (int i = PRIMITIVE_TYPE_MAPPING.length; --i >= 0;) {
+            if (PRIMITIVE_TYPE_MAPPING[i][0] == name) {
+                expectsParam(node, 0);
+                return (Type) PRIMITIVE_TYPE_MAPPING[i][1];
+            }
+        }
+        if (name == "") {
+            return nodeToMembers(STRUCT, node.param, free, depth);
+        }
+        if (name == "|") {
+            return nodeToMembers(VARIANT, node.param, free, depth);
+        }
+        if (name == "->") {
+            expectsParam(node, 2);
+            Type[] tp = { nodeToType(node.param[0], free, depth),
+                          nodeToType(node.param[1], free, depth) };
+            return new Type(FUN, tp);
+        }
+        if (name == "array") {
+            expectsParam(node, 1);
+            Type[] tp = { nodeToType(node.param[0], free, depth),
+                          NUM_TYPE, LIST_TYPE };
+            return new Type(MAP, tp);
+        }
+        if (name == "list") {
+            expectsParam(node, 1);
+            Type[] tp = { nodeToType(node.param[0], free, depth),
+                          NO_TYPE, LIST_TYPE };
+            return new Type(MAP, tp);
+        }
+        if (name == "list?") {
+            expectsParam(node, 1);
+            Type[] tp = { nodeToType(node.param[0], free, depth),
+                          new Type(depth), LIST_TYPE };
+            return new Type(MAP, tp);
+        }
+        if (name == "hash") {
+            expectsParam(node, 2);
+            Type[] tp = { nodeToType(node.param[1], free, depth),
+                          nodeToType(node.param[0], free, depth), MAP_TYPE };
+            return new Type(MAP, tp);
+        }
+        if (Character.isUpperCase(name.charAt(0))) {
+            return nodeToMembers(VARIANT, new TypeNode[] { node }, free, depth);
+        }
+        if (name.startsWith("'")) {
+            Type t = (Type) free.get(name);
+            if (t == null) {
+                free.put(name, t = new Type(depth));
+            }
+            return t;
+        }
+        throw new CompileException(node, "Unknown type: " + name);
+    }
+
+    static Code isOp(Node is, TypeNode type, Code value, int depth) {
+        Type t = nodeToType(type, new HashMap(), depth);
+        try {
+            unify(value.type, t);
+        } catch (TypeException ex) {
+            throw new CompileException(is, ex.getMessage() +
+                        " (when checking " + value.type + " is " + t + ")");
+        }
+        return value;
     }
 
     static Code apply(Node where, Code fun, Code arg, int depth) {
@@ -918,6 +1021,9 @@ public final class YetiType implements YetiParser, YetiCode {
                                      depth, scope);
                 } else {
                     scope = new Scope(scope, bind.name, binder);
+                }
+                if (bind.type != null) {
+                    isOp(bind, bind.type, binder.st, depth);
                 }
                 if (bind.var) {
                     registerVar(binder, scope.outer);

@@ -130,6 +130,7 @@ interface YetiParser {
     class Bind extends Node {
         String name;
         Node expr;
+        TypeNode type;
         boolean var;
 
         Bind(List args, Node expr) {
@@ -156,7 +157,12 @@ interface YetiParser {
                 throw new CompileException((BinOp) args.get(first),
                         "Bad argument on binding (use := for assignment, not =)");
             }
-            for (int i = args.size(); --i >= first;) {
+            int i = args.size() - 1;
+            if (i >= first && args.get(i) instanceof IsOp) {
+                type = ((IsOp) args.get(i)).type;
+                --i;
+            }
+            for (; i >= first; --i) {
                 expr = new Lambda((Node) args.get(i), expr,
                         i == first ? name : null);
             }
@@ -382,6 +388,7 @@ interface YetiParser {
         int prio;
         String op;
         boolean toRight;
+        boolean postfix;
         Node left;
         Node right;
         BinOp parent;
@@ -409,6 +416,21 @@ interface YetiParser {
 
         String str() {
             return "(" + sym + " " + arg.str() + ")";
+        }
+    }
+
+    class IsOp extends BinOp {
+        TypeNode type;
+
+        IsOp(TypeNode type) {
+            super("is", Parser.IS_OP_LEVEL, true);
+            postfix = true;
+            this.type = type;
+        }
+
+        String str() {
+            return (right == null ? "<>" : right.show())
+                        + " is " + type.str();
         }
     }
 
@@ -463,18 +485,6 @@ interface YetiParser {
         }
     }
 
-    class IsOp extends Node {
-        TypeNode type;
-
-        IsOp(TypeNode type) {
-            this.type = type;
-        }
-
-        String str() {
-            return "is " + type.str();
-        }
-    }
-
     class ParseExpr {
         private boolean lastOp = true;
         private BinOp root = new BinOp(null, -1, false);
@@ -499,8 +509,8 @@ interface YetiParser {
             } else if (lastOp) {
                 throw new CompileException(op, "Do not stack operators");
             } else {
-                while (to.parent != null && (to.prio < op.prio
-                                        || to.prio == op.prio && op.toRight)) {
+                while (to.parent != null && (to.postfix || to.prio < op.prio ||
+                                            to.prio == op.prio && op.toRight)) {
                     to = to.parent;
                 }
                 op.right = to.right;
@@ -508,7 +518,7 @@ interface YetiParser {
             op.parent = to;
             to.right = op;
             cur = op;
-            lastOp = true;
+            lastOp = !op.postfix;
         }
 
         void add(Node node) {
@@ -525,8 +535,8 @@ interface YetiParser {
         }
 
         Node result() {
-            if (cur.left == null && cur.prio != -1 && cur.prio != 1 ||
-                cur.right == null) {
+            if (cur.left == null && cur.prio != -1 && cur.prio != 1 &&
+                !cur.postfix || cur.right == null) {
                 throw new CompileException(cur, "Expecting some value");
             }
             return root.right;
@@ -549,11 +559,13 @@ interface YetiParser {
             { null }, // non-standard operators
             { "." },
             { ":=" },
+            { "is" },
             { ":" }
         };
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
         private static final int DOT_OP_LEVEL = opLevel(".");
+        static final int IS_OP_LEVEL = opLevel("is");
         private static final Eof EOF = new Eof() {
             public String toString() {
                 return "EOF";
@@ -770,7 +782,8 @@ interface YetiParser {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
-                           (partial = (BinOp) o).parent == null) {
+                           (partial = (BinOp) o).parent == null &&
+                           !partial.postfix) {
                     s = partial.op;
                     if (s == FIELD_OP) {
                         throw new CompileException(partial,
@@ -1036,9 +1049,10 @@ interface YetiParser {
                 ArrayList param = new ArrayList();
                 String expect = "Expecting field name or '}' here, not ";
                 while ((field = fetch()) instanceof Sym) {
-                    if (!((t = fetch()) instanceof IsOp)) {
+                    if (!((t = fetch()) instanceof IsOp) ||
+                        ((BinOp) t).right != null) {
                         throw new CompileException(t,
-                            "Expecting 'is' after field name, not " + t);
+                            "Expecting 'is' after field name");
                     }
                     param.add(new TypeNode(((Sym) field).sym,
                                 new TypeNode[] { ((IsOp) t).type }));
