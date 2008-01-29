@@ -322,6 +322,18 @@ public final class Core {
         }
     }
 
+    private static final class LikeOp extends Fun2 {
+        Object apply2(Object v, Object pattern) {
+            return new Like(pattern).apply(v);
+        }
+    }
+
+    private static final class MatchOp extends Fun2 {
+        Object apply2(Object v, Object pattern) {
+            return new Match(pattern).apply(v);
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
     public static final Fun HEAD = new Head();
@@ -341,6 +353,8 @@ public final class Core {
     public static final Fun CONS = new Cons();
     public static final Fun NOT = new Not();
     public static final Fun AT = new At();
+    public static final Fun LIKE_OP = new LikeOp();
+    public static final Fun MATCH_OP = new MatchOp();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
