@@ -598,6 +598,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         throw new CompileException(where, "Unknown identifier: " + sym);
     }
 
+    static void unusedBinding(Bind bind) {
+        throw new CompileException(bind, "Unused binding: " + bind.name);
+    }
+
     static Code analyze(Node node, Scope scope, int depth) {
         if (node instanceof Sym) {
             String sym = ((Sym) node).sym;
@@ -617,6 +621,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         }
         if (node instanceof Seq) {
             return analSeq(((Seq) node).st, scope, depth);
+        }
+        if (node instanceof Bind) {
+            Function r = singleBind((Bind) node, scope, depth);
+            if (!((BindExpr) r.selfBind).used) {
+                unusedBinding((Bind) node);
+            }
+            return r;
         }
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
@@ -1013,6 +1024,20 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         }
     }
 
+    static Function singleBind(Bind bind, Scope scope, int depth) {
+        if (!(bind.expr instanceof Lambda)) {
+            throw new CompileException(bind,
+                "Closed binding must be a function binding");
+        }
+        // recursive binding
+        Function lambda = new Function(new Type(depth + 1));
+        BindExpr binder = new BindExpr(lambda, bind.var);
+        lambda.selfBind = binder;
+        lambdaBind(lambda, bind,
+                   new Scope(scope, bind.name, binder), depth + 1);
+        return lambda;
+    }
+
     static Code analSeq(Node[] nodes, Scope scope, int depth) {
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr result = null, last = null, cur;
@@ -1021,12 +1046,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 Bind bind = (Bind) nodes[i];
                 BindExpr binder;
                 if (bind.expr instanceof Lambda) {
-                    // recursive binding
-                    Function lambda = new Function(new Type(depth + 1));
-                    binder = new BindExpr(lambda, bind.var);
-                    lambda.selfBind = binder;
-                    lambdaBind(lambda, bind,
-                               new Scope(scope, bind.name, binder), depth + 1);
+                    binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
                 } else {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
@@ -1084,8 +1104,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
         for (int i = bindings.length; --i >= 0;) {
             if (bindings[i] != null && !bindings[i].used) {
-                throw new CompileException(nodes[i],
-                    "Unused binding: " + ((Bind) nodes[i]).name);
+                unusedBinding((Bind) nodes[i]);
             }
         }
         if (last == null) {
