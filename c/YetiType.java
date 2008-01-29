@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public final class YetiType implements YetiParser, YetiCode {
+public final class YetiType implements YetiParser, YetiBuiltins {
     static final int VAR  = 0;
     static final int UNIT = 1;
     static final int STR  = 2;
