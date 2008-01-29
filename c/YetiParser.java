@@ -553,8 +553,8 @@ interface YetiParser {
         private static final String[][] OPS = {
             { "*", "/", "%" },
             { "+", "-" },
-            { "::" },
-            { "<", ">", "<=", ">=", "==", "!=" },
+            { "::", ":~" },
+            { "<", ">", "<=", ">=", "==", "!=", "=~" },
             { null }, // and or
             { null }, // non-standard operators
             { "." },

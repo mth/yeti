@@ -54,6 +54,37 @@ interface YetiCode {
 
     ThreadLocal currentCompileCtx = new ThreadLocal();
 
+    class Constants implements Opcodes {
+        private Map constants = new HashMap();
+        private Ctx sb;
+        String sourceName;
+        Ctx ctx;
+
+        void registerConstant(Object key, final Code code, Ctx ctx_) {
+            final String descr = 'L' + Code.javaType(code.type) + ';';
+            String name = (String) constants.get(key);
+            if (name == null) {
+                if (sb == null) {
+                    sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
+                }
+                name = "_".concat(Integer.toString(ctx.fieldCounter++));
+                ctx.cw.visitField(ACC_STATIC | ACC_FINAL, name, descr,
+                                  null, null).visitEnd();
+                code.gen(sb);
+                sb.m.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
+            }
+            final String fieldName = name;
+            ctx_.m.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
+        }
+
+        void close() {
+            if (sb != null) {
+                sb.m.visitInsn(RETURN);
+                sb.closeMethod();
+            }
+        }
+    }
+
     class CompileCtx implements Opcodes {
         private CodeWriter writer;
         private SourceReader reader;
@@ -112,8 +143,11 @@ interface YetiCode {
                 name = codeTree.moduleName;
                 module = true;
             }
-            Ctx ctx = new Ctx(this, sourceName, null, null)
+            Constants constants = new Constants();
+            constants.sourceName = sourceName;
+            Ctx ctx = new Ctx(this, constants, null, null)
                 .newClass(ACC_PUBLIC, name, null);
+            constants.ctx = ctx;
             if (module) {
                 ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type));
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "eval",
@@ -133,6 +167,7 @@ interface YetiCode {
                 ctx.m.visitInsn(RETURN);
             }
             ctx.closeMethod();
+            constants.close();
         }
 
         void write() throws Exception {
@@ -146,28 +181,28 @@ interface YetiCode {
 
     class Ctx implements Opcodes {
         CompileCtx compilation;
-        String sourceName;
         String className;
         ClassWriter cw;
         MethodVisitor m;
+        Constants constants;
         int localVarCount;
         int fieldCounter;
         int lastLine;
 
-        Ctx(CompileCtx compilation, String sourceName,
+        Ctx(CompileCtx compilation, Constants constants,
                 ClassWriter writer, String className) {
             this.compilation = compilation;
-            this.sourceName = sourceName;
+            this.constants = constants;
             this.cw = writer;
             this.className = className;
         }
 
         Ctx newClass(int flags, String name, String extend) {
-            Ctx ctx = new Ctx(compilation, sourceName,
+            Ctx ctx = new Ctx(compilation, constants,
                     new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
             ctx.cw.visit(V1_2, flags, name, null,
                     extend == null ? "java/lang/Object" : extend, null);
-            ctx.cw.visitSource(sourceName, null);
+            ctx.cw.visitSource(constants.sourceName, null);
             if (compilation.classes.put(name, ctx) != null) {
                 throw new IllegalStateException("Duplicate class: " + name);
             }
@@ -175,7 +210,7 @@ interface YetiCode {
         }
 
         Ctx newMethod(int flags, String name, String type) {
-            Ctx ctx = new Ctx(compilation, sourceName, cw, className);
+            Ctx ctx = new Ctx(compilation, constants, cw, className);
             ctx.m = cw.visitMethod(flags, name, type, null, null);
             ctx.m.visitCode();
             return ctx;
@@ -212,6 +247,10 @@ interface YetiCode {
             m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     "FALSE", "Ljava/lang/Boolean;");
             m.visitLabel(end);
+        }
+
+        void constant(Object key, Code code) {
+            constants.registerConstant(key, code, this);
         }
     }
 
@@ -393,44 +432,58 @@ interface YetiCode {
             return true;
         }
 
+        private static final class Impl extends Code {
+            String jtype, sig;
+            Object val;
+
+            void gen(Ctx ctx) {
+                ctx.m.visitTypeInsn(NEW, jtype);
+                ctx.m.visitInsn(DUP);
+                ctx.m.visitLdcInsn(val);
+                ctx.m.visitMethodInsn(INVOKESPECIAL, jtype, "<init>", sig);
+            }
+        }
+
         void gen(Ctx ctx) {
             if (num instanceof RatNum) {
-                ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
-                ctx.m.visitInsn(DUP);
-                RatNum rat = ((RatNum) num).reduce();
-                ctx.intConst(rat.numerator());
-                ctx.intConst(rat.denominator());
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
-                                      "<init>", "(II)V");
+                ctx.constant(num, new Code() {
+                    { type = YetiType.NUM_TYPE; }
+                    void gen(Ctx ctx) {
+                        ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
+                        ctx.m.visitInsn(DUP);
+                        RatNum rat = ((RatNum) num).reduce();
+                        ctx.intConst(rat.numerator());
+                        ctx.intConst(rat.denominator());
+                        ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
+                                              "<init>", "(II)V");
+                    }
+                });
                 return;
             }
-            String type, sig;
-            Object val;
+            Impl v = new Impl();
             if (num instanceof IntNum) {
-                type = "yeti/lang/IntNum";
+                v.jtype = "yeti/lang/IntNum";
                 if (IntNum.__1.compareTo(num) <= 0 &&
                     IntNum._9.compareTo(num) >= 0) {
-                    ctx.m.visitFieldInsn(GETSTATIC, type,
+                    ctx.m.visitFieldInsn(GETSTATIC, v.jtype,
                         IntNum.__1.equals(num) ? "__1" :
                         IntNum.__2.equals(num) ? "__2" : "_" + num,
                         "Lyeti/lang/IntNum;");
                     return;
                 }
-                val = new Long(num.longValue());
-                sig = "(J)V";
+                v.val = new Long(num.longValue());
+                v.sig = "(J)V";
             } else if (num instanceof BigNum) {
-                type = "yeti/lang/BigNum";
-                val = num.toString();
-                sig = "(Ljava/lang/String;)V";
+                v.jtype = "yeti/lang/BigNum";
+                v.val = num.toString();
+                v.sig = "(Ljava/lang/String;)V";
             } else {
-                type = "yeti/lang/FloatNum";
-                val = new Double(num.doubleValue());
-                sig = "(D)V";
+                v.jtype = "yeti/lang/FloatNum";
+                v.val = new Double(num.doubleValue());
+                v.sig = "(D)V";
             }
-            ctx.m.visitTypeInsn(NEW, type);
-            ctx.m.visitInsn(DUP);
-            ctx.m.visitLdcInsn(val);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, type, "<init>", sig);
+            v.type = YetiType.NUM_TYPE;
+            ctx.constant(num, v);
         }
     }
 
@@ -901,11 +954,16 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/TagCon");
-            ctx.m.visitInsn(DUP);
-            ctx.m.visitLdcInsn(name);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
-                    "<init>", "(Ljava/lang/String;)V");
+            ctx.constant("TAG:".concat(name), new Code() {
+                { type = VariantConstructor.this.type; }
+                void gen(Ctx ctx) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/TagCon");
+                    ctx.m.visitInsn(DUP);
+                    ctx.m.visitLdcInsn(name);
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
+                            "<init>", "(Ljava/lang/String;)V");
+                }
+            });
         }
 
         Code apply(Code arg, YetiType.Type res, int line) {
@@ -972,26 +1030,37 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            if (names.length == 1) {
-                ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitLdcInsn(names[0]);
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selector",
-                                      "<init>", "(Ljava/lang/String;)V");
-                return;
-            }
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/Selectors");
-            ctx.m.visitInsn(DUP);
-            ctx.intConst(names.length);
-            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            StringBuffer buf = new StringBuffer("SELECTMEMBER");
             for (int i = 0; i < names.length; ++i) {
-                ctx.m.visitInsn(DUP);
-                ctx.intConst(i);
-                ctx.m.visitLdcInsn(names[i]);
-                ctx.m.visitInsn(AASTORE);
+                buf.append(':');
+                buf.append(names[i]);
             }
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
-                                  "<init>", "([Ljava/lang/String;)V");
+            ctx.constant(buf.toString(), new Code() {
+                { type = SelectMemberFun.this.type; }
+                void gen(Ctx ctx) {
+                    if (names.length == 1) {
+                        ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
+                        ctx.m.visitInsn(DUP);
+                        ctx.m.visitLdcInsn(names[0]);
+                        ctx.m.visitMethodInsn(INVOKESPECIAL,
+                                "yeti/lang/Selector", "<init>",
+                                "(Ljava/lang/String;)V");
+                        return;
+                    }
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Selectors");
+                    ctx.m.visitInsn(DUP);
+                    ctx.intConst(names.length);
+                    ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+                    for (int i = 0; i < names.length; ++i) {
+                        ctx.m.visitInsn(DUP);
+                        ctx.intConst(i);
+                        ctx.m.visitLdcInsn(names[i]);
+                        ctx.m.visitInsn(AASTORE);
+                    }
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
+                                          "<init>", "([Ljava/lang/String;)V");
+                }
+            });
         }
     }
 
