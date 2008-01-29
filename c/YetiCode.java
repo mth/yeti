@@ -72,6 +72,7 @@ interface YetiCode {
                                   null, null).visitEnd();
                 code.gen(sb);
                 sb.m.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
+                constants.put(key, name);
             }
             final String fieldName = name;
             ctx_.m.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
