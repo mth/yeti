@@ -334,6 +334,14 @@ public final class Core {
         }
     }
 
+    private static final class Empty extends Fun {
+        public Object apply(Object v) {
+            AMList m;
+            return v == null || v instanceof AMList &&
+                    (m = (AMList) v)._size() <= m.start;
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
     public static final Fun HEAD = new Head();
@@ -353,6 +361,7 @@ public final class Core {
     public static final Fun CONS = new Cons();
     public static final Fun NOT = new Not();
     public static final Fun AT = new At();
+    public static final Fun EMPTY = new Empty();
     public static final Fun LIKE_OP = new LikeOp();
     public static final Fun MATCH_OP = new MatchOp();
 

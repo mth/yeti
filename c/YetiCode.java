@@ -1139,6 +1139,28 @@ interface YetiCode {
         }
     }
 
+    class LoopExpr extends Code {
+        Code cond, body;
+
+        LoopExpr(Code cond, Code body) {
+            this.type = YetiType.UNIT_TYPE;
+            this.cond = cond;
+            this.body = body;
+        }
+
+        void gen(Ctx ctx) {
+            Label start = new Label();
+            Label end = new Label();
+            ctx.m.visitLabel(start);
+            cond.genIf(ctx, end, false);
+            body.gen(ctx);
+            ctx.m.visitInsn(POP);
+            ctx.m.visitJumpInsn(GOTO, start);
+            ctx.m.visitLabel(end);
+            ctx.m.visitInsn(ACONST_NULL);
+        }
+    }
+
     class SeqExpr extends Code {
         Code st;
         Code result;

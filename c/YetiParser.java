@@ -155,7 +155,7 @@ interface YetiParser {
             if (first < args.size() && args.get(first) instanceof BinOp &&
                     ((BinOp) args.get(first)).op == FIELD_OP) {
                 throw new CompileException((BinOp) args.get(first),
-                        "Bad argument on binding (use := for assignment, not =)");
+                    "Bad argument on binding (use := for assignment, not =)");
             }
             int i = args.size() - 1;
             if (i >= first && args.get(i) instanceof IsOp) {
@@ -754,6 +754,8 @@ interface YetiParser {
                 return new IsOp(t).pos(line, col);
             } else if (s == "var") {
                 res = new VarSym();
+            } else if (s == "loop") {
+                res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load") {
                 res = new Load(readDotted(false));
             } else {
@@ -784,13 +786,17 @@ interface YetiParser {
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
                            (partial = (BinOp) o).parent == null &&
                            !partial.postfix) {
-                    s = partial.op;
+                    if (partial.op == "loop") {
+                        partial.postfix = true;
+                    } else {
+                        s = partial.op;
+                        --cnt;
+                    }
                     if (s == FIELD_OP) {
                         throw new CompileException(partial,
                                 "Unexpected '.' here. Add space before it, " +
                                 "if you want a compose section.");
                     }
-                    --cnt;
                 }
             }
             if (s != null && i >= cnt) {
@@ -802,7 +808,7 @@ interface YetiParser {
             }
             Node e = parseExpr.result();
             if (s != null) {
-                if  (cnt < expr.size()) {
+                if (cnt < expr.size()) {
                     BinOp r = new BinOp("", 2, true);
                     r.left = new Sym(s);
                     r.right = e;

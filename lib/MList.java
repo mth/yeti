@@ -50,6 +50,21 @@ abstract class AMList extends AList implements ListIter {
         if (obj == null) {
             return _size() <= start;
         }
+        if (obj instanceof AMList) {
+            AMList o = (AMList) obj;
+            int cnt = _size();
+            if (cnt - start != o._size() - o.start) {
+                return false;
+            }
+            Object[] arr = array(), arr_ = o.array();
+            for (int i = start, j = o.start; i < cnt; ++i, ++j) {
+                Object a = arr[i], b = arr_[j];
+                if (a != b && (a == null || !a.equals(b))) {
+                    return false;
+                }
+            }
+            return true;
+        }
         if (!(obj instanceof AList)) {
             return false;
         }
@@ -128,15 +143,14 @@ abstract class AMList extends AList implements ListIter {
         return new MList(result);
     }
 
-    public int compareTo(Object o) {
-        AIter j = (AIter) o;
+    public int compareTo(Object other) {
+        AMList o = (AMList) other;
         Object[] array = array();
-        for (int r, cnt = _size(), i = start; i < cnt; ++i) {
+        Object[] array_ = o.array();
+        int cnt = _size(), cnt_ = o._size();
+        for (int r, i = start, j = o.start; i < cnt && j < cnt_; ++i, ++j) {
             Object a, b;
-            if (j == null) {
-                return 1;
-            }
-            if ((b = j.first()) != (a = array[i])) {
+            if ((b = array_[j]) != (a = array[i])) {
                 if (a == null) {
                     return -1;
                 }
@@ -147,9 +161,8 @@ abstract class AMList extends AList implements ListIter {
                     return r;
                 }
             }
-            j = j.next();
         }
-        return j == null ? 0 : -1;
+        return cnt < cnt_ ? -1 : cnt > cnt_ ? 1 : 0;
     }
 
     // TODO ineffective

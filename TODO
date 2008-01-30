@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix MList == [] / != []
 * Real pattern matching in case
 * Better error messages
 * Built-in regex support

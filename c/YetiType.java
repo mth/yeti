@@ -145,6 +145,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("setHashDefault",
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
         bindCore("at", fun2Arg(A_B_MAP_TYPE, A, B), "AT",
+        bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
@@ -160,7 +161,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -654,6 +655,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 return isOp(op, ((IsOp) op).type,
                             analyze(op.right, scope, depth), depth);
             }
+            if (op.op == "loop") {
+                return loop(op, scope, depth);
+            }
             // TODO: unary -
             return apply(op.right,
                          apply(op, resolve(op.op, op, scope, depth),
@@ -955,7 +959,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     unify(BOOL_TYPE, cond.type);
                 } catch (TypeException ex) {
                     throw new CompileException(choice[1],
-                        "if condition must have a boolean type (but here was a "
+                        "if condition must have a boolean type (but here was "
                         + cond.type + ")");
                 }
                 conds[i] = new Code[] { val, cond };
@@ -974,6 +978,29 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
         }
         return new ConditionalExpr(result, conds, poly);
+    }
+
+    static Code loop(BinOp loop, Scope scope, int depth) {
+        Code cond = analyze(loop.left != null ? loop.left : loop.right,
+                            scope, depth);
+        try {
+            unify(BOOL_TYPE, cond.type);
+        } catch (TypeException ex) {
+            throw new CompileException(loop.left,
+                "Loop condition must have a boolean type (but here was "
+                + cond.type + ")");
+        }
+        if (loop.left == null) {
+            return new LoopExpr(cond, new UnitConstant());
+        }
+        Code body = analyze(loop.right, scope, depth);
+        try {
+            unify(body.type, UNIT_TYPE);
+        } catch (TypeException ex) {
+            throw new CompileException(loop.right,
+                "Loop body must have a unit type, not " + body.type, ex);
+        }
+        return new LoopExpr(cond, body);
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {
@@ -1411,8 +1438,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {
                     throw new CompileException(n,
-                        "Program body must have a unit type, " +
-                        "not a " + root.type, ex);
+                        "Program body must have a unit type, not "
+                        + root.type, ex);
                 }
             } else { // MODULE
                 List free = new ArrayList(), deny = new ArrayList();
