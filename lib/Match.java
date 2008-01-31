@@ -31,10 +31,8 @@
 package yeti.lang;
 
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 public class Match extends Fun {
-    private static Object[] NONE = {};
     private Pattern p;
 
     public Match(Object pattern) {
@@ -42,14 +40,7 @@ public class Match extends Fun {
     }
 
     public Object apply(Object v) {
-        Matcher m = p.matcher((CharSequence) v);
-        if (!m.find()) {
-            return new MList(NONE);
-        }
-        Object[] r = new Object[m.groupCount() + 1];
-        for (int i = r.length; --i >= 0;) {
-            r[i] = m.group(i);
-        }
-        return new MList(r);
+        return p.matcher((CharSequence) v).find()
+                ? Boolean.TRUE : Boolean.FALSE;
     }
 }

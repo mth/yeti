@@ -459,4 +459,47 @@ interface YetiBuiltins extends YetiCode {
             };
         }
     }
+
+    class MatchOpFun extends BinOpRef implements Binder {
+        MatchOpFun() {
+            type = YetiType.STR2_PRED_TYPE;
+            coreFun = "MATCH_OP";
+        }
+
+        public BindRef getRef(int line) {
+            return this;
+        }
+
+        void binGen(Ctx ctx, Code arg1, final Code arg2) {
+            apply2nd(arg2, YetiType.STR2_PRED_TYPE, 0).gen(ctx);
+            arg1.gen(ctx);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
+                    "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+
+        Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {
+            final Code matcher = new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Match");
+                    ctx.m.visitInsn(DUP);
+                    arg2.gen(ctx);
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Match",
+                                          "<init>", "(Ljava/lang/Object;)V");
+                }
+            };
+            if (!(arg2 instanceof StringConstant)) {
+                return matcher;
+            }
+            return new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.constant("MATCH-FUN:".concat(((StringConstant) arg2)
+                                    .str), matcher);
+                }
+            };
+        }
+    }
 }

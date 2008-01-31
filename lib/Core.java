@@ -322,11 +322,11 @@ public final class Core {
         }
     }
 
-    private static final class LikeOp extends Fun2 {
+/*    private static final class LikeOp extends Fun2 {
         Object apply2(Object v, Object pattern) {
             return new Like(pattern).apply(v);
         }
-    }
+    }*/
 
     private static final class MatchOp extends Fun2 {
         Object apply2(Object v, Object pattern) {
@@ -362,7 +362,6 @@ public final class Core {
     public static final Fun NOT = new Not();
     public static final Fun AT = new At();
     public static final Fun EMPTY = new Empty();
-    public static final Fun LIKE_OP = new LikeOp();
     public static final Fun MATCH_OP = new MatchOp();
 
     public static final BinFun ADD_OP = new BinFun() {
