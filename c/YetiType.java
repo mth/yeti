@@ -673,6 +673,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 return isOp(op, ((IsOp) op).type,
                             analyze(op.right, scope, depth), depth);
             }
+            if (op.op == "#") {
+                return objectRef((ObjectRefOp) op, scope, depth);
+            }
             if (op.op == "loop") {
                 return loop(op, scope, depth);
             }
@@ -706,6 +709,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         }
         if (node instanceof RSection) {
             return rsection((RSection) node, scope, depth);
+        }
+        if (node instanceof NewOp) {
+            return javaNew((NewOp) node, scope, depth);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -808,6 +814,14 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                         " (when checking " + value.type + " is " + t + ")");
         }
         return value;
+    }
+
+    static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
+        return null;
+    }
+
+    static Code javaNew(NewOp op, Scope scope, int depth) {
+        return null;
     }
 
     static Code apply(Node where, Code fun, Code arg, int depth) {
