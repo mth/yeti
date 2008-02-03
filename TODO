@@ -1,13 +1,14 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* Foreign interface
 * Real pattern matching in case
 * Better error messages
 * Built-in regex support
 * Some standard library
   + lazy list constructors
 * Struct properties
-* Foreign interface
+* Struct and list patterns
 * Extendable structs?
 * Lambda inlineing optimisation
 * Direct double optimisation, when it can be deduced,

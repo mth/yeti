@@ -103,7 +103,8 @@ interface YetiParser {
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
                      c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
                      c != '[' && c != ']' && c != '{' && c != '}'));
-            return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\'';
+            return '\'' + new String(s, p, Math.min(e, s.length) - p) + "':"
+                        + getClass().getName();
         }
     }
 
@@ -314,7 +315,7 @@ interface YetiParser {
             this.str = str;
         }
 
-        String show() {
+        String str() {
             return '"' + str + '"';
         }
     }
@@ -326,7 +327,7 @@ interface YetiParser {
             this.param = param;
         }
 
-        String show() {
+        String str() {
             StringBuffer buf = new StringBuffer("\"");
             for (int i = 0; i < param.length; ++i) {
                 if (param[i] instanceof Str) {
@@ -349,7 +350,7 @@ interface YetiParser {
             this.num = num;
         }
 
-        String show() {
+        String str() {
             return String.valueOf(num);
         }
     }
@@ -431,6 +432,59 @@ interface YetiParser {
         String str() {
             return (right == null ? "<>" : right.show())
                         + " is " + type.str();
+        }
+    }
+
+    class ObjectRefOp extends BinOp {
+        String name;
+        Node[] arguments;
+
+        ObjectRefOp(String name, Node[] arguments) {
+            super("#", 0, true);
+            postfix = true;
+            this.name = name;
+            this.arguments = arguments;
+        }
+
+        String str() {
+            StringBuffer buf =
+                new StringBuffer(right == null ? "<>" : right.show());
+            buf.append('#');
+            buf.append(name);
+            if (arguments != null) {
+                buf.append('(');
+                for (int i = 0; i < arguments.length; ++i) {
+                    if (i != 0) {
+                        buf.append(", ");
+                    }
+                    buf.append(arguments[i].str());
+                }
+                buf.append(')');
+            }
+            return buf.toString();
+        }
+    }
+
+    class NewOp extends Node {
+        String name;
+        Node[] arguments;
+
+        NewOp(String name, Node[] arguments) {
+            this.name = name;
+            this.arguments = arguments;
+        }
+
+        String str() {
+            StringBuffer buf = new StringBuffer("new ");
+            buf.append(name);
+            buf.append('(');
+            for (int i = 0; i < arguments.length; ++i) {
+                if (i != 0) {
+                    buf.append(", ");
+                }
+                buf.append(arguments[i].str());
+            }
+            return buf + ")";
         }
     }
 
@@ -693,6 +747,8 @@ interface YetiParser {
                     return new BindOp().pos(line, col);
                 if (s == ".")
                     return new BinOp(FIELD_OP, 0, true).pos(line, col);
+                if (s == "#")
+                    return readObjectRef().pos(line, col);
                 for (i = OPS.length; --i >= 0;) {
                     for (int j = OPS[i].length; --j >= 0;) {
                         if (OPS[i][j] == s) {
@@ -752,12 +808,15 @@ interface YetiParser {
                                 "Expecting type expression");
                 }
                 return new IsOp(t).pos(line, col);
+            } else if (s == "new") {
+                res = readNew();
             } else if (s == "var") {
                 res = new VarSym();
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load") {
-                res = new Load(readDotted(false));
+                res = new Load(readDotted(false,
+                                "Expected module name after 'load', not a "));
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
@@ -840,6 +899,50 @@ interface YetiParser {
             }
         }
 
+        private Node[] readArgs() {
+            if ((p = skipSpace()) >= src.length || src[p] != '(') {
+                return null;
+            }
+            ++p;
+            return readMany(',', ')');
+        }
+
+        // new ClassName(...)
+        private Node readNew() {
+            Node[] args = null;
+            String name = "";
+            while (args == null) {
+                int nline = line, ncol = p - lineStart + 1;
+                Node sym = fetch();
+                if (!(sym instanceof Sym)) {
+                    throw new CompileException(nline, ncol,
+                                "Expecting class name after new");
+                }
+                name += ((Sym) sym).sym;
+                args = readArgs();
+                if (args == null) {
+                    if (p >= src.length || src[p] != '.') {
+                        throw new CompileException(line, p - lineStart + 1,
+                                    "Expecting constructor argument list");
+                    }
+                    ++p;
+                    name += '/';
+                    System.err.println(src[p]);
+                }
+            }
+            return new NewOp(name, args);
+        }
+
+        // #something or #something(...)
+        private Node readObjectRef() {
+            Node field = fetch();
+            if (!(field instanceof Sym)) {
+                throw new CompileException(field,
+                    "Expected field/method name, found " + field);
+            }
+            return new ObjectRefOp(((Sym) field).sym, readArgs());
+        }
+
         private Node readIf() {
             List branches = new ArrayList();
             do {
@@ -891,19 +994,18 @@ interface YetiParser {
             }
         }
 
-        private String readDotted(boolean decl) {
+        private String readDotted(boolean decl, String err) {
             String result = "";
             for (;;) {
                 Node n = fetch();
                 if (!(n instanceof Sym)) {
-                    throw new CompileException(n,
-                        (decl ? "Expected module name, not a " :
-                            "Expected module name after 'load', not a ") + n);
+                    throw new CompileException(n, err + n);
                 }
                 result += ((Sym) n).sym;
                 n = fetch();
                 if (!(n instanceof BinOp) || ((BinOp) n).op != FIELD_OP) {
                     if (!decl) {
+                        System.err.println(n.str());
                         prefetched = new LList(n, prefetched);
                         return result;
                     }
@@ -1139,7 +1241,7 @@ interface YetiParser {
         Node parse() {
             Node n = fetch();
             if (n instanceof Sym && ((Sym) n).sym == "module") {
-                moduleName = readDotted(true);
+                moduleName = readDotted(true, "Expected module name, not a ");
             } else {
                 prefetched = new LList(n, prefetched);
             }

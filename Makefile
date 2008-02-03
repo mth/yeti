@@ -1,9 +1,6 @@
 compile: CodeWriter.java SourceReader.java YetiParser.java YetiType.java\
          YetiCode.java YetiC.java CompileException.java YetiTypeAttr.java\
-         YetiBuiltins.java
-	javac -d . -classpath asm-3.1.jar:. $+
-
-jt: JavaType.java
+         YetiBuiltins.java JavaType.java
 	javac -d . -classpath asm-3.1.jar:. $+
 
 .PHONY: lib
@@ -27,5 +24,5 @@ clean:
 g:
 	./yc guess.yeti
 
-jtt: jt
-	java -cp asm-3.1.jar:. yeti.lang.compiler.JavaType yeti/lang/compiler/JavaType
+jtt: compile
+	java -cp asm-3.1.jar:. yeti.lang.compiler.JavaType yeti/lang/compiler/JavaTypeReader
