@@ -547,7 +547,7 @@ interface YetiParser {
         private static final char[] CHS =
            ("                                " + // 0x
             " .'....x  .. ../xxxxxxxxxx. ...x" + // 2x
-            ".xxxxxxxxxxxxxxxxxxxxxxxxxx   .x" + // 4x
+            ".xxxxxxxxxxxxxxxxxxxxxxxxxx[ ].x" + // 4x
             "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
         private static final String[][] OPS = {
