@@ -217,6 +217,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Type(String javaSig) {
             type = JAVA;
             this.javaType = JavaType.fromDescription(javaSig);
+            param = NO_PARAM;
         }
 
         private String hstr(Map vars) {
@@ -711,7 +712,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             return rsection((RSection) node, scope, depth);
         }
         if (node instanceof NewOp) {
-            return javaNew((NewOp) node, scope, depth);
+            NewOp op = (NewOp) node;
+            Code[] args = mapArgs(op.arguments, scope, depth);
+            return new NewExpr(JavaType.resolveConstructor(op, args, scope),
+                               args, op.line);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -816,11 +820,17 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         return value;
     }
 
-    static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
-        return null;
+    static Code[] mapArgs(Node[] args, Scope scope, int depth) {
+        if (args == null)
+            return null;
+        Code[] res = new Code[args.length];
+        for (int i = 0; i < args.length; ++i) {
+            res[i] = analyze(args[i], scope, depth);
+        }
+        return res;
     }
 
-    static Code javaNew(NewOp op, Scope scope, int depth) {
+    static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
         return null;
     }
 

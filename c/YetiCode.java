@@ -563,6 +563,31 @@ interface YetiCode {
         }
     }
 
+    class NewExpr extends Code {
+        JavaType.Method init;
+        Code[] args;
+        int line;
+
+        NewExpr(JavaType.Method init, Code[] args, int line) {
+            type = init.classType;
+            this.init = init;
+            this.args = args;
+            this.line = line;
+        }
+
+        void gen(Ctx ctx) {
+            String name = init.classType.javaType.className();
+            ctx.m.visitTypeInsn(NEW, name);
+            ctx.m.visitInsn(DUP);
+            for (int i = 0; i < args.length; ++i) {
+                args[i].gen(ctx);
+                // TODO convert types
+            }
+            ctx.visitLine(line);
+            ctx.m.visitMethodInsn(INVOKESPECIAL, name, "<init>", init.descr());
+        }
+    }
+
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);

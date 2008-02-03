@@ -116,6 +116,14 @@ class YetiTypeAttr extends Attribute {
                        type.type == YetiType.VARIANT) {
                 writeMap(type.finalMembers);
                 writeMap(type.partialMembers);
+            } else if (type.type == YetiType.JAVA) {
+                buf.putShort(cw.newUTF8(type.javaType.description));
+                buf.putShort(type.param.length);
+                for (int i = 0; i < type.param.length; ++i) {
+                    write(type.param[i]);
+                }
+            } else if (type.type == YetiType.JAVA_ARRAY) {
+                write(type.param[0]);
             } else {
                 throw new RuntimeException("Unknown type: " + type.type);
             }
@@ -214,6 +222,14 @@ class YetiTypeAttr extends Attribute {
                 t.param = param == null ? YetiType.NO_PARAM :
                            (YetiType.Type[]) param.values().toArray(
                                               new YetiType.Type[param.size()]);
+            } else if (tv == YetiType.JAVA) {
+                t.javaType = JavaType.fromDescription(cr.readUTF8(p, buf));
+                int cnt = cr.readUnsignedShort(p + 2);
+                p += 4;
+                t.param = new YetiType.Type[cnt];
+                for (int i = 0; i < cnt; ++i) {
+                    t.param[i] = read();
+                }
             } else {
                 throw new RuntimeException("Unknown type: " + tv);
             }
