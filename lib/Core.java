@@ -147,7 +147,7 @@ public final class Core {
 
     private static final class At extends Fun2 {
         Object apply2(Object hash, Object key) {
-            return ((Hash) hash).vget(key);
+            return ((ByKey) hash).vget(key);
         }
     }
 

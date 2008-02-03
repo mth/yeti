@@ -84,6 +84,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { C, B, LIST_TYPE });
     static final Type A_B_MAP_TYPE =
         new Type(MAP, new Type[] { B, A, MAP_TYPE });
+    static final Type A_B_C_MAP_TYPE =
+        new Type(MAP, new Type[] { B, A, C });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
@@ -148,7 +150,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
         bindCore("setHashDefault",
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
-        bindCore("at", fun2Arg(A_B_MAP_TYPE, A, B), "AT",
+        bindCore("at", fun2Arg(A_B_C_MAP_TYPE, A, B), "AT",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
