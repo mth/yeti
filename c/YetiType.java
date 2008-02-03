@@ -53,6 +53,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final int MAP  = 10; // value, index, (LIST | MAP)
     static final int STRUCT = 11;
     static final int VARIANT = 12;
+    static final int JAVA = 13;
+    static final int JAVA_ARRAY = 14;
 
     static final int FL_ORDERED_REQUIRED = 1;
 
@@ -103,7 +105,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static final String[] TYPE_NAMES =
         { "var", "()", "string", "number", "boolean", "char",
-          "none", "list", "hash", "fun", "list", "struct", "variant" };
+          "none", "list", "hash", "fun", "list", "struct", "variant",
+          "object" };
 
     static final Scope ROOT_SCOPE =
         bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
@@ -198,6 +201,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         int field;
         boolean seen;
 
+        String javaSig;
+
         Type(int depth) {
             this.depth = depth;
         }
@@ -205,6 +210,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Type(int type, Type[] param) {
             this.type = type;
             this.param = param;
+        }
+
+        Type(String javaSig) {
+            type = JAVA;
+            this.javaSig = javaSig;
         }
 
         private String hstr(Map vars) {
@@ -278,6 +288,39 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                                       + param[0].str(vars) + ">"
                             :  "map<" + param[1].str(vars) + ", "
                                       + param[0].str(vars) + ">";
+                case JAVA: {
+                    switch (javaSig.charAt(0)) {
+                        case 'Z': return "!boolean";
+                        case 'B': return "!byte";
+                        case 'C': return "!char";
+                        case 'D': return "!double";
+                        case 'F': return "!float";
+                        case 'I': return "!int";
+                        case 'J': return "!long";
+                        case 'S': return "!short";
+                        case 'V': return "void";
+                        case 'L': break;
+                        default : return "!" + javaSig;
+                    }
+                    StringBuffer s = new StringBuffer("!");
+                    s.append(javaSig.substring(1, javaSig.length() - 1)
+                                    .replace('/', '.'));
+                    if (param != null && param.length > 0) {
+                        s.append('<');
+                        for (int i = 0; i < param.length; ++i) {
+                            if (i != 0) {
+                                s.append(", ");
+                            }
+                            String ps = param[i].str(vars);
+                            s.append(ps.charAt(0) == '!'
+                                        ? ps.substring(1) : ps);
+                        }
+                        s.append('>');
+                    }
+                    return s.toString();
+                }
+                case JAVA_ARRAY:
+                    return param[0].str(vars) + "[]";
             }
             return TYPE_NAMES[type];
         }
