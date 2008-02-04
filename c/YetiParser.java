@@ -926,7 +926,7 @@ interface YetiParser {
                     }
                     ++p;
                     name += '/';
-                    System.err.println(src[p]);
+//                    System.err.println(src[p]);
                 }
             }
             return new NewOp(name, args);
