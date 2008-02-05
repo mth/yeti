@@ -661,7 +661,7 @@ interface YetiCode {
                     case 'S': method = "shortValue"; break;
                 }
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                      method, "()" + descr.charAt(0));
+                                      method, "()" + descr);
                 if (newInstr != null) {
                     ctx.m.visitMethodInsn(INVOKESPECIAL, newInstr,
                                           "<init>", "(" + descr + ")V");
