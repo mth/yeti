@@ -310,8 +310,8 @@ public final class Core {
         }
     }
 
-    private static final class Cons extends Fun2 {
-        Object apply2(Object v, Object list) {
+    private static final class Cons extends BinFun {
+        public Object apply2(Object v, Object list) {
             return new LList(v, (AList) list);
         }
     }
@@ -342,8 +342,15 @@ public final class Core {
         }
     }
 
+    private static final class Flip extends Fun2 {
+        Object apply2(Object f, Object arg2) {
+            return new Bind2nd(f, arg2);
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
+    public static final Fun FLIP = new Flip();
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
@@ -358,7 +365,7 @@ public final class Core {
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
     public static final Fun COMPOSE = new FCompose();
-    public static final Fun CONS = new Cons();
+    public static final BinFun CONS = new Cons();
     public static final Fun NOT = new Not();
     public static final Fun AT = new At();
     public static final Fun EMPTY = new Empty();

@@ -120,6 +120,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("id", fun(A, A), "ID",
         bindCore("const", fun2Arg(A, B, A), "CONST",
+        bindCore("flip", fun(fun2Arg(A, B, C), fun2Arg(B, A, C)), "FLIP",
         bindCore("print", A_TO_UNIT, "PRINT",
         bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
@@ -168,7 +169,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
