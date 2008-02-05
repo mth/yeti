@@ -583,7 +583,8 @@ interface YetiCode {
             for (int i = 0; i < args.length; ++i) {
                 YetiType.Type given = args[i].type;
                 YetiType.Type argType = init.arguments[i];
-                if (argType.javaType.description == "Z") {
+                String descr = argType.javaType.description;
+                if (descr == "Z") {
                     // boolean
                     Label end = new Label(), lie = new Label();
                     args[i].genIf(ctx, lie, false);
@@ -598,7 +599,7 @@ interface YetiCode {
                 if (given.type == YetiType.JAVA) {
                     continue;
                 }
-                if (argType.javaType.description == "C") {
+                if (descr == "C") {
                     ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
                     ctx.intConst(0);
                     ctx.m.visitMethodInsn(INVOKEVIRTUAL,
@@ -631,7 +632,6 @@ interface YetiCode {
                 if (given.type != YetiType.NUM)
                     continue;
                 // Convert numbers...
-                String descr = argType.javaType.description;
                 ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
                 if (descr == "Ljava/math/BigInteger;") {
                     ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
