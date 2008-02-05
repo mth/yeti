@@ -53,4 +53,20 @@ public class Struct {
         for (; v[i] != field; i += 2);
         v[i + 1] = value;
     }
+
+    public String toString() {
+        int cnt = values.length, p = 1;
+        if (cnt == 0)
+            return "{}";
+        String[] v = new String[cnt * 2 + 1];
+        v[0] = "{";
+        for (int i = 0; i < cnt; i += 2, p += 4) {
+            v[p] = (String) values[i];
+            v[p + 1] = "=";
+            v[p + 2] = String.valueOf(values[i + 1]);
+            v[p + 3] = "; ";
+        }
+        v[p - 1] = "}";
+        return Core.concat(v);
+    }
 }
