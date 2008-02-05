@@ -581,12 +581,30 @@ interface YetiCode {
             ctx.m.visitInsn(DUP);
         genargs:
             for (int i = 0; i < args.length; ++i) {
-                args[i].gen(ctx);
                 YetiType.Type given = args[i].type;
+                YetiType.Type argType = init.arguments[i];
+                if (argType.javaType.description == "Z") {
+                    // boolean
+                    Label end = new Label(), lie = new Label();
+                    args[i].genIf(ctx, lie, false);
+                    ctx.intConst(1);
+                    ctx.m.visitJumpInsn(GOTO, end);
+                    ctx.m.visitLabel(lie);
+                    ctx.intConst(0);
+                    ctx.m.visitLabel(end);
+                    continue;
+                }
+                args[i].gen(ctx);
                 if (given.type == YetiType.JAVA) {
                     continue;
                 }
-                YetiType.Type argType = init.arguments[i];
+                if (argType.javaType.description == "C") {
+                    ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
+                    ctx.intConst(0);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                            "java/lang/String", "charAt", "(I)C");
+                    continue;
+                }
                 int arrayLevel = 0;
                 for (; argType.type == YetiType.JAVA_ARRAY; ++arrayLevel) {
                     if (given.type == YetiType.STR) {
@@ -609,28 +627,31 @@ interface YetiCode {
                     // ...
                     continue;
                 }
+
+                if (given.type != YetiType.NUM)
+                    continue;
+                // Convert numbers...
                 String descr = argType.javaType.description;
-                switch (given.type) {
-                case YetiType.NUM:
-                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-                    String newInstr = null;
-                    if (descr == "Ljava/math/BigInteger;") {
-                        ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                "toBigInteger", "()Ljava/math/BigInteger;");
-                        continue;
-                    }
-                    if (descr == "Ljava/math/BigDecimal;") {
-                        ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                "toBigDecimal", "()Ljava/math/BigDecimal;");
-                        continue;
-                    }
-                    if (descr.startsWith("Ljava/lang/")) {
-                        newInstr = argType.javaType.className();
-                        ctx.m.visitTypeInsn(NEW, newInstr);
-                        ctx.m.visitInsn(DUP);
-                    }
-                    String method = null;
-                    switch (descr.charAt(0)) {
+                ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                if (descr == "Ljava/math/BigInteger;") {
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                            "toBigInteger", "()Ljava/math/BigInteger;");
+                    continue;
+                }
+                if (descr == "Ljava/math/BigDecimal;") {
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                            "toBigDecimal", "()Ljava/math/BigDecimal;");
+                    continue;
+                }
+                String newInstr = null;
+                if (descr.startsWith("Ljava/lang/")) {
+                    newInstr = argType.javaType.className();
+                    ctx.m.visitTypeInsn(NEW, newInstr);
+                    ctx.m.visitInsn(DUP);
+                    descr = descr.substring(11, 12);
+                }
+                String method = null;
+                switch (descr.charAt(0)) {
                     case 'B': method = "byteValue"; break;
                     case 'D': method = "doubleValue"; break;
                     case 'F': method = "floatValue"; break;
@@ -638,14 +659,12 @@ interface YetiCode {
                     case 'L':
                     case 'J': method = "longValue"; break;
                     case 'S': method = "shortValue"; break;
-                    }
-                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                          method, "()" + descr.charAt(0));
-                    if (newInstr != null) {
-                        ctx.m.visitMethodInsn(INVOKESPECIAL, newInstr,
-                                              "<init>", "(" + descr + ")V");
-                    }
-                    continue;
+                }
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                      method, "()" + descr.charAt(0));
+                if (newInstr != null) {
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, newInstr,
+                                          "<init>", "(" + descr + ")V");
                 }
             }
             ctx.visitLine(line);
