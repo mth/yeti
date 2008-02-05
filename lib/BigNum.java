@@ -31,6 +31,7 @@
 package yeti.lang;
 
 import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public final class BigNum extends Num {
     private final BigInteger v;
@@ -169,6 +170,14 @@ public final class BigNum extends Num {
 
     public double doubleValue() {
         return v.doubleValue();
+    }
+
+    public BigInteger toBigInteger() {
+        return v;
+    }
+
+    public BigDecimal toBigDecimal() {
+        return new BigDecimal(v);
     }
 
     public int compareTo(Object num) {

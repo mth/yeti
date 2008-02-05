@@ -31,6 +31,7 @@
 package yeti.lang;
 
 import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public abstract class Num extends Number implements Comparable {
     public abstract Num add(Num num);
@@ -64,5 +65,13 @@ public abstract class Num extends Number implements Comparable {
 
     public boolean equals(Object x) {
         return x instanceof Num && compareTo(x) == 0;
+    }
+
+    public BigInteger toBigInteger() {
+        return BigInteger.valueOf(longValue());
+    }
+
+    public BigDecimal toBigDecimal() {
+        return new BigDecimal(toString());
     }
 }

@@ -579,9 +579,74 @@ interface YetiCode {
             String name = init.classType.javaType.className();
             ctx.m.visitTypeInsn(NEW, name);
             ctx.m.visitInsn(DUP);
+        genargs:
             for (int i = 0; i < args.length; ++i) {
                 args[i].gen(ctx);
-                // TODO convert types
+                YetiType.Type given = args[i].type;
+                if (given.type == YetiType.JAVA) {
+                    continue;
+                }
+                YetiType.Type argType = init.arguments[i];
+                int arrayLevel = 0;
+                for (; argType.type == YetiType.JAVA_ARRAY; ++arrayLevel) {
+                    if (given.type == YetiType.STR) {
+                        if (arrayLevel == 0) {
+                            ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
+                            ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                                "java/lang/String", "toCharArray", "()[C");
+                            continue genargs;
+                        }
+                    }
+                    
+//                        ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+
+//                        ctx.m.visitMethodInsn(INVOKESTATIC,
+//                            "yeti/lang/Core", "toArray",
+                    argType = argType.param[0];
+                    given = given.param[0];
+                }
+                if (arrayLevel != 0) {
+                    // ...
+                    continue;
+                }
+                String descr = argType.javaType.description;
+                switch (given.type) {
+                case YetiType.NUM:
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                    String newInstr = null;
+                    if (descr == "Ljava/math/BigInteger;") {
+                        ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                "toBigInteger", "()Ljava/math/BigInteger;");
+                        continue;
+                    }
+                    if (descr == "Ljava/math/BigDecimal;") {
+                        ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                "toBigDecimal", "()Ljava/math/BigDecimal;");
+                        continue;
+                    }
+                    if (descr.startsWith("Ljava/lang/")) {
+                        newInstr = argType.javaType.className();
+                        ctx.m.visitTypeInsn(NEW, newInstr);
+                        ctx.m.visitInsn(DUP);
+                    }
+                    String method = null;
+                    switch (descr.charAt(0)) {
+                    case 'B': method = "byteValue"; break;
+                    case 'D': method = "doubleValue"; break;
+                    case 'F': method = "floatValue"; break;
+                    case 'I': method = "intValue"; break;
+                    case 'L':
+                    case 'J': method = "longValue"; break;
+                    case 'S': method = "shortValue"; break;
+                    }
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                          method, "()" + descr.charAt(0));
+                    if (newInstr != null) {
+                        ctx.m.visitMethodInsn(INVOKESPECIAL, newInstr,
+                                              "<init>", "(" + descr + ")V");
+                    }
+                    continue;
+                }
             }
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKESPECIAL, name, "<init>", init.descr());
