@@ -41,6 +41,40 @@ interface YetiBuiltins extends YetiCode {
     int COND_LE  = COND_NOT | COND_GT;
     int COND_GE  = COND_NOT | COND_LT;
 
+    class Argv implements Binder, DirectBind {
+        public BindRef getRef(int line) {
+            return new BindRef() {
+                { type = YetiType.STRING_ARRAY; }
+
+                void gen(Ctx ctx) {
+                    ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                                         "ARGV", "Ljava/lang/ThreadLocal;");
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                        "java/lang/ThreadLocal",
+                        "get", "()Ljava/lang/Object;");
+                }
+
+                Code assign(final Code value) {
+                    return new Code() {
+                        void gen(Ctx ctx) {
+                            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                                         "ARGV", "Ljava/lang/ThreadLocal;");
+                            value.gen(ctx);
+                            ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                                "java/lang/ThreadLocal",
+                                "get", "(Ljava/lang/Object;)V");
+                            ctx.m.visitInsn(ACONST_NULL);
+                        }
+                    };
+                }
+
+                public boolean assign() {
+                    return true;
+                }
+            };
+        }
+    }
+
     class CoreFun implements Binder {
         private YetiType.Type type;
         private String name;

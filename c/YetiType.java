@@ -94,6 +94,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
     static final Type A_MLIST_TYPE =
         new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
+    static final Type STRING_ARRAY =
+        new Type(MAP, new Type[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
@@ -119,6 +121,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCompare("<=", LG_TYPE, COND_LE,
         bindCompare(">" , LG_TYPE, COND_GT,
         bindCompare(">=", LG_TYPE, COND_GE,
+        bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("id", fun(A, A), "ID",
         bindCore("const", fun2Arg(A, B, A), "CONST",
@@ -174,7 +177,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

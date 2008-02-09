@@ -156,6 +156,9 @@ interface YetiCode {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");
                 ctx.localVarCount++;
+                ctx.m.visitVarInsn(ALOAD, 0);
+                ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                      "setArgv", "([Ljava/lang/String;)V");
                 codeTree.gen(ctx);
                 ctx.m.visitInsn(POP);
                 ctx.m.visitInsn(RETURN);

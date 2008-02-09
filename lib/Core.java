@@ -560,4 +560,14 @@ public final class Core {
         }
         return new String(res);
     }
+
+    public static final ThreadLocal ARGV = new ThreadLocal() {
+        protected Object initialValue() {
+            return new MList();
+        }
+    };
+
+    public static void setArgv(String[] argv) {
+        ARGV.set(new MList(argv));
+    }
 }
