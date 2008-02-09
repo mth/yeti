@@ -330,7 +330,7 @@ interface YetiCode {
                 case YetiType.STRUCT: return "yeti/lang/Struct";
                 case YetiType.VARIANT: return "yeti/lang/Tag";
             }
-            return "Ljava/lang/Object;";
+            return "java/lang/Object";
         }
 
         static final char[] mangle =

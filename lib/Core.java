@@ -251,6 +251,28 @@ public final class Core {
         }
     }
 
+    private static final class Sum extends FunX {
+        public Object apply(Object list) {
+            if (list == null) {
+                return IntNum._0;
+            }
+            if (list instanceof LList) {
+                AIter i = (AIter) list;
+                list = null; // give it free for gc
+                Num v;
+                for (v = IntNum._0; i != null; i = i.next()) {
+                    v = v.add((Num) i.first());
+                }
+                return v;
+            }
+            return ((AList) list).fold(this, null, IntNum._0);
+        }
+
+        public Object apply(Object a, Object b, Fun f) {
+            return ((Num) a).add((Num) b);
+        }
+    }
+
     private static final class Filter extends Fun2 {
         Object apply2(Object f, Object list) {
             return FilterList.filter((AList) list, (Fun) f);
@@ -338,7 +360,8 @@ public final class Core {
         public Object apply(Object v) {
             AMList m;
             return v == null || v instanceof AMList &&
-                    (m = (AMList) v)._size() <= m.start;
+                    (m = (AMList) v)._size() <= m.start
+                ? Boolean.TRUE : Boolean.FALSE;
         }
     }
 
@@ -358,6 +381,7 @@ public final class Core {
     public static final Fun MAP  = new Map_();
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
+    public static final Fun SUM  = new Sum();
     public static final Fun FILTER = new Filter();
     public static final Fun FIND = new Find();
     public static final Fun CONTAINS = new Contains();
@@ -404,6 +428,18 @@ public final class Core {
     public static final BinFun REM_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
             return ((Num) a).rem((Num) b);
+        }
+    };
+
+    public static final BinFun SHL_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).shl(((Num) b).intValue());
+        }
+    };
+
+    public static final BinFun SHR_OP = new BinFun() {
+        public Object apply2(Object a, Object b) {
+            return ((Num) a).shl(-((Num) b).intValue());
         }
     };
 
@@ -476,11 +512,11 @@ public final class Core {
             throw new IllegalArgumentException("Number expected");
         }
         if (s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
+            char c;
+            if ((c = s.charAt(l - 1)) == 'e' || c == 'E') {
+                return new FloatNum(Double.parseDouble(s.substring(0, l - 1)));
+            }
             return new FloatNum(Double.parseDouble(s));
-        }
-        char c;
-        if ((c = s.charAt(l - 1)) == 'f' || c == 'F') {
-            return new FloatNum(Double.parseDouble(s.substring(0, l - 1)));
         }
         int dot = s.indexOf('.');
         if (dot == l - 1) {

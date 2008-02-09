@@ -82,6 +82,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { A, B, LIST_TYPE });
     static final Type C_B_LIST_TYPE =
         new Type(MAP, new Type[] { C, B, LIST_TYPE });
+    static final Type NUM_LIST_TYPE =
+        new Type(MAP, new Type[] { NUM_TYPE, B, LIST_TYPE });
     static final Type A_B_MAP_TYPE =
         new Type(MAP, new Type[] { B, A, MAP_TYPE });
     static final Type A_B_C_MAP_TYPE =
@@ -149,6 +151,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("all",
             fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, BOOL_TYPE), "ALL",
         bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
+        bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindCore("setHashDefault",
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
         bindCore("at", fun2Arg(A_B_C_MAP_TYPE, A, B), "AT",
@@ -163,13 +166,15 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
         bindScope("%", new ArithOpFun("rem", NUMOP_TYPE),
         bindScope("div", new ArithOpFun("intDiv", NUMOP_TYPE),
+        bindScope("shl", new ArithOpFun("shl", NUMOP_TYPE),
+        bindScope("shr", new ArithOpFun("shr", NUMOP_TYPE),
         bindScope("=~", new MatchOpFun(),
         bindScope("not", new NotOp(),
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -221,7 +226,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             param = NO_PARAM;
         }
 
-        private String hstr(Map vars) {
+        private String hstr(Map vars, Map refs) {
             StringBuffer res = new StringBuffer();
             boolean variant = type == VARIANT;
             if (partialMembers != null) {
@@ -233,7 +238,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     }
                     res.append(e.getKey());
                     res.append(variant ? " " : " is ");
-                    res.append(((Type) e.getValue()).str(vars));
+                    res.append(((Type) e.getValue()).str(vars, refs));
                 }
             }
             if (finalMembers != null) {
@@ -249,59 +254,86 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     }
                     res.append(e.getKey());
                     res.append(variant ? " " : " is ");
-                    res.append(((Type) e.getValue()).str(vars));
+                    res.append(((Type) e.getValue()).str(vars, refs));
                 }
             }
             return res.toString();
         }
 
-        String str(Map vars) {
-            if (ref != null) {
-                return ref.toString();
+        private String getVarName(Map vars) {
+            String v = (String) vars.get(this);
+            if (v == null) {
+                v = "'";
+                int n = vars.size();
+                do {
+                    v += (char) ('a' + n % 26);
+                    n /= 26;
+                } while (n > 0);
+                vars.put(this, v);
             }
-            switch (type) {
-                case VAR: {
-                    String v = (String) vars.get(this);
-                    if (v == null) {
-                        v = "'";
-                        int n = vars.size();
-                        do {
-                            v += (char) ('a' + n % 26);
-                            n /= 26;
-                        } while (n > 0);
-                        vars.put(this, v);
-                    }
-                    return v;
+            return v;
+        }
+
+        String str(Map vars, Map refs) {
+            if (ref != null) {
+                return ref.str(vars, refs);
+            }
+            if (type == VAR) {
+                return getVarName(vars);
+            }
+            if (type < PRIMITIVES.length) {
+                return TYPE_NAMES[type];
+            }
+            String[] recRef = (String[]) refs.get(this);
+            if (recRef == null) {
+                refs.put(this, recRef = new String[1]);
+            } else {
+                if (recRef[0] == null) {
+                    recRef[0] = getVarName(vars);
                 }
+                return recRef[0];
+            }
+            String res = null;
+            switch (type) {
                 case FUN:
-                    return (param[0].type == FUN
-                        ? "(" + param[0].str(vars) + ")"
-                        : param[0].str(vars)) + " -> " + param[1].str(vars);
+                    res = (param[0].type == FUN
+                        ? "(" + param[0].str(vars, refs) + ")"
+                        : param[0].str(vars, refs)) + " -> " +
+                          param[1].str(vars, refs);
+                    break;
                 case STRUCT:
-                    return "{" + hstr(vars) + "}";
+                    res = "{" + hstr(vars, refs) + "}";
+                    break;
                 case VARIANT:
-                    return hstr(vars);
+                    res = hstr(vars, refs);
+                    break;
                 case MAP:
-                    return param[2].type == LIST_MARKER
+                    res = param[2].type == LIST_MARKER
                         ? (param[1].type == NONE ? "list<" :
                                 param[1].type == NUM ? "array<" : "list?<")
-                          + param[0].str(vars) + ">"
+                          + param[0].str(vars, refs) + ">"
                         : param[2].type == MAP_MARKER ||
                           param[1].type != NUM && param[1].type != VAR
-                            ? "hash<" + param[1].str(vars) + ", "
-                                      + param[0].str(vars) + ">"
-                            :  "map<" + param[1].str(vars) + ", "
-                                      + param[0].str(vars) + ">";
+                            ? "hash<" + param[1].str(vars, refs) + ", "
+                                      + param[0].str(vars, refs) + ">"
+                            :  "map<" + param[1].str(vars, refs) + ", "
+                                      + param[0].str(vars, refs) + ">";
+                    break;
                 case JAVA:
-                    return javaType.str(vars, param);
+                    res = javaType.str(vars, refs, param);
+                    break;
                 case JAVA_ARRAY:
-                    return param[0].str(vars) + "[]";
+                    res = param[0].str(vars, refs) + "[]";
+                    break;
+                default:
+                    return TYPE_NAMES[type];
             }
-            return TYPE_NAMES[type];
+            return recRef[0] == null
+                    ? res : "(" + res + " is " + recRef[0] + ")";
         }
 
         public String toString() {
-            return str(new HashMap());
+            return str(new HashMap(), new HashMap());
         }
         
         Type deref() {

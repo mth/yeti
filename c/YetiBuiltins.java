@@ -232,15 +232,30 @@ interface YetiBuiltins extends YetiCode {
         void binGen(Ctx ctx, Code arg1, Code arg2) {
             arg1.gen(ctx);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            boolean ii = method == "intDiv" || method == "rem";
+            boolean ii = method == "intDiv" || method == "rem" ||
+                         method == "shl" || method == "shr";
             if (arg2 instanceof NumericConstant &&
                 ((NumericConstant) arg2).genInt(ctx, ii)) {
+                if (method == "shr") {
+                    method = "shl";
+                    ctx.m.visitInsn(INEG);
+                }
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                     method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
                 return;
             }
             arg2.gen(ctx);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            if (method == "shl" || method == "shr") {
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                      "intValue", "()I");
+                if (method == "shr") {
+                    ctx.m.visitInsn(INEG);
+                }
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                      "shl", "(I)Lyeti/lang/Num;");
+                return;
+            }
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                     method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
         }

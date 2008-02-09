@@ -148,6 +148,10 @@ public final class BigNum extends Num {
         return new BigNum(num.subtract(v));
     }
 
+    public Num shl(int num) {
+        return new BigNum(v.shiftLeft(num));
+    }
+
     public byte byteValue() {
         return v.byteValue();
     }
