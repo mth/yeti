@@ -371,6 +371,18 @@ public final class Core {
         }
     }
 
+    private static final class Min extends Fun2 {
+        Object apply2(Object a, Object b) {
+            return ((Num) a).compareTo((Num) b) < 0 ? a : b;
+        }
+    }
+
+    private static final class Max extends Fun2 {
+        Object apply2(Object a, Object b) {
+            return ((Num) a).compareTo((Num) b) > 0 ? a : b;
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
     public static final Fun FLIP = new Flip();
@@ -394,6 +406,8 @@ public final class Core {
     public static final Fun AT = new At();
     public static final Fun EMPTY = new Empty();
     public static final Fun MATCH_OP = new MatchOp();
+    public static final Fun MIN = new Min();
+    public static final Fun MAX = new Max();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
@@ -568,6 +582,8 @@ public final class Core {
     };
 
     public static void setArgv(String[] argv) {
-        ARGV.set(new MList(argv));
+        if (argv != null) {
+            ARGV.set(new MList(argv));
+        }
     }
 }

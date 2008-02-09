@@ -159,6 +159,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
         bindCore("at", fun2Arg(A_B_C_MAP_TYPE, A, B), "AT",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
+        bindCore("min", fun2Arg(ORDERED, ORDERED, ORDERED), "MIN",
+        bindCore("max", fun2Arg(ORDERED, ORDERED, ORDERED), "MAX",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
@@ -177,7 +179,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
