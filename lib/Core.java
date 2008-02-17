@@ -383,6 +383,18 @@ public final class Core {
         }
     }
 
+    private static final class FromSome extends Fun2 {
+        Object apply2(final Object defaultVal, Object transformer) {
+            final Fun f = (Fun) transformer;
+            return new Fun() {
+                public Object apply(Object val) {
+                    Tag v = (Tag) val;
+                    return v.name == "Some" ? f.apply(v.value) : defaultVal;
+                }
+            };
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
     public static final Fun FLIP = new Flip();
@@ -408,6 +420,7 @@ public final class Core {
     public static final Fun MATCH_OP = new MatchOp();
     public static final Fun MIN = new Min();
     public static final Fun MAX = new Max();
+    public static final Fun FROM_SOME = new FromSome();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {

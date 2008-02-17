@@ -161,6 +161,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
         bindCore("min", fun2Arg(ORDERED, ORDERED, ORDERED), "MIN",
         bindCore("max", fun2Arg(ORDERED, ORDERED, ORDERED), "MAX",
+        bindCore("fromSome", fun2Arg(C, fun(A, C), fun(variantOf(
+                    new String[] { "Some", "None" }, new Type[] { A, B }), C)),
+                    "FROM_SOME",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
@@ -179,7 +182,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -200,6 +203,15 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static Type fun2Arg(Type a, Type b, Type res) {
         return new Type(FUN,
             new Type[] { a, new Type(FUN, new Type[] { b, res }) });
+    }
+
+    static Type variantOf(String[] na, Type[] ta) {
+        Type t = new Type(VARIANT, ta);
+        t.partialMembers = new HashMap();
+        for (int i = 0; i < na.length; ++i) {
+            t.partialMembers.put(na[i], ta[i]);
+        }
+        return t;
     }
 
     static final class Type {

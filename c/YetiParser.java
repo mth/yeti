@@ -732,6 +732,8 @@ interface YetiParser {
                     return new CloseBracket(src[i]).pos(line, col);
                 case '"':
                     return readStr().pos(line, col);
+                case '\'':
+                    return readAStr().pos(line, col);
                 case '\\':
                     return new BinOp("\\", 1, false).pos(line, col);
             }
@@ -1068,7 +1070,7 @@ interface YetiParser {
         private Node readStr() {
             int st = p;
             List parts = null;
-            String res = "";
+            StringBuffer res = new StringBuffer();
             int sline = line, scol = p - lineStart;
             for (; p < src.length && src[p] != '"'; ++p) {
                 if (src[p] == '\n') {
@@ -1076,7 +1078,7 @@ interface YetiParser {
                     ++line;
                 }
                 if (src[p] == '\\') {
-                    res = res.concat(new String(src, st, p - st));
+                    res.append(src, st, p - st);
                     st = ++p;
                     if (p >= src.length) {
                         break;
@@ -1086,13 +1088,13 @@ interface YetiParser {
                         case '"':
                             continue;
                         case 'n':
-                            res = res.concat("\n");
+                            res.append('\n');
                             break;
                         case 'r':
-                            res = res.concat("\r");
+                            res.append('\r');
                             break;
                         case 't':
-                            res = res.concat("\t");
+                            res.append('\t');
                             break;
                         case '(':
                             ++p;
@@ -1100,10 +1102,10 @@ interface YetiParser {
                                 parts = new ArrayList();
                             }
                             if (res.length() != 0) {
-                                parts.add(new Str(res));
+                                parts.add(new Str(res.toString()));
                             }
                             parts.add(readSeq(')'));
-                            res = "";
+                            res.setLength(0);
                             st = --p;
                             break;
                         default:
@@ -1116,15 +1118,33 @@ interface YetiParser {
             if (p >= src.length) {
                 throw new CompileException(sline, scol, "Unclosed \"");
             }
-            res = res.concat(new String(src, st, p++ - st));
+            res.append(src, st, p++ - st);
             if (parts == null) {
-                return new Str(res);
+                return new Str(res.toString());
             }
             if (res.length() != 0) {
-                parts.add(new Str(res));
+                parts.add(new Str(res.toString()));
             }
             return new ConcatStr((Node[]) parts.toArray(
                                             new Node[parts.size()]));
+        }
+
+        private Node readAStr() {
+            int i = p, sline = line, scol = i - lineStart;
+            String s = "";
+            do {
+                for (; i < src.length && src[i] != '\''; ++i)
+                    if (src[p] == '\n') {
+                        lineStart = p + 1;
+                        ++line;
+                    }
+                if (i >= src.length) {
+                    throw new CompileException(sline, scol, "Unclosed \"");
+                }
+                s = s.concat(new String(src, p, i - p));
+                p = ++i;
+            } while (i < src.length && src[i] == '\'');
+            return new Str(s);
         }
 
         // ugly all-in-one bastard type expression parser
