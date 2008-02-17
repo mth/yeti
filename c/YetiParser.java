@@ -1139,11 +1139,11 @@ interface YetiParser {
                         ++line;
                     }
                 if (i >= src.length) {
-                    throw new CompileException(sline, scol, "Unclosed \"");
+                    throw new CompileException(sline, scol, "Unclosed '");
                 }
                 s = s.concat(new String(src, p, i - p));
                 p = ++i;
-            } while (i < src.length && src[i] == '\'');
+            } while (i < src.length && src[i++] == '\'');
             return new Str(s);
         }
 

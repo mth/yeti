@@ -164,6 +164,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("fromSome", fun2Arg(C, fun(A, C), fun(variantOf(
                     new String[] { "Some", "None" }, new Type[] { A, B }), C)),
                     "FROM_SOME",
+        bindCore("replace",
+            fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), "REPLACE",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
@@ -182,7 +184,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

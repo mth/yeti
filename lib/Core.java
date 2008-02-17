@@ -395,6 +395,29 @@ public final class Core {
         }
     }
 
+    private static final class Replace extends Fun {
+        public Object apply(Object find) {
+            final String f = (String) find;
+            return new Fun2() {
+                Object apply2(Object replace, Object text) {
+                    StringBuffer result = new StringBuffer();
+                    String s = (String) text;
+                    String r = (String) replace;
+                    int p = 0, i, l = f.length();
+                    while ((i = s.indexOf(f, p)) >= 0) {
+                        result.append(s.substring(p, i));
+                        result.append(r);
+                        p = i + l;
+                    }
+                    if (p < s.length()) {
+                        result.append(s.substring(p));
+                    }
+                    return result.toString();
+                }
+            };
+        }
+    }
+
     public static final Fun ID = new Id();
     public static final Fun CONST = new Const();
     public static final Fun FLIP = new Flip();
@@ -421,6 +444,7 @@ public final class Core {
     public static final Fun MIN = new Min();
     public static final Fun MAX = new Max();
     public static final Fun FROM_SOME = new FromSome();
+    public static final Fun REPLACE = new Replace();
 
     public static final BinFun ADD_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
