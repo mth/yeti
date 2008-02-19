@@ -74,6 +74,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final Type A = new Type(1);
     static final Type B = new Type(1);
     static final Type C = new Type(1);
+    static final Type D = new Type(1);
     static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
     static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
     static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
@@ -92,11 +93,15 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
         new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
+    static final Type D_LIST_TYPE =
+        new Type(MAP, new Type[] { D, NO_TYPE, LIST_TYPE });
     static final Type A_MLIST_TYPE =
         new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type STRING_ARRAY =
         new Type(MAP, new Type[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
+    static final Type LAZYCONS_TYPE =
+        fun2Arg(A, fun(C, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
@@ -140,6 +145,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             "FORHASH",
         bindCore("map",
             fun2Arg(fun(A, C), A_B_LIST_TYPE, C_B_LIST_TYPE), "MAP",
+        bindCore("map2",
+            fun(fun2Arg(A, C, D),
+                fun2Arg(A_B_LIST_TYPE, C_B_LIST_TYPE, D_LIST_TYPE)), "MAP2",
         bindCore("mapHash",
             fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
@@ -168,6 +176,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), "REPLACE",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
+        bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
         bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
@@ -184,7 +193,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

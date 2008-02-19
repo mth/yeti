@@ -202,6 +202,10 @@ public class MList extends AMList implements ByKey {
             return (p = start + 1) < size ? new Iter(p) : null;
         }
 
+        public boolean isEmpty() {
+            return size > 0;
+        }
+
         int _size() {
             return size;
         }

@@ -210,6 +210,18 @@ public final class Core {
         }
     }
 
+    private static final class Map2 extends Fun {
+        public Object apply(final Object f) {
+            return new Fun2() {
+                Object apply2(Object l1, Object l2) {
+                    return l1 == null || l2 == null
+                        ? null : new Map2List((Fun) f, (AIter) l1,
+                                                       (AIter) l2);
+                }
+            };
+        }
+    }
+
     private static final class MapHash extends Fun2 {
         Object apply2(Object fun, Object map) {
             Map m = (Map) map;
@@ -338,6 +350,12 @@ public final class Core {
         }
     }
 
+    private static final class LazyCons extends BinFun {
+        public Object apply2(Object v, Object list) {
+            return new LazyList(v, (Fun) list);
+        }
+    }
+
     private static final class Not extends Fun {
         public Object apply(Object v) {
             return v == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
@@ -426,6 +444,7 @@ public final class Core {
     public static final Fun FOR  = new For();
     public static final Fun FORHASH = new ForHash();
     public static final Fun MAP  = new Map_();
+    public static final Fun MAP2 = new Map2();
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
@@ -437,6 +456,7 @@ public final class Core {
     public static final Fun INDEX = new Index();
     public static final Fun COMPOSE = new FCompose();
     public static final BinFun CONS = new Cons();
+    public static final BinFun LAZYCONS = new LazyCons();
     public static final Fun NOT = new Not();
     public static final Fun AT = new At();
     public static final Fun EMPTY = new Empty();
@@ -623,4 +643,25 @@ public final class Core {
             ARGV.set(new MList(argv));
         }
     }
+/*
+    public static Object convertList(Object value, String type) {
+        if (type == "") {
+            return value;
+        }
+        switch (type.charAt(0)) {
+        case 'l': return ((AList) value).toList(type.substring(1));
+        case 's': return ((AList) value).toSet(type.substring(1));
+        case '[': return ((AList) value).toArray(type.substring(1));
+        case 'B': return new Byte(((Num) value).byteValue());
+        case 'S': return new Short(((Num) value).shortValue());
+        case 'F': return new Float(((Num) value).floatValue());
+        case 'D': return new Double(((Num) value).doubleValue());
+        case 'I': return new Integer(((Num) value).intValue());
+        case 'J': return new Long(((Num) value).longValue());
+        case 'i': return ((Num) value).toBigInteger();
+        case 'd': return ((Num) value).toBigDecimal();
+        }
+        return value;
+    }
+*/
 }

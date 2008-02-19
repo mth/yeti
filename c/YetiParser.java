@@ -606,7 +606,7 @@ interface YetiParser {
         private static final String[][] OPS = {
             { "*", "/", "%" },
             { "+", "-" },
-            { "::" },
+            { "::", ":." },
             { "<", ">", "<=", ">=", "==", "!=", "=~" },
             { null }, // and or
             { null }, // non-standard operators
@@ -1006,7 +1006,7 @@ interface YetiParser {
                 n = fetch();
                 if (!(n instanceof BinOp) || ((BinOp) n).op != FIELD_OP) {
                     if (!decl) {
-                        System.err.println(n.str());
+//                        System.err.println(n.str());
                         prefetched = new LList(n, prefetched);
                         return result;
                     }

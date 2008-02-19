@@ -509,6 +509,31 @@ interface YetiBuiltins extends YetiCode {
         }
     }
 
+    class LazyCons implements Binder {
+        public BindRef getRef(final int line) {
+            return new BinOpRef() {
+                {
+                    type = YetiType.LAZYCONS_TYPE;
+                    binder = LazyCons.this;
+                    coreFun = "LAZYCONS";
+                    polymorph = true;
+                }
+
+                void binGen(Ctx ctx, Code arg1, Code arg2) {
+                    ctx.visitLine(line);
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/LazyList");
+                    ctx.m.visitInsn(DUP);
+                    arg1.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.visitLine(line);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LazyList",
+                        "<init>", "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
+                }
+            };
+        }
+    }
+
     class MatchOpFun extends BinOpRef implements Binder {
         MatchOpFun() {
             type = YetiType.STR2_PRED_TYPE;

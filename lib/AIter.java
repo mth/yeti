@@ -42,4 +42,8 @@ public abstract class AIter {
      * May well modify itself and return this.
      */
     public abstract AIter next();
+
+    public boolean isEmpty() {
+        return false;
+    }
 }
