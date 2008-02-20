@@ -580,6 +580,26 @@ interface YetiCode {
         }
     }
 
+    class VirtualMethodCall extends JavaExpr {
+        private Code object;
+
+        VirtualMethodCall(Code object, JavaType.Method method,
+                          Code[] args, int line) {
+            super(method, args, line);
+            type = method.returnType;
+            this.object = object;
+        }
+
+        void gen(Ctx ctx) {
+            object.gen(ctx);
+            genCall(ctx, INVOKEVIRTUAL);
+            if (method.returnType.type == YetiType.JAVA &&
+                method.returnType.javaType.description == "V") {
+                ctx.m.visitInsn(ACONST_NULL);
+            }
+        }
+    }
+
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);

@@ -534,6 +534,19 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         b.ref = a;
     }
 
+    static void unifyJava(Type jt, Type t) throws TypeException {
+        String descr = jt.javaType.description;
+        if (t.type != JAVA) {
+            if (t.type == UNIT && descr == "V")
+                return;
+            mismatch(jt, t);
+        }
+        if (descr == t.javaType.description) {
+            return;
+        }
+        mismatch(jt, t);
+    }
+
     static void requireOrdered(Type type) throws TypeException {
         switch (type.type) {
             case VARIANT:
@@ -605,6 +618,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             unifyToVar(a, b);
         } else if (b.type == VAR) {
             unifyToVar(b, a);
+        } else if (a.type == JAVA) {
+            unifyJava(a, b);
+        } else if (b.type == JAVA) {
+            unifyJava(b, a);
         } else if (a.type != b.type) {
             mismatch(a, b);
         } else if (a.type == STRUCT || a.type == VARIANT) {
@@ -775,7 +792,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
             Code[] args = mapArgs(op.arguments, scope, depth);
-            return new NewExpr(JavaType.resolveConstructor(op, args, scope),
+            return new NewExpr(JavaType.resolveConstructor(op, args),
                                args, op.line);
         }
         throw new CompileException(node,
@@ -892,7 +909,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
-        return null;
+        Code obj = analyze(ref.right, scope, depth);
+        Code[] args = mapArgs(ref.arguments, scope, depth);
+        return new VirtualMethodCall(obj,
+                    JavaType.resolveVMethod(ref, obj.type, args),
+                    args, ref.line);
     }
 
     static Code apply(Node where, Code fun, Code arg, int depth) {
