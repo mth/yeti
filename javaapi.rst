@@ -39,8 +39,8 @@ Method calls are recognized by having parenthesized argument list after
 class namespace, it will be considered to be a static method invocation.
 
 
-Field reference
-~~~~~~~~~~~~~~~~~
+Class field reference
+~~~~~~~~~~~~~~~~~~~~~~~
 ::
 
         expr#field
