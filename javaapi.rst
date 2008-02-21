@@ -60,49 +60,50 @@ Java method/constructor argument types are not used on the type inference.
 
 Automatic conversion on arguments, when calling java methods:
 
--	string -> java.lang.String
--	string -> java.lang.StringBuffer
--	string -> java.lang.StringBuilder
--	string -> char[]
--	list?<'a> -> java.util.Collection<?convertable-of 'a>
--	list?<'a> -> java.util.List<?convertable-of 'a>
--	list?<'a> -> java.util.Set<?convertable-of 'a>
--	list?<'a> -> (convertable-of 'a)[]
--	'a[] -> java.util.Collection<?'a>
--	'a[] -> java.util.List<?'a>
--	number -> byte
--	number -> double
--	number -> float
--	number -> int
--	number -> long
--	number -> short
--	number -> java.lang.Byte
--	number -> java.lang.Short
--	number -> java.lang.Float
--	number -> java.lang.Double
--	number -> java.lang.Integer
--	number -> java.lang.Long
--	number -> java.lang.BigInteger
--	number -> java.lang.BigDecimal
--	boolean -> !boolean
--	boolean -> Boolean
--	'a -> 'b -> yeti.lang.Fun
--	map<'a, 'b> -> java.util.Map<'a, 'b>
--	{ .\.\. } -> yeti.lang.Struct
--	SomeTag 'a -> yeti.lang.Tag
+-	string --> java.lang.String
+-	string --> java.lang.StringBuffer
+-	string --> java.lang.StringBuilder
+-	string --> char[]
+-	list?<'a> --> java.util.Collection<?convertable-of 'a>
+-	list?<'a> --> java.util.List<?convertable-of 'a>
+-	list?<'a> --> java.util.Set<?convertable-of 'a>
+-	list?<'a> --> (convertable-of 'a)[]
+-	'a[] --> java.util.Collection<?'a>
+-	'a[] --> java.util.List<?'a>
+-	number --> byte
+-	number --> double
+-	number --> float
+-	number --> int
+-	number --> long
+-	number --> short
+-	number --> java.lang.Byte
+-	number --> java.lang.Short
+-	number --> java.lang.Float
+-	number --> java.lang.Double
+-	number --> java.lang.Integer
+-	number --> java.lang.Long
+-	number --> java.lang.BigInteger
+-	number --> java.lang.BigDecimal
+-	boolean --> !boolean
+-	boolean --> Boolean
+-	'a -> 'b --> yeti.lang.Fun
+-	map<'a, 'b> --> java.util.Map<'a, 'b>
+-	{ .\.\. } --> yeti.lang.Struct
+-	SomeTag 'a --> yeti.lang.Tag
 
 Note: list?<'a> conversions will be done recursively for the 'a.
 
 Automatic conversion on return values of java methods:
 
--	java.lang.String -> string
--	yeti.lang.Num -> number
--	java.lang.Boolean -> boolean
--	!boolean -> boolean
--	byte   -> number
--	double -> number
--	float  -> number
--	int    -> number
--	long   -> number
--	short  -> number
--       void   -> ()
+-	java.lang.String --> string
+-	yeti.lang.Num --> number
+-	java.lang.Boolean --> boolean
+-	!boolean --> boolean
+-	byte   --> number
+-	double --> number
+-	float  --> number
+-	int    --> number
+-	long   --> number
+-	short  --> number
+-       void   --> ()
+
