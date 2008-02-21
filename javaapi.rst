@@ -84,8 +84,10 @@ Automatic conversion on arguments, when calling java methods:
 -	number --> java.lang.Long
 -	number --> java.lang.BigInteger
 -	number --> java.lang.BigDecimal
+-       number --> java.lang.Number
+-       number --> yeti.lang.Num
 -	boolean --> !boolean
--	boolean --> Boolean
+-	boolean --> java.lang.Boolean
 -	'a -> 'b --> yeti.lang.Fun
 -	hash<'a, 'b> --> java.util.Map<'a, 'b>
 -	{ .\.\. } --> yeti.lang.Struct
@@ -96,8 +98,8 @@ Note: list?<'a> conversions will be done recursively for the 'a.
 Automatic conversion on return values of java methods:
 
 -	java.lang.String --> string
--	yeti.lang.Num --> number
 -	java.lang.Boolean --> boolean
+-	yeti.lang.Num --> number
 -	!boolean --> boolean
 -	byte   --> number
 -	double --> number
