@@ -87,7 +87,7 @@ Automatic conversion on arguments, when calling java methods:
 -	boolean --> !boolean
 -	boolean --> Boolean
 -	'a -> 'b --> yeti.lang.Fun
--	map<'a, 'b> --> java.util.Map<'a, 'b>
+-	hash<'a, 'b> --> java.util.Map<'a, 'b>
 -	{ .\.\. } --> yeti.lang.Struct
 -	SomeTag 'a --> yeti.lang.Tag
 
