@@ -107,5 +107,6 @@ Automatic conversion on return values of java methods:
 -	int    --> number
 -	long   --> number
 -	short  --> number
+-       char   --> string
 -       void   --> ()
 

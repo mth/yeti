@@ -190,6 +190,27 @@ class JavaType {
             return s.toString();
         }
 
+        YetiType.Type convertedReturnType() {
+            if (returnType.type != YetiType.JAVA) {
+                return returnType;
+            }
+            String descr = returnType.javaType.description;
+            if (descr == "Ljava/lang/String;") {
+                return YetiType.STR_TYPE;
+            }
+            if (descr == "Ljava/lang/Boolean;" || descr == "Z") {
+                return YetiType.BOOL_TYPE;
+            }
+            if (descr == "Lyeti/lang/Num;" ||
+                descr.length() == 1 && "BDFIJS".indexOf(descr.charAt(0)) >= 0) {
+                return YetiType.NUM_TYPE;
+            }
+            if (descr == "V") {
+                return YetiType.UNIT_TYPE;
+            }
+            return returnType;
+        }
+
         String argDescr(int arg) {
             YetiType.Type t = arguments[arg];
             String r = "";
