@@ -1,2 +1,0 @@
-#!/bin/sh
-java -classpath .:asm-3.1.jar YetiType "$@"
