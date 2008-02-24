@@ -67,6 +67,8 @@ public final class Core {
     private static Random rnd = null;
     private static BufferedReader stdin = null;
 
+    public static final String UNDEF_STR = new String();
+
     public static final Fun PRINTLN = new Fun() {
         public Object apply(Object x) {
             System.out.println(x);
