@@ -21,3 +21,4 @@ pub:
 	git-clone --bare . /tmp/yeti
 	cd /tmp/yeti && git-update-server-info
 	rsync -rlpz -e ssh /tmp/yeti linux.ee:/home/mzz/public_html/git/
+	rm -rf /tmp/yeti
