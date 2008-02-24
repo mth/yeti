@@ -1,6 +1,7 @@
 .PHONY: compile lib
 
-compile:
+compile: asm-3.1.jar
+	if [ ! -d yeti ]; then cd lib && $(MAKE) lib; fi
 	cd c && $(MAKE) compile
 
 lib:
