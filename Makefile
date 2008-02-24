@@ -7,10 +7,6 @@ compile: asm-3.1.jar
 lib:
 	cd lib && $(MAKE) lib
 
-test: compile
-	java -classpath .:asm-3.1.jar YetiCode\$$Test
-	java -classpath .:lib Test
-
 yeti.jar: clean lib compile
 	jar xf asm-3.1.jar
 	jar cmf manifest $@ yeti/lang org/objectweb/asm
@@ -19,12 +15,6 @@ yeti.jar: clean lib compile
 clean:
 	-rm -f yeti.jar
 	-rm -r yeti
-
-g:
-	./yc guess.yeti
-
-jtt: compile
-	java -cp asm-3.1.jar:. yeti.lang.compiler.JavaType yeti/lang/compiler/JavaTypeReader
 
 pub:
 	-rm -rf /tmp/yeti
