@@ -26,8 +26,7 @@ jtt: compile
 	java -cp asm-3.1.jar:. yeti.lang.compiler.JavaType yeti/lang/compiler/JavaTypeReader
 
 pub:
-	-mkdir -p /tmp/yeti
-	-rm -rf /tmp/yeti/git
-	git-clone --bare . /tmp/yeti/git
-	cd /tmp/yeti/git && git-update-server-info
-	rsync -rlpzv -e ssh /tmp/yeti/git linux.ee:/home/mzz/public_html/yeti/
+	-rm -rf /tmp/yeti
+	git-clone --bare . /tmp/yeti
+	cd /tmp/yeti && git-update-server-info
+	rsync -rlpzv -e ssh /tmp/yeti linux.ee:/home/mzz/public_html/git/
