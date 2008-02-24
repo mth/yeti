@@ -1,0 +1,21 @@
+_10 = 0 - 10;
+
+flr x y = (y.q * x + y.r) div (y.s * x + y.t);
+comp1 x y = { q = x.q * y.q + x.r * y.s;
+              r = x.q * y.r + x.r * y.t;
+              s = x.t * y.s;
+              t = x.t * y.t; };
+comp2 x y = { q = x.q * y.q;
+              r = x.q * y.r + x.r * y.t;
+              s = x.s * y.q;
+              t = x.s * y.r + x.t * y.t; };
+str z l =
+   (x = head l;
+    y = flr 3 z;
+	if y == flr 4 z then
+		y :: str (comp1 { q = 10; r = _10 * y; s = 0; t = 1 }) l
+	else
+		str (comp2 z x) (tail l)
+	fi);
+
+

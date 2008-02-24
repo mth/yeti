@@ -1,0 +1,27 @@
+drawingAPI1 = {
+    drawCircle x y radius =
+        println "API1.circle at \(x):\(y) radius \(radius)"
+};
+
+drawingAPI2 = {
+    drawCircle x y radius =
+        println "API2.circle at \(x):\(y) radius \(radius)"
+};
+
+circleShape x y radius drawingAPI =
+   (var currentRadius = radius;
+    {
+        draw () =
+            drawingAPI.drawCircle x y currentRadius;
+
+        resizeByPercentage pct =
+            currentRadius := currentRadius * pct;
+    });
+
+shapes = [ circleShape 1 2 3 drawingAPI1,
+           circleShape 5 7 11 drawingAPI2 ];
+for shapes do shape:
+    shape.resizeByPercentage 2.5;
+    shape.draw();
+done
+

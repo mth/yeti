@@ -1,0 +1,14 @@
+bottles n =
+    if n == 0 then
+        "no more bottles of beer"
+    elif n == 1 then
+        "1 bottle of beer"
+    else
+        "\(n) bottles of beer"
+    fi;
+
+for (reverse [1 .. 99]) do n:
+    println "\(bottles n) on the wall, \(bottles n)";
+    println "Take one down, pass it around,";
+    println "and there's \(bottles (n - 1)) on the wall!";
+done

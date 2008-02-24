@@ -1,0 +1,31 @@
+numLen n =
+	if n == 0 then 0 else numLen (n div 10) + 1 fi;
+
+max x y =
+	if x > y then x else y fi;
+
+pow10 n =
+	if n > 0 then pow10 (n - 1) * 10 else 1 fi;
+
+prod x y =
+	(n = max (numLen x) (numLen y);
+	if n < 3 then
+		x * y
+	else
+		m = pow10 (n div 2);
+		a = x div m;
+		b = x % m;
+		c = y div m;
+		d = y % m;
+		prod a c * m * m + (prod a d + prod b c) * m + b * d
+	fi);
+
+test x y =
+	(println "\(x) * \(y) = \(x * y)";
+	 println "prod \(x) \(y) = \(prod x y)");
+
+test 34 56;
+test 1234 4321;
+test 123456789 987654321;
+test 12345678987654321 98765432123456789;
+

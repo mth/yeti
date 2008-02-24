@@ -50,13 +50,8 @@ class Loader extends ClassLoader implements CodeWriter {
 
     public void writeClass(String name, byte[] code) {
         // to a dotted classname used by loadClass
-        char[] cn = name.substring(0, name.length() - 6).toCharArray();
-        for (int i = cn.length; i > 0;) {
-            if (cn[--i] == '/') {
-                cn[i] = '.';
-            }
-        }
-        classes.put(new String(cn), code);
+        classes.put(name.substring(0, name.length() - 6).replace('/', '.'),
+                    code);
     }
 
     // override loadClass to ensure loading our own class
@@ -236,7 +231,8 @@ public class YetiC implements SourceReader {
         }
         compilation.write();
         if (exec) {
-            Class c = Class.forName(mainClass, true, (ClassLoader) writer);
+            Class c = Class.forName(mainClass.replace('/', '.'), true,
+                                    (ClassLoader) writer);
             try {
                 if (eval) {
                     Object res = c.getMethod("eval", new Class[] {})

@@ -1,0 +1,16 @@
+take n l =
+	if n > 0 and l != [] then
+		head l :. \(take (n - 1) (tail l))
+	else
+		[]
+	fi;
+
+integersFrom x = x :. \(integersFrom (x + 1));
+
+sieve stream =
+	head stream :. \(sieve (filter ((!= 0) . (% (head stream)))
+	                               (tail stream)));
+
+primes = sieve (integersFrom 2);
+
+for (take 100 primes) println;

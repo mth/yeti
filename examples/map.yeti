@@ -1,0 +1,10 @@
+module std.map;
+
+{
+    map' f l =
+        if l == [] then
+            []
+        else
+            f (head l) :: map f (tail l)
+        fi;
+}

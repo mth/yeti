@@ -1,0 +1,8 @@
+concat2 l1 l2 = fold (flip (::)) l2 (reverse l1);
+concat l = fold concat2 [] l;
+prod l1 l2 = concat (map do x: map do y: { x = x; y = y } done l2 done l1);
+
+println (prod_ [1, 2] [5, 6]);
+println (prod_ [1, 2] []);
+println (prod_ [] []);
+println (map do x: x done []);

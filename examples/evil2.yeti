@@ -1,0 +1,6 @@
+var id x = x;
+do:
+	z = { a = id }.a;
+	println (z "a");
+	println (z 42)
+done (id := do x: x + 1 done)

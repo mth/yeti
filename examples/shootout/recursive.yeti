@@ -1,0 +1,38 @@
+ack m n =
+    if m == 0 then
+        n + 1
+    elif n == 0 then
+        ack (m - 1) 1
+    else
+        ack (m - 1) (ack m (n - 1))
+    fi;
+
+fib n =
+    if n < 2 then
+        1
+    else
+        fib (n - 2) + fib (n - 1)
+    fi;
+
+fibFP n =
+    if n < 2e then
+        1e
+    else
+        fibFP (n - 2e) + fibFP (n - 1e)
+    fi;
+
+tak x y z =
+    if y >= x then
+        z
+    else
+        tak (tak (x - 1) y z) (tak (y - 1) z x) (tak (z - 1) x y)
+    fi;
+
+n = number _argv.[0];
+println "Ack(3,\(n)): \(ack 3 n)";
+println "Fib(\(27e + n)): \(fibFP (27e + n))";
+n = n - 1;
+println "Tak(\(n * 3),\(n * 2),\(n)): \(tak (n * 3) (n * 2) n)";
+println "Fib(3): \(fib 3)";
+println "Tak(3.0,2.0,1.0): \(tak 3e 2e 1e)";
+

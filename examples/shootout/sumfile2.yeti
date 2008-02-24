@@ -1,0 +1,5 @@
+var sum = 0;
+var line = "";
+(line := readln (); defined? line) loop
+    sum := sum + number line;
+println sum;

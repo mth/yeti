@@ -1,0 +1,30 @@
+makeTree item depth =
+    if depth > 0 then
+        { item  = item;
+          left  = Some (makeTree (item * 2 - 1) (depth - 1));
+          right = Some (makeTree (item * 2) (depth - 1));
+        }
+    else
+        { item = item; left = None (); right = None () }
+    fi;
+
+fromSomeNode = fromSome 0 (.item);
+check node = node.item + fromSomeNode node.left - fromSomeNode node.right;
+out s depth check = println "\(s) of depth \(depth)\t check: \(check)";
+
+checkDepth depth item =
+    check (makeTree item depth) + check (makeTree (0 - item) depth);
+
+minDepth = 4;
+n = if empty? _argv then 2 else number _argv.[0] fi;
+maxDepth = max (minDepth + 2) n;
+
+out "stretch tree" (maxDepth + 1) (check (makeTree 0 (maxDepth + 1)));
+longLived = makeTree 0 maxDepth;
+var depth = minDepth;
+depth <= maxDepth loop
+   (iterations = 1 shl (maxDepth - depth + minDepth);
+    out "\(iterations * 2)\t trees" depth
+        (sum (map (checkDepth depth) [1 .. iterations]));
+    depth := depth + 2);
+out "long lived tree" maxDepth (check longLived);
