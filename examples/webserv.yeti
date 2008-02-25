@@ -4,24 +4,24 @@ processRequest conn =
    (replyHeader status contentType =
         conn.print "HTTP/1.0 \(status)\r\nContent-Type: \(contentType)\r\n\r\n";
     try
-        status = split "\s+" (conn.readTo "\r\n" 16384);
-        if count status != 3 or not (status.[2] =~ "^HTTP/1\.") then
-            throw new Bad("400 Bad request");
+        status = split '\s+' (conn.readTo "\r\n" 16384);
+        if count status != 3 or not (status.[2] =~ '^HTTP/1\.') then
+            throw new Bad('400 Bad request');
         fi;
-        uri = subst "[^/]*[^/.]/\.\." ""
+        uri = subst '[^/]*[^/.]/\.\.' ''
                     (substBy "%(0-9a-fA-F]<2>)" (chr . hexNumber)
                              (leftStr "?" status.[1]));
-        if uri =~ "/\.\." then
-            throw new Bad("403 Forbidden");
+        if uri =~ '/\.\.' then
+            throw new Bad('403 Forbidden');
         fi;
-        uri = subst "/$" "/index.html";
+        uri = subst '/$' '/index.html';
         ignore (conn.readTo "\r\n\r\n" 65536);
         open (basePath ^ uri) do f:
-            replyHeader "200 OK" "text/html";
+            replyHeader '200 OK' 'text/html';
             conn.sendFully (f.readBlock 16384) > 0 loop;
         done;
     catch Bad what:
-        replyHeader what "text/html";
+        replyHeader what 'text/html';
         conn.print "<h1>\(what)</h1>\n";
     finally
         conn.close ();
