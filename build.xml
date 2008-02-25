@@ -1,0 +1,44 @@
+<project name="yeti" default="compiler" basedir=".">
+
+<target name="prepare-build">
+	<property name="asm" value="${basedir}/asm-3.1.jar"/>
+	<available property="has.asm" file="${asm}"/>
+</target>
+
+<target name="fetch" depends="prepare-build" unless="has.asm">
+	<get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
+</target>
+
+<target name="lib" depends="fetch" unless="no.lib.build">
+	<mkdir dir=".build/lib"/>
+	<javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib"
+		encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"/>
+</target>
+
+<target name="checklib">
+	<available property="no.lib.build" file="${basedir}/.build/lib" type="dir"/>
+</target>
+
+<target name="compiler" depends="checklib,lib">
+	<mkdir dir=".build/compiler"/>
+	<javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c"
+		   encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
+		   classpath="${asm}:${basedir}/.build/lib"/>
+</target>
+
+<target name="yeti" depends="compiler">
+	<jar jarfile="${basedir}/yeti.jar">
+		<manifest>
+			<attribute name="Main-Class" value="yeti.lang.compiler.YetiC"/>
+		</manifest>
+		<fileset dir="${basedir}/.build/lib"/>
+		<fileset dir="${basedir}/.build/compiler"/>
+		<zipfileset src="${asm}"/>
+	</jar>
+</target>
+
+<target name="clean">
+	<delete dir="${basedir}/.build"/>
+</target>
+
+</project>
