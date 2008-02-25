@@ -399,6 +399,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Binder binder;
         Type[] free;
         Closure closure; // non-null means outer scopes must be proxied
+        Type importClass;
 
         public Scope(Scope outer, String name, Binder binder) {
             this.outer = outer;
@@ -673,7 +674,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static BindRef resolve(String sym, Node where, Scope scope, int depth) {
         for (; scope != null; scope = scope.outer) {
-            if (scope.name == sym) {
+            if (scope.name == sym && scope.binder != null) {
                 BindRef ref = scope.binder.getRef(where.line);
                 if (scope.free == null || scope.free.length == 0) {
                     return ref;
@@ -694,6 +695,18 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
         }
         throw new CompileException(where, "Unknown identifier: " + sym);
+    }
+
+    static Type resolveClass(String name, Node where, Scope scope) {
+        if (name.indexOf('/') >= 0) {
+            return new Type("L" + name + ';');
+        }
+        for (; scope != null; scope = scope.outer) {
+            if (scope.name == name && scope.importClass != null) {
+                return scope.importClass;
+            }
+        }
+        throw new CompileException(where, "Class not imported: " + name);
     }
 
     static void unusedBinding(Bind bind) {
@@ -792,7 +805,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
             Code[] args = mapArgs(op.arguments, scope, depth);
-            return new NewExpr(JavaType.resolveConstructor(op, args),
+            return new NewExpr(JavaType.resolveConstructor(op,
+                                    resolveClass(op.name, op, scope), args),
                                args, op.line);
         }
         throw new CompileException(node,
@@ -1234,6 +1248,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                         ", but only structs can be exploded)");
                 }
                 cur = new SeqExpr(m);
+            } else if (nodes[i] instanceof Import) {
+                String name = ((Import) nodes[i]).className;
+                int lastSlash = name.lastIndexOf('/');
+                scope = new Scope(scope, (lastSlash < 0 ? name
+                              : name.substring(lastSlash + 1)).intern(), null);
+                scope.importClass = new Type("L" + name + ';');
+                continue;
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {

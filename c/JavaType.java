@@ -461,8 +461,8 @@ class JavaType {
     }
 
     static Method resolveConstructor(YetiParser.NewOp call,
+                                     YetiType.Type t,
                                      YetiCode.Code[] args) {
-        YetiType.Type t = new YetiType.Type("L" + call.name + ";");
         JavaType jt = t.javaType;
         jt.resolve();
         Method m = jt.resolveByArgs(call, jt.constructors, "<init>", args);

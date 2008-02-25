@@ -204,6 +204,18 @@ interface YetiParser {
         }
     }
 
+    class Import extends Node {
+        String className;
+
+        Import(String className) {
+            this.className = className;
+        }
+
+        String str() {
+            return "import " + className.replace('/', '.');
+        }
+    }
+
     class Seq extends Node {
         Node[] st;
 
@@ -469,7 +481,7 @@ interface YetiParser {
         Node[] arguments;
 
         NewOp(String name, Node[] arguments) {
-            this.name = name;
+            this.name = name.intern();
             this.arguments = arguments;
         }
 
@@ -818,6 +830,9 @@ interface YetiParser {
             } else if (s == "load") {
                 res = new Load(readDotted(false,
                                 "Expected module name after 'load', not a "));
+            } else if (s == "import") {
+                res = new Import(readDotted(false,
+                                 "Expected class path after 'import', not a "));
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
