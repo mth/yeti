@@ -9,7 +9,7 @@
 	<get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
 </target>
 
-<target name="lib" depends="fetch" unless="no.lib.build">
+<target name="lib" unless="no.lib.build">
 	<mkdir dir=".build/lib"/>
 	<javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib"
 		encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"/>
@@ -19,7 +19,7 @@
 	<available property="no.lib.build" file="${basedir}/.build/lib" type="dir"/>
 </target>
 
-<target name="compiler" depends="checklib,lib">
+<target name="compiler" depends="checklib,lib,fetch">
 	<mkdir dir=".build/compiler"/>
 	<javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c"
 		   encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
