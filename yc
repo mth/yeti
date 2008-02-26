@@ -1,3 +1,2 @@
 #!/bin/sh
-JAVAHOME=/usr/lib/j2se/jdk1.6.0
-$JAVA_HOME/bin/java -server -classpath .build/lib:.build/compiler:asm-3.1.jar yeti.lang.compiler.YetiC "$@"
+java -classpath .build/lib:.build/compiler:asm-3.1.jar yeti.lang.compiler.YetiC "$@"
