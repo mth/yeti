@@ -1,0 +1,29 @@
+script = map do v: { like = like (head v);
+                     replies = array (tail v) } done
+   [['(father|mother|brother|sister)', "Tell me about your %."],
+    [' (?:am|i''m) +(.*)$', "Why are you %?"],
+    [' I +(.*)$', "Why do you %?"],
+    [' you +(.*)$', "We're talking about you, not me.",
+                    "Please don't be so personal."],
+    ['', "That's very interesting. Do go on.",
+         "Tell me more.",
+         "I'm not sure that I understand you fully.",
+         "Can you elaborate on that?"]];
+
+answer s pat =
+   (r = pat.like s;
+    if empty? r then
+        None ()
+    else
+        reply = pat.replies.[randomInt (length pat.replies)];
+        Some if length r <= 1 then
+            reply
+        else
+            replace '%' r.[1] reply
+        fi
+    fi);
+
+true loop
+   (print "? ";
+    s = ' ' ^ readln ();
+    println (head (catSome (map (answer s) script))))

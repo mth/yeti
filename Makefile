@@ -1,20 +1,16 @@
 .PHONY: compile lib
 
-compile: asm-3.1.jar
-	if [ ! -d yeti ]; then cd lib && $(MAKE) lib; fi
-	cd c && $(MAKE) compile
+compile:
+	ant compiler
 
 lib:
-	cd lib && $(MAKE) lib
+	ant lib
 
-yeti.jar: clean lib compile
-	jar xf asm-3.1.jar
-	jar cmf manifest $@ yeti/lang org/objectweb/asm
-	rm -r org
+yeti.jar:
+	ant clean yeti
 
 clean:
-	-rm -f yeti.jar
-	-rm -r yeti
+	-rm .build
 
 pub:
 	git repack -d
