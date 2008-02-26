@@ -17,7 +17,7 @@ clean:
 	-rm -r yeti
 
 pub:
-	git repack
+	git repack -d
 	-rm -rf /tmp/yeti
 	git-clone --bare . /tmp/yeti
 	cd /tmp/yeti && git-update-server-info
