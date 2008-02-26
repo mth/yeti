@@ -771,6 +771,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             if (op.op == "loop") {
                 return loop(op, scope, depth);
             }
+            if (op.left == null) {
+                throw new CompileException(op,
+                    "Internal error (incomplete operator " + op.op + ")");
+            }
             // TODO: unary -
             return apply(op.right,
                          apply(op, resolve(op.op, op, scope, depth),
