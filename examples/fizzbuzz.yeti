@@ -1,0 +1,4 @@
+for [1 .. 100] do i:
+    println (array ["fizzbuzz", "fizz", "buzz", "\(i)"])
+                .[index 0 [i%15, i%3, i%5, 0]]
+done

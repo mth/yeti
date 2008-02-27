@@ -1,0 +1,18 @@
+_1 = 0 - 1;
+sieve limit =
+   (numbers = array [0 .. limit];
+    numbers.[0] := _1;
+    numbers.[1] := _1;
+    var primes = [];
+    for numbers do i:
+        if i != _1 then
+            var j = i * 2;
+            j <= limit loop
+               (numbers.[j] := _1;
+                j := j + i);
+            primes := i :: primes;
+        fi
+    done;
+    reverse primes);
+
+println (sieve 100);
