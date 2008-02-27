@@ -598,10 +598,10 @@ interface YetiCode {
         }
 
         static void convertValue(Ctx ctx, YetiType.Type t) {
-            if (t != YetiType.JAVA) {
+            if (t.type != YetiType.JAVA) {
                 return; // array, no automatic conversions
             }
-            String descr = t.description;
+            String descr = t.javaType.description;
             if (descr == "V") {
                 ctx.m.visitInsn(ACONST_NULL);
             } else if (descr == "Ljava/lang/String;") {
@@ -655,21 +655,16 @@ interface YetiCode {
         }
     }
 
-    class ClassField {
+    class ClassField extends Code {
         private Code object;
-        private String name;
-        private String className;
-        private YetiType.Type rawType;
+        private JavaType.Field field;
         private int line;
 
-        ClassField(Code object, JavaType objType, String name,
-                   YetiType.Type type, YetiType.Type rawType, int line) {
-            this.type = type;
-            this.rawType = rawType;
+        ClassField(Code object, JavaType.Field field, int line) {
+            this.type = field.convertedType();
             this.object = object;
-            this.name = name;
+            this.field = field;
             this.line = line;
-            className = objType.className();
         }
 
         void gen(Ctx ctx) {
@@ -678,9 +673,10 @@ interface YetiCode {
             }
             ctx.visitLine(line);
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
-                                 className, name,
-                                 JavaType.descriptionOf(rawType));
-            MethodCall.convertValue(ctx, rawType);
+                                 field.classType.javaType.className(),
+                                 field.name,
+                                 JavaType.descriptionOf(field.type));
+            MethodCall.convertValue(ctx, field.type);
         }
     }
 

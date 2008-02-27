@@ -951,12 +951,17 @@ interface YetiParser {
 
         // #something or #something(...)
         private Node readObjectRef() {
-            Node field = fetch();
-            if (!(field instanceof Sym)) {
-                throw new CompileException(field,
-                    "Expected field/method name, found " + field);
+            int nline = line, ncol = p - lineStart + 1;
+            int st = skipSpace(), i = st;
+            while (i < src.length && Character.isJavaIdentifierPart(src[i]))
+                ++i;
+            if (i == st) {
+                throw new CompileException(nline, ncol,
+                            "Expecting java identifier after #");
             }
-            return new ObjectRefOp(((Sym) field).sym, readArgs());
+            p = i;
+            return new ObjectRefOp(new String(src, st, i - st).intern(),
+                                   readArgs());
         }
 
         private Node readIf() {

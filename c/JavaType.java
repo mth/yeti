@@ -46,9 +46,9 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
         parent = superName;
-        System.err.println("visit: ver=" + version + " | access=" + access
+/*        System.err.println("visit: ver=" + version + " | access=" + access
             + " | name=" + name + " | sig=" + signature + " super="
-            + superName);
+            + superName);*/
     }
 
     public void visitEnd() {
@@ -106,30 +106,30 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     public FieldVisitor visitField(int access, String name, String desc,
                                    String signature, Object value) {
         if ((access & ACC_PRIVATE) == 0) {
-            System.err.println("visitField: name=" + name + " | desc="
+/*            System.err.println("visitField: name=" + name + " | desc="
                     + desc + " | sig=" + signature + " | val=" + value
-                    + " | access=" + access);
+                    + " | access=" + access);*/
             List l = parseSig(0, signature == null ? desc : signature);
             (((access & ACC_STATIC) == 0) ? fields : staticFields).put(name,
-                new JavaType.Field(access, (YetiType.Type) l.get(0)));
+                new JavaType.Field(name, access, (YetiType.Type) l.get(0)));
         }
         return null;
     }
 
     public void visitInnerClass(String name, String outerName,
                                 String innerName, int access) {
-        System.err.println("visitInnerClass: name=" +
-            name + " | outer=" + outerName + " | inner=" + innerName);
+/*        System.err.println("visitInnerClass: name=" +
+            name + " | outer=" + outerName + " | inner=" + innerName);*/
     }
 
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
         if ((access & ACC_PRIVATE) == 0) {
-            System.err.println("visitMethod: name=" + name + " | desc=" + desc
+/*            System.err.println("visitMethod: name=" + name + " | desc=" + desc
                 + " | sig=" + signature + " | exc=" +
                 (exceptions == null ? "()"
                     : Arrays.asList(exceptions).toString())
-                + " | access=" + access);
+                + " | access=" + access);*/
             List l = parseSig(1, signature == null ? desc : signature);
             JavaType.Method m = new JavaType.Method();
             m.name = name.intern();
@@ -150,23 +150,30 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     }
 
     public void visitOuterClass(String owner, String name, String desc) {
-        System.err.println("visitOuterClass: owner=" + owner + " | name="
-            + name + " | desc=" + desc);
+/*        System.err.println("visitOuterClass: owner=" + owner + " | name="
+            + name + " | desc=" + desc);*/
     }
 
     public void visitSource(String source, String debug) {
-        System.err.println("visitSource: src=" + source + " | debug=" + debug);
+//        System.err.println("visitSource: src=" + source + " | debug=" + debug);
     }
 }
 
 class JavaType {
     static class Field {
         int access;
+        String name;
         YetiType.Type type;
+        YetiType.Type classType;
 
-        public Field(int access, YetiType.Type type) {
+        public Field(String name, int access, YetiType.Type type) {
             this.access = access;
             this.type = type;
+            this.name = name;
+        }
+
+        YetiType.Type convertedType() {
+            return convertValueType(type);
         }
     }
 
@@ -258,30 +265,7 @@ class JavaType {
                description == "Ljava/util/Collection;" ||
                description == "Ljava/util/Set;";
     }
-/*
-    static String simpleJavaSig(YetiType.Type t) {
-        switch (t.type) {
-        case YetiType.JAVA:
-            if (t.javaType.isCollection()) {
-                if (t.javaType.description == "Ljava/lang/Set;") {
-                    return "s" + (t.param.length == 0
-                            ? "" : simpleJavaSig(t.param[0]));
-                }
-                return "l" + (t.param.length == 0
-                        ? "" : simpleJavaSig(t.param[0]));
-            }
-            for (int i = NUMBER_TYPES.length; --i >= 0;) {
-                if (t.javaType.description == NUMBER_TYPES[i]) {
-                    return NUMBER_X[i];
-                }
-            }
-            return t.javaType.description;
-        case YetiType.JAVA_ARRAY:
-            return "[" + simpleJavaSig(t.param[0]);
-        }
-        throw new IllegalArgumentException("simpleJavaSig(" + t.type + ")");
-    }
-*/
+
     String className() {
         if (!description.startsWith("L")) {
             throw new RuntimeException("No className for " + description);
@@ -326,7 +310,6 @@ class JavaType {
         "Ljava/lang/Byte;",
         "Ljava/lang/Short;",
         "Ljava/lang/Float;",
-        "Ljava/lang/Double;",
         "Ljava/lang/Integer;",
         "Ljava/lang/Long;",
         "Ljava/math/BigInteger;",
@@ -351,7 +334,8 @@ class JavaType {
     int isAssignableJT(YetiType.Type to, YetiType.Type from) {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
-            return from.type == YetiType.VAR ? 1 : 10;
+            return from.type == YetiType.VAR ? 1 :
+                   from.type == YetiType.NUM ? 2 : 10;
         }
         switch (from.type) {
         case YetiType.STR:
@@ -360,11 +344,13 @@ class JavaType {
                    "Ljava/lang/StringBuilder;" == description ? 2 :
                    "C" == description ? 3 : -1;
         case YetiType.NUM:
+            if (description == "D" || description == "Ljava/lang/Double;")
+                return 3;
             if (description.length() == 1)
-                return "BDFIJS".indexOf(description.charAt(0)) < 0 ? -1 : 2;
+                return "BFIJS".indexOf(description.charAt(0)) < 0 ? -1 : 4;
             for (int i = NUMBER_TYPES.length; --i >= 0;)
                 if (NUMBER_TYPES[i] == description)
-                    return 2;
+                    return 4;
             return description == "Ljava/lang/Number;" ? 1 :
                    description == "Lyeti/lang/Num;" ? 0 : -1;
         case YetiType.BOOL:
@@ -410,7 +396,7 @@ class JavaType {
 
     static int isAssignable(YetiType.Type to, YetiType.Type from) {
         int ass;
-        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
+//        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
         to = to.deref();
         from = from.deref();
         if (to.type == YetiType.JAVA) {
@@ -502,22 +488,27 @@ class JavaType {
                         isStatic ? jt.staticMethods : jt.methods,
                         ref.name, args);
         m.classType = objType;
+        System.err.println(" ** " + m.name + " access "
+            + Integer.toHexString(m.access));
         return m;
     }
 
-    static YetiType.Type resolveField(YetiParser.ObjectRefOp ref,
-                                      YetiType.Type objType,
-                                      boolean isStatic) {
+    static Field resolveField(YetiParser.ObjectRefOp ref,
+                              YetiType.Type objType,
+                              boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot access field on ");
-        YetiType.Type t =
-            (YetiType.Type) (isStatic ? jt.staticFields : jt.methods).get(ref.name);
-        if (t == null) {
+        Field field =
+            (Field) (isStatic ? jt.staticFields : jt.fields).get(ref.name);
+        if (field == null) {
             throw new CompileException(ref,
                         (isStatic ? "Static field" : "Field") +
                         " not found in " + jt.dottedName());
         }
-        return t;
+        field.classType = objType;
+        System.err.println(" ** " + field.name + " access "
+            + Integer.toHexString(field.access));
+        return field;
     }
 
     static JavaType fromDescription(String sig) {

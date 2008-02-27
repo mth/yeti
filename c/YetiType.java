@@ -258,8 +258,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             StringBuffer res = new StringBuffer();
             boolean variant = type == VARIANT;
             if (partialMembers != null) {
-                for (Iterator i = partialMembers.entrySet().iterator();
-                     i.hasNext();) {
+                Iterator i = partialMembers.entrySet().iterator();
+                while (i.hasNext()) {
                     Map.Entry e = (Map.Entry) i.next();
                     if (res.length() != 0) {
                         res.append(variant ? " | " : "; ");
@@ -270,8 +270,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 }
             }
             if (finalMembers != null) {
-                for (Iterator i = finalMembers.entrySet().iterator();
-                     i.hasNext();) {
+                Iterator i = finalMembers.entrySet().iterator();
+                while (i.hasNext()) {
                     Map.Entry e = (Map.Entry) i.next();
                     if (partialMembers != null &&
                         partialMembers.containsKey(e.getKey())) {
@@ -939,8 +939,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             t = obj.type;
         }
         if (ref.arguments == null) {
-            Type res = JavaType.resolveField(ref, t, obj == null);
-            return new ClassField(obj, res, ref.line);
+            JavaType.Field f = JavaType.resolveField(ref, t, obj == null);
+            return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(ref.arguments, scope, depth);
         return new MethodCall(obj,
