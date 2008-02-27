@@ -45,7 +45,7 @@ import yeti.lang.IntNum;
 import yeti.lang.BigNum;
 
 interface YetiCode {
-    ThreadLocal currentCompileCtx();
+    ThreadLocal currentCompileCtx = new ThreadLocal();
 
     class Constants implements Opcodes {
         private Map constants = new HashMap();
@@ -92,8 +92,8 @@ interface YetiCode {
 
         private void generateModuleFields(Map fields, Ctx ctx) {
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-            for (Iterator entryIter = fields.entrySet().iterator(); entryIter.hasNext();) {
-                Map.Entry entry = (Map.Entry) entryIter.next();
+            for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
+                Map.Entry entry = (Map.Entry) i.next();
                 String name = (String) entry.getKey();
                 String jname = Code.mangle(name);
                 String type = Code.javaType((YetiType.Type) entry.getValue());
