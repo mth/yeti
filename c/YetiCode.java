@@ -45,7 +45,7 @@ import yeti.lang.IntNum;
 import yeti.lang.BigNum;
 
 interface YetiCode {
-    ThreadLocal currentCompileCtx = new ThreadLocal();
+    ThreadLocal currentCompileCtx();
 
     class Constants implements Opcodes {
         private Map constants = new HashMap();
@@ -92,8 +92,8 @@ interface YetiCode {
 
         private void generateModuleFields(Map fields, Ctx ctx) {
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-            for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
-                Map.Entry entry = (Map.Entry) i.next();
+            for (Iterator entryIter = fields.entrySet().iterator(); entryIter.hasNext();) {
+                Map.Entry entry = (Map.Entry) entryIter.next();
                 String name = (String) entry.getKey();
                 String jname = Code.mangle(name);
                 String type = Code.javaType((YetiType.Type) entry.getValue());
@@ -594,10 +594,14 @@ interface YetiCode {
                 object.gen(ctx);
             }
             genCall(ctx, object == null ? INVOKESTATIC : INVOKEVIRTUAL);
-            if (method.returnType.type != YetiType.JAVA) {
+            convertValue(ctx, method.returnType);
+        }
+
+        static void convertValue(Ctx ctx, YetiType.Type t) {
+            if (t != YetiType.JAVA) {
                 return; // array, no automatic conversions
             }
-            String descr = method.returnType.javaType.description;
+            String descr = t.description;
             if (descr == "V") {
                 ctx.m.visitInsn(ACONST_NULL);
             } else if (descr == "Ljava/lang/String;") {
@@ -648,6 +652,35 @@ interface YetiCode {
                 ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                                       "valueOf", "(C)Ljava/lang/String;");
             }
+        }
+    }
+
+    class ClassField {
+        private Code object;
+        private String name;
+        private String className;
+        private YetiType.Type rawType;
+        private int line;
+
+        ClassField(Code object, JavaType objType, String name,
+                   YetiType.Type type, YetiType.Type rawType, int line) {
+            this.type = type;
+            this.rawType = rawType;
+            this.object = object;
+            this.name = name;
+            this.line = line;
+            className = objType.className();
+        }
+
+        void gen(Ctx ctx) {
+            if (object != null) {
+                object.gen(ctx);
+            }
+            ctx.visitLine(line);
+            ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
+                                 className, name,
+                                 JavaType.descriptionOf(rawType));
+            MethodCall.convertValue(ctx, rawType);
         }
     }
 

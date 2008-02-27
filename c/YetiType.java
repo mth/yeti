@@ -258,9 +258,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             StringBuffer res = new StringBuffer();
             boolean variant = type == VARIANT;
             if (partialMembers != null) {
-                for (Iterator i = partialMembers.entrySet().iterator();
-                     i.hasNext();) {
-                    Map.Entry e = (Map.Entry) i.next();
+                for (Iterator eIter = partialMembers.entrySet().iterator(); eIter.hasNext();) {
+                    Map.Entry e = (Map.Entry) eIter.next();
                     if (res.length() != 0) {
                         res.append(variant ? " | " : "; ");
                     }
@@ -270,9 +269,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 }
             }
             if (finalMembers != null) {
-                for (Iterator i = finalMembers.entrySet().iterator();
-                     i.hasNext();) {
-                    Map.Entry e = (Map.Entry) i.next();
+                for (Iterator eIter = finalMembers.entrySet().iterator(); eIter.hasNext();) {
+                    Map.Entry e = (Map.Entry) eIter.next();
                     if (partialMembers != null &&
                         partialMembers.containsKey(e.getKey())) {
                         continue;
@@ -482,8 +480,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         } else {
             // unify final members
             ff = new HashMap(a.finalMembers);
-            for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
-                Map.Entry entry = (Map.Entry) i.next();
+            for (Iterator entryIter = ff.entrySet().iterator(); entryIter.hasNext();) {
+                Map.Entry entry = (Map.Entry) entryIter.next();
                 Type f = (Type) b.finalMembers.get(entry.getKey());
                 if (f != null) {
                     Type t = (Type) entry.getValue();
@@ -636,8 +634,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static Map copyTypeMap(Map types, Map free, Map known) {
         Map result = new HashMap();
-        for (Iterator i = types.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
+        for (Iterator entryIter = types.entrySet().iterator(); entryIter.hasNext();) {
+            Map.Entry entry = (Map.Entry) entryIter.next();
             result.put(entry.getKey(),
                     copyType((Type) entry.getValue(), free, known));
         }
@@ -937,6 +935,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             (t = resolveClass(((Sym) ref.right).sym, scope, true)) == null) {
             obj = analyze(ref.right, scope, depth);
             t = obj.type;
+        }
+        if (ref.arguments == null) {
+            Type res = JavaType.resolveField(ref, t, obj == null);
+            return new ClassField(obj, res, ref.line);
         }
         Code[] args = mapArgs(ref.arguments, scope, depth);
         return new MethodCall(obj,

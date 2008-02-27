@@ -191,34 +191,11 @@ class JavaType {
         }
 
         YetiType.Type convertedReturnType() {
-            if (returnType.type != YetiType.JAVA) {
-                return returnType;
-            }
-            String descr = returnType.javaType.description;
-            if (descr == "Ljava/lang/String;") {
-                return YetiType.STR_TYPE;
-            }
-            if (descr == "Ljava/lang/Boolean;" || descr == "Z") {
-                return YetiType.BOOL_TYPE;
-            }
-            if (descr == "Lyeti/lang/Num;" ||
-                descr.length() == 1 && "BDFIJS".indexOf(descr.charAt(0)) >= 0) {
-                return YetiType.NUM_TYPE;
-            }
-            if (descr == "V") {
-                return YetiType.UNIT_TYPE;
-            }
-            return returnType;
+            return convertValueType(returnType);
         }
 
         String argDescr(int arg) {
-            YetiType.Type t = arguments[arg];
-            String r = "";
-            while (t.type == YetiType.JAVA_ARRAY) {
-                r = r.concat("[");
-                t = t.param[0];
-            }
-            return r.concat(t.javaType.description);
+            return descriptionOf(arguments[arg]);
         }
 
         String descr() {
@@ -241,6 +218,36 @@ class JavaType {
     private Method[] constructors;
     private JavaType parent;
     private static HashMap CACHE = new HashMap();
+
+    static String descriptionOf(YetiType.Type t) {
+        String r = "";
+        while (t.type == YetiType.JAVA_ARRAY) {
+            r = r.concat("[");
+            t = t.param[0];
+        }
+        return r.concat(t.javaType.description);
+    }
+
+    static YetiType.Type convertValueType(YetiType.Type t) {
+        if (t.type != YetiType.JAVA) {
+            return t;
+        }
+        String descr = t.javaType.description;
+        if (descr == "Ljava/lang/String;") {
+            return YetiType.STR_TYPE;
+        }
+        if (descr == "Ljava/lang/Boolean;" || descr == "Z") {
+            return YetiType.BOOL_TYPE;
+        }
+        if (descr == "Lyeti/lang/Num;" ||
+            descr.length() == 1 && "BDFIJS".indexOf(descr.charAt(0)) >= 0) {
+            return YetiType.NUM_TYPE;
+        }
+        if (descr == "V") {
+            return YetiType.UNIT_TYPE;
+        }
+        return t;
+    }
 
     private JavaType(String description) {
         this.description = description.intern();
@@ -282,6 +289,10 @@ class JavaType {
         return description.substring(1, description.length() - 1);
     }
 
+    String dottedName() {
+        return className().replace('/', '.');
+    }
+
     private synchronized void resolve() {
         if (resolved)
             return;
@@ -296,7 +307,7 @@ class JavaType {
             new ClassReader(in).accept(t, null,
                     ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         } catch (IOException ex) {
-            throw new RuntimeException("Not found: " + className(), ex);
+            throw new RuntimeException("Not found: " + dottedName(), ex);
         }
 //        System.err.println(t.constructors);
         fields = t.fields;
@@ -457,7 +468,18 @@ class JavaType {
             return res;
         }
         throw new CompileException(n, "No suitable method " + name
-                                   + " found in " + className());
+                                   + " found in " + dottedName());
+    }
+
+    private static JavaType javaTypeOf(YetiParser.Node where,
+                                       YetiType.Type objType, String err) {
+        if (objType.type != YetiType.JAVA) {
+            throw new CompileException(where,
+                        err + objType + ", java object expected");
+        }
+        JavaType jt = objType.javaType;
+        jt.resolve();
+        return jt;
     }
 
     static Method resolveConstructor(YetiParser.NewOp call,
@@ -475,17 +497,27 @@ class JavaType {
                                 YetiCode.Code[] args,
                                 boolean isStatic) {
         objType = objType.deref();
-        if (objType.type != YetiType.JAVA) {
-            throw new CompileException(ref, "Cannot call method on " +
-                                       objType + ", java object expected");
-        }
-        JavaType jt = objType.javaType;
-        jt.resolve();
+        JavaType jt = javaTypeOf(ref, objType, "Cannot call method on");
         Method m = jt.resolveByArgs(ref,
                         isStatic ? jt.staticMethods : jt.methods,
                         ref.name, args);
         m.classType = objType;
         return m;
+    }
+
+    static YetiType.Type resolveField(YetiParser.ObjectRefOp ref,
+                                      YetiType.Type objType,
+                                      boolean isStatic) {
+        objType = objType.deref();
+        JavaType jt = javaTypeOf(ref, objType, "Cannot access field on ");
+        YetiType.Type t =
+            (YetiType.Type) (isStatic ? jt.staticFields : jt.methods).get(ref.name);
+        if (t == null) {
+            throw new CompileException(ref,
+                        (isStatic ? "Static field" : "Field") +
+                        " not found in " + jt.dottedName());
+        }
+        return t;
     }
 
     static JavaType fromDescription(String sig) {
