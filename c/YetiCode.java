@@ -51,6 +51,7 @@ interface YetiCode {
         private Map constants = new HashMap();
         private Ctx sb;
         String sourceName;
+        String packageName;
         Ctx ctx;
 
         void registerConstant(Object key, final Code code, Ctx ctx_) {
@@ -139,6 +140,7 @@ interface YetiCode {
             }
             Constants constants = new Constants();
             constants.sourceName = sourceName;
+            constants.packageName = JavaType.packageOfClass(name);
             Ctx ctx = new Ctx(this, constants, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             constants.ctx = ctx;
@@ -567,8 +569,8 @@ interface YetiCode {
     }
 
     class NewExpr extends JavaExpr {
-        NewExpr(JavaType.Method init, Code[] args, int line) {
-            super(init, args, line);
+        NewExpr(JavaType.Method init, Code[] args, int line, int col) {
+            super(null, init, args, line, col);
             type = init.classType;
         }
 
@@ -583,10 +585,10 @@ interface YetiCode {
     class MethodCall extends JavaExpr {
         private Code object;
 
-        MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
-            super(method, args, line);
+        MethodCall(Code object, JavaType.Method method, Code[] args,
+                   int line, int col) {
+            super(object, method, args, line, col);
             type = method.convertedReturnType();
-            this.object = object;
         }
 
         void gen(Ctx ctx) {
@@ -598,28 +600,28 @@ interface YetiCode {
         }
     }
 
-    class ClassField extends Code {
-        private Code object;
+    class ClassField extends JavaExpr {
         private JavaType.Field field;
-        private int line;
 
-        ClassField(Code object, JavaType.Field field, int line) {
+        ClassField(Code object, JavaType.Field field, int line, int col) {
+            super(object, null, null, line, col);
             this.type = field.convertedType();
-            this.object = object;
             this.field = field;
-            this.line = line;
         }
 
         void gen(Ctx ctx) {
+            String className = field.classType.javaType.className();
+            if ((field.access & ACC_PUBLIC) == 0) {
+                checkPackage(ctx, className, "field", field.name);
+            }
             if (object != null) {
                 object.gen(ctx);
             }
             ctx.visitLine(line);
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
-                                 field.classType.javaType.className(),
-                                 field.name,
+                                 className, field.name,
                                  JavaType.descriptionOf(field.type));
-            JavaExpr.convertValue(ctx, field.type);
+            convertValue(ctx, field.type);
         }
 
         Code assign(final Code setValue) {
@@ -631,7 +633,7 @@ interface YetiCode {
                     if (object != null) {
                         object.gen(ctx);
                     }
-                    JavaExpr.genValue(ctx, setValue, field.type, line);
+                    genValue(ctx, setValue, field.type, line);
                     ctx.m.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
                                          field.classType.javaType.className(),
                                          field.name,

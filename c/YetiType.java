@@ -814,7 +814,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 notImported(op, op.name);
             }
             return new NewExpr(JavaType.resolveConstructor(op, t, args),
-                               args, op.line);
+                               args, op.line, op.col);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -949,12 +949,12 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         }
         if (ref.arguments == null) {
             JavaType.Field f = JavaType.resolveField(ref, t, obj == null);
-            return new ClassField(obj, f, ref.line);
+            return new ClassField(obj, f, ref.line, ref.col);
         }
         Code[] args = mapArgs(ref.arguments, scope, depth);
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null),
-                    args, ref.line);
+                    args, ref.line, ref.col);
     }
 
     static Code apply(Node where, Code fun, Code arg, int depth) {

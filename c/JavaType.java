@@ -553,7 +553,12 @@ class JavaType {
         return s.toString();
     }
 
-    public static void main(String[] arg) throws Exception{
+    static String packageOfClass(String className) {
+        int p = className.lastIndexOf('/');
+        return p < 0 ? "" : className.substring(0, p);
+    }
+
+/*    public static void main(String[] arg) throws Exception{
         InputStream in = Thread.currentThread().getContextClassLoader()
                             .getResourceAsStream(arg[0] + ".class");
         JavaTypeReader t = new JavaTypeReader();
@@ -561,6 +566,6 @@ class JavaType {
                 ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         System.err.println(t.fields);
         System.err.println(t.methods);
-    }
+    }*/
 }
 
