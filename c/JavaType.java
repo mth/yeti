@@ -488,8 +488,8 @@ class JavaType {
                         isStatic ? jt.staticMethods : jt.methods,
                         ref.name, args);
         m.classType = objType;
-        System.err.println(" ** " + m.name + " access "
-            + Integer.toHexString(m.access));
+/*        System.err.println(" ** " + m.name + " access "
+            + Integer.toHexString(m.access));*/
         return m;
     }
 
@@ -506,8 +506,8 @@ class JavaType {
                         " not found in " + jt.dottedName());
         }
         field.classType = objType;
-        System.err.println(" ** " + field.name + " access "
-            + Integer.toHexString(field.access));
+/*        System.err.println(" ** " + field.name + " access "
+            + Integer.toHexString(field.access));*/
         return field;
     }
 
