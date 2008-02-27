@@ -934,7 +934,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Code obj = null;
         Type t;
         if (!(ref.right instanceof Sym) ||
-            (t = resolveClass(((Sym) ref.right).sym, scope, false)) == null) {
+            (t = resolveClass(((Sym) ref.right).sym, scope, true)) == null) {
             obj = analyze(ref.right, scope, depth);
             t = obj.type;
         }
