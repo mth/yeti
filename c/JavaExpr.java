@@ -188,7 +188,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
         }
     }
 
-    private void convertNum(Ctx ctx, String descr) {
+    private static void convertNum(Ctx ctx, String descr) {
         String method = null;
         switch (descr.charAt(0)) {
             case 'B': method = "byteValue"; break;
@@ -207,43 +207,112 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
         String name = method.classType.javaType.className();
     genargs:
         for (int i = 0; i < args.length; ++i) {
-            YetiType.Type given = args[i].type;
             YetiType.Type argType = method.arguments[i];
-            String descr =
-                argType.javaType == null ? null : argType.javaType.description;
-            if (descr == "Z") {
-                // boolean
-                Label end = new Label(), lie = new Label();
-                args[i].genIf(ctx, lie, false);
-                ctx.intConst(1);
-                ctx.m.visitJumpInsn(GOTO, end);
-                ctx.m.visitLabel(lie);
-                ctx.intConst(0);
-                ctx.m.visitLabel(end);
-                continue;
-            }
-            args[i].gen(ctx);
-            if (given.type == YetiType.JAVA) {
-                continue;
-            }
-            ctx.visitLine(line);
-            if (descr == "C") {
-                ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
-                ctx.intConst(0);
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL,
-                        "java/lang/String", "charAt", "(I)C");
-                continue;
-            }
-            if (argType.type == YetiType.JAVA_ARRAY &&
-                given.type == YetiType.STR) {
-                ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL,
-                    "java/lang/String", "toCharArray", "()[C");
-                continue;
-            }
-            convert(ctx, given, argType);
+            genRawArg(ctx, args[i], argType, line);
+            convert(ctx, args[i].type, argType);
         }
         ctx.visitLine(line);
         ctx.m.visitMethodInsn(invokeInsn, name, method.name, method.descr());
+    }
+
+    private static void genRawArg(Ctx ctx, Code arg,
+                                  YetiType.Type argType, int line) {
+        YetiType.Type given = arg.type;
+        String descr =
+            argType.javaType == null ? null : argType.javaType.description;
+        if (descr == "Z") {
+            // boolean
+            Label end = new Label(), lie = new Label();
+            arg.genIf(ctx, lie, false);
+            ctx.intConst(1);
+            ctx.m.visitJumpInsn(GOTO, end);
+            ctx.m.visitLabel(lie);
+            ctx.intConst(0);
+            ctx.m.visitLabel(end);
+            return;
+        }
+        arg.gen(ctx);
+        if (given.type == YetiType.JAVA) {
+            return;
+        }
+        ctx.visitLine(line);
+        if (descr == "C") {
+            ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
+            ctx.intConst(0);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                    "java/lang/String", "charAt", "(I)C");
+            return;
+        }
+        if (argType.type == YetiType.JAVA_ARRAY &&
+            given.type == YetiType.STR) {
+            ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                "java/lang/String", "toCharArray", "()[C");
+        }
+    }
+
+    static void genValue(Ctx ctx, Code arg, YetiType.Type argType, int line) {
+        genRawArg(ctx, arg, argType, line);
+        if (arg.type.type == YetiType.NUM &&
+            argType.javaType.description.length() == 1) {
+            convertNum(ctx, argType.javaType.description);
+        }
+    }
+
+    static void convertValue(Ctx ctx, YetiType.Type t) {
+        if (t.type != YetiType.JAVA) {
+            return; // array, no automatic conversions
+        }
+        String descr = t.javaType.description;
+        if (descr == "V") {
+            ctx.m.visitInsn(ACONST_NULL);
+        } else if (descr == "Ljava/lang/String;") {
+            Label nonnull = new Label();
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitJumpInsn(IFNONNULL, nonnull);
+            ctx.m.visitInsn(POP);
+            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "UNDEF_STR",
+                                 "Ljava/lang/String;");
+            ctx.m.visitLabel(nonnull);
+        } else if (descr == "Z") {
+            Label skip = new Label(), end = new Label();
+            ctx.m.visitJumpInsn(IFEQ, skip);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TRUE",
+                                 "Ljava/lang/Boolean;");
+            ctx.m.visitJumpInsn(GOTO, end);
+            ctx.m.visitLabel(skip);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE",
+                                 "Ljava/lang/Boolean;");
+            ctx.m.visitLabel(end);
+        } else if (descr == "B" || descr == "S" ||
+                   descr == "I" || descr == "J") {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/IntNum");
+            if (descr == "J") {
+                ctx.m.visitInsn(DUP_X2);
+                ctx.m.visitInsn(DUP_X2);
+                ctx.m.visitInsn(POP);
+            } else {
+                ctx.m.visitInsn(DUP_X1);
+                ctx.m.visitInsn(SWAP);
+            }
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/IntNum",
+                                  "<init>", descr == "J" ? "(J)V" : "(I)V");
+        } else if (descr == "D" || descr == "F") {
+            ctx.m.visitTypeInsn(NEW, "yeti/lang/FloatNum");
+            if (descr == "F") {
+                ctx.m.visitInsn(DUP_X1);
+                ctx.m.visitInsn(SWAP);
+                ctx.m.visitInsn(F2D);
+            } else {
+                ctx.m.visitInsn(DUP_X2);
+                ctx.m.visitInsn(DUP_X2);
+                ctx.m.visitInsn(POP);
+            }
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
+                                  "<init>", "(D)V");
+        } else if (descr == "C") {
+            ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                                  "valueOf", "(C)Ljava/lang/String;");
+        }
     }
 }

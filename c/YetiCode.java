@@ -596,63 +596,6 @@ interface YetiCode {
             genCall(ctx, object == null ? INVOKESTATIC : INVOKEVIRTUAL);
             convertValue(ctx, method.returnType);
         }
-
-        static void convertValue(Ctx ctx, YetiType.Type t) {
-            if (t.type != YetiType.JAVA) {
-                return; // array, no automatic conversions
-            }
-            String descr = t.javaType.description;
-            if (descr == "V") {
-                ctx.m.visitInsn(ACONST_NULL);
-            } else if (descr == "Ljava/lang/String;") {
-                Label nonnull = new Label();
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitJumpInsn(IFNONNULL, nonnull);
-                ctx.m.visitInsn(POP);
-                ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "UNDEF_STR",
-                                     "Ljava/lang/String;");
-                ctx.m.visitLabel(nonnull);
-            } else if (descr == "Z") {
-                Label skip = new Label(), end = new Label();
-                ctx.m.visitJumpInsn(IFEQ, skip);
-                ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "TRUE",
-                                     "Ljava/lang/Boolean;");
-                ctx.m.visitJumpInsn(GOTO, end);
-                ctx.m.visitLabel(skip);
-                ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE",
-                                     "Ljava/lang/Boolean;");
-                ctx.m.visitLabel(end);
-            } else if (descr == "B" || descr == "S" ||
-                       descr == "I" || descr == "J") {
-                ctx.m.visitTypeInsn(NEW, "yeti/lang/IntNum");
-                if (descr == "J") {
-                    ctx.m.visitInsn(DUP_X2);
-                    ctx.m.visitInsn(DUP_X2);
-                    ctx.m.visitInsn(POP);
-                } else {
-                    ctx.m.visitInsn(DUP_X1);
-                    ctx.m.visitInsn(SWAP);
-                }
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/IntNum",
-                                      "<init>", descr == "J" ? "(J)V" : "(I)V");
-            } else if (descr == "D" || descr == "F") {
-                ctx.m.visitTypeInsn(NEW, "yeti/lang/FloatNum");
-                if (descr == "F") {
-                    ctx.m.visitInsn(DUP_X1);
-                    ctx.m.visitInsn(SWAP);
-                    ctx.m.visitInsn(F2D);
-                } else {
-                    ctx.m.visitInsn(DUP_X2);
-                    ctx.m.visitInsn(DUP_X2);
-                    ctx.m.visitInsn(POP);
-                }
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
-                                      "<init>", "(D)V");
-            } else if (descr == "C") {
-                ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
-                                      "valueOf", "(C)Ljava/lang/String;");
-            }
-        }
     }
 
     class ClassField extends Code {
@@ -676,7 +619,26 @@ interface YetiCode {
                                  field.classType.javaType.className(),
                                  field.name,
                                  JavaType.descriptionOf(field.type));
-            MethodCall.convertValue(ctx, field.type);
+            JavaExpr.convertValue(ctx, field.type);
+        }
+
+        Code assign(final Code setValue) {
+            if ((field.access & ACC_FINAL) != 0) {
+                return null;
+            }
+            return new Code() {
+                void gen(Ctx ctx) {
+                    if (object != null) {
+                        object.gen(ctx);
+                    }
+                    JavaExpr.genValue(ctx, setValue, field.type, line);
+                    ctx.m.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
+                                         field.classType.javaType.className(),
+                                         field.name,
+                                         JavaType.descriptionOf(field.type));
+                    ctx.m.visitInsn(ACONST_NULL);
+                }
+            };
         }
     }
 

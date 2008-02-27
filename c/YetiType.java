@@ -811,8 +811,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             Code[] args = mapArgs(op.arguments, scope, depth);
             Type t = resolveClass(op.name, scope, false);
             if (t == null) {
-                throw new CompileException(op,
-                                "Class not imported: " + op.name);
+                notImported(op, op.name);
             }
             return new NewExpr(JavaType.resolveConstructor(op, t, args),
                                args, op.line);
@@ -930,11 +929,21 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         return res;
     }
 
+    static void notImported(Node where, String name) {
+        throw new CompileException(where, "Class not imported: " + name);
+    }
+
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
         Code obj = null;
-        Type t;
-        if (!(ref.right instanceof Sym) ||
-            (t = resolveClass(((Sym) ref.right).sym, scope, true)) == null) {
+        Type t = null;
+        if (ref.right instanceof Sym) {
+            String className = ((Sym) ref.right).sym;
+            t = resolveClass(className, scope, true);
+            if (t == null && Character.isUpperCase(className.charAt(0))) {
+                notImported(ref, className);
+            }
+        }
+        if (t == null) {
             obj = analyze(ref.right, scope, depth);
             t = obj.type;
         }
