@@ -697,16 +697,16 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         throw new CompileException(where, "Unknown identifier: " + sym);
     }
 
-    static Type resolveClass(String name, Node where, Scope scope) {
+    static Type resolveClass(String name, Scope scope, boolean shadow) {
         if (name.indexOf('/') >= 0) {
             return new Type("L" + name + ';');
         }
         for (; scope != null; scope = scope.outer) {
-            if (scope.name == name && scope.importClass != null) {
+            if (scope.name == name && (scope.importClass != null || shadow)) {
                 return scope.importClass;
             }
         }
-        throw new CompileException(where, "Class not imported: " + name);
+        return null;
     }
 
     static void unusedBinding(Bind bind) {
@@ -809,8 +809,12 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
             Code[] args = mapArgs(op.arguments, scope, depth);
-            return new NewExpr(JavaType.resolveConstructor(op,
-                                    resolveClass(op.name, op, scope), args),
+            Type t = resolveClass(op.name, scope, false);
+            if (t == null) {
+                throw new CompileException(op,
+                                "Class not imported: " + op.name);
+            }
+            return new NewExpr(JavaType.resolveConstructor(op, t, args),
                                args, op.line);
         }
         throw new CompileException(node,
@@ -927,10 +931,16 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
-        Code obj = analyze(ref.right, scope, depth);
+        Code obj = null;
+        Type t;
+        if (!(ref.right instanceof Sym) ||
+            (t = resolveClass(((Sym) ref.right).sym, scope, false)) == null) {
+            obj = analyze(ref.right, scope, depth);
+            t = obj.type;
+        }
         Code[] args = mapArgs(ref.arguments, scope, depth);
-        return new VirtualMethodCall(obj,
-                    JavaType.resolveVMethod(ref, obj.type, args),
+        return new MethodCall(obj,
+                    JavaType.resolveMethod(ref, t, args, obj == null),
                     args, ref.line);
     }
 

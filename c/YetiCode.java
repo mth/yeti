@@ -580,19 +580,20 @@ interface YetiCode {
         }
     }
 
-    class VirtualMethodCall extends JavaExpr {
+    class MethodCall extends JavaExpr {
         private Code object;
 
-        VirtualMethodCall(Code object, JavaType.Method method,
-                          Code[] args, int line) {
+        MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
             super(method, args, line);
             type = method.convertedReturnType();
             this.object = object;
         }
 
         void gen(Ctx ctx) {
-            object.gen(ctx);
-            genCall(ctx, INVOKEVIRTUAL);
+            if (object != null) {
+                object.gen(ctx);
+            }
+            genCall(ctx, object == null ? INVOKESTATIC : INVOKEVIRTUAL);
             if (method.returnType.type != YetiType.JAVA) {
                 return; // array, no automatic conversions
             }
@@ -620,15 +621,27 @@ interface YetiCode {
             } else if (descr == "B" || descr == "S" ||
                        descr == "I" || descr == "J") {
                 ctx.m.visitTypeInsn(NEW, "yeti/lang/IntNum");
-                ctx.m.visitInsn(SWAP);
+                if (descr == "J") {
+                    ctx.m.visitInsn(DUP_X2);
+                    ctx.m.visitInsn(DUP_X2);
+                    ctx.m.visitInsn(POP);
+                } else {
+                    ctx.m.visitInsn(DUP_X1);
+                    ctx.m.visitInsn(SWAP);
+                }
                 ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/IntNum",
                                       "<init>", descr == "J" ? "(J)V" : "(I)V");
             } else if (descr == "D" || descr == "F") {
-                if (descr == "F") {
-                    ctx.m.visitInsn(F2D);
-                }
                 ctx.m.visitTypeInsn(NEW, "yeti/lang/FloatNum");
-                ctx.m.visitInsn(SWAP);
+                if (descr == "F") {
+                    ctx.m.visitInsn(DUP_X1);
+                    ctx.m.visitInsn(SWAP);
+                    ctx.m.visitInsn(F2D);
+                } else {
+                    ctx.m.visitInsn(DUP_X2);
+                    ctx.m.visitInsn(DUP_X2);
+                    ctx.m.visitInsn(POP);
+                }
                 ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
                                       "<init>", "(D)V");
             } else if (descr == "C") {

@@ -41,4 +41,6 @@
     <delete dir="${basedir}/.build"/>
 </target>
 
+<target name="rebuild" depends="clean,yeti"/>
+
 </project>

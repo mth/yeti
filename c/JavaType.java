@@ -470,9 +470,10 @@ class JavaType {
         return m;
     }
 
-    static Method resolveVMethod(YetiParser.ObjectRefOp ref,
-                                 YetiType.Type objType,
-                                 YetiCode.Code[] args) {
+    static Method resolveMethod(YetiParser.ObjectRefOp ref,
+                                YetiType.Type objType,
+                                YetiCode.Code[] args,
+                                boolean isStatic) {
         objType = objType.deref();
         if (objType.type != YetiType.JAVA) {
             throw new CompileException(ref, "Cannot call method on " +
@@ -480,7 +481,9 @@ class JavaType {
         }
         JavaType jt = objType.javaType;
         jt.resolve();
-        Method m = jt.resolveByArgs(ref, jt.methods, ref.name, args);
+        Method m = jt.resolveByArgs(ref,
+                        isStatic ? jt.staticMethods : jt.methods,
+                        ref.name, args);
         m.classType = objType;
         return m;
     }
