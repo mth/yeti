@@ -38,15 +38,12 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
     JavaType.Method method;
     Code[] args;
     int line;
-    int col;
 
-    JavaExpr(Code object, JavaType.Method method, Code[] args,
-             int line, int col) {
+    JavaExpr(Code object, JavaType.Method method, Code[] args, int line) {
         this.object = object;
         this.method = method;
         this.args = args;
         this.line = line;
-        this.col = col;
     }
 
     private void convert(Ctx ctx, YetiType.Type given,
@@ -208,18 +205,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
                               method, "()" + descr);
     }
 
-    void checkPackage(Ctx ctx, String name, String what, String item) {
-        if (!JavaType.packageOfClass(name).equals(ctx.constants.packageName))
-            throw new CompileException(ctx.constants.sourceName, line, col,
-                "Non-public " + what + ' ' + name.replace('/', '.') + '#'
-              + item + " cannot be accessed from different package ("
-              + ctx.constants.packageName + ")");
-    }
-
     void genCall(Ctx ctx, int invokeInsn) {
-        if ((method.access & ACC_PUBLIC) == 0) {
-            checkPackage(ctx, method.className, "method", method.name);
-        }
     genargs:
         for (int i = 0; i < args.length; ++i) {
             YetiType.Type argType = method.arguments[i];

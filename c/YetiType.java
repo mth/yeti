@@ -400,11 +400,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Type[] free;
         Closure closure; // non-null means outer scopes must be proxied
         Type importClass;
+        String packageName;
 
         public Scope(Scope outer, String name, Binder binder) {
             this.outer = outer;
             this.name = name;
             this.binder = binder;
+            packageName = outer == null ? null : outer.packageName;
         }
     }
 
@@ -699,7 +701,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static Type resolveClass(String name, Scope scope, boolean shadow) {
         if (name.indexOf('/') >= 0) {
-            return new Type("L" + name + ';');
+            return JavaType.typeOfClass(null, name);
         }
         for (; scope != null; scope = scope.outer) {
             if (scope.name == name && (scope.importClass != null || shadow)) {
@@ -811,10 +813,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             Code[] args = mapArgs(op.arguments, scope, depth);
             Type t = resolveClass(op.name, scope, false);
             if (t == null) {
-                notImported(op, op.name);
+                t = JavaType.typeOfClass(scope.packageName, op.name);
             }
-            return new NewExpr(JavaType.resolveConstructor(op, t, args),
-                               args, op.line, op.col);
+            return new NewExpr(JavaType.resolveConstructor(op, t, args)
+                                .check(op, scope.packageName), args, op.line);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -929,10 +931,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         return res;
     }
 
-    static void notImported(Node where, String name) {
-        throw new CompileException(where, "Class not imported: " + name);
-    }
-
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
         Code obj = null;
         Type t = null;
@@ -940,7 +938,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             String className = ((Sym) ref.right).sym;
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0))) {
-                notImported(ref, className);
+                t = JavaType.typeOfClass(scope.packageName, className);
             }
         }
         if (t == null) {
@@ -949,12 +947,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         }
         if (ref.arguments == null) {
             JavaType.Field f = JavaType.resolveField(ref, t, obj == null);
-            return new ClassField(obj, f, ref.line, ref.col);
+            f.check(ref, scope.packageName);
+            return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(ref.arguments, scope, depth);
         return new MethodCall(obj,
-                    JavaType.resolveMethod(ref, t, args, obj == null),
-                    args, ref.line, ref.col);
+                    JavaType.resolveMethod(ref, t, args, obj == null)
+                        .check(ref, scope.packageName), args, ref.line);
     }
 
     static Code apply(Node where, Code fun, Code arg, int depth) {
@@ -1589,7 +1588,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         return res;
     }
 
-    public static RootClosure toCode(String sourceName, char[] src, int flags) {
+    public static RootClosure toCode(String sourceName, String className,
+                                        char[] src, int flags) {
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
@@ -1601,6 +1601,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             RootClosure root = new RootClosure();
             Scope scope = new Scope(ROOT_SCOPE, null, null);
             scope.closure = root;
+            scope.packageName = JavaType.packageOfClass(
+                parser.moduleName != null ? parser.moduleName : className);
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleName = parser.moduleName;

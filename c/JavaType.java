@@ -35,6 +35,12 @@ import org.objectweb.asm.*;
 import java.io.IOException;
 import java.io.InputStream;
 
+class JavaClassNotFoundException extends Exception {
+    public JavaClassNotFoundException(String what) {
+        super(what);
+    }
+}
+
 class JavaTypeReader implements ClassVisitor, Opcodes {
     Map fields = new HashMap();
     Map staticFields = new HashMap();
@@ -185,6 +191,12 @@ class JavaType {
         YetiType.Type convertedType() {
             return convertValueType(type);
         }
+
+        void check(YetiParser.Node where, String packageName) {
+            if ((access & Opcodes.ACC_PUBLIC) == 0) {
+                checkPackage(where, packageName, className, "field", name);
+            }
+        }
     }
 
     static class Method {
@@ -212,6 +224,13 @@ class JavaType {
             m.sig = sig;
             arr[n] = m;
             return m;
+        }
+
+        Method check(YetiParser.Node where, String packageName) {
+            if ((access & Opcodes.ACC_PUBLIC) == 0) {
+                checkPackage(where, packageName, className, "method", name);
+            }
+            return this;
         }
 
         public String toString() {
@@ -255,6 +274,15 @@ class JavaType {
     private Method[] constructors;
     private JavaType parent;
     private static HashMap CACHE = new HashMap();
+
+    static void checkPackage(YetiParser.Node where, String packageName,
+                             String name, String what, String item) {
+        if (!JavaType.packageOfClass(name).equals(packageName))
+            throw new CompileException(where,
+                "Non-public " + what + ' ' + name.replace('/', '.') + '#'
+              + item + " cannot be accessed from different package ("
+              + packageName + ")");
+    }
 
     static String descriptionOf(YetiType.Type t) {
         String r = "";
@@ -324,7 +352,7 @@ class JavaType {
         return (Method[]) v.toArray(new Method[v.size()]);
     }
 
-    private synchronized void resolve() {
+    private synchronized void resolve() throws JavaClassNotFoundException {
         if (resolved)
             return;
         if (!description.startsWith("L")) {
@@ -340,7 +368,7 @@ class JavaType {
             new ClassReader(in).accept(t, null,
                     ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         } catch (IOException ex) {
-            throw new RuntimeException("Not found: " + dottedName(), ex);
+            throw new JavaClassNotFoundException(dottedName());
         }
         if (t.parent != null) {
             parent = fromDescription('L' + t.parent + ';');
@@ -374,7 +402,7 @@ class JavaType {
 
     static final String[] NUMBER_X = { "B", "S", "F", "D", "I", "J", "i", "d" };
 
-    int isAssignable(JavaType from) {
+    int isAssignable(JavaType from) throws JavaClassNotFoundException {
         // I'm from or one of from's parents?
         for (int i = 0; from != null; ++i) {
             if (this == from) {
@@ -387,7 +415,8 @@ class JavaType {
     }
 
     // -1 not assignable. 0 - perfect match. > 0 convertable.
-    int isAssignableJT(YetiType.Type to, YetiType.Type from) {
+    int isAssignableJT(YetiType.Type to, YetiType.Type from)
+            throws JavaClassNotFoundException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
             return from.type == YetiType.VAR ? 1 :
@@ -450,7 +479,8 @@ class JavaType {
         return description == "Ljava/lang/Object;" ? 10 : -1;
     }
 
-    static int isAssignable(YetiType.Type to, YetiType.Type from) {
+    static int isAssignable(YetiType.Type to, YetiType.Type from)
+            throws JavaClassNotFoundException {
         int ass;
 //        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
         to = to.deref();
@@ -482,32 +512,36 @@ class JavaType {
         name = name.intern();
         int rAss = Integer.MAX_VALUE;
         int res = -1;
-    find_match:
-        for (int i = ma.length; --i >= 0;) {
-            Method m = ma[i];
-            if (m.name != name || m.arguments.length != args.length) {
-                continue;
-            }
-            int mAss = 0;
-            for (int j = 0; j < args.length; ++j) {
-                int ass = isAssignable(m.arguments[j], args[j].type);
-//                System.err.println("isAssignable(" + m.arguments[j] +
-//                    ", " + args[j].type + ") = " + ass);
-                if (ass < 0) {
-                    continue find_match;
+        try {
+        find_match:
+            for (int i = ma.length; --i >= 0;) {
+                Method m = ma[i];
+                if (m.name != name || m.arguments.length != args.length) {
+                    continue;
                 }
-                if (ass != 0) {
-                    mAss += ass + 1;
+                int mAss = 0;
+                for (int j = 0; j < args.length; ++j) {
+                    int ass = isAssignable(m.arguments[j], args[j].type);
+    //                System.err.println("isAssignable(" + m.arguments[j] +
+    //                    ", " + args[j].type + ") = " + ass);
+                    if (ass < 0) {
+                        continue find_match;
+                    }
+                    if (ass != 0) {
+                        mAss += ass + 1;
+                    }
+                }
+                if (mAss == 0) {
+                    res = i;
+                    break;
+                }
+                if (mAss < rAss) {
+                    res = i;
+                    rAss = mAss;
                 }
             }
-            if (mAss == 0) {
-                res = i;
-                break;
-            }
-            if (mAss < rAss) {
-                res = i;
-                rAss = mAss;
-            }
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(n, ex);
         }
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
@@ -523,7 +557,11 @@ class JavaType {
                         err + objType + ", java object expected");
         }
         JavaType jt = objType.javaType;
-        jt.resolve();
+        try {
+            jt.resolve();
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(where, ex);
+        }
         return jt;
     }
 
@@ -531,7 +569,11 @@ class JavaType {
                                      YetiType.Type t,
                                      YetiCode.Code[] args) {
         JavaType jt = t.javaType;
-        jt.resolve();
+        try {
+            jt.resolve();
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(call, ex);
+        }
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
@@ -579,6 +621,13 @@ class JavaType {
         }
     }
 
+    static YetiType.Type typeOfClass(String packageName, String className) {
+        if (packageName != null && packageName.length() != 0) {
+            className = packageName + '/' + className;
+        }
+        return new YetiType.Type("L" + className + ';');
+    }
+
     public String str(Map vars, Map refs, YetiType.Type[] param) {
         switch (description.charAt(0)) {
             case 'Z': return "!boolean";
@@ -611,6 +660,9 @@ class JavaType {
     }
 
     static String packageOfClass(String className) {
+        if (className == null || className.length() == 0) {
+            return "";
+        }
         int p = className.lastIndexOf('/');
         return p < 0 ? "" : className.substring(0, p);
     }

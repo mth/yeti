@@ -42,9 +42,9 @@ public class CompileException extends RuntimeException {
         this.what = what;
     }
 
-    public CompileException(String fn, int line, int col, String what) {
-        this(line, col, what);
-        this.fn = fn;
+    public CompileException(YetiParser.Node pos,
+                            JavaClassNotFoundException ex) {
+        this(pos, "Class not found: " + ex.getMessage());
     }
 
     public CompileException(YetiParser.Node pos, String what) {

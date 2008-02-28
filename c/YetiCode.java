@@ -51,7 +51,6 @@ interface YetiCode {
         private Map constants = new HashMap();
         private Ctx sb;
         String sourceName;
-        String packageName;
         Ctx ctx;
 
         void registerConstant(Object key, final Code code, Ctx ctx_) {
@@ -130,7 +129,7 @@ interface YetiCode {
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
             try {
-                codeTree = YetiType.toCode(sourceName, code, flags);
+                codeTree = YetiType.toCode(sourceName, name, code, flags);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
@@ -140,7 +139,6 @@ interface YetiCode {
             }
             Constants constants = new Constants();
             constants.sourceName = sourceName;
-            constants.packageName = JavaType.packageOfClass(name);
             Ctx ctx = new Ctx(this, constants, null, null)
                 .newClass(ACC_PUBLIC, name, null);
             constants.ctx = ctx;
@@ -569,8 +567,8 @@ interface YetiCode {
     }
 
     class NewExpr extends JavaExpr {
-        NewExpr(JavaType.Method init, Code[] args, int line, int col) {
-            super(null, init, args, line, col);
+        NewExpr(JavaType.Method init, Code[] args, int line) {
+            super(null, init, args, line);
             type = init.classType;
         }
 
@@ -583,9 +581,8 @@ interface YetiCode {
     }
 
     class MethodCall extends JavaExpr {
-        MethodCall(Code object, JavaType.Method method, Code[] args,
-                   int line, int col) {
-            super(object, method, args, line, col);
+        MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
+            super(object, method, args, line);
             type = method.convertedReturnType();
         }
 
@@ -601,16 +598,13 @@ interface YetiCode {
     class ClassField extends JavaExpr {
         private JavaType.Field field;
 
-        ClassField(Code object, JavaType.Field field, int line, int col) {
-            super(object, null, null, line, col);
+        ClassField(Code object, JavaType.Field field, int line) {
+            super(object, null, null, line);
             this.type = field.convertedType();
             this.field = field;
         }
 
         void gen(Ctx ctx) {
-            if ((field.access & ACC_PUBLIC) == 0) {
-                checkPackage(ctx, field.className, "field", field.name);
-            }
             if (object != null) {
                 object.gen(ctx);
             }
