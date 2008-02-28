@@ -208,6 +208,10 @@ public final class FloatNum extends Num {
         // hashCode must be same when equals is same
         // a bit rough, but hopefully it satisfies that condition ;)
         long x = (long) v;
+        long d = Double.doubleToLongBits(v - x);
+        if (d != 0x8000000000000000L) {
+            x ^= d;
+        }
         return (int) (x ^ (x >>> 32));
     }
 

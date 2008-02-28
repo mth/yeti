@@ -371,6 +371,10 @@ public final class RatNum extends Num {
     public int hashCode() {
         // compatibility with IntNum and FloatNum...
         long x = numerator / denominator;
+        long d = Double.doubleToLongBits((double) numerator / denominator - x);
+        if (d != 0x8000000000000000L) {
+            x ^= d;
+        }
         return (int) (x ^ (x >>> 32));
     }
 }
