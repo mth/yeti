@@ -527,7 +527,8 @@ interface YetiBuiltins extends YetiCode {
                 {
                     type = YetiType.LAZYCONS_TYPE;
                     binder = LazyCons.this;
-                    coreFun = "LAZYCONS";
+                    fromStd = true;
+                    coreFun = "$c$d";
                     polymorph = true;
                 }
 
@@ -549,7 +550,8 @@ interface YetiBuiltins extends YetiCode {
     class MatchOpFun extends BinOpRef implements Binder {
         MatchOpFun() {
             type = YetiType.STR2_PRED_TYPE;
-            coreFun = "MATCH_OP";
+            fromStd = true;
+            coreFun = mangle("=~");
         }
 
         public BindRef getRef(int line) {

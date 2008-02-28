@@ -26,7 +26,7 @@
            debug="on" classpath="${asm}:${basedir}/.build/lib"/>
 </target>
 
-<target name="modules">
+<target name="modules" depends="prepare-build">
     <!-- TODO: write yetic ant task -->
     <fileset id="module.srcs" dir="${basedir}/modules" includes="*.yeti"/>
     <pathconvert pathsep=" " property="module.srclist" refid="module.srcs"/>

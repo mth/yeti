@@ -299,18 +299,6 @@ public final class Core {
         }
     }
 
-    private static final class LazyCons extends BinFun {
-        public Object apply2(Object v, Object list) {
-            return new LazyList(v, (Fun) list);
-        }
-    }
-
-    private static final class MatchOp extends Fun2 {
-        Object apply2(Object v, Object pattern) {
-            return new Match(pattern).apply(v);
-        }
-    }
-
     private static final class Empty extends Fun {
         public Object apply(Object v) {
             AMList m;
@@ -371,9 +359,7 @@ public final class Core {
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
     public static final Fun COMPOSE = new FCompose();
-    public static final BinFun LAZYCONS = new LazyCons();
     public static final Fun EMPTY = new Empty();
-    public static final Fun MATCH_OP = new MatchOp();
     public static final Fun FROM_SOME = new FromSome();
     public static final Fun REPLACE = new Replace();
 
