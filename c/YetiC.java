@@ -34,7 +34,14 @@ import java.io.*;
 import java.util.*;
 
 class ToFile implements CodeWriter {
+    private String target;
+
+    ToFile(String target) {
+        this.target = target;
+    }
+
     public void writeClass(String name, byte[] code) throws Exception {
+        name = target + name;
         int sl = name.lastIndexOf('/');
         if (sl > 0) {
             new File(name.substring(0, sl)).mkdirs();
@@ -126,6 +133,7 @@ public class YetiC implements SourceReader {
         if(argv.length == 0) {
             help();
         }
+        String target = "";
         boolean eval = false, exec = true, printType = false;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
@@ -140,6 +148,11 @@ public class YetiC implements SourceReader {
                 switch (expect.charAt(expectCounter++)) {
                 case 'e':
                     src = argv[i].toCharArray();
+                    break;
+                case 'd':
+                    target = argv[i];
+                    if (target != "")
+                        target += '/';
                     break;
                 }
                 continue;
@@ -171,6 +184,9 @@ public class YetiC implements SourceReader {
                         eval = true;
                         expect.append('e');
                         break;
+                    case 'd':
+                        expect.append('d');
+                        break;
                     case 'x':
                         xflag = true;
                         break;
@@ -200,7 +216,8 @@ public class YetiC implements SourceReader {
         if (sources.isEmpty() && src  == null) {
             return;
         }
-        CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
+        CodeWriter writer = exec ? (CodeWriter) new Loader()
+                                 : new ToFile(target);
         YetiCode.CompileCtx compilation =
             new YetiCode.CompileCtx(new YetiC(), writer, preload);
         try {
