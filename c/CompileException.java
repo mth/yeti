@@ -48,8 +48,10 @@ public class CompileException extends RuntimeException {
     }
 
     public CompileException(YetiParser.Node pos, String what) {
-        line = pos.line;
-        col = pos.col;
+        if (pos != null) {
+            line = pos.line;
+            col = pos.col;
+        }
         this.what = what;
     }
 
@@ -64,6 +66,8 @@ public class CompileException extends RuntimeException {
     }
 
     public String getMessage() {
-        return (fn == null ? "" : fn) + ":" + line + ":" + col + ": " + what;
+        return (fn == null ? "" : fn + ":") +
+               (line == 0 ? "" : line + ":" + col + ": ") +
+               what;
     }
 }

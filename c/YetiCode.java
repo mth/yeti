@@ -82,12 +82,14 @@ interface YetiCode {
     class CompileCtx implements Opcodes {
         private CodeWriter writer;
         private SourceReader reader;
+        private String[] preload;
         Map classes = new HashMap();
         Map types = new HashMap();
 
-        CompileCtx(SourceReader reader, CodeWriter writer) {
+        CompileCtx(SourceReader reader, CodeWriter writer, String[] preload) {
             this.reader = reader;
             this.writer = writer;
+            this.preload = preload;
         }
 
         private void generateModuleFields(Map fields, Ctx ctx) {
@@ -128,8 +130,8 @@ interface YetiCode {
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
             try {
-                codeTree =
-                    YetiType.toCode(sourceName, name, code, flags, classes);
+                codeTree = YetiType.toCode(sourceName, name, code, flags,
+                                           classes, preload);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
@@ -993,6 +995,7 @@ interface YetiCode {
     class RootClosure extends AClosure {
         Code code;
         String moduleName;
+        String[] preload;
 
         public BindRef refProxy(BindRef code) {
             return code;
@@ -1000,6 +1003,13 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             genClosureInit(ctx);
+            for (int i = 0; i < preload.length; ++i) {
+                if (!preload[i].equals(ctx.className)) {
+                    ctx.m.visitMethodInsn(INVOKESTATIC, preload[i],
+                        "eval", "()Ljava/lang/Object;");
+                    ctx.m.visitInsn(POP);
+                }
+            }
             code.gen(ctx);
         }
     }

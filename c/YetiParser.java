@@ -121,6 +121,9 @@ interface YetiParser {
     class VarSym extends Node {
     }
 
+    class NoRecSym extends Node {
+    }
+
     class UnitLiteral extends Node {
         String str() {
             return "()";
@@ -132,18 +135,25 @@ interface YetiParser {
         Node expr;
         TypeNode type;
         boolean var;
+        boolean noRec;
 
         Bind(List args, Node expr) {
-            int first = 1;
-            Node nameNode = (Node) args.get(0);
-            if (nameNode instanceof VarSym) {
-                if (args.size() == 1) {
-                    throw new CompileException(nameNode,
-                            "Variable name is missing");
+            int first = 0;
+            Node nameNode = null;
+            while (first < args.size()) {
+                nameNode = (Node) args.get(first);
+                ++first;
+                if (nameNode instanceof VarSym) {
+                    var = true;
+                } else if (nameNode instanceof NoRecSym) {
+                    noRec = true;
+                } else {
+                    break;
                 }
-                nameNode = (Node) args.get(1);
-                first = 2;
-                var = true;
+            }
+            if (first == 0 || first > args.size()) {
+                throw new CompileException(nameNode,
+                        "Variable name is missing");
             }
             if (!(nameNode instanceof Sym)) {
                 throw new CompileException(nameNode,
@@ -825,6 +835,8 @@ interface YetiParser {
                 res = readNew();
             } else if (s == "var") {
                 res = new VarSym();
+            } else if (s == "norec") {
+                res = new NoRecSym();
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load") {

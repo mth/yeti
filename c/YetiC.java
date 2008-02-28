@@ -120,6 +120,8 @@ public class YetiC implements SourceReader {
         System.exit(0);
     }
 
+    private static final String[] preload = { "yeti/lang/std" };
+
     public static void main(String[] argv) throws Exception {
         if(argv.length == 0) {
             help();
@@ -200,7 +202,7 @@ public class YetiC implements SourceReader {
         }
         CodeWriter writer = exec ? (CodeWriter) new Loader() : new ToFile();
         YetiCode.CompileCtx compilation =
-            new YetiCode.CompileCtx(new YetiC(), writer);
+            new YetiCode.CompileCtx(new YetiC(), writer, preload);
         try {
             if (eval) {
                 flags |= CF_COMPILE_MODULE;

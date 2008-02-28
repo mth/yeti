@@ -1,0 +1,36 @@
+module yeti.lang.std;
+
+import java.lang.System;
+
+{
+    id x = x;
+    const x y = x;
+    ignore x = ();
+    at h k = h.[k];
+
+    // functions for standard operators
+    norec (not) v = not v;
+    norec (and) a b = a and b;
+    norec (or) a b = a or b;
+    norec (==) a b = a == b;
+    norec (!=) a b = a != b;
+    norec (<)  a b = a <  b;
+    norec (<=) a b = a <= b;
+    norec (>)  a b = a >  b;
+    norec (>=) a b = a >= b;
+    norec (::) v l = v :: l;
+
+    flip f x y =
+        f y x;
+    println a =
+        System#out#println(a);
+    print a =
+       (System#out#print(a);
+        System#out#flush());
+    number x is string -> number =
+        Core#parseNum(x);
+    min a b =
+        if a < b then a else b fi;
+    max a b =
+        if a > b then a else b fi;
+}

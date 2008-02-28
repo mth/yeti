@@ -92,7 +92,7 @@ interface YetiBuiltins extends YetiCode {
 
     class Ignore implements Binder {
         public BindRef getRef(int line) {
-            return new StaticRef("yeti/lang/Core", "IGNORE",
+            return new StaticRef("yeti/lang/std", "ignore",
                         YetiType.A_TO_UNIT, this, true, line) {
                 Code apply(final Code arg1, YetiType.Type res, int line) {
                     return new Code() {
@@ -186,9 +186,12 @@ interface YetiBuiltins extends YetiCode {
 
     abstract class BinOpRef extends BindRef implements DirectBind {
         boolean markTail2;
+        boolean fromStd;
         String coreFun;
 
         Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {
+            if (fromStd)
+                return super.apply2nd(arg2, t, line);
             return new Code() {
                 { type = t; }
 
@@ -237,8 +240,13 @@ interface YetiBuiltins extends YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
-                                 coreFun, "Lyeti/lang/BinFun;");
+            if (fromStd) {
+                ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/std",
+                                     coreFun, "Lyeti/lang/Fun;");
+            } else {
+                ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                                     coreFun, "Lyeti/lang/BinFun;");
+            }
         }
 
         abstract void binGen(Ctx ctx, Code arg1, Code arg2);
@@ -372,13 +380,14 @@ interface YetiBuiltins extends YetiCode {
     }
 
     class Compare implements Binder {
-        static final String[] FUN = { "EQ", "NE", "LT", "GE", "GT", "LE" };
         YetiType.Type type;
         int op;
+        String fun;
 
-        public Compare(YetiType.Type type, int op) {
+        public Compare(YetiType.Type type, int op, String fun) {
             this.op = op;
             this.type = type;
+            this.fun = Code.mangle(fun);
         }
 
         public BindRef getRef(int line) {
@@ -388,7 +397,8 @@ interface YetiBuiltins extends YetiCode {
             c.op = op;
             c.polymorph = true;
             c.line = line;
-            c.coreFun = FUN[op];
+            c.coreFun = fun;
+            c.fromStd = true;
             return c;
         }
     }
@@ -419,7 +429,7 @@ interface YetiBuiltins extends YetiCode {
 
     class NotOp implements Binder {
         public BindRef getRef(int line) {
-            return new StaticRef("yeti/lang/Core", "NOT",
+            return new StaticRef("yeti/lang/std", "not",
                                  YetiType.BOOL_TO_BOOL, this, false, line) {
                 Code apply(final Code arg, YetiType.Type res, int line) {
                     return new Code() {
@@ -448,7 +458,8 @@ interface YetiBuiltins extends YetiCode {
             this.orOp = orOp;
             binder = this;
             markTail2 = true;
-            coreFun = orOp ? "OR_OP" : "AND_OP";
+            coreFun = orOp ? "or" : "and";
+            fromStd = true;
         }
 
         public BindRef getRef(int line) {
@@ -490,7 +501,8 @@ interface YetiBuiltins extends YetiCode {
                 {
                     type = YetiType.CONS_TYPE;
                     binder = Cons.this;
-                    coreFun = "CONS";
+                    fromStd = true;
+                    coreFun = "$c$c";
                     polymorph = true;
                 }
 

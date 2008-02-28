@@ -128,13 +128,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCompare(">=", LG_TYPE, COND_GE,
         bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
-        bindCore("id", fun(A, A), "ID",
-        bindCore("const", fun2Arg(A, B, A), "CONST",
-        bindCore("flip", fun(fun2Arg(A, B, C), fun2Arg(B, A, C)), "FLIP",
-        bindCore("print", A_TO_UNIT, "PRINT",
-        bindCore("println", A_TO_UNIT, "PRINTLN",
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
-        bindCore("number", fun(STR_TYPE, NUM_TYPE), "NUM",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
         bindCore("array", fun(A_B_LIST_TYPE, A_MLIST_TYPE), "ARRAY",
         bindCore("reverse", fun(A_B_LIST_TYPE, A_LIST_TYPE), "REVERSE",
@@ -165,10 +159,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindCore("setHashDefault",
             fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
-        bindCore("at", fun2Arg(A_B_C_MAP_TYPE, A, B), "AT",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
-        bindCore("min", fun2Arg(ORDERED, ORDERED, ORDERED), "MIN",
-        bindCore("max", fun2Arg(ORDERED, ORDERED, ORDERED), "MAX",
         bindCore("fromSome", fun2Arg(C, fun(A, C), fun(variantOf(
                     new String[] { "Some", "None" }, new Type[] { A, B }), C)),
                     "FROM_SOME",
@@ -193,14 +184,14 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
     }
 
     static Scope bindCompare(String op, Type type, int code, Scope scope) {
-        return bindPoly(op, type, new Compare(type, code), 0, scope);
+        return bindPoly(op, type, new Compare(type, code, op), 0, scope);
     }
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
@@ -1224,9 +1215,35 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Function lambda = new Function(new Type(depth + 1));
         BindExpr binder = new BindExpr(lambda, bind.var);
         lambda.selfBind = binder;
-        lambdaBind(lambda, bind,
-                   new Scope(scope, bind.name, binder), depth + 1);
+        if (!bind.noRec) {
+            scope = new Scope(scope, bind.name, binder);
+        }
+        lambdaBind(lambda, bind, scope, depth + 1);
         return lambda;
+    }
+
+    static Scope explodeStruct(Node where, LoadModule m,
+                               Scope scope, int depth, boolean noRoot) {
+        if (m.type.type == STRUCT) {
+            Iterator j = m.type.finalMembers.entrySet().iterator();
+        members:
+            while (j.hasNext()) {
+                Map.Entry e = (Map.Entry) j.next();
+                String name = ((String) e.getKey()).intern();
+                if (noRoot)
+                    for (Scope i = ROOT_SCOPE; i != null; i = i.outer)
+                        if (i.name == name)
+                            continue members;
+                Type t = (Type) e.getValue();
+                scope = bindPoly(name, t, m.bindField(name, t), depth, scope);
+            }
+        } else if (m.type.type != UNIT) {
+            throw new CompileException(where,
+                "Expected module with struct or unit type here (" +
+                m.moduleName.replace('/', '.') + " has type " + m.type +
+                ", but only structs can be exploded)");
+        }
+        return scope;
     }
 
     static Code analSeq(Node[] nodes, Scope scope, int depth) {
@@ -1258,21 +1275,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 cur = binder;
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
-                if (m.type.type == STRUCT) {
-                    Iterator j = m.type.finalMembers.entrySet().iterator();
-                    while (j.hasNext()) {
-                        Map.Entry e = (Map.Entry) j.next();
-                        String name = ((String) e.getKey()).intern();
-                        Type t = (Type) e.getValue();
-                        scope = bindPoly(name, t, m.bindField(name, t),
-                                         depth, scope);
-                    }
-                } else if (m.type.type != UNIT) {
-                    throw new CompileException(nodes[i],
-                        "Expected module with struct or unit type here (" +
-                        ((Load) nodes[i]).moduleName + " has type " + m.type +
-                        ", but only structs can be exploded)");
-                }
+                scope = explodeStruct(nodes[i], m, scope, depth, false);
                 cur = new SeqExpr(m);
             } else if (nodes[i] instanceof Import) {
                 String name = ((Import) nodes[i]).className;
@@ -1405,7 +1408,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
             if (field.expr instanceof Lambda) {
-                lambdaBind((Function) values[i], field, local, depth);
+                lambdaBind((Function) values[i], field,
+                           field.noRec ? scope : local, depth);
             }
         }
         result.type = new Type(STRUCT,
@@ -1589,7 +1593,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     }
 
     public static RootClosure toCode(String sourceName, String className,
-                                     char[] src, int flags, Map classes) {
+                                     char[] src, int flags, Map classes,
+                                     String[] preload) {
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
@@ -1604,6 +1609,14 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             classes.put(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope(ROOT_SCOPE, null, null);
+            for (int i = 0; i < preload.length; ++i) {
+                if (!preload[i].equals(className)) {
+                    scope = explodeStruct(null, new LoadModule(preload[i],
+                          YetiTypeVisitor.getType(null, preload[i])),
+                          scope, 1, true);
+                }
+            }
+            root.preload = preload;
             scope.closure = root;
             scope.packageName = JavaType.packageOfClass(className);
             root.code = analyze(n, scope, 0);

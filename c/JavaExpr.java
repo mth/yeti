@@ -162,8 +162,12 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
 
         if (given.type != YetiType.NUM ||
             descr == "Ljava/lang/Object;" ||
-            descr == "Ljava/lang/Number;")
+            descr == "Ljava/lang/Number;") {
+            if (descr != "Ljava/lang/Object;") {
+                ctx.m.visitTypeInsn(CHECKCAST, argType.javaType.className());
+            }
             return;
+        }
         // Convert numbers...
         ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
         if (descr == "Ljava/math/BigInteger;") {

@@ -37,12 +37,6 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-class Id extends Fun {
-    public Object apply(Object a) {
-        return a;
-    }
-}
-
 abstract class Fun2 extends Fun {
     abstract Object apply2(Object a, Object b);
 
@@ -55,12 +49,6 @@ abstract class Fun2 extends Fun {
     }
 }
 
-class Const extends Fun2 {
-    Object apply2(Object a, Object b) {
-        return a;
-    }
-}
-
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
@@ -68,21 +56,6 @@ public final class Core {
     private static BufferedReader stdin = null;
 
     public static final String UNDEF_STR = new String();
-
-    public static final Fun PRINTLN = new Fun() {
-        public Object apply(Object x) {
-            System.out.println(x);
-            return null;
-        }
-    };
-
-    public static final Fun PRINT = new Fun() {
-        public Object apply(Object x) {
-            System.out.print(x);
-            System.out.flush();
-            return null;
-        }
-    };
 
     public static final Fun READLN = new Fun() {
         public synchronized Object apply(Object x) {
@@ -109,26 +82,12 @@ public final class Core {
         }
     };
 
-    public static final Fun IGNORE = new Fun() {
-        public Object apply(Object x) {
-            return null;
-        }
-    };
-
     public static final Fun SET_HASH_DEFAULT = new Fun2() {
         Object apply2(Object h, Object f) {
             ((Hash) h).defaultFun = (Fun) f;
             return null;
         }
     };
-
-    private static final class Number extends Fun {
-        public Object apply(Object x) {
-            return parseNum((String) x);
-        }
-    }
-
-    public static final Fun NUM = new Number();
 
     public static final Fun RANDINT = new Fun() {
         public Object apply(Object x) {
@@ -146,12 +105,6 @@ public final class Core {
             return new FloatNum(Math.floor(n.doubleValue() * rnd.nextDouble()));
         }
     };
-
-    private static final class At extends Fun2 {
-        Object apply2(Object hash, Object key) {
-            return ((ByKey) hash).vget(key);
-        }
-    }
 
     private static final class FCompose extends Fun2 {
         Object apply2(Object f, Object g) {
@@ -346,29 +299,11 @@ public final class Core {
         }
     }
 
-    private static final class Cons extends BinFun {
-        public Object apply2(Object v, Object list) {
-            return new LList(v, (AList) list);
-        }
-    }
-
     private static final class LazyCons extends BinFun {
         public Object apply2(Object v, Object list) {
             return new LazyList(v, (Fun) list);
         }
     }
-
-    private static final class Not extends Fun {
-        public Object apply(Object v) {
-            return v == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
-        }
-    }
-
-/*    private static final class LikeOp extends Fun2 {
-        Object apply2(Object v, Object pattern) {
-            return new Like(pattern).apply(v);
-        }
-    }*/
 
     private static final class MatchOp extends Fun2 {
         Object apply2(Object v, Object pattern) {
@@ -382,24 +317,6 @@ public final class Core {
             return v == null || v instanceof AMList &&
                     (m = (AMList) v)._size() <= m.start
                 ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
-    private static final class Flip extends Fun2 {
-        Object apply2(Object f, Object arg2) {
-            return new Bind2nd(f, arg2);
-        }
-    }
-
-    private static final class Min extends Fun2 {
-        Object apply2(Object a, Object b) {
-            return ((Num) a).compareTo((Num) b) < 0 ? a : b;
-        }
-    }
-
-    private static final class Max extends Fun2 {
-        Object apply2(Object a, Object b) {
-            return ((Num) a).compareTo((Num) b) > 0 ? a : b;
         }
     }
 
@@ -438,9 +355,6 @@ public final class Core {
         }
     }
 
-    public static final Fun ID = new Id();
-    public static final Fun CONST = new Const();
-    public static final Fun FLIP = new Flip();
     public static final Fun HEAD = new Head();
     public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
@@ -457,14 +371,9 @@ public final class Core {
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
     public static final Fun COMPOSE = new FCompose();
-    public static final BinFun CONS = new Cons();
     public static final BinFun LAZYCONS = new LazyCons();
-    public static final Fun NOT = new Not();
-    public static final Fun AT = new At();
     public static final Fun EMPTY = new Empty();
     public static final Fun MATCH_OP = new MatchOp();
-    public static final Fun MIN = new Min();
-    public static final Fun MAX = new Max();
     public static final Fun FROM_SOME = new FromSome();
     public static final Fun REPLACE = new Replace();
 
@@ -513,62 +422,6 @@ public final class Core {
     public static final BinFun SHR_OP = new BinFun() {
         public Object apply2(Object a, Object b) {
             return ((Num) a).shl(-((Num) b).intValue());
-        }
-    };
-
-    public static final BinFun AND_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a == Boolean.TRUE && b == Boolean.TRUE
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun OR_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a == Boolean.TRUE || b == Boolean.TRUE
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun EQ = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a == b || a != null && a.equals(b)
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun NE = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a != b && (a == null || !a.equals(b))
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun LT = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a != b && (a == null || ((Comparable) a).compareTo(b) < 0)
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun LE = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a == b || a == null || ((Comparable) a).compareTo(b) <= 0
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun GT = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a != b && a != null && ((Comparable) a).compareTo(b) > 0
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    };
-
-    public static final BinFun GE = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return a == b || (a != null && ((Comparable) a).compareTo(b) >= 0)
-                    ? Boolean.TRUE : Boolean.FALSE;
         }
     };
 

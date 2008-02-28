@@ -340,12 +340,6 @@ class YetiTypeVisitor implements ClassVisitor {
         } catch (CompileException ex) {
             throw ex;
         } catch (Exception ex) {
-            if (node == null) {
-                if (ex instanceof RuntimeException) {
-                    throw (RuntimeException) ex;
-                }
-                throw new RuntimeException(ex);
-            }
             throw new CompileException(node, ex.getMessage());
         }
     }
