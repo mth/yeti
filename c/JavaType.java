@@ -42,6 +42,7 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     List staticMethods = new ArrayList();
     List constructors = new ArrayList();
     String parent;
+    String className;
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
@@ -111,7 +112,8 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                     + " | access=" + access);*/
             List l = parseSig(0, signature == null ? desc : signature);
             (((access & ACC_STATIC) == 0) ? fields : staticFields).put(name,
-                new JavaType.Field(name, access, (YetiType.Type) l.get(0)));
+                new JavaType.Field(name, access, className,
+                                   (YetiType.Type) l.get(0)));
         }
         return null;
     }
@@ -130,14 +132,19 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                 (exceptions == null ? "()"
                     : Arrays.asList(exceptions).toString())
                 + " | access=" + access);*/
-            List l = parseSig(1, signature == null ? desc : signature);
             JavaType.Method m = new JavaType.Method();
+            if (signature == null) {
+                signature = desc;
+            }
+            List l = parseSig(1, signature);
+            m.sig = name + signature;
             m.name = name.intern();
             m.access = access;
             int argc = l.size() - 1;
             m.returnType = (YetiType.Type) l.get(argc);
             m.arguments = (YetiType.Type[])
                 l.subList(0, argc).toArray(new YetiType.Type[argc]);
+            m.className = className;
             if (m.name == "<init>") {
                 constructors.add(m);
             } else if ((access & ACC_STATIC) == 0) {
@@ -165,11 +172,14 @@ class JavaType {
         String name;
         YetiType.Type type;
         YetiType.Type classType;
+        String className;
 
-        public Field(String name, int access, YetiType.Type type) {
+        public Field(String name, int access,
+                     String className, YetiType.Type type) {
             this.access = access;
             this.type = type;
             this.name = name;
+            this.className = className;
         }
 
         YetiType.Type convertedType() {
@@ -183,6 +193,26 @@ class JavaType {
         YetiType.Type[] arguments;
         YetiType.Type returnType;
         YetiType.Type classType;
+        String className; // name of the class the method actually belongs to
+        String sig;
+
+        Method dup(Method[] arr, int n, YetiType.Type classType) {
+            if (classType == this.classType ||
+                className.equals(classType.javaType.className())) {
+                this.classType = classType;
+                return this;
+            }
+            Method m = new Method();
+            m.access = access;
+            m.name = name;
+            m.arguments = arguments;
+            m.returnType = returnType;
+            m.classType = classType;
+            m.className = className;
+            m.sig = sig;
+            arr[n] = m;
+            return m;
+        }
 
         public String toString() {
             StringBuffer s = new StringBuffer(returnType + " ");
@@ -277,6 +307,23 @@ class JavaType {
         return className().replace('/', '.');
     }
 
+    private static Method[] merge(Method[] parentMethods, List methods) {
+        if (parentMethods == null) {
+            return (Method[]) methods.toArray(new Method[methods.size()]);
+        }
+        HashMap mm = new HashMap();
+        for (int i = parentMethods.length; --i >= 0;) {
+            Method m = parentMethods[i];
+            mm.put(m.sig, m);
+        }
+        for (int i = methods.size(); --i >= 0;) {
+            Method m = (Method) methods.get(i);
+            mm.put(m.sig, m);
+        }
+        Collection v = mm.values();
+        return (Method[]) v.toArray(new Method[v.size()]);
+    }
+
     private synchronized void resolve() {
         if (resolved)
             return;
@@ -284,25 +331,34 @@ class JavaType {
             resolved = true;
             return;
         }
+        String className = className();
         InputStream in = Thread.currentThread().getContextClassLoader()
-                            .getResourceAsStream(className() + ".class");
+                            .getResourceAsStream(className + ".class");
         JavaTypeReader t = new JavaTypeReader();
+        t.className = className;
         try {
             new ClassReader(in).accept(t, null,
                     ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         } catch (IOException ex) {
             throw new RuntimeException("Not found: " + dottedName(), ex);
         }
-//        System.err.println(t.constructors);
-        fields = t.fields;
-        staticFields = t.staticFields;
-        constructors = (Method[]) t.constructors.toArray(
-                            new Method[t.constructors.size()]);
-        methods = (Method[]) t.methods.toArray(new Method[t.methods.size()]);
-        staticMethods = (Method[]) t.staticMethods.toArray(
-                            new Method[t.staticMethods.size()]);
-        parent = t.parent == null
-                    ? null : fromDescription('L' + t.parent + ';');
+        if (t.parent != null) {
+            parent = fromDescription('L' + t.parent + ';');
+            parent.resolve();
+            fields = new HashMap();
+            fields.putAll(parent.fields);
+            fields.putAll(t.fields);
+            staticFields = new HashMap();
+            staticFields.putAll(parent.staticFields);
+            staticFields.putAll(t.staticFields);
+        } else {
+            fields = t.fields;
+            staticFields = t.staticFields;
+        }
+        constructors = merge(null, t.constructors);
+        methods = merge(parent == null ? null : parent.methods, t.methods);
+        staticMethods = merge(parent == null ? null : parent.staticMethods,
+                              t.staticMethods);
         resolved = true;
     }
 
@@ -421,10 +477,11 @@ class JavaType {
     }
 
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
-                                 String name, YetiCode.Code[] args) {
+                                 String name, YetiCode.Code[] args,
+                                 YetiType.Type objType) {
         name = name.intern();
         int rAss = Integer.MAX_VALUE;
-        Method res = null;
+        int res = -1;
     find_match:
         for (int i = ma.length; --i >= 0;) {
             Method m = ma[i];
@@ -443,15 +500,17 @@ class JavaType {
                     mAss += ass + 1;
                 }
             }
-            if (mAss == 0)
-                return m;
+            if (mAss == 0) {
+                res = i;
+                break;
+            }
             if (mAss < rAss) {
-                res = m;
+                res = i;
                 rAss = mAss;
             }
         }
-        if (res != null) {
-            return res;
+        if (res != -1) {
+            return ma[res].dup(ma, res, objType);
         }
         throw new CompileException(n, "No suitable method " + name
                                    + " found in " + dottedName());
@@ -473,9 +532,7 @@ class JavaType {
                                      YetiCode.Code[] args) {
         JavaType jt = t.javaType;
         jt.resolve();
-        Method m = jt.resolveByArgs(call, jt.constructors, "<init>", args);
-        m.classType = t;
-        return m;
+        return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
     static Method resolveMethod(YetiParser.ObjectRefOp ref,
@@ -484,13 +541,8 @@ class JavaType {
                                 boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot call method on");
-        Method m = jt.resolveByArgs(ref,
-                        isStatic ? jt.staticMethods : jt.methods,
-                        ref.name, args);
-        m.classType = objType;
-/*        System.err.println(" ** " + m.name + " access "
-            + Integer.toHexString(m.access));*/
-        return m;
+        return jt.resolveByArgs(ref, isStatic ? jt.staticMethods : jt.methods,
+                                ref.name, args, objType);
     }
 
     static Field resolveField(YetiParser.ObjectRefOp ref,
@@ -498,16 +550,21 @@ class JavaType {
                               boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot access field on ");
-        Field field =
-            (Field) (isStatic ? jt.staticFields : jt.fields).get(ref.name);
+        Map fm = isStatic ? jt.staticFields : jt.fields;
+        Field field = (Field) fm.get(ref.name);
         if (field == null) {
             throw new CompileException(ref,
                         (isStatic ? "Static field" : "Field") +
                         " not found in " + jt.dottedName());
         }
-        field.classType = objType;
-/*        System.err.println(" ** " + field.name + " access "
-            + Integer.toHexString(field.access));*/
+        if (field.classType != objType) {
+            if (!field.className.equals(objType.javaType.className())) {
+                field = new Field(field.name, field.access,
+                                  field.className, field.type);
+                fm.put(field.name, field);
+            }
+            field.classType = objType;
+        }
         return field;
     }
 

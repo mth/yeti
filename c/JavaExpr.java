@@ -217,9 +217,8 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
     }
 
     void genCall(Ctx ctx, int invokeInsn) {
-        String name = method.classType.javaType.className();
         if ((method.access & ACC_PUBLIC) == 0) {
-            checkPackage(ctx, name, "method", method.name);
+            checkPackage(ctx, method.className, "method", method.name);
         }
     genargs:
         for (int i = 0; i < args.length; ++i) {
@@ -228,7 +227,8 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             convert(ctx, args[i].type, argType);
         }
         ctx.visitLine(line);
-        ctx.m.visitMethodInsn(invokeInsn, name, method.name, method.descr());
+        ctx.m.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
+                              method.name, method.descr());
     }
 
     private static void genRawArg(Ctx ctx, Code arg,

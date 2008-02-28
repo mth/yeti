@@ -583,8 +583,6 @@ interface YetiCode {
     }
 
     class MethodCall extends JavaExpr {
-        private Code object;
-
         MethodCall(Code object, JavaType.Method method, Code[] args,
                    int line, int col) {
             super(object, method, args, line, col);
@@ -610,16 +608,16 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            String className = field.classType.javaType.className();
             if ((field.access & ACC_PUBLIC) == 0) {
-                checkPackage(ctx, className, "field", field.name);
+                checkPackage(ctx, field.className, "field", field.name);
             }
             if (object != null) {
                 object.gen(ctx);
             }
             ctx.visitLine(line);
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
-                                 className, field.name,
+                                 field.classType.javaType.className(),
+                                 field.name,
                                  JavaType.descriptionOf(field.type));
             convertValue(ctx, field.type);
         }
