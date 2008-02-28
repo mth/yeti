@@ -1,8 +1,8 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Foreign interface
 * Real pattern matching in case
+* Foreign structs
 * Better error messages
 * Built-in regex support
 * Some standard library
