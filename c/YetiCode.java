@@ -123,13 +123,13 @@ interface YetiCode {
                     ? "Circular module dependency: " + name
                     : "Duplicate module name: " + name);
             }
-            classes.put(name, null);
             boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
             RootClosure codeTree;
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
             try {
-                codeTree = YetiType.toCode(sourceName, name, code, flags);
+                codeTree =
+                    YetiType.toCode(sourceName, name, code, flags, classes);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
@@ -144,12 +144,28 @@ interface YetiCode {
             constants.ctx = ctx;
             if (module) {
                 ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type));
-                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "eval",
-                                    "()Ljava/lang/Object;");
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
+                                  "Ljava/lang/Object;", null, null).visitEnd();
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
+                                  null, Boolean.FALSE);
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
+                                    "eval", "()Ljava/lang/Object;");
+                ctx.m.visitFieldInsn(GETSTATIC, name, "_$", "Z");
+                Label eval = new Label();
+                ctx.m.visitJumpInsn(IFEQ, eval);
+                ctx.m.visitFieldInsn(GETSTATIC, name, "$",
+                                     "Ljava/lang/Object;");
+                ctx.m.visitInsn(ARETURN);
+                ctx.m.visitLabel(eval);
                 codeTree.gen(ctx);
                 if (codeTree.type.type == YetiType.STRUCT) {
                     generateModuleFields(codeTree.type.finalMembers, ctx);
                 }
+                ctx.m.visitInsn(DUP);
+                ctx.m.visitFieldInsn(PUTSTATIC, name, "$",
+                                     "Ljava/lang/Object;");
+                ctx.intConst(1);
+                ctx.m.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.m.visitInsn(ARETURN);
                 types.put(name, codeTree.type);
             } else {

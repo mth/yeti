@@ -1589,7 +1589,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     }
 
     public static RootClosure toCode(String sourceName, String className,
-                                        char[] src, int flags) {
+                                     char[] src, int flags, Map classes) {
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
@@ -1598,11 +1598,14 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.show());
             }
+            if (parser.moduleName != null) {
+                className = parser.moduleName;
+            }
+            classes.put(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope(ROOT_SCOPE, null, null);
             scope.closure = root;
-            scope.packageName = JavaType.packageOfClass(
-                parser.moduleName != null ? parser.moduleName : className);
+            scope.packageName = JavaType.packageOfClass(className);
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleName = parser.moduleName;

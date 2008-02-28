@@ -454,7 +454,9 @@ class JavaType {
             case YetiType.LIST_MARKER:
                 if ("Ljava/util/List;" == description ||
                     "Ljava/util/Collection;" == description ||
-                    "Ljava/util/Set;" == description)
+                    "Ljava/util/Set;" == description ||
+                    "Lyeti/lang/AList;" == description ||
+                    "Lyeti/lang/AIter;" == description)
                     break;
             default:
                     return -1;
@@ -546,8 +548,31 @@ class JavaType {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        throw new CompileException(n, "No suitable method " + name
-                                   + " found in " + dottedName());
+        StringBuffer err = new StringBuffer("No suitable method ");
+        HashMap vars = new HashMap();
+        HashMap refs = new HashMap();
+        err.append(name);
+        err.append("(");
+        for (int i = 0; i < args.length; ++i) {
+            if (i != 0) {
+                err.append(", ");
+            }
+            err.append(args[i].type.str(vars, refs));
+        }
+        err.append(") found in ");
+        err.append(dottedName());
+        boolean fst = true;
+        for (int i = ma.length; --i >= 0;) {
+            if (ma[i].name != name)
+                continue;
+            if (fst) {
+                err.append("\nMethods named " + name + ':');
+                fst = false;
+            }
+            err.append("\n    ");
+            err.append(ma[i]);
+        }
+        throw new CompileException(n, err.toString());
     }
 
     private static JavaType javaTypeOf(YetiParser.Node where,
