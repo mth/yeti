@@ -142,39 +142,29 @@ public final class Core {
         }
     }
 
-    private static final class Replace extends Fun {
-        public Object apply(Object find) {
-            final String f = (String) find;
-            return new Fun2() {
-                Object apply2(Object replace, Object text) {
-                    StringBuffer result = new StringBuffer();
-                    String s = (String) text;
-                    String r = (String) replace;
-                    int p = 0, i, l = f.length();
-                    while ((i = s.indexOf(f, p)) >= 0) {
-                        result.append(s.substring(p, i));
-                        result.append(r);
-                        p = i + l;
-                    }
-                    if (p < s.length()) {
-                        result.append(s.substring(p));
-                    }
-                    return result.toString();
-                }
-            };
-        }
-    }
-
     public static final Fun FOR  = new For();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
     public static final Fun EMPTY = new Empty();
-    public static final Fun REPLACE = new Replace();
 
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();
         }
+    }
+
+    public static String replace(String f, String r, String s) {
+        StringBuffer result = new StringBuffer();
+        int p = 0, i, l = f.length();
+        while ((i = s.indexOf(f, p)) >= 0) {
+            result.append(s.substring(p, i));
+            result.append(r);
+            p = i + l;
+        }
+        if (p < s.length()) {
+            result.append(s.substring(p));
+        }
+        return result.toString();
     }
 
     public static Num parseNum(String str) {

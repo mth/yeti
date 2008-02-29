@@ -100,6 +100,10 @@ notPred f x = not (f x);
     atan a = Math#atan(a is number);
     sqrt a = Math#sqrt(a is number);
 
+    replace needle replacement haystack
+            is string -> string -> string -> string =
+        Core#replace(needle, replacement, haystack);
+
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
