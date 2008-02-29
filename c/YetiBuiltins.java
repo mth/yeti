@@ -119,6 +119,10 @@ interface YetiBuiltins extends YetiCode {
         }
 
         Code apply(final Code arg1, final YetiType.Type res1, final int line) {
+            if (arg1 instanceof NumericConstant) {
+                return new NumericConstant(((NumericConstant) arg1)
+                            .num.subFrom(0));
+            }
             return new Code() {
                 { type = YetiType.NUM_TYPE; }
 
