@@ -48,6 +48,8 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
 
     private void convert(Ctx ctx, YetiType.Type given,
                          YetiType.Type argType) {
+        given = given.deref();
+        argType = argType.deref();
         String descr = argType.javaType == null
                         ? "" : argType.javaType.description;
         if (argType.type == YetiType.JAVA_ARRAY ||
