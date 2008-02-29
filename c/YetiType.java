@@ -1627,7 +1627,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 if (!preload[i].equals(className)) {
                     scope = explodeStruct(null, new LoadModule(preload[i],
                           YetiTypeVisitor.getType(null, preload[i])),
-                          scope, 1, true);
+                          scope, 0, true);
                 }
             }
             root.preload = preload;
