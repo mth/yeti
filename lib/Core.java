@@ -249,40 +249,6 @@ public final class Core {
         }
     }
 
-    private static final class Contains extends Fun2 {
-        Object apply2(Object v, Object list) {
-            return list != null && ((AList) list).index(v) != null
-                    ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
-    private static final class Any extends Fun2 {
-        Object apply2(Object f, Object list) {
-            return list != null && ((AList) list).find((Fun) f) != null
-                ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
-    private static final class NotPred extends Fun {
-        Fun f;
-
-        public Object apply(Object v) {
-            return f.apply(v) == Boolean.TRUE ? Boolean.FALSE : Boolean.TRUE;
-        }
-    }
-
-    private static final class All extends Fun2 {
-        Object apply2(Object f, Object list) {
-            if (list == null) {
-                return Boolean.FALSE;
-            }
-            NotPred p = new NotPred();
-            p.f = (Fun) f;
-            return ((AList) list).find((Fun) p) == null
-                ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
     private static final class Index extends Fun2 {
         Object apply2(Object v, Object list) {
             if (list == null) {
@@ -348,9 +314,6 @@ public final class Core {
     public static final Fun SUM  = new Sum();
     public static final Fun FILTER = new Filter();
     public static final Fun FIND = new Find();
-    public static final Fun CONTAINS = new Contains();
-    public static final Fun ALL  = new All();
-    public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
     public static final Fun EMPTY = new Empty();
     public static final Fun FROM_SOME = new FromSome();

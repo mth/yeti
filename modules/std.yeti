@@ -30,6 +30,9 @@ module yeti.lang.std;
 
 import java.lang.System;
 
+// like not . f, but a tiny bit faster
+notPred f x = not (f x);
+
 {
     id x = x;
     const x y = x;
@@ -58,6 +61,7 @@ import java.lang.System;
     norec (div) a b = a div b;
     norec (shl) a b = a shl b;
     norec (shr) a b = a shr b;
+    norec negate a = negate a;
 
     flip f x y =
         f y x;
@@ -72,4 +76,11 @@ import java.lang.System;
         if a < b then a else b fi;
     max a b =
         if a > b then a else b fi;
+    any f l =
+        find f l != [];
+    all f l =
+        find (notPred f) l == [];
+    contains v l =
+        index v l != -1;
+
 }

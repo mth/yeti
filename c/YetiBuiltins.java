@@ -107,6 +107,32 @@ interface YetiBuiltins extends YetiCode {
         }
     }
 
+    class Negate extends StaticRef implements Binder {
+        Negate() {
+            super("yeti/lang/std", "negate", YetiType.NUM_TO_NUM,
+                  null, false, 0);
+            binder = this;
+        }
+
+        public BindRef getRef(int line) {
+            return this;
+        }
+
+        Code apply(final Code arg1, final YetiType.Type res1, final int line) {
+            return new Code() {
+                { type = YetiType.NUM_TYPE; }
+
+                void gen(Ctx ctx) {
+                    arg1.gen(ctx);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                    ctx.m.visitLdcInsn(new Long(0));
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                          "subFrom", "(J)Lyeti/lang/Num;");
+                }
+            };
+        }
+    }
+
     abstract class Bind2Core implements Binder, Opcodes {
         String lib = "yeti/lang/Core";
         private String coreFun;

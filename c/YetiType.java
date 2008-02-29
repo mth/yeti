@@ -106,6 +106,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
+    static final Type NUM_TO_NUM = fun(NUM_TYPE, NUM_TYPE);
     static final Type FOR_TYPE =
         fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
     static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
@@ -150,11 +151,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FILTER",
         bindCore("find",
             fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FIND",
-        bindCore("contains", fun2Arg(A, A_B_LIST_TYPE, BOOL_TYPE), "CONTAINS",
-        bindCore("any",
-            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, BOOL_TYPE), "ANY",
-        bindCore("all",
-            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, BOOL_TYPE), "ALL",
         bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindCore("setHashDefault",
@@ -170,6 +166,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
+        bindPoly("negate", NUM_TO_NUM, new Negate(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -180,7 +177,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -764,11 +761,14 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             if (op.op == "loop") {
                 return loop(op, scope, depth);
             }
+            if (op.op == "-" && op.left == null) {
+                return apply(op, resolve("negate", op, scope, depth),
+                                 analyze(op.right, scope, depth), depth);
+            }
             if (op.left == null) {
                 throw new CompileException(op,
                     "Internal error (incomplete operator " + op.op + ")");
             }
-            // TODO: unary -
             return apply(op.right,
                          apply(op, resolve(op.op, op, scope, depth),
                                analyze(op.left, scope, depth), depth),
@@ -1394,7 +1394,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 throw new CompileException(field, "Duplicate field "
                     + field.name + " in the structure");
             }
-            Code code = values[i] = field.expr instanceof Lambda
+            Code code = values[i] =
+                    !field.noRec && field.expr instanceof Lambda
                         ? new Function(new Type(depth))
                         : analyze(field.expr, scope, depth);
             names[i] = field.name;
@@ -1402,14 +1403,15 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
                 code.polymorph || field.expr instanceof Lambda ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
-            local = new Scope(local, field.name,
-                              result.bind(i, code, field.var));
+            if (!field.noRec) {
+                local = new Scope(local, field.name,
+                                  result.bind(i, code, field.var));
+            }
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
             if (field.expr instanceof Lambda) {
-                lambdaBind((Function) values[i], field,
-                           field.noRec ? scope : local, depth);
+                lambdaBind((Function) values[i], field, local, depth);
             }
         }
         result.type = new Type(STRUCT,
