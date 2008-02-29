@@ -18,9 +18,17 @@ import java.lang.System;
     norec (<=) a b = a <= b;
     norec (>)  a b = a >  b;
     norec (>=) a b = a >= b;
+    norec (+)  a b = a + b;
+    norec (-)  a b = a - b;
+    norec (*)  a b = a * b;
+    norec (/)  a b = a / b;
+    norec (%)  a b = a % b;
     norec (::) v l = v :: l;
     norec (:.) v l = v :. l;
     norec (=~) s p = s =~ p;
+    norec (div) a b = a div b;
+    norec (shl) a b = a shl b;
+    norec (shr) a b = a shr b;
 
     flip f x y =
         f y x;

@@ -170,14 +170,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
-        bindScope("+", new ArithOpFun("add", NUMOP_TYPE),
-        bindScope("-", new ArithOpFun("sub", NUMOP_TYPE),
-        bindScope("*", new ArithOpFun("mul", NUMOP_TYPE),
-        bindScope("/", new ArithOpFun("div", NUMOP_TYPE),
-        bindScope("%", new ArithOpFun("rem", NUMOP_TYPE),
-        bindScope("div", new ArithOpFun("intDiv", NUMOP_TYPE),
-        bindScope("shl", new ArithOpFun("shl", NUMOP_TYPE),
-        bindScope("shr", new ArithOpFun("shr", NUMOP_TYPE),
+        bindArith("+", "add", bindArith("-", "sub",
+        bindArith("*", "mul", bindArith("/", "div",
+        bindArith("%", "rem", bindArith("div", "intDiv",
+        bindArith("shl", "shl", bindArith("shr", "shr",
         bindScope("=~", new MatchOpFun(),
         bindScope("not", new NotOp(),
         bindScope("and", new BoolOpFun(false),
@@ -192,6 +188,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static Scope bindCompare(String op, Type type, int code, Scope scope) {
         return bindPoly(op, type, new Compare(type, code, op), 0, scope);
+    }
+
+    static Scope bindArith(String op, String method, Scope scope) {
+        return bindScope(op, new ArithOpFun(op, method, NUMOP_TYPE), scope);
     }
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {

@@ -363,54 +363,6 @@ public final class Core {
     public static final Fun FROM_SOME = new FromSome();
     public static final Fun REPLACE = new Replace();
 
-    public static final BinFun ADD_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).add((Num) b);
-        }
-    };
-
-    public static final BinFun SUB_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).sub((Num) b);
-        }
-    };
-
-    public static final BinFun MUL_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).mul((Num) b);
-        }
-    };
-
-    public static final BinFun DIV_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).div((Num) b);
-        }
-    };
-
-    public static final BinFun INTDIV_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).intDiv((Num) b);
-        }
-    };
-
-    public static final BinFun REM_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).rem((Num) b);
-        }
-    };
-
-    public static final BinFun SHL_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).shl(((Num) b).intValue());
-        }
-    };
-
-    public static final BinFun SHR_OP = new BinFun() {
-        public Object apply2(Object a, Object b) {
-            return ((Num) a).shl(-((Num) b).intValue());
-        }
-    };
-
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();
