@@ -45,6 +45,7 @@ notPred f x = not (f x);
     norec not v = not v;
     norec (and) a b = a and b;
     norec (or) a b = a or b;
+    norec (in) a b = a in b;
     norec (==) a b = a == b;
     norec (!=) a b = a != b;
     norec (<)  a b = a <  b;
@@ -66,6 +67,7 @@ notPred f x = not (f x);
     norec negate a = negate a;
     norec raw_nullptr? a = raw_nullptr? a;
     norec synchronized monitor block = synchronized monitor block;
+    (^) a b = "\(a)\(b)";
 
     flip f x y =
         f y x;

@@ -499,6 +499,8 @@ interface YetiBuiltins extends YetiCode {
             InOpFun f = new InOpFun();
             f.type = YetiType.IN_TYPE;
             f.line = line;
+            f.polymorph = true;
+            f.coreFun = "in";
             return f;
         }
     }
