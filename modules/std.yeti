@@ -76,6 +76,8 @@ notPred f x = not (f x);
         if a < b then a else b fi;
     max a b =
         if a > b then a else b fi;
+    abs a =
+        if a < 0 then -a else a fi;
     any f l =
         find f l != [];
     all f l =

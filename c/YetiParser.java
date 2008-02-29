@@ -867,7 +867,7 @@ interface YetiParser {
                 Object o = expr.get(0);
                 if (o instanceof BinOp
                     && (partial = (BinOp) o).parent == null
-                    && partial.op != "\\") {
+                    && partial.op != "\\" && partial.op != "-") {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
