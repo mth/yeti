@@ -127,8 +127,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
-        bindCore("replace",
-            fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), "REPLACE",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
@@ -147,7 +145,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
-        null)))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
