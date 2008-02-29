@@ -29,6 +29,7 @@
 module yeti.lang.std;
 
 import java.lang.System;
+import java.lang.Math;
 
 // like not . f, but a tiny bit faster
 notPred f x = not (f x);
@@ -85,4 +86,14 @@ notPred f x = not (f x);
     contains v l =
         index v l != -1;
 
+    // few math functions
+    pi = Math#PI;
+    exp a is number -> number = Math#exp(a);
+    cos a is number -> number = Math#cos(a);
+    sin a is number -> number = Math#sin(a);
+    tan a is number -> number = Math#tan(a);
+    acos a is number -> number = Math#acos(a);
+    asin a is number -> number = Math#asin(a);
+    atan a is number -> number = Math#atan(a);
+    sqrt a is number -> number = Math#sqrt(a);
 }
