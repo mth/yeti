@@ -163,9 +163,9 @@ interface YetiBuiltins extends YetiCode {
     }
 
     abstract class Bind2Core implements Binder, Opcodes {
-        String lib = "yeti/lang/Core";
+        String lib = "yeti/lang/std";
         private String coreFun;
-        private YetiType.Type type;
+        YetiType.Type type;
 
         Bind2Core(String fun, YetiType.Type type) {
             coreFun = fun;
@@ -197,6 +197,7 @@ interface YetiBuiltins extends YetiCode {
     class For extends Bind2Core {
         For() {
             super("FOR", YetiType.FOR_TYPE);
+            lib = "yeti/lang/Core";
         }
 
         void genApply2(Ctx ctx, Code list, Code fun, int line) {
@@ -226,7 +227,6 @@ interface YetiBuiltins extends YetiCode {
     class Compose extends Bind2Core {
         Compose() {
             super("$d", YetiType.COMPOSE_TYPE);
-            lib = "yeti/lang/std";
         }
 
         void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {
@@ -237,6 +237,49 @@ interface YetiBuiltins extends YetiCode {
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Compose",
                     "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+        }
+    }
+
+    class Synchronized extends Bind2Core {
+        Synchronized() {
+            super("synchronized", YetiType.SYNCHRONIZED_TYPE);
+        }
+
+        void genApply2(Ctx ctx, Code monitor, Code block, int line) {
+            Label startBlock = new Label(), endBlock = new Label();
+            Label startCleanup = new Label(), endCleanup = new Label();
+            Label end = new Label();
+            ctx.m.visitTryCatchBlock(startBlock, endBlock, startCleanup, null);
+            // I have no fucking idea, what this second catch is supposed
+            // to be doing. javac generates it, so it has to be good.
+            // yeah, sure...
+            ctx.m.visitTryCatchBlock(startCleanup, endCleanup,
+                                     startCleanup, null);
+            monitor.gen(ctx);
+            int monitorVar = ctx.localVarCount++;
+            ctx.visitLine(line);
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitVarInsn(ASTORE, monitorVar);
+            ctx.m.visitInsn(MONITORENTER);
+
+            ctx.m.visitLabel(startBlock);
+            block.gen(ctx);
+            new Apply(type, block, new UnitConstant(), line).gen(ctx);
+            ctx.visitLine(line);
+            ctx.m.visitVarInsn(ALOAD, monitorVar);
+            ctx.m.visitInsn(MONITOREXIT);
+            ctx.m.visitLabel(endBlock);
+            ctx.m.visitJumpInsn(GOTO, end);
+
+            int exceptionVar = ctx.localVarCount++;
+            ctx.m.visitLabel(startCleanup);
+            ctx.m.visitVarInsn(ASTORE, exceptionVar);
+            ctx.m.visitVarInsn(ALOAD, monitorVar);
+            ctx.m.visitInsn(MONITOREXIT);
+            ctx.m.visitLabel(endCleanup);
+            ctx.m.visitVarInsn(ALOAD, exceptionVar);
+            ctx.m.visitInsn(ATHROW);
+            ctx.m.visitLabel(end);
         }
     }
 

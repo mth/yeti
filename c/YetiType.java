@@ -74,29 +74,20 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final Type A = new Type(1);
     static final Type B = new Type(1);
     static final Type C = new Type(1);
-    static final Type D = new Type(1);
     static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
     static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
     static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
     static final Type BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
     static final Type A_B_LIST_TYPE =
         new Type(MAP, new Type[] { A, B, LIST_TYPE });
-    static final Type C_B_LIST_TYPE =
-        new Type(MAP, new Type[] { C, B, LIST_TYPE });
     static final Type NUM_LIST_TYPE =
         new Type(MAP, new Type[] { NUM_TYPE, B, LIST_TYPE });
     static final Type A_B_MAP_TYPE =
         new Type(MAP, new Type[] { B, A, MAP_TYPE });
-    static final Type A_B_C_MAP_TYPE =
-        new Type(MAP, new Type[] { B, A, C });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
         new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
-    static final Type D_LIST_TYPE =
-        new Type(MAP, new Type[] { D, NO_TYPE, LIST_TYPE });
-    static final Type A_MLIST_TYPE =
-        new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type STRING_ARRAY =
         new Type(MAP, new Type[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
@@ -111,6 +102,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final Type FOR_TYPE =
         fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
     static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
+    static final Type SYNCHRONIZED_TYPE = fun2Arg(A, fun(UNIT_TYPE, B), B);
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -149,6 +141,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
         bindPoly("raw_nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
+        bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -160,7 +153,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
-        null)))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -714,7 +707,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     return new Throw(throwable);
                 }
                 return apply(node, analyze(op.left, scope, depth),
-                             analyze(op.right, scope, depth), depth);
+                             op.right, scope, depth);
             }
             if (op.op == FIELD_OP) {
                 if (op.right instanceof NList) {
@@ -743,7 +736,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
             if (op.op == "-" && op.left == null) {
                 return apply(op, resolve("negate", op, scope, depth),
-                                 analyze(op.right, scope, depth), depth);
+                                 op.right, scope, depth);
             }
             if (op.left == null) {
                 throw new CompileException(op,
@@ -751,8 +744,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
             return apply(op.right,
                          apply(op, resolve(op.op, op, scope, depth),
-                               analyze(op.left, scope, depth), depth),
-                         analyze(op.right, scope, depth), depth);
+                               op.left, scope, depth),
+                         op.right, scope, depth);
         }
         if (node instanceof Condition) {
             return cond((Condition) node, scope, depth);
@@ -951,16 +944,17 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                         .check(ref, scope.packageName), args, ref.line);
     }
 
-    static Code apply(Node where, Code fun, Code arg, int depth) {
-        Type[] applyFun = { arg.type, new Type(depth) };
+    static Code apply(Node where, Code fun, Node arg, Scope scope, int depth) {
+        Code argCode = analyze(arg, scope, depth);
+        Type[] applyFun = { argCode.type, new Type(depth) };
         try {
             unify(fun.type, new Type(FUN, applyFun));
         } catch (TypeException ex) {
             throw new CompileException(where,
-                "Cannot apply " + arg.type + " to " + fun.type + "\n    " +
-                ex.getMessage());
+                "Cannot apply " + argCode.type + " to " + fun.type +
+                "\n    " + ex.getMessage());
         }
-        return fun.apply(arg, applyFun[1], where.line);
+        return fun.apply(argCode, applyFun[1], where.line);
     }
 
     static Code rsection(RSection section, Scope scope, int depth) {

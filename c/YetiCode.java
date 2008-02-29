@@ -781,8 +781,13 @@ interface YetiCode {
         CaptureWrapper wrapper;
         Object identity;
         int localVar; // 0 - this - not copied
+        boolean uncaptured;
 
         void gen(Ctx ctx) {
+            if (uncaptured) {
+                ref.gen(ctx);
+                return;
+            }
             genPreGet(ctx);
             if (wrapper != null) {
                 wrapper.genGet(ctx);
@@ -801,6 +806,9 @@ interface YetiCode {
         }
 
         Code assign(final Code value) {
+            if (uncaptured) {
+                return ref.assign(value);
+            }
             if (!ref.assign()) {
                 return null;
             }
@@ -832,6 +840,9 @@ interface YetiCode {
         }
 
         public CaptureWrapper capture() {
+            if (uncaptured) {
+                return ref.capture();
+            }
             return wrapper == null ? null : this;
         }
 
@@ -881,10 +892,15 @@ interface YetiCode {
         Label restart;
         Function outer;
         Capture[] argCaptures;
+        private Code uncaptureArg;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, 1);
+                if (uncaptureArg != null) {
+                    uncaptureArg.gen(ctx);
+                } else {
+                    ctx.m.visitVarInsn(ALOAD, 1);
+                }
             }
         };
 
@@ -895,6 +911,18 @@ interface YetiCode {
 
         public BindRef getRef(int line) {
             return arg;
+        }
+
+        // uncaptures captured variables if possible
+        // useful for function inlineing, don't work with self-refs
+        boolean uncapture(Code arg) {
+            if (selfRef != null)
+                return false;
+            for (Capture c = captures; c != null; c = c.next) {
+                c.uncaptured = true;
+            }
+            uncaptureArg = arg;
+            return true;
         }
 
         void setBody(Code body) {
@@ -1054,7 +1082,28 @@ interface YetiCode {
             this.line = line;
         }
 
+        class SpecialArg extends Code {
+            int var;
+
+            void gen(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, var);
+            }
+        }
+
         void gen(Ctx ctx) {
+            if (fun instanceof Function) {
+                Function f = (Function) fun;
+                SpecialArg arg_ = new SpecialArg();
+                // inline direct calls
+                // TODO: constants don't need a temp variable
+                if (f.uncapture(arg_)) {
+                    arg.gen(ctx);
+                    arg_.var = ctx.localVarCount++;
+                    ctx.m.visitVarInsn(ASTORE, arg_.var);
+                    f.body.gen(ctx);
+                    return;
+                }
+            }
             fun.gen(ctx);
             // XXX this cast could be optimised away sometimes
             //  - when the fun really is Fun by java types

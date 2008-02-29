@@ -65,6 +65,7 @@ notPred f x = not (f x);
     norec (shr) a b = a shr b;
     norec negate a = negate a;
     norec raw_nullptr? a = raw_nullptr? a;
+	norec synchronized monitor block = synchronized monitor block;
 
     flip f x y =
         f y x;
