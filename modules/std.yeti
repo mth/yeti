@@ -80,7 +80,7 @@ notPred f x = not (f x);
     abs a =
         if a < 0 then -a else a fi;
     any f l =
-        raw_nullptr? (find f l);
+        not (raw_nullptr? (find f l));
     all f l =
         raw_nullptr? (find (notPred f) l);
     contains v l =
