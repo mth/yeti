@@ -103,7 +103,7 @@ notPred f x = not (f x);
     sqrt a = Math#sqrt(a is number);
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
-        (h as !Hash)#defaultFun := (f as !Fun);
+        (h unsafely_as !Hash)#defaultFun := (f unsafely_as !Fun);
 
     array l is list?<'a> -> array<'a> =
         new MList(l) unsafely_as array<'a>;

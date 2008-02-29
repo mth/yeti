@@ -743,7 +743,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                               new Lambda(new Sym("_").pos(op.line, op.col),
                                          op.right, null), scope, depth);
             }
-            if (op.op == "is" || op.op == "as" || op.op == "unsafely_as") {
+            if (op.op == "is" || op.op == "unsafely_as") {
                 return isOp(op, ((TypeOp) op).type,
                             analyze(op.right, scope, depth), scope, depth);
             }
@@ -915,16 +915,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static Code isOp(Node is, TypeNode type, Code value,
                      Scope scope, int depth) {
         Type t = nodeToType(type, new HashMap(), scope, depth);
-        if (is instanceof BinOp) {
-            String op = ((BinOp) is).op;
-            if (op == "unsafely_as") {
-                JavaType.checkUnsafeCast(is, value.type, t);
-                return new Cast(value, t);
-            }
-            if (op == "as") {
-                JavaType.checkCast(is, value.type, t);
-                return new Cast(value, t);
-            }
+        if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as") {
+            JavaType.checkUnsafeCast(is, value.type, t);
+            return new Cast(value, t);
         }
         try {
             unify(value.type, t);
