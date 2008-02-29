@@ -42,7 +42,7 @@ notPred f x = not (f x);
     at h k = h.[k];
 
     // functions for standard operators
-    norec (not) v = not v;
+    norec not v = not v;
     norec (and) a b = a and b;
     norec (or) a b = a or b;
     norec (==) a b = a == b;
