@@ -122,7 +122,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindCompare(">=", LG_TYPE, COND_GE,
         bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
-        bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
         bindCore("forHash",
             fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
@@ -153,7 +152,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
-        null))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -839,7 +838,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             return new Type(FUN, tp);
         }
         if (name.startsWith("!")) {
-            String cn = name.substring(1).replace('.', '/');
+            String cn = name.substring(1).replace('.', '/').intern();
             Type[] tp = new Type[node.param.length];
             for (int i = tp.length; --i >= 0;)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
@@ -898,6 +897,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         Type t = nodeToType(type, new HashMap(), scope, depth);
         if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as") {
             JavaType.checkUnsafeCast(is, value.type, t);
+            return new Cast(value, t);
+        }
+        // () is class is a way for writing null constant
+        if ((t.type == JAVA || t.type == JAVA_ARRAY) &&
+            value instanceof UnitConstant) {
             return new Cast(value, t);
         }
         try {

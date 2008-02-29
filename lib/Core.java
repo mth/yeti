@@ -33,9 +33,6 @@ package yeti.lang;
 
 import java.util.Map;
 import java.util.Random;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 abstract class Fun2 extends Fun {
     abstract Object apply2(Object a, Object b);
@@ -53,22 +50,8 @@ public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
     private static Random rnd = null;
-    private static BufferedReader stdin = null;
 
     public static final String UNDEF_STR = new String();
-
-    public static final Fun READLN = new Fun() {
-        public synchronized Object apply(Object x) {
-            if (stdin == null) {
-                stdin = new BufferedReader(new InputStreamReader(System.in));
-            }
-            try {
-                return stdin.readLine();
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-    };
 
     public static final Fun RANDINT = new Fun() {
         public Object apply(Object x) {

@@ -28,7 +28,6 @@
  */
 module yeti.lang.std;
 
-import java.lang.System;
 import java.lang.Math;
 import java.lang.IllegalArgumentException;
 
@@ -69,11 +68,6 @@ notPred f x = not (f x);
 
     flip f x y =
         f y x;
-    println a =
-        System#out#println(a);
-    print a =
-       (System#out#print(a);
-        System#out#flush());
     number x =
         Core#parseNum(x is string);
     min a b =

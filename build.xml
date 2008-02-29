@@ -32,8 +32,9 @@
     <pathconvert pathsep=" " property="module.srclist" refid="module.srcs"/>
     <java classname="yeti.lang.compiler.YetiC" fork="false" failonerror="true"
           classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler">
-        <arg value="-Cd"/>
+        <arg value="-Cdl"/>
         <arg value="${basedir}/.build/modules"/>
+		<arg value=""/>
         <arg line="${module.srclist}"/>
     </java>
 </target>

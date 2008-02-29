@@ -339,6 +339,7 @@ class JavaType {
             return fromDescription("Lyeti/lang/Tag;");
         case YetiType.STRUCT:
             return fromDescription("Lyeti/lang/Struct;");
+        case YetiType.UNIT:
         case YetiType.VAR:
             return fromDescription("Ljava/lang/Object;");
         }

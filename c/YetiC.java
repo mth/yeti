@@ -127,7 +127,8 @@ public class YetiC implements SourceReader {
         System.exit(0);
     }
 
-    private static final String[] preload = { "yeti/lang/std" };
+    private static final String[] PRELOAD =
+        { "yeti/lang/std", "yeti/lang/io" };
 
     public static void main(String[] argv) throws Exception {
         if(argv.length == 0) {
@@ -135,6 +136,7 @@ public class YetiC implements SourceReader {
         }
         String target = "";
         boolean eval = false, exec = true, printType = false;
+        String[] preload = PRELOAD;
         StringBuffer expect = new StringBuffer();
         int expectCounter = 0;
         char[] src = null;
@@ -153,6 +155,10 @@ public class YetiC implements SourceReader {
                     target = argv[i];
                     if (target != "")
                         target += '/';
+                    break;
+                case 'l':
+                    preload =
+                        "".equals(argv[i]) ? new String[0] : argv[i].split(":");
                     break;
                 }
                 continue;
@@ -186,6 +192,9 @@ public class YetiC implements SourceReader {
                         break;
                     case 'd':
                         expect.append('d');
+                        break;
+                    case 'l':
+                        expect.append('l');
                         break;
                     case 'x':
                         xflag = true;
