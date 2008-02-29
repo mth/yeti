@@ -70,22 +70,9 @@ public final class Core {
         }
     };
 
-    public static final Fun ARRAY = new Fun() {
-        public Object apply(Object x) {
-            return new MList((AIter) x);
-        }
-    };
-
     public static final Fun REVERSE = new Fun() {
         public Object apply(Object x) {
             return x == null ? null : ((AList) x).reverse();
-        }
-    };
-
-    public static final Fun SET_HASH_DEFAULT = new Fun2() {
-        Object apply2(Object h, Object f) {
-            ((Hash) h).defaultFun = (Fun) f;
-            return null;
         }
     };
 
@@ -234,12 +221,6 @@ public final class Core {
         }
     }
 
-    private static final class Filter extends Fun2 {
-        Object apply2(Object f, Object list) {
-            return FilterList.filter((AList) list, (Fun) f);
-        }
-    }
-
     private static final class Find extends Fun2 {
         Object apply2(Object f, Object list) {
             if (list == null) {
@@ -265,18 +246,6 @@ public final class Core {
             return v == null || v instanceof AMList &&
                     (m = (AMList) v)._size() <= m.start
                 ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
-    private static final class FromSome extends Fun2 {
-        Object apply2(final Object defaultVal, Object transformer) {
-            final Fun f = (Fun) transformer;
-            return new Fun() {
-                public Object apply(Object val) {
-                    Tag v = (Tag) val;
-                    return v.name == "Some" ? f.apply(v.value) : defaultVal;
-                }
-            };
         }
     }
 
@@ -312,11 +281,9 @@ public final class Core {
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
-    public static final Fun FILTER = new Filter();
     public static final Fun FIND = new Find();
     public static final Fun INDEX = new Index();
     public static final Fun EMPTY = new Empty();
-    public static final Fun FROM_SOME = new FromSome();
     public static final Fun REPLACE = new Replace();
 
     private static synchronized void initRandom() {

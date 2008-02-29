@@ -314,6 +314,57 @@ class JavaType {
         return t;
     }
 
+    private static JavaType getClass(YetiType.Type t) {
+        switch (t.type) {
+        case YetiType.JAVA:
+            return t.javaType;
+        case YetiType.NUM:
+            return fromDescription("Lyeti/lang/Num;");
+        case YetiType.STR:
+            return fromDescription("Ljava/lang/String;");
+        case YetiType.BOOL:
+            return fromDescription("Ljava/lang/Boolean;");
+        case YetiType.MAP:
+            switch (t.param[2].type) {
+            case YetiType.LIST_MARKER:
+                return fromDescription(t.param[1] == YetiType.NUM_TYPE
+                            ? "Lyeti/lang/MList;" : "Lyeti/lang/AList;");
+            case YetiType.MAP_MARKER:
+                return fromDescription("Lyeti/lang/Hash;");
+            }
+            return fromDescription("Lyeti/lang/ByKey;");
+        case YetiType.FUN:
+            return fromDescription("Lyeti/lang/Fun;");
+        case YetiType.VARIANT:
+            return fromDescription("Lyeti/lang/Tag;");
+        case YetiType.STRUCT:
+            return fromDescription("Lyeti/lang/Struct;");
+        }
+        return null;
+    }
+
+    static void checkCast(YetiParser.Node cast,
+                          YetiType.Type from, YetiType.Type to) {
+        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA) {
+            throw new CompileException(cast,
+                "Illegal cast (neither side is java object)");
+        }
+        JavaType src = getClass(from);
+        if (src == null)
+            throw new CompileException(cast, "Illegal cast from " + from);
+        JavaType dst = getClass(to);
+        if (dst == null)
+            throw new CompileException(cast, "Illegal cast to " + to);
+        try {
+            if (src.isAssignable(dst) < 0 && dst.isAssignable(src) < 0) {
+                throw new CompileException(cast,
+                    "Illegal cast from " + from + " to " + to);
+            }
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(cast, ex);
+        }
+    }
+
     private JavaType(String description) {
         this.description = description.intern();
     }

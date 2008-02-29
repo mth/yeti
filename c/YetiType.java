@@ -131,7 +131,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
-        bindCore("array", fun(A_B_LIST_TYPE, A_MLIST_TYPE), "ARRAY",
         bindCore("reverse", fun(A_B_LIST_TYPE, A_LIST_TYPE), "REVERSE",
         bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
         bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
@@ -147,18 +146,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
-        bindCore("filter",
-            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FILTER",
         bindCore("find",
             fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FIND",
         bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
-        bindCore("setHashDefault",
-            fun2Arg(A_B_MAP_TYPE, fun(A, B), UNIT_TYPE), "SET_HASH_DEFAULT",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
-        bindCore("fromSome", fun2Arg(C, fun(A, C), fun(variantOf(
-                    new String[] { "Some", "None" }, new Type[] { A, B }), C)),
-                    "FROM_SOME",
         bindCore("replace",
             fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), "REPLACE",
         bindPoly("in", IN_TYPE, new InOp(), 0,
@@ -177,7 +169,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -751,9 +743,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                               new Lambda(new Sym("_").pos(op.line, op.col),
                                          op.right, null), scope, depth);
             }
-            if (op.op == "is") {
-                return isOp(op, ((IsOp) op).type,
-                            analyze(op.right, scope, depth), depth);
+            if (op.op == "is" || op.op == "unsafely_as") {
+                return isOp(op, ((TypeOp) op).type,
+                            analyze(op.right, scope, depth), scope, depth);
             }
             if (op.op == "#") {
                 return objectRef((ObjectRefOp) op, scope, depth);
@@ -813,11 +805,12 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             "I think that this " + node + " should not be here.");
     }
 
-    static Type nodeToMembers(int type, TypeNode[] param, Map free, int depth) {
+    static Type nodeToMembers(int type, TypeNode[] param, Map free,
+                              Scope scope, int depth) {
         Map members = new HashMap();
         Type[] tp = new Type[param.length];
         for (int i = 0; i < param.length; ++i) {
-            tp[i] = nodeToType(param[i].param[0], free, depth);
+            tp[i] = nodeToType(param[i].param[0], free, scope, depth);
             if (members.put(param[i].name, tp[i]) != null) {
                 throw new CompileException(param[i], "Duplicate field name "
                                     + param[i].name + " in structure type");
@@ -844,7 +837,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         { "string",  STR_TYPE  }
     };
 
-    static Type nodeToType(TypeNode node, Map free, int depth) {
+    static Type nodeToType(TypeNode node, Map free, Scope scope, int depth) {
         String name = node.name;
         for (int i = PRIMITIVE_TYPE_MAPPING.length; --i >= 0;) {
             if (PRIMITIVE_TYPE_MAPPING[i][0] == name) {
@@ -853,43 +846,61 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
         }
         if (name == "") {
-            return nodeToMembers(STRUCT, node.param, free, depth);
+            return nodeToMembers(STRUCT, node.param, free, scope, depth);
         }
         if (name == "|") {
-            return nodeToMembers(VARIANT, node.param, free, depth);
+            return nodeToMembers(VARIANT, node.param, free, scope, depth);
         }
         if (name == "->") {
             expectsParam(node, 2);
-            Type[] tp = { nodeToType(node.param[0], free, depth),
-                          nodeToType(node.param[1], free, depth) };
+            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
+                          nodeToType(node.param[1], free, scope, depth) };
             return new Type(FUN, tp);
+        }
+        if (name.startsWith("!")) {
+            String cn = name.substring(1).replace('.', '/');
+            Type[] tp = new Type[node.param.length];
+            for (int i = tp.length; --i >= 0;)
+                tp[i] = nodeToType(node.param[i], free, scope, depth);
+            Type t;
+            if (cn.indexOf('.') > 0) {
+                t = JavaType.typeOfClass(null, cn);
+            } else {
+                t = resolveClass(cn, scope, false);
+                if (t == null)
+                    t = JavaType.typeOfClass(scope.packageName, cn);
+            }
+            t.param = tp;
+            return t;
         }
         if (name == "array") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, depth),
+            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
                           NUM_TYPE, LIST_TYPE };
             return new Type(MAP, tp);
         }
         if (name == "list") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, depth),
+            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
                           NO_TYPE, LIST_TYPE };
             return new Type(MAP, tp);
         }
         if (name == "list?") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, depth),
+            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
                           new Type(depth), LIST_TYPE };
             return new Type(MAP, tp);
         }
         if (name == "hash") {
             expectsParam(node, 2);
-            Type[] tp = { nodeToType(node.param[1], free, depth),
-                          nodeToType(node.param[0], free, depth), MAP_TYPE };
+            Type[] tp = { nodeToType(node.param[1], free, scope, depth),
+                          nodeToType(node.param[0], free, scope, depth),
+                          MAP_TYPE };
             return new Type(MAP, tp);
         }
         if (Character.isUpperCase(name.charAt(0))) {
-            return nodeToMembers(VARIANT, new TypeNode[] { node }, free, depth);
+            return nodeToMembers(VARIANT, new TypeNode[] { node },
+                                 free, scope, depth);
         }
         if (name.startsWith("'")) {
             Type t = (Type) free.get(name);
@@ -901,8 +912,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         throw new CompileException(node, "Unknown type: " + name);
     }
 
-    static Code isOp(Node is, TypeNode type, Code value, int depth) {
-        Type t = nodeToType(type, new HashMap(), depth);
+    static Code isOp(Node is, TypeNode type, Code value,
+                     Scope scope, int depth) {
+        Type t = nodeToType(type, new HashMap(), scope, depth);
+        if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as") {
+            JavaType.checkCast(is, value.type, t);
+            return new Cast(value, t);
+        }
         try {
             unify(value.type, t);
         } catch (TypeException ex) {
@@ -1259,7 +1275,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
                     if (bind.type != null) {
-                        isOp(bind, bind.type, binder.st, depth);
+                        isOp(bind, bind.type, binder.st, scope, depth);
                     }
                 }
                 if (binder.st.polymorph && !bind.var) {
@@ -1321,7 +1337,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
         if (bind.type != null) {
-            isOp(bind, bind.type, to, depth);
+            isOp(bind, bind.type, to, scope, depth);
         }
         return lambda(to, (Lambda) bind.expr, scope, depth);
     } 

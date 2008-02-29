@@ -85,6 +85,11 @@ notPred f x = not (f x);
         find (notPred f) l == [];
     contains v l =
         index v l != -1;
+    fromSome default f opt =
+        case opt of
+        Some v: f v;
+        None _: default;
+        esac;
 
     // few math functions
     pi = Math#PI;
@@ -96,4 +101,13 @@ notPred f x = not (f x);
     asin a = Math#asin(a is number);
     atan a = Math#atan(a is number);
     sqrt a = Math#sqrt(a is number);
+
+    setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
+        (h unsafely_as !Hash)#defaultFun := (f unsafely_as !Fun);
+
+    array l is list?<'a> -> array<'a> =
+        new MList(l) unsafely_as array<'a>;
+
+    filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
+        FilterList#filter(l, f) unsafely_as list<'a>;
 }

@@ -654,6 +654,19 @@ interface YetiCode {
         }
     }
 
+    class Cast extends Code {
+        Code code;
+
+        Cast(Code code, YetiType.Type type) {
+            this.type = type;
+            this.code = code;
+        }
+
+        void gen(Ctx ctx) {
+            code.gen(ctx);
+        }
+    }
+
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);

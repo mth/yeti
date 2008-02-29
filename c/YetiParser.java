@@ -441,18 +441,24 @@ interface YetiParser {
         }
     }
 
-    class IsOp extends BinOp {
+    class TypeOp extends BinOp {
         TypeNode type;
 
-        IsOp(TypeNode type) {
-            super("is", Parser.IS_OP_LEVEL, true);
+        TypeOp(String what, TypeNode type) {
+            super(what, Parser.IS_OP_LEVEL, true);
             postfix = true;
             this.type = type;
         }
 
         String str() {
             return (right == null ? "<>" : right.show())
-                        + " is " + type.str();
+                        + ' ' + op + ' ' + type.str();
+        }
+    }
+
+    class IsOp extends TypeOp {
+        IsOp(TypeNode type) {
+            super("is", type);
         }
     }
 
@@ -824,13 +830,14 @@ interface YetiParser {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
             } else if (s == "div" || s == "shr" || s == "shl") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
-            } else if (s == "is") {
+            } else if (s == "is" || s == "unsafely_as") {
                 TypeNode t = readType(true);
                 if (t == null) {
                     throw new CompileException(line, col,
                                 "Expecting type expression");
                 }
-                return new IsOp(t).pos(line, col);
+                return (s == "is" ? new IsOp(t) : new TypeOp(s, t))
+                            .pos(line, col);
             } else if (s == "new") {
                 res = readNew();
             } else if (s == "var") {
@@ -1229,8 +1236,13 @@ interface YetiParser {
                 res.pos(sline, scol);
             } else {
                 int start = i;
-                char c;
-                while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'))
+                char c, dot = '_';
+                if (i < src.length && src[i] == '!') {
+                    ++i;
+                    dot = '.';
+                }
+                while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'
+                                          || c == dot))
                     ++i;
                 if (i == start)
                     throw new CompileException(sline, scol,
