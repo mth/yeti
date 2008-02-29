@@ -177,6 +177,7 @@ abstract class AMList extends AList implements ListIter {
 
 /** Yeti core library - List. */
 public class MList extends AMList implements ByKey {
+    private static final Object[] EMPTY = {}; 
     private Object[] array;
     private int size;
 
@@ -245,7 +246,7 @@ public class MList extends AMList implements ByKey {
     }
 
     public MList() {
-        array = new Object[10];
+        array = EMPTY;
     }
 
     public MList(Object[] array) {
@@ -254,16 +255,28 @@ public class MList extends AMList implements ByKey {
     }
 
     public MList(AIter iter) {
-        array = new Object[10];
-        while (iter != null) {
-            add(iter.first());
-            iter = iter.next();
+        if (iter == null) {
+            array = EMPTY;
+        } else {
+            array = new Object[10];
+            while (iter != null) {
+                add(iter.first());
+                iter = iter.next();
+            }
+        }
+    }
+
+    public void reserve(int n) {
+        if (n > array.length) {
+            Object[] tmp = new Object[n];
+            System.arraycopy(array, 0, tmp, 0, size);
+            array = tmp;
         }
     }
 
     public void add(Object o) {
         if (size >= array.length) {
-            Object[] tmp = new Object[size * 3 / 2];
+            Object[] tmp = new Object[size == 0 ? 10 : size * 3 / 2];
             System.arraycopy(array, 0, tmp, 0, array.length);
             array = tmp;
         }

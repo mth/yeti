@@ -724,19 +724,19 @@ class JavaType {
 
     public String str(Map vars, Map refs, YetiType.Type[] param) {
         switch (description.charAt(0)) {
-            case 'Z': return "!boolean";
-            case 'B': return "!byte";
-            case 'C': return "!char";
-            case 'D': return "!double";
-            case 'F': return "!float";
-            case 'I': return "!int";
-            case 'J': return "!long";
-            case 'S': return "!short";
+            case 'Z': return "~boolean";
+            case 'B': return "~byte";
+            case 'C': return "~char";
+            case 'D': return "~double";
+            case 'F': return "~float";
+            case 'I': return "~int";
+            case 'J': return "~long";
+            case 'S': return "~short";
             case 'V': return "void";
             case 'L': break;
-            default : return "!" + description;
+            default : return "~" + description;
         }
-        StringBuffer s = new StringBuffer("!");
+        StringBuffer s = new StringBuffer("~");
         s.append(description.substring(1, description.length() - 1)
                             .replace('/', '.'));
         if (param != null && param.length > 0) {
@@ -746,7 +746,7 @@ class JavaType {
                     s.append(", ");
                 }
                 String ps = param[i].str(vars, refs);
-                s.append(ps.charAt(0) == '!' ? ps.substring(1) : ps);
+                s.append(ps.charAt(0) == '~' ? ps.substring(1) : ps);
             }
             s.append('>');
         }

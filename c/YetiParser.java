@@ -1242,12 +1242,12 @@ interface YetiParser {
             } else {
                 int start = i;
                 char c, dot = '_';
-                if (i < src.length && src[i] == '!') {
+                if (i < src.length && src[i] == '~') {
                     ++i;
                     dot = '.';
                 }
                 while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'
-                                          || c == dot))
+                                          || c == dot || c == '$'))
                     ++i;
                 if (i == start)
                     throw new CompileException(sline, scol,

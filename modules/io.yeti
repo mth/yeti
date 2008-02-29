@@ -32,15 +32,15 @@ import java.lang.System;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 
-var stdin = () is !BufferedReader;
+var stdin = () is ~BufferedReader;
 
 {
     readln () = synchronized readln do:
-	    if not (raw_nullptr? stdin) then
-			stdin := new BufferedReader(new InputStreamReader(System#in));
-		fi;
-		stdin#readLine()
-	done;
+        if not (raw_nullptr? stdin) then
+            stdin := new BufferedReader(new InputStreamReader(System#in));
+        fi;
+        stdin#readLine()
+    done;
 
     print v =
        (System#out#print(v);

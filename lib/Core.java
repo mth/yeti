@@ -84,32 +84,6 @@ public final class Core {
         }
     }
 
-    private static final class ForHash extends Fun2 {
-        Object apply2(Object map, Object fun) {
-            Fun f = (Fun) fun;
-            java.util.Iterator i = ((Map) map).entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry e = (Map.Entry) i.next();
-                ((Fun) f.apply(e.getKey())).apply(e.getValue());
-            }
-            return null;
-        }
-    }
-
-    private static final class MapHash extends Fun2 {
-        Object apply2(Object fun, Object map) {
-            Map m = (Map) map;
-            Object[] a = new Object[m.size()];
-            Fun f = (Fun) fun;
-            java.util.Iterator i = m.entrySet().iterator();
-            for (int n = 0; i.hasNext(); ++n) {
-                Map.Entry e = (Map.Entry) i.next();
-                a[n] = ((Fun) f.apply(e.getKey())).apply(e.getValue());
-            }
-            return new MList(a);
-        }
-    }
-
     private static final class Fold extends Fun2 {
         Object apply2(final Object f, final Object value) {
             return new FunX() {
@@ -192,8 +166,6 @@ public final class Core {
     }
 
     public static final Fun FOR  = new For();
-    public static final Fun FORHASH = new ForHash();
-    public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
     public static final Fun EMPTY = new Empty();

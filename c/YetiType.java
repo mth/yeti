@@ -123,11 +123,6 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
-        bindCore("forHash",
-            fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
-            "FORHASH",
-        bindCore("mapHash",
-            fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
@@ -152,7 +147,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
-        null)))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -837,7 +832,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                           nodeToType(node.param[1], free, scope, depth) };
             return new Type(FUN, tp);
         }
-        if (name.startsWith("!")) {
+        if (name.startsWith("~")) {
             String cn = name.substring(1).replace('.', '/').intern();
             Type[] tp = new Type[node.param.length];
             for (int i = tp.length; --i >= 0;)

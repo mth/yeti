@@ -28,6 +28,7 @@
  */
 module yeti.lang.std;
 
+import java.lang.Long;
 import java.lang.Math;
 import java.lang.IllegalArgumentException;
 
@@ -64,7 +65,7 @@ notPred f x = not (f x);
     norec (shr) a b = a shr b;
     norec negate a = negate a;
     norec raw_nullptr? a = raw_nullptr? a;
-	norec synchronized monitor block = synchronized monitor block;
+    norec synchronized monitor block = synchronized monitor block;
 
     flip f x y =
         f y x;
@@ -99,31 +100,52 @@ notPred f x = not (f x);
     atan a = Math#atan(a is number);
     sqrt a = Math#sqrt(a is number);
 
+    forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
+       (i = (h unsafely_as ~Hash)#entrySet()#iterator();
+        i#hasNext() loop
+           (e = i#next() unsafely_as ~java.util.Map$Entry;
+            f e#getKey() e#getValue()));
+
+    mapHash h f is hash<'a, 'b> -> ('a -> 'b -> 'c) -> array<'c> =
+       (a = array [];
+        setArrayCapacity a (h unsafely_as ~Hash)#size();
+        i = (h unsafely_as ~Hash)#entrySet()#iterator();
+        i#hasNext() loop
+           (e = i#next() unsafely_as ~java.util.Map$Entry;
+            push a (f e#getKey() e#getValue()));
+        a);
+
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
-        (h unsafely_as !Hash)#defaultFun := (f unsafely_as !Fun);
+        (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun);
 
     head l is list?<'a> -> 'a =
        (if raw_nullptr? l then
             throw new IllegalArgumentException("Empty list")
         fi;
-        (l unsafely_as !AList)#first()) unsafely_as 'a;
+        (l unsafely_as ~AList)#first()) unsafely_as 'a;
 
     tail l is list?<'a> -> list<'a> =
        (if raw_nullptr? l then
             throw new IllegalArgumentException("Empty list")
         fi;
-        (l unsafely_as !AList)#rest()) unsafely_as list<'a>;
+        (l unsafely_as ~AList)#rest()) unsafely_as list<'a>;
 
     index v l is 'a -> list?<'a> -> number =
         if raw_nullptr? l then
             -1
         else
-            res = (l unsafely_as !AList)#index(v);
+            res = (l unsafely_as ~AList)#index(v);
             if raw_nullptr? res then -1 else res fi
         fi;
 
     array l is list?<'a> -> array<'a> =
         new MList(l) unsafely_as array<'a>;
+
+    setArrayCapacity a n is array<'a> -> number -> () =
+        (a unsafely_as ~MList)#reserve(n);
+
+    push a v is array<'a> -> 'a -> () =
+        (a unsafely_as ~MList)#add(v);
 
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         FilterList#filter(l, f) unsafely_as list<'a>;
@@ -132,14 +154,14 @@ notPred f x = not (f x);
         if raw_nullptr? l then
             []
         else
-            (l unsafely_as !AList)#find(f) unsafely_as list<'a>
+            (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
         fi;
 
     map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if raw_nullptr? l then
             []
         else
-            (l unsafely_as !AList)#map(f) unsafely_as list<'b>
+            (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi;
 
     map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =
@@ -153,6 +175,6 @@ notPred f x = not (f x);
         if raw_nullptr? l then
             []
         else
-            (l unsafely_as !AList)#reverse() unsafely_as list<'a>
+            (l unsafely_as ~AList)#reverse() unsafely_as list<'a>
         fi;
 }
