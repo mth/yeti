@@ -64,6 +64,7 @@ notPred f x = not (f x);
     norec (shl) a b = a shl b;
     norec (shr) a b = a shr b;
     norec negate a = negate a;
+    norec raw_nullptr? a = raw_nullptr? a;
 
     flip f x y =
         f y x;
