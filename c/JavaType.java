@@ -49,10 +49,12 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     List constructors = new ArrayList();
     String parent;
     String className;
+    int access;
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
         parent = superName;
+        this.access = access;
 /*        System.err.println("visit: ver=" + version + " | access=" + access
             + " | name=" + name + " | sig=" + signature + " super="
             + superName);*/
@@ -273,6 +275,7 @@ class JavaType {
     private Method[] staticMethods;
     private Method[] constructors;
     private JavaType parent;
+    private int access;
     private static HashMap CACHE = new HashMap();
 
     static void checkPackage(YetiParser.Node where, String packageName,
@@ -282,6 +285,10 @@ class JavaType {
                 "Non-public " + what + ' ' + name.replace('/', '.') + '#'
               + item + " cannot be accessed from different package ("
               + packageName + ")");
+    }
+
+    boolean isInterface() {
+        return (access & Opcodes.ACC_INTERFACE) != 0;
     }
 
     static String descriptionOf(YetiType.Type t) {
@@ -439,6 +446,7 @@ class JavaType {
         } catch (IOException ex) {
             throw new JavaClassNotFoundException(dottedName());
         }
+        access = t.access;
         if (t.parent != null) {
             parent = fromDescription('L' + t.parent + ';');
             parent.resolve();

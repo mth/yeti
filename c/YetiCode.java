@@ -610,7 +610,9 @@ interface YetiCode {
                 ctx.m.visitTypeInsn(CHECKCAST,
                     method.classType.javaType.className());
             }
-            genCall(ctx, object == null ? INVOKESTATIC : INVOKEVIRTUAL);
+            genCall(ctx, object == null ? INVOKESTATIC :
+                        method.classType.javaType.isInterface()
+                            ? INVOKEINTERFACE : INVOKEVIRTUAL);
             convertValue(ctx, method.returnType);
         }
     }

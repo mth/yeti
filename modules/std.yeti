@@ -108,15 +108,16 @@ notPred f x = not (f x);
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
-            f e#getKey() e#getValue()));
+            f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
-    mapHash h f is hash<'a, 'b> -> ('a -> 'b -> 'c) -> array<'c> =
+    mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> array<'c> =
        (a = array [];
         setArrayCapacity a (h unsafely_as ~Hash)#size();
         i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
-            push a (f e#getKey() e#getValue()));
+            push a (f (e#getKey() unsafely_as 'a)
+                      (e#getValue() unsafely_as 'b)));
         a);
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
