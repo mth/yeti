@@ -106,12 +106,6 @@ public final class Core {
         }
     };
 
-    private static final class FCompose extends Fun2 {
-        Object apply2(Object f, Object g) {
-            return new Compose(f, g);
-        }
-    }
-
     private static final class Head extends Fun {
         public Object apply(Object x) {
             if (x == null) {
@@ -358,7 +352,6 @@ public final class Core {
     public static final Fun ALL  = new All();
     public static final Fun ANY  = new Any();
     public static final Fun INDEX = new Index();
-    public static final Fun COMPOSE = new FCompose();
     public static final Fun EMPTY = new Empty();
     public static final Fun FROM_SOME = new FromSome();
     public static final Fun REPLACE = new Replace();

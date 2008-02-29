@@ -108,6 +108,7 @@ interface YetiBuiltins extends YetiCode {
     }
 
     abstract class Bind2Core implements Binder, Opcodes {
+        String lib = "yeti/lang/Core";
         private String coreFun;
         private YetiType.Type type;
 
@@ -117,8 +118,7 @@ interface YetiBuiltins extends YetiCode {
         }
 
         public BindRef getRef(int line) {
-            return new StaticRef("yeti/lang/Core", coreFun,
-                                 type, this, true, line) {
+            return new StaticRef(lib, coreFun, type, this, true, line) {
                 Code apply(final Code arg1, YetiType.Type res, int line1) {
                     return new Apply(res, this, arg1, line1) {
                         Code apply(final Code arg2, final YetiType.Type res,
@@ -170,7 +170,8 @@ interface YetiBuiltins extends YetiCode {
 
     class Compose extends Bind2Core {
         Compose() {
-            super("COMPOSE", YetiType.COMPOSE_TYPE);
+            super("$d", YetiType.COMPOSE_TYPE);
+            lib = "yeti/lang/std";
         }
 
         void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {

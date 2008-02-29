@@ -51,6 +51,7 @@ import java.lang.System;
     norec (*)  a b = a * b;
     norec (/)  a b = a / b;
     norec (%)  a b = a % b;
+    norec (.)  a b = a . b;
     norec (::) v l = v :: l;
     norec (:.) v l = v :. l;
     norec (=~) s p = s =~ p;
