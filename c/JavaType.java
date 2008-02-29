@@ -343,20 +343,36 @@ class JavaType {
         return null;
     }
 
-    static void checkCast(YetiParser.Node cast,
-                          YetiType.Type from, YetiType.Type to) {
-        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA) {
+    static void checkUnsafeCast(YetiParser.Node cast,
+                                YetiType.Type from, YetiType.Type to) {
+        if (from.type != YetiType.JAVA) {
             throw new CompileException(cast,
-                "Illegal cast (neither side is java object)");
+                "unsafely_as expects java object as value");
         }
-        JavaType src = getClass(from);
-        if (src == null)
-            throw new CompileException(cast, "Illegal cast from " + from);
+        JavaType src = from.javaType;
         JavaType dst = getClass(to);
         if (dst == null)
             throw new CompileException(cast, "Illegal cast to " + to);
         try {
             if (src.isAssignable(dst) < 0 && dst.isAssignable(src) < 0) {
+                throw new CompileException(cast,
+                    "Illegal cast from " + from + " to " + to);
+            }
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(cast, ex);
+        }
+    }
+
+    static void checkCast(YetiParser.Node cast,
+                          YetiType.Type from, YetiType.Type to) {
+        if (to.type != YetiType.JAVA) {
+            throw new CompileException(cast, "Illegal cast to " + to);
+        }
+        JavaType src = getClass(from);
+        if (src == null)
+            throw new CompileException(cast, "Illegal cast from " + from);
+        try {
+            if (src.isAssignable(to.javaType) < 0) {
                 throw new CompileException(cast,
                     "Illegal cast from " + from + " to " + to);
             }

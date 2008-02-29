@@ -830,7 +830,7 @@ interface YetiParser {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
             } else if (s == "div" || s == "shr" || s == "shl") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
-            } else if (s == "is" || s == "unsafely_as") {
+            } else if (s == "is" || s == "unsafely_as" || s == "as") {
                 TypeNode t = readType(true);
                 if (t == null) {
                     throw new CompileException(line, col,
