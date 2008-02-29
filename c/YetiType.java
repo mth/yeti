@@ -228,33 +228,25 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         private String hstr(Map vars, Map refs) {
             StringBuffer res = new StringBuffer();
             boolean variant = type == VARIANT;
-            if (partialMembers != null) {
-                Iterator i = partialMembers.entrySet().iterator();
-                while (i.hasNext()) {
-                    Map.Entry e = (Map.Entry) i.next();
-                    if (res.length() != 0) {
-                        res.append(variant ? " | " : "; ");
-                    }
-                    res.append(e.getKey());
-                    res.append(variant ? " " : " is ");
-                    res.append(((Type) e.getValue()).str(vars, refs));
+            Map m = new java.util.TreeMap();
+            if (partialMembers != null)
+                m.putAll(partialMembers);
+            if (finalMembers != null)
+                m.putAll(finalMembers);
+            boolean useNL = m.size() >= 10;
+            String sep = variant ? " | " : useNL ? ";\n" : "; ";
+            String sep2 = variant ? " | " : useNL ? ";\n." : "; .";
+            Iterator i = m.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                if (res.length() != 0) {
+                    res.append(partialMembers != null &&
+                               partialMembers.containsKey(e.getKey())
+                               ? sep : sep2);
                 }
-            }
-            if (finalMembers != null) {
-                Iterator i = finalMembers.entrySet().iterator();
-                while (i.hasNext()) {
-                    Map.Entry e = (Map.Entry) i.next();
-                    if (partialMembers != null &&
-                        partialMembers.containsKey(e.getKey())) {
-                        continue;
-                    }
-                    if (res.length() != 0) {
-                        res.append(variant ? " | " : "; .");
-                    }
-                    res.append(e.getKey());
-                    res.append(variant ? " " : " is ");
-                    res.append(((Type) e.getValue()).str(vars, refs));
-                }
+                res.append(e.getKey());
+                res.append(variant ? " " : " is ");
+                res.append(((Type) e.getValue()).str(vars, refs));
             }
             return res.toString();
         }
