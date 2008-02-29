@@ -607,9 +607,25 @@ interface YetiCode {
         void gen(Ctx ctx) {
             if (object != null) {
                 object.gen(ctx);
+                ctx.m.visitTypeInsn(CHECKCAST,
+                    method.classType.javaType.className());
             }
             genCall(ctx, object == null ? INVOKESTATIC : INVOKEVIRTUAL);
             convertValue(ctx, method.returnType);
+        }
+    }
+
+    class Throw extends Code {
+        Code throwable;
+
+        Throw(Code throwable) {
+            this.type = YetiType.UNIT_TYPE;
+            this.throwable = throwable;
+        }
+
+        void gen(Ctx ctx) {
+            throwable.gen(ctx);
+            ctx.m.visitInsn(ATHROW);
         }
     }
 

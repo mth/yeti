@@ -107,6 +107,31 @@ interface YetiBuiltins extends YetiCode {
         }
     }
 
+    class IsNullPtr implements Binder {
+        public BindRef getRef(int line) {
+            return new StaticRef("yeti/lang/std", "raw_nullptr?",
+                                 YetiType.A_TO_BOOL, this, true, line) {
+                Code apply(final Code arg, YetiType.Type t, int line) {
+                    return new Code () {
+                        { type = YetiType.BOOL_TYPE; }
+
+                        void gen(Ctx ctx) {
+                            Label label = new Label();
+                            genIf(ctx, label, false);
+                            ctx.genBoolean(label);
+                        }
+
+                        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                            arg.gen(ctx);
+                            ctx.m.visitJumpInsn(ifTrue ? IFNULL : IFNONNULL,
+                                                to);
+                        }
+                    };
+                }
+            };
+        }
+    }
+
     class Negate extends StaticRef implements Binder {
         Negate() {
             super("yeti/lang/std", "negate", YetiType.NUM_TO_NUM,
@@ -594,4 +619,5 @@ interface YetiBuiltins extends YetiCode {
             };
         }
     }
+
 }

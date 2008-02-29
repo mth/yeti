@@ -30,6 +30,7 @@ module yeti.lang.std;
 
 import java.lang.System;
 import java.lang.Math;
+import java.lang.IllegalArgumentException;
 
 // like not . f, but a tiny bit faster
 notPred f x = not (f x);
@@ -80,9 +81,9 @@ notPred f x = not (f x);
     abs a =
         if a < 0 then -a else a fi;
     any f l =
-        find f l != [];
+        raw_nullptr? (find f l);
     all f l =
-        find (notPred f) l == [];
+        raw_nullptr? (find (notPred f) l);
     contains v l =
         index v l != -1;
     fromSome default f opt =
@@ -105,9 +106,57 @@ notPred f x = not (f x);
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as !Hash)#defaultFun := (f unsafely_as !Fun);
 
+    head l is list?<'a> -> 'a =
+       (if raw_nullptr? l then
+            throw new IllegalArgumentException("Empty list")
+        fi;
+        (l unsafely_as !AList)#first()) unsafely_as 'a;
+
+    tail l is list?<'a> -> list<'a> =
+       (if raw_nullptr? l then
+            throw new IllegalArgumentException("Empty list")
+        fi;
+        (l unsafely_as !AList)#rest()) unsafely_as list<'a>;
+
+    index v l is 'a -> list?<'a> -> number =
+        if raw_nullptr? l then
+            -1
+        else
+            res = (l unsafely_as !AList)#index(v);
+            if raw_nullptr? res then -1 else res fi
+        fi;
+
     array l is list?<'a> -> array<'a> =
         new MList(l) unsafely_as array<'a>;
 
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         FilterList#filter(l, f) unsafely_as list<'a>;
+
+    find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
+        if raw_nullptr? l then
+            []
+        else
+            (l unsafely_as !AList)#find(f) unsafely_as list<'a>
+        fi;
+
+    map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+        if raw_nullptr? l then
+            []
+        else
+            (l unsafely_as !AList)#map(f) unsafely_as list<'b>
+        fi;
+
+    map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =
+        if raw_nullptr? a or raw_nullptr? b then
+            []
+        else
+            new Map2List(f, a, b) unsafely_as list<'c>
+        fi;
+
+    reverse l is list?<'a> -> list<'a> =
+        if raw_nullptr? l then
+            []
+        else
+            (l unsafely_as !AList)#reverse() unsafely_as list<'a>
+        fi;
 }

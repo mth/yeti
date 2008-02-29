@@ -339,6 +339,8 @@ class JavaType {
             return fromDescription("Lyeti/lang/Tag;");
         case YetiType.STRUCT:
             return fromDescription("Lyeti/lang/Struct;");
+        case YetiType.VAR:
+            return fromDescription("Ljava/lang/Object;");
         }
         return null;
     }
@@ -363,6 +365,20 @@ class JavaType {
             }
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(cast, ex);
+        }
+    }
+
+    static void checkThrowable(YetiParser.Node node, YetiType.Type t) {
+        t = t.deref();
+        try {
+            if (t.type != YetiType.JAVA ||
+                JavaType.fromDescription("Ljava/lang/Throwable;")
+                    .isAssignable(t.javaType) == -1) {
+                throw new CompileException(node,
+                                "Not a Throwable instance (" + t + ")");
+            }
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(node, ex);
         }
     }
 

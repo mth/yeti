@@ -103,6 +103,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     static final Type LAZYCONS_TYPE =
         fun2Arg(A, fun(C, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
+    static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
@@ -131,24 +132,13 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("readln", fun(UNIT_TYPE, STR_TYPE), "READLN",
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
-        bindCore("reverse", fun(A_B_LIST_TYPE, A_LIST_TYPE), "REVERSE",
-        bindCore("head", fun(A_B_LIST_TYPE, A), "HEAD",
-        bindCore("tail", fun(A_B_LIST_TYPE, A_LIST_TYPE), "TAIL",
         bindCore("forHash",
             fun2Arg(A_B_MAP_TYPE, fun2Arg(A, B, UNIT_TYPE), UNIT_TYPE),
             "FORHASH",
-        bindCore("map",
-            fun2Arg(fun(A, C), A_B_LIST_TYPE, C_B_LIST_TYPE), "MAP",
-        bindCore("map2",
-            fun(fun2Arg(A, C, D),
-                fun2Arg(A_B_LIST_TYPE, C_B_LIST_TYPE, D_LIST_TYPE)), "MAP2",
         bindCore("mapHash",
             fun2Arg(fun2Arg(A, B, C), A_B_MAP_TYPE, C_LIST_TYPE), "MAPHASH",
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
-        bindCore("find",
-            fun2Arg(fun(A, BOOL_TYPE), A_B_LIST_TYPE, A_LIST_TYPE), "FIND",
-        bindCore("index", fun2Arg(A, A_B_LIST_TYPE, NUM_TYPE), "INDEX",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
         bindCore("replace",
@@ -158,7 +148,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
-        bindPoly("negate", NUM_TO_NUM, new Negate(), 0,
+        bindPoly("raw_nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -169,7 +159,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         bindScope("or", new BoolOpFun(true),
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
-        null)))))))))))))))))))))))))))))))))))))))))));
+        bindScope("negate", new Negate(),
+        null)))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -725,6 +716,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             if (op.op == "") {
+                if (op.left instanceof ThrowSym) {
+                    Code throwable = analyze(op.right, scope, depth);
+                    JavaType.checkThrowable(op.left, throwable.type);
+                    return new Throw(throwable);
+                }
                 return apply(node, analyze(op.left, scope, depth),
                              analyze(op.right, scope, depth), depth);
             }

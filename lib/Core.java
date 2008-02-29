@@ -70,12 +70,6 @@ public final class Core {
         }
     };
 
-    public static final Fun REVERSE = new Fun() {
-        public Object apply(Object x) {
-            return x == null ? null : ((AList) x).reverse();
-        }
-    };
-
     public static final Fun RANDINT = new Fun() {
         public Object apply(Object x) {
             if (rnd == null) {
@@ -92,24 +86,6 @@ public final class Core {
             return new FloatNum(Math.floor(n.doubleValue() * rnd.nextDouble()));
         }
     };
-
-    private static final class Head extends Fun {
-        public Object apply(Object x) {
-            if (x == null) {
-                throw new IllegalArgumentException("Empty list");
-            }
-            return ((AList) x).first();
-        }
-    }
-
-    private static final class Tail extends Fun {
-        public Object apply(Object x) {
-            if (x == null) {
-                throw new IllegalArgumentException("Empty list");
-            }
-            return ((AList) x).rest();
-        }
-    }
 
     private static final class For extends Fun {
         public Object apply(Object list) {
@@ -134,27 +110,6 @@ public final class Core {
                 ((Fun) f.apply(e.getKey())).apply(e.getValue());
             }
             return null;
-        }
-    }
-
-    private static final class Map_ extends Fun2 {
-        Object apply2(Object f, Object list) {
-            if (list == null) {
-                return null;
-            }
-            return ((AList) list).map((Fun) f);
-        }
-    }
-
-    private static final class Map2 extends Fun {
-        public Object apply(final Object f) {
-            return new Fun2() {
-                Object apply2(Object l1, Object l2) {
-                    return l1 == null || l2 == null
-                        ? null : new Map2List((Fun) f, (AIter) l1,
-                                                       (AIter) l2);
-                }
-            };
         }
     }
 
@@ -221,25 +176,6 @@ public final class Core {
         }
     }
 
-    private static final class Find extends Fun2 {
-        Object apply2(Object f, Object list) {
-            if (list == null) {
-                return null;
-            }
-            return ((AList) list).find((Fun) f);
-        }
-    }
-
-    private static final class Index extends Fun2 {
-        Object apply2(Object v, Object list) {
-            if (list == null) {
-                return IntNum.__1;
-            }
-            Num n = ((AList) list).index(v);
-            return n == null ? IntNum.__1 : n;
-        }
-    }
-
     private static final class Empty extends Fun {
         public Object apply(Object v) {
             AMList m;
@@ -272,17 +208,11 @@ public final class Core {
         }
     }
 
-    public static final Fun HEAD = new Head();
-    public static final Fun TAIL = new Tail();
     public static final Fun FOR  = new For();
     public static final Fun FORHASH = new ForHash();
-    public static final Fun MAP  = new Map_();
-    public static final Fun MAP2 = new Map2();
     public static final Fun MAPHASH = new MapHash();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
-    public static final Fun FIND = new Find();
-    public static final Fun INDEX = new Index();
     public static final Fun EMPTY = new Empty();
     public static final Fun REPLACE = new Replace();
 

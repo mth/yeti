@@ -124,6 +124,9 @@ interface YetiParser {
     class NoRecSym extends Node {
     }
 
+    class ThrowSym extends Node {
+    }
+
     class UnitLiteral extends Node {
         String str() {
             return "()";
@@ -852,6 +855,8 @@ interface YetiParser {
             } else if (s == "import") {
                 res = new Import(readDotted(false,
                                  "Expected class path after 'import', not a "));
+            } else if (s == "throw") {
+                res = new ThrowSym();
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
