@@ -1,4 +1,4 @@
-module fib;
+module examples.fib;
 
 // memoizing algorithm
 fibs = [0: 0, 1: 1];

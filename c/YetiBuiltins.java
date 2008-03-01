@@ -263,7 +263,6 @@ interface YetiBuiltins extends YetiCode {
             ctx.m.visitInsn(MONITORENTER);
 
             ctx.m.visitLabel(startBlock);
-            block.gen(ctx);
             new Apply(type, block, new UnitConstant(), line).gen(ctx);
             ctx.visitLine(line);
             ctx.m.visitVarInsn(ALOAD, monitorVar);

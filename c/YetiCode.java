@@ -645,10 +645,17 @@ interface YetiCode {
                 object.gen(ctx);
             }
             ctx.visitLine(line);
+            String descr = JavaType.descriptionOf(field.type);
+            char what = descr.charAt(0);
+            if (object == null) {
+            } else if (what == '[') {
+                ctx.m.visitTypeInsn(CHECKCAST, descr);
+            } else if (what == 'L') {
+                ctx.m.visitTypeInsn(CHECKCAST, field.type.javaType.className());
+            }
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
                                  field.classType.javaType.className(),
-                                 field.name,
-                                 JavaType.descriptionOf(field.type));
+                                 field.name, descr);
             convertValue(ctx, field.type);
         }
 
@@ -808,17 +815,18 @@ interface YetiCode {
         }
 
         Code assign(final Code value) {
-            if (uncaptured) {
-                return ref.assign(value);
-            }
             if (!ref.assign()) {
                 return null;
             }
             return new Code() {
                 void gen(Ctx ctx) {
-                    genPreGet(ctx);
-                    wrapper.genSet(ctx, value);
-                    ctx.m.visitInsn(ACONST_NULL);
+                    if (uncaptured) {
+                        ref.assign(value).gen(ctx);
+                    } else {
+                        genPreGet(ctx);
+                        wrapper.genSet(ctx, value);
+                        ctx.m.visitInsn(ACONST_NULL);
+                    }
                 }
             };
         }
