@@ -452,8 +452,10 @@ class JavaType {
             return;
         }
         String className = className();
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                            .getResourceAsStream(className + ".class");
+        InputStream in = ClassFinder.find(className + ".class");
+        if (in == null) {
+            throw new JavaClassNotFoundException(dottedName());
+        }
         JavaTypeReader t = new JavaTypeReader();
         t.className = className;
         try {
@@ -785,14 +787,8 @@ class JavaType {
         return p < 0 ? "" : className.substring(0, p);
     }
 
-/*    public static void main(String[] arg) throws Exception{
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                            .getResourceAsStream(arg[0] + ".class");
-        JavaTypeReader t = new JavaTypeReader();
-        new ClassReader(in).accept(t, null,
-                ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
-        System.err.println(t.fields);
-        System.err.println(t.methods);
-    }*/
+    static YetiType.Type toStructType(YetiType.Type object) {
+        return null;   
+    }
 }
 

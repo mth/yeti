@@ -83,13 +83,16 @@ interface YetiCode {
         private CodeWriter writer;
         private SourceReader reader;
         private String[] preload;
+        ClassFinder classPath;
         Map classes = new HashMap();
         Map types = new HashMap();
 
-        CompileCtx(SourceReader reader, CodeWriter writer, String[] preload) {
+        CompileCtx(SourceReader reader, CodeWriter writer,
+                   String[] preload, ClassFinder finder) {
             this.reader = reader;
             this.writer = writer;
             this.preload = preload;
+            this.classPath = finder;
         }
 
         private void generateModuleFields(Map fields, Ctx ctx) {

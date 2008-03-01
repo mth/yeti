@@ -127,7 +127,7 @@ public class YetiC implements SourceReader {
         System.exit(0);
     }
 
-    private static final String[] PRELOAD =
+    static final String[] PRELOAD =
         { "yeti/lang/std", "yeti/lang/io" };
 
     public static void main(String[] argv) throws Exception {
@@ -228,7 +228,8 @@ public class YetiC implements SourceReader {
         CodeWriter writer = exec ? (CodeWriter) new Loader()
                                  : new ToFile(target);
         YetiCode.CompileCtx compilation =
-            new YetiCode.CompileCtx(new YetiC(), writer, preload);
+            new YetiCode.CompileCtx(new YetiC(), writer, preload,
+                                    new ClassFinder(""));
         try {
             if (eval) {
                 flags |= CF_COMPILE_MODULE;

@@ -1,3 +1,4 @@
+<!-- ex: se sts=4 sw=4 expandtab: -->
 <project name="yeti" default="compiler" basedir=".">
 
 <target name="prepare-build">
@@ -21,22 +22,16 @@
 
 <target name="compiler" depends="checklib,lib,fetch">
     <mkdir dir="${basedir}/.build/compiler"/>
-    <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c"
+    <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
-           debug="on" classpath="${asm}:${basedir}/.build/lib"/>
+           classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"/>
 </target>
 
 <target name="modules" depends="prepare-build">
-    <!-- TODO: write yetic ant task -->
-    <fileset id="module.srcs" dir="${basedir}/modules" includes="*.yeti"/>
-    <pathconvert pathsep=" " property="module.srclist" refid="module.srcs"/>
-    <java classname="yeti.lang.compiler.YetiC" fork="false" failonerror="true"
-          classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler">
-        <arg value="-Cdl"/>
-        <arg value="${basedir}/.build/modules"/>
-		<arg value=""/>
-        <arg line="${module.srclist}"/>
-    </java>
+    <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
+        classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
+    <yetic srcdir="${basedir}/modules" includes="*.yeti"
+           destdir="${basedir}/.build/modules" preload=""/>
 </target>
 
 <target name="yeti" depends="compiler,modules">

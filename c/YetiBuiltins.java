@@ -662,6 +662,13 @@ interface YetiBuiltins extends YetiCode {
                 }
             };
         }
-    }
 
+        void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                Label to, boolean ifTrue) {
+            binGen(ctx, arg1, arg2);
+            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                    "TRUE", "Ljava/lang/Boolean;");
+            ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+        }
+    }
 }

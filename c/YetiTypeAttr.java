@@ -318,8 +318,7 @@ class YetiTypeVisitor implements ClassVisitor {
         if (t != null) {
             return t;
         }
-        InputStream in = Thread.currentThread().getContextClassLoader()
-                            .getResourceAsStream(name + ".class");
+        InputStream in = ClassFinder.find(name + ".class");
         try {
             if (in == null) {
                 ctx.compile(name + ".yeti", 0);

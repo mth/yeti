@@ -5,7 +5,7 @@ processRequest conn =
         conn.print "HTTP/1.0 \(status)\r\nContent-Type: \(contentType)\r\n\r\n";
     try
         status = split '\s+' (conn.readTo "\r\n" 16384);
-        if count status != 3 or not (status.[2] =~ '^HTTP/1\.') then
+        if sizeOf status != 3 or not (status.[2] =~ '^HTTP/1\.') then
             throw new Bad('400 Bad request');
         fi;
         uri = subst '[^/]*[^/.]/\.\.' ''
