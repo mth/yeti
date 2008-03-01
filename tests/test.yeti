@@ -1,0 +1,49 @@
+h = [0.5e: true, 33.2: false];
+trueTests = [
+'id': \(id true),
+'const': const true,
+'ignore': \(ignore false; true),
+'at' : \(at h 0.5 and not (at h 33.2e)),
+'not': \(not false and (not true) == false),
+'and': \(true and not (false and true)),
+'or' : \(not (false or false) and (false or true)),
+'in': \(not (0 in h) and 0.5 in h and 33.2 in h),
+'==': \(not (0 == -1) and (1 == 1)),
+'!=': \(1 != 2 and not (0 != 0)),
+'<' : \(1 < 2 and not (1 < 1) and not (1 < 0)),
+'<=': \(1 <= 2 and 1 <= 1 and not (1 < 0)),
+'>' : \(1 > 0 and not (0 > 0) and not (-2 > -1)),
+'>=': \(22 >= 21.9 and 22 >= 22 and not (22 >= 22.1)),
+'*' : \(2 + 3 == 5),
+'-' : \(2 - 3 == -1),
+'*' : \(7 * 5 == 35),
+'/' : \(42 / 2 == 21),
+'%' : \(7 % 5 == 2),
+'.' : \(((* 2) . (+ 1)) 0.5 == 3),
+'::': \(head (1 :: [2]) == 1 and tail (1 :: [2]) == [2]),
+':.': \(head (1 :. \[2]) == 1 and tail (1 :. \[2]) == [2]),
+'=~': \('kala' =~ 'a' and not ('kala' =~ 't')),
+'^' : \(('a' ^ 7) == 'a7'),
+'div': \(7 div 2 == 3),
+'shl': \(7 shl 2 == 28),
+'shr': \(35 shr 3 == 4),
+'-x': \(x = 2; -x == 0 - 2),
+'raw_nullptr?': \(raw_nullptr? [] and not (raw_nullptr? 42)),
+'synchronized': \(synchronized 7 \true),
+'flip': \(flip (-) 2 3 == 1),
+'number': \(number '13' == 13),
+'min': \(min 897 13 == 13),
+'max': \(max 897 13 == 897),
+'abs': \(abs 52 == 52 and abs (-4) == 4),
+'any': \(any (== 3) [1 .. 5] and not (any (== 3) [5 .. 10])),
+'all': \(not (all (!= 3) [1 .. 5]) and (all (!= 3) [5 .. 10])),
+'contains': \(contains 3 [1 .. 5] and not (contains 3 [5 .. 10])),
+'fromSome': \(fromSome false not (Some false)),
+];
+
+forHash trueTests do name f:
+    if not (f ()) then
+        println "\(name) failed."
+    fi
+done;
+println "Testing done.";
