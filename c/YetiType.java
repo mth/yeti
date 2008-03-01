@@ -887,8 +887,10 @@ public final class YetiType implements YetiParser, YetiBuiltins {
 
     static Code isOp(Node is, TypeNode type, Code value,
                      Scope scope, int depth) {
-        Type t = nodeToType(type, new HashMap(), scope, depth);
-        if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as") {
+        Type t = nodeToType(type, new HashMap(), scope, depth).deref();
+        Type vt = value.type.deref();
+        if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as" &&
+                (vt.type != VAR || t.type != VAR)) {
             JavaType.checkUnsafeCast(is, value.type, t);
             return new Cast(value, t);
         }

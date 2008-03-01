@@ -42,6 +42,7 @@ class JavaClassNotFoundException extends Exception {
 }
 
 class JavaTypeReader implements ClassVisitor, Opcodes {
+    Map vars = new HashMap();
     Map fields = new HashMap();
     Map staticFields = new HashMap();
     List methods = new ArrayList();
@@ -70,7 +71,7 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     public void visitAttribute(Attribute attr) {
     }
 
-    private static int parseSig(List res, int p, char[] s) {
+    private static int parseSig(Map vars, List res, int p, char[] s) {
         int arrays = 0;
         for (int l = s.length; p < l && s[p] != '>'; ++p) {
             if (s[p] == '+') {
@@ -90,9 +91,18 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                 t = new YetiType.Type(new String(s, p1, p - p1).concat(";"));
                 if (p < l && s[p] == '<') {
                     List param = new ArrayList();
-                    p = parseSig(param, p + 1, s) + 1;
+                    p = parseSig(vars, param, p + 1, s) + 1;
                     t.param = (YetiType.Type[])
                         param.toArray(new YetiType.Type[param.size()]);
+                }
+            } else if (s[p] == 'T') {
+                int p1 = p + 1;
+                while (++p < l && s[p] != ';' && s[p] != '<');
+                String varName = new String(s, p1, p - p1);
+                t = (YetiType.Type) vars.get(varName);
+                if (t == null) {
+                    t = new YetiType.Type(1000000);
+                    vars.put(varName, t);
                 }
             } else {
                 t = new YetiType.Type(new String(s, p, 1));
@@ -106,9 +116,9 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
         return p;
     }
 
-    private static List parseSig(int start, String sig) {
+    private List parseSig(int start, String sig) {
         List res = new ArrayList();
-        parseSig(res, start, sig.toCharArray());
+        parseSig(vars, res, start, sig.toCharArray());
         return res;
     }
 
@@ -262,7 +272,7 @@ class JavaType {
                 result.append(argDescr(i));
             }
             result.append(')');
-            result.append(returnType.javaType.description);
+            result.append(descriptionOf(returnType));
             return result.toString();
         }
     }
@@ -292,6 +302,12 @@ class JavaType {
     }
 
     static String descriptionOf(YetiType.Type t) {
+        if (t.type == YetiType.VAR) {
+            if (t.ref != null) {
+                return descriptionOf(t.ref);
+            }
+            return "Ljava/lang/Object;";
+        }
         String r = "";
         while (t.type == YetiType.JAVA_ARRAY) {
             r = r.concat("[");
