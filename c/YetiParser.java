@@ -379,6 +379,40 @@ interface YetiParser {
         }
     }
 
+    class Try extends Node {
+        Node block;
+        Catch[] catches;
+        Node rescue;
+
+        String str() {
+            StringBuffer buf = new StringBuffer("try\n");
+            for (int i = 0; i < catches.length; ++i)
+                buf.append(catches[i].str());
+            if (rescue != null) {
+                buf.append("\nfinally\n");
+                buf.append(rescue.str());
+            }
+            buf.append("\nyrt\n");
+            return buf.toString();
+        }
+    }
+
+    class Catch extends Eof {
+        String exception;
+        String bind;
+        Node expr;
+
+        String str() {
+            return "\ncatch " + exception + ' ' + bind + ":\n" + expr.str();
+        }
+    }
+
+    class Finally extends Eof {
+    }
+
+    class Yrt extends Finally {
+    }
+
     class Eof extends Node {
     }
 
@@ -853,6 +887,14 @@ interface YetiParser {
             } else if (s == "load") {
                 res = new Load(readDotted(false,
                                 "Expected module name after 'load', not a "));
+            } else if (s == "try") {
+                res = readTry();
+            } else if (s == "catch") {
+                res = new Catch();
+            } else if (s == "finally") {
+                res = new Finally();
+            } else if (s == "yrt") {
+                res = new Yrt();
             } else if (s == "import") {
                 res = new Import(readDotted(false,
                                  "Expected class path after 'import', not a "));
@@ -1014,6 +1056,45 @@ interface YetiParser {
                     "Expected esac, found " + eofWas);
             }
             return new Case(val, choices);
+        }
+
+        private Node readTry() {
+            List catches = new ArrayList();
+            Try t = new Try();
+            t.block = readSeq(' ');
+            while (!(eofWas instanceof Finally)) {
+                if (!(eofWas instanceof Catch)) {
+                    throw new CompileException(eofWas,
+                        "Expected finally or yrt, found " + eofWas);
+                }
+                Catch c = (Catch) eofWas;
+                catches.add(c);
+                c.exception =
+                    readDotted(false, "Expected exception name, not ");
+                Node n = fetch();
+                if (n instanceof Sym) {
+                    c.bind = ((Sym) n).sym;
+                    n = fetch();
+                }
+                if (!(n instanceof BinOp) || ((BinOp) n).op != ":") {
+                    throw new CompileException(n, "Expected ':'" +
+                        (c.bind == null ? " or identifier" : "") +
+                        ", but found " + n);
+                }
+                c.expr = readSeq(' ');
+            }
+            t.catches = (Catch[]) catches.toArray(new Catch[catches.size()]);
+            if (!(eofWas instanceof Yrt)) {
+                t.rescue = readSeq(' ');
+                if (!(eofWas instanceof Yrt)) {
+                    throw new CompileException(eofWas,
+                        "Expected yrt, found " + eofWas);
+                }
+            } else if (t.catches.length == 0) {
+                throw new CompileException(eofWas,
+                    "try block must contain at least one catch or finally");
+            }
+            return t;
         }
 
         private Node readDo() {
