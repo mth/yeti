@@ -664,6 +664,7 @@ interface YetiParser {
         private int lineStart;
         private AList prefetched;
         String moduleName;
+        boolean isModule;
 
         private static int opLevel(String op) {
             int i = 0;
@@ -1308,8 +1309,12 @@ interface YetiParser {
 
         Node parse() {
             Node n = fetch();
-            if (n instanceof Sym && ((Sym) n).sym == "module") {
-                moduleName = readDotted(true, "Expected module name, not a ");
+            String s;
+            if (n instanceof Sym &&
+                ((s = ((Sym) n).sym) == "module" || s == "program")) {
+                moduleName = readDotted(true,
+                    "Expected " + s + " name, not a ");
+                isModule = s == "module";
             } else {
                 prefetched = new LList(n, prefetched);
             }

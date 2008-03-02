@@ -1621,8 +1621,8 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleName = parser.moduleName;
-            if ((flags & YetiC.CF_COMPILE_MODULE) == 0 &&
-                parser.moduleName == null) {
+            root.isModule = parser.isModule;
+            if ((flags & YetiC.CF_COMPILE_MODULE) == 0 && !parser.isModule) {
                 try {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {

@@ -1,3 +1,5 @@
+program yeti.lang.compiler.yetic;
+
 help = do:
     println ("yeti -flags... files\n\n" ^
              "-h      Print this help\n" ^
@@ -10,7 +12,7 @@ var target = "";
 var eval = false;
 var exec = true;
 var printType = false;
-var preload = [];
+var preload = array [];
 var src = "";
 var evalArgs = [];
 var mainClass = "Program";
@@ -30,7 +32,7 @@ options = [
     "-e": \(eval := true; src := shift argv),
     "-h": help,
     "-help": help,
-    "-l": \(preload = split (shift argv)),
+    "-l": \(preload := split ':' (shift argv)),
     "-xm": \(printType := true),
     "-xp": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
 ];

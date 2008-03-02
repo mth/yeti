@@ -140,8 +140,8 @@ interface YetiCode {
             }
             if (codeTree.moduleName != null) {
                 name = codeTree.moduleName;
-                module = true;
             }
+            module = module || codeTree.isModule;
             Constants constants = new Constants();
             constants.sourceName = sourceName;
             Ctx ctx = new Ctx(this, constants, null, null)
@@ -1064,8 +1064,9 @@ interface YetiCode {
 
     class RootClosure extends AClosure {
         Code code;
-        String moduleName;
         String[] preload;
+        String moduleName;
+        boolean isModule;
 
         public BindRef refProxy(BindRef code) {
             return code;
