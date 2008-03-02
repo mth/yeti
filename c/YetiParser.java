@@ -961,7 +961,7 @@ interface YetiParser {
                 name += ((Sym) sym).sym;
                 args = readArgs();
                 if (args == null) {
-                    if (p >= src.length || src[p] != '.') {
+                    if (p >= src.length || src[p] != '.' && src[p] != '$') {
                         throw new CompileException(line, p - lineStart + 1,
                                     "Expecting constructor argument list");
                     }

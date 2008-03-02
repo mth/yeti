@@ -283,11 +283,18 @@ public class MList extends AMList implements ByKey {
         array[size++] = o;
     }
 
-    public Object first() {
-        if (size == 0) {
-            throw new IllegalStateException("No first element in empty list");
+    public Object shift() {
+        if (start >= size) {
+            throw new EmptyArrayException("No first element in empty array");
         }
-        return array[0];
+        return array[start++];
+    }
+
+    public Object first() {
+        if (start >= size) {
+            throw new EmptyArrayException("No first element in empty array");
+        }
+        return array[start];
     }
 
     public AList rest() {
@@ -300,23 +307,29 @@ public class MList extends AMList implements ByKey {
 
     public Object vget(Object index) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
+        if ((i = ((Number) index).intValue()) < 0) {
             throw new NoSuchKeyException(i, size);
+        }
+        if ((i += start) >= size) {
+            throw new NoSuchKeyException(i - start, size);
         }
         return array[i];
     }
 
     public Object put(Object index, Object value) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0 || i >= size) {
+        if ((i = ((Number) index).intValue()) < 0) {
             throw new NoSuchKeyException(i, size);
+        }
+        if ((i += start) >= size) {
+            throw new NoSuchKeyException(i - start, size);
         }
         array[i] = value;
         return null;
     }
 
     public AList find(Fun pred) {
-        for (int cnt = size, i = 0; i < cnt; ++i) {
+        for (int cnt = size, i = start; i < cnt; ++i) {
             if (pred.apply(array[i]) == Boolean.TRUE) {
                 return new SubList(i);
             }

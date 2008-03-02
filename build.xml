@@ -35,7 +35,11 @@
 </target>
 
 <target name="yetic" depends="modules">
-    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"/>
+    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler">
+        <classpath>
+            <path location="${basedir}/.build/modules"/>
+        </classpath>
+    </yetic>
 </target>
 
 <target name="yeti" depends="compiler,modules">

@@ -35,6 +35,10 @@ import java.lang.IllegalArgumentException;
 // like not . f, but a tiny bit faster
 notPred f x = not (f x);
 
+// struct inner bindings are non-polymorphic
+array l is list?<'a> -> array<'a> =
+    new MList(l) unsafely_as array<'a'>;
+
 {
     id x = x;
     const x y = x;
@@ -68,6 +72,8 @@ notPred f x = not (f x);
     norec raw_nullptr? a = raw_nullptr? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
+
+    norec array = array;
 
     flip f x y =
         f y x;
@@ -145,11 +151,11 @@ notPred f x = not (f x);
             if raw_nullptr? res then -1 else res fi
         fi;
 
-    array l is list?<'a> -> array<'a> =
-        new MList(l) unsafely_as array<'a>;
-
     setArrayCapacity a n is array<'a> -> number -> () =
         (a unsafely_as ~MList)#reserve(n);
+
+    shift a is array<'a> -> 'a =
+        (a unsafely_as ~MList)#shift(v) unsafely_as 'a;
 
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v);
