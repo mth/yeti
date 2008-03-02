@@ -155,7 +155,7 @@ array l is list?<'a> -> array<'a> =
         (a unsafely_as ~MList)#reserve(n);
 
     shift a is array<'a> -> 'a =
-        (a unsafely_as ~MList)#shift(v) unsafely_as 'a;
+        (a unsafely_as ~MList)#shift() unsafely_as 'a;
 
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v);
