@@ -30,8 +30,12 @@
 <target name="modules" depends="prepare-build">
     <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
         classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
-    <yetic srcdir="${basedir}/modules" includes="*.yeti"
-           destdir="${basedir}/.build/modules" preload=""/>
+    <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
+           preload=""/>
+</target>
+
+<target name="yetic" depends="modules">
+    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"/>
 </target>
 
 <target name="yeti" depends="compiler,modules">

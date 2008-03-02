@@ -70,6 +70,9 @@ public class YetiTask extends MatchingTask {
         if (dir == null) {
             dir = getProject().getBaseDir();
         }
+        if (!hasSelectors()) {
+            setIncludes("*.yeti");
+        }
         String[] files = getDirectoryScanner(dir).getIncludedFiles();
         for (int i = files.length; --i >= 0; ) {
             files[i] = new java.io.File(dir, files[i]).getPath();

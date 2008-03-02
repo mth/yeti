@@ -716,8 +716,8 @@ class JavaType {
         Field field = (Field) fm.get(ref.name);
         if (field == null) {
             throw new CompileException(ref,
-                        (isStatic ? "Static field" : "Field") +
-                        " not found in " + jt.dottedName());
+                        (isStatic ? "Static field " : "Field ") +
+                        ref.name + " not found in " + jt.dottedName());
         }
         if (field.classType != objType) {
             if (!field.className.equals(objType.javaType.className())) {

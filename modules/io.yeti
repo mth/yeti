@@ -49,4 +49,7 @@ var stdin = () is ~BufferedReader;
 
     println v =
         System#out#println(v);
+
+    sysExit exitCode is number -> () =
+        System#exit(exitCode);
 }

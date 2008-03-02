@@ -1,0 +1,106 @@
+help = do:
+    println ("yeti -flags... files\n\n" ^
+             "-h      Print this help\n" ^
+             "  -C      Compile to classes\n" +
+             "  -e expr Evaluate expr and print result\n");
+    exit 0;
+done;
+
+var target = "";
+var eval = false;
+var exec = true;
+var printType = false;
+var preload = [];
+var src = "";
+var evalArgs = [];
+var mainClass = "Program";
+var flags = 0;
+
+srcs = array [];
+argv = array _argv;
+
+options = [
+    "-C": \(exec := false),
+    "-d": do:
+        target := shift argv;
+        if target != "" then
+            target := "\(target)/"
+        fi
+    done,
+    "-e": \(eval := true; src := shift argv),
+    "-h": help,
+    "-help": help,
+    "-l": \(preload = split (shift argv)),
+    "-xm": \(printType := true),
+    "-xp": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
+];
+
+not (empty? argv) loop
+   (arg = shift argv;
+    if not (arg =~ '^-') then
+        push srcs arg
+    elif arg in options then
+        try 
+            options.[arg] ()
+        catch yeti.lang.EmptyArrayException:
+            println "Parameter expected after \(arg)";
+            exit 1
+        yrt
+    else
+        println "Unexpected option: \(arg)";
+        exit 1;
+    fi);
+
+if empty? srcs and src == "" then
+    exit 0
+fi;
+
+writer =
+    if exec then
+        new Loader()
+    else
+        new ToFile(target)
+    fi;
+compilation =
+    new YetiCode$CompileCtx(new YetiC(), writer, preload, new ClassFinder(""));
+try
+    if eval then
+        flags := flags + YetiC#CF_COMPILE_MODULE;
+        compilation#compile((), mainClass, src, flags);
+        if printType then
+            println compilation#types#get(mainClass);
+            exit 0;
+        fi
+    elif printType then
+        for srcs do src:
+            println YetiTypeVisitor#getType((), src)
+        done
+    else
+        for srcs do src:
+            mainClass := compilation#compile(src, flags);
+        done
+    fi
+catch CompileException ex:
+    println ex#getMessage();
+    exit 1;
+yrt;
+compilation#write();
+if exec then
+    c = Class#forName(replace '/' '.' mainClass, true,
+                      writer unsafely_as ~java.lang.ClassLoader);
+    try
+        if eval then
+            res = c#getMethod("eval", [])#invoke((), []);
+            if not (raw_nullptr? res) then
+                println res
+            fi
+        else
+            c#getMethod("main", [ classOf java.lang.String ])
+             #invoke((), evalArgs);
+        fi
+    catch java.lang.reflect.InvocationTargetException ex:
+        t = ex#getCause();
+        if raw_nullptr? t then ex else t fi#printStackTrace();
+        exit 2;
+    yrt
+fi
