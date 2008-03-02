@@ -52,6 +52,11 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
         argType = argType.deref();
         String descr = argType.javaType == null
                         ? "" : argType.javaType.description;
+        if (argType.type == YetiType.JAVA_ARRAY &&
+            given.type == YetiType.JAVA_ARRAY) {
+            return; // better than thinking, that array was given...
+                    // still FIXME for a case of different arrays
+        }
         if (argType.type == YetiType.JAVA_ARRAY ||
             argType.type == YetiType.JAVA &&
                 argType.javaType.isCollection()) {

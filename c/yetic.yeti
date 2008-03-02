@@ -12,7 +12,7 @@ var target = "";
 var eval = false;
 var exec = true;
 var printType = false;
-var preload = array [];
+var preload = [];
 var src = "";
 var evalArgs = [];
 var mainClass = "Program";
@@ -44,7 +44,7 @@ not (empty? argv) loop
     elif arg in options then
         try 
             options.[arg] ()
-        catch yeti.lang.EmptyArrayException:
+        catch EmptyArray:
             println "Parameter expected after \(arg)";
             sysExit 1
         yrt
@@ -63,8 +63,10 @@ writer =
     else
         new ToFile(target)
     fi;
+
 compilation =
     new YetiCode$CompileCtx(new YetiC(), writer, preload, new ClassFinder(""));
+
 try
     if eval then
         flags := flags + YetiC#CF_COMPILE_MODULE;
@@ -86,7 +88,9 @@ catch CompileException ex:
     println ex#getMessage();
     sysExit 1;
 yrt;
+
 compilation#write();
+
 if exec then
     c = Class#forName(replace '/' '.' mainClass, true,
                       writer unsafely_as ~java.lang.ClassLoader);
