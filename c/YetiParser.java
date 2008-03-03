@@ -382,15 +382,15 @@ interface YetiParser {
     class Try extends Node {
         Node block;
         Catch[] catches;
-        Node rescue;
+        Node cleanup;
 
         String str() {
             StringBuffer buf = new StringBuffer("try\n");
             for (int i = 0; i < catches.length; ++i)
                 buf.append(catches[i].str());
-            if (rescue != null) {
+            if (cleanup != null) {
                 buf.append("\nfinally\n");
-                buf.append(rescue.str());
+                buf.append(cleanup.str());
             }
             buf.append("\nyrt\n");
             return buf.toString();
@@ -400,10 +400,10 @@ interface YetiParser {
     class Catch extends Eof {
         String exception;
         String bind;
-        Node expr;
+        Node handler;
 
         String str() {
-            return "\ncatch " + exception + ' ' + bind + ":\n" + expr.str();
+            return "\ncatch " + exception + ' ' + bind + ":\n" + handler.str();
         }
     }
 
@@ -1081,11 +1081,11 @@ interface YetiParser {
                         (c.bind == null ? " or identifier" : "") +
                         ", but found " + n);
                 }
-                c.expr = readSeq(' ');
+                c.handler = readSeq(' ');
             }
             t.catches = (Catch[]) catches.toArray(new Catch[catches.size()]);
             if (!(eofWas instanceof Yrt)) {
-                t.rescue = readSeq(' ');
+                t.cleanup = readSeq(' ');
                 if (!(eofWas instanceof Yrt)) {
                     throw new CompileException(eofWas,
                         "Expected yrt, found " + eofWas);

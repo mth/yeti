@@ -774,6 +774,9 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             return new NewExpr(JavaType.resolveConstructor(op, t, args)
                                 .check(op, scope.packageName), args, op.line);
         }
+        if (node instanceof Try) {
+            return tryCatch((Try) node, scope, depth);
+        }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
     }
@@ -810,6 +813,15 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         { "string",  STR_TYPE  }
     };
 
+    static Type typeOfClass(String className, Scope scope) {
+        if (className.indexOf('/') > 0)
+            return JavaType.typeOfClass(null, className);
+        Type t = resolveClass(className, scope, false);
+        if (t != null)
+            return t;
+        return JavaType.typeOfClass(scope.packageName, className);
+    }
+
     static Type nodeToType(TypeNode node, Map free, Scope scope, int depth) {
         String name = node.name;
         for (int i = PRIMITIVE_TYPE_MAPPING.length; --i >= 0;) {
@@ -835,14 +847,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             Type[] tp = new Type[node.param.length];
             for (int i = tp.length; --i >= 0;)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
-            Type t;
-            if (cn.indexOf('.') > 0) {
-                t = JavaType.typeOfClass(null, cn);
-            } else {
-                t = resolveClass(cn, scope, false);
-                if (t == null)
-                    t = JavaType.typeOfClass(scope.packageName, cn);
-            }
+            Type t = typeOfClass(cn, scope);
             t.param = tp;
             return t;
         }
@@ -941,6 +946,36 @@ public final class YetiType implements YetiParser, YetiBuiltins {
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null)
                         .check(ref, scope.packageName), args, ref.line);
+    }
+
+    static Code tryCatch(Try t, Scope scope, int depth) {
+        Code block = analyze(t.block, scope, depth);
+        Code cleanup = null;
+        if (t.cleanup != null) {
+            cleanup = analyze(t.cleanup, scope, depth);
+            try {
+                unify(cleanup.type, UNIT_TYPE);
+            } catch (TypeException ex) {
+                throw new CompileException(t.cleanup,
+                                "finally block must have a unit type, not "
+                                + cleanup.type, ex);
+            }
+        }
+        TryCatch tc = new TryCatch(block, cleanup);
+        for (int i = 0; i < t.catches.length; ++i) {
+            Catch c = t.catches[i];
+            TryCatch.Catch cc = tc.addCatch(typeOfClass(c.exception, scope));
+            cc.handler = analyze(c.handler,
+                c.bind == null ? scope : new Scope(scope, c.bind, cc), depth);
+            try {
+                unify(block.type, cc.handler.type);
+            } catch (TypeException ex) {
+                throw new CompileException(c.handler,
+                            "This catch has " + cc.handler.type +
+                            " type, while try block was " + block.type, ex);
+            }
+        }
+        return tc;
     }
 
     static Code apply(Node where, Code fun, Node arg, Scope scope, int depth) {

@@ -695,6 +695,90 @@ interface YetiCode {
         }
     }
 
+    class TryCatch extends Code {
+        private List catches = new ArrayList();
+        private int exVar;
+        Code block;
+        Code cleanup;
+
+        class Catch extends BindRef implements Binder {
+            Code handler;
+            Label start = new Label();
+            Label end;
+
+            public BindRef getRef(int line) {
+                return this;
+            }
+
+            void gen(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, exVar);
+            }
+        }
+
+        TryCatch(Code block, Code cleanup) {
+            this.type = block.type;
+            this.block = block;
+            this.cleanup = cleanup;
+        }
+
+        Catch addCatch(YetiType.Type ex) {
+            Catch c = new Catch();
+            c.type = ex;
+            catches.add(c);
+            return c;
+        }
+
+        void gen(Ctx ctx) {
+            Label codeStart = new Label(), codeEnd = new Label();
+            Label cleanupStart = cleanup == null ? null : new Label();
+            Label end = new Label();
+            int catchCount = catches.size();
+            for (int i = 0; i < catchCount; ++i) {
+                Catch c = (Catch) catches.get(i);
+                ctx.m.visitTryCatchBlock(codeStart, codeEnd, c.start,
+                                         c.type.javaType.className());
+                if (cleanupStart != null) {
+                    c.end = new Label();
+                    ctx.m.visitTryCatchBlock(c.start, c.end, cleanupStart,
+                                             null);
+                }
+            }
+            ctx.m.visitLabel(codeStart);
+            block.gen(ctx);
+            ctx.m.visitLabel(codeEnd);
+            exVar = ctx.localVarCount++;
+            if (cleanupStart != null) {
+                ctx.m.visitTryCatchBlock(codeStart, codeEnd, cleanupStart,
+                                         null);
+                ctx.m.visitInsn(ACONST_NULL);
+                ctx.m.visitLabel(cleanupStart);
+                ctx.m.visitVarInsn(ASTORE, exVar);
+                cleanup.gen(ctx);
+                ctx.m.visitInsn(POP); // cleanup's null
+                ctx.m.visitVarInsn(ALOAD, exVar);
+                ctx.m.visitJumpInsn(IFNULL, end);
+                ctx.m.visitVarInsn(ALOAD, exVar);
+                ctx.m.visitInsn(ATHROW);
+            } else {
+                ctx.m.visitJumpInsn(GOTO, end);
+            }
+            for (int i = 0; i < catchCount; ++i) {
+                Catch c = (Catch) catches.get(i);
+                ctx.m.visitLabel(c.start);
+                ctx.m.visitVarInsn(ASTORE, exVar);
+                c.handler.gen(ctx);
+                if (c.end != null) {
+                    ctx.m.visitInsn(ACONST_NULL);
+                    ctx.m.visitLabel(c.end);
+                    ctx.m.visitJumpInsn(GOTO, cleanupStart);
+                } else if (i < catchCount - 1) {
+                    ctx.m.visitJumpInsn(GOTO, end);
+                }
+            }
+            ctx.m.visitLabel(end);
+        }
+    }
+
     interface Closure {
         // Closures "wrap" references to the outside world.
         BindRef refProxy(BindRef code);
