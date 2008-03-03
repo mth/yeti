@@ -623,8 +623,8 @@ interface YetiCode {
     class Throw extends Code {
         Code throwable;
 
-        Throw(Code throwable) {
-            this.type = YetiType.UNIT_TYPE;
+        Throw(Code throwable, YetiType.Type type) {
+            this.type = type;
             this.throwable = throwable;
         }
 

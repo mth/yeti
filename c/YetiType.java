@@ -696,7 +696,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 if (op.left instanceof ThrowSym) {
                     Code throwable = analyze(op.right, scope, depth);
                     JavaType.checkThrowable(op.left, throwable.type);
-                    return new Throw(throwable);
+                    return new Throw(throwable, new Type(depth));
                 }
                 return apply(node, analyze(op.left, scope, depth),
                              op.right, scope, depth);
