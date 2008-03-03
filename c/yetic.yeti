@@ -72,8 +72,9 @@ try
         flags := flags + YetiC#CF_COMPILE_MODULE;
         compilation#compile((), mainClass, src, flags);
         if printType then
-            println compilation#types#get(mainClass);
-            sysExit 0;
+            println compilation#types#get(mainClass)
+        else
+            compilation#write()
         fi
     elif printType then
         for srcs do src:
@@ -81,15 +82,14 @@ try
         done
     else
         for srcs do src:
-            mainClass := compilation#compile(src, flags);
-        done
+            mainClass := compilation#compile(src, flags)
+        done;
+        compilation#write()
     fi
 catch CompileException ex:
     println ex#getMessage();
     sysExit 1;
 yrt;
-
-compilation#write();
 
 if exec then
     c = Class#forName(replace '/' '.' mainClass, true,

@@ -50,12 +50,14 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     List constructors = new ArrayList();
     String parent;
     String className;
+    String[] interfaces;
     int access;
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
         parent = superName;
         this.access = access;
+        this.interfaces = interfaces;
 /*        System.err.println("visit: ver=" + version + " | access=" + access
             + " | name=" + name + " | sig=" + signature + " super="
             + superName);*/
@@ -277,6 +279,8 @@ class JavaType {
         }
     }
 
+    private static final JavaType[] EMPTY_JTARR = {};
+
     final String description;
     private boolean resolved;
     private Map fields;
@@ -285,6 +289,7 @@ class JavaType {
     private Method[] staticMethods;
     private Method[] constructors;
     private JavaType parent;
+    private HashMap interfaces;
     private int access;
     private static HashMap CACHE = new HashMap();
 
@@ -477,6 +482,17 @@ class JavaType {
         } else {
             fields = t.fields;
             staticFields = t.staticFields;
+        }
+        if (t.interfaces != null) {
+            interfaces = new HashMap();
+            for (int i = t.interfaces.length; --i >= 0;) {
+                JavaType it = fromDescription(t.interfaces[i]);
+                it.resolve();
+                interfaces.putAll(it.interfaces);
+                interfaces.put(it.description, it);
+            }
+        } else {
+            interfaces = EMPTY_JTARR;
         }
         constructors = merge(null, t.constructors);
         methods = merge(parent == null ? null : parent.methods, t.methods);
@@ -787,8 +803,53 @@ class JavaType {
         return p < 0 ? "" : className.substring(0, p);
     }
 
-    static YetiType.Type toStructType(YetiType.Type object) {
+/*    static YetiType.Type toStructType(YetiType.Type object) {
         return null;   
+    }*/
+
+    private static List parentList(JavaType t) {
+        List a = new ArrayList();
+        while (t != null) {
+            a.add(t);
+            t = t.parent;
+        }
+        return a;
+    }
+
+    static YetiType.Type mergeTypes(YetiType.Type a, YetiType.Type b) {
+        a = a.deref();
+        b = b.deref();
+        if (a.type != YetiType.JAVA || b.type != YetiType.JAVA) {
+            return null;
+        }
+        if (a.javaType == b.javaType) {
+            return a;
+        }
+        List aa = parentList(a.javaType);
+        List ba = parentList(b.javaType);
+        JavaType common = null;
+        for (int i = aa.size(), j = ba.size(); --i >= 0 && --j >= 0 &&
+                                aa.get(i) == ba.get(j)) {
+            common = (JavaType) aa.get(i);
+        }
+        if (common.description == "Ljava/lang/Object;") {
+            int mc = -1;
+            Map m = b.javaType.interfaces;
+            Iterator i = a.javaType.interfaces.keySet().iterator();
+            while (i.hasNext()) {
+                Object o;
+                if ((o = m.get(i.next())) != null) {
+                    JavaType jt = (JavaType) o;
+                    int n = jt.methods.length;
+                    if (n > mc) {
+                        common = jt;
+                    }
+                }
+            }
+        }
+        YetiType.Type t = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
+        t.javaType = common;
+        return t;
     }
 }
 
