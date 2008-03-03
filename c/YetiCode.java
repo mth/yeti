@@ -764,6 +764,7 @@ interface YetiCode {
             String name = "_" + ctx.methodCounter++;
             ctx.m.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
             Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
+            mc.localVarCount = argc;
             MethodVisitor m = mc.m;
 
             Label codeStart = new Label(), codeEnd = new Label();
@@ -925,7 +926,7 @@ interface YetiCode {
         Capture next;
         CaptureWrapper wrapper;
         Object identity;
-        int localVar; // 0 - this - not copied
+        int localVar = -1; // -1 - use this - not copied
         boolean uncaptured;
 
         void gen(Ctx ctx) {
@@ -968,15 +969,17 @@ interface YetiCode {
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.m.visitVarInsn(ALOAD, localVar);
-            if (localVar == 0) {
+            if (localVar == -1) {
+                ctx.m.visitVarInsn(ALOAD, 0);
                 ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
                     captureType());
+            } else {
+                ctx.m.visitVarInsn(ALOAD, localVar);
             }
         }
 
         public void genGet(Ctx ctx) {
-            if (localVar == 0) {
+            if (localVar == -1) {
                 wrapper.genGet(ctx);
             }
         }

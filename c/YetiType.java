@@ -949,6 +949,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static Code tryCatch(Try t, Scope scope, int depth) {
+        scope = new Scope(scope, null, null); // closure frame
         Code block = analyze(t.block, scope, depth);
         Code cleanup = null;
         if (t.cleanup != null) {
@@ -962,6 +963,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             }
         }
         TryCatch tc = new TryCatch(block, cleanup);
+        scope.closure = tc;
         for (int i = 0; i < t.catches.length; ++i) {
             Catch c = t.catches[i];
             TryCatch.Catch cc = tc.addCatch(typeOfClass(c.exception, scope));
