@@ -780,15 +780,13 @@ interface YetiCode {
                     m.visitTryCatchBlock(c.start, c.end, cleanupStart, null);
                 }
             }
+            genClosureInit(mc);
             int retVar = -1;
             if (cleanupStart != null) {
                 retVar = mc.localVarCount++;
                 m.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
-                genClosureInit(mc);
                 m.visitInsn(ACONST_NULL);
                 m.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
-            } else {
-                genClosureInit(mc);
             }
             m.visitLabel(codeStart);
             block.gen(mc);
