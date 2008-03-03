@@ -1649,7 +1649,7 @@ public final class YetiType implements YetiParser, YetiBuiltins {
                 if (!preload[i].equals(className)) {
                     scope = explodeStruct(null, new LoadModule(preload[i],
                           YetiTypeVisitor.getType(null, preload[i])),
-                          scope, 0, true);
+                          scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
             }
             root.preload = preload;
