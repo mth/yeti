@@ -205,6 +205,7 @@ interface YetiCode {
         Constants constants;
         int localVarCount;
         int fieldCounter;
+        int methodCounter;
         int lastLine;
 
         Ctx(CompileCtx compilation, Constants constants,
@@ -695,7 +696,10 @@ interface YetiCode {
         }
     }
 
-    class TryCatch extends Code {
+    // Since the stupid JVM discards local stack when catching exceptions,
+    // try catch blocks have to be converted into fucking closures
+    // (at least for the generic case).
+    class TryCatch extends CapturingClosure {
         private List catches = new ArrayList();
         private int exVar;
         Code block;
@@ -721,6 +725,10 @@ interface YetiCode {
             this.cleanup = cleanup;
         }
 
+        public BindRef refProxy(BindRef code) {
+            return code instanceof DirectBind ? code : captureRef(code);
+        }
+
         Catch addCatch(YetiType.Type ex) {
             Catch c = new Catch();
             c.type = ex;
@@ -729,53 +737,94 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
+            StringBuffer sigb = new StringBuffer("(");
+            int argc = 0;
+            Capture prev = null;
+        next_capture: // copy-paste from Function :(
+            for (Capture c = captures; c != null; c = c.next) {
+                Object identity = c.identity = c.captureIdentity();
+                for (Capture i = captures; i != c; i = i.next) {
+                    if (i.identity == identity) {
+                        c.localVar = i.localVar; // copy old one's var
+                        prev.next = c.next;
+                        continue next_capture;
+                    }
+                }
+                c.localVar = argc++;
+                sigb.append(c.captureType());
+                if (c.wrapper == null) {
+                    c.ref.gen(ctx);
+                } else {
+                    c.wrapper.genPreGet(ctx);
+                }
+                prev = c;
+            }
+            sigb.append(")Ljava/lang/Object;");
+            String sig = sigb.toString();
+            String name = "_" + ctx.methodCounter++;
+            ctx.m.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
+            Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
+            MethodVisitor m = mc.m;
+
             Label codeStart = new Label(), codeEnd = new Label();
             Label cleanupStart = cleanup == null ? null : new Label();
-            Label end = new Label();
+            Label cleanupEntry = cleanup == null ? null : new Label();
             int catchCount = catches.size();
             for (int i = 0; i < catchCount; ++i) {
                 Catch c = (Catch) catches.get(i);
-                ctx.m.visitTryCatchBlock(codeStart, codeEnd, c.start,
-                                         c.type.javaType.className());
+                m.visitTryCatchBlock(codeStart, codeEnd, c.start,
+                                     c.type.javaType.className());
                 if (cleanupStart != null) {
                     c.end = new Label();
-                    ctx.m.visitTryCatchBlock(c.start, c.end, cleanupStart,
-                                             null);
+                    m.visitTryCatchBlock(c.start, c.end, cleanupStart, null);
                 }
             }
-            ctx.m.visitLabel(codeStart);
-            block.gen(ctx);
-            ctx.m.visitLabel(codeEnd);
-            exVar = ctx.localVarCount++;
+            int retVar = -1;
             if (cleanupStart != null) {
-                ctx.m.visitTryCatchBlock(codeStart, codeEnd, cleanupStart,
-                                         null);
-                ctx.m.visitInsn(ACONST_NULL);
-                ctx.m.visitLabel(cleanupStart);
-                ctx.m.visitVarInsn(ASTORE, exVar);
-                cleanup.gen(ctx);
-                ctx.m.visitInsn(POP); // cleanup's null
-                ctx.m.visitVarInsn(ALOAD, exVar);
-                ctx.m.visitJumpInsn(IFNULL, end);
-                ctx.m.visitVarInsn(ALOAD, exVar);
-                ctx.m.visitInsn(ATHROW);
+                retVar = mc.localVarCount++;
+                m.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
+                genClosureInit(mc);
+                m.visitInsn(ACONST_NULL);
+                m.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
             } else {
-                ctx.m.visitJumpInsn(GOTO, end);
+                genClosureInit(mc);
+            }
+            m.visitLabel(codeStart);
+            block.gen(mc);
+            m.visitLabel(codeEnd);
+            exVar = mc.localVarCount++;
+            if (cleanupStart != null) {
+                Label goThrow = new Label();
+                m.visitLabel(cleanupEntry);
+                m.visitVarInsn(ASTORE, retVar);
+                m.visitInsn(ACONST_NULL);
+                m.visitLabel(cleanupStart);
+                m.visitVarInsn(ASTORE, exVar);
+                cleanup.gen(mc);
+                m.visitInsn(POP); // cleanup's null
+                m.visitVarInsn(ALOAD, exVar);
+                m.visitJumpInsn(IFNONNULL, goThrow);
+                m.visitVarInsn(ALOAD, retVar);
+                m.visitInsn(ARETURN);
+                m.visitLabel(goThrow);
+                m.visitVarInsn(ALOAD, exVar);
+                m.visitInsn(ATHROW);
+            } else {
+                m.visitInsn(ARETURN);
             }
             for (int i = 0; i < catchCount; ++i) {
                 Catch c = (Catch) catches.get(i);
-                ctx.m.visitLabel(c.start);
-                ctx.m.visitVarInsn(ASTORE, exVar);
-                c.handler.gen(ctx);
+                m.visitLabel(c.start);
+                m.visitVarInsn(ASTORE, exVar);
+                c.handler.gen(mc);
                 if (c.end != null) {
-                    ctx.m.visitInsn(ACONST_NULL);
-                    ctx.m.visitLabel(c.end);
-                    ctx.m.visitJumpInsn(GOTO, cleanupStart);
+                    m.visitLabel(c.end);
+                    m.visitJumpInsn(GOTO, cleanupEntry);
                 } else if (i < catchCount - 1) {
-                    ctx.m.visitJumpInsn(GOTO, end);
+                    m.visitInsn(ARETURN);
                 }
             }
-            ctx.m.visitLabel(end);
+            mc.closeMethod();
         }
     }
 
@@ -979,12 +1028,32 @@ interface YetiCode {
         }
     }
 
-    class Function extends AClosure implements Binder {
+    abstract class CapturingClosure extends AClosure {
+        Capture captures;
+
+        Capture captureRef(BindRef code) {
+            for (Capture c = captures; c != null; c = c.next) {
+                if (c.binder == code.binder) {
+                    return c;
+                }
+            }
+            Capture c = new Capture();
+            c.binder = code.binder;
+            c.type = code.type;
+            c.polymorph = code.polymorph;
+            c.ref = code;
+            c.wrapper = code.capture();
+            c.next = captures;
+            captures = c;
+            return c;
+        }
+    }
+
+    class Function extends CapturingClosure implements Binder {
         private String name;
         Binder selfBind;
         Code body;
         String bindName;
-        private Capture captures;
         private CaptureRef selfRef;
         Label restart;
         Function outer;
@@ -1051,20 +1120,8 @@ interface YetiCode {
                 }
                 return selfRef;
             }
-            for (Capture c = captures; c != null; c = c.next) {
-                if (c.binder == code.binder) {
-                    return c;
-                }
-            }
-            Capture c = new Capture();
-            c.binder = code.binder;
-            c.type = code.type;
-            c.polymorph = code.polymorph;
-            c.ref = code;
-            c.wrapper = code.capture();
-            c.next = captures;
+            Capture c = captureRef(code);
             c.capturer = this;
-            captures = c;
             return c;
         }
 
