@@ -1157,6 +1157,11 @@ public final class YetiType implements YetiParser, YetiBuiltins {
             if (result == null) {
                 result = val.type;
             } else {
+                Type t = JavaType.mergeTypes(result, val.type);
+                if (t != null) {
+                    result = t;
+                    continue;
+                }
                 try {
                     unify(result, val.type);
                 } catch (TypeException ex) {
