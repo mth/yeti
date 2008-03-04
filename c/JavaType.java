@@ -432,21 +432,22 @@ class JavaType {
         return className().replace('/', '.');
     }
 
-    private static Method[] merge(Method[] parentMethods, List methods) {
-        if (parentMethods == null) {
-            return (Method[]) methods.toArray(new Method[methods.size()]);
-        }
-        HashMap mm = new HashMap();
-        for (int i = parentMethods.length; --i >= 0;) {
-            Method m = parentMethods[i];
+    private static void putMethods(Map mm, Method[] methods) {
+        for (int i = methods.length; --i >= 0;) {
+            Method m = methods[i];
             mm.put(m.sig, m);
         }
+    }
+
+    private static void putMethods(Map mm, List methods) {
         for (int i = methods.size(); --i >= 0;) {
             Method m = (Method) methods.get(i);
             mm.put(m.sig, m);
         }
-        Collection v = mm.values();
-        return (Method[]) v.toArray(new Method[v.size()]);
+    }
+
+    private static Method[] methodArray(Collection c) {
+        return (Method[]) c.toArray(new Method[c.size()]);
     }
 
     private synchronized void resolve() throws JavaClassNotFoundException {
@@ -470,34 +471,39 @@ class JavaType {
             throw new JavaClassNotFoundException(dottedName());
         }
         access = t.access;
-        if (t.parent != null) {
-            parent = fromDescription('L' + t.parent + ';');
-            parent.resolve();
-            fields = new HashMap();
-            fields.putAll(parent.fields);
-            fields.putAll(t.fields);
-            staticFields = new HashMap();
-            staticFields.putAll(parent.staticFields);
-            staticFields.putAll(t.staticFields);
-        } else {
-            fields = t.fields;
-            staticFields = t.staticFields;
-        }
+        interfaces = new HashMap();
         if (t.interfaces != null) {
-            interfaces = new HashMap();
             for (int i = t.interfaces.length; --i >= 0;) {
-                JavaType it = fromDescription(t.interfaces[i]);
+                JavaType it = fromDescription('L' + t.interfaces[i] + ';');
                 it.resolve();
                 interfaces.putAll(it.interfaces);
                 interfaces.put(it.description, it);
             }
-        } else {
-            interfaces = EMPTY_JTARR;
         }
-        constructors = merge(null, t.constructors);
-        methods = merge(parent == null ? null : parent.methods, t.methods);
-        staticMethods = merge(parent == null ? null : parent.staticMethods,
-                              t.staticMethods);
+        fields = new HashMap();
+        staticFields = new HashMap();
+        HashMap mm = new HashMap();
+        HashMap smm = new HashMap();
+        if (t.parent != null) {
+            parent = fromDescription('L' + t.parent + ';');
+            parent.resolve();
+            fields.putAll(parent.fields);
+            staticFields.putAll(parent.staticFields);
+            putMethods(mm, parent.methods);
+            putMethods(smm, parent.staticMethods);
+        }
+        for (Iterator i = interfaces.values().iterator(); i.hasNext();) {
+            JavaType ii = (JavaType) i.next();
+            staticFields.putAll(ii.staticFields);
+            putMethods(mm, ii.methods);
+        }
+        fields.putAll(t.fields);
+        staticFields.putAll(t.staticFields);
+        putMethods(mm, t.methods);
+        putMethods(smm, t.staticMethods);
+        constructors = methodArray(t.constructors);
+        methods = methodArray(mm.values());
+        staticMethods = methodArray(smm.values());
         resolved = true;
     }
 
@@ -514,8 +520,16 @@ class JavaType {
     static final String[] NUMBER_X = { "B", "S", "F", "D", "I", "J", "i", "d" };
 
     int isAssignable(JavaType from) throws JavaClassNotFoundException {
+        from.resolve();
+        if (this == from) {
+            return 0;
+        }
+        if (from.interfaces.containsKey(this)) {
+            return 1; // I'm an interface implemented by from
+        }
+        from = from.parent;
         // I'm from or one of from's parents?
-        for (int i = 0; from != null; ++i) {
+        for (int i = 1; from != null; ++i) {
             if (this == from) {
                 return i;
             }
@@ -825,17 +839,23 @@ class JavaType {
         if (a.javaType == b.javaType) {
             return a;
         }
-        List aa = parentList(a.javaType);
-        List ba = parentList(b.javaType);
+        List aa = parentList(a.javaType), ba = parentList(b.javaType);
         JavaType common = null;
-        for (int i = aa.size(), j = ba.size(); --i >= 0 && --j >= 0 &&
-                                aa.get(i) == ba.get(j)) {
+        for (int i = aa.size(), j = ba.size();
+             --i >= 0 && --j >= 0 && aa.get(i) == ba.get(j);) {
             common = (JavaType) aa.get(i);
         }
+        JavaType aj = a.javaType, bj = b.javaType;
         if (common.description == "Ljava/lang/Object;") {
             int mc = -1;
-            Map m = b.javaType.interfaces;
-            Iterator i = a.javaType.interfaces.keySet().iterator();
+            if (bj.interfaces.containsKey(aj.description)) {
+                return a;
+            }
+            if (aj.interfaces.containsKey(bj.description)) {
+                return b;
+            }
+            Map m = bj.interfaces;
+            Iterator i = aj.interfaces.keySet().iterator();
             while (i.hasNext()) {
                 Object o;
                 if ((o = m.get(i.next())) != null) {
