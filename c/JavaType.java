@@ -524,7 +524,7 @@ class JavaType {
         if (this == from) {
             return 0;
         }
-        if (from.interfaces.containsKey(this)) {
+        if (from.interfaces.containsKey(description)) {
             return 1; // I'm an interface implemented by from
         }
         from = from.parent;
