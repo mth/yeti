@@ -256,7 +256,7 @@ class JavaType {
                     s.append(", ");
                 s.append(arguments[i]);
             }
-            s.append(")\n");
+            s.append(")");
             return s.toString();
         }
 
