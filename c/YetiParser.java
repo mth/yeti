@@ -696,7 +696,6 @@ interface YetiParser {
         private String sourceName;
         private int line = 1;
         private int lineStart;
-        private AList prefetched;
         String moduleName;
         boolean isModule;
 
@@ -756,12 +755,6 @@ interface YetiParser {
         }
 
         private Node fetch() {
-            Node res;
-            if (prefetched != null) {
-                res = (Node) prefetched.first();
-                prefetched = prefetched.rest();
-                return res;
-            }
             int i = skipSpace();
             if (i >= src.length) {
                 return EOF;
@@ -846,6 +839,7 @@ interface YetiParser {
             String s = new String(src, p, i - p);
             p = i;
             s = s.intern(); // Sym's are expected to have interned strings
+            Node res;
             if (s == "if") {
                 res = readIf();
             } else if (s == "elif") {
@@ -1004,12 +998,13 @@ interface YetiParser {
                 name += ((Sym) sym).sym;
                 args = readArgs();
                 if (args == null) {
-                    if (p >= src.length || src[p] != '.' && src[p] != '$') {
+                    char c;
+                    if (p >= src.length || (c = src[p]) != '.' && c != '$') {
                         throw new CompileException(line, p - lineStart + 1,
                                     "Expecting constructor argument list");
                     }
                     ++p;
-                    name += '/';
+                    name += c == '.' ? '/' : c;
 //                    System.err.println(src[p]);
                 }
             }
@@ -1129,19 +1124,19 @@ interface YetiParser {
                     throw new CompileException(n, err + n);
                 }
                 result += ((Sym) n).sym;
-                n = fetch();
-                if (!(n instanceof BinOp) || ((BinOp) n).op != FIELD_OP) {
-                    if (!decl) {
-//                        System.err.println(n.str());
-                        prefetched = new LList(n, prefetched);
+                p = skipSpace();
+                if (p >= src.length)
+                    return result;
+                if (src[p] != '.') {
+                    if (!decl)
+                        return result;
+                    if (src[p] == ';') {
+                        ++p;
                         return result;
                     }
-                    if (n instanceof SepOp && ((SepOp) n).sep == ';') {
-                        return result;
-                    }
-                    throw new CompileException(n,
-                        "Expected ';', not a " + n);
+                    throw new CompileException(n, "Expected ';', not a " + n);
                 }
+                ++p;
                 result += "/";
             }
         }
@@ -1389,15 +1384,15 @@ interface YetiParser {
         }
 
         Node parse() {
-            Node n = fetch();
-            String s;
-            if (n instanceof Sym &&
-                ((s = ((Sym) n).sym) == "module" || s == "program")) {
+            int i = p = skipSpace();
+            while (i < src.length && CHS[src[i]] == 'x')
+                ++i;
+            String s = new String(src, p, i - p);
+            if (s.equals("module") || s.equals("program")) {
+                p = i;
                 moduleName = readDotted(true,
                     "Expected " + s + " name, not a ");
-                isModule = s == "module";
-            } else {
-                prefetched = new LList(n, prefetched);
+                isModule = s.equals("module");
             }
             Node res = readSeq(' ');
             if (eofWas != EOF) {
