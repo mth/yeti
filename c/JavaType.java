@@ -639,15 +639,23 @@ class JavaType {
         name = name.intern();
         int rAss = Integer.MAX_VALUE;
         int res = -1;
+        int suitable[] = new int[ma.length];
+        int suitableCounter = 0;
+        for (int i = ma.length; --i >= 0;) {
+            Method m = ma[i];
+            if (m.name == name && m.arguments.length == args.length) {
+                suitable[suitableCounter++] = i;
+            }
+        }
         try {
+            boolean single = suitableCounter == 1;
         find_match:
-            for (int i = ma.length; --i >= 0;) {
-                Method m = ma[i];
-                if (m.name != name || m.arguments.length != args.length) {
-                    continue;
-                }
+            while (--suitableCounter >= 0) {
+                int index = suitable[suitableCounter];
+                Method m = ma[index];
                 int mAss = 0;
                 for (int j = 0; j < args.length; ++j) {
+                    // TODO use single
                     int ass = isAssignable(m.arguments[j], args[j].type);
     //                System.err.println("isAssignable(" + m.arguments[j] +
     //                    ", " + args[j].type + ") = " + ass);
@@ -659,11 +667,11 @@ class JavaType {
                     }
                 }
                 if (mAss == 0) {
-                    res = i;
+                    res = index;
                     break;
                 }
                 if (mAss < rAss) {
-                    res = i;
+                    res = index;
                     rAss = mAss;
                 }
             }
@@ -780,14 +788,14 @@ class JavaType {
 
     public String str(Map vars, Map refs, YetiType.Type[] param) {
         switch (description.charAt(0)) {
-            case 'Z': return "~boolean";
-            case 'B': return "~byte";
-            case 'C': return "~char";
-            case 'D': return "~double";
-            case 'F': return "~float";
-            case 'I': return "~int";
-            case 'J': return "~long";
-            case 'S': return "~short";
+            case 'Z': return "boolean";
+            case 'B': return "byte";
+            case 'C': return "char";
+            case 'D': return "double";
+            case 'F': return "float";
+            case 'I': return "int";
+            case 'J': return "long";
+            case 'S': return "short";
             case 'V': return "void";
             case 'L': break;
             default : return "~" + description;
