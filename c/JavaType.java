@@ -76,7 +76,7 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     private static int parseSig(Map vars, List res, int p, char[] s) {
         int arrays = 0;
         for (int l = s.length; p < l && s[p] != '>'; ++p) {
-            if (s[p] == '+') {
+            if (s[p] == '+' || s[p] == '*') {
                 continue;
             }
             if (s[p] == '[') {
@@ -386,6 +386,10 @@ class JavaType {
         JavaType dst = getClass(to);
         if (dst == null)
             throw new CompileException(cast, "Illegal cast to " + to);
+        if (to.type == YetiType.JAVA &&
+            (src.access & Opcodes.ACC_INTERFACE) != 0) {
+            return;
+        }
         try {
             if (src.isAssignable(dst) < 0 &&
                 (from.type != YetiType.JAVA || dst.isAssignable(src) < 0)) {
@@ -539,8 +543,11 @@ class JavaType {
         return -1;
     }
 
+    YetiType.Type[] TRY_SMART =
+        { YetiType.BOOL_TYPE, YetiType.STR_TYPE, YetiType.NUM_TYPE };
+
     // -1 not assignable. 0 - perfect match. > 0 convertable.
-    int isAssignableJT(YetiType.Type to, YetiType.Type from)
+    int isAssignableJT(YetiType.Type to, YetiType.Type from, boolean smart)
             throws JavaClassNotFoundException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
@@ -573,8 +580,8 @@ class JavaType {
             case YetiType.MAP_MARKER:
                 return "Ljava/util/Map;" == description &&
                        (to.param.length == 0 ||
-                        isAssignable(to.param[1], from.param[0]) == 0 &&
-                        isAssignable(from.param[1], to.param[0]) >= 0)
+                        isAssignable(to.param[1], from.param[0], smart) == 0 &&
+                        isAssignable(from.param[1], to.param[0], smart) >= 0)
                        ? 0 : -1;
             case YetiType.LIST_MARKER:
                 if ("Ljava/util/List;" == description ||
@@ -587,7 +594,7 @@ class JavaType {
                     return -1;
             }
             return to.param.length == 0 ||
-                   (ass = isAssignable(to.param[0], from.param[0])) == 0
+                   (ass = isAssignable(to.param[0], from.param[0], smart)) == 0
                    || ass > 0 && from.param[1].type == YetiType.NONE ? 1 : -1;
         }
         case YetiType.STRUCT:
@@ -600,20 +607,32 @@ class JavaType {
             return ("Ljava/util/Collection;" == description ||
                     "Ljava/util/List;" == description) &&
                    (to.param.length == 0 ||
-                    isAssignable(to.param[0], from.param[0]) == 0)
+                    isAssignable(to.param[0], from.param[0], smart) == 0)
                    ? 1 : -1;
+        case YetiType.VAR:
+            if (smart) {
+                for (int i = 0; i < TRY_SMART.length; ++i) {
+                    int r = isAssignableJT(to, TRY_SMART[i], false);
+                    if (r >= 0) {
+                        from.ref = TRY_SMART[i];
+                        return r;
+                    }
+                }
+                from.ref = to;
+                return 1;
+            }
         }
         return description == "Ljava/lang/Object;" ? 10 : -1;
     }
 
-    static int isAssignable(YetiType.Type to, YetiType.Type from)
+    static int isAssignable(YetiType.Type to, YetiType.Type from, boolean smart)
             throws JavaClassNotFoundException {
         int ass;
 //        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
         to = to.deref();
         from = from.deref();
         if (to.type == YetiType.JAVA) {
-            return to.javaType.isAssignableJT(to, from);
+            return to.javaType.isAssignableJT(to, from, smart);
         }
         if (to.type == YetiType.JAVA_ARRAY) {
             YetiType.Type of = to.param[0];
@@ -621,13 +640,15 @@ class JavaType {
             case YetiType.STR:
                 return of.type == YetiType.JAVA &&
                        of.javaType.description == "C" ? 1 : -1;
-            case YetiType.MAP:
+            case YetiType.MAP: {
                 return from.param[2].type == YetiType.LIST_MARKER &&
-                       ((ass = isAssignable(to.param[0], from.param[0])) == 0
+                       ((ass = isAssignable(to.param[0], from.param[0], smart))
+                            == 0
                         || ass > 0 && from.param[1].type == YetiType.NONE)
                        ? 1 : -1;
+            }
             case YetiType.JAVA_ARRAY:
-                return isAssignable(to.param[0], from.param[0]);
+                return isAssignable(to.param[0], from.param[0], smart);
             }
         }
         return -1;
@@ -655,8 +676,12 @@ class JavaType {
                 Method m = ma[index];
                 int mAss = 0;
                 for (int j = 0; j < args.length; ++j) {
+                    YetiType.Type t = args[j].type.deref();
+                    if (single && t.type == YetiType.UNIT) {
+                        continue;
+                    }
                     // TODO use single
-                    int ass = isAssignable(m.arguments[j], args[j].type);
+                    int ass = isAssignable(m.arguments[j], t, single);
     //                System.err.println("isAssignable(" + m.arguments[j] +
     //                    ", " + args[j].type + ") = " + ass);
                     if (ass < 0) {

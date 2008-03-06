@@ -1,5 +1,7 @@
 program yeti.lang.compiler.yetic;
 
+import java.lang.Class;
+
 help = do:
     println ("yeti -flags... files\n\n" ^
              "-h      Print this help\n" ^
