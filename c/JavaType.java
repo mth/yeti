@@ -548,7 +548,7 @@ class JavaType {
 
     // -1 not assignable. 0 - perfect match. > 0 convertable.
     int isAssignableJT(YetiType.Type to, YetiType.Type from, boolean smart)
-            throws JavaClassNotFoundException {
+            throws JavaClassNotFoundException, YetiType.TypeException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
             return from.type == YetiType.VAR ? 1 :
@@ -614,11 +614,11 @@ class JavaType {
                 for (int i = 0; i < TRY_SMART.length; ++i) {
                     int r = isAssignableJT(to, TRY_SMART[i], false);
                     if (r >= 0) {
-                        from.ref = TRY_SMART[i];
+                        YetiType.unify(from, TRY_SMART[i]);
                         return r;
                     }
                 }
-                from.ref = to;
+                YetiType.unify(from, to);
                 return 1;
             }
         }
@@ -626,7 +626,7 @@ class JavaType {
     }
 
     static int isAssignable(YetiType.Type to, YetiType.Type from, boolean smart)
-            throws JavaClassNotFoundException {
+            throws JavaClassNotFoundException, YetiType.TypeException {
         int ass;
 //        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
         to = to.deref();
@@ -702,6 +702,8 @@ class JavaType {
             }
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(n, ex);
+        } catch (YetiType.TypeException ex) {
+            throw new CompileException(n, ex.getMessage());
         }
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
