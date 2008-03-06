@@ -103,7 +103,7 @@ if exec then
                 println res
             fi
         else
-            ignore c#getMethod("main", [ classOf java.lang.String ])
+            ignore c#getMethod("main", [ Class#forName('[java.lang.String') ])
                     #invoke((), evalArgs);
         fi
     catch java.lang.reflect.InvocationTargetException ex:
