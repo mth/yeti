@@ -133,8 +133,8 @@ interface YetiCode {
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
             try {
-                codeTree = YetiType.toCode(sourceName, name, code, flags,
-                                           classes, preload);
+                codeTree = YetiAnalyzer.toCode(sourceName, name, code, flags,
+                                               classes, preload);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
