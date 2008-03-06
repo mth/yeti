@@ -50,6 +50,6 @@ var stdin = () is ~BufferedReader;
     println v =
         System#out#println(v);
 
-    sysExit exitCode is number -> () =
+    sysExit exitCode =
         System#exit(exitCode);
 }

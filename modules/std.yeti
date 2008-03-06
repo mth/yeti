@@ -99,17 +99,16 @@ array l is list?<'a> -> array<'a> =
 
     // few math functions
     pi = Math#PI;
-    exp a = Math#exp(a is number);
-    cos a = Math#cos(a is number);
-    sin a = Math#sin(a is number);
-    tan a = Math#tan(a is number);
-    acos a = Math#acos(a is number);
-    asin a = Math#asin(a is number);
-    atan a = Math#atan(a is number);
-    sqrt a = Math#sqrt(a is number);
+    exp a = Math#exp(a);
+    cos a = Math#cos(a);
+    sin a = Math#sin(a);
+    tan a = Math#tan(a);
+    acos a = Math#acos(a);
+    asin a = Math#asin(a);
+    atan a = Math#atan(a);
+    sqrt a = Math#sqrt(a);
 
-    replace needle replacement haystack
-            is string -> string -> string -> string =
+    replace needle replacement haystack =
         Core#replace(needle, replacement, haystack);
 
     // TODO ineffective
