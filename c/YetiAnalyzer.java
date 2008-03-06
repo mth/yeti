@@ -330,32 +330,31 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code tryCatch(Try t, Scope scope, int depth) {
+        TryCatch tc = new TryCatch();
         scope = new Scope(scope, null, null); // closure frame
-        Code block = analyze(t.block, scope, depth);
-        Code cleanup = null;
+        scope.closure = tc;
+        tc.setBlock(analyze(t.block, scope, depth));
         if (t.cleanup != null) {
-            cleanup = analyze(t.cleanup, scope, depth);
+            tc.cleanup = analyze(t.cleanup, scope, depth);
             try {
-                unify(cleanup.type, UNIT_TYPE);
+                unify(tc.cleanup.type, UNIT_TYPE);
             } catch (TypeException ex) {
                 throw new CompileException(t.cleanup,
                                 "finally block must have a unit type, not "
-                                + cleanup.type, ex);
+                                + tc.cleanup.type, ex);
             }
         }
-        TryCatch tc = new TryCatch(block, cleanup);
-        scope.closure = tc;
         for (int i = 0; i < t.catches.length; ++i) {
             Catch c = t.catches[i];
             TryCatch.Catch cc = tc.addCatch(typeOfClass(c.exception, scope));
             cc.handler = analyze(c.handler,
                 c.bind == null ? scope : new Scope(scope, c.bind, cc), depth);
             try {
-                unify(block.type, cc.handler.type);
+                unify(tc.block.type, cc.handler.type);
             } catch (TypeException ex) {
                 throw new CompileException(c.handler,
                             "This catch has " + cc.handler.type +
-                            " type, while try block was " + block.type, ex);
+                            " type, while try block was " + tc.block.type, ex);
             }
         }
         return tc;

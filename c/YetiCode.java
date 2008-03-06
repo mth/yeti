@@ -721,10 +721,9 @@ interface YetiCode {
             }
         }
 
-        TryCatch(Code block, Code cleanup) {
+        void setBlock(Code block) {
             this.type = block.type;
             this.block = block;
-            this.cleanup = cleanup;
         }
 
         public BindRef refProxy(BindRef code) {
@@ -821,7 +820,7 @@ interface YetiCode {
                 if (c.end != null) {
                     m.visitLabel(c.end);
                     m.visitJumpInsn(GOTO, cleanupEntry);
-                } else if (i < catchCount - 1) {
+                } else {
                     m.visitInsn(ARETURN);
                 }
             }

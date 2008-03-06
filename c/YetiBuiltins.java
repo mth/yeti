@@ -672,7 +672,7 @@ interface YetiBuiltins extends YetiCode {
         }
     }
 
-    class ClassOfExpr extends Code {
+    class ClassOfExpr extends Code implements DirectBind {
         String className;
 
         ClassOfExpr(JavaType what) {
