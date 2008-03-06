@@ -28,8 +28,6 @@
  */
 module yeti.lang.std;
 
-import java.lang.Long;
-import java.lang.Math;
 import java.lang.IllegalArgumentException;
 
 // like not . f, but a tiny bit faster

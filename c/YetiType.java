@@ -146,7 +146,10 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
-        null)))))))))))))))))))))))))))))))))));
+        bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
+        bindImport("System", "java/lang/System",
+        bindImport("Math", "java/lang/Math",
+        null))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

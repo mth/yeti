@@ -14,9 +14,8 @@ var target = "";
 var eval = false;
 var exec = true;
 var printType = false;
-var preload = [];
+var preload = ["yeti/lang/std", "yeti/lang/io"];
 var src = "";
-var evalArgs = [];
 var mainClass = "Program";
 var flags = 0;
 
@@ -39,20 +38,20 @@ options = [
     "-xp": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
 ];
 
-not (empty? argv) loop
+not (eval or empty? argv) and (not exec or empty? srcs) loop
    (arg = shift argv;
-    if not (arg =~ '^-') then
-        push srcs arg
-    elif arg in options then
+    if arg in options then
         try 
             options.[arg] ()
         catch EmptyArray:
             println "Parameter expected after \(arg)";
             sysExit 1
         yrt
-    else
+    elif arg =~ '^-' then
         println "Unexpected option: \(arg)";
         sysExit 1;
+    else
+        push srcs arg
     fi);
 
 if empty? srcs and src == "" then
@@ -104,7 +103,7 @@ if exec then
             fi
         else
             ignore c#getMethod("main", [ classOf java.lang.String ])
-                    #invoke((), evalArgs);
+                    #invoke((), argv);
         fi
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();

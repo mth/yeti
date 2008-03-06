@@ -642,10 +642,8 @@ class JavaType {
                        of.javaType.description == "C" ? 1 : -1;
             case YetiType.MAP: {
                 return from.param[2].type == YetiType.LIST_MARKER &&
-                       ((ass = isAssignable(to.param[0], from.param[0], smart))
-                            == 0
-                        || ass > 0 && from.param[1].type == YetiType.NONE)
-                       ? 1 : -1;
+                       (ass = isAssignable(to.param[0], from.param[0], smart))
+                            >= 0 ? 1 : -1;
             }
             case YetiType.JAVA_ARRAY:
                 return isAssignable(to.param[0], from.param[0], smart);

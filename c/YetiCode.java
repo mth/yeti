@@ -923,6 +923,7 @@ interface YetiCode {
         Object identity;
         int localVar = -1; // -1 - use this - not copied
         boolean uncaptured;
+        boolean ignoreGet;
 
         void gen(Ctx ctx) {
             if (uncaptured) {
@@ -930,9 +931,7 @@ interface YetiCode {
                 return;
             }
             genPreGet(ctx);
-            if (wrapper != null) {
-                wrapper.genGet(ctx);
-            }
+            genGet(ctx);
         }
 
         String getId(Ctx ctx) {
@@ -974,7 +973,7 @@ interface YetiCode {
         }
 
         public void genGet(Ctx ctx) {
-            if (localVar == -1) {
+            if (wrapper != null && !ignoreGet) {
                 wrapper.genGet(ctx);
             }
         }
@@ -1164,8 +1163,10 @@ interface YetiCode {
             apply.localVarCount = 2; // this, arg
             if (argCaptures != null) {
                 for (int i = 0; i < argCaptures.length; ++i) {
-                    argCaptures[i].gen(apply);
-                    argCaptures[i].localVar = apply.localVarCount;
+                    Capture c = argCaptures[i];
+                    c.gen(apply);
+                    c.localVar = apply.localVarCount;
+                    c.ignoreGet = true;
                     apply.m.visitVarInsn(ASTORE, apply.localVarCount++);
                 }
             }

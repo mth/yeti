@@ -233,7 +233,7 @@ public class MList extends AMList implements ByKey {
         }
 
         public Object first() {
-            if (i < size) {
+            if (i >= size) {
                 throw new IllegalStateException(
                     "End of list reached or list has shrunken.");
             }
@@ -242,6 +242,10 @@ public class MList extends AMList implements ByKey {
 
         public AIter next() {
             return ++i < size ? this : null;
+        }
+
+        public boolean isEmpty() {
+            return i >= size;
         }
     }
 
