@@ -671,4 +671,25 @@ interface YetiBuiltins extends YetiCode {
             ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
         }
     }
+
+    class ClassOfExpr extends Code {
+        String className;
+
+        ClassOfExpr(JavaType what) {
+            type = YetiType.CLASS_TYPE;
+            className = what.dottedName();
+        }
+
+        void gen(Ctx ctx) {
+            ctx.constant("CLASS-OF:".concat(className), new Code() {
+                { type = YetiType.CLASS_TYPE; }
+
+                void gen(Ctx ctx) {
+                    ctx.m.visitLdcInsn(className);
+                    ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/Class",
+                        "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+                }
+            });
+        }
+    }
 }

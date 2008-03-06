@@ -735,30 +735,28 @@ class JavaType {
         throw new CompileException(n, err.toString());
     }
 
+    JavaType resolve(YetiParser.Node where) {
+        try {
+            resolve();
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(where, ex);
+        }
+        return this;
+    }
+
     private static JavaType javaTypeOf(YetiParser.Node where,
                                        YetiType.Type objType, String err) {
         if (objType.type != YetiType.JAVA) {
             throw new CompileException(where,
                         err + objType + ", java object expected");
         }
-        JavaType jt = objType.javaType;
-        try {
-            jt.resolve();
-        } catch (JavaClassNotFoundException ex) {
-            throw new CompileException(where, ex);
-        }
-        return jt;
+        return objType.javaType.resolve(where);
     }
 
     static Method resolveConstructor(YetiParser.NewOp call,
                                      YetiType.Type t,
                                      YetiCode.Code[] args) {
-        JavaType jt = t.javaType;
-        try {
-            jt.resolve();
-        } catch (JavaClassNotFoundException ex) {
-            throw new CompileException(call, ex);
-        }
+        JavaType jt = t.javaType.resolve(call);
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 

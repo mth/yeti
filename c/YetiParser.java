@@ -552,6 +552,18 @@ interface YetiParser {
         }
     }
 
+    class ClassOf extends Node {
+        String className;
+
+        ClassOf(String className) {
+            this.className = className;
+        }
+
+        String str() {
+            return "classOf " + className;
+        }
+    }
+
     class TypeNode extends Node {
         String name;
         TypeNode[] param;
@@ -894,6 +906,9 @@ interface YetiParser {
                                  "Expected class path after 'import', not a "));
             } else if (s == "throw") {
                 res = new ThrowSym();
+            } else if (s == "classOf") {
+                res = new ClassOf(
+                            readDotted(false, "Expected class name, not a "));
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);

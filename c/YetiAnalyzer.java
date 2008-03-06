@@ -146,15 +146,17 @@ public final class YetiAnalyzer extends YetiType {
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
             Code[] args = mapArgs(op.arguments, scope, depth);
-            Type t = resolveClass(op.name, scope, false);
-            if (t == null) {
-                t = JavaType.typeOfClass(scope.packageName, op.name);
-            }
-            return new NewExpr(JavaType.resolveConstructor(op, t, args)
+            return new NewExpr(JavaType.resolveConstructor(op,
+                                    resolveFullClass(op.name, scope), args)
                                 .check(op, scope.packageName), args, op.line);
         }
         if (node instanceof Try) {
             return tryCatch((Try) node, scope, depth);
+        }
+        if (node instanceof ClassOf) {
+            ClassOf co = (ClassOf) node;
+            return new ClassOfExpr(
+                    resolveFullClass(co.className, scope).javaType.resolve(co));
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");

@@ -102,6 +102,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
     static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
     static final Type SYNCHRONIZED_TYPE = fun2Arg(A, fun(UNIT_TYPE, B), B);
+    static final Type CLASS_TYPE = new Type("Ljava/lang/Class;");
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -656,6 +657,11 @@ public class YetiType implements YetiParser, YetiBuiltins {
             }
         }
         return null;
+    }
+
+    static Type resolveFullClass(String name, Scope scope) {
+        Type t = resolveClass(name, scope, false);
+        return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {

@@ -103,8 +103,8 @@ if exec then
                 println res
             fi
         else
-            c#getMethod("main", [ classOf java.lang.String ])
-             #invoke((), evalArgs);
+            ignore c#getMethod("main", [ classOf java.lang.String ])
+                    #invoke((), evalArgs);
         fi
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();

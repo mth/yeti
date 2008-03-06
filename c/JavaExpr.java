@@ -220,16 +220,16 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
     genargs:
         for (int i = 0; i < args.length; ++i) {
             YetiType.Type argType = method.arguments[i];
-            genRawArg(ctx, args[i], argType, line);
-            convert(ctx, args[i].type, argType);
+            if (genRawArg(ctx, args[i], argType, line))
+                convert(ctx, args[i].type, argType);
         }
         ctx.visitLine(line);
         ctx.m.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
                               method.name, method.descr());
     }
 
-    private static void genRawArg(Ctx ctx, Code arg,
-                                  YetiType.Type argType, int line) {
+    private static boolean genRawArg(Ctx ctx, Code arg,
+                                     YetiType.Type argType, int line) {
         YetiType.Type given = arg.type;
         String descr =
             argType.javaType == null ? null : argType.javaType.description;
@@ -242,11 +242,11 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             ctx.m.visitLabel(lie);
             ctx.intConst(0);
             ctx.m.visitLabel(end);
-            return;
+            return false;
         }
         arg.gen(ctx);
         if (given.type == YetiType.JAVA) {
-            return;
+            return true;
         }
         ctx.visitLine(line);
         if (descr == "C") {
@@ -254,14 +254,16 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             ctx.intConst(0);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL,
                     "java/lang/String", "charAt", "(I)C");
-            return;
+            return false;
         }
         if (argType.type == YetiType.JAVA_ARRAY &&
             given.type == YetiType.STR) {
             ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
             ctx.m.visitMethodInsn(INVOKEVIRTUAL,
                 "java/lang/String", "toCharArray", "()[C");
+            return false;
         }
+        return true;
     }
 
     static void genValue(Ctx ctx, Code arg, YetiType.Type argType, int line) {

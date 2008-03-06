@@ -347,13 +347,15 @@ interface YetiCode {
         }
 
         static final String javaType(YetiType.Type t) {
-            switch (t.deref().type) {
+            t = t.deref();
+            switch (t.type) {
                 case YetiType.STR: return "java/lang/String";
                 case YetiType.NUM: return "yeti/lang/Num";
                 case YetiType.CHAR: return "java/lang/Character";
                 case YetiType.FUN: return "yeti/lang/Fun";
                 case YetiType.STRUCT: return "yeti/lang/Struct";
                 case YetiType.VARIANT: return "yeti/lang/Tag";
+                case YetiType.JAVA: return t.javaType.className();
             }
             return "java/lang/Object";
         }
