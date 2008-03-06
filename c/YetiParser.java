@@ -556,7 +556,7 @@ interface YetiParser {
         String className;
 
         ClassOf(String className) {
-            this.className = className;
+            this.className = className.intern();
         }
 
         String str() {
@@ -1080,7 +1080,7 @@ interface YetiParser {
                 Catch c = (Catch) eofWas;
                 catches.add(c);
                 c.exception =
-                    readDotted(false, "Expected exception name, not ");
+                    readDotted(false, "Expected exception name, not ").intern();
                 Node n = fetch();
                 if (n instanceof Sym) {
                     c.bind = ((Sym) n).sym;

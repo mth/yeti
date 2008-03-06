@@ -652,7 +652,9 @@ interface YetiCode {
             }
             ctx.visitLine(line);
             String className = field.classType.javaType.className();
-            ctx.m.visitTypeInsn(CHECKCAST, className);
+            if (object != null) {
+                ctx.m.visitTypeInsn(CHECKCAST, className);
+            }
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
                                  className, field.name,
                                  JavaType.descriptionOf(field.type));

@@ -204,7 +204,7 @@ public class MList extends AMList implements ByKey {
         }
 
         public boolean isEmpty() {
-            return size > 0;
+            return start >= size;
         }
 
         int _size() {
@@ -255,7 +255,7 @@ public class MList extends AMList implements ByKey {
     }
 
     public MList(AIter iter) {
-        if (iter == null) {
+        if (iter == null || iter.isEmpty()) {
             array = EMPTY;
         } else {
             array = new Object[10];
@@ -335,6 +335,10 @@ public class MList extends AMList implements ByKey {
             }
         }
         return null;
+    }
+
+    public boolean isEmpty() {
+        return start >= size;
     }
 
     int _size() {

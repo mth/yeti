@@ -346,7 +346,9 @@ public final class YetiAnalyzer extends YetiType {
         }
         for (int i = 0; i < t.catches.length; ++i) {
             Catch c = t.catches[i];
-            TryCatch.Catch cc = tc.addCatch(typeOfClass(c.exception, scope));
+            Type exception = resolveFullClass(c.exception, scope);
+            exception.javaType.resolve(c);
+            TryCatch.Catch cc = tc.addCatch(exception);
             cc.handler = analyze(c.handler,
                 c.bind == null ? scope : new Scope(scope, c.bind, cc), depth);
             try {

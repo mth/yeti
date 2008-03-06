@@ -145,7 +145,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
-        null))))))))))))))))))))))))))))))))));
+        bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
+        null)))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -161,6 +162,12 @@ public class YetiType implements YetiParser, YetiBuiltins {
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
         return bindPoly(name, type, new CoreFun(type, field), 0, scope);
+    }
+
+    static Scope bindImport(String name, String className, Scope scope) {
+        scope = new Scope(scope, name, null);
+        scope.importClass = new Type('L' + className + ';');
+        return scope;
     }
 
     static Type fun(Type a, Type res) {
