@@ -651,17 +651,11 @@ interface YetiCode {
                 object.gen(ctx);
             }
             ctx.visitLine(line);
-            String descr = JavaType.descriptionOf(field.type);
-            char what = descr.charAt(0);
-            if (object == null) {
-            } else if (what == '[') {
-                ctx.m.visitTypeInsn(CHECKCAST, descr);
-            } else if (what == 'L') {
-                ctx.m.visitTypeInsn(CHECKCAST, field.type.javaType.className());
-            }
+            String className = field.classType.javaType.className();
+            ctx.m.visitTypeInsn(CHECKCAST, className);
             ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
-                                 field.classType.javaType.className(),
-                                 field.name, descr);
+                                 className, field.name,
+                                 JavaType.descriptionOf(field.type));
             convertValue(ctx, field.type);
         }
 

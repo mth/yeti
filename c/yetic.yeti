@@ -87,7 +87,7 @@ try
             mainClass := compilation#compile(src, flags)
         done;
         compilation#write()
-    fi
+    fi;
 catch CompileException ex:
     println ex#getMessage();
     sysExit 1;
