@@ -90,45 +90,83 @@ interface YetiBuiltins extends YetiCode {
         }
     }
 
-    class Ignore implements Binder {
+    abstract class Bind1Arg implements Binder, Opcodes {
+        private String libName;
+        private YetiType.Type type;
+        boolean polymorph = true;
+
+        Bind1Arg(YetiType.Type type, String libName) {
+            this.type = type;
+            this.libName = libName;
+        }
+
         public BindRef getRef(int line) {
-            return new StaticRef("yeti/lang/std", "ignore",
-                        YetiType.A_TO_UNIT, this, true, line) {
-                Code apply(final Code arg1, YetiType.Type res, int line) {
+            return new StaticRef("yeti/lang/std", libName,
+                                 type, this, polymorph, line) {
+                Code apply(final Code arg, final YetiType.Type res, int line) {
                     return new Code() {
-                        { type = YetiType.UNIT_TYPE; }
+                        { type = res; }
 
                         void gen(Ctx ctx) {
-                            arg1.gen(ctx);
+                            Bind1Arg.this.gen(ctx, arg);
+                        }
+
+                        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                            Bind1Arg.this.genIf(ctx, arg, to, ifTrue);
                         }
                     };
                 }
             };
         }
+
+        void gen(Ctx ctx, Code arg) {
+            arg.gen(ctx);
+        }
+
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+            throw new UnsupportedOperationException();
+        }
     }
 
-    class IsNullPtr implements Binder {
-        public BindRef getRef(int line) {
-            return new StaticRef("yeti/lang/std", "raw_nullptr?",
-                                 YetiType.A_TO_BOOL, this, true, line) {
-                Code apply(final Code arg, YetiType.Type t, int line) {
-                    return new Code () {
-                        { type = YetiType.BOOL_TYPE; }
+    class Ignore extends Bind1Arg {
+        Ignore() {
+            super(YetiType.A_TO_UNIT, "ignore");
+        }
+    }
 
-                        void gen(Ctx ctx) {
-                            Label label = new Label();
-                            genIf(ctx, label, false);
-                            ctx.genBoolean(label);
-                        }
+    class IsNullPtr extends Bind1Arg {
+        IsNullPtr() {
+            super(YetiType.A_TO_BOOL, "raw_nullptr?");
+        }
 
-                        void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                            arg.gen(ctx);
-                            ctx.m.visitJumpInsn(ifTrue ? IFNULL : IFNONNULL,
-                                                to);
-                        }
-                    };
-                }
-            };
+        void gen(Ctx ctx, Code arg) {
+            Label label = new Label();
+            genIf(ctx, arg, label, false);
+            ctx.genBoolean(label);
+        }
+
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+            arg.gen(ctx);
+            ctx.m.visitJumpInsn(ifTrue ? IFNULL : IFNONNULL, to);
+        }
+    }
+
+    class IsDefined extends IsNullPtr {
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+            Label isNull = new Label(), end = new Label();
+            arg.gen(ctx);
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitJumpInsn(IFNULL, isNull);
+            ctx.m.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                                 "UNDEF_STR", "Ljava/lang/String;");
+            ctx.m.visitJumpInsn(IF_ACMPEQ, ifTrue ? end : to);
+            ctx.m.visitJumpInsn(GOTO, ifTrue ? to : end);
+            ctx.m.visitLabel(isNull);
+            ctx.m.visitInsn(POP);
+            if (!ifTrue) {
+                ctx.m.visitJumpInsn(GOTO, to);
+            }
+            ctx.m.visitLabel(end);
         }
     }
 

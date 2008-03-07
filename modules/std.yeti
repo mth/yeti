@@ -68,6 +68,7 @@ array l is list?<'a> -> array<'a> =
     norec (shr) a b = a shr b;
     norec negate a = negate a;
     norec raw_nullptr? a = raw_nullptr? a;
+    norec defined? a = defined? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
 

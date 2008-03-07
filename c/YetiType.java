@@ -133,6 +133,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
         bindPoly("raw_nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
+        bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
@@ -148,8 +149,9 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("System", "java/lang/System",
+        bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

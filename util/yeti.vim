@@ -33,6 +33,7 @@ syn keyword yetiType var norec
 syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at setHashDefault flip sum
 syn keyword yetiFunc raw_nullptr? empty? min max fromSome abs push exit shift
+syn keyword yetiFunc defined?
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/

@@ -233,7 +233,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
 
     private static boolean genRawArg(Ctx ctx, Code arg,
                                      YetiType.Type argType, int line) {
-        YetiType.Type given = arg.type;
+        YetiType.Type given = arg.type.deref();
         String descr =
             argType.javaType == null ? null : argType.javaType.description;
         if (descr == "Z") {

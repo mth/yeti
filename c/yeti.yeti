@@ -2,14 +2,6 @@ program yeti.lang.compiler.yeti;
 
 import java.lang.Class;
 
-help = do:
-    println ("yeti -flags... files\n\n" ^
-             "  -h      Print this help\n" ^
-             "  -C      Compile to classes\n" ^
-             "  -e expr Evaluate expr and print result\n");
-    sysExit 0;
-done;
-
 var target = "";
 var eval = false;
 var exec = true;
@@ -22,8 +14,67 @@ var flags = 0;
 srcs = array [];
 argv = array _argv;
 
+compilationOf writer =
+    new YetiCode$CompileCtx(new YetiC(), writer, preload, new ClassFinder(""));
+
+execClass writer =
+   (c = Class#forName(replace '/' '.' mainClass, true,
+                      writer unsafely_as ~java.lang.ClassLoader);
+    try
+        if eval then
+            c#getMethod("eval", [])#invoke((), [])
+        else
+            c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
+             #invoke((), [argv as ~java.lang.String[]])
+        fi
+    catch java.lang.reflect.InvocationTargetException ex:
+        t = ex#getCause();
+        throw if defined? t then t else ex fi;
+    yrt);
+
+printObj obj =
+    if not (raw_nullptr? obj) then
+        println obj
+    fi;
+
+repl () =
+   (print "> ";
+    line = readln ();
+    if defined? line then
+        writer = new Loader();
+        try
+            compilation = compilationOf (writer as ~CodeWriter);
+            compilation#compile((), mainClass, line, flags);
+            compilation#write();
+            try
+                printObj (execClass writer)
+            catch Exception ex:
+                ex#printStackTrace()
+            yrt
+        catch CompileException ex:
+            println ex#getMessage()
+        yrt;
+        repl ()
+    else
+        println "";
+        sysExit 0
+    fi);
+
+startRepl () =
+   (println "Yeti REPL.\n";
+    eval := true;
+    flags := YetiC#CF_COMPILE_MODULE;
+    repl ());
+
+help () =
+   (println ("yeti -flags... files\n\n" ^
+             "  -h      Print this help\n" ^
+             "  -C      Compile to classes\n" ^
+             "  -e expr Evaluate expr and print result\n");
+    sysExit 0);
+
 if empty? argv then
-    help ()
+    startRepl ()
 fi;
 
 options = [
@@ -69,8 +120,7 @@ writer =
         new ToFile(target)
     fi;
 
-compilation =
-    new YetiCode$CompileCtx(new YetiC(), writer, preload, new ClassFinder(""));
+compilation = compilationOf writer;
 
 try
     if eval then
@@ -97,21 +147,10 @@ catch CompileException ex:
 yrt;
 
 if exec then
-    c = Class#forName(replace '/' '.' mainClass, true,
-                      writer unsafely_as ~java.lang.ClassLoader);
-    try
-        if eval then
-            res = c#getMethod("eval", [])#invoke((), []);
-            if not (raw_nullptr? res) then
-                println res
-            fi
-        else
-            ignore c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
-                    #invoke((), [argv as ~java.lang.String[]])
-        fi
-    catch java.lang.reflect.InvocationTargetException ex:
-        t = ex#getCause();
-        if raw_nullptr? t then ex else t fi#printStackTrace();
+    try 
+        printObj (execClass writer)
+    catch Exception ex:
+        ex#printStackTrace();
         sysExit 2;
     yrt
 fi
