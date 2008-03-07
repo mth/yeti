@@ -652,6 +652,21 @@ class JavaType {
         return -1;
     }
 
+    static int isAssignable(YetiParser.Node where, YetiType.Type to,
+                            YetiType.Type from, boolean smart) {
+        from = from.deref();
+        if (smart && from.type == YetiType.UNIT) {
+            return 0;
+        }
+        try {
+            return isAssignable(to, from, smart);
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(where, ex);
+        } catch (YetiType.TypeException ex) {
+            throw new CompileException(where, ex.getMessage());
+        }
+    }
+
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
                                  String name, YetiCode.Code[] args,
                                  YetiType.Type objType) {
@@ -666,42 +681,29 @@ class JavaType {
                 suitable[suitableCounter++] = i;
             }
         }
-        try {
-            boolean single = suitableCounter == 1;
-        find_match:
-            while (--suitableCounter >= 0) {
-                int index = suitable[suitableCounter];
-                Method m = ma[index];
-                int mAss = 0;
-                for (int j = 0; j < args.length; ++j) {
-                    YetiType.Type t = args[j].type.deref();
-                    if (single && t.type == YetiType.UNIT) {
-                        continue;
-                    }
-                    // TODO use single
-                    int ass = isAssignable(m.arguments[j], t, single);
-    //                System.err.println("isAssignable(" + m.arguments[j] +
-    //                    ", " + args[j].type + ") = " + ass);
-                    if (ass < 0) {
-                        continue find_match;
-                    }
-                    if (ass != 0) {
-                        mAss += ass + 1;
-                    }
+        boolean single = suitableCounter == 1;
+    find_match:
+        while (--suitableCounter >= 0) {
+            int index = suitable[suitableCounter];
+            Method m = ma[index];
+            int mAss = 0;
+            for (int j = 0; j < args.length; ++j) {
+                int ass = isAssignable(n, m.arguments[j], args[j].type, single);
+                if (ass < 0) {
+                    continue find_match;
                 }
-                if (mAss == 0) {
-                    res = index;
-                    break;
-                }
-                if (mAss < rAss) {
-                    res = index;
-                    rAss = mAss;
+                if (ass != 0) {
+                    mAss += ass + 1;
                 }
             }
-        } catch (JavaClassNotFoundException ex) {
-            throw new CompileException(n, ex);
-        } catch (YetiType.TypeException ex) {
-            throw new CompileException(n, ex.getMessage());
+            if (mAss == 0) {
+                res = index;
+                break;
+            }
+            if (mAss < rAss) {
+                res = index;
+                rAss = mAss;
+            }
         }
         if (res != -1) {
             return ma[res].dup(ma, res, objType);

@@ -46,7 +46,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
         this.line = line;
     }
 
-    private void convert(Ctx ctx, YetiType.Type given,
+    private static void convert(Ctx ctx, YetiType.Type given,
                          YetiType.Type argType) {
         given = given.deref();
         argType = argType.deref();
@@ -217,15 +217,18 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
     }
 
     void genCall(Ctx ctx, int invokeInsn) {
-    genargs:
         for (int i = 0; i < args.length; ++i) {
-            YetiType.Type argType = method.arguments[i];
-            if (genRawArg(ctx, args[i], argType, line))
-                convert(ctx, args[i].type, argType);
+            convertedArg(ctx, args[i], method.arguments[i], line);
         }
         ctx.visitLine(line);
         ctx.m.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
                               method.name, method.descr());
+    }
+
+    static void convertedArg(Ctx ctx, Code arg, YetiType.Type argType,
+                             int line) {
+        if (genRawArg(ctx, arg, argType, line))
+            convert(ctx, arg.type, argType);
     }
 
     private static boolean genRawArg(Ctx ctx, Code arg,

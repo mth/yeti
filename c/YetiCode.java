@@ -681,16 +681,21 @@ interface YetiCode {
         }
     }
 
-    class Cast extends Code {
-        Code code;
+    class Cast extends JavaExpr {
+        boolean convert;
 
-        Cast(Code code, YetiType.Type type) {
+        Cast(Code code, YetiType.Type type, boolean convert, int line) {
+            super(code, null, null, line);
             this.type = type;
-            this.code = code;
+            this.line = line;
         }
 
         void gen(Ctx ctx) {
-            code.gen(ctx);
+            if (convert) {
+                convertedArg(ctx, object, type, line);
+            } else {
+                object.gen(ctx);
+            }
         }
     }
 

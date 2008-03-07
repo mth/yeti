@@ -95,7 +95,7 @@ public final class YetiAnalyzer extends YetiType {
                               new Lambda(new Sym("_").pos(op.line, op.col),
                                          op.right, null), scope, depth);
             }
-            if (op.op == "is" || op.op == "unsafely_as") {
+            if (op.op == "is" || op.op == "as" || op.op == "unsafely_as") {
                 return isOp(op, ((TypeOp) op).type,
                             analyze(op.right, scope, depth), scope, depth);
             }
@@ -224,12 +224,20 @@ public final class YetiAnalyzer extends YetiType {
             return new Type(FUN, tp);
         }
         if (name.startsWith("~")) {
+            int arrays = 0;
+            while (name.endsWith("[]")) {
+                ++arrays;
+                name = name.substring(0, name.length() - 2);
+            }
             String cn = name.substring(1).replace('.', '/').intern();
             Type[] tp = new Type[node.param.length];
             for (int i = tp.length; --i >= 0;)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
             Type t = typeOfClass(cn, scope);
             t.param = tp;
+            while (--arrays >= 0) {
+                t = new Type(JAVA_ARRAY, new Type[] { t });
+            }
             return t;
         }
         if (name == "array") {
@@ -275,15 +283,21 @@ public final class YetiAnalyzer extends YetiType {
                      Scope scope, int depth) {
         Type t = nodeToType(type, new HashMap(), scope, depth).deref();
         Type vt = value.type.deref();
-        if (is instanceof BinOp && ((BinOp) is).op == "unsafely_as" &&
-                (vt.type != VAR || t.type != VAR)) {
-            JavaType.checkUnsafeCast(is, value.type, t);
-            return new Cast(value, t);
+        if (is instanceof BinOp) {
+            String s = ((BinOp) is).op;
+            if (s == "unsafely_as" && (vt.type != VAR || t.type != VAR)) {
+                JavaType.checkUnsafeCast(is, value.type, t);
+            } else if (s == "as" &&
+                       JavaType.isAssignable(is, t, vt, true) < 0) {
+                throw new CompileException(is, "impossible cast from " +
+                                               vt + " to " + t);
+            }
+            return new Cast(value, t, s == "as", is.line);
         }
         // () is class is a way for writing null constant
         if ((t.type == JAVA || t.type == JAVA_ARRAY) &&
             value instanceof UnitConstant) {
-            return new Cast(value, t);
+            return new Cast(value, t, false, is.line);
         }
         try {
             unify(value.type, t);

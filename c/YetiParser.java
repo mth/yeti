@@ -873,7 +873,7 @@ interface YetiParser {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
             } else if (s == "div" || s == "shr" || s == "shl") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
-            } else if (s == "is" || s == "unsafely_as") {
+            } else if (s == "is" || s == "unsafely_as" || s == "as") {
                 TypeNode t = readType(true);
                 if (t == null) {
                     throw new CompileException(line, col,
@@ -1339,6 +1339,9 @@ interface YetiParser {
                 while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'
                                           || c == dot || c == '$'))
                     ++i;
+                while (dot != '_' && i + 1 < src.length && // java arrays
+                       src[i] == '[' && src[i + 1] == ']')
+                    i += 2;
                 if (i == start)
                     throw new CompileException(sline, scol,
                                 "Expected type identifier, not '" +
