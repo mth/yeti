@@ -102,8 +102,8 @@ if exec then
                 println res
             fi
         else
-            ignore c#getMethod("main", [ classOf java.lang.String ])
-                    #invoke((), argv);
+            ignore c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
+                    #invoke((), [ /*argv*/ () ]);
         fi
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();

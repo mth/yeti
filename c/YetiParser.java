@@ -543,9 +543,8 @@ interface YetiParser {
             buf.append(name);
             buf.append('(');
             for (int i = 0; i < arguments.length; ++i) {
-                if (i != 0) {
+                if (i != 0)
                     buf.append(", ");
-                }
                 buf.append(arguments[i].str());
             }
             return buf + ")";
@@ -1020,7 +1019,6 @@ interface YetiParser {
                     }
                     ++p;
                     name += c == '.' ? '/' : c;
-//                    System.err.println(src[p]);
                 }
             }
             return new NewOp(name, args);
