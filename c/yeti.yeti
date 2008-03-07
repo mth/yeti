@@ -1,10 +1,10 @@
-program yeti.lang.compiler.yetic;
+program yeti.lang.compiler.yeti;
 
 import java.lang.Class;
 
 help = do:
     println ("yeti -flags... files\n\n" ^
-             "-h      Print this help\n" ^
+             "  -h      Print this help\n" ^
              "  -C      Compile to classes\n" ^
              "  -e expr Evaluate expr and print result\n");
     sysExit 0;
@@ -21,6 +21,10 @@ var flags = 0;
 
 srcs = array [];
 argv = array _argv;
+
+if empty? argv then
+    help ()
+fi;
 
 options = [
     "-C": \(exec := false),

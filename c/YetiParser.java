@@ -160,7 +160,8 @@ interface YetiParser {
             }
             if (!(nameNode instanceof Sym)) {
                 throw new CompileException(nameNode,
-                        "Illegal binding name: " + nameNode);
+                        "Illegal binding name: " + nameNode
+                         + " (missing ; after expression?)");
             }
             line = nameNode.line;
             col = nameNode.col;
