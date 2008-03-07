@@ -283,8 +283,13 @@ public final class YetiAnalyzer extends YetiType {
                      Scope scope, int depth) {
         Type t = nodeToType(type, new HashMap(), scope, depth).deref();
         Type vt = value.type.deref();
-        if (is instanceof BinOp) {
-            String s = ((BinOp) is).op;
+        String s;
+        if (is instanceof BinOp && (s = ((BinOp) is).op) != "is") {
+            // () is class is a way for writing null constant
+            if ((t.type == JAVA || t.type == JAVA_ARRAY) &&
+                value instanceof UnitConstant) {
+                return new Cast(value, t, false, is.line);
+            }
             if (s == "unsafely_as" && (vt.type != VAR || t.type != VAR)) {
                 JavaType.checkUnsafeCast(is, value.type, t);
             } else if (s == "as" &&
@@ -293,11 +298,6 @@ public final class YetiAnalyzer extends YetiType {
                                                vt + " to " + t);
             }
             return new Cast(value, t, s == "as", is.line);
-        }
-        // () is class is a way for writing null constant
-        if ((t.type == JAVA || t.type == JAVA_ARRAY) &&
-            value instanceof UnitConstant) {
-            return new Cast(value, t, false, is.line);
         }
         try {
             unify(value.type, t);
