@@ -34,7 +34,7 @@ options = [
     "-h": help,
     "-help": help,
     "-l": \(preload := split ':' (shift argv)),
-    "-xm": \(printType := true),
+    "-xm": \(printType := true; exec := false),
     "-xp": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
 ];
 
