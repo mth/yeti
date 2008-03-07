@@ -688,6 +688,7 @@ interface YetiCode {
             super(code, null, null, line);
             this.type = type;
             this.line = line;
+            this.convert = convert;
         }
 
         void gen(Ctx ctx) {
