@@ -1,14 +1,13 @@
-_1 = 0 - 1;
 sieve limit =
    (numbers = array [0 .. limit];
-    numbers.[0] := _1;
-    numbers.[1] := _1;
+    numbers.[0] := -1;
+    numbers.[1] := -1;
     var primes = [];
     for numbers do i:
-        if i != _1 then
+        if i != -1 then
             var j = i * 2;
             j <= limit loop
-               (numbers.[j] := _1;
+               (numbers.[j] := -1;
                 j := j + i);
             primes := i :: primes;
         fi
