@@ -248,6 +248,13 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             return false;
         }
         arg.gen(ctx);
+        if (given.type == YetiType.UNIT) {
+            if (!(arg instanceof UnitConstant)) {
+                ctx.m.visitInsn(POP);
+                ctx.m.visitInsn(ACONST_NULL);
+            }
+            return false;
+        }
         if (given.type == YetiType.JAVA) {
             return true;
         }
