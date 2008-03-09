@@ -10,7 +10,7 @@ newGame size = {
         chk 0 (m + 2) or chk m m or any line [0 .. m]);
     show () =
        (cell n =
-            " | \(board.[n])\(if n % size == size - 1 then " |\n" else "" fi)";
+            " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
         fold (^) "" (map cell [0 .. maxPos]));
     check me op =
         if hasWon me then

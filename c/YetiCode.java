@@ -1663,53 +1663,53 @@ interface YetiCode {
         Code[] values;
         Bind[] binds;
 
-        private class Bind extends BindRef
-            implements Binder, CaptureWrapper {
-                boolean mutable;
-                boolean used;
-                int var;
-                int index;
+        private class Bind extends BindRef implements Binder, CaptureWrapper {
+            boolean mutable;
+            boolean used;
+            boolean fun;
+            int var;
+            int index;
 
-                public BindRef getRef(int line) {
-                    used = true;
-                    return this;
-                }
-
-                public CaptureWrapper capture() {
-                    return mutable ? this : null;
-                }
-
-                public boolean assign() {
-                    return mutable;
-                }
-
-                void gen(Ctx ctx) {
-                    ctx.m.visitVarInsn(ALOAD, var);
-                }
-
-                public void genPreGet(Ctx ctx) {
-                    ctx.m.visitVarInsn(ALOAD, var);
-                }
-
-                public void genGet(Ctx ctx) {
-                    ctx.intConst(index);
-                    ctx.m.visitInsn(AALOAD);
-                }
-
-                public void genSet(Ctx ctx, Code value) {
-                    ctx.intConst(index);
-                    value.gen(ctx);
-                    ctx.m.visitInsn(AASTORE);
-                }
-
-                public Object captureIdentity() {
-                    return StructConstructor.this;
-                }
-
-                public String captureType() {
-                    return "[Ljava/lang/Object;";
-                }
+            public BindRef getRef(int line) {
+                used = true;
+                return this;
             }
+
+            public CaptureWrapper capture() {
+                return !fun || mutable ? this : null;
+            }
+
+            public boolean assign() {
+                return mutable;
+            }
+
+            void gen(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, var);
+            }
+
+            public void genPreGet(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, var);
+            }
+
+            public void genGet(Ctx ctx) {
+                ctx.intConst(index);
+                ctx.m.visitInsn(AALOAD);
+            }
+
+            public void genSet(Ctx ctx, Code value) {
+                ctx.intConst(index);
+                value.gen(ctx);
+                ctx.m.visitInsn(AASTORE);
+            }
+
+            public Object captureIdentity() {
+                return StructConstructor.this;
+            }
+
+            public String captureType() {
+                return "[Ljava/lang/Object;";
+            }
+        }
 
         StructConstructor(String[] names, Code[] values) {
             this.names = names;
@@ -1722,6 +1722,7 @@ interface YetiCode {
             bind.type = code.type;
             bind.binder = bind;
             bind.mutable = mutable;
+            bind.fun = code instanceof Function;
             binds[num] = bind;
             return bind;
         }
@@ -1730,7 +1731,7 @@ interface YetiCode {
             int arrayVar = -1;
             for (int i = 0; i < binds.length; ++i) {
                 if (binds[i] != null) {
-                    if (binds[i].used && !binds[i].mutable) {
+                    if (binds[i].used && !binds[i].mutable && binds[i].fun) {
                         ((Function) values[i]).prepareGen(ctx);
                         ctx.m.visitVarInsn(ASTORE,
                                 binds[i].var = ctx.localVarCount++);

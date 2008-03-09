@@ -15,7 +15,7 @@ else
  set iskeyword=39,48-57,A-Z,a-z,_,?
 endif
 
-syn cluster yetiExp contains=yetiOperator,yetiFunc,yetiGroup,yetiKW,yetiList,yetiString,yetiChar,yetiNumber,yetiLineComment,yetiComment
+syn cluster yetiExp contains=yetiOperator,yetiStat,yetiFunc,yetiGroup,yetiKW,yetiList,yetiString,yetiChar,yetiNumber,yetiLineComment,yetiComment
 syn region yetiGroup contained start="(" end=")" contains=@yetiExp
 syn match yetiOperator ?[,:;={}\[\]~!+\-*/%<>]\+\|`[a-zA-Z_?]\+`?
 syn match yetiConst /\[\s*\]/
