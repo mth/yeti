@@ -60,7 +60,7 @@ public final class YetiAnalyzer extends YetiType {
             return new UnitConstant();
         }
         if (node instanceof Seq) {
-            return analSeq(((Seq) node).st, scope, depth);
+            return analSeq((Seq) node, scope, depth);
         }
         if (node instanceof Bind) {
             Function r = singleBind((Bind) node, scope, depth);
@@ -643,7 +643,8 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static Code analSeq(Node[] nodes, Scope scope, int depth) {
+    static Code analSeq(Seq seq, Scope scope, int depth) {
+        Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr result = null, last = null, cur;
         for (int i = 0; i < nodes.length - 1; ++i) {
@@ -667,6 +668,10 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (bind.var) {
                     registerVar(binder, scope.outer);
+                }
+                if (seq.isEvalSeq) {
+                    binder.evalId =
+                        YetiEval.registerBind(bind.name, binder.st.type);
                 }
                 bindings[i] = binder;
                 cur = binder;
@@ -701,7 +706,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
         for (int i = bindings.length; --i >= 0;) {
-            if (bindings[i] != null && !bindings[i].used) {
+            if (bindings[i] != null && !bindings[i].used && !seq.isEvalSeq) {
                 unusedBinding((Bind) nodes[i]);
             }
         }

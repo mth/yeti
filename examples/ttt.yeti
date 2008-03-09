@@ -60,7 +60,7 @@ human = 'O';
         else
             game.board.[move] := human;
             play false
-        fi;
+        fi
     else
         game.putBest computer;
         play true

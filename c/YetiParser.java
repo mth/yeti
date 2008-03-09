@@ -231,6 +231,7 @@ interface YetiParser {
     }
 
     class Seq extends Node {
+        boolean isEvalSeq;
         Node[] st;
 
         Seq(Node[] st) {
@@ -1412,6 +1413,22 @@ interface YetiParser {
                 isModule = s.equals("module");
             }
             Node res = readSeq(' ');
+            if ((flags & YetiC.CF_EVAL) != 0) {
+                if (res instanceof Bind) {
+                    res = new Seq(new Node[] { res }).pos(res.line, res.col);
+                }
+                if (res instanceof Seq) {
+                    Seq seq = (Seq) res;
+                    seq.isEvalSeq = true;
+                    if (seq.st[seq.st.length - 1] instanceof Bind) {
+                        Node[] tmp = new Node[seq.st.length + 1];
+                        System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
+                        tmp[tmp.length - 1] =
+                            new UnitLiteral().pos(seq.line, seq.col);
+                        seq.st = tmp;
+                    }
+                }
+            }
             if (eofWas != EOF) {
                 throw new CompileException(eofWas, "Unexpected " + eofWas);
             }

@@ -43,6 +43,8 @@ repl () =
     if defined? line then
         writer = new Loader();
         try
+            bindings = YetiEval#get()#bindings;
+            bindBarrier = bindings#size();
             compilation = compilationOf (writer as ~CodeWriter);
             compilation#compile((), mainClass, line, flags);
             compilation#write();
@@ -50,7 +52,11 @@ repl () =
                 printObj (execClass writer)
             catch Exception ex:
                 ex#printStackTrace()
-            yrt
+            yrt;
+            for [bindBarrier .. bindings#size() - 1] do i:
+                binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
+                println "\(binding#name) is \(binding#type) = \(binding#val())";
+            done
         catch CompileException ex:
             println ex#getMessage()
         yrt;
@@ -63,8 +69,13 @@ repl () =
 startRepl () =
    (println "Yeti REPL.\n";
     eval := true;
-    flags := YetiC#CF_COMPILE_MODULE;
-    repl ());
+    flags := YetiC#CF_COMPILE_MODULE + YetiC#CF_EVAL;
+    oldEval = YetiEval#set(new YetiEval());
+    try
+        repl ()
+    finally
+        ignore YetiEval#set(oldEval)
+    yrt);
 
 help () =
    (println ("yeti -flags... files\n\n" ^

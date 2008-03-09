@@ -1537,6 +1537,7 @@ interface YetiCode {
         boolean assigned;
         boolean captured;
         boolean used;
+        int evalId = -1;
 
         BindExpr(Code expr, boolean var) {
             super(expr);
@@ -1630,6 +1631,17 @@ interface YetiCode {
                 id = ctx.localVarCount++;
             }
             genLocalSet(ctx, st);
+            if (evalId != -1) {
+                ctx.intConst(evalId);
+                genPreGet(ctx);
+                if (mvar != -1) {
+                    ctx.intConst(id);
+                }
+                ctx.m.visitMethodInsn(INVOKESTATIC,
+                    "yeti/lang/compiler/YetiEval", "setBind",
+                    mvar == -1 ? "(ILjava/lang/Object;)V"
+                               : "(I[Ljava/lang/Object;I)V");
+            }
             result.gen(ctx);
         }
     }
