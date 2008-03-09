@@ -36,7 +36,8 @@ newGame size = {
                     fi
                 fi) { score = -2; pos = -1 } 0
         fi;
-    best me = board.[(check me if me == 'O' then 'X' else 'O' fi).pos] := me;
+    putBest me =
+        board.[(check me if me == 'O' then 'X' else 'O' fi).pos] := me;
 };
 
 game = newGame 3;
@@ -61,7 +62,7 @@ human = 'O';
             play false
         fi;
     else
-        game.best computer;
+        game.putBest computer;
         play true
     fi) true;
 print (game.show ());
