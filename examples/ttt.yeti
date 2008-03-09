@@ -1,0 +1,67 @@
+newGame size = {
+    maxPos = size * size - 1;
+    pos x y = x + y * size;
+    board = array (map \' ' [1 .. size * size]);
+    isFull () = not (contains ' ' board);
+    hasWon player =
+       (m = size - 1;
+        chk from by = all do p: board.[p * by + from] == player done [0 .. m];
+        line i = chk i size or chk (i * size) 1;
+        chk 0 (m + 2) or chk m m or any line [0 .. m]);
+    show () =
+       (cell n =
+            " | \(board.[n])\(if n % size == size - 1 then " |\n" else "" fi)";
+        fold (^) "" (map cell [0 .. maxPos]));
+    check me op =
+        if hasWon me then
+            { score = 1; pos = -1 }
+        elif hasWon op then
+            { score = -1; pos = -1 }
+        elif isFull () then
+            { score = 0; pos = -1 }
+        else
+            (tryPos best pos =
+                if pos > maxPos or best.score > 0 then
+                    best
+                elif board.[pos] != ' ' then
+                    tryPos best (pos + 1)
+                else
+                    board.[pos] := me;
+                    res = -(check op me).score;
+                    board.[pos] := ' ';
+                    if res > best.score then
+                        tryPos { score = res; pos = pos } (pos + 1)
+                    else
+                        tryPos best (pos + 1)
+                    fi
+                fi) { score = -2; pos = -1 } 0
+        fi;
+    best me = board.[(check me if me == 'O' then 'X' else 'O' fi).pos] := me;
+};
+
+game = newGame 3;
+computer = 'X';
+human = 'O';
+(play humanMove =
+    if game.hasWon computer then
+        println "Game over. Computer won."
+    elif game.hasWon human then
+        println "You won! Impossible!"
+    elif game.isFull () then
+        println "Draw."
+    elif humanMove then
+        print "\(game.show ())move xy> ";
+        move = number (readln ());
+        move = game.pos (move div 10 - 1) (move % 10 - 1);
+        if move < 0 or move > game.maxPos or game.board.[move] != ' ' then
+            println "Illegal move. You'll be shot.";
+            play true
+        else
+            game.board.[move] := human;
+            play false
+        fi;
+    else
+        game.best computer;
+        play true
+    fi) true;
+print (game.show ());
