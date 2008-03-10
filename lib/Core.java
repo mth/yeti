@@ -223,6 +223,17 @@ public final class Core {
         return new String(res);
     }
 
+    public static String show(Object o) {
+        if (o == null) {
+            return "[]";
+        }
+        if (o instanceof String) {
+            // TODO escaping
+            return '"' + (String) o + '"';
+        }
+        return o.toString();
+    }
+
     public static final ThreadLocal ARGV = new ThreadLocal() {
         protected Object initialValue() {
             return new MList();

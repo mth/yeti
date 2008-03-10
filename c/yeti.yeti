@@ -1,6 +1,7 @@
 program yeti.lang.compiler.yeti;
 
 import java.lang.Class;
+import yeti.lang.Core;
 
 var target = "";
 var eval = false;
@@ -46,7 +47,7 @@ repl () =
             try
                 res = execClass writer;
                 if type#deref()#type != YetiType#UNIT then
-                    println "\(res) is \(type)"
+                    println "\(Core#show(res)) is \(type)"
                 fi
             catch Exception ex:
                 ex#printStackTrace()

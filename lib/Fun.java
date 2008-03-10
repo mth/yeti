@@ -32,4 +32,8 @@ package yeti.lang;
 
 public abstract class Fun {
     public abstract Object apply(Object arg);
+
+    public String toString() {
+        return "<fun@" + Integer.toHexString(hashCode()) + '>';
+    }
 }

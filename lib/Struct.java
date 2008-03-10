@@ -63,7 +63,7 @@ public class Struct {
         for (int i = 0; i < cnt; i += 2, p += 4) {
             v[p] = (String) values[i];
             v[p + 1] = "=";
-            v[p + 2] = String.valueOf(values[i + 1]);
+            v[p + 2] = Core.show(values[i + 1]);
             v[p + 3] = "; ";
         }
         v[p - 1] = "}";

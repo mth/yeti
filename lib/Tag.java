@@ -54,4 +54,8 @@ public final class Tag implements Comparable {
         return name == o.name ? ((Comparable) value).compareTo(o.value)
                               : name.compareTo(o.name);
     }
+
+    public String toString() {
+        return name + ' ' + Core.show(value);
+    }
 }
