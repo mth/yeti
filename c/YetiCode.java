@@ -1972,4 +1972,69 @@ interface YetiCode {
             return items.length == 0;
         }
     }
+
+    class EvalBind implements Binder, CaptureWrapper, Opcodes {
+        YetiEval.Binding bind;
+
+        EvalBind(YetiEval.Binding bind) {
+            this.bind = bind;
+        }
+
+        public BindRef getRef(int line) {
+            return new BindRef() {
+                {
+                    type = bind.type;
+                    binder = EvalBind.this;
+                }
+
+                void gen(Ctx ctx) {
+                    genPreGet(ctx);
+                    genGet(ctx);
+                }
+
+                Code assign(final Code value) {
+                    return bind.mutable ? new Code() {
+                        void gen(Ctx ctx) {
+                            genPreGet(ctx);
+                            genSet(ctx, value);
+                            ctx.m.visitInsn(ACONST_NULL);
+                        }
+                    } : null;
+                }
+
+                boolean assign() {
+                    return bind.mutable;
+                }
+
+                CaptureWrapper capture() {
+                    return EvalBind.this;
+                }
+            };
+        }
+
+        public void genPreGet(Ctx ctx) {
+            ctx.intConst(bind.bindId);
+            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
+                                  "getBind", "(I)[Ljava/lang/Object;");
+        }
+
+        public void genGet(Ctx ctx) {
+            ctx.intConst(bind.index);
+            ctx.m.visitInsn(AALOAD);
+        }
+
+        public void genSet(Ctx ctx, Code value) {
+            ctx.intConst(bind.index);
+            value.gen(ctx);
+            ctx.m.visitInsn(AASTORE);
+        }
+
+        public Object captureIdentity() {
+            return this;
+        }
+
+        public String captureType() {
+            return "[Ljava/lang/Object;";
+        }
+    }
 }

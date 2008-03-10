@@ -670,8 +670,8 @@ public final class YetiAnalyzer extends YetiType {
                     registerVar(binder, scope.outer);
                 }
                 if (seq.isEvalSeq) {
-                    binder.evalId =
-                        YetiEval.registerBind(bind.name, binder.st.type);
+                    binder.evalId = YetiEval.registerBind(bind.name,
+                                binder.st.type, bind.var, binder.st.polymorph);
                 }
                 bindings[i] = binder;
                 cur = binder;
@@ -1018,6 +1018,15 @@ public final class YetiAnalyzer extends YetiType {
                     scope = explodeStruct(null, new LoadModule(preload[i],
                           YetiTypeVisitor.getType(null, preload[i])),
                           scope, 0, "yeti/lang/std".equals(preload[i]));
+                }
+            }
+            if ((flags & YetiC.CF_EVAL) != 0) {
+                List binds = YetiEval.get().bindings;
+                for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
+                    YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
+                    scope = bind.polymorph ? bindPoly(bind.name, bind.type,
+                                                new EvalBind(bind), 0, scope)
+                        : new Scope(scope, bind.name, new EvalBind(bind));
                 }
             }
             root.preload = preload;

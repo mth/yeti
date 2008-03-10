@@ -55,7 +55,8 @@ repl () =
             yrt;
             for [bindBarrier .. bindings#size() - 1] do i:
                 binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
-                println "\(binding#name) is \(binding#type) = \(binding#val())";
+                println (if binding#mutable then "var " else "" fi ^
+                    "\(binding#name) is \(binding#type) = \(binding#val())");
             done
         catch CompileException ex:
             println ex#getMessage()
