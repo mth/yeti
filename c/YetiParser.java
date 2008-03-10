@@ -834,8 +834,9 @@ interface YetiParser {
             }
             if ((c = src[i]) >= '0' && c <= '9') {
                 while (++i < src.length && ((c = src[i]) <= 'z' &&
-                       (CHS[c] == 'x' || c == '.' ||
-                        ((c == '+' || c == '-') &&
+                       (CHS[c] == 'x' ||
+                        c == '.' && (i + 1 >= src.length || src[i + 1] != '.')
+                        || ((c == '+' || c == '-') &&
                          (src[i - 1] == 'e' || src[i - 1] == 'E')))));
                 String s = new String(src, p, i - p);
                 p = i;
