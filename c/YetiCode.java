@@ -143,7 +143,7 @@ interface YetiCode {
             }
             module = module || codeTree.isModule;
             Constants constants = new Constants();
-            constants.sourceName = sourceName;
+            constants.sourceName = sourceName == null ? "<>" : sourceName;
             Ctx ctx = new Ctx(this, constants, null, null)
                             .newClass(ACC_PUBLIC, name,
                         (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
