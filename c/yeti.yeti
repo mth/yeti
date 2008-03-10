@@ -9,7 +9,7 @@ var exec = true;
 var printType = false;
 var preload = ["yeti/lang/std", "yeti/lang/io"];
 var src = "";
-var mainClass = "Program";
+var mainClass = "code";
 var flags = 0;
 
 srcs = array [];
