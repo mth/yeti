@@ -94,6 +94,14 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                 if (p < l && s[p] == '<') {
                     List param = new ArrayList();
                     p = parseSig(vars, param, p + 1, s) + 1;
+                    // XXX: workaround for broken generics support
+                    //      strips free type vars from classes...
+                    for (int i = param.size(); --i >= 0;) {
+                        if (((YetiType.Type) param.get(i)).type
+                                == YetiType.VAR) {
+                            param.remove(i);
+                        }
+                    }
                     t.param = (YetiType.Type[])
                         param.toArray(new YetiType.Type[param.size()]);
                 }
@@ -162,6 +170,10 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
             m.access = access;
             int argc = l.size() - 1;
             m.returnType = (YetiType.Type) l.get(argc);
+            // XXX hack for broken generic support
+            if (m.returnType.type == YetiType.VAR) {
+                m.returnType = YetiType.OBJECT_TYPE;
+            }
             m.arguments = (YetiType.Type[])
                 l.subList(0, argc).toArray(new YetiType.Type[argc]);
             m.className = className;

@@ -103,6 +103,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
     static final Type SYNCHRONIZED_TYPE = fun2Arg(A, fun(UNIT_TYPE, B), B);
     static final Type CLASS_TYPE = new Type("Ljava/lang/Class;");
+    static final Type OBJECT_TYPE = new Type("Ljava/lang/Object;");
 
     static final Type[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
