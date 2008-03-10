@@ -46,7 +46,7 @@ repl () =
             bindings = YetiEval#get()#bindings;
             bindBarrier = bindings#size();
             compilation = compilationOf (writer as ~CodeWriter);
-            compilation#compile((), mainClass, line, flags);
+            compilation#compile("<>", mainClass, line, flags);
             compilation#write();
             try
                 printObj (execClass writer)
@@ -137,7 +137,7 @@ compilation = compilationOf writer;
 try
     if eval then
         flags := flags + YetiC#CF_EVAL;
-        compilation#compile((), mainClass, src, flags);
+        compilation#compile("<>", mainClass, src, flags);
         if printType then
             println compilation#types#get(mainClass)
         else
