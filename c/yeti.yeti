@@ -32,11 +32,6 @@ execClass writer =
         throw if defined? t then t else ex fi;
     yrt);
 
-printObj obj =
-    if not (raw_nullptr? obj) then
-        println obj
-    fi;
-
 repl () =
    (print "> ";
     line = readln ();
@@ -46,10 +41,13 @@ repl () =
             bindings = YetiEval#get()#bindings;
             bindBarrier = bindings#size();
             compilation = compilationOf (writer as ~CodeWriter);
-            compilation#compile((), mainClass, line, flags);
+            type = compilation#compile((), mainClass, line, flags);
             compilation#write();
             try
-                printObj (execClass writer)
+                res = execClass writer;
+                if type#deref()#type != YetiType#UNIT then
+                    println "\(res) is \(type)"
+                fi
             catch Exception ex:
                 ex#printStackTrace()
             catch java.lang.StackOverflowError ex:
@@ -135,13 +133,14 @@ writer =
     fi;
 
 compilation = compilationOf writer;
+var resultType = YetiType#UNIT_TYPE;
 
 try
     if eval then
         flags := flags + YetiC#CF_EVAL;
-        compilation#compile((), mainClass, src, flags);
+        resultType := compilation#compile((), mainClass, src, flags);
         if printType then
-            println compilation#types#get(mainClass)
+            println resultType
         else
             compilation#write()
         fi
@@ -161,8 +160,11 @@ catch CompileException ex:
 yrt;
 
 if exec then
-    try 
-        printObj (execClass writer)
+    try
+        v = execClass writer;
+        if resultType#deref()#type != YetiType#UNIT then
+            println v
+        fi
     catch Exception ex:
         ex#printStackTrace();
         sysExit 2;

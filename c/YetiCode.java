@@ -122,7 +122,8 @@ interface YetiCode {
             return className;
         }
 
-        void compile(String sourceName, String name, char[] code, int flags) {
+        YetiType.Type compile(String sourceName, String name,
+                              char[] code, int flags) {
             if (classes.containsKey(name)) {
                 throw new RuntimeException(classes.get(name) == null
                     ? "Circular module dependency: " + name
@@ -193,6 +194,7 @@ interface YetiCode {
             }
             ctx.closeMethod();
             constants.close();
+            return codeTree.type;
         }
 
         void write() throws Exception {
