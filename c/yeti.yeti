@@ -56,8 +56,8 @@ repl () =
             yrt;
             for [bindBarrier .. bindings#size() - 1] do i:
                 binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
-                println (if binding#mutable then "var " else "" fi ^
-                    "\(binding#name) is \(binding#type) = \(binding#val())");
+                println "\(if binding#mutable then "var " else "" fi)\
+                        "\(binding#name) is \(binding#type) = \(binding#val())";
             done
         catch CompileException ex:
             println ex#getMessage()
@@ -80,10 +80,14 @@ startRepl () =
     yrt);
 
 help () =
-   (println ("yeti -flags... files\n\n" ^
-             "  -h      Print this help\n" ^
-             "  -C      Compile to classes\n" ^
-             "  -e expr Evaluate expr and print result\n");
+   (println ("yeti -flags... files\n\n\
+     "  -h               Print this help\n\
+     "  -C               Compile to classes\n\
+     "  -e expr          Evaluate expr and print result\n\
+     "  -d directory     Store generated files in the given directory\n\
+     "                   (implies compile to classes)\n\
+     "  -preload modules Preload modules (: separated list)\n\
+     "  -type            Print type signature of given expression or module\n");
     sysExit 0);
 
 if empty? argv then
@@ -96,14 +100,15 @@ options = [
         target := shift argv;
         if target != "" then
             target := "\(target)/"
-        fi
+        fi;
+        exec := false
     done,
     "-e": \(eval := true; src := shift argv),
     "-h": help,
     "-help": help,
-    "-l": \(preload := split ':' (shift argv)),
-    "-xm": \(printType := true; exec := false),
-    "-xp": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
+    "-preload": \(preload := split ':' (shift argv)),
+    "-type": \(printType := true; exec := false),
+    "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop

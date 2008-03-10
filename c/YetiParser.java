@@ -1246,8 +1246,16 @@ interface YetiParser {
                             st = --p;
                             break;
                         default:
-                            throw new CompileException(line, p - lineStart,
-                                "Unexpected escape: \\" + src[p]);
+                            if (src[p] > ' ') {
+                                throw new CompileException(line, p - lineStart,
+                                    "Unexpected escape: \\" + src[p]);
+                            }
+                            p = skipSpace();
+                            if (p >= src.length || src[p] != '"') {
+                                throw new CompileException(line, p - lineStart,
+                                            "Expecting continuation of string");
+                            }
+                            st = p;
                     }
                     ++st;
                 }
