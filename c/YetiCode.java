@@ -683,14 +683,18 @@ interface YetiCode {
             }
             return new Code() {
                 void gen(Ctx ctx) {
+                    String className = field.classType.javaType.className();
                     if (object != null) {
                         object.gen(ctx);
+                        ctx.m.visitTypeInsn(CHECKCAST, className);
                     }
                     genValue(ctx, setValue, field.type, line);
+                    String descr = JavaType.descriptionOf(field.type);
+                    ctx.m.visitTypeInsn(CHECKCAST,
+                        field.type.type == YetiType.JAVA
+                            ? field.type.javaType.className() : descr);
                     ctx.m.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
-                                         field.classType.javaType.className(),
-                                         field.name,
-                                         JavaType.descriptionOf(field.type));
+                                         className, field.name, descr);
                     ctx.m.visitInsn(ACONST_NULL);
                 }
             };

@@ -52,6 +52,8 @@ repl () =
                 printObj (execClass writer)
             catch Exception ex:
                 ex#printStackTrace()
+            catch java.lang.StackOverflowError ex:
+                ex#printStackTrace()
             yrt;
             for [bindBarrier .. bindings#size() - 1] do i:
                 binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
