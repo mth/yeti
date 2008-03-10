@@ -287,8 +287,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
                 case FUN:
                     res = (param[0].type == FUN
                         ? "(" + param[0].str(vars, refs) + ")"
-                        : param[0].str(vars, refs)) + " -> " +
-                          param[1].str(vars, refs);
+                        : param[0].str(vars, refs))
+                        + " -> " + param[1].str(vars, refs);
                     break;
                 case STRUCT:
                     res = "{" + hstr(vars, refs) + "}";
