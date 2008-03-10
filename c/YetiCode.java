@@ -145,7 +145,8 @@ interface YetiCode {
             Constants constants = new Constants();
             constants.sourceName = sourceName;
             Ctx ctx = new Ctx(this, constants, null, null)
-                .newClass(ACC_PUBLIC, name, null);
+                            .newClass(ACC_PUBLIC, name,
+                        (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
             constants.ctx = ctx;
             if (module) {
                 ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type));
@@ -174,8 +175,9 @@ interface YetiCode {
                 ctx.m.visitInsn(ARETURN);
                 types.put(name, codeTree.type);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
-                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC,
-                                    "eval", "()Ljava/lang/Object;");
+                ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
+                ctx = ctx.newMethod(ACC_PUBLIC, "apply",
+                                    "(Ljava/lang/Object;)Ljava/lang/Object;");
                 codeTree.gen(ctx);
                 ctx.m.visitInsn(ARETURN);
             } else {
@@ -241,6 +243,15 @@ interface YetiCode {
         }
 
         void closeMethod() {
+            m.visitMaxs(0, 0);
+            m.visitEnd();
+        }
+
+        void createInit(int mod, String parent) {
+            MethodVisitor m = cw.visitMethod(mod, "<init>", "()V", null, null);
+            m.visitVarInsn(ALOAD, 0); // this.
+            m.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V"); // super
+            m.visitInsn(RETURN);
             m.visitMaxs(0, 0);
             m.visitEnd();
         }
@@ -1160,14 +1171,7 @@ interface YetiCode {
                         c.captureType(), null, null).visitEnd();
                 prev = c;
             }
-            MethodVisitor init = // constructor
-                fun.cw.visitMethod(0, "<init>", "()V", null, null);
-            init.visitVarInsn(ALOAD, 0); // this.
-            init.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun",
-                    "<init>", "()V"); // super();
-            init.visitInsn(RETURN);
-            init.visitMaxs(0, 0);
-            init.visitEnd();
+            fun.createInit(0, "yeti/lang/Fun");
 
             Ctx apply = fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");

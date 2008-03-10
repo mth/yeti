@@ -22,7 +22,7 @@ execClass writer =
                       writer unsafely_as ~java.lang.ClassLoader);
     try
         if eval then
-            c#getMethod("eval", [])#invoke((), [])
+            (c#newInstance() unsafely_as () -> '') ()
         else
             c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
              #invoke((), [argv as ~java.lang.String[]])

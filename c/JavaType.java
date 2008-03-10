@@ -318,6 +318,9 @@ class JavaType {
             r = r.concat("[");
             t = t.param[0];
         }
+        if (t.type != YetiType.JAVA) {
+            return "Ljava/lang/Object;";
+        }
         return r.concat(t.javaType.description);
     }
 
@@ -376,9 +379,11 @@ class JavaType {
 
     static void checkUnsafeCast(YetiParser.Node cast,
                                 YetiType.Type from, YetiType.Type to) {
-        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA) {
+        if (from.type != YetiType.JAVA && from.type != YetiType.VAR &&
+            to.type != YetiType.JAVA) {
             throw new CompileException(cast,
-                "Illegal cast (neither side is java object)");
+                "Illegal cast from " + from + " to " + to + 
+                " (neither side is java object)");
         }
         JavaType src = getClass(from);
         if (src == null)

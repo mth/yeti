@@ -291,7 +291,7 @@ public final class YetiAnalyzer extends YetiType {
                 return new Cast(value, t, false, is.line);
             }
             if (s == "unsafely_as" && (vt.type != VAR || t.type != VAR)) {
-                JavaType.checkUnsafeCast(is, value.type, t);
+                JavaType.checkUnsafeCast(is, vt, t);
             } else if (s == "as" &&
                        JavaType.isAssignable(is, t, vt, true) < 0) {
                 throw new CompileException(is, "impossible cast from " +
