@@ -8,7 +8,7 @@ bottles n =
     fi;
 
 for (reverse [1 .. 99]) do n:
-    println "\(bottles n) on the wall, \(bottles n)";
-    println "Take one down, pass it around,";
-    println "and there's \(bottles (n - 1)) on the wall!";
+    println "\(bottles n) on the wall, \(bottles n)\n\
+            "Take one down, pass it around,\n\
+            "and there's \(bottles (n - 1)) on the wall!";
 done
