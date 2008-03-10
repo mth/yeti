@@ -173,6 +173,11 @@ interface YetiCode {
                 ctx.m.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.m.visitInsn(ARETURN);
                 types.put(name, codeTree.type);
+            } else if ((flags & YetiC.CF_EVAL) != 0) {
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC,
+                                    "eval", "()Ljava/lang/Object;");
+                codeTree.gen(ctx);
+                ctx.m.visitInsn(ARETURN);
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");

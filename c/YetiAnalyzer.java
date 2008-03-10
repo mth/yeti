@@ -1020,7 +1020,7 @@ public final class YetiAnalyzer extends YetiType {
                           scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
             }
-            if ((flags & YetiC.CF_EVAL) != 0) {
+            if ((flags & YetiC.CF_EVAL_BIND) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
@@ -1036,23 +1036,21 @@ public final class YetiAnalyzer extends YetiType {
             root.type = root.code.type;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
-            if ((flags & YetiC.CF_COMPILE_MODULE) == 0 && !parser.isModule) {
+            if ((flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
+                List free = new ArrayList(), deny = new ArrayList();
+                getFreeVar(free, deny, root.type, -1);
+                if (!deny.isEmpty() ||
+                    !free.isEmpty() && !root.code.polymorph) {
+                    throw new CompileException(n,
+                        "Module type is not fully defined");
+                }
+            } else if ((flags & YetiC.CF_EVAL) == 0) {
                 try {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {
                     throw new CompileException(n,
                         "Program body must have a unit type, not "
                         + root.type, ex);
-                }
-            } else { // MODULE
-                List free = new ArrayList(), deny = new ArrayList();
-                getFreeVar(free, deny, root.type, -1);
-                //System.err.println("checked module type, free are " + free
-                //        + ", deny " + deny);
-                if (!deny.isEmpty() ||
-                    !free.isEmpty() && !root.code.polymorph) {
-                    throw new CompileException(n,
-                        "Module type is not fully defined");
                 }
             }
             return root;

@@ -1414,7 +1414,7 @@ interface YetiParser {
                 isModule = s.equals("module");
             }
             Node res = readSeq(' ');
-            if ((flags & YetiC.CF_EVAL) != 0) {
+            if ((flags & YetiC.CF_EVAL_BIND) != 0) {
                 if (res instanceof Bind) {
                     res = new Seq(new Node[] { res }).pos(res.line, res.col);
                 }

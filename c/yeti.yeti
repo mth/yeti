@@ -70,7 +70,7 @@ repl () =
 startRepl () =
    (println "Yeti REPL.\n";
     eval := true;
-    flags := YetiC#CF_COMPILE_MODULE + YetiC#CF_EVAL;
+    flags := YetiC#CF_EVAL + YetiC#CF_EVAL_BIND;
     oldEval = YetiEval#set(new YetiEval());
     try
         repl ()
@@ -136,7 +136,7 @@ compilation = compilationOf writer;
 
 try
     if eval then
-        flags := flags + YetiC#CF_COMPILE_MODULE;
+        flags := flags + YetiC#CF_EVAL;
         compilation#compile((), mainClass, src, flags);
         if printType then
             println compilation#types#get(mainClass)
