@@ -35,6 +35,22 @@ import org.objectweb.asm.*;
 import java.io.IOException;
 import java.io.InputStream;
 
+/*
+ * Encoding:
+ *
+ * 00 - format identifier
+ * Follows type description
+ * 00 XX XX - free type variable XXXX
+ * XX, where XX is 00..08 -
+ *      primitives (same as YetiType.Type.type UNIT - MAP_MARKER)
+ * 09 x.. y.. - Function x -> y
+ * 0A e.. i.. t.. - MAP<e,i,t>
+ * 0B <partialMembers...> <finalMembers...> - Struct
+ * 0C <partialMembers...> <finalMembers...> - Variant
+ * 0D XX XX <param...> - java type
+ * 0E e.. - java array e[]
+ * FE XX XX - reference to non-primitive type
+ */
 class YetiTypeAttr extends Attribute {
     static final byte END = -1;
     static final byte REF = -2;
@@ -118,10 +134,10 @@ class YetiTypeAttr extends Attribute {
                 writeMap(type.partialMembers);
             } else if (type.type == YetiType.JAVA) {
                 buf.putShort(cw.newUTF8(type.javaType.description));
-                buf.putShort(type.param.length);
                 for (int i = 0; i < type.param.length; ++i) {
                     write(type.param[i]);
                 }
+                buf.putByte(END);
             } else if (type.type == YetiType.JAVA_ARRAY) {
                 write(type.param[0]);
             } else {
@@ -224,14 +240,18 @@ class YetiTypeAttr extends Attribute {
                                               new YetiType.Type[param.size()]);
             } else if (tv == YetiType.JAVA) {
                 t.javaType = JavaType.fromDescription(cr.readUTF8(p, buf));
-                int cnt = cr.readUnsignedShort(p + 2);
-                p += 4;
-                t.param = new YetiType.Type[cnt];
-                for (int i = 0; i < cnt; ++i) {
-                    t.param[i] = read();
+                p += 2;
+                List param = new ArrayList();
+                while (in[p] != END) {
+                    param.add(read());
                 }
+                ++p;
+                t.param = (YetiType.Type[])
+                    param.toArray(new YetiType.Type[param.size()]);
+            } else if (tv == YetiType.JAVA_ARRAY) {
+                t.param = new YetiType.Type[] { read() };
             } else {
-                throw new RuntimeException("Unknown type: " + tv);
+                throw new RuntimeException("Unknown type id: " + tv);
             }
             return t;
         }

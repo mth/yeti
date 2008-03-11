@@ -35,7 +35,7 @@ notPred f x = not (f x);
 
 // struct inner bindings are non-polymorphic
 array l is list?<'a> -> array<'a> =
-    new MList(l) unsafely_as array<'a'>;
+    new MList(l) unsafely_as array<''>;
 
 {
     id x = x;
@@ -73,6 +73,9 @@ array l is list?<'a> -> array<'a> =
     (^) a b = "\(a)\(b)";
 
     norec array = array;
+
+    wrapArray a is 'a[] -> array<'a> =
+        new MList(a) unsafely_as array<''>;
 
     flip f x y =
         f y x;

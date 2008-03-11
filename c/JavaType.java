@@ -94,26 +94,27 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                 if (p < l && s[p] == '<') {
                     List param = new ArrayList();
                     p = parseSig(vars, param, p + 1, s) + 1;
-                    // XXX: workaround for broken generics support
+                    /* XXX: workaround for broken generics support
                     //      strips free type vars from classes...
                     for (int i = param.size(); --i >= 0;) {
                         if (((YetiType.Type) param.get(i)).type
                                 == YetiType.VAR) {
                             param.remove(i);
                         }
-                    }
+                    }*/
                     t.param = (YetiType.Type[])
                         param.toArray(new YetiType.Type[param.size()]);
                 }
             } else if (s[p] == 'T') {
                 int p1 = p + 1;
                 while (++p < l && s[p] != ';' && s[p] != '<');
-                String varName = new String(s, p1, p - p1);
+                /*String varName = new String(s, p1, p - p1);
                 t = (YetiType.Type) vars.get(varName);
                 if (t == null) {
                     t = new YetiType.Type(1000000);
                     vars.put(varName, t);
-                }
+                }*/
+                t = YetiType.OBJECT_TYPE;
             } else {
                 t = new YetiType.Type(new String(s, p, 1));
             }
@@ -161,19 +162,19 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                     : Arrays.asList(exceptions).toString())
                 + " | access=" + access);*/
             JavaType.Method m = new JavaType.Method();
-            if (signature == null) {
+//            if (signature == null) {
                 signature = desc;
-            }
+  //          }
             List l = parseSig(1, signature);
             m.sig = name + signature;
             m.name = name.intern();
             m.access = access;
             int argc = l.size() - 1;
             m.returnType = (YetiType.Type) l.get(argc);
-            // XXX hack for broken generic support
+            /* hack for broken generic support
             if (m.returnType.type == YetiType.VAR) {
                 m.returnType = YetiType.OBJECT_TYPE;
-            }
+            }*/
             m.arguments = (YetiType.Type[])
                 l.subList(0, argc).toArray(new YetiType.Type[argc]);
             m.className = className;

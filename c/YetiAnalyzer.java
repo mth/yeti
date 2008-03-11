@@ -223,23 +223,6 @@ public final class YetiAnalyzer extends YetiType {
                           nodeToType(node.param[1], free, scope, depth) };
             return new Type(FUN, tp);
         }
-        if (name.startsWith("~")) {
-            int arrays = 0;
-            while (name.endsWith("[]")) {
-                ++arrays;
-                name = name.substring(0, name.length() - 2);
-            }
-            String cn = name.substring(1).replace('.', '/').intern();
-            Type[] tp = new Type[node.param.length];
-            for (int i = tp.length; --i >= 0;)
-                tp[i] = nodeToType(node.param[i], free, scope, depth);
-            Type t = typeOfClass(cn, scope);
-            t.param = tp;
-            while (--arrays >= 0) {
-                t = new Type(JAVA_ARRAY, new Type[] { t });
-            }
-            return t;
-        }
         if (name == "array") {
             expectsParam(node, 1);
             Type[] tp = { nodeToType(node.param[0], free, scope, depth),
@@ -269,14 +252,30 @@ public final class YetiAnalyzer extends YetiType {
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth);
         }
-        if (name.startsWith("'")) {
-            Type t = (Type) free.get(name);
-            if (t == null) {
-                free.put(name, t = new Type(depth));
-            }
-            return t;
+        int arrays = 0;
+        while (name.endsWith("[]")) {
+            ++arrays;
+            name = name.substring(0, name.length() - 2);
         }
-        throw new CompileException(node, "Unknown type: " + name);
+        Type t;
+        if (name.startsWith("~")) {
+            String cn = name.substring(1).replace('.', '/').intern();
+            Type[] tp = new Type[node.param.length];
+            for (int i = tp.length; --i >= 0;)
+                tp[i] = nodeToType(node.param[i], free, scope, depth);
+            t = typeOfClass(cn, scope);
+            t.param = tp;
+        } else if (name.startsWith("'")) {
+            t = (Type) free.get(name);
+            if (t == null)
+                free.put(name, t = new Type(depth));
+        } else {
+            throw new CompileException(node, "Unknown type: " + name);
+        }
+        while (--arrays >= 0) {
+            t = new Type(JAVA_ARRAY, new Type[] { t });
+        }
+        return t;
     }
 
     static Code isOp(Node is, TypeNode type, Code value,

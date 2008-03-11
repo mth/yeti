@@ -54,6 +54,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
                         ? "" : argType.javaType.description;
         if (argType.type == YetiType.JAVA_ARRAY &&
             given.type == YetiType.JAVA_ARRAY) {
+            ctx.m.visitTypeInsn(CHECKCAST, JavaType.descriptionOf(argType));
             return; // better than thinking, that array was given...
                     // still FIXME for a case of different arrays
         }

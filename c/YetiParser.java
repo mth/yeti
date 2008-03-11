@@ -1342,15 +1342,16 @@ interface YetiParser {
                 res.pos(sline, scol);
             } else {
                 int start = i;
-                char c, dot = '_';
-                if (i < src.length && src[i] == '~') {
+                char c = ' ', dot = '_';
+                if (i < src.length && (c = src[i]) == '~') {
                     ++i;
                     dot = '.';
                 }
+                boolean maybeArr = c == '~' || c == '\'';
                 while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'
                                           || c == dot || c == '$'))
                     ++i;
-                while (dot != '_' && i + 1 < src.length && // java arrays
+                while (maybeArr && i + 1 < src.length && // java arrays
                        src[i] == '[' && src[i + 1] == ']')
                     i += 2;
                 if (i == start)
