@@ -730,21 +730,24 @@ public final class YetiAnalyzer extends YetiType {
     static Code lambda(Function to, Lambda lambda, Scope scope, int depth) {
         Type expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
-        Scope bodyScope;
+        Scope bodyScope = null;
         if (lambda.arg instanceof Sym) {
             if (expected != null && expected.type == FUN) {
                 to.arg.type = expected.param[0];
             } else {
                 to.arg.type = new Type(depth);
             }
-            bodyScope = new Scope(scope, ((Sym) lambda.arg).sym, to);
+            String argName = ((Sym) lambda.arg).sym;
+            if (argName != "_")
+                bodyScope = new Scope(scope, argName, to);
         } else if (lambda.arg instanceof UnitLiteral) {
             to.arg.type = UNIT_TYPE;
-            bodyScope = new Scope(scope, null, to);
         } else {
             throw new CompileException(lambda.arg,
                                        "Bad argument: " + lambda.arg);
         }
+        if (bodyScope == null)
+            bodyScope = new Scope(scope, null, to);
         bodyScope.closure = to;
         if (lambda.expr instanceof Lambda) {
             Function f = new Function(expected != null && expected.type == FUN
@@ -825,6 +828,15 @@ public final class YetiAnalyzer extends YetiType {
         throw new CompileException(pattern, "Bad case pattern: " + pattern);
     }
 
+    static Scope bindPattern(String name, Type type, CasePattern pattern,
+                             Scope scope) {
+        if (name == "_") {
+            pattern.noParam();
+            return scope;
+        }
+        return new Scope(scope, name, pattern.bindParam(type));
+    }
+
     // oh holy fucking shit, this code sucks. horrible abuse of BinOps...
     static Code caseType(Case ex, Scope scope, int depth) {
         Node[] choices = ex.choices;
@@ -855,7 +867,7 @@ public final class YetiAnalyzer extends YetiType {
                     (variant = ((Sym) pat.left).sym).charAt(0))) {
                 badPattern(pat); // binop pat should be a variant
             }
-            Choice caseChoice = result.addVariantChoice(variant);
+            VariantPattern vp = new VariantPattern(result, variant);
             Type variantArg = null;
             if (!(pat.right instanceof Sym)) {
                 if (pat.right instanceof UnitLiteral) {
@@ -863,11 +875,11 @@ public final class YetiAnalyzer extends YetiType {
                 } else {
                     badPattern(pat); // TODO
                 }
+                vp.noParam();
             } else {
-                variantArg = new Type(depth);
-                // got some constructor, store to map.
-                local = new Scope(local, ((Sym) pat.right).sym,
-                                  caseChoice.bindParam(variantArg));
+                variantArg = new Type(depth); 
+                local = bindPattern(((Sym) pat.right).sym,
+                                    variantArg, vp, local);
             }
             Type old = (Type) variants.put(variant, variantArg);
             if (old != null) { // same constructor already. shall be same type.
@@ -892,7 +904,7 @@ public final class YetiAnalyzer extends YetiType {
                         " type, while another was a " + result.type, e);
                 }
             }
-            caseChoice.setExpr(opt);
+            result.addChoice(vp, opt);
         }
         Type variantType = new Type(VARIANT,
             (Type[]) variants.values().toArray(new Type[variants.size()]));

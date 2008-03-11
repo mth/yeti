@@ -33,7 +33,7 @@ package yeti.lang.compiler;
 
 import org.objectweb.asm.*;
 
-interface YetiBuiltins extends YetiCode {
+interface YetiBuiltins extends CaseCode {
     int COND_EQ  = 0;
     int COND_NOT = 1;
     int COND_LT  = 2;
