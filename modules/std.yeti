@@ -71,6 +71,14 @@ array l is list?<'a> -> array<'a> =
     norec defined? a = defined? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
+    (++) a b is list?<'a> -> list?<'a> -> list<'a> =
+        if empty? a then
+            b
+        elif empty? b then
+            a
+        else
+            new ConcatList(a, b) unsafely_as list<'a>
+        fi;
 
     norec array = array;
 
@@ -87,6 +95,10 @@ array l is list?<'a> -> array<'a> =
         if a > b then a else b fi;
     abs a =
         if a < 0 then -a else a fi;
+    concat l =
+        fold (++) [] l;
+    concatMap f =
+        concat . (map f);
     any f l =
         not (raw_nullptr? (find f l));
     all f l =
@@ -98,6 +110,14 @@ array l is list?<'a> -> array<'a> =
         Some v: f v;
         None _: default;
         esac;
+
+    splitBy pred list is (('a -> boolean) -> list<'a> ->
+                          { fst is list?<'a>; snd is list<'a> }) = 
+       (a = new MList();
+        var l = list; // over-optimized loop from hell. don't code like that.
+        not (empty? l) and (h = head l; pred h and (a#add(h); true)) loop
+            l := tail l;
+        { fst = a unsafely_as list?<''>; snd = l });
 
     // few math functions
     pi = Math#PI;

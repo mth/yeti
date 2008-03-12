@@ -169,4 +169,5 @@ withHandle h block =
         withHandle (openOutFile name encoding);
 
     getLines h = h.lines ();
+    putLines h lines = for lines h.writeln;
 }
