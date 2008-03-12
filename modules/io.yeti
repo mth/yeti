@@ -170,4 +170,6 @@ withHandle h block =
 
     getLines h = h.lines ();
     putLines h lines = for lines h.writeln;
+
+    trace msg a = (System#err#print(msg); System#err#println(a); a);
 }

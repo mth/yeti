@@ -139,11 +139,13 @@ abstract class AMList extends AList implements ListIter {
     }
 
     public AList map(Fun f) {
-        int cnt;
+        int cnt = _size();
+        if (start >= cnt)
+            return null;
         Object[] array = array();
-        Object[] result = new Object[cnt = array.length];
+        Object[] result = new Object[cnt - start];
         for (int i = start; i < cnt; ++i) {
-            result[i] = f.apply(array[i]);
+            result[i - start] = f.apply(array[i]);
         }
         return new MList(result);
     }
