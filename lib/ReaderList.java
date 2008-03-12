@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /*
- * Yeti language compiler.
+ * Yeti core library.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,8 +28,47 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package yeti.lang.compiler;
+package yeti.lang;
 
-public interface SourceReader {
-    char[] getSource(String[] name) throws Exception;
+import java.io.BufferedReader;
+import java.io.IOException;
+
+/** Yeti core library - BufferedReader list. */
+public class ReaderList extends LList {
+    private boolean forced;
+    private BufferedReader r;
+
+    private ReaderList(String line, BufferedReader r) {
+        super(line, null);
+        this.r = r;
+    }
+
+    public AList rest() {
+        synchronized (r) {
+            if (!forced) {
+                rest = lines(r);
+            }
+            return rest;
+        }
+    }
+
+    static AList lines(BufferedReader r) {
+        try {
+            String line = null;
+            try {
+                if ((line = r.readLine()) == null) {
+                    return null;
+                }
+                return new ReaderList(line, r);
+            } finally {
+                if (line == null) {
+                    r.close();
+                }
+            }
+        } catch (IOException ex) {
+            // not very portable, but that's the easist way...
+            sun.misc.Unsafe.getUnsafe().throwException(ex);
+            return null;
+        }
+    }
 }

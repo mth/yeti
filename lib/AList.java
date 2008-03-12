@@ -55,4 +55,6 @@ public abstract class AList extends AIter implements Comparable {
             l = l.rest();
         return l;
     }
+
+    public abstract long length();
 }

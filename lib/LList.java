@@ -151,4 +151,11 @@ public class LList extends AList {
         }
         return null;
     }
+
+    public long length() {
+        int n = 0;
+        for (AIter i = this; i != null; i = i.next())
+            ++n;
+        return n;
+    }
 }

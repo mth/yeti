@@ -16,7 +16,8 @@ srcs = array [];
 argv = array _argv;
 
 compilationOf writer =
-    new YetiCode$CompileCtx(new YetiC(), writer, preload, new ClassFinder(""));
+    new YetiCode$CompileCtx(new YetiC(()), writer, preload,
+                            new ClassFinder(""));
 
 execClass writer =
    (c = Class#forName(replace '/' '.' mainClass, true,

@@ -676,7 +676,7 @@ public final class YetiAnalyzer extends YetiType {
                 cur = binder;
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
-                scope = explodeStruct(nodes[i], m, scope, depth, false);
+                scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 cur = new SeqExpr(m);
             } else if (nodes[i] instanceof Import) {
                 String name = ((Import) nodes[i]).className;

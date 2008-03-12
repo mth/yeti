@@ -83,6 +83,7 @@ interface YetiCode {
         private CodeWriter writer;
         private SourceReader reader;
         private String[] preload;
+        private Map compiled = new HashMap();
         ClassFinder classPath;
         Map classes = new HashMap();
         Map types = new HashMap();
@@ -114,11 +115,17 @@ interface YetiCode {
             }
         }
 
-        String compile(String srcName, int flags) throws Exception {
+        String compile(String sourceName, int flags) throws Exception {
+            String className = (String) compiled.get(sourceName);
+            if (className != null) {
+                return className;
+            }
+            String[] srcName = { sourceName };
             char[] src = reader.getSource(srcName);
-            int dot = srcName.lastIndexOf('.');
-            String className = dot < 0 ? srcName : srcName.substring(0, dot);
-            compile(srcName, className, src, flags);
+            int dot = srcName[0].lastIndexOf('.');
+            className = dot < 0 ? srcName[0] : srcName[0].substring(0, dot);
+            compile(srcName[0], className, src, flags);
+            compiled.put(srcName, className);
             return className;
         }
 
@@ -194,6 +201,7 @@ interface YetiCode {
             }
             ctx.closeMethod();
             constants.close();
+            compiled.put(sourceName, name);
             return codeTree.type;
         }
 
@@ -1154,10 +1162,10 @@ interface YetiCode {
             if (bindName == null) {
                 bindName = "";
             }
-            name = ctx.className + '$' + mangle(bindName);
+            String nameBase = name = ctx.className + '$' + mangle(bindName);
             Map classes = ctx.compilation.classes;
             for (int i = 0; classes.containsKey(name); ++i) {
-                name = ctx.className + '$' + bindName + i;
+                name = nameBase + i;
             }
             Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
                     "yeti/lang/Fun");

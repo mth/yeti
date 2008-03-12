@@ -234,6 +234,12 @@ public final class Core {
         return o.toString();
     }
 
+    static String read(java.io.Reader r, int max) throws java.io.IOException {
+        char[] buf = new char[max];
+        int n = r.read(buf, 0, max);
+        return n < 0 ? null : new String(buf, 0, n);
+    }
+
     public static final ThreadLocal ARGV = new ThreadLocal() {
         protected Object initialValue() {
             return new MList();

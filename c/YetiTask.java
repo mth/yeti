@@ -74,14 +74,11 @@ public class YetiTask extends MatchingTask {
             setIncludes("*.yeti");
         }
         String[] files = getDirectoryScanner(dir).getIncludedFiles();
-        for (int i = files.length; --i >= 0; ) {
-            files[i] = new java.io.File(dir, files[i]).getPath();
-        }
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
         CodeWriter writer = new ToFile(target);
         YetiCode.CompileCtx compilation =
-            new YetiCode.CompileCtx(new YetiC(), writer, preload,
+            new YetiCode.CompileCtx(new YetiC(dir.getPath()), writer, preload,
                                     new ClassFinder(classPath));
         log("Compiling " + files.length + " files.");
         try {

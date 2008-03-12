@@ -137,6 +137,13 @@ array l is list?<'a> -> array<'a> =
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun);
 
+    length l is list?<''> -> number =
+        if raw_nullptr? l then
+            0
+        else
+            (l unsafely_as ~AList)#length()
+        fi;
+
     head l is list?<'a> -> 'a =
        (if raw_nullptr? l then
             throw new IllegalArgumentException("Empty list")

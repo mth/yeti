@@ -28,19 +28,64 @@
  */
 module yeti.lang.io;
 
+import java.io.Reader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
-var stdin = () as ~BufferedReader;
+load yeti.lang.std;
+
+var stdin' = () as ~BufferedReader;
+
+lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
+   (var l = [];
+    {
+        read num =
+            Core#read(reader (), num);
+
+        readln () =
+            synchronized reader do:
+                if raw_nullptr? l then
+                    (reader ())#readLine()
+                else
+                    Core#UNDEF_STR
+                fi;
+            done;
+
+        lines () =
+            synchronized reader do:
+                if l == [] then
+                    l := (ReaderList#lines(reader ()) unsafely_as list<string>);
+                fi;
+                l
+            done;
+
+        close () =
+            try
+                synchronized reader do:
+                    if not (raw_nullptr? l) then
+                        ignore (length l)
+                    fi
+                done
+            finally
+                (reader ())#close()
+            yrt;
+    });
 
 {
-    readln () =
-        synchronized readln do:
-            if raw_nullptr? stdin then
-                stdin := new BufferedReader(new InputStreamReader(System#in));
-            fi;
-            stdin#readLine()
-        done;
+    readln () = stdin.readln ();
+
+    stdin = lazyReaderHandle do:
+        if raw_nullptr? stdin' then
+            stdin' := new BufferedReader(new InputStreamReader(System#in));
+        fi;
+        stdin'
+    done;
 
     print v =
        (System#out#print(v);
@@ -51,4 +96,68 @@ var stdin = () as ~BufferedReader;
 
     sysExit exitCode =
         System#exit(exitCode);
+
+
+    readerHandle reader = lazyReaderHandle \reader;
+
+    inputHandle stream encoding is ~InputStream -> string -> '' =
+       (var nok = true;
+        try
+            r = new BufferedReader(new InputStreamReader(stream, encoding));
+            nok := false;
+            readerHandle r
+        finally
+            if nok then
+                stream#close()
+            fi
+        yrt);
+
+    writerHandle writer is ~BufferedWriter -> '' = {
+        write s is string -> () =
+            writer#write(s);
+        writeln s is string -> () =
+           (writer#write(s);
+            writer#newLine());
+        flush () = writer#flush();
+        close () = writer#close();
+    };
+
+    outputHandle stream encoding is ~OutputStream -> string -> '' =
+       (var nok = true;
+        try
+            w = new BufferedWriter(new OutputStreamWriter(stream, encoding));
+            nok := false;
+            writerHandle w
+        finally
+            if nok then
+                stream#close()
+            fi
+        yrt);
+
+    linesOfReader reader is ~BufferedReader -> list<string> =
+        ReaderList#lines(reader) unsafely_as list<string>;
+
+    openInFile name encoding is string -> string -> '' =
+        inputHandle (new FileInputStream(name) as ~InputStream) encoding;
+
+    openOutFile name encoding is string -> string -> '' =
+        outputHandle (new FileOutputStream(name) as ~OutputStream) encoding;
+
+    readFile name encoding block =
+       (h = openInFile name encoding;
+        try
+            block h
+        finally
+            h.close ()
+        yrt);
+
+    writeFile name encoding block =
+       (h = openOutFile name encoding;
+        try
+            block h
+        finally
+            h.close ()
+        yrt);
+
+    getLines h = h.lines ();
 }

@@ -204,6 +204,11 @@ public class ListRange extends AList implements ListIter {
         return l;
     }
 
+    public long length() {
+        long n = last.sub(first).intValue() / inc;
+        return n >= 0 ? n + 1 : 0;
+    }
+
     public Num index(Object v) {
         if (inc > 0) {
             return first.compareTo(v) <= 0 && last.compareTo(v) >= 0
