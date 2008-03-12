@@ -138,9 +138,10 @@ interface YetiParser {
         Node expr;
         TypeNode type;
         boolean var;
+        boolean property;
         boolean noRec;
 
-        Bind(List args, Node expr) {
+        Bind(List args, Node expr, boolean structBind) {
             int first = 0;
             Node nameNode = null;
             while (first < args.size()) {
@@ -152,6 +153,17 @@ interface YetiParser {
                     noRec = true;
                 } else {
                     break;
+                }
+            }
+            if (!var && nameNode instanceof Sym) {
+                String s = ((Sym) nameNode).sym;
+                if (s == "get") {
+                    property = true;
+                    ++first;
+                } else if (s == "set") {
+                    property = true;
+                    var = true;
+                    ++first;
                 }
             }
             if (first == 0 || first > args.size()) {
@@ -925,7 +937,7 @@ interface YetiParser {
             return res.pos(line, col);
         }
 
-        private Node def(List args, List expr) {
+        private Node def(List args, List expr, boolean structDef) {
             BinOp partial = null;
             String s = null;
             int i = 0, cnt = expr.size();
@@ -973,7 +985,7 @@ interface YetiParser {
                 e.line = partial.line;
                 e.col = partial.col;
             }
-            return args == null ? e : new Bind(args, e);
+            return args == null ? e : new Bind(args, e, structDef);
         }
 
         private Node readExpr(String to) {
@@ -987,7 +999,7 @@ interface YetiParser {
                     if (res.isEmpty()) {
                         throw new CompileException(node, "no condition?");
                     }
-                    return def(null, res);
+                    return def(null, res, false);
                 }
                 res.add(node);
             }
@@ -1170,7 +1182,7 @@ interface YetiParser {
                     continue;
                 }
                 if (sym instanceof SepOp && ((SepOp) sym).sep == sep) {
-                    res.add(def(args, l));
+                    res.add(def(args, l, end == '}'));
                     args = null;
                     l = new ArrayList();
                     continue;
@@ -1183,7 +1195,7 @@ interface YetiParser {
                                            "Expecting " + end);
             }
             if (!l.isEmpty()) {
-                res.add(def(args, l));
+                res.add(def(args, l, end == '}'));
             }
             return (Node[]) res.toArray(new Node[res.size()]);
         }
