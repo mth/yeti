@@ -55,7 +55,21 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                     Core#UNDEF_STR
                 else
                     (reader ())#readLine()
-                fi;
+                fi
+            done;
+
+        contents () =
+            synchronized lazyReaderHandle do:
+                if used then
+                    Core#UNDEF_STR
+                else
+                    r = reader ();
+                    try
+                        Core#readAll(r)
+                    finally
+                        r#close()
+                    yrt
+                fi
             done;
 
         lines () =
@@ -94,7 +108,8 @@ withHandle h block =
 
     stdin = lazyReaderHandle do:
         if raw_nullptr? stdin' then
-            stdin' := new BufferedReader(new InputStreamReader(System#in));
+            stdin' :=
+                new BufferedReader(new InputStreamReader(System#in), 8192);
         fi;
         stdin'
     done;
@@ -120,7 +135,7 @@ withHandle h block =
                         new InputStreamReader(stream)
                     else
                         new InputStreamReader(stream, encoding)
-                    fi);
+                    fi, 8192);
             nok := false;
             readerHandle r
         finally
@@ -175,5 +190,9 @@ withHandle h block =
         withHandle (openOutFile name encoding);
 
     getLines h = h.lines ();
-    putLines h lines = for lines h.writeln
+    putLines h lines = for lines h.writeln;
+
+    getContents h = h.contents ();
+
+    trace msg a = (System#err#print(msg); System#err#println(a); a);
 }

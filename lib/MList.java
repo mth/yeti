@@ -139,11 +139,13 @@ abstract class AMList extends AList implements ListIter {
     }
 
     public AList map(Fun f) {
-        int cnt;
+        int cnt = _size();
+        if (start >= cnt)
+            return null;
         Object[] array = array();
-        Object[] result = new Object[cnt = array.length];
+        Object[] result = new Object[cnt - start];
         for (int i = start; i < cnt; ++i) {
-            result[i] = f.apply(array[i]);
+            result[i - start] = f.apply(array[i]);
         }
         return new MList(result);
     }
@@ -307,11 +309,13 @@ public class MList extends AMList implements ByKey {
     }
 
     public AList rest() {
-        return size > 1 ? new SubList(1) : null;
+        int p;
+        return (p = start + 1) < size ? new SubList(p) : null;
     }
 
     public AIter next() {
-        return size > 1 ? new Iter(1) : null;
+        int p;
+        return (p = start + 1) < size ? new Iter(p) : null;
     }
 
     public Object vget(Object index) {

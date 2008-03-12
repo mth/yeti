@@ -37,6 +37,25 @@ notPred f x = not (f x);
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
 
+head l is list?<'a> -> 'a =
+   (if raw_nullptr? l then
+        throw new IllegalArgumentException("Empty list")
+    fi;
+    (l unsafely_as ~AList)#first()) unsafely_as '';
+
+tail l is list?<'a> -> list<'a> =
+   (if raw_nullptr? l then
+        throw new IllegalArgumentException("Empty list")
+    fi;
+    (l unsafely_as ~AList)#rest()) unsafely_as list<''>;
+
+map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+    if raw_nullptr? l then
+        []
+    else
+        (l unsafely_as ~AList)#map(f) unsafely_as list<''>
+    fi;
+
 {
     id x = x;
     const x y = x;
@@ -71,8 +90,20 @@ array l is list?<'a> -> array<'a> =
     norec defined? a = defined? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
+    (++) a b is list?<'a> -> list?<'a> -> list<'a> =
+        if empty? a then
+            b
+        elif empty? b then
+            a
+        else
+            new ConcatList(a, b) unsafely_as list<'a>
+        fi;
 
+    // damn struct polymorphism restriction. is it really needed?
     norec array = array;
+    norec tail = tail;
+    norec head = head;
+    norec map = map;
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>;
@@ -87,6 +118,10 @@ array l is list?<'a> -> array<'a> =
         if a > b then a else b fi;
     abs a =
         if a < 0 then -a else a fi;
+    concat l =
+        fold (++) [] l;
+    concatMap f =
+        concat . (map f);
     any f l =
         not (raw_nullptr? (find f l));
     all f l =
@@ -98,6 +133,15 @@ array l is list?<'a> -> array<'a> =
         Some v: f v;
         None _: default;
         esac;
+
+    splitBy pred list is (('a -> boolean) -> list<'a> ->
+                          { fst is list<'a>; snd is list<'a> }) = 
+       (a = new MList();
+        var l = list; // over-optimized loop from hell. don't code like that.
+        not (empty? l) and (h = head l; not (pred h) and (a#add(h); true)) loop
+            l := tail l;
+        { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi;
+          snd = l });
 
     // few math functions
     pi = Math#PI;
@@ -117,6 +161,10 @@ array l is list?<'a> -> array<'a> =
     split re s is string -> string -> list?<string> =
         new MList((s unsafely_as ~java.lang.String)#split(re))
             unsafely_as list?<string>;
+
+    // TODO ineffective
+    substAll re replacement s is string -> string -> string -> string =
+        (s unsafely_as ~java.lang.String)#replaceAll(re, replacement);
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();
@@ -144,18 +192,6 @@ array l is list?<'a> -> array<'a> =
             (l unsafely_as ~AList)#length()
         fi;
 
-    head l is list?<'a> -> 'a =
-       (if raw_nullptr? l then
-            throw new IllegalArgumentException("Empty list")
-        fi;
-        (l unsafely_as ~AList)#first()) unsafely_as 'a;
-
-    tail l is list?<'a> -> list<'a> =
-       (if raw_nullptr? l then
-            throw new IllegalArgumentException("Empty list")
-        fi;
-        (l unsafely_as ~AList)#rest()) unsafely_as list<'a>;
-
     index v l is 'a -> list?<'a> -> number =
         if raw_nullptr? l then
             -1
@@ -181,13 +217,6 @@ array l is list?<'a> -> array<'a> =
             []
         else
             (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
-        fi;
-
-    map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-        if raw_nullptr? l then
-            []
-        else
-            (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi;
 
     map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =
