@@ -67,9 +67,8 @@ public class ReaderList extends LList {
                 }
             }
         } catch (IOException ex) {
-            // not very portable, but that's the easist way...
-            sun.misc.Unsafe.getUnsafe().throwException(ex);
-            return null;
+            // TODO unsafe throw
+            throw new RuntimeException(ex);
         }
     }
 }
