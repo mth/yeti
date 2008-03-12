@@ -57,6 +57,21 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         (l unsafely_as ~AList)#map(f) unsafely_as list<''>
     fi;
 
+find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
+    if raw_nullptr? l then
+        []
+    else
+        (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
+    fi;
+
+index v l is 'a -> list?<'a> -> number =
+    if raw_nullptr? l then
+        -1
+    else
+        res = (l unsafely_as ~AList)#index(v);
+        if raw_nullptr? res then -1 else res fi
+    fi;
+
 {
     id x = x;
     const x y = x;
@@ -105,6 +120,8 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     norec tail = tail;
     norec head = head;
     norec map = map;
+    norec find = find;
+    norec index = index;
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>;
@@ -173,15 +190,15 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
            (e = i#next() unsafely_as ~java.util.Map$Entry;
             f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
-    mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> array<'c> =
-       (a = array [];
-        setArrayCapacity a (h unsafely_as ~Hash)#size();
+    mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c> =
+       (a = new MList();
+        a#reserve((h unsafely_as ~Hash)#size());
         i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
-            push a (f (e#getKey() unsafely_as 'a)
-                      (e#getValue() unsafely_as 'b)));
-        a);
+            a#add(f (e#getKey() unsafely_as 'a)
+                    (e#getValue() unsafely_as 'b)));
+        a unsafely_as list?<''>);
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun);
@@ -191,14 +208,6 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
             0
         else
             (l unsafely_as ~AList)#length()
-        fi;
-
-    index v l is 'a -> list?<'a> -> number =
-        if raw_nullptr? l then
-            -1
-        else
-            res = (l unsafely_as ~AList)#index(v);
-            if raw_nullptr? res then -1 else res fi
         fi;
 
     setArrayCapacity a n is array<'a> -> number -> () =
@@ -212,13 +221,6 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
 
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         FilterList#filter(l, f) unsafely_as list<'a>;
-
-    find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
-        if raw_nullptr? l then
-            []
-        else
-            (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
-        fi;
 
     map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =
         if raw_nullptr? a or raw_nullptr? b then
