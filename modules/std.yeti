@@ -37,6 +37,18 @@ notPred f x = not (f x);
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
 
+head l is list?<'a> -> 'a =
+   (if raw_nullptr? l then
+        throw new IllegalArgumentException("Empty list")
+    fi;
+    (l unsafely_as ~AList)#first()) unsafely_as '';
+
+tail l is list?<'a> -> list<'a> =
+   (if raw_nullptr? l then
+        throw new IllegalArgumentException("Empty list")
+    fi;
+    (l unsafely_as ~AList)#rest()) unsafely_as list<''>;
+
 {
     id x = x;
     const x y = x;
@@ -80,7 +92,10 @@ array l is list?<'a> -> array<'a> =
             new ConcatList(a, b) unsafely_as list<'a>
         fi;
 
+    // damn struct polymorphism restriction. is it really needed?
     norec array = array;
+    norec tail = tail;
+    norec head = head;
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>;
@@ -163,18 +178,6 @@ array l is list?<'a> -> array<'a> =
         else
             (l unsafely_as ~AList)#length()
         fi;
-
-    head l is list?<'a> -> 'a =
-       (if raw_nullptr? l then
-            throw new IllegalArgumentException("Empty list")
-        fi;
-        (l unsafely_as ~AList)#first()) unsafely_as 'a;
-
-    tail l is list?<'a> -> list<'a> =
-       (if raw_nullptr? l then
-            throw new IllegalArgumentException("Empty list")
-        fi;
-        (l unsafely_as ~AList)#rest()) unsafely_as list<'a>;
 
     index v l is 'a -> list?<'a> -> number =
         if raw_nullptr? l then
