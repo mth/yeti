@@ -155,7 +155,7 @@ withHandle h block =
     readFile name encoding =
         withHandle (openInFile name encoding);
 
-    writeFile name encoding block =
+    writeFile name encoding =
         withHandle (openOutFile name encoding);
 
     getLines h = h.lines ();
