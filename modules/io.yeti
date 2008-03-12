@@ -77,7 +77,16 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
             yrt;
     });
 
+withHandle h block =
+    try
+        block h
+    finally
+        h.close ()
+    yrt;
+
 {
+    norec withHandle = withHandle;
+
     readln () = stdin.readln ();
 
     stdin = lazyReaderHandle do:
@@ -137,27 +146,17 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>;
 
-    openInFile name encoding is string -> string -> '' =
-        inputHandle (new FileInputStream(name) as ~InputStream) encoding;
+    openInFile name is string -> string -> '' =
+        inputHandle (new FileInputStream(name) as ~InputStream);
 
-    openOutFile name encoding is string -> string -> '' =
-        outputHandle (new FileOutputStream(name) as ~OutputStream) encoding;
+    openOutFile name is string -> string -> '' =
+        outputHandle (new FileOutputStream(name) as ~OutputStream);
 
-    readFile name encoding block =
-       (h = openInFile name encoding;
-        try
-            block h
-        finally
-            h.close ()
-        yrt);
+    readFile name encoding =
+        withHandle (openInFile name encoding);
 
     writeFile name encoding block =
-       (h = openOutFile name encoding;
-        try
-            block h
-        finally
-            h.close ()
-        yrt);
+        withHandle (openOutFile name encoding);
 
     getLines h = h.lines ();
 }
