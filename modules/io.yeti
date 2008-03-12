@@ -44,31 +44,34 @@ var stdin' = () as ~BufferedReader;
 
 lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
    (var l = [];
+    var used = false;
     {
         read num =
             Core#read(reader (), num);
 
         readln () =
             synchronized reader do:
-                if raw_nullptr? l then
-                    (reader ())#readLine()
-                else
+                if used then
                     Core#UNDEF_STR
+                else
+                    (reader ())#readLine()
                 fi;
             done;
 
         lines () =
             synchronized reader do:
-                if l == [] then
+                if used then
+                    []
+                else
                     l := (ReaderList#lines(reader ()) unsafely_as list<string>);
-                fi;
-                l
+                    l
+                fi
             done;
 
         close () =
             try
                 synchronized reader do:
-                    if not (raw_nullptr? l) then
+                    if used then
                         ignore (length l)
                     fi
                 done
