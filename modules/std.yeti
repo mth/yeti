@@ -162,6 +162,10 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         new MList((s unsafely_as ~java.lang.String)#split(re))
             unsafely_as list?<string>;
 
+    // TODO ineffective
+    substAll re replacement s is string -> string -> string -> string =
+        (s unsafely_as ~java.lang.String)#replaceAll(re, replacement);
+
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop

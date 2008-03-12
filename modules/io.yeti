@@ -49,16 +49,30 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
             Core#read(reader (), num);
 
         readln () =
-            synchronized reader do:
+            synchronized lazyReaderHandle do:
                 if raw_nullptr? l then
                     (reader ())#readLine()
                 else
                     Core#UNDEF_STR
-                fi;
+                fi
+            done;
+
+        contents () =
+            synchronized lazyReaderHandle do:
+                if raw_nullptr? l then
+                    r = reader ();
+                    try
+                        Core#readAll(r)
+                    finally
+                        r#close()
+                    yrt
+                else
+                    Core#UNDEF_STR
+                fi
             done;
 
         lines () =
-            synchronized reader do:
+            synchronized lazyReaderHandle do:
                 if l == [] then
                     l := (ReaderList#lines(reader ()) unsafely_as list<string>);
                 fi;
@@ -67,7 +81,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
 
         close () =
             try
-                synchronized reader do:
+                synchronized lazyReaderHandle do:
                     if not (raw_nullptr? l) then
                         ignore (length l)
                     fi
@@ -91,7 +105,8 @@ withHandle h block =
 
     stdin = lazyReaderHandle do:
         if raw_nullptr? stdin' then
-            stdin' := new BufferedReader(new InputStreamReader(System#in));
+            stdin' :=
+                new BufferedReader(new InputStreamReader(System#in), 8192);
         fi;
         stdin'
     done;
@@ -117,7 +132,7 @@ withHandle h block =
                         new InputStreamReader(stream)
                     else
                         new InputStreamReader(stream, encoding)
-                    fi);
+                    fi, 8192);
             nok := false;
             readerHandle r
         finally
@@ -170,6 +185,8 @@ withHandle h block =
 
     getLines h = h.lines ();
     putLines h lines = for lines h.writeln;
+
+    getContents h = h.contents ();
 
     trace msg a = (System#err#print(msg); System#err#println(a); a);
 }

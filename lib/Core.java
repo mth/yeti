@@ -240,6 +240,16 @@ public final class Core {
         return n < 0 ? null : new String(buf, 0, n);
     }
 
+    static String readAll(java.io.Reader r) throws java.io.IOException {
+        StringBuffer result = new StringBuffer();
+        char[] buf = new char[8192];
+        int n;
+        while ((n = r.read(buf, 0, buf.length)) > 0) {
+            result.append(buf, 0, n);
+        }
+        return result.toString();
+    }
+
     public static final ThreadLocal ARGV = new ThreadLocal() {
         protected Object initialValue() {
             return new MList();
