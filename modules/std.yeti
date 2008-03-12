@@ -49,6 +49,13 @@ tail l is list?<'a> -> list<'a> =
     fi;
     (l unsafely_as ~AList)#rest()) unsafely_as list<''>;
 
+map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+    if raw_nullptr? l then
+        []
+    else
+        (l unsafely_as ~AList)#map(f) unsafely_as list<''>
+    fi;
+
 {
     id x = x;
     const x y = x;
@@ -96,6 +103,7 @@ tail l is list?<'a> -> list<'a> =
     norec array = array;
     norec tail = tail;
     norec head = head;
+    norec map = map;
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>;
@@ -204,13 +212,6 @@ tail l is list?<'a> -> list<'a> =
             []
         else
             (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
-        fi;
-
-    map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-        if raw_nullptr? l then
-            []
-        else
-            (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi;
 
     map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =

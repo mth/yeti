@@ -307,11 +307,13 @@ public class MList extends AMList implements ByKey {
     }
 
     public AList rest() {
-        return size > 1 ? new SubList(1) : null;
+        int p;
+        return (p = start + 1) < size ? new SubList(p) : null;
     }
 
     public AIter next() {
-        return size > 1 ? new Iter(1) : null;
+        int p;
+        return (p = start + 1) < size ? new Iter(p) : null;
     }
 
     public Object vget(Object index) {
