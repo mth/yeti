@@ -44,10 +44,11 @@ head l is list?<'a> -> 'a =
     (l unsafely_as ~AList)#first()) unsafely_as '';
 
 tail l is list?<'a> -> list<'a> =
-   (if raw_nullptr? l then
-        throw new IllegalArgumentException("Empty list")
+    if raw_nullptr? l then
+        [] // tail of empty list is empty list
+    else
+        (l unsafely_as ~AList)#rest() unsafely_as list<''>
     fi;
-    (l unsafely_as ~AList)#rest()) unsafely_as list<''>;
 
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if raw_nullptr? l then
