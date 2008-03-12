@@ -47,6 +47,7 @@ public class ReaderList extends LList {
         synchronized (r) {
             if (!forced) {
                 rest = lines(r);
+                forced = true;
             }
             return rest;
         }
