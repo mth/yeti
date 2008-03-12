@@ -165,6 +165,9 @@ withHandle h block =
     openOutFile name is string -> string -> '' =
         outputHandle (new FileOutputStream(name) as ~OutputStream);
 
+    openUrl name is string -> string -> '' =
+        inputHandle new java.net.URL(name)#openStream();
+
     readFile name encoding =
         withHandle (openInFile name encoding);
 
@@ -172,4 +175,5 @@ withHandle h block =
         withHandle (openOutFile name encoding);
 
     getLines h = h.lines ();
+    putLines h lines = for lines h.writeln
 }
