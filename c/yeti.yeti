@@ -20,7 +20,7 @@ compilationOf writer =
                             new ClassFinder(""));
 
 execClass writer =
-   (c = Class#forName(replace '/' '.' mainClass, true,
+   (c = Class#forName(strReplace '/' '.' mainClass, true,
                       writer unsafely_as ~java.lang.ClassLoader);
     try
         if eval then
@@ -107,7 +107,7 @@ options = [
     "-e": \(eval := true; src := shift argv),
     "-h": help,
     "-help": help,
-    "-preload": \(preload := split ':' (shift argv)),
+    "-preload": \(preload := strSplit ':' (shift argv)),
     "-type": \(printType := true; exec := false),
     "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
 ];

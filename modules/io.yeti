@@ -180,9 +180,6 @@ withHandle h block =
     openOutFile name is string -> string -> '' =
         outputHandle (new FileOutputStream(name) as ~OutputStream);
 
-    openUrl name is string -> string -> '' =
-        inputHandle new java.net.URL(name)#openStream();
-
     readFile name encoding =
         withHandle (openInFile name encoding);
 
