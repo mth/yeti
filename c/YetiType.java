@@ -154,12 +154,27 @@ public class YetiType implements YetiParser, YetiBuiltins {
                 "()Ljava/lang/String;",
         bindStr("strTrim", fun(STR_TYPE, STR_TYPE), "trim",
                 "()Ljava/lang/String;",
+        bindStr("strSlice",
+                fun2Arg(STR_TYPE, NUM_TYPE, fun(NUM_TYPE, STR_TYPE)),
+                "substring", "(II)Ljava/lang/String;",
+        bindStr("strRight", fun2Arg(STR_TYPE, NUM_TYPE, STR_TYPE),
+                "substring", "(I)Ljava/lang/String;",
+        bindStr("strStartsWith", fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE),
+                "startsWith", "(Ljava/lang/String;)Ljava/lang/String;",
+        bindStr("strEndsWith", fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE),
+                "endsWith", "(Ljava/lang/String;)Ljava/lang/String;",
+        bindStr("strIndexOf",
+                fun2Arg(STR_TYPE, STR_TYPE, fun(NUM_TYPE, NUM_TYPE)),
+                "indexOf", "(Ljava/lang/String;I)I",
+        bindStr("strLastIndexOf",
+                fun2Arg(STR_TYPE, STR_TYPE, fun(NUM_TYPE, NUM_TYPE)),
+                "lastIndexOf", "(Ljava/lang/String;I)I",
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("System", "java/lang/System",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

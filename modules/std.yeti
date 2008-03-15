@@ -189,21 +189,22 @@ index v l is 'a -> list?<'a> -> number =
     norec strUpper s = strUpper s;
     norec strLower s = strLower s;
     norec strTrim s = strTrim s;
+    norec strSlice s start end = strSlice s start end;
+    norec strRight s pos = strRight s pos;
+    norec strStartsWith s start = strStartsWith s start;
+    norec strEndsWith s end = strEndsWith s end;
+    norec strIndexOf haystack needle = strIndexOf haystack needle;
+    norec strLastIndexOf haystack needle = strLastIndexOf haystack needle;
 
-    strLeft subString s is string -> string -> string =
-       (i = (s as ~String)#indexOf(subString);
-        if i < 0 then
-            ''
-        else
-            (s as ~String)#substring(0, i)
-        fi);
-    strRight subString s is string -> string -> string=
-       (i = (s as ~String)#lastIndexOf(subString);
-        if i < 0 then
-            ''
-        else
-            (s as ~String)#substring(i + (subString as ~String)#length())
-        fi);
+    strLeft s end = strSlice s 0 end;
+
+    strLeftOf subString s is string -> string -> string =
+       (i = strIndexOf s subString 0;
+        if i < 0 then '' else strSlice s 0 i fi);
+
+    strRightOf subString s is string -> string -> string=
+       (i = strLastIndexOf s subString 0;
+        if i < 0 then '' else strRight s (i + strLength subString) fi);
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();
