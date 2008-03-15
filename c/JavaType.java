@@ -133,6 +133,12 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
         return res;
     }
 
+    static YetiType.Type[] parseSig1(int start, String sig) {
+        List res = new ArrayList();
+        parseSig(new HashMap(), res, start, sig.toCharArray());
+        return (YetiType.Type[]) res.toArray(new YetiType.Type[res.size()]);
+    }
+
     public FieldVisitor visitField(int access, String name, String desc,
                                    String signature, Object value) {
         if ((access & ACC_PRIVATE) == 0) {

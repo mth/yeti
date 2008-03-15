@@ -185,9 +185,11 @@ index v l is 'a -> list?<'a> -> number =
     substAll re replacement s is string -> string -> string -> string =
         (s as ~String)#replaceAll(re, replacement);
 
-    strLength s = (s as ~String)#length();
-    strUpper s = (s as ~String)#toUpperCase();
-    strLower s = (s as ~String)#toLowerCase();
+    norec strLength s = strLength s;
+    norec strUpper s = strUpper s;
+    norec strLower s = strLower s;
+    norec strTrim s = strTrim s;
+
     strLeft subString s is string -> string -> string =
        (i = (s as ~String)#indexOf(subString);
         if i < 0 then
@@ -202,7 +204,6 @@ index v l is 'a -> list?<'a> -> number =
         else
             (s as ~String)#substring(i + (subString as ~String)#length())
         fi);
-    strTrim s = (s as ~String)#trim();
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (i = (h unsafely_as ~Hash)#entrySet()#iterator();

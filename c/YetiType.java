@@ -147,12 +147,19 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindScope("false", new BooleanConstant(false),
         bindScope("true", new BooleanConstant(true),
         bindScope("negate", new Negate(),
+        bindStr("strLength", fun(STR_TYPE, NUM_TYPE), "length", "()I",
+        bindStr("strUpper", fun(STR_TYPE, STR_TYPE), "toUpperCase",
+                "()Ljava/lang/String;",
+        bindStr("strLower", fun(STR_TYPE, STR_TYPE), "toLowerCase",
+                "()Ljava/lang/String;",
+        bindStr("strTrim", fun(STR_TYPE, STR_TYPE), "trim",
+                "()Ljava/lang/String;",
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("System", "java/lang/System",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))));
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
@@ -168,6 +175,11 @@ public class YetiType implements YetiParser, YetiBuiltins {
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {
         return bindPoly(name, type, new CoreFun(type, field), 0, scope);
+    }
+
+    static Scope bindStr(String name, Type type, String method, String sig,
+                         Scope scope) {
+        return bindScope(name, new StrOp(name, method, sig, type), scope);
     }
 
     static Scope bindImport(String name, String className, Scope scope) {

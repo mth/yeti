@@ -32,6 +32,7 @@
 package yeti.lang.compiler;
 
 import org.objectweb.asm.*;
+import java.util.*;
 
 interface YetiBuiltins extends CaseCode {
     int COND_EQ  = 0;
@@ -728,6 +729,72 @@ interface YetiBuiltins extends CaseCode {
                         "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
                 }
             });
+        }
+    }
+
+    Code NOP_CODE = new Code() {
+        void gen(Ctx ctx) {
+        }
+    };
+
+    class StrOp extends StaticRef implements DirectBind, Binder {
+        String method;
+        String sig;
+        YetiType.Type argTypes[];
+
+        class StrApply extends Apply {
+            StrApply prev;
+
+            StrApply(Code arg, YetiType.Type type, StrApply prev, int line) {
+                super(type, NOP_CODE, arg, line);
+                this.prev = prev;
+            }
+
+            Code apply(Code arg, YetiType.Type res, int line) {
+                return new StrApply(arg, res, this, line);
+            }
+
+            void genApply(Ctx ctx) {
+                super.gen(ctx);
+            }
+
+            void gen(Ctx ctx) {
+                List argv = new ArrayList();
+                for (StrApply a = this; a != null; a = a.prev) {
+                    argv.add(a);
+                }
+                if (argv.size() != argTypes.length) {
+                    StrOp.this.gen(ctx);
+                    for (int i = argv.size() - 1; --i >= 0;)
+                        ((StrApply) argv.get(i)).genApply(ctx);
+                    return;
+                }
+                ((StrApply) argv.get(argv.size() - 1)).arg.gen(ctx);
+                ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
+                for (int i = 0, last = argv.size() - 2; i <= last; ++i) {
+                    StrApply a = (StrApply) argv.get(last - i);
+                    JavaExpr.convertedArg(ctx, a.arg, argTypes[i], a.line);
+                }
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
+                                      method, sig);
+                JavaExpr.convertValue(ctx, argTypes[argTypes.length - 1]);
+            }
+        }
+
+        StrOp(String fun, String method, String sig, YetiType.Type type) {
+            super("yeti/lang/std", fun, type, null, false, 0);
+            this.method = method;
+            this.sig = sig;
+            binder = this;
+            argTypes = JavaTypeReader.parseSig1(1, sig);
+        }
+
+        public BindRef getRef(int line) {
+            return this;
+        }
+
+        Code apply(final Code arg, final YetiType.Type res, final int line) {
+            return new StrApply(arg, res, null, line);
         }
     }
 }
