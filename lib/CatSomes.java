@@ -44,7 +44,7 @@ public class CatSomes extends LList {
         Tag t = null;
         while (src != null && (t = (Tag) src.first()).name != "Some")
             src = src.next();
-        return src == null ? null : new CatSomes(t, src);
+        return src == null ? null : new CatSomes(t.value, src);
     }
 
     public synchronized AList rest() {
