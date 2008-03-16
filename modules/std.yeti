@@ -249,7 +249,7 @@ index v l is 'a -> list?<'a> -> number =
             FilterList#filter(l, f) unsafely_as list<'a>
         fi;
 
-    catSomes l is list?<Some 'a | None 'b> -> list<'a> =
+    catSome l is list?<Some 'a | None 'b> -> list<'a> =
         if empty? l then
             []
         else
