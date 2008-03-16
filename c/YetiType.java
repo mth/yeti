@@ -133,7 +133,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
-        bindPoly("raw_nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
+        bindPoly("nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
         bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",

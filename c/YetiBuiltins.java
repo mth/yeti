@@ -137,7 +137,7 @@ interface YetiBuiltins extends CaseCode {
 
     class IsNullPtr extends Bind1Arg {
         IsNullPtr() {
-            super(YetiType.A_TO_BOOL, "raw_nullptr?");
+            super(YetiType.A_TO_BOOL, "nullptr?");
         }
 
         void gen(Ctx ctx, Code arg) {

@@ -107,7 +107,7 @@ withHandle h block =
     readln () = stdin.readln ();
 
     stdin = lazyReaderHandle do:
-        if raw_nullptr? stdin' then
+        if nullptr? stdin' then
             stdin' :=
                 new BufferedReader(new InputStreamReader(System#in), 8192);
         fi;

@@ -1,9 +1,6 @@
 numLen n =
 	if n == 0 then 0 else numLen (n div 10) + 1 fi;
 
-max x y =
-	if x > y then x else y fi;
-
 pow10 n =
 	if n > 0 then pow10 (n - 1) * 10 else 1 fi;
 

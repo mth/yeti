@@ -1,7 +1,7 @@
-seq = join '' stdin.readlines;
-ilen = strlen seq;
+seq = join '' stdin.lines ();
+ilen = strLength seq;
 var seq = substAll '(?:>.*)?\n' '' seq;
-clen = strlen seq;
+clen = strLength seq;
 
 variants =
    ['agggtaaa|tttaccct',

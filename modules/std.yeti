@@ -39,38 +39,38 @@ array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
 
 head l is list?<'a> -> 'a =
-   (if raw_nullptr? l then
+   (if nullptr? l then
         throw new IllegalArgumentException("Empty list")
     fi;
     (l unsafely_as ~AList)#first()) unsafely_as '';
 
 tail l is list?<'a> -> list<'a> =
-    if raw_nullptr? l then
+    if nullptr? l then
         [] // tail of empty list is empty list
     else
         (l unsafely_as ~AList)#rest() unsafely_as list<''>
     fi;
 
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-    if raw_nullptr? l then
+    if empty? l then
         []
     else
         (l unsafely_as ~AList)#map(f) unsafely_as list<''>
     fi;
 
 find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
-    if raw_nullptr? l then
+    if nullptr? l then
         []
     else
         (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
     fi;
 
 index v l is 'a -> list?<'a> -> number =
-    if raw_nullptr? l then
+    if nullptr? l then
         -1
     else
         res = (l unsafely_as ~AList)#index(v);
-        if raw_nullptr? res then -1 else res fi
+        if nullptr? res then -1 else res fi
     fi;
 
 {
@@ -103,7 +103,7 @@ index v l is 'a -> list?<'a> -> number =
     norec (shl) a b = a shl b;
     norec (shr) a b = a shr b;
     norec negate a = negate a;
-    norec raw_nullptr? a = raw_nullptr? a;
+    norec nullptr? a = nullptr? a;
     norec defined? a = defined? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
@@ -142,9 +142,9 @@ index v l is 'a -> list?<'a> -> number =
     concatMap f =
         concat . (map f);
     any f l =
-        not (raw_nullptr? (find f l));
+        not (nullptr? (find f l));
     all f l =
-        raw_nullptr? (find (notPred f) l);
+        nullptr? (find (notPred f) l);
     contains v l =
         index v l != -1;
     fromSome default f opt =
@@ -164,6 +164,7 @@ index v l is 'a -> list?<'a> -> number =
 
     // few math functions
     pi = Math#PI;
+    ln a = Math#log(a);
     exp a = Math#exp(a);
     cos a = Math#cos(a);
     sin a = Math#sin(a);
@@ -226,7 +227,7 @@ index v l is 'a -> list?<'a> -> number =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun);
 
     length l is list?<''> -> number =
-        if raw_nullptr? l then
+        if nullptr? l then
             0
         else
             (l unsafely_as ~AList)#length()
@@ -242,17 +243,28 @@ index v l is 'a -> list?<'a> -> number =
         (a unsafely_as ~MList)#add(v);
 
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
-        FilterList#filter(l, f) unsafely_as list<'a>;
+        if empty? l then
+            []
+        else
+            FilterList#filter(l, f) unsafely_as list<'a>
+        fi;
+
+    catSomes l is list?<Some 'a | None 'b> -> list<'a> =
+        if empty? l then
+            []
+        else
+            CatSomes#filter(l) unsafely_as list<'a>
+        fi;
 
     map2 f a b is ('a -> 'b -> 'c) -> list?<'a> -> list?<'b> -> list<'c> =
-        if raw_nullptr? a or raw_nullptr? b then
+        if empty? a or empty? b then
             []
         else
             new Map2List(f, a, b) unsafely_as list<'c>
         fi;
 
     reverse l is list?<'a> -> list<'a> =
-        if raw_nullptr? l then
+        if nullptr? l then
             []
         else
             (l unsafely_as ~AList)#reverse() unsafely_as list<'a>

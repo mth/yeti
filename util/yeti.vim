@@ -32,8 +32,15 @@ syn keyword yetiBoolean false true
 syn keyword yetiType var norec
 syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at setHashDefault flip sum
-syn keyword yetiFunc raw_nullptr? empty? min max fromSome abs push exit shift
-syn keyword yetiFunc defined?
+syn keyword yetiFunc nullptr? empty? min max fromSome abs push exit shift
+syn keyword yetiFunc defined? wrapArray concat concatMap negate splitBy
+syn keyword yetiFunc ln exp cos sin tan acos asin atan sqrt strReplace
+syn keyword yetiFunc strSplit substAll strLength strUpper strLower strTrim
+syn keyword yetiFunc strSlice strRight strStartsWith strEndsWith strIndexOf
+syn keyword yetiFunc strLastIndexOf strLeft strLeftOf strRightOf length
+syn keyword yetiFunc setArrayCapacity catSomes map2 withHandle openInFile
+syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
+syn keyword yetiFunc getContents readln print println
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/
