@@ -15,7 +15,7 @@ variants =
     'agggtaa[cgt]|[acg]ttaccct'];
 
 for variants do f:
-    println "\(f)\(count (catSomes (matchAll f Some None seq)))"
+    println "\(f)\(length (catSome (matchAll f Some None seq)))"
 done;
 
 subst =

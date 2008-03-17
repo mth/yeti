@@ -31,7 +31,7 @@
 package yeti.lang;
 
 public class Struct {
-    final Object[] values;
+    final protected Object[] values;
 
     // expecting interleaved array field1, value1, field2, value2, ...
     public Struct(Object[] valueMap) {
