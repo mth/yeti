@@ -133,19 +133,9 @@ public final class Core {
         }
     }
 
-    private static final class Empty extends Fun {
-        public Object apply(Object v) {
-            AMList m;
-            return v == null || v instanceof AMList &&
-                    (m = (AMList) v)._size() <= m.start
-                ? Boolean.TRUE : Boolean.FALSE;
-        }
-    }
-
     public static final Fun FOR  = new For();
     public static final Fun FOLD = new Fold();
     public static final Fun SUM  = new Sum();
-    public static final Fun EMPTY = new Empty();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

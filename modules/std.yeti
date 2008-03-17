@@ -105,6 +105,7 @@ index v l is 'a -> list?<'a> -> number =
     norec negate a = negate a;
     norec nullptr? a = nullptr? a;
     norec defined? a = defined? a;
+    norec empty? a = empty? a;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =

@@ -94,6 +94,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         fun2Arg(A, fun(C, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_UNIT = fun(A, UNIT_TYPE);
     static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
+    static final Type LIST_TO_BOOL = fun(A_B_LIST_TYPE, BOOL_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
@@ -127,14 +128,14 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindCore("fold",
             fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
         bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
-        bindCore("empty?", fun(A_B_LIST_TYPE, BOOL_TYPE), "EMPTY",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
         bindPoly("ignore", A_TO_UNIT, new Ignore(), 0,
         bindPoly("for", FOR_TYPE, new For(), 0,
-        bindPoly("nullptr?", A_TO_BOOL, new IsNullPtr(), 0,
+        bindPoly("nullptr?", A_TO_BOOL, new IsNullPtr(A_TO_BOOL, "nullptr?"), 0,
         bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
+        bindPoly("empty?", LIST_TO_BOOL, new IsEmpty(), 0,
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",

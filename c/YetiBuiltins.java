@@ -136,8 +136,8 @@ interface YetiBuiltins extends CaseCode {
     }
 
     class IsNullPtr extends Bind1Arg {
-        IsNullPtr() {
-            super(YetiType.A_TO_BOOL, "nullptr?");
+        IsNullPtr(YetiType.Type type, String fun) {
+            super(type, fun);
         }
 
         void gen(Ctx ctx, Code arg) {
@@ -153,6 +153,10 @@ interface YetiBuiltins extends CaseCode {
     }
 
     class IsDefined extends IsNullPtr {
+        IsDefined() {
+            super(YetiType.A_TO_BOOL, "defined?");
+        }
+
         void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
             Label isNull = new Label(), end = new Label();
             arg.gen(ctx);
@@ -165,6 +169,30 @@ interface YetiBuiltins extends CaseCode {
             ctx.m.visitLabel(isNull);
             ctx.m.visitInsn(POP);
             if (!ifTrue) {
+                ctx.m.visitJumpInsn(GOTO, to);
+            }
+            ctx.m.visitLabel(end);
+        }
+    }
+
+    class IsEmpty extends IsNullPtr {
+        IsEmpty() {
+            super(YetiType.LIST_TO_BOOL, "empty?");
+        }
+
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+            Label isNull = new Label(), end = new Label();
+            arg.gen(ctx);
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitJumpInsn(IFNULL, isNull);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                  "isEmpty", "()Z"); 
+            ctx.m.visitJumpInsn(IFNE, ifTrue ? to : end);
+            ctx.m.visitJumpInsn(GOTO, ifTrue ? end : to);
+            ctx.m.visitLabel(isNull);
+            ctx.m.visitInsn(POP);
+            if (ifTrue) {
                 ctx.m.visitJumpInsn(GOTO, to);
             }
             ctx.m.visitLabel(end);
