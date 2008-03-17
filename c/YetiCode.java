@@ -1535,6 +1535,12 @@ interface YetiCode {
             result.gen(ctx);
         }
 
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            st.gen(ctx);
+            ctx.m.visitInsn(POP); // ignore the result of st expr
+            result.genIf(ctx, to, ifTrue);
+        }
+
         void markTail() {
             result.markTail();
         }
@@ -1649,7 +1655,7 @@ interface YetiCode {
             }
         }
 
-        void gen(Ctx ctx) {
+        private void genBind(Ctx ctx) {
             if (mvar == -1) {
                 id = ctx.localVarCount++;
             }
@@ -1665,7 +1671,16 @@ interface YetiCode {
                     mvar == -1 ? "(ILjava/lang/Object;)V"
                                : "(I[Ljava/lang/Object;I)V");
             }
+        }
+
+        void gen(Ctx ctx) {
+            genBind(ctx);
             result.gen(ctx);
+        }
+
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            genBind(ctx);
+            result.genIf(ctx, to, ifTrue);
         }
     }
 
