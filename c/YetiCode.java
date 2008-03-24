@@ -87,6 +87,7 @@ interface YetiCode {
         ClassFinder classPath;
         Map classes = new HashMap();
         Map types = new HashMap();
+        int flags;
 
         CompileCtx(SourceReader reader, CodeWriter writer,
                    String[] preload, ClassFinder finder) {
@@ -94,6 +95,10 @@ interface YetiCode {
             this.writer = writer;
             this.preload = preload;
             this.classPath = finder;
+        }
+
+        static CompileCtx current() {
+            return (CompileCtx) currentCompileCtx.get();
         }
 
         private void generateModuleFields(Map fields, Ctx ctx) {
@@ -140,6 +145,7 @@ interface YetiCode {
             RootClosure codeTree;
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
+            this.flags = flags;
             try {
                 codeTree = YetiAnalyzer.toCode(sourceName, name, code, flags,
                                                classes, preload);

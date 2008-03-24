@@ -60,7 +60,6 @@ class ClassFinder {
     }
 
     static InputStream find(String name) {
-        return ((YetiCode.CompileCtx) YetiCode.currentCompileCtx.get())
-                    .classPath.findClass(name);
+        return YetiCode.CompileCtx.current().classPath.findClass(name);
     }
 }

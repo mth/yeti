@@ -85,6 +85,7 @@ public class YetiC implements SourceReader {
     public static final int CF_PRINT_PARSE_TREE = 2;
     public static final int CF_EVAL             = 4;
     public static final int CF_EVAL_BIND        = 8;
+    public static final int CF_NO_IMPORT        = 16;
     static String inCharset = "UTF-8";
     static final String[] PRELOAD =
         { "yeti/lang/std", "yeti/lang/io" };

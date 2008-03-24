@@ -110,6 +110,7 @@ options = [
     "-preload": \(preload := strSplit ':' (shift argv)),
     "-type": \(printType := true; exec := false),
     "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
+    "-no-import": \(flags := flags + YetiC#CF_NO_IMPORT),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop

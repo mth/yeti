@@ -137,6 +137,8 @@ public final class YetiAnalyzer extends YetiType {
             return concatStr((ConcatStr) node, scope, depth);
         }
         if (node instanceof Load) {
+            if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+                throw new CompileException(node, "load is disabled");
             String name = ((Load) node).moduleName;
             return new LoadModule(name, YetiTypeVisitor.getType(node, name));
         }
@@ -679,6 +681,9 @@ public final class YetiAnalyzer extends YetiType {
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 cur = new SeqExpr(m);
             } else if (nodes[i] instanceof Import) {
+                if ((YetiCode.CompileCtx.current().flags
+                        & YetiC.CF_NO_IMPORT) != 0)
+                    throw new CompileException(nodes[i], "import is disabled");
                 String name = ((Import) nodes[i]).className;
                 int lastSlash = name.lastIndexOf('/');
                 scope = new Scope(scope, (lastSlash < 0 ? name
