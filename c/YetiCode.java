@@ -129,8 +129,16 @@ interface YetiCode {
             char[] src = reader.getSource(srcName);
             int dot = srcName[0].lastIndexOf('.');
             className = dot < 0 ? srcName[0] : srcName[0].substring(0, dot);
+            dot = className.lastIndexOf('.');
+            if (dot >= 0) {
+                dot = Math.max(className.indexOf('/', dot),
+                               className.indexOf('\\', dot));
+                if (dot >= 0)
+                    className = className.substring(dot + 1);
+            }
             compile(srcName[0], className, src, flags);
-            compiled.put(srcName, className);
+            className = (String) compiled.get(srcName[0]);
+            compiled.put(sourceName, className);
             return className;
         }
 
