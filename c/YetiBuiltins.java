@@ -464,6 +464,7 @@ interface YetiBuiltins extends CaseCode {
                 Label to, boolean ifTrue) {
             YetiType.Type t = arg1.type.deref();
             int op = this.op;
+            boolean eq = (op & (COND_LT | COND_GT)) == 0;
             if (!ifTrue) {
                 op ^= COND_NOT;
             }
@@ -492,6 +493,8 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitJumpInsn(GOTO, nojmp);
                 }
                 ctx.m.visitLabel(nonull);
+                if (!eq)
+                    ctx.m.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
                 ctx.m.visitInsn(SWAP); // 1-2
             } else {
                 arg1.gen(ctx);
@@ -504,10 +507,12 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitJumpInsn(ROP[op], to);
                     return;
                 }
+                if (!eq)
+                    ctx.m.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
                 arg2.gen(ctx);
                 ctx.visitLine(line);
             }
-            if ((op & (COND_LT | COND_GT)) == 0) {
+            if (eq) {
                 op ^= COND_NOT;
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
                                       "equals", "(Ljava/lang/Object;)Z");

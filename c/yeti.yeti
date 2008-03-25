@@ -10,6 +10,7 @@ var printType = false;
 var preload = ["yeti/lang/std", "yeti/lang/io"];
 var src = "";
 var mainClass = "code";
+var classPath = "";
 var flags = 0;
 
 srcs = array [];
@@ -17,7 +18,7 @@ argv = array _argv;
 
 compilationOf writer =
     new YetiCode$CompileCtx(new YetiC(()), writer, preload,
-                            new ClassFinder(""));
+                            new ClassFinder(classPath));
 
 execClass writer =
    (c = Class#forName(strReplace '/' '.' mainClass, true,
@@ -87,13 +88,10 @@ help () =
       "  -e expr          Evaluate expr and print result\n\
       "  -d directory     Store generated files in the given directory\n\
       "                   (implies compile to classes)\n\
+      "  -cp path         Give classpath\n\
       "  -preload modules Preload modules (: separated list)\n\
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
-
-if empty? argv then
-    startRepl ()
-fi;
 
 options = [
     "-C": \(exec := false),
@@ -106,6 +104,7 @@ options = [
     done,
     "-e": \(eval := true; src := shift argv),
     "-h": help,
+    "-cp": \(classPath := shift argv),
     "-help": help,
     "-preload": \(preload := strSplit ':' (shift argv)),
     "-type": \(printType := true; exec := false),
@@ -130,6 +129,9 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
     fi);
 
 if empty? srcs and src == "" then
+    if exec and empty? argv then
+        startRepl ()
+    fi;
     sysExit 0
 fi;
 

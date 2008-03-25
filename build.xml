@@ -46,15 +46,23 @@
 </target>
 
 <target name="jar" depends="compiler,modules,yeti">
-    <jar jarfile="${basedir}/yeti.jar">
+    <condition property="jar-name" value="yeti.jar">
+        <not><isset property="jar-name"/></not>
+    </condition>
+    <jar jarfile="${basedir}/${jar-name}">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
         <fileset dir="${basedir}/.build/lib"/>
-        <fileset dir="${basedir}/.build/compiler"/>
+        <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
         <fileset dir="${basedir}/.build/modules"/>
         <zipfileset src="${asm}"/>
     </jar>
+</target>
+
+<target name="noant">
+    <property name="jar-name" value="yeti-noant.jar"/>
+    <property name="jar-excludes" value="yeti/lang/compiler/YetiTask.class"/>
 </target>
 
 <target name="clean">

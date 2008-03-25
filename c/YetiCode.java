@@ -1438,6 +1438,7 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             val.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
             key.gen(ctx);
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
@@ -1448,6 +1449,7 @@ interface YetiCode {
             return new Code() {
                 void gen(Ctx ctx) {
                     val.gen(ctx);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
                     key.gen(ctx);
                     setValue.gen(ctx);
                     ctx.visitLine(line);
