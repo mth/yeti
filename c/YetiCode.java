@@ -1212,6 +1212,8 @@ interface YetiCode {
         next_capture:
             for (Capture c = captures; c != null; c = c.next) {
                 Object identity = c.identity = c.captureIdentity();
+                if (c.uncaptured)
+                    continue;
                 // remove shared captures
                 for (Capture i = captures; i != c; i = i.next) {
                     if (i.identity == identity) {
