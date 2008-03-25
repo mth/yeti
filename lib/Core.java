@@ -34,18 +34,6 @@ package yeti.lang;
 import java.util.Map;
 import java.util.Random;
 
-abstract class Fun2 extends Fun {
-    abstract Object apply2(Object a, Object b);
-
-    public Object apply(final Object a) {
-        return new Fun() {
-            public Object apply(Object b) {
-                return apply2(a, b);
-            }
-        };
-    }
-}
-
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
@@ -85,7 +73,7 @@ public final class Core {
     }
 
     private static final class Fold extends Fun2 {
-        Object apply2(final Object f, final Object value) {
+        public Object apply2(final Object f, final Object value) {
             return new FunX() {
                 public Object apply(Object list) {
                     if (list == null) {

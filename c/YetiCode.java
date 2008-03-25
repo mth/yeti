@@ -911,7 +911,7 @@ interface YetiCode {
                     return;
                 }
                 genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
-                ctx.m.visitVarInsn(ASTORE, 1);
+                ctx.m.visitVarInsn(ASTORE, capturer.argCount);
                 if (argCaptures != null) {
                     for (int i = argCaptures.length; --i >= 0;) {
                         ctx.m.visitVarInsn(ASTORE, argCaptures[i].localVar);
@@ -1106,13 +1106,15 @@ interface YetiCode {
         Function outer;
         Capture[] argCaptures;
         private Code uncaptureArg;
+        private int argCount = 1;
+        private boolean merged;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
                 if (uncaptureArg != null) {
                     uncaptureArg.gen(ctx);
                 } else {
-                    ctx.m.visitVarInsn(ALOAD, 1);
+                    ctx.m.visitVarInsn(ALOAD, argCount);
                 }
             }
         };
@@ -1141,7 +1143,12 @@ interface YetiCode {
         void setBody(Code body) {
             this.body = body;
             if (body instanceof Function) {
-                ((Function) body).outer = this;
+                Function bodyFun = (Function) body;
+                bodyFun.outer = this;
+                if (argCount == 1) {
+                    merged = true;
+                    ++bodyFun.argCount;
+                }
             }
         }
 
@@ -1167,12 +1174,28 @@ interface YetiCode {
                 }
                 return selfRef;
             }
+            if (merged) {
+                return code;
+            }
             Capture c = captureRef(code);
             c.capturer = this;
+            //expecting max 2 merged
+            if (outer != null && outer.merged &&
+                (code == outer.selfRef || code == outer.arg)) {
+                if (code == outer.arg) {
+                    c.localVar = 1; // really evil hack for tail-recursion.
+                }
+                c.uncaptured = true;
+            }
             return c;
         }
 
         void prepareGen(Ctx ctx) {
+            if (merged) {
+                ((Function) body).bindName = bindName;
+                ((Function) body).prepareGen(ctx);
+                return;
+            }
             if (bindName == null) {
                 bindName = "";
             }
@@ -1181,8 +1204,10 @@ interface YetiCode {
             for (int i = 0; classes.containsKey(name); ++i) {
                 name = nameBase + i;
             }
-            Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name,
-                    "yeti/lang/Fun");
+
+            String funClass =
+                argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
+            Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name, funClass);
             Capture prev = null;
         next_capture:
             for (Capture c = captures; c != null; c = c.next) {
@@ -1199,18 +1224,23 @@ interface YetiCode {
                         c.captureType(), null, null).visitEnd();
                 prev = c;
             }
-            fun.createInit(0, "yeti/lang/Fun");
+            fun.createInit(0, funClass);
 
-            Ctx apply = fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
+            Ctx apply = argCount == 2
+                ? fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply2",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
+                : fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
-            apply.localVarCount = 2; // this, arg
+            apply.localVarCount = argCount + 1; // this, arg
             if (argCaptures != null) {
                 for (int i = 0; i < argCaptures.length; ++i) {
                     Capture c = argCaptures[i];
-                    c.gen(apply);
-                    c.localVar = apply.localVarCount;
-                    c.ignoreGet = true;
-                    apply.m.visitVarInsn(ASTORE, apply.localVarCount++);
+                    if (!c.uncaptured) {
+                        c.gen(apply);
+                        c.localVar = apply.localVarCount;
+                        c.ignoreGet = true;
+                        apply.m.visitVarInsn(ASTORE, apply.localVarCount++);
+                    }
                 }
             }
             genClosureInit(apply);
@@ -1226,8 +1256,14 @@ interface YetiCode {
         }
 
         void finishGen(Ctx ctx) {
+            if (merged) {
+                ((Function) body).finishGen(ctx);
+                return;
+            }
             // Capture a closure
             for (Capture c = captures; c != null; c = c.next) {
+                if (c.uncaptured)
+                    continue;
                 ctx.m.visitInsn(DUP);
                 if (c.wrapper == null) {
                     c.ref.gen(ctx);

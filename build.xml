@@ -32,6 +32,14 @@
         classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
 </target>
 
+<target name="test1" depends="prepare-build,taskdef">
+    <yetic srcdir="." destdir="." includes="test.yeti">
+        <classpath>
+            <path location="${basedir}/.build/modules"/>
+        </classpath>
+    </yetic>
+</target>
+
 <target name="modules" depends="prepare-build,taskdef">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
            preload=""/>
