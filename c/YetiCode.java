@@ -1182,9 +1182,7 @@ interface YetiCode {
             //expecting max 2 merged
             if (outer != null && outer.merged &&
                 (code == outer.selfRef || code == outer.arg)) {
-                if (code == outer.arg) {
-                    c.localVar = 1; // really evil hack for tail-recursion.
-                }
+                c.localVar = 1; // really evil hack for tail-recursion.
                 c.uncaptured = true;
             }
             return c;
