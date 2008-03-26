@@ -12,6 +12,7 @@ var src = "";
 var mainClass = "code";
 var classPath = "";
 var flags = 0;
+var sandbox = false;
 
 srcs = array [];
 argv = array _argv;
@@ -23,9 +24,15 @@ compilationOf writer =
 execClass writer =
    (c = Class#forName(strReplace '/' '.' mainClass, true,
                       writer unsafely_as ~java.lang.ClassLoader);
+    sm = new SandboxSecurityManager();
     try
         if eval then
-            (c#newInstance() unsafely_as () -> '') ()
+            f = c#newInstance() unsafely_as () -> '';
+            if sandbox then
+                System#setSecurityManager(sm);
+                sm#setActive(true);
+            fi;
+            f ()
         else
             c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
              #invoke((), [argv as ~java.lang.String[]])
@@ -33,6 +40,8 @@ execClass writer =
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();
         throw if defined? t then t else ex fi;
+    finally
+        sm#setActive(false)
     yrt);
 
 repl () =
@@ -115,6 +124,7 @@ options = [
         println "(terminated)";
         sysExit 13;
     done),
+    "-safe-eval": \(sandbox := true; eval := true; src := shift argv),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop
@@ -182,7 +192,7 @@ if exec then
             println v
         fi
     catch Exception ex:
-        ex#printStackTrace();
+        ex#printStackTrace(if sandbox then System#out else System#err fi);
         sysExit 2;
     yrt
 fi

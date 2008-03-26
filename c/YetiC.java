@@ -32,6 +32,7 @@ package yeti.lang.compiler;
 
 import java.io.*;
 import java.util.*;
+import java.security.Permission;
 
 class ToFile implements CodeWriter {
     private String target;
@@ -77,6 +78,26 @@ class Loader extends ClassLoader implements CodeWriter {
             resolveClass(loaded);
         }
         return loaded;
+    }
+}
+
+class SandboxSecurityManager extends SecurityManager {
+    private boolean active;
+
+    void setActive(boolean x) {
+        active = x;
+    }
+
+    public void checkPermission(Permission perm) {
+        if (active) {
+            throw new SecurityException();
+        }
+    }
+
+    public void checkPermission(Permission perm, Object context) {
+        if (active) {
+            throw new SecurityException();
+        }
     }
 }
 
