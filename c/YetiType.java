@@ -582,7 +582,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static void occursCheck(Type type, Type var) throws TypeException {
         type = type.deref();
         if (type == var) {
-            TypeException ex = new TypeException("Cyclic type");
+            TypeException ex =
+                new TypeException("Cyclic types are not allowed");
             ex.special = true;
             throw ex;
         }
