@@ -172,10 +172,11 @@ public class YetiType implements YetiParser, YetiBuiltins {
                 "lastIndexOf", "(Ljava/lang/String;I)I",
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
-        bindImport("System", "java/lang/System",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))));
+    static final Scope ROOT_SCOPE_SYS =
+        bindImport("System", "java/lang/System", ROOT_SCOPE);
 
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);

@@ -1028,7 +1028,8 @@ public final class YetiAnalyzer extends YetiType {
             }
             classes.put(className, null);
             RootClosure root = new RootClosure();
-            Scope scope = new Scope(ROOT_SCOPE, null, null);
+            Scope scope = new Scope((flags & YetiC.CF_NO_IMPORT) == 0
+                                ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
                     scope = explodeStruct(null, new LoadModule(preload[i],
