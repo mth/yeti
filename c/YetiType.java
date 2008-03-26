@@ -702,8 +702,14 @@ public class YetiType implements YetiParser, YetiBuiltins {
         return null;
     }
 
-    static Type resolveFullClass(String name, Scope scope) {
+    static Type resolveFullClass(String name, Scope scope, Node checkPerm) {
+        if (checkPerm != null && name.indexOf('/') >= 0 &&
+            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            throw new CompileException(checkPerm, name + " is not imported");
         Type t = resolveClass(name, scope, false);
+        if (t == null && checkPerm != null &&
+            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            throw new CompileException(checkPerm, name + " is not imported");
         return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
     }
 
