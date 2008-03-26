@@ -37,6 +37,7 @@ import java.io.OutputStreamWriter;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.Thread;
 
 load yeti.lang.std;
 
@@ -192,4 +193,14 @@ withHandle h block =
     getContents h = h.contents ();
 
     trace msg a = (System#err#print(msg); System#err#println(a); a);
+
+    runThread v f is 'a -> ('a -> ()) -> () =
+        new FunThread(f, v)#start();
+
+    runDaemonThread v f is 'a -> ('a -> ()) -> () =
+       (th = new FunThread(f, v);
+        th#setDaemon(true);
+        th#start());
+
+    sleep time = Thread#sleep(time * 1000);
 }
