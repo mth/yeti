@@ -42,6 +42,12 @@ public final class YetiAnalyzer extends YetiType {
         throw new CompileException(bind, "Unused binding: " + bind.name);
     }
 
+    static void checkNew(Node node, String className) {
+        if (className.indexOf('/') >= 0 &&
+            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            throw new CompileException(node, "full classnames not allowed");
+    }
+
     static Code analyze(Node node, Scope scope, int depth) {
         if (node instanceof Sym) {
             String sym = ((Sym) node).sym;
@@ -147,6 +153,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
+            checkNew(op, op.name);
             Code[] args = mapArgs(op.arguments, scope, depth);
             return new NewExpr(JavaType.resolveConstructor(op,
                                     resolveFullClass(op.name, scope), args)
@@ -157,6 +164,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof ClassOf) {
             ClassOf co = (ClassOf) node;
+            checkNew(co, co.className);
             return new ClassOfExpr(
                     resolveFullClass(co.className, scope).javaType.resolve(co));
         }
@@ -1030,6 +1038,8 @@ public final class YetiAnalyzer extends YetiType {
             RootClosure root = new RootClosure();
             Scope scope = new Scope((flags & YetiC.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
+            if ((flags & YetiC.CF_NO_IMPORT) != 0) {
+            }
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
                     scope = explodeStruct(null, new LoadModule(preload[i],
