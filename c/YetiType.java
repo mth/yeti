@@ -691,9 +691,6 @@ public class YetiType implements YetiParser, YetiBuiltins {
 
     static Type resolveClass(String name, Scope scope, boolean shadow) {
         if (name.indexOf('/') >= 0) {
-            if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
-                    != 0)
-                return null;
             return JavaType.typeOfClass(null, name);
         }
         for (; scope != null; scope = scope.outer) {
