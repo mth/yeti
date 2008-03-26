@@ -42,12 +42,6 @@ public final class YetiAnalyzer extends YetiType {
         throw new CompileException(bind, "Unused binding: " + bind.name);
     }
 
-    static void checkNew(Node node, String className) {
-        if (className.indexOf('/') >= 0 &&
-            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
-            throw new CompileException(node, "full classnames not allowed");
-    }
-
     static Code analyze(Node node, Scope scope, int depth) {
         if (node instanceof Sym) {
             String sym = ((Sym) node).sym;
@@ -153,10 +147,9 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof NewOp) {
             NewOp op = (NewOp) node;
-            checkNew(op, op.name);
             Code[] args = mapArgs(op.arguments, scope, depth);
             return new NewExpr(JavaType.resolveConstructor(op,
-                                    resolveFullClass(op.name, scope), args)
+                                    resolveFullClass(op.name, scope, op), args)
                                 .check(op, scope.packageName), args, op.line);
         }
         if (node instanceof Try) {
@@ -164,9 +157,8 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof ClassOf) {
             ClassOf co = (ClassOf) node;
-            checkNew(co, co.className);
-            return new ClassOfExpr(
-                    resolveFullClass(co.className, scope).javaType.resolve(co));
+            return new ClassOfExpr(resolveFullClass(co.className, scope, co)
+                                   .javaType.resolve(co));
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -333,9 +325,9 @@ public final class YetiAnalyzer extends YetiType {
         if (ref.right instanceof Sym) {
             String className = ((Sym) ref.right).sym;
             t = resolveClass(className, scope, true);
-            if (t == null && Character.isUpperCase(className.charAt(0))) {
+            if (t == null && Character.isUpperCase(className.charAt(0)) &&
+                (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.packageName, className);
-            }
         }
         if (t == null) {
             obj = analyze(ref.right, scope, depth);
@@ -369,7 +361,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         for (int i = 0; i < t.catches.length; ++i) {
             Catch c = t.catches[i];
-            Type exception = resolveFullClass(c.exception, scope);
+            Type exception = resolveFullClass(c.exception, scope, null);
             exception.javaType.resolve(c);
             TryCatch.Catch cc = tc.addCatch(exception);
             cc.handler = analyze(c.handler,
