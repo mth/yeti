@@ -99,6 +99,10 @@ class SandboxSecurityManager extends SecurityManager {
             throw new SecurityException();
         }
     }
+
+    // allow exit
+    public void checkExit(int status) {
+    }
 }
 
 public class YetiC implements SourceReader {
