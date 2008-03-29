@@ -30,7 +30,7 @@ execClass writer =
             f = c#newInstance() unsafely_as () -> '';
             if sandbox then
                 System#setSecurityManager(sm);
-                sm#setActive(true);
+                sm#setActive();
             fi;
             f ()
         else
@@ -40,8 +40,6 @@ execClass writer =
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();
         throw if defined? t then t else ex fi;
-    finally
-        sm#setActive(false)
     yrt);
 
 repl () =
