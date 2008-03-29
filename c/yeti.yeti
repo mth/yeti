@@ -191,6 +191,10 @@ if exec then
         if resultType#deref()#type != YetiType#UNIT then
             println v
         fi
+    catch java.lang.StackOverflowError ex:
+        if sandbox then System#out else System#err fi#println("Stack overflow");
+    catch java.lang.OutOfMemoryError ex:
+        if sandbox then System#out else System#err fi#println("Out of memory");
     catch Exception ex:
         ex#printStackTrace(if sandbox then System#out else System#err fi);
         sysExit 2;

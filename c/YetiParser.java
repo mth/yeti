@@ -1425,7 +1425,7 @@ interface YetiParser {
 
         Node parse() {
             int i = p = skipSpace();
-            while (i < src.length && CHS[src[i]] == 'x')
+            while (i < src.length && src[i] < '~' && CHS[src[i]] == 'x')
                 ++i;
             String s = new String(src, p, i - p);
             if (s.equals("module") || s.equals("program")) {
