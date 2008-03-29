@@ -84,8 +84,8 @@ class Loader extends ClassLoader implements CodeWriter {
 class SandboxSecurityManager extends SecurityManager {
     private boolean active;
 
-    void setActive(boolean x) {
-        active = x;
+    void setActive() {
+        active = true;
     }
 
     public void checkPermission(Permission perm) {
