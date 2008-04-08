@@ -163,6 +163,15 @@ index v l is 'a -> list?<'a> -> number =
         { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi;
           snd = l });
 
+    take n l =
+        if n > 0 and l != [] then
+            head l :. \(take (n - 1) (tail l))
+        else
+            []
+	fi;
+
+    iterate f x = x :. \(iterate f (f x));
+
     // few math functions
     pi = Math#PI;
     ln a = Math#log(a);
