@@ -34,7 +34,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 /** Yeti core library - BufferedReader list. */
-public class ReaderList extends LList {
+class ReaderList extends LList {
     private boolean forced;
     private BufferedReader r;
 

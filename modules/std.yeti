@@ -164,14 +164,11 @@ index v l is 'a -> list?<'a> -> number =
         { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi;
           snd = l });
 
-    take n l =
-        if n > 0 and l != [] then
-            head l :. \(take (n - 1) (tail l))
-        else
-            []
-	fi;
+    take n l is number -> list?<'a> -> list<'a> =
+        TakeList#take(l, n) unsafely_as list<''>;
 
-    iterate f x = x :. \(iterate f (f x));
+    iterate f x is ('a -> 'a) -> 'a -> list<'a> =
+        new Iterate(x, f) unsafely_as list<''>;
 
     // few math functions
     pi = Math#PI;

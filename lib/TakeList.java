@@ -31,23 +31,29 @@
 package yeti.lang;
 
 /** Yeti core library - Map list. */
-class MapList extends LList {
+class TakeList extends LList {
     private boolean mappedRest;
     private AIter src;
-    private Fun f;
+    private int left;
 
-    public MapList(AIter src, Fun f) {
-        super(f.apply(src.first()), null);
+    private TakeList(AIter src, int n) {
+        super(src.first(), null);
         this.src = src;
-        this.f = f;
+        this.left = n - 1;
+    }
+
+    static AList take(AIter src, int n) {
+        return n > 1 ? new TakeList(src, n) :
+               n > 0 ? new LList(src.first(), null) : null;
     }
 
     public synchronized AList rest() {
         if (!mappedRest) {
             AIter i = src.next();
-            rest = i == null ? null : new MapList(i, f);
+            rest = i == null ? null :
+                   left > 1 ? new TakeList(i, left) :
+                   left > 0 ? new LList(i.first(), null) : null;
             src = null;
-            f = null;
             mappedRest = true;
         }
         return rest;

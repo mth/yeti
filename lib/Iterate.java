@@ -30,25 +30,19 @@
  */
 package yeti.lang;
 
-/** Yeti core library - Map list. */
-class MapList extends LList {
-    private boolean mappedRest;
-    private AIter src;
+/** Yeti core library - Iterate function. */
+class Iterate extends LList {
     private Fun f;
 
-    public MapList(AIter src, Fun f) {
-        super(f.apply(src.first()), null);
-        this.src = src;
+    Iterate(Object v, Fun f) {
+        super(v, null);
         this.f = f;
     }
 
     public synchronized AList rest() {
-        if (!mappedRest) {
-            AIter i = src.next();
-            rest = i == null ? null : new MapList(i, f);
-            src = null;
+        if (f != null) {
+            rest = new Iterate(f.apply(first), f);
             f = null;
-            mappedRest = true;
         }
         return rest;
     }

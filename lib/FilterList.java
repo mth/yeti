@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Map list. */
-public class FilterList extends LList {
+class FilterList extends LList {
     private boolean checked;
     private AIter src;
     private Fun f;
@@ -42,7 +42,7 @@ public class FilterList extends LList {
         this.f = f;
     }
 
-    public static AList filter(AIter src, Fun f) {
+    static AList filter(AIter src, Fun f) {
         Object first = null;
         while (src != null && f.apply(first = src.first()) != Boolean.TRUE)
             src = src.next();
