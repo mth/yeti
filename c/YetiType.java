@@ -136,6 +136,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("nullptr?", A_TO_BOOL, new IsNullPtr(A_TO_BOOL, "nullptr?"), 0,
         bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
         bindPoly("empty?", LIST_TO_BOOL, new IsEmpty(), 0,
+        bindPoly("same?", EQ_TYPE, new Same(), 0,
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
@@ -174,7 +175,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null)))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))));
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
 

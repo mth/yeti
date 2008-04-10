@@ -550,6 +550,28 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
+
+    class Same implements Binder {
+        public BindRef getRef(int line) {
+            return new BoolBinOp() {
+                {
+                    type = YetiType.EQ_TYPE;
+                    binder = Same.this;
+                    polymorph = true;
+                    coreFun = "same?";
+                }
+
+                void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                              Label to, boolean ifTrue) {
+                    arg1.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+                }
+            };
+        }
+    }
+
+
     class InOpFun extends BoolBinOp {
         int line;
 
@@ -572,6 +594,7 @@ interface YetiBuiltins extends CaseCode {
             f.line = line;
             f.polymorph = true;
             f.coreFun = "in";
+            f.binder = this;
             return f;
         }
     }
