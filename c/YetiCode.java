@@ -1108,6 +1108,7 @@ interface YetiCode {
         private Code uncaptureArg;
         private int argCount = 1;
         private boolean merged;
+        private int argUsed;
 
         final BindRef arg = new BindRef() {
             void gen(Ctx ctx) {
@@ -1115,6 +1116,11 @@ interface YetiCode {
                     uncaptureArg.gen(ctx);
                 } else {
                     ctx.m.visitVarInsn(ALOAD, argCount);
+                    // inexact nulling...
+                    if (--argUsed == 0) {
+                        ctx.m.visitInsn(ACONST_NULL);
+                        ctx.m.visitVarInsn(ASTORE, argCount);
+                    }
                 }
             }
         };
@@ -1125,6 +1131,7 @@ interface YetiCode {
         }
 
         public BindRef getRef(int line) {
+            ++argUsed;
             return arg;
         }
 

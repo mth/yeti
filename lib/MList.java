@@ -36,7 +36,7 @@ abstract class AMList extends AList implements ListIter {
     abstract int _size();
     abstract Object[] array();
 
-    public long length() {
+    public long length(AIter i) {
         int l = _size() - start;
         return l > 0 ? l : 0;
     }

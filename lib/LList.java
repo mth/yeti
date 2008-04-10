@@ -35,9 +35,15 @@ class LListIter implements ListIter {
 
     public void forEach(Object fun, AIter i) {
         Fun f = (Fun) fun;
-        for (; i != null; i = i.next()) {
+        for (; i != null; i = i.next())
             f.apply(i.first());
-        }
+    }
+
+    public long length(AIter i) {
+        int n = 0;
+        for (; i != null; i = i.next())
+            ++n;
+        return n;
     }
 }
 
@@ -150,12 +156,5 @@ public class LList extends AList {
             ++n;
         }
         return null;
-    }
-
-    public long length() {
-        int n = 0;
-        for (AIter i = this; i != null; i = i.next())
-            ++n;
-        return n;
     }
 }

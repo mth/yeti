@@ -238,7 +238,7 @@ index v l is 'a -> list?<'a> -> number =
         if nullptr? l then
             0
         else
-            (l unsafely_as ~AList)#length()
+            (l unsafely_as ~AList)#iter()#length(l)
         fi;
 
     setArrayCapacity a n is array<'a> -> number -> () =

@@ -32,4 +32,5 @@ package yeti.lang;
 
 public interface ListIter {
     void forEach(Object f, AIter i);
+    long length(AIter i);
 }
