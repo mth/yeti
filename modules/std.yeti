@@ -165,7 +165,11 @@ index v l is 'a -> list?<'a> -> number =
           snd = l });
 
     take n l is number -> list?<'a> -> list<'a> =
-        TakeList#take(l, n) unsafely_as list<''>;
+        if nullptr? l then
+            []
+        else
+            TakeList#take(l, n) unsafely_as list<''>
+        fi;
 
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<''>;
