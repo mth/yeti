@@ -31,7 +31,6 @@
 
 package yeti.lang;
 
-import java.util.Map;
 import java.util.Random;
 
 public final class Core {
