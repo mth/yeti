@@ -59,7 +59,7 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
-   (f2 v l is 'a -> list<''> -> 'a =
+   (f2 v l is 'a -> list<''> -> 'a = // hack to get good code for gc
         if nullptr? l then
             v
         else

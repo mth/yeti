@@ -238,6 +238,7 @@ interface YetiCode {
         int fieldCounter;
         int methodCounter;
         int lastLine;
+        int tainted; // you are inside loop, natural laws a broken
 
         Ctx(CompileCtx compilation, Constants constants,
                 ClassWriter writer, String className) {
@@ -1117,7 +1118,7 @@ interface YetiCode {
                 } else {
                     ctx.m.visitVarInsn(ALOAD, argCount);
                     // inexact nulling...
-                    if (--argUsed == 0) {
+                    if (--argUsed == 0 && ctx.tainted == 0) {
                         ctx.m.visitInsn(ACONST_NULL);
                         ctx.m.visitVarInsn(ASTORE, argCount);
                     }
@@ -1571,8 +1572,10 @@ interface YetiCode {
             Label start = new Label();
             Label end = new Label();
             ctx.m.visitLabel(start);
+            ++ctx.tainted;
             cond.genIf(ctx, end, false);
             body.gen(ctx);
+            --ctx.tainted;
             ctx.m.visitInsn(POP);
             ctx.m.visitJumpInsn(GOTO, start);
             ctx.m.visitLabel(end);
