@@ -72,58 +72,7 @@ public final class Core {
         }
     }
 
-    private static final class Fold extends Fun2 {
-        public Object apply2(final Object f, final Object value) {
-            return new FunX() {
-                public Object apply(Object list) {
-                    if (list == null) {
-                        return value;
-                    }
-                    if (list instanceof LList) {
-                        AIter i = (AIter) list;
-                        Fun fun = (Fun) f;
-                        list = null; // give it free for gc
-                        Object v;
-                        for (v = value; i != null; i = i.next()) {
-                            v = ((Fun) fun.apply(v)).apply(i.first());
-                        }
-                        return v;
-                    }
-                    return ((AList) list).fold(this, (Fun) f, value);
-                }
-
-                public Object apply(Object a, Object b, Fun f) {
-                    return ((Fun) f.apply(a)).apply(b);
-                }
-            };
-        }
-    }
-
-    private static final class Sum extends FunX {
-        public Object apply(Object list) {
-            if (list == null) {
-                return IntNum._0;
-            }
-            if (list instanceof LList) {
-                AIter i = (AIter) list;
-                list = null; // give it free for gc
-                Num v;
-                for (v = IntNum._0; i != null; i = i.next()) {
-                    v = v.add((Num) i.first());
-                }
-                return v;
-            }
-            return ((AList) list).fold(this, null, IntNum._0);
-        }
-
-        public Object apply(Object a, Object b, Fun f) {
-            return ((Num) a).add((Num) b);
-        }
-    }
-
     public static final Fun FOR  = new For();
-    public static final Fun FOLD = new Fold();
-    public static final Fun SUM  = new Sum();
 
     private static synchronized void initRandom() {
         if (rnd == null) {

@@ -42,3 +42,15 @@ public abstract class Fun2 extends Fun {
         };
     }
 }
+
+class ToFun2 extends Fun2 {
+    private Fun f;
+
+    ToFun2(Fun f) {
+        this.f = f;
+    }
+
+    public Object apply2(Object a, Object b) {
+        return ((Fun) f.apply(a)).apply(b);
+    }
+}

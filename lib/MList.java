@@ -111,10 +111,11 @@ abstract class AMList extends AList implements ListIter {
         return this;
     }
 
-    public Object fold(FunX f, Fun g, Object v) {
+    public Object fold(Fun g, Object v, AIter _) {
+        Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
         Object[] array = array();
         for (int cnt = _size(), i = start; i < cnt; ++i) {
-            v = f.apply(v, array[i], g);
+            v = f.apply2(v, array[i]);
         }
         return v;
     }

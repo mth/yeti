@@ -39,6 +39,13 @@ class LListIter implements ListIter {
             f.apply(i.first());
     }
 
+    public Object fold(Fun g, Object value, AIter i) {
+        Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
+        for (; i != null; i = i.next())
+            value = f.apply2(value, i.first());
+        return value;
+    }
+
     public long length(AIter i) {
         int n = 0;
         for (; i != null; i = i.next())
@@ -124,10 +131,6 @@ public class LList extends AList {
 
     public ListIter iter() {
         return LListIter.ITER;
-    }
-
-    public Object fold(FunX f, Fun g, Object value) {
-        throw new UnsupportedOperationException();
     }
 
     public AList reverse() {

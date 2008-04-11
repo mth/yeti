@@ -152,13 +152,14 @@ public class ListRange extends AList implements ListIter {
         return this;
     }
 
-    public Object fold(FunX f, Fun g, Object v) {
+    public Object fold(Fun g, Object v, AIter _) {
+        Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
             if (first.compareTo(last) <= 0) {
                 for (int i = first.intValue(), e = last.intValue();
                      i <= e; ++i) {
-                    v = f.apply(v, new IntNum(i), g);
+                    v = f.apply2(v, new IntNum(i));
                 }
             }
         } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
@@ -166,16 +167,16 @@ public class ListRange extends AList implements ListIter {
             if (first.compareTo(last) >= 0) {
                 for (int i = first.intValue(), e = last.intValue();
                      i >= e; --i) {
-                    v = f.apply(v, new IntNum(i), g);
+                    v = f.apply2(v, new IntNum(i));
                 }
             }
         } else {
             for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-                v = f.apply(v, i, g);
+                v = f.apply2(v, i);
             }
         }
         for (AIter i = rest; i != null; i = i.next()) {
-            v = f.apply(v, i.first(), g);
+            v = f.apply2(v, i.first());
         }
         return v;
     }

@@ -58,6 +58,15 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         (l unsafely_as ~AList)#map(f) unsafely_as list<''>
     fi;
 
+fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
+   (f2 v l is 'a -> list<''> -> 'a =
+        if nullptr? l then
+            v
+        else
+            (l unsafely_as ~AList)#iter()#fold(f, v, l) unsafely_as ''
+        fi;
+    f2);
+
 find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
     if nullptr? l then
         []
@@ -72,6 +81,8 @@ index v l is 'a -> list?<'a> -> number =
         res = (l unsafely_as ~AList)#index(v);
         if nullptr? res then -1 else res fi
     fi;
+
+plus a b = a + b;
 
 {
     id x = x;
@@ -90,7 +101,7 @@ index v l is 'a -> list?<'a> -> number =
     norec (<=) a b = a <= b;
     norec (>)  a b = a >  b;
     norec (>=) a b = a >= b;
-    norec (+)  a b = a + b;
+    norec (+)      = plus;
     norec (-)  a b = a - b;
     norec (*)  a b = a * b;
     norec (/)  a b = a / b;
@@ -123,6 +134,7 @@ index v l is 'a -> list?<'a> -> number =
     norec tail = tail;
     norec head = head;
     norec map = map;
+    norec fold = fold;
     norec find = find;
     norec index = index;
 
@@ -139,6 +151,8 @@ index v l is 'a -> list?<'a> -> number =
         if a > b then a else b fi;
     abs a =
         if a < 0 then -a else a fi;
+    sum =
+        fold plus 0;
     concat l =
         fold (++) [] l;
     concatMap f =

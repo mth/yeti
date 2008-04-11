@@ -125,9 +125,6 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
-        bindCore("fold",
-            fun2Arg(fun2Arg(C, A, C), C, fun(A_B_LIST_TYPE, C)), "FOLD",
-        bindCore("sum", fun(NUM_LIST_TYPE, NUM_TYPE), "SUM",
         bindPoly("in", IN_TYPE, new InOp(), 0,
         bindPoly("::", CONS_TYPE, new Cons(), 0,
         bindPoly(":.", LAZYCONS_TYPE, new LazyCons(), 0,
@@ -175,7 +172,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))));
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
 
