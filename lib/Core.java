@@ -58,22 +58,6 @@ public final class Core {
         }
     };
 
-    private static final class For extends Fun {
-        public Object apply(Object list) {
-            final AList l = (AList) list;
-            return new Fun() {
-                public Object apply(Object f) {
-                    if (l != null) {
-                        l.iter().forEach(f, l);
-                    }
-                    return null;
-                }
-            };
-        }
-    }
-
-    public static final Fun FOR  = new For();
-
     private static synchronized void initRandom() {
         if (rnd == null) {
             rnd = new Random();

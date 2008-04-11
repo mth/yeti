@@ -118,6 +118,7 @@ plus a b = a + b;
     norec defined? a = defined? a;
     norec empty? a = empty? a;
     norec same? a b = same? a b;
+    norec for l f = for l f;
     norec synchronized monitor block = synchronized monitor block;
     (^) a b = "\(a)\(b)";
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =

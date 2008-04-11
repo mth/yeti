@@ -230,7 +230,6 @@ interface YetiBuiltins extends CaseCode {
     }
 
     abstract class Bind2Core implements Binder, Opcodes {
-        String lib = "yeti/lang/std";
         private String coreFun;
         YetiType.Type type;
 
@@ -240,7 +239,8 @@ interface YetiBuiltins extends CaseCode {
         }
 
         public BindRef getRef(int line) {
-            return new StaticRef(lib, coreFun, type, this, true, line) {
+            return new StaticRef("yeti/lang/std", coreFun,
+                                 type, this, true, line) {
                 Code apply(final Code arg1, YetiType.Type res, int line1) {
                     return new Apply(res, this, arg1, line1) {
                         Code apply(final Code arg2, final YetiType.Type res,
@@ -263,8 +263,7 @@ interface YetiBuiltins extends CaseCode {
 
     class For extends Bind2Core {
         For() {
-            super("FOR", YetiType.FOR_TYPE);
-            lib = "yeti/lang/Core";
+            super("for", YetiType.FOR_TYPE);
         }
 
         void genApply2(Ctx ctx, Code list, Code fun, int line) {
