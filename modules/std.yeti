@@ -59,7 +59,7 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
-   (f2 v l is 'a -> list<''> -> 'a = // hack to get good code for gc
+   (f2 v l is 'a -> list?<''> -> 'a = // hack to get good code for gc
         if nullptr? l then
             v
         else
@@ -152,8 +152,8 @@ plus a b = a + b;
         if a > b then a else b fi;
     abs a =
         if a < 0 then -a else a fi;
-    sum =
-        fold plus 0;
+    sum l =
+        fold plus 0 l;
     concat l =
         fold (++) [] l;
     concatMap f =
