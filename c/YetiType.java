@@ -667,7 +667,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == sym && scope.binder != null) {
                 BindRef ref = scope.binder.getRef(where.line);
-                if (scope.free == null || scope.free.length == 0) {
+                if (scope.free == null) {
                     return ref;
                 }
                 HashMap vars = new HashMap();
