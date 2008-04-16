@@ -635,14 +635,14 @@ public class YetiType implements YetiParser, YetiBuiltins {
         return result;
     }
 
-    static Type copyType(Type type, Map free, Map known) {
-        type = type.deref();
+    static Type copyType(Type type_, Map free, Map known) {
+        Type type = type_.deref();
         if (type.type == VAR) {
             Type var = (Type) free.get(type);
             return var == null ? type : var;
         }
         if (type.param.length == 0) {
-            return type;
+            return type_;
         }
         Type copy = (Type) known.get(type);
         if (copy != null) {
@@ -650,7 +650,13 @@ public class YetiType implements YetiParser, YetiBuiltins {
         }
         Type[] param = new Type[type.param.length];
         copy = new Type(type.type, param);
-        known.put(type, copy);
+        Type res = copy;
+        if (type_.field >= FIELD_NON_POLYMORPHIC) {
+            res = mutableFieldRef(type_);
+            res.field = type_.field;
+            res.ref = copy;
+        }
+        known.put(type, res);
         for (int i = param.length; --i >= 0;) {
             param[i] = copyType(type.param[i], free, known);
         }
@@ -660,7 +666,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         if (type.finalMembers != null) {
             copy.finalMembers = copyTypeMap(type.finalMembers, free, known);
         }
-        return copy;
+        return res;
     }
 
     static BindRef resolve(String sym, Node where, Scope scope, int depth) {
