@@ -40,7 +40,7 @@ syn keyword yetiFunc strSlice strRight strStartsWith strEndsWith strIndexOf
 syn keyword yetiFunc strLastIndexOf strLeft strLeftOf strRightOf length
 syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
 syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
-syn keyword yetiFunc getContents iterate take
+syn keyword yetiFunc getContents iterate take splitAt strJoin strPad
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/

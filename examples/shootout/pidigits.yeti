@@ -1,5 +1,3 @@
-_10 = 0 - 10;
-
 flr x y = (y.q * x + y.r) div (y.s * x + y.t);
 comp1 x y = { q = x.q * y.q + x.r * y.s;
               r = x.q * y.r + x.r * y.t;
@@ -12,10 +10,21 @@ comp2 x y = { q = x.q * y.q;
 str z l =
    (x = head l;
     y = flr 3 z;
-	if y == flr 4 z then
-		y :: str (comp1 { q = 10; r = _10 * y; s = 0; t = 1 }) l
-	else
-		str (comp2 z x) (tail l)
-	fi);
+    if y == flr 4 z then
+        y :. \(str (comp1 { q = 10; r = -10 * y; s = 0; t = 1 } z) l)
+    else
+        str (comp2 z x) (tail l)
+    fi);
 
+ns k = { q = k; r = 4 * k + 2; s = 0; t = 2 * k + 1 } :. \(ns (k + 1));
 
+format l n =
+    if not (empty? l) then
+        l = splitAt 10 l;
+        s = strJoin "" l.fst;
+        n = n + strLength s;
+        print "\(strPad " " 10 s)\t:\(n)\n";
+        format l.snd n
+    fi;
+
+format (take (number _argv.[0]) (str { q = 1; r = 0; s = 0; t = 1 } (ns 1))) 0
