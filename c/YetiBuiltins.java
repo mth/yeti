@@ -557,7 +557,7 @@ interface YetiBuiltins extends CaseCode {
                     type = YetiType.EQ_TYPE;
                     binder = Same.this;
                     polymorph = true;
-                    coreFun = "same?";
+                    coreFun = "same$q";
                 }
 
                 void binGenIf(Ctx ctx, Code arg1, Code arg2,
