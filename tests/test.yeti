@@ -28,7 +28,7 @@ trueTests = [
 'shl': \(7 shl 2 == 28),
 'shr': \(35 shr 3 == 4),
 '-x': \(x = 2; -x == 0 - 2),
-'raw_nullptr?': \(raw_nullptr? [] and not (raw_nullptr? 42)),
+'nullptr?': \(nullptr? [] and not (nullptr? 42)),
 'synchronized': \(synchronized 7 \true),
 'flip': \(flip (-) 2 3 == 1),
 'number': \(number '13' == 13),
