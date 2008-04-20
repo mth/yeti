@@ -116,8 +116,9 @@ interface CaseCode extends YetiCode {
     }
 
     class CaseExpr extends Code {
-        Code caseValue;
-        List choices = new ArrayList();
+        private int totalParams;
+        private Code caseValue;
+        private List choices = new ArrayList();
         int paramStart;
         int paramCount;
 
@@ -125,7 +126,7 @@ interface CaseCode extends YetiCode {
             this.caseValue = caseValue;
         }
 
-        private class Choice {
+        private static class Choice {
             CasePattern pattern;
             Code expr;
         }
@@ -135,12 +136,16 @@ interface CaseCode extends YetiCode {
             c.pattern = pattern;
             c.expr = code;
             choices.add(c);
+            if (totalParams < paramCount) {
+                totalParams = paramCount;
+            }
+            paramCount = 0;
         }
 
         void gen(Ctx ctx) {
             caseValue.gen(ctx);
             paramStart = ctx.localVarCount;
-            ctx.localVarCount += paramCount;
+            ctx.localVarCount += totalParams;
             Label next = null, end = new Label();
             CasePattern lastPattern = ((Choice) choices.get(0)).pattern;
             int patternStack = lastPattern.preparePattern(ctx);
