@@ -312,6 +312,12 @@ interface YetiCode {
         void constant(Object key, Code code) {
             constants.registerConstant(key, code, this);
         }
+
+        void popn(int n) {
+            while (--n >= 0) {
+                m.visitInsn(POP);
+            }
+        }
     }
 
     abstract class Code implements Opcodes {

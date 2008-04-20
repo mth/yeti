@@ -833,13 +833,13 @@ public final class YetiAnalyzer extends YetiType {
         throw new CompileException(pattern, "Bad case pattern: " + pattern);
     }
 
-    static Scope bindPattern(String name, Type type, CasePattern pattern,
-                             Scope scope) {
-        if (name == "_") {
-            pattern.noParam();
-            return scope;
-        }
-        return new Scope(scope, name, pattern.bindParam(type));
+    static CasePattern bindPattern(String name, Type type, CaseExpr exp,
+                                   Scope[] scope) {
+        if (name == "_")
+            return ANY_PATTERN;
+        BindPattern binding = new BindPattern(exp, type);
+        scope[0] = new Scope(scope[0], name, binding);
+        return binding;
     }
 
     // oh holy fucking shit, this code sucks. horrible abuse of BinOps...
@@ -853,7 +853,7 @@ public final class YetiAnalyzer extends YetiType {
         CaseExpr result = new CaseExpr(val);
         result.polymorph = true;
         for (int i = 0; i < choices.length; ++i) {
-            Scope local = scope;
+            Scope[] local = { scope };
             BinOp choice;
             if (!(choices[i] instanceof BinOp) ||
                 (choice = (BinOp) choices[i]).op != ":") {
@@ -872,20 +872,21 @@ public final class YetiAnalyzer extends YetiType {
                     (variant = ((Sym) pat.left).sym).charAt(0))) {
                 badPattern(pat); // binop pat should be a variant
             }
-            VariantPattern vp = new VariantPattern(result, variant);
             Type variantArg = null;
+            CasePattern argPattern;
             if (!(pat.right instanceof Sym)) {
                 if (pat.right instanceof UnitLiteral) {
                     variantArg = UNIT_TYPE;
                 } else {
                     badPattern(pat); // TODO
                 }
-                vp.noParam();
+                argPattern = ANY_PATTERN; // valid only for UNIT_TYPE
             } else {
                 variantArg = new Type(depth); 
-                local = bindPattern(((Sym) pat.right).sym,
-                                    variantArg, vp, local);
+                argPattern = bindPattern(((Sym) pat.right).sym,
+                                         variantArg, result, local);
             }
+            VariantPattern vp = new VariantPattern(variant, argPattern);
             Type old = (Type) variants.put(variant, variantArg);
             if (old != null) { // same constructor already. shall be same type.
                 try {
@@ -896,7 +897,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             
             // nothing intresting, just get option expr and merge to result
-            Code opt = analyze(choice.right, local, depth);
+            Code opt = analyze(choice.right, local[0], depth);
             result.polymorph &= opt.polymorph;
             if (result.type == null) {
                 result.type = opt.type;

@@ -35,105 +35,83 @@ import org.objectweb.asm.*;
 import java.util.*;
 
 interface CaseCode extends YetiCode {
+
     abstract class CasePattern implements Opcodes {
-        private List params = new ArrayList();
-        private int paramBase;
-        private boolean enclosing; // for sanity check
-        CaseExpr caseExpr;
+        int preparePattern(Ctx ctx) {
+            return 0;
+        }
 
-        class Param extends BindRef implements Binder {
-            int nth = -1;
+        void patternDup(Ctx ctx) {
+            ctx.m.visitInsn(DUP);
+        }
 
-            public BindRef getRef(int line) {
-                binder = this;
-                return this;
-            }
+        abstract void tryMatch(Ctx ctx, Label onFail, boolean duped);
 
+        void tryMatch(Ctx ctx, Label to) {
+            int n = preparePattern(ctx);
+            tryMatch(ctx, to, false);
+            ctx.popn(n);
+        }
+    }
+
+    class BindPattern extends CasePattern implements Binder {
+        private CaseExpr caseExpr;
+        private int nth;
+
+        BindRef param = new BindRef() {
             void gen(Ctx ctx) {
                 ctx.m.visitVarInsn(ALOAD, caseExpr.paramStart + nth);
             }
+        };
 
-            void store(Ctx ctx) {
-                if (nth < 0) {
-                    ctx.m.visitInsn(POP);
-                } else {
-                    ctx.m.visitVarInsn(ASTORE, caseExpr.paramStart + nth);
-                }
-            }
+        BindPattern(CaseExpr caseExpr, YetiType.Type type) {
+            this.caseExpr = caseExpr;
+            param.binder = this;
+            param.type = type;
+            nth = caseExpr.paramCount++;
         }
 
-        void noParam() {
-            params.add(new Param());
+        public BindRef getRef(int line) {
+            return param;
         }
 
-        Binder bindParam(YetiType.Type type) {
-            if (enclosing) {
-                throw new IllegalStateException(
-                    "bindParam not allowed after having children");
-            }
-            Param p = new Param();
-            p.type = type;
-            p.nth = paramBase + params.size();
-            if (caseExpr.paramCount <= p.nth)
-                caseExpr.paramCount = p.nth + 1;
-            params.add(p);
-            return p;
+        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
+            ctx.m.visitVarInsn(ASTORE, caseExpr.paramStart + nth);
         }
-
-        void enclose(CasePattern parent) {
-            if (params.size() != 0) {
-                throw new IllegalStateException(
-                    "enclose not allowed after bindParam");
-            }
-            paramBase = parent.paramBase + parent.params.size();
-            parent.enclosing = true;
-        }
-
-        Param param(int n) {
-            return (Param) params.get(n);
-        }
-
-        void StoreParam(Ctx ctx, int n) {
-            ((Param) params.get(n)).store(ctx);
-        }
-
-        abstract void prepareCase(Ctx ctx);
-        abstract void caseCleanup(Ctx ctx);
-        abstract void jumpUnless(Ctx ctx, Label to);
     }
+
+    CasePattern ANY_PATTERN = new CasePattern() {
+        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
+            ctx.m.visitInsn(POP);
+        }
+    };
 
     class VariantPattern extends CasePattern {
         String variantTag;
+        CasePattern variantArg;
 
-        VariantPattern(CaseExpr caseExpr, String tagName) {
-            this.caseExpr = caseExpr;
+        VariantPattern(String tagName, CasePattern arg) {
             variantTag = tagName;
+            variantArg = arg;
         }
 
-        void prepareCase(Ctx ctx) {
+        int preparePattern(Ctx ctx) {
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Tag");
             ctx.m.visitInsn(DUP);
             ctx.m.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "name",
                                  "Ljava/lang/String;");
+            return 1; // pushed one extra item
         }
 
-        void caseCleanup(Ctx ctx) {
-            ctx.m.visitInsn(POP2);
-        }
-
-        void jumpUnless(Ctx ctx, Label to) {
-            ctx.m.visitInsn(DUP);
+        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
             ctx.m.visitLdcInsn(variantTag);
-            ctx.m.visitJumpInsn(IF_ACMPNE, to);
-            ctx.m.visitInsn(POP);
-            Param p = param(0);
-            if (p.nth < 0) {
+            ctx.m.visitJumpInsn(IF_ACMPNE, onFail);
+            if (duped) {
                 ctx.m.visitInsn(POP);
-            } else {
-                ctx.m.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "value",
-                                     "Ljava/lang/Object;");
-                p.store(ctx);
             }
+            ctx.m.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "value",
+                                 "Ljava/lang/Object;");
+            variantArg.tryMatch(ctx, onFail);
         }
     }
 
@@ -164,17 +142,25 @@ interface CaseCode extends YetiCode {
             paramStart = ctx.localVarCount;
             ctx.localVarCount += paramCount;
             Label next = null, end = new Label();
-            ((Choice) choices.get(0)).pattern.prepareCase(ctx);
+            CasePattern lastPattern = ((Choice) choices.get(0)).pattern;
+            int patternStack = lastPattern.preparePattern(ctx);
+
             for (int last = choices.size() - 1, i = 0; i <= last; ++i) {
                 Choice c = (Choice) choices.get(i);
+                if (lastPattern.getClass() != c.pattern.getClass()) {
+                    ctx.popn(patternStack);
+                    patternStack = c.pattern.preparePattern(ctx);
+                }
+                lastPattern = c.pattern;
                 next = new Label();
-                c.pattern.jumpUnless(ctx, next);
+                c.pattern.patternDup(ctx);
+                c.pattern.tryMatch(ctx, next, true);
                 c.expr.gen(ctx);
                 ctx.m.visitJumpInsn(GOTO, end);
                 ctx.m.visitLabel(next);
             }
             ctx.m.visitLabel(next);
-            ((Choice) choices.get(0)).pattern.caseCleanup(ctx);
+            ctx.popn(patternStack + 1);
             ctx.m.visitInsn(ACONST_NULL);
             ctx.m.visitLabel(end);
         }
