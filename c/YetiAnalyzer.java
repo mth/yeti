@@ -897,6 +897,14 @@ public final class YetiAnalyzer extends YetiType {
                             new Type[t.finalMembers.size()]);
                 return new VariantPattern(variant, arg);
             }
+            if (pat.op == "::") {
+                Type itemt = new Type(depth);
+                patUnify(node, t, new Type(MAP,
+                    new Type[] { itemt, new Type(depth), LIST_TYPE }));
+                CasePattern hd = toPattern(pat.left, exp, itemt, scope, depth);
+                CasePattern tl = toPattern(pat.right, exp, t, scope, depth);
+                return new ConsPattern(hd, tl);
+            }
         }
         throw new CompileException(node, "Bad case pattern: " + node);
     }

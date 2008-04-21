@@ -135,27 +135,62 @@ interface CaseCode extends YetiCode {
         }
     };
 
-
-    class ListPattern extends CasePattern {
-        private CasePattern[] items;
-
-        ListPattern(CasePattern[] items) {
-            this.items = items;
-        }
+    abstract class AListPattern extends CasePattern {
+        abstract void listMatch(Ctx ctx, Label onFail, Label dropFail);
 
         void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
             Label dropFail = preserve ? onFail : new Label();
             ctx.m.visitInsn(DUP);
             ctx.m.visitJumpInsn(IFNULL, dropFail);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
             ctx.m.visitInsn(DUP);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                   "isEmpty", "()Z");
             ctx.m.visitJumpInsn(IFNE, dropFail);
             if (preserve) {
                 ctx.m.visitInsn(DUP);
                 dropFail = new Label();
             }
+            listMatch(ctx, onFail, dropFail);
+            Label cont = new Label();
+            ctx.m.visitJumpInsn(GOTO, cont);
+            ctx.m.visitLabel(dropFail);
+            ctx.m.visitInsn(POP);
+            ctx.m.visitJumpInsn(GOTO, onFail);
+            ctx.m.visitLabel(cont);
+        }
+    }
+
+    class ConsPattern extends AListPattern {
+        private CasePattern hd;
+        private CasePattern tl;
+
+        ConsPattern(CasePattern hd, CasePattern tl) {
+            this.hd = hd;
+            this.tl = tl;
+        }
+
+        void listMatch(Ctx ctx, Label onFail, Label dropFail) {
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                  "first", "()Ljava/lang/Object;");
+            hd.preparePattern(ctx);
+            hd.tryMatch(ctx, dropFail, false);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                  "rest", "()Lyeti/lang/AList;");
+            tl.preparePattern(ctx);
+            tl.tryMatch(ctx, onFail, false);
+        }
+    }
+
+    class ListPattern extends AListPattern {
+        private CasePattern[] items;
+
+        ListPattern(CasePattern[] items) {
+            this.items = items;
+        }
+
+        void listMatch(Ctx ctx, Label onFail, Label dropFail) {
             for (int i = 0; i < items.length; ++i) {
                 if (i != 0) {
                     ctx.m.visitInsn(DUP);
@@ -170,12 +205,6 @@ interface CaseCode extends YetiCode {
                                       "next", "()Lyeti/lang/AIter;");
             }
             ctx.m.visitJumpInsn(IFNONNULL, onFail);
-            Label cont = new Label();
-            ctx.m.visitJumpInsn(GOTO, cont);
-            ctx.m.visitLabel(dropFail);
-            ctx.m.visitInsn(POP);
-            ctx.m.visitJumpInsn(GOTO, onFail);
-            ctx.m.visitLabel(cont);
         }
     }
 
