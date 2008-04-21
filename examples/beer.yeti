@@ -1,11 +1,9 @@
 bottles n =
-    if n == 0 then
-        "no more bottles of beer"
-    elif n == 1 then
-        "1 bottle of beer"
-    else
-        "\(n) bottles of beer"
-    fi;
+    case n of
+    0: "no more bottles of beer";
+    1: "1 bottle of beer";
+    _: "\(n) bottles of beer";
+    esac;
 
 for (reverse [1 .. 99]) do n:
     println "\(bottles n) on the wall, \(bottles n)\n\
