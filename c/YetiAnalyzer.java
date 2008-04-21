@@ -856,6 +856,20 @@ public final class YetiAnalyzer extends YetiType {
             patUnify(node, t, c.type);
             return new ConstPattern(c);
         }
+        if (node instanceof NList) {
+            NList list = (NList) node;
+            if (list.items == null || list.items.length == 0) {
+                return EMPTY_PATTERN;
+            }
+            CasePattern[] items = new CasePattern[list.items.length];
+            Type itemt = new Type(depth);
+            for (int i = 0; i < items.length; ++i) {
+                items[i] = toPattern(list.items[i], exp, itemt, scope, depth);
+            }
+            patUnify(node, t, new Type(MAP,
+                new Type[] { itemt, new Type(depth), LIST_TYPE }));
+            return new ListPattern(items);
+        }
         if (node instanceof BinOp) {
             BinOp pat = (BinOp) node;
             if (pat.op == "" && pat.left instanceof Sym) {

@@ -111,6 +111,74 @@ interface CaseCode extends YetiCode {
         }
     }
 
+    CasePattern EMPTY_PATTERN = new CasePattern() {
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            ctx.m.visitInsn(DUP);
+            Label cont = new Label();
+            ctx.m.visitJumpInsn(IFNULL, cont);
+            if (preserve) {
+                ctx.m.visitInsn(DUP);
+            }
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                  "isEmpty", "()Z");
+            ctx.m.visitJumpInsn(IFEQ, onFail);
+            if (preserve) {
+                ctx.m.visitLabel(cont);
+            } else {
+                Label end = new Label();
+                ctx.m.visitJumpInsn(GOTO, end);
+                ctx.m.visitLabel(cont);
+                ctx.m.visitInsn(POP);
+                ctx.m.visitLabel(end);
+            }
+        }
+    };
+
+
+    class ListPattern extends CasePattern {
+        private CasePattern[] items;
+
+        ListPattern(CasePattern[] items) {
+            this.items = items;
+        }
+
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            Label dropFail = preserve ? onFail : new Label();
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitJumpInsn(IFNULL, dropFail);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
+            ctx.m.visitInsn(DUP);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                  "isEmpty", "()Z");
+            ctx.m.visitJumpInsn(IFNE, dropFail);
+            if (preserve) {
+                ctx.m.visitInsn(DUP);
+                dropFail = new Label();
+            }
+            for (int i = 0; i < items.length; ++i) {
+                if (i != 0) {
+                    ctx.m.visitInsn(DUP);
+                    ctx.m.visitJumpInsn(IFNULL, dropFail);
+                }
+                ctx.m.visitInsn(DUP);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                      "first", "()Ljava/lang/Object;");
+                items[i].preparePattern(ctx);
+                items[i].tryMatch(ctx, dropFail, false);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                      "next", "()Lyeti/lang/AIter;");
+            }
+            ctx.m.visitJumpInsn(IFNONNULL, onFail);
+            Label cont = new Label();
+            ctx.m.visitJumpInsn(GOTO, cont);
+            ctx.m.visitLabel(dropFail);
+            ctx.m.visitInsn(POP);
+            ctx.m.visitJumpInsn(GOTO, onFail);
+            ctx.m.visitLabel(cont);
+        }
+    }
+
     class VariantPattern extends CasePattern {
         String variantTag;
         CasePattern variantArg;
