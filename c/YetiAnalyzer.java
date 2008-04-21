@@ -829,29 +829,68 @@ public final class YetiAnalyzer extends YetiType {
         return result;
     }
 
-    static Scope badPattern(Node pattern) {
-        throw new CompileException(pattern, "Bad case pattern: " + pattern);
+    static void patUnify(Node node, Type a, Type b) {
+        try {
+            unify(a, b);
+        } catch (TypeException e) {
+            throw new CompileException(node, e.getMessage());
+        }
     }
 
-    static CasePattern bindPattern(String name, Type type, CaseExpr exp,
-                                   Scope[] scope) {
-        if (name == "_")
+    static CasePattern toPattern(Node node, CaseExpr exp,
+                                 Type t, Scope[] scope, int depth) {
+        if (node instanceof Sym) {
+            String name = ((Sym) node).sym;
+            if (name == "_")
+                return ANY_PATTERN;
+            BindPattern binding = new BindPattern(exp, t);
+            scope[0] = new Scope(scope[0], name, binding);
+            return binding;
+        }
+        if (node instanceof UnitLiteral) {
+            patUnify(node, t, UNIT_TYPE);
             return ANY_PATTERN;
-        BindPattern binding = new BindPattern(exp, type);
-        scope[0] = new Scope(scope[0], name, binding);
-        return binding;
+        }
+        if (node instanceof BinOp) {
+            BinOp pat = (BinOp) node;
+            if (pat.op == "" && pat.left instanceof Sym) {
+                String variant = ((Sym) pat.left).sym;
+                if (!Character.isUpperCase(variant.charAt(0))) {
+                    throw new CompileException(pat.left, variant +
+                        ": Variant constructor must start with upper case");
+                }
+                if ((t.type != VAR || t.ref != null) && t.type != VARIANT) {
+                    throw new CompileException(node,
+                        "Variant " + variant + " ... is not " + t);
+                }
+                t.type = VARIANT;
+                if (t.finalMembers == null) {
+                    t.finalMembers = new HashMap();
+                }
+                Type argt = new Type(depth);
+                CasePattern arg = toPattern(pat.right, exp, argt, scope, depth);
+                Type old = (Type) t.finalMembers.put(variant, argt);
+                if (old != null) {
+                    // same constructor already. shall be same type.
+                    patUnify(pat.right, old, argt);
+                }
+                t.param = (Type[]) t.finalMembers.values().toArray(
+                            new Type[t.finalMembers.size()]);
+                return new VariantPattern(variant, arg);
+            }
+        }
+        throw new CompileException(node, "Bad case pattern: " + node);
     }
 
-    // oh holy fucking shit, this code sucks. horrible abuse of BinOps...
     static Code caseType(Case ex, Scope scope, int depth) {
         Node[] choices = ex.choices;
         if (choices.length == 0) {
             throw new CompileException(ex, "case expects some option!");
         }
         Code val = analyze(ex.value, scope, depth);
-        Map variants = new HashMap();
         CaseExpr result = new CaseExpr(val);
         result.polymorph = true;
+        Type argType = new Type(depth);
         for (int i = 0; i < choices.length; ++i) {
             Scope[] local = { scope };
             BinOp choice;
@@ -860,43 +899,8 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(choices[i],
                     "Expecting option, not a " + choices[i]);
             }
-            if (!(choice.left instanceof BinOp)) {
-                badPattern(choice.left); // TODO
-            }
-
-            // binop. so try to extract a damn variant constructor.
-            BinOp pat = (BinOp) choice.left;
-            String variant = null;
-            if (pat.op != "" || !(pat.left instanceof Sym) ||
-                !Character.isUpperCase(
-                    (variant = ((Sym) pat.left).sym).charAt(0))) {
-                badPattern(pat); // binop pat should be a variant
-            }
-            Type variantArg = null;
-            CasePattern argPattern;
-            if (!(pat.right instanceof Sym)) {
-                if (pat.right instanceof UnitLiteral) {
-                    variantArg = UNIT_TYPE;
-                } else {
-                    badPattern(pat); // TODO
-                }
-                argPattern = ANY_PATTERN; // valid only for UNIT_TYPE
-            } else {
-                variantArg = new Type(depth); 
-                argPattern = bindPattern(((Sym) pat.right).sym,
-                                         variantArg, result, local);
-            }
-            VariantPattern vp = new VariantPattern(variant, argPattern);
-            Type old = (Type) variants.put(variant, variantArg);
-            if (old != null) { // same constructor already. shall be same type.
-                try {
-                    unify(old, variantArg);
-                } catch (TypeException e) {
-                    throw new CompileException(pat.right, e.getMessage());
-                }
-            }
-            
-            // nothing intresting, just get option expr and merge to result
+            CasePattern pat =
+                toPattern(choice.left, result, argType, local, depth);
             Code opt = analyze(choice.right, local[0], depth);
             result.polymorph &= opt.polymorph;
             if (result.type == null) {
@@ -910,16 +914,13 @@ public final class YetiAnalyzer extends YetiType {
                         " type, while another was a " + result.type, e);
                 }
             }
-            result.addChoice(vp, opt);
+            result.addChoice(pat, opt);
         }
-        Type variantType = new Type(VARIANT,
-            (Type[]) variants.values().toArray(new Type[variants.size()]));
-        variantType.finalMembers = variants;
         try {
-            unify(val.type, variantType);
+            unify(val.type, argType);
         } catch (TypeException e) {
             throw new CompileException(ex.value,
-                "Inferred type for case argument is " + variantType +
+                "Inferred type for case argument is " + argType +
                 ", but a " + val.type + " is given\n    (" +
                 e.getMessage() + ")");
         }
