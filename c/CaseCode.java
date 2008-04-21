@@ -171,15 +171,23 @@ interface CaseCode extends YetiCode {
         }
 
         void listMatch(Ctx ctx, Label onFail, Label dropFail) {
-            ctx.m.visitInsn(DUP);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                                  "first", "()Ljava/lang/Object;");
-            hd.preparePattern(ctx);
-            hd.tryMatch(ctx, dropFail, false);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                                  "rest", "()Lyeti/lang/AList;");
-            tl.preparePattern(ctx);
-            tl.tryMatch(ctx, onFail, false);
+            if (hd != ANY_PATTERN) {
+                if (tl != ANY_PATTERN) {
+                    ctx.m.visitInsn(DUP);
+                } else {
+                    dropFail = onFail;
+                }
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                      "first", "()Ljava/lang/Object;");
+                hd.preparePattern(ctx);
+                hd.tryMatch(ctx, dropFail, false);
+            }
+            if (tl != ANY_PATTERN) {
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                      "rest", "()Lyeti/lang/AList;");
+                tl.preparePattern(ctx);
+                tl.tryMatch(ctx, onFail, false);
+            }
         }
     }
 
@@ -196,11 +204,13 @@ interface CaseCode extends YetiCode {
                     ctx.m.visitInsn(DUP);
                     ctx.m.visitJumpInsn(IFNULL, dropFail);
                 }
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
-                                      "first", "()Ljava/lang/Object;");
-                items[i].preparePattern(ctx);
-                items[i].tryMatch(ctx, dropFail, false);
+                if (items[i] != ANY_PATTERN) {
+                    ctx.m.visitInsn(DUP);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                          "first", "()Ljava/lang/Object;");
+                    items[i].preparePattern(ctx);
+                    items[i].tryMatch(ctx, dropFail, false);
+                }
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                       "next", "()Lyeti/lang/AIter;");
             }
@@ -231,8 +241,17 @@ interface CaseCode extends YetiCode {
                 ctx.m.visitInsn(DUP); // TNN
                 ctx.m.visitLdcInsn(variantTag);
                 ctx.m.visitJumpInsn(IF_ACMPNE, onFail); // TN
+                if (variantArg == ANY_PATTERN) {
+                    return;
+                }
                 ctx.m.visitInsn(SWAP); // NT
                 ctx.m.visitInsn(DUP_X1); // TNT
+            } else if (variantArg == ANY_PATTERN) {
+                ctx.m.visitInsn(SWAP); // NT
+                ctx.m.visitInsn(POP); // N
+                ctx.m.visitLdcInsn(variantTag);
+                ctx.m.visitJumpInsn(IF_ACMPNE, onFail);
+                return;
             } else {
                 Label cont = new Label(); // TN
                 ctx.m.visitLdcInsn(variantTag);
