@@ -851,6 +851,11 @@ public final class YetiAnalyzer extends YetiType {
             patUnify(node, t, UNIT_TYPE);
             return ANY_PATTERN;
         }
+        if (node instanceof NumLit || node instanceof Str) {
+            Code c = analyze(node, scope[0], depth);
+            patUnify(node, t, c.type);
+            return new ConstPattern(c);
+        }
         if (node instanceof BinOp) {
             BinOp pat = (BinOp) node;
             if (pat.op == "" && pat.left instanceof Sym) {

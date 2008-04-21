@@ -314,7 +314,10 @@ interface YetiCode {
         }
 
         void popn(int n) {
-            while (--n >= 0) {
+            for (; n >= 2; n -= 2) {
+                m.visitInsn(POP2);
+            }
+            if (n != 0) {
                 m.visitInsn(POP);
             }
         }

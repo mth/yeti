@@ -38,19 +38,13 @@ interface CaseCode extends YetiCode {
 
     abstract class CasePattern implements Opcodes {
         int preparePattern(Ctx ctx) {
-            return 0;
+            return 1;
         }
 
-        void patternDup(Ctx ctx) {
-            ctx.m.visitInsn(DUP);
-        }
+        abstract void tryMatch(Ctx ctx, Label onFail, boolean preserve);
 
-        abstract void tryMatch(Ctx ctx, Label onFail, boolean duped);
-
-        void tryMatch(Ctx ctx, Label to) {
-            int n = preparePattern(ctx);
-            tryMatch(ctx, to, false);
-            ctx.popn(n);
+        boolean irrefutable() {
+            return false;
         }
     }
 
@@ -75,16 +69,47 @@ interface CaseCode extends YetiCode {
             return param;
         }
 
-        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            if (preserve) {
+                ctx.m.visitInsn(DUP);
+            }
             ctx.m.visitVarInsn(ASTORE, caseExpr.paramStart + nth);
+        }
+
+        boolean irrefutable() {
+            return true;
         }
     }
 
     CasePattern ANY_PATTERN = new CasePattern() {
-        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
-            ctx.m.visitInsn(POP);
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            if (!preserve) {
+                ctx.m.visitInsn(POP);
+            }
+        }
+
+        boolean irrefutable() {
+            return true;
         }
     };
+
+    class ConstPattern extends CasePattern {
+        Code v;
+
+        ConstPattern(Code value) {
+            v = value;
+        }
+
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            if (preserve) {
+                ctx.m.visitInsn(DUP);
+            }
+            v.gen(ctx);
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
+                                  "equals", "(Ljava/lang/Object;)Z");
+            ctx.m.visitJumpInsn(IFEQ, onFail);
+        }
+    }
 
     class VariantPattern extends CasePattern {
         String variantTag;
@@ -100,18 +125,29 @@ interface CaseCode extends YetiCode {
             ctx.m.visitInsn(DUP);
             ctx.m.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "name",
                                  "Ljava/lang/String;");
-            return 1; // pushed one extra item
+            return 2; // TN
         }
 
-        void tryMatch(Ctx ctx, Label onFail, boolean duped) {
-            ctx.m.visitLdcInsn(variantTag);
-            ctx.m.visitJumpInsn(IF_ACMPNE, onFail);
-            if (duped) {
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            Label jumpTo = onFail;
+            if (preserve) {
+                ctx.m.visitInsn(DUP); // TNN
+                ctx.m.visitLdcInsn(variantTag);
+                ctx.m.visitJumpInsn(IF_ACMPNE, onFail); // TN
+                ctx.m.visitInsn(SWAP); // NT
+                ctx.m.visitInsn(DUP_X1); // TNT
+            } else {
+                Label cont = new Label(); // TN
+                ctx.m.visitLdcInsn(variantTag);
+                ctx.m.visitJumpInsn(IF_ACMPEQ, cont); // T
                 ctx.m.visitInsn(POP);
+                ctx.m.visitJumpInsn(GOTO, onFail);
+                ctx.m.visitLabel(cont);
             }
             ctx.m.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "value",
-                                 "Ljava/lang/Object;");
-            variantArg.tryMatch(ctx, onFail);
+                                 "Ljava/lang/Object;"); // TNt (t)
+            variantArg.preparePattern(ctx); 
+            variantArg.tryMatch(ctx, onFail, false); // TN ()
         }
     }
 
@@ -153,19 +189,19 @@ interface CaseCode extends YetiCode {
             for (int last = choices.size() - 1, i = 0; i <= last; ++i) {
                 Choice c = (Choice) choices.get(i);
                 if (lastPattern.getClass() != c.pattern.getClass()) {
-                    ctx.popn(patternStack);
+                    ctx.popn(patternStack - 1);
                     patternStack = c.pattern.preparePattern(ctx);
                 }
                 lastPattern = c.pattern;
                 next = new Label();
-                c.pattern.patternDup(ctx);
                 c.pattern.tryMatch(ctx, next, true);
+                ctx.popn(patternStack);
                 c.expr.gen(ctx);
                 ctx.m.visitJumpInsn(GOTO, end);
                 ctx.m.visitLabel(next);
             }
             ctx.m.visitLabel(next);
-            ctx.popn(patternStack + 1);
+            ctx.popn(patternStack);
             ctx.m.visitInsn(ACONST_NULL);
             ctx.m.visitLabel(end);
         }
