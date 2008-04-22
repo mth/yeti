@@ -909,6 +909,26 @@ public final class YetiAnalyzer extends YetiType {
         throw new CompileException(node, "Bad case pattern: " + node);
     }
 
+    // Intermediate Pattern Representation
+    static class IPR {
+        Map members = new HashMap();
+        int type;
+
+        IPR add(Node what, int t, Object key) {
+            if (type != t) {
+                if (type != VAR) {
+                    throw new CompileException(what, "unexpected type");
+                }
+                type = t;
+            }
+            IPR variant = (IPR) members.get(key);
+            if (variant == null) {
+                members.put(key, variant = new IPR());
+            }
+            return variant;
+        }
+    }
+
     static Code caseType(Case ex, Scope scope, int depth) {
         Node[] choices = ex.choices;
         if (choices.length == 0) {
