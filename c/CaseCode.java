@@ -321,7 +321,8 @@ interface CaseCode extends YetiCode {
             }
             ctx.m.visitLabel(next);
             ctx.popn(patternStack);
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                  "badMatch", "()V");
             ctx.m.visitLabel(end);
         }
 
