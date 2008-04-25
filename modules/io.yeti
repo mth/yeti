@@ -65,6 +65,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                     Core#UNDEF_STR
                 else
                     r = reader ();
+                    used := true;
                     try
                         Core#readAll(r)
                     finally
@@ -78,6 +79,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                 if used then
                     []
                 else
+                    used := true;
                     l := (ReaderList#lines(reader ()) unsafely_as list<string>);
                     l
                 fi
