@@ -377,7 +377,7 @@ class JavaType {
         case YetiType.MAP:
             switch (t.param[2].type) {
             case YetiType.LIST_MARKER:
-                return fromDescription(t.param[1] == YetiType.NUM_TYPE
+                return fromDescription(t.param[1].type == YetiType.NUM
                             ? "Lyeti/lang/MList;" : "Lyeti/lang/AList;");
             case YetiType.MAP_MARKER:
                 return fromDescription("Lyeti/lang/Hash;");

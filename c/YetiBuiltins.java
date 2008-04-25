@@ -470,7 +470,7 @@ interface YetiBuiltins extends CaseCode {
             Label nojmp = null;
             if (t.type == YetiType.VAR || t.type == YetiType.MAP &&
                     t.param[2] == YetiType.LIST_TYPE &&
-                    t.param[1] != YetiType.NUM_TYPE) {
+                    t.param[1].type != YetiType.NUM) {
                 Label nonull = new Label();
                 nojmp = new Label();
                 arg2.gen(ctx);
