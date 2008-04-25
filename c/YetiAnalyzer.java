@@ -983,8 +983,8 @@ public final class YetiAnalyzer extends YetiType {
                         while (j.hasNext()) {
                             Map.Entry e = (Map.Entry) j.next();
                             if (e.getValue() == t.param[i])
-                                return e.getKey() +
-                                    (t.type == VARIANT ? " (" : ".(") + s + ")";
+                                return (t.type == STRUCT ? "." : "") +
+                                            e.getKey() + " (" + s + ")";
                         }
                     }
                     return s;
