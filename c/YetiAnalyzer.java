@@ -842,7 +842,7 @@ public final class YetiAnalyzer extends YetiType {
         Scope scope;
         int depth;
         List variants = new ArrayList();
-
+  
         CaseCompiler(Code val, int depth) {
             exp = new CaseExpr(val);
             exp.polymorph = true;
@@ -851,6 +851,7 @@ public final class YetiAnalyzer extends YetiType {
 
         CasePattern toPattern(Node node, Type t) {
             if (node instanceof Sym) {
+                t.flags |= FL_ANY_PATTERN;
                 String name = ((Sym) node).sym;
                 if (name == "_")
                     return ANY_PATTERN;
@@ -864,21 +865,32 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (node instanceof NumLit || node instanceof Str) {
                 Code c = analyze(node, scope, depth);
-                patUnify(node, t, c.type);
+                t = t.deref();
+                if (t.type == VAR) {
+                    t.type = c.type.type;
+                    t.param = NO_PARAM;
+                    t.flags = FL_PARTIAL_PATTERN;
+                } else if (t.type != c.type.type) {
+                    throw new CompileException(node,
+                        "Pattern type mismatch: " + c.type + " is not " + t);
+                }
                 return new ConstPattern(c);
             }
             if (node instanceof NList) {
                 NList list = (NList) node;
+                Type itemt = new Type(depth);
+                Type lt = new Type(MAP,
+                        new Type[] { itemt, new Type(depth), LIST_TYPE });
+                lt.flags |= FL_PARTIAL_PATTERN;
                 if (list.items == null || list.items.length == 0) {
+                    patUnify(node, t, lt);
                     return EMPTY_PATTERN;
                 }
                 CasePattern[] items = new CasePattern[list.items.length];
-                Type itemt = new Type(depth);
                 for (int i = 0; i < items.length; ++i) {
                     items[i] = toPattern(list.items[i], itemt);
                 }
-                patUnify(node, t, new Type(MAP,
-                    new Type[] { itemt, new Type(depth), LIST_TYPE }));
+                patUnify(node, t, lt);
                 return new ListPattern(items);
             }
             if (node instanceof BinOp) {
@@ -911,10 +923,14 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (pat.op == "::") {
                     Type itemt = new Type(depth);
-                    patUnify(node, t, new Type(MAP,
-                        new Type[] { itemt, NO_TYPE, LIST_TYPE }));
+                    Type lt = new Type(MAP,
+                                new Type[] { itemt, NO_TYPE, LIST_TYPE });
+                    int flags = t.flags; 
+                    patUnify(node, t, lt);
                     CasePattern hd = toPattern(pat.left, itemt);
                     CasePattern tl = toPattern(pat.right, t);
+                    lt.flags = FL_PARTIAL_PATTERN;
+                    t.flags = flags;
                     return new ConsPattern(hd, tl);
                 }
             }
@@ -948,6 +964,40 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
+    static String checkPartialMatch(Type t) {
+        if (t.seen || (t.flags & FL_ANY_PATTERN) != 0)
+            return null;
+        if ((t.flags & FL_PARTIAL_PATTERN) != 0) {
+            t = t.deref();
+            return t.type == MAP ? "[]" : t.toString();
+        }
+        if (t.type != VAR) {
+            t.seen = true;
+            for (int i = t.param.length; --i >= 0;) {
+                String s = checkPartialMatch(t.param[i]);
+                if (s != null) {
+                    t.seen = false;
+                    if (t.type == MAP)
+                        return "(" + s + ")::_";
+                    if (t.type == VARIANT || t.type == STRUCT) {
+                        Iterator j = t.partialMembers.entrySet().iterator();
+                        while (j.hasNext()) {
+                            Map.Entry e = (Map.Entry) j.next();
+                            if (e.getValue() == t.param[i])
+                                return e.getKey() +
+                                    (t.type == VARIANT ? " (" : ".(") + s + ")";
+                        }
+                    }
+                    return s;
+                }
+            }
+            t.seen = false;
+        } else if (t.ref != null) {
+            return checkPartialMatch(t.ref);
+        }
+        return null;
+    }
+
     static Code caseType(Case ex, Scope scope, int depth) {
         Node[] choices = ex.choices;
         if (choices.length == 0) {
@@ -969,6 +1019,10 @@ public final class YetiAnalyzer extends YetiType {
             pats[i] = cc.toPattern(choice.left, argType);
             scopes[i] = cc.scope;
             cc.exp.resetParams();
+        }
+        String partialError = checkPartialMatch(argType);
+        if (partialError != null) {
+            throw new CompileException(ex, "Partial match: " + partialError);
         }
         cc.finalizeVariants();
         for (int i = 0; i < choices.length; ++i) {

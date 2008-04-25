@@ -56,6 +56,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static final int JAVA_ARRAY = 14;
 
     static final int FL_ORDERED_REQUIRED = 1;
+    static final int FL_ANY_PATTERN = 0x4000;
+    static final int FL_PARTIAL_PATTERN  = 0x8000;
 
     static final int FIELD_NON_POLYMORPHIC = 1;
     static final int FIELD_MUTABLE = 2;
