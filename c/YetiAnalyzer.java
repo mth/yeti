@@ -837,95 +837,114 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
-    static CasePattern toPattern(Node node, CaseExpr exp,
-                                 Type t, Scope[] scope, int depth) {
-        if (node instanceof Sym) {
-            String name = ((Sym) node).sym;
-            if (name == "_")
+    static class CaseCompiler {
+        CaseExpr exp;
+        Scope scope;
+        int depth;
+        List variants = new ArrayList();
+
+        CaseCompiler(Code val, int depth) {
+            exp = new CaseExpr(val);
+            exp.polymorph = true;
+            depth = depth;
+        }
+
+        CasePattern toPattern(Node node, Type t) {
+            if (node instanceof Sym) {
+                String name = ((Sym) node).sym;
+                if (name == "_")
+                    return ANY_PATTERN;
+                BindPattern binding = new BindPattern(exp, t);
+                scope = new Scope(scope, name, binding);
+                return binding;
+            }
+            if (node instanceof UnitLiteral) {
+                patUnify(node, t, UNIT_TYPE);
                 return ANY_PATTERN;
-            BindPattern binding = new BindPattern(exp, t);
-            scope[0] = new Scope(scope[0], name, binding);
-            return binding;
-        }
-        if (node instanceof UnitLiteral) {
-            patUnify(node, t, UNIT_TYPE);
-            return ANY_PATTERN;
-        }
-        if (node instanceof NumLit || node instanceof Str) {
-            Code c = analyze(node, scope[0], depth);
-            patUnify(node, t, c.type);
-            return new ConstPattern(c);
-        }
-        if (node instanceof NList) {
-            NList list = (NList) node;
-            if (list.items == null || list.items.length == 0) {
-                return EMPTY_PATTERN;
             }
-            CasePattern[] items = new CasePattern[list.items.length];
-            Type itemt = new Type(depth);
-            for (int i = 0; i < items.length; ++i) {
-                items[i] = toPattern(list.items[i], exp, itemt, scope, depth);
+            if (node instanceof NumLit || node instanceof Str) {
+                Code c = analyze(node, scope, depth);
+                patUnify(node, t, c.type);
+                return new ConstPattern(c);
             }
-            patUnify(node, t, new Type(MAP,
-                new Type[] { itemt, new Type(depth), LIST_TYPE }));
-            return new ListPattern(items);
-        }
-        if (node instanceof BinOp) {
-            BinOp pat = (BinOp) node;
-            if (pat.op == "" && pat.left instanceof Sym) {
-                String variant = ((Sym) pat.left).sym;
-                if (!Character.isUpperCase(variant.charAt(0))) {
-                    throw new CompileException(pat.left, variant +
-                        ": Variant constructor must start with upper case");
+            if (node instanceof NList) {
+                NList list = (NList) node;
+                if (list.items == null || list.items.length == 0) {
+                    return EMPTY_PATTERN;
                 }
-                if ((t.type != VAR || t.ref != null) && t.type != VARIANT) {
-                    throw new CompileException(node,
-                        "Variant " + variant + " ... is not " + t);
-                }
-                t.type = VARIANT;
-                if (t.finalMembers == null) {
-                    t.finalMembers = new HashMap();
-                }
-                Type argt = new Type(depth);
-                CasePattern arg = toPattern(pat.right, exp, argt, scope, depth);
-                Type old = (Type) t.finalMembers.put(variant, argt);
-                if (old != null) {
-                    // same constructor already. shall be same type.
-                    patUnify(pat.right, old, argt);
-                }
-                t.param = (Type[]) t.finalMembers.values().toArray(
-                            new Type[t.finalMembers.size()]);
-                return new VariantPattern(variant, arg);
-            }
-            if (pat.op == "::") {
+                CasePattern[] items = new CasePattern[list.items.length];
                 Type itemt = new Type(depth);
+                for (int i = 0; i < items.length; ++i) {
+                    items[i] = toPattern(list.items[i], itemt);
+                }
                 patUnify(node, t, new Type(MAP,
-                    new Type[] { itemt, NO_TYPE, LIST_TYPE }));
-                CasePattern hd = toPattern(pat.left, exp, itemt, scope, depth);
-                CasePattern tl = toPattern(pat.right, exp, t, scope, depth);
-                return new ConsPattern(hd, tl);
+                    new Type[] { itemt, new Type(depth), LIST_TYPE }));
+                return new ListPattern(items);
+            }
+            if (node instanceof BinOp) {
+                BinOp pat = (BinOp) node;
+                if (pat.op == "" && pat.left instanceof Sym) {
+                    String variant = ((Sym) pat.left).sym;
+                    if (!Character.isUpperCase(variant.charAt(0))) {
+                        throw new CompileException(pat.left, variant +
+                            ": Variant constructor must start with upper case");
+                    }
+                    if ((t.type != VAR || t.ref != null) && t.type != VARIANT) {
+                        throw new CompileException(node,
+                            "Variant " + variant + " ... is not " + t);
+                    }
+                    t.type = VARIANT;
+                    if (t.partialMembers == null) {
+                        t.partialMembers = new HashMap();
+                        variants.add(t);
+                    }
+                    Type argt = new Type(depth);
+                    CasePattern arg = toPattern(pat.right, argt);
+                    Type old = (Type) t.partialMembers.put(variant, argt);
+                    if (old != null) {
+                        // same constructor already. shall be same type.
+                        patUnify(pat.right, old, argt);
+                    }
+                    t.param = (Type[]) t.partialMembers.values().toArray(
+                                new Type[t.partialMembers.size()]);
+                    return new VariantPattern(variant, arg);
+                }
+                if (pat.op == "::") {
+                    Type itemt = new Type(depth);
+                    patUnify(node, t, new Type(MAP,
+                        new Type[] { itemt, NO_TYPE, LIST_TYPE }));
+                    CasePattern hd = toPattern(pat.left, itemt);
+                    CasePattern tl = toPattern(pat.right, t);
+                    return new ConsPattern(hd, tl);
+                }
+            }
+            throw new CompileException(node, "Bad case pattern: " + node);
+        }
+
+        void finalizeVariants() {
+            for (int i = variants.size(); --i >= 0;) {
+                Type t = (Type) variants.get(i);
+                if (t.type == VARIANT && t.finalMembers == null) {
+                    t.finalMembers = t.partialMembers;
+                    t.partialMembers = null;
+                }
             }
         }
-        throw new CompileException(node, "Bad case pattern: " + node);
-    }
 
-    // Intermediate Pattern Representation
-    static class IPR {
-        Map members = new HashMap();
-        int type;
-
-        IPR add(Node what, int t, Object key) {
-            if (type != t) {
-                if (type != VAR) {
-                    throw new CompileException(what, "unexpected type");
+        void mergeChoice(CasePattern pat, Node node, Scope scope) {
+            Code opt = analyze(node, scope, depth);
+            exp.polymorph &= opt.polymorph;
+            if (exp.type == null) {
+                exp.type = opt.type;
+            } else {
+                try {
+                    unify(exp.type, opt.type);
+                } catch (TypeException e) {
+                    throw new CompileException(node, "This choice has a " +
+                        opt.type + " type, while another was a " + exp.type, e);
                 }
-                type = t;
             }
-            IPR variant = (IPR) members.get(key);
-            if (variant == null) {
-                members.put(key, variant = new IPR());
-            }
-            return variant;
+            exp.addChoice(pat, opt);
         }
     }
 
@@ -935,33 +954,25 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(ex, "case expects some option!");
         }
         Code val = analyze(ex.value, scope, depth);
-        CaseExpr result = new CaseExpr(val);
-        result.polymorph = true;
+        CaseCompiler cc = new CaseCompiler(val, depth);
+        CasePattern[] pats = new CasePattern[choices.length];
+        Scope[] scopes = new Scope[choices.length];
         Type argType = new Type(depth);
         for (int i = 0; i < choices.length; ++i) {
-            Scope[] local = { scope };
+            cc.scope = scope;
             BinOp choice;
             if (!(choices[i] instanceof BinOp) ||
                 (choice = (BinOp) choices[i]).op != ":") {
                 throw new CompileException(choices[i],
                     "Expecting option, not a " + choices[i]);
             }
-            CasePattern pat =
-                toPattern(choice.left, result, argType, local, depth);
-            Code opt = analyze(choice.right, local[0], depth);
-            result.polymorph &= opt.polymorph;
-            if (result.type == null) {
-                result.type = opt.type;
-            } else {
-                try {
-                    unify(result.type, opt.type);
-                } catch (TypeException e) {
-                    throw new CompileException(choice.right,
-                        "This choice has a " + opt.type +
-                        " type, while another was a " + result.type, e);
-                }
-            }
-            result.addChoice(pat, opt);
+            pats[i] = cc.toPattern(choice.left, argType);
+            scopes[i] = cc.scope;
+            cc.exp.resetParams();
+        }
+        cc.finalizeVariants();
+        for (int i = 0; i < choices.length; ++i) {
+            cc.mergeChoice(pats[i], ((BinOp) choices[i]).right, scopes[i]);
         }
         try {
             unify(val.type, argType);
@@ -971,7 +982,7 @@ public final class YetiAnalyzer extends YetiType {
                 ", but a " + val.type + " is given\n    (" +
                 e.getMessage() + ")");
         }
-        return result;
+        return cc.exp;
     }
 
     static Code list(NList list, Scope scope, int depth) {

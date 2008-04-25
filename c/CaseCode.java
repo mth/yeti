@@ -283,15 +283,18 @@ interface CaseCode extends YetiCode {
             Code expr;
         }
 
+        void resetParams() {
+            if (totalParams < paramCount) {
+                totalParams = paramCount;
+            }
+            paramCount = 0;
+        }
+
         void addChoice(CasePattern pattern, Code code) {
             Choice c = new Choice();
             c.pattern = pattern;
             c.expr = code;
             choices.add(c);
-            if (totalParams < paramCount) {
-                totalParams = paramCount;
-            }
-            paramCount = 0;
         }
 
         void gen(Ctx ctx) {
