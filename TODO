@@ -1,12 +1,9 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Real pattern matching in case
 * Foreign structs
 * Better error messages
 * Built-in regex support
-* Some standard library
-  + lazy list constructors
 * Struct properties
 * Struct and list patterns
 * Extendable structs?
