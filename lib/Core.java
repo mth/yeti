@@ -172,7 +172,7 @@ public final class Core {
         }
     }
 
-    public static void badMatch() {
+    public static Object badMatch() {
         throw new IllegalArgumentException("bad match");
     }
 /*

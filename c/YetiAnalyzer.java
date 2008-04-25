@@ -968,7 +968,6 @@ public final class YetiAnalyzer extends YetiType {
         if (t.seen || (t.flags & FL_ANY_PATTERN) != 0)
             return null;
         if ((t.flags & FL_PARTIAL_PATTERN) != 0) {
-            t = t.deref();
             return t.type == MAP ? "[]" : t.toString();
         }
         if (t.type != VAR) {
