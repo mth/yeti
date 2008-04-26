@@ -141,7 +141,10 @@ interface YetiParser {
         boolean property;
         boolean noRec;
 
-        Bind(List args, Node expr, boolean structBind) {
+        Bind() {
+        }
+
+        Bind(List args, Node expr) {
             int first = 0;
             Node nameNode = null;
             while (first < args.size()) {
@@ -215,6 +218,22 @@ interface YetiParser {
 
         String str() {
             return "\\" + arg.show() + " -> " + expr.show();
+        }
+    }
+
+    class StructBind extends Node {
+        Struct bindings;
+        Node expr;
+
+        StructBind(Struct bindings, Node expr) {
+            this.bindings = bindings;
+            this.expr = expr;
+            line = bindings.line;
+            col = bindings.col;
+        }
+
+        String str() {
+            return bindings + " = " + expr;
         }
     }
 
@@ -985,7 +1004,10 @@ interface YetiParser {
                 e.line = partial.line;
                 e.col = partial.col;
             }
-            return args == null ? e : new Bind(args, e, structDef);
+            return args == null ? e :
+                   args.size() == 1 && args.get(0) instanceof Struct
+                   ? (Node) new StructBind((Struct) args.get(0), e)
+                   : new Bind(args, e);
         }
 
         private Node readExpr(String to) {

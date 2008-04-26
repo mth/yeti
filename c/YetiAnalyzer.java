@@ -85,7 +85,9 @@ public final class YetiAnalyzer extends YetiType {
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (NList) op.right, scope, depth);
                 }
-                return selectMember(op, scope, depth);
+                checkSelectorSym(op, op.right);
+                return selectMember(op, (Sym) op.right,
+                        analyze(op.left, scope, depth), scope, depth);
             }
             if (op.op == ":=") {
                 return assignOp(op, scope, depth);
@@ -453,16 +455,15 @@ public final class YetiAnalyzer extends YetiType {
         return arg;
     }
 
-    static Code selectMember(BinOp op, Scope scope, int depth) {
+    static Code selectMember(Node op, Sym member, Code src,
+                             Scope scope, int depth) {
         final Type res = new Type(depth);
-        checkSelectorSym(op, op.right);
-        final String field = ((Sym) op.right).sym;
+        final String field = member.sym;
         Type arg = selectMemberType(res, field, depth);
-        Code src = analyze(op.left, scope, depth);
         try {
             unify(arg, src.type);
         } catch (TypeException ex) {
-            throw new CompileException(op.right,
+            throw new CompileException(member,
                 src.type + " do not have ." + field + " field\n", ex);
         }
         boolean poly = src.polymorph && src.type.finalMembers != null &&
@@ -644,6 +645,24 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
+    static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,
+                             Scope scope, int depth) {
+        if (binder.st.polymorph && !bind.var) {
+            scope = bindPoly(bind.name, binder.st.type, binder,
+                             depth, scope);
+        } else {
+            scope = new Scope(scope, bind.name, binder);
+        }
+        if (bind.var) {
+            registerVar(binder, scope.outer);
+        }
+        if (evalSeq) {
+            binder.evalId = YetiEval.registerBind(bind.name,
+                        binder.st.type, bind.var, binder.st.polymorph);
+        }
+        return scope;
+    }
+
     static Code analSeq(Seq seq, Scope scope, int depth) {
         Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
@@ -661,21 +680,50 @@ public final class YetiAnalyzer extends YetiType {
                         isOp(bind, bind.type, binder.st, scope, depth);
                     }
                 }
-                if (binder.st.polymorph && !bind.var) {
-                    scope = bindPoly(bind.name, binder.st.type, binder,
-                                     depth, scope);
-                } else {
-                    scope = new Scope(scope, bind.name, binder);
-                }
-                if (bind.var) {
-                    registerVar(binder, scope.outer);
-                }
-                if (seq.isEvalSeq) {
-                    binder.evalId = YetiEval.registerBind(bind.name,
-                                binder.st.type, bind.var, binder.st.polymorph);
-                }
+                scope = genericBind(bind, binder, seq.isEvalSeq, scope, depth);
                 bindings[i] = binder;
                 cur = binder;
+            } else if (nodes[i] instanceof StructBind) {
+                StructBind sbind = (StructBind) nodes[i];
+                Code expr = analyze(sbind.expr, scope, depth + 1);
+                BindExpr binder = new BindExpr(expr, false);
+                if (last == null) {
+                    result = binder;
+                } else {
+                    last.result = binder;
+                }
+                last = binder;
+                Node[] fields = sbind.bindings.fields;
+                for (int j = 0; j < fields.length; ++j) {
+                    Bind bind = new Bind();
+                    Node nameNode;
+                    if (fields[j] instanceof Sym) {
+                        bind.expr = nameNode = fields[j];
+                    } else if (fields[j] instanceof Bind) {
+                        Bind field = (Bind) fields[j];
+                        if (field.var || field.property || field.noRec) {
+                            throw new CompileException(field, "Structure " +
+                                "field pattern may not have modifiers");
+                        }
+                        nameNode = field.expr;
+                        bind.expr = new Sym(field.name);
+                        bind.expr.pos(bind.line, bind.col);
+                    } else {
+                        throw new CompileException(fields[j],
+                            "Expected field pattern, not a " + fields[j]);
+                    }
+                    if (!(nameNode instanceof Sym))
+                        throw new CompileException(nameNode,
+                            "Binding name expected, not a " + nameNode);
+                    bind.name = ((Sym) nameNode).sym;
+                    Code code = selectMember(fields[j], (Sym) bind.expr,
+                                  binder.getRef(fields[j].line), scope, depth);
+                    BindExpr fb = new BindExpr(code, false);
+                    scope = genericBind(bind, fb, seq.isEvalSeq, scope, depth);
+                    last.result = fb;
+                    last = fb;
+                }
+                continue;
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
@@ -702,11 +750,11 @@ public final class YetiAnalyzer extends YetiType {
                 cur = new SeqExpr(code);
             }
             if (last == null) {
-                result = last = cur;
+                result = cur;
             } else {
                 last.result = cur;
-                last = cur;
             }
+            last = cur;
         }
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
         for (int i = bindings.length; --i >= 0;) {
