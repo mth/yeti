@@ -829,7 +829,7 @@ interface YetiParser {
                     }
                     return new NList(readMany(',', ']')).pos(line, col);
                 case '{':
-                    return new Struct(readMany(';', '}')).pos(line, col);
+                    return new Struct(readMany(',', '}')).pos(line, col);
                 case ')': case ']': case '}':
                     p = i;
                     return new CloseBracket(src[i]).pos(line, col);
@@ -1363,8 +1363,8 @@ interface YetiParser {
                     param.add(new TypeNode(((Sym) field).sym,
                                 new TypeNode[] { ((IsOp) t).type }));
                     if (!((field = fetch()) instanceof SepOp) ||
-                        ((SepOp) field).sep != ';') {
-                        expect = "Expecting ';' or '}' here, not ";
+                        ((SepOp) field).sep != ',') {
+                        expect = "Expecting ',' or '}' here, not ";
                         break;
                     }
                 }

@@ -48,7 +48,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
     var used = false;
     {
         read num =
-            Core#read(reader (), num);
+            Core#read(reader (), num),
 
         readln () =
             synchronized reader do:
@@ -57,7 +57,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                 else
                     (reader ())#readLine()
                 fi
-            done;
+            done,
 
         contents () =
             synchronized lazyReaderHandle do:
@@ -72,7 +72,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                         r#close()
                     yrt
                 fi
-            done;
+            done,
 
         lines () =
             synchronized reader do:
@@ -83,7 +83,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                     l := (ReaderList#lines(reader ()) unsafely_as list<string>);
                     l
                 fi
-            done;
+            done,
 
         close () =
             try
@@ -94,7 +94,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                 done
             finally
                 (reader ())#close()
-            yrt;
+            yrt,
     });
 
 withHandle h block =
@@ -105,9 +105,9 @@ withHandle h block =
     yrt;
 
 {
-    norec withHandle = withHandle;
+    norec withHandle = withHandle,
 
-    readln () = stdin.readln ();
+    readln () = stdin.readln (),
 
     stdin = lazyReaderHandle do:
         if nullptr? stdin' then
@@ -115,20 +115,19 @@ withHandle h block =
                 new BufferedReader(new InputStreamReader(System#in), 8192);
         fi;
         stdin'
-    done;
+    done,
 
     print v =
        (System#out#print(v);
-        System#out#flush());
+        System#out#flush()),
 
     println v =
-        System#out#println(v);
+        System#out#println(v),
 
     sysExit exitCode =
-        System#exit(exitCode);
+        System#exit(exitCode),
 
-
-    readerHandle reader = lazyReaderHandle \reader;
+    readerHandle reader = lazyReaderHandle \reader,
 
     inputHandle stream encoding is ~InputStream -> string -> '' =
        (var nok = true;
@@ -145,17 +144,17 @@ withHandle h block =
             if nok then
                 stream#close()
             fi
-        yrt);
+        yrt),
 
     writerHandle writer is ~BufferedWriter -> '' = {
         write s is string -> () =
-            writer#write(s);
+            writer#write(s),
         writeln s is string -> () =
            (writer#write(s);
-            writer#newLine());
-        flush () = writer#flush();
-        close () = writer#close();
-    };
+            writer#newLine()),
+        flush () = writer#flush(),
+        close () = writer#close(),
+    },
 
     outputHandle stream encoding is ~OutputStream -> string -> '' =
        (var nok = true;
@@ -172,37 +171,37 @@ withHandle h block =
             if nok then
                 stream#close()
             fi
-        yrt);
+        yrt),
 
     linesOfReader reader is ~BufferedReader -> list<string> =
-        ReaderList#lines(reader) unsafely_as list<string>;
+        ReaderList#lines(reader) unsafely_as list<string>,
 
     openInFile name is string -> string -> '' =
-        inputHandle (new FileInputStream(name) as ~InputStream);
+        inputHandle (new FileInputStream(name) as ~InputStream),
 
     openOutFile name is string -> string -> '' =
-        outputHandle (new FileOutputStream(name) as ~OutputStream);
+        outputHandle (new FileOutputStream(name) as ~OutputStream),
 
     readFile name encoding =
-        withHandle (openInFile name encoding);
+        withHandle (openInFile name encoding),
 
     writeFile name encoding =
-        withHandle (openOutFile name encoding);
+        withHandle (openOutFile name encoding),
 
-    getLines h = h.lines ();
-    putLines h lines = for lines h.writeln;
+    getLines h = h.lines (),
+    putLines h lines = for lines h.writeln,
 
-    getContents h = h.contents ();
+    getContents h = h.contents (),
 
-    trace msg a = (System#err#print(msg); System#err#println(a); a);
+    trace msg a = (System#err#print(msg); System#err#println(a); a),
 
     runThread v f is 'a -> ('a -> ()) -> () =
-        new FunThread(f, v)#start();
+        new FunThread(f, v)#start(),
 
     runDaemonThread v f is 'a -> ('a -> ()) -> () =
        (th = new FunThread(f, v);
         th#setDaemon(true);
-        th#start());
+        th#start()),
 
-    sleep time = Thread#sleep(time * 1000);
+    sleep time = Thread#sleep(time * 1000),
 }

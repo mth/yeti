@@ -37,8 +37,8 @@ load yeti.lang.io;
         stream = conn#getInputStream();
         contentType = conn#getContentType();
         cs = strTrim (strRightOf 'CHARSET=' (strUpper contentType));
-        inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi);
+        inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi),
 
     getTextByUrl url =
-        (openTextUrl url).contents ();
+        (openTextUrl url).contents ()
 }
