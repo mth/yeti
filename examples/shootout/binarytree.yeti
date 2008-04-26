@@ -1,11 +1,11 @@
 makeTree item depth =
     if depth > 0 then
-        { item  = item;
-          left  = Some (makeTree (item * 2 - 1) (depth - 1));
-          right = Some (makeTree (item * 2) (depth - 1));
+        { item  = item,
+          left  = Some (makeTree (item * 2 - 1) (depth - 1)),
+          right = Some (makeTree (item * 2) (depth - 1)),
         }
     else
-        { item = item; left = None (); right = None () }
+        { item = item, left = None (), right = None () }
     fi;
 
 fromSomeNode = fromSome 0 (.item);

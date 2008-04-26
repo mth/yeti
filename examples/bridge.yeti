@@ -12,10 +12,10 @@ circleShape x y radius drawingAPI =
    (var currentRadius = radius;
     {
         draw () =
-            drawingAPI.drawCircle x y currentRadius;
+            drawingAPI.drawCircle x y currentRadius,
 
         resizeByPercentage pct =
-            currentRadius := currentRadius * pct;
+            currentRadius := currentRadius * pct
     });
 
 shapes = [ circleShape 1 2 3 drawingAPI1,

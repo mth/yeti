@@ -1,22 +1,22 @@
 flr x y = (y.q * x + y.r) div (y.s * x + y.t);
-comp1 x y = { q = x.q * y.q + x.r * y.s;
-              r = x.q * y.r + x.r * y.t;
-              s = x.t * y.s;
-              t = x.t * y.t; };
-comp2 x y = { q = x.q * y.q;
-              r = x.q * y.r + x.r * y.t;
-              s = x.s * y.q;
-              t = x.s * y.r + x.t * y.t; };
+comp1 x y = { q = x.q * y.q + x.r * y.s,
+              r = x.q * y.r + x.r * y.t,
+              s = x.t * y.s,
+              t = x.t * y.t };
+comp2 x y = { q = x.q * y.q,
+              r = x.q * y.r + x.r * y.t,
+              s = x.s * y.q,
+              t = x.s * y.r + x.t * y.t };
 str z l =
    (x = head l;
     y = flr 3 z;
     if y == flr 4 z then
-        y :. \(str (comp1 { q = 10; r = -10 * y; s = 0; t = 1 } z) l)
+        y :. \(str (comp1 { q = 10, r = -10 * y, s = 0, t = 1 } z) l)
     else
         str (comp2 z x) (tail l)
     fi);
 
-ns k = { q = k; r = 4 * k + 2; s = 0; t = 2 * k + 1 } :. \(ns (k + 1));
+ns k = { q = k, r = 4 * k + 2, s = 0, t = 2 * k + 1 } :. \(ns (k + 1));
 
 format l n =
     if not (empty? l) then
@@ -27,4 +27,4 @@ format l n =
         format l.snd n
     fi;
 
-format (take (number _argv.[0]) (str { q = 1; r = 0; s = 0; t = 1 } (ns 1))) 0
+format (take (number _argv.[0]) (str { q = 1, r = 0, s = 0, t = 1 } (ns 1))) 0
