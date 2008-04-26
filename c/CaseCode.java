@@ -187,6 +187,8 @@ interface CaseCode extends YetiCode {
                                       "rest", "()Lyeti/lang/AList;");
                 tl.preparePattern(ctx);
                 tl.tryMatch(ctx, onFail, false);
+            } else if (hd == ANY_PATTERN) {
+                ctx.m.visitInsn(POP);
             }
         }
     }
@@ -321,7 +323,8 @@ interface CaseCode extends YetiCode {
             }
             ctx.m.visitLabel(next);
             ctx.popn(patternStack);
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                  "badMatch", "()Ljava/lang/Object;");
             ctx.m.visitLabel(end);
         }
 

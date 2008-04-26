@@ -171,6 +171,10 @@ public final class Core {
             ARGV.set(new MList(argv));
         }
     }
+
+    public static Object badMatch() {
+        throw new IllegalArgumentException("bad match");
+    }
 /*
     public static Object convertList(Object value, String type) {
         if (type == "") {
