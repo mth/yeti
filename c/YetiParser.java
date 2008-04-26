@@ -1458,13 +1458,14 @@ interface YetiParser {
             }
             Node res = readSeq(' ');
             if ((flags & YetiC.CF_EVAL_BIND) != 0) {
-                if (res instanceof Bind) {
+                if (res instanceof Bind || res instanceof StructBind) {
                     res = new Seq(new Node[] { res }).pos(res.line, res.col);
                 }
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;
                     seq.isEvalSeq = true;
-                    if (seq.st[seq.st.length - 1] instanceof Bind) {
+                    if (seq.st[seq.st.length - 1] instanceof Bind ||
+                        seq.st[seq.st.length - 1] instanceof StructBind) {
                         Node[] tmp = new Node[seq.st.length + 1];
                         System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
                         tmp[tmp.length - 1] =
