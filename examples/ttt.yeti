@@ -4,14 +4,14 @@ newGame size = {
     board = array (map \' ' [1 .. size * size]),
     isFull () = not (contains ' ' board),
     hasWon player =
-       (m = size - 1;
+        m = size - 1;
         chk from by = all do p: board.[p * by + from] == player done [0 .. m];
         line i = chk i size or chk (i * size) 1;
-        chk 0 (m + 2) or chk m m or any line [0 .. m]),
+        chk 0 (m + 2) or chk m m or any line [0 .. m],
     show () =
-       (cell n =
+        cell n =
             " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
-        fold (^) "" (map cell [0 .. maxPos])),
+        fold (^) "" (map cell [0 .. maxPos]),
     check me op =
         if hasWon me then
             { score = 1, pos = -1 }

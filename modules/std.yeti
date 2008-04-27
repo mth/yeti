@@ -172,16 +172,16 @@ plus a b = a + b;
 
     splitBy pred list is (('a -> boolean) -> list<'a>
                           -> { fst is list<'a>, snd is list<'a> }) = 
-       (a = new MList();
+        a = new MList();
         var l = list; // over-optimized loop from hell. don't code like that.
         not (empty? l) and (h = head l; not (pred h) and (a#add(h); true)) loop
             l := tail l;
         { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi,
-          snd = l }),
+          snd = l },
 
     splitAt n list is number -> list<''>
                       -> { fst is list<''>, snd is list<''> } =
-       (a = new MList();
+        a = new MList();
         var l = list;
         var n = n;
         if n < 256 then
@@ -192,7 +192,7 @@ plus a b = a + b;
             l := tail l;
             n := n - 1);
         { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi,
-          snd = l }),
+          snd = l },
 
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l then
@@ -242,12 +242,12 @@ plus a b = a + b;
     strLeft s end = strSlice s 0 end,
 
     strLeftOf subString s is string -> string -> string =
-       (i = strIndexOf s subString 0;
-        if i < 0 then '' else strSlice s 0 i fi),
+        i = strIndexOf s subString 0;
+        if i < 0 then '' else strSlice s 0 i fi,
 
-    strRightOf subString s is string -> string -> string=
-       (i = strLastIndexOf s subString 0;
-        if i < 0 then '' else strRight s (i + strLength subString) fi),
+    strRightOf subString s is string -> string -> string =
+        i = strLastIndexOf s subString 0;
+        if i < 0 then '' else strRight s (i + strLength subString) fi,
 
     strJoin sep list is string -> list<''> -> string =
         if empty? list then
@@ -278,20 +278,20 @@ plus a b = a + b;
         fi,
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
-       (i = (h unsafely_as ~Hash)#entrySet()#iterator();
+        i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
-            f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b))),
+            f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)),
 
     mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c> =
-       (a = new MList();
+        a = new MList();
         a#reserve((h unsafely_as ~Hash)#size());
         i = (h unsafely_as ~Hash)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
             a#add(f (e#getKey() unsafely_as 'a)
                     (e#getValue() unsafely_as 'b)));
-        a unsafely_as list?<''>),
+        a unsafely_as list?<''>,
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),

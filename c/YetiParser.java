@@ -41,6 +41,7 @@ struct: '{' { binding } '}'
 
 package yeti.lang.compiler;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import yeti.lang.Core;
@@ -1200,10 +1201,19 @@ interface YetiParser {
             while (!((sym = fetch()) instanceof Eof)) {
                 if (sym instanceof BindOp) {
                     args = l;
-                    l = new ArrayList();
-                    continue;
+                    if (end == '}') {
+                        l = Collections.singletonList(readSeq(' '));
+                        if ((sym = eofWas) instanceof Eof)
+                            break;
+                    } else {
+                        l = new ArrayList();
+                        continue;
+                    }
                 }
-                if (sym instanceof SepOp && ((SepOp) sym).sep == sep) {
+                if (sym instanceof SepOp) {
+                    if (((SepOp) sym).sep != sep) {
+                        break;
+                    }
                     res.add(def(args, l, end == '}'));
                     args = null;
                     l = new ArrayList();

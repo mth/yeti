@@ -118,8 +118,8 @@ withHandle h block =
     done,
 
     print v =
-       (System#out#print(v);
-        System#out#flush()),
+        System#out#print(v);
+        System#out#flush(),
 
     println v =
         System#out#println(v),
@@ -130,7 +130,7 @@ withHandle h block =
     readerHandle reader = lazyReaderHandle \reader,
 
     inputHandle stream encoding is ~InputStream -> string -> '' =
-       (var nok = true;
+        var nok = true;
         try
             r = new BufferedReader(
                     if encoding == "" then
@@ -144,20 +144,20 @@ withHandle h block =
             if nok then
                 stream#close()
             fi
-        yrt),
+        yrt,
 
     writerHandle writer is ~BufferedWriter -> '' = {
         write s is string -> () =
             writer#write(s),
         writeln s is string -> () =
-           (writer#write(s);
-            writer#newLine()),
+            writer#write(s);
+            writer#newLine(),
         flush () = writer#flush(),
         close () = writer#close(),
     },
 
     outputHandle stream encoding is ~OutputStream -> string -> '' =
-       (var nok = true;
+        var nok = true;
         try
             w = new BufferedWriter(
                     if encoding == "" then
@@ -171,7 +171,7 @@ withHandle h block =
             if nok then
                 stream#close()
             fi
-        yrt),
+        yrt,
 
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
@@ -199,9 +199,9 @@ withHandle h block =
         new FunThread(f, v)#start(),
 
     runDaemonThread v f is 'a -> ('a -> ()) -> () =
-       (th = new FunThread(f, v);
+        th = new FunThread(f, v);
         th#setDaemon(true);
-        th#start()),
+        th#start(),
 
     sleep time = Thread#sleep(time * 1000),
 }
