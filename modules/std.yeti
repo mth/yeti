@@ -90,7 +90,6 @@ plus a b = a + b;
     at h k = h.[k],
 
     // functions for standard operators
-    norec ignore x = (),
     norec not v = not v,
     norec (and) a b = a and b,
     norec (or) a b = a or b,
