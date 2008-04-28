@@ -63,9 +63,14 @@ public final class YetiAnalyzer extends YetiType {
             return analSeq((Seq) node, scope, depth);
         }
         if (node instanceof Bind) {
-            Function r = singleBind((Bind) node, scope, depth);
-            if (!((BindExpr) r.selfBind).used) {
-                unusedBinding((Bind) node);
+            Bind bind = (Bind) node;
+            if (bind.name == "_" && !(bind.expr instanceof Lambda)) {
+                return new Cast(analyze(bind.expr, scope, depth),
+                                UNIT_TYPE, false, bind.line);
+            }
+            Function r = singleBind(bind, scope, depth);
+            if (bind.name != "_" && !((BindExpr) r.selfBind).used) {
+                unusedBinding(bind);
             }
             return r;
         }
@@ -614,7 +619,7 @@ public final class YetiAnalyzer extends YetiType {
         Function lambda = new Function(new Type(depth + 1));
         BindExpr binder = new BindExpr(lambda, bind.var);
         lambda.selfBind = binder;
-        if (!bind.noRec) {
+        if (!bind.noRec && bind.name != "_") {
             scope = new Scope(scope, bind.name, binder);
         }
         lambdaBind(lambda, bind, scope, depth + 1);
@@ -668,8 +673,11 @@ public final class YetiAnalyzer extends YetiType {
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr result = null, last = null, cur;
         for (int i = 0; i < nodes.length - 1; ++i) {
-            if (nodes[i] instanceof Bind) {
-                Bind bind = (Bind) nodes[i];
+            Bind bind = null;
+            if (nodes[i] instanceof Bind &&
+                (bind = (Bind) nodes[i]).name == "_") {
+                cur = new SeqExpr(analyze(bind.expr, scope, depth));
+            } else if (bind != null) {
                 BindExpr binder;
                 if (bind.expr instanceof Lambda) {
                     binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
@@ -695,7 +703,7 @@ public final class YetiAnalyzer extends YetiType {
                 last = binder;
                 Node[] fields = sbind.bindings.fields;
                 for (int j = 0; j < fields.length; ++j) {
-                    Bind bind = new Bind();
+                    bind = new Bind();
                     Node nameNode;
                     if (fields[j] instanceof Sym) {
                         bind.expr = nameNode = fields[j];

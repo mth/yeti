@@ -15,7 +15,7 @@ processRequest conn =
             throw new Bad('403 Forbidden');
         fi;
         uri = subst '/$' '/index.html';
-        ignore (conn.readTo "\r\n\r\n" 65536);
+        _ = conn.readTo "\r\n\r\n" 65536;
         open (basePath ^ uri) do f:
             replyHeader '200 OK' 'text/html';
             conn.sendFully (f.readBlock 16384) > 0 loop;

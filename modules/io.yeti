@@ -89,7 +89,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
             try
                 synchronized reader do:
                     if used then
-                        ignore (length l)
+                        _ = (length l)
                     fi
                 done
             finally

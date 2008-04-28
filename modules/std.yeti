@@ -257,12 +257,12 @@ plus a b = a + b;
             var l = tail list;
             if strLength sep == 0 then
                 not (nullptr? l) loop
-                   (ignore buf#append("\(head l)");
+                   (_ = buf#append("\(head l)");
                     l := tail l)
             else
                 not (nullptr? l) loop
-                   (ignore buf#append(sep);
-                    ignore buf#append("\(head l)");
+                   (_ = buf#append(sep);
+                    _ = buf#append("\(head l)");
                     l := tail l)
             fi;
             buf#toString()
@@ -273,7 +273,7 @@ plus a b = a + b;
             str
         else
             buf = new java.lang.StringBuffer(str);
-            buf#length() < n loop ignore buf#append(pad);
+            buf#length() < n loop (_ = buf#append(pad));
             buf#toString()
         fi,
 

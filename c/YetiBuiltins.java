@@ -91,53 +91,32 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    abstract class Bind1Arg implements Binder, Opcodes {
+    class IsNullPtr implements Binder, Opcodes {
         private String libName;
         private YetiType.Type type;
-        boolean polymorph = true;
 
-        Bind1Arg(YetiType.Type type, String libName) {
+        IsNullPtr(YetiType.Type type, String fun) {
             this.type = type;
-            this.libName = libName;
+            libName = fun;
         }
 
         public BindRef getRef(int line) {
             return new StaticRef("yeti/lang/std", libName,
-                                 type, this, polymorph, line) {
+                                 type, this, true, line) {
                 Code apply(final Code arg, final YetiType.Type res, int line) {
                     return new Code() {
                         { type = res; }
 
                         void gen(Ctx ctx) {
-                            Bind1Arg.this.gen(ctx, arg);
+                            IsNullPtr.this.gen(ctx, arg);
                         }
 
                         void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                            Bind1Arg.this.genIf(ctx, arg, to, ifTrue);
+                            IsNullPtr.this.genIf(ctx, arg, to, ifTrue);
                         }
                     };
                 }
             };
-        }
-
-        void gen(Ctx ctx, Code arg) {
-            arg.gen(ctx);
-        }
-
-        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    class Ignore extends Bind1Arg {
-        Ignore() {
-            super(YetiType.A_TO_UNIT, "ignore");
-        }
-    }
-
-    class IsNullPtr extends Bind1Arg {
-        IsNullPtr(YetiType.Type type, String fun) {
-            super(type, fun);
         }
 
         void gen(Ctx ctx, Code arg) {
