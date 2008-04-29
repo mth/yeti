@@ -9,7 +9,7 @@ makeTree item depth =
     fi;
 
 fromSomeNode = fromSome 0 (.item);
-check node = node.item + fromSomeNode node.left - fromSomeNode node.right;
+check {item, left, right} = item + fromSomeNode left - fromSomeNode right;
 out s depth check = println "\(s) of depth \(depth)\t check: \(check)";
 
 checkDepth depth item =

@@ -740,7 +740,6 @@ public final class YetiAnalyzer extends YetiType {
                 addSeq(last, binder);
                 scope = bindStruct(binder, sbind.bindings.fields,
                                    seq.isEvalSeq, scope, depth, last);
-                continue;
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
@@ -754,7 +753,6 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
                 scope.importClass = new Type("L" + name + ';');
-                continue;
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {
@@ -773,15 +771,18 @@ public final class YetiAnalyzer extends YetiType {
                 unusedBinding((Bind) nodes[i]);
             }
         }
-        if (last[0] == null) {
+        return wrapSeq(code, last);
+    }
+
+    static Code wrapSeq(Code code, SeqExpr[] seq) {
+        if (seq == null || seq[0] == null)
             return code;
-        }
-        for (SeqExpr cur = last[1]; cur != null; cur = (SeqExpr) cur.result) {
+        for (SeqExpr cur = seq[1]; cur != null; cur = (SeqExpr) cur.result) {
             cur.type = code.type;
         }
-        last[0].result = code;
-        last[1].polymorph = code.polymorph;
-        return last[1];
+        seq[0].result = code;
+        seq[1].polymorph = code.polymorph;
+        return seq[1];
     }
 
     static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
@@ -795,6 +796,7 @@ public final class YetiAnalyzer extends YetiType {
         Type expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
         Scope bodyScope = null;
+        SeqExpr[] seq = null;
         if (lambda.arg instanceof Sym) {
             if (expected != null && expected.type == FUN) {
                 to.arg.type = expected.param[0];
@@ -806,21 +808,29 @@ public final class YetiAnalyzer extends YetiType {
                 bodyScope = new Scope(scope, argName, to);
         } else if (lambda.arg instanceof UnitLiteral) {
             to.arg.type = UNIT_TYPE;
+        } else if (lambda.arg instanceof Struct) {
+            to.arg.type = new Type(depth);
+            seq = new SeqExpr[] { null, null };
+            bodyScope = bindStruct(to, ((Struct) lambda.arg).fields,
+                                   false, scope, depth, seq);
         } else {
             throw new CompileException(lambda.arg,
                                        "Bad argument: " + lambda.arg);
         }
         if (bodyScope == null)
             bodyScope = new Scope(scope, null, to);
-        bodyScope.closure = to;
+        Scope marker = bodyScope;
+        while (marker.outer != scope)
+            marker = marker.outer;
+        marker.closure = to;
         if (lambda.expr instanceof Lambda) {
             Function f = new Function(expected != null && expected.type == FUN
                                       ? expected.param[1] : null);
             // make f to know about its outer scope before processing it
-            to.setBody(f);
+            to.setBody(wrapSeq(f, seq));
             lambda(f, (Lambda) lambda.expr, bodyScope, depth);
         } else {
-            to.setBody(analyze(lambda.expr, bodyScope, depth));
+            to.setBody(wrapSeq(analyze(lambda.expr, bodyScope, depth), seq));
         }
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
