@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public final class YetiAnalyzer extends YetiType {
+    static final String NONSENSE_STRUCT = "No sense in empty struct";
+
     static void unusedBinding(Bind bind) {
         throw new CompileException(bind, "Unused binding: " + bind.name);
     }
@@ -677,8 +679,11 @@ public final class YetiAnalyzer extends YetiType {
         last[0] = expr;
     }
 
-    static Scope bindStruct(Binder binder, Node[] fields, boolean isEval,
+    static Scope bindStruct(Binder binder, Struct st, boolean isEval,
                             Scope scope, int depth, SeqExpr[] last) {
+        Node[] fields = st.fields;
+        if (fields.length == 0)
+            throw new CompileException(st, NONSENSE_STRUCT);
         for (int j = 0; j < fields.length; ++j) {
             Bind bind = new Bind();
             Node nameNode;
@@ -738,8 +743,8 @@ public final class YetiAnalyzer extends YetiType {
                 Code expr = analyze(sbind.expr, scope, depth + 1);
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
-                scope = bindStruct(binder, sbind.bindings.fields,
-                                   seq.isEvalSeq, scope, depth, last);
+                scope = bindStruct(binder, sbind.bindings, seq.isEvalSeq,
+                                   scope, depth, last);
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
@@ -811,7 +816,7 @@ public final class YetiAnalyzer extends YetiType {
         } else if (lambda.arg instanceof Struct) {
             to.arg.type = new Type(depth);
             seq = new SeqExpr[] { null, null };
-            bodyScope = bindStruct(to, ((Struct) lambda.arg).fields,
+            bodyScope = bindStruct(to, (Struct) lambda.arg,
                                    false, scope, depth, seq);
         } else {
             throw new CompileException(lambda.arg,
@@ -850,9 +855,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code structType(Struct st, Scope scope, int depth) {
         Node[] nodes = st.fields;
-        if (nodes.length == 0) {
-            throw new CompileException(st, "No sense in empty struct");
-        }
+        if (nodes.length == 0)
+            throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope;
         Map fields = new HashMap();
         Map codeFields = new HashMap();
