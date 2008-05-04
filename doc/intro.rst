@@ -138,7 +138,8 @@ The function value is printed as <classname>, where classname is the name
 of the Java class generated for implementing the function. Function type
 is written down as argument-type -> result-type. Here compiler inferred
 that both argument and result types are numbers, because the function
-adds number 1 to the argument value. Using the function is called application.
+adds number 1 to the argument value. Using the function is called application
+(or a function call).
 ::
 
         > inc = do x: x + 1 done
