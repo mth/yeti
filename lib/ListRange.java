@@ -101,7 +101,7 @@ public class ListRange extends AList implements ListIter {
             } else {
                 buf.append(',');
             }
-            buf.append(i.first());
+            buf.append(Core.show(i.first()));
         }
         buf.append(']');
         return buf.toString();

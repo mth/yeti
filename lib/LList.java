@@ -107,10 +107,10 @@ public class LList extends AList {
 
     public String toString() {
         StringBuffer buf = new StringBuffer("[");
-        buf.append(first());
+        buf.append(Core.show(first()));
         for (AIter i = rest(); i != null; i = i.next()) {
             buf.append(',');
-            buf.append(i.first());
+            buf.append(Core.show(i.first()));
         }
         buf.append(']');
         return buf.toString();

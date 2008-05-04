@@ -67,10 +67,9 @@ public class Hash extends java.util.HashMap implements ByKey {
             if (n != 0) {
                 s[n] = ",";
             }
-            Object v;
-            s[n + 1] = (v = e.getKey()) == null ? "()" : v.toString();
+            s[n + 1] = Core.show(e.getKey());
             s[n + 2] = ":";
-            s[n + 3] = (v = e.getValue()) == null ? "()" : v.toString();
+            s[n + 3] = Core.show(e.getValue());
         }
         s[n] = "]";
         return Core.concat(s);

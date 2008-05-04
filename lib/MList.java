@@ -93,7 +93,7 @@ abstract class AMList extends AList implements ListIter {
             if (i != 0) {
                 buf.append(',');
             }
-            buf.append(array[i]);
+            buf.append(Core.show(array[i]));
         }
         buf.append(']');
         return buf.toString();

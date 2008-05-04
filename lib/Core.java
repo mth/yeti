@@ -139,7 +139,30 @@ public final class Core {
         }
         if (o instanceof String) {
             // TODO escaping
-            return '"' + (String) o + '"';
+            char[] s = ((String) o).toCharArray();
+            StringBuffer r = new StringBuffer("\"");
+            int p = 0, i = 0, cnt = s.length;
+            for (String c; i < cnt; ++i) {
+                if (s[i] == '\\') {
+                    c = "\\\\";
+                } else if (s[i] == '"') {
+                    c = "\\\"";
+                } else if (s[i] == '\n') {
+                    c = "\\n";
+                } else if (s[i] == '\r') {
+                    c = "\\r";
+                } else if (s[i] == '\t') {
+                    c = "\\t";
+                } else {
+                    continue;
+                }
+                r.append(s, p, i - p);
+                r.append(c);
+                p = i + 1;
+            }
+            r.append(s, p, i - p);
+            r.append('"');
+            return r.toString();
         }
         return o.toString();
     }
