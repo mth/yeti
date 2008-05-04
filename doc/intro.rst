@@ -185,7 +185,14 @@ The function definition can have multiple arguments::
         > add 2 4
         6 is number
 
-As expected, it also works with function literal::
+This is analogous to the following Java function (the Yeti number type
+cannot be mapped directly to Java primitive type)::
+
+        double add(double x, double y) {
+            return x + y;
+        }
+
+As expected, multiple arguments work also with function literal::
 
         > sub = do x y: x - y done
         sub is number -> number -> number = <code$>
