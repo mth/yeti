@@ -110,7 +110,7 @@ but REPL won't print it.
 Value bindings
 ~~~~~~~~~~~~~~~~~~
 Values can be named - this is called binding value to a name.
-In java terms a value binding is a final variable - those bindings are
+In Java terms a value binding is a final variable - those bindings are
 by default immutable.
 ::
 
