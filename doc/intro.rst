@@ -175,4 +175,43 @@ Java code::
         ...
             dec(3)
 
+Multiple arguments
+++++++++++++++++++++++++
+
+The function definition can have multiple arguments::
+
+        > add x y = x + y
+        add is number -> number -> number = <code$add>
+        > add 2 4
+        6 is number
+
+As expected, it also works with function literal::
+
+        > sub = do x y: x - y done
+        sub is number -> number -> number = <code$>
+        > sub 2 4
+        -2 is number
+
+This multiple-arguments function definition is actually just
+a shorthand for a nested function literals::
+
+        > sub_ = do x: do y: x - y done done
+        sub_ is number -> number -> number = <code$>
+        > sub_ 2 4
+        -2 is number
+        > (sub_ 2) 4
+        -2 is number
+
+
+        > sub_from_2 = sub_ 2
+        sub_from_2 is number -> number = <yeti.lang.Fun2$1>
+        > sub_from_2 4
+        -2 is number
+        > sub_from_2 4
+        -2 is number
+        > add_to_3 = add 3
+        add_to_3 is number -> number = <yeti.lang.Fun2$1>
+        > add_to_3 2
+        5 is number
+        > 
 
