@@ -166,7 +166,7 @@ has a shorthand syntax for it.
 
 It's almost exactly like a value binding, but function argument is placed
 after the binding name. The last code example is similar to the following
-java code::
+Java code::
 
         int dec(int x) {
             return x;
