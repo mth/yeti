@@ -1,3 +1,5 @@
+.. ex: se sw=4 sts=4 expandtab:
+
 ===========================
 Short introduction to Yeti
 ===========================
@@ -19,10 +21,10 @@ Interactive evaluation
 Yeti comes with interactive evaluation environment. This can be started
 by simply running ``java -jar yeti.jar``::
 
-        ~/yeti$ java -jar yeti.jar
-        Yeti REPL.
+    ~/yeti$ java -jar yeti.jar
+    Yeti REPL.
 
-        >
+    >
 
 At least J2SE 1.4 compatible JVM is required.
 REPL means Read-Eval-Print-Loop - a short description of the interactive
@@ -34,13 +36,13 @@ when some is available (rlwrap can be installed on Debian or Ubuntu linux
 systems using ``aptitude install rlwrap`` or ``sudo aptitude install rlwrap``).
 ::
 
-        ~/yeti$ alias yc='rlwrap java -jar yeti.jar'
-        ~/yeti$ yc
-        Yeti REPL.
+    ~/yeti$ alias yc='rlwrap java -jar yeti.jar'
+    ~/yeti$ yc
+    Yeti REPL.
 
-        > 42
-        42 is number
-        >
+    > 42
+    42 is number
+    >
 
 Here expression 42 is typed. REPL answers by telling 42 is number.
 Most expression values are replied in the form ``value is sometype`` -
@@ -52,16 +54,16 @@ Primitive types
 Yeti has string, number, boolean and () as primitive types.
 String literals can be quoted by single or double quotes::
 
-        > "some text"
-        "some text" is string
-        > 'some text'
-        "some text" is string
-        > "test\n"
-        "test\n" is string
-        > 'test\n'
-        "test\\n" is string
-        > 'i''m'
-        "i'm" is string
+    > "some text"
+    "some text" is string
+    > 'some text'
+    "some text" is string
+    > "test\n"
+    "test\n" is string
+    > 'test\n'
+    "test\\n" is string
+    > 'i''m'
+    "i'm" is string
 
 The difference is that double-quoted strings may contain escaped sequences
 and expressions, like "\n" while single-quoted string literal will interpret
@@ -69,31 +71,31 @@ everything expect the apostrophe as a literal.
 
 Double-quoted strings may contain embedded expressions::
 
-        > "1 + 2 = \(1 + 2)"
-        "1 + 2 = 3" is string
+    > "1 + 2 = \(1 + 2)"
+    "1 + 2 = 3" is string
 
 Booleans have just two possible values::
-        > true
-        true is boolean
-        > false
-        false is boolean
+    > true
+    true is boolean
+    > false
+    false is boolean
 
 While all numbers have statically a number type, there is runtime
 distinction between integers, rational numbers and floating-point numbers.
 ::
 
-        > 0.4
-        0.4 is number
-        > 2/5
-        0.4 is number
-        > 4/2
-        2 is number
-        > 4e2
-        400.0 is number
-        > 4e / 2
-        2.0 is number
-        > 2
-        2 is number
+    > 0.4
+    0.4 is number
+    > 2/5
+    0.4 is number
+    > 4/2
+    2 is number
+    > 4e2
+    400.0 is number
+    > 4e / 2
+    2.0 is number
+    > 2
+    2 is number
 
 Here 0.4 and integer divisions will result in rational numbers,
 4e2 and 4e are floating point numbers (e - exponent) and 2 is integer.
@@ -104,8 +106,8 @@ Unit type (also called () type) has just one possible value - (),
 but REPL won't print it.
 ::
 
-        > ()
-        >
+    > ()
+    >
 
 Value bindings
 ~~~~~~~~~~~~~~~~~~
@@ -114,14 +116,14 @@ In Java terms a value binding is a final variable - those bindings are
 by default immutable.
 ::
 
-        > a = 40
-        a is number = 40
-        > a
-        40 is number
-        > b
-        1:1: Unknown identifier: b
-        > a + 2
-        42 is number
+    > a = 40
+    a is number = 40
+    > a
+    40 is number
+    > b
+    1:1: Unknown identifier: b
+    > a + 2
+    42 is number
 
 Attempt to use an unbound name will result in error.
 
@@ -131,8 +133,8 @@ Functions are values and can be defined using function literal syntax
 **do** argument\ **:** expression **done**.
 ::
 
-        > do x: x + 1 done
-        <code$> is number -> number
+    > do x: x + 1 done
+    <code$> is number -> number
 
 The function value is printed as <classname>, where classname is the name
 of the Java class generated for implementing the function. Function type
@@ -142,83 +144,110 @@ adds number 1 to the argument value. Using the function is called application
 (or a function call).
 ::
 
-        > inc = do x: x + 1 done
-        inc is number -> number = <code$>
-        > inc 2
-        3 is number
+    > inc = do x: x + 1 done
+    inc is number -> number = <code$>
+    > inc 2
+    3 is number
 
 Here the same function literal is bound to a name ``inc`` and then value
 2 is applied to it. Since application syntax is simply function value
 followed by argument value, a value can be applied directly to
 a function value::
 
-        > do x: x + 1 done 2
-        3 is number
+    > do x: x + 1 done 2
+    3 is number
 
 Defining function value and giving it a name is a common operation, so Yeti
 has a shorthand syntax for it.
 ::
 
-        > dec x = x - 1
-        dec is number -> number = <code$dec>
-        > dec 3
-        2 is number
+    > dec x = x - 1
+    dec is number -> number = <code$dec>
+    > dec 3
+    2 is number
 
 It's almost exactly like a value binding, but function argument is placed
 after the binding name. The last code example is similar to the following
 Java code::
 
-        int dec(int x) {
-            return x;
-        }
-        
-        ...
-            dec(3)
+    int dec(int x) {
+        return x;
+    }
+    
+    ...
+        dec(3)
 
 Multiple arguments
 ++++++++++++++++++++++++
 
-The function definition can have multiple arguments::
+It is possible to have multiple arguments in the function definition::
 
-        > add x y = x + y
-        add is number -> number -> number = <code$add>
-        > add 2 4
-        6 is number
+    > sub x y = x - y
+    sub is number -> number -> number = <code$sub>
+    > sub 5 2
+    3 is number
 
-This is analogous to the following Java function (the Yeti number type
-cannot be mapped directly to Java primitive type)::
+This works also with function literals::
 
-        double add(double x, double y) {
-            return x + y;
-        }
+    > subA = do x y: x - y done
+    subA is number -> number -> number = <code$>
+    > subA 5 2
+    3 is number
 
-As expected, multiple arguments work also with function literal::
+Actually, both of those previous multi-argument function definitions were
+just shorthands for nested function literals::
 
-        > sub = do x y: x - y done
-        sub is number -> number -> number = <code$>
-        > sub 2 4
-        -2 is number
+    > subB = do x: do y: x - y done done
+    subB is number -> number -> number = <code$>
+    > subB 5 2
+    3 is number
+    > (subB 5) 2
+    3 is number
 
-This multiple-arguments function definition is actually just
-a shorthand for a nested function literals::
+All of those sub definitions are equivalent, and the last one shows
+explicitly, what really happens. The nesting of function literals gives
+a function, that returns another function as a result.
+When first argument (5 in the example) is applied, the outer function
+returns a instance of the inner function with x bound to the applied value
+(``do y: 5 - y done``, when 5 was applied).
+Actual subtraction is done only when another argument (2 in the example) is
+applied to the returned function. The function returned from the first
+application can be used as any other function.
+::
 
-        > sub_ = do x: do y: x - y done done
-        sub_ is number -> number -> number = <code$>
-        > sub_ 2 4
-        -2 is number
-        > (sub_ 2) 4
-        -2 is number
+    > subFrom10 = subB 10
+    subFrom10 is number -> number = <yeti.lang.Fun2$1>
+    > subFrom2 = subB 2
+    subFrom2 is number -> number = <yeti.lang.Fun2$1>
+    > subFrom10 3
+    7 is number
+    > subFrom2 4
+    -2 is number
+
+So, technically there are only single argument functions in the Yeti,
+that get a single value as an argument and return a single value.
+Multiple arguments are just a special way of using single argument
+functions, that return another function (this is also called curring).
+This explains the type of the multiple-argument functions -
+``number -> number -> number`` really means ``number -> (number -> number)``,
+a function from number to a function from number to number.
+
+This may sound complicated, but you don't have to think how it really works,
+as long as you just need a multiple-argument function - declaring
+multiple arguments and appling them in the same order is enough.
+Knowing how curring works allows you to use partial application (like
+subFrom10 and subFrom2 in the above example).
+
+The definition ``sub x y = x - y`` is by intent similar to the following
+Java function::
+
+    double sub(double x, double y) {
+        return x - y;
+    }
 
 
-        > sub_from_2 = sub_ 2
-        sub_from_2 is number -> number = <yeti.lang.Fun2$1>
-        > sub_from_2 4
-        -2 is number
-        > sub_from_2 4
-        -2 is number
-        > add_to_3 = add 3
-        add_to_3 is number -> number = <yeti.lang.Fun2$1>
-        > add_to_3 2
-        5 is number
-        > 
+
+
+
+
 

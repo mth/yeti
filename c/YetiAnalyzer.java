@@ -1007,6 +1007,15 @@ public final class YetiAnalyzer extends YetiType {
                     return new ConsPattern(hd, tl);
                 }
             }
+            if (node instanceof Struct) {
+                Struct st = (Struct) node;
+                if (st.fields.length == 0)
+                    throw new CompileException(st, NONSENSE_STRUCT);
+                Map patterns = new HashMap();
+                for (int i = 0; i < st.fields.length; ++i) {
+                    
+                }
+            }
             throw new CompileException(node, "Bad case pattern: " + node);
         }
 
