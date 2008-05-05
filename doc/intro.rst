@@ -298,3 +298,13 @@ that any value may be given and it will be ignored.
 The ``'a`` in the argument type is a free type variable - meaning any
 argument type is allowed.
 
+There is also a shorthand notation for defining function literals that
+ignore the argument::
+
+    > f = \3
+    f is 'a -> number = <code$>
+    > f "test"
+    3 is number
+    > \3 ()
+    3 is number
+
