@@ -305,6 +305,6 @@ ignore the argument::
     f is 'a -> number = <code$>
     > f "test"
     3 is number
-    > \3 ()
-    3 is number
+    > \"wtf" ()
+    "wtf" is string
 
