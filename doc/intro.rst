@@ -245,9 +245,56 @@ Java function::
         return x - y;
     }
 
+Unit type and functions
++++++++++++++++++++++++++++
 
+What if you don't want to return anything?
+::
 
+    > println
+    <yeti.lang.io$println> is 'a -> ()
+    > println "Hello world"
+    Hello world
 
+The println function is an example of action - it is not called for getting
+a returned value, but for a side effect (printing message to the console).
+Since every function in Yeti must return a value, a special unit value ``()``
+is returned by println.
 
+Unit value is also used, when you don't want to give an argument.
+::
 
+    > const42 () = 42
+    const42 is () -> number = <code$const42>
+    > const42 ()
+    42 is number
+    > const42 "test"
+    1:9: Cannot apply string to () -> number
+        Type mismatch: () is not string
+
+Here the ``()`` is used as an argument in the function definition. This tells
+to the compiler, that only the unit value is allowed as argument (in other
+words, that the argument type is unit type). Attempt to apply anything else
+results in a type error.
+
+Ignoring the argument
+++++++++++++++++++++++++
+
+There is an another way of definining function that do not want to use it's
+argument value.
+::
+
+    > const13 _ = 13
+    const13 is 'a -> number = <code$const13>
+    > const13 42
+    13 is number
+    > const13 "wtf"
+    13 is number
+    > const13 ()
+    13 is number
+
+The ``_`` symbol is a kind of wildcard - it tells to the compiler
+that any value may be given and it will be ignored.
+The ``'a`` in the argument type is a free type variable - meaning any
+argument type is allowed.
 
