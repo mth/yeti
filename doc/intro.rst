@@ -308,6 +308,46 @@ ignore the argument::
     > \"wtf" ()
     "wtf" is string
 
+Sequences and bind scopes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Multiple side-effecting expressions can be sequenced using ``;`` operator::
+
+    > println "Hello,"; println "world!"
+    Hello,
+    world!
+
+The expression ``a; b`` means evaluate expression ``a``, discard its result
+and after that evaluate expression ``b``. The result of ``b`` is then used
+as a result of the sequence operator. The first expression is required
+to have a unit type.
+::
+
+    > 1; true
+    1:1: Unit type expected here, not a number
+    > (); true
+    true is boolean
+
+The first expression gets a type error because 1 is number and not a unit.
+The ``;`` operator is right-associative, so ``a; b; c`` is parsed like
+``a; (b; c)``.
+::
+
+    > println "a"; println "b"; println "c"; 42
+    a
+    b
+    c
+    42 is number
+
+A combination of binding and sequence, where binding is in the place of the
+first (ignored) expression of the sequence operator, gives a bind expression.
+::
+
+    > println (a = 3; a + 2)
+    5
+
+
+
 Variables
 ~~~~~~~~~~~~~~
 The value bindings shown before were immutable.
@@ -387,6 +427,4 @@ bindings are not really distinguishable from the value that was bound to them).
     > f ()
     3 is number
 
-Binding scopes
-~~~~~~~~~~~~~~~~~
 
