@@ -308,3 +308,85 @@ ignore the argument::
     > \"wtf" ()
     "wtf" is string
 
+Variables
+~~~~~~~~~~~~~~
+The value bindings shown before were immutable.
+::
+
+    > x = 3
+    x is number = 3
+    > f = \x 
+    f is 'a -> number = <code$>
+    > x = 4
+    x is number = 4
+    > f ()
+    3 is number
+
+The rebinding of x to a value 4 didn't actually modify the original binding
+of the x. Therefore the f () still returned 3. Variable bindings are
+introduced using ``var`` keyword.
+::
+
+    > var x = "test"
+    var x is string = test
+    > x
+    "test" is string
+    > x := "something else"
+    > x
+    "something else" is string
+
+The ``:=`` operator is an assignment operator, which changes a value stored
+in the variable. Attempt to assign to an unbound name or a immutable
+binding will result in an error::
+
+    > y := 3
+    1:1: Unknown identifier: y
+    > f := \3
+    1:3: Non-mutable expression on the left of the assign operator :=
+
+Assigning a new value to the variable will cause a function referencing
+it also return a new value::
+
+    > g = \x
+    g is 'a -> string = <code$>
+    > g ()
+    "something else" is string
+    > x := "whatever"
+    > g ()
+    "whatever" is string
+
+Assigning values could be done inside a function::
+
+    > setX v = x := v
+    setX is string -> () = <code$setX>
+    > setX "newt"
+    > x
+    "newt" is string
+
+Here the setX function is used for assigning to the variable. The binding
+could be now rebound with the original variable still fully accesable through
+the functions defined before.
+::
+
+    > x = true
+    x is boolean = true
+    > g ()
+    "newt" is string
+    > setX "ghost?"
+    > g ()
+    "ghost?" is string
+    > x
+    true is boolean
+
+The g and setX functions retained a reference to the variable defined before
+(in the function definitions scope), regardless of the current binding. Also
+the very first binding of x is still reachable through f (although immutable
+bindings are not really distinguishable from the value that was bound to them).
+::
+
+    > f ()
+    3 is number
+
+Binding scopes
+~~~~~~~~~~~~~~~~~
+
