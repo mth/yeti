@@ -348,7 +348,7 @@ first (ignored) expression of the sequence operator, gives a bind expression.
     > (x = 3; y = x - 1; x * y)
     6 is number
 
-The last one is equivalent to ``println (x = 3; (y = x - 1; x * y))``.
+The last one is equivalent to ``(x = 3; (y = x - 1; x * y))``.
 The binding on the left side of ``;`` will be available in the expression
 on the right side of the ``;`` - this is called the scope of the binding.
 
