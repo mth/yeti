@@ -429,7 +429,7 @@ Assigning values could be done inside a function::
     "newt" is string
 
 Here the setX function is used for assigning to the variable. The binding
-could be now rebound with the original variable still fully accesable through
+could be rebound now with the original variable still fully accesable through
 the functions defined before.
 ::
 
