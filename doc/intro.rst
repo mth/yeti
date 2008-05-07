@@ -4,6 +4,8 @@
 Short introduction to Yeti
 ===========================
 
+.. contents:: Contents
+
 What is Yeti?
 ~~~~~~~~~~~~~~~~~~
 Yeti is a ML-derived strict, statically typed functional language,
