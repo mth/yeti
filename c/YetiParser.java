@@ -1466,12 +1466,17 @@ interface YetiParser {
                     "Expected " + s + " name, not a ");
                 isModule = s.equals("module");
             }
-            Node res = readSeq(' ');
+            char first = p < src.length ? src[p] : ' ';
+            Node res;
             if ((flags & YetiC.CF_EVAL_BIND) != 0) {
+                Node[] list = readMany(';', ' ');
+                res = list.length == 1 ? list[0]
+                    : list.length == 0 ? (Node) new UnitLiteral()
+                    : new Seq(list);
                 if (res instanceof Bind || res instanceof StructBind) {
-                    res = new Seq(new Node[] { res }).pos(res.line, res.col);
+                    res = new Seq(list);
                 }
-                if (res instanceof Seq) {
+                if (res instanceof Seq && (list.length > 1 || first != '(')) {
                     Seq seq = (Seq) res;
                     seq.isEvalSeq = true;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
@@ -1483,6 +1488,8 @@ interface YetiParser {
                         seq.st = tmp;
                     }
                 }
+            } else {
+                res = readSeq(' ');
             }
             if (eofWas != EOF) {
                 throw new CompileException(eofWas, "Unexpected " + eofWas);

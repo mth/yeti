@@ -343,9 +343,34 @@ A combination of binding and sequence, where binding is in the place of the
 first (ignored) expression of the sequence operator, gives a bind expression.
 ::
 
-    > println (a = 3; a + 2)
-    5
+    > (x = 3; x * 2)
+    6 is number
+    > (x = 3; y = x - 1; x * y)
+    6 is number
 
+The last one is equivalent to ``println (x = 3; (y = x - 1; x * y))``.
+The binding on the left side of ``;`` will be available in the expression
+on the right side of the ``;`` - this is called the scope of the binding.
+
+Because the bind expression of ``y`` is in the scope of ``x``,
+the binding of ``y`` is in the scope of ``x`` and the scope of ``y``
+is nested in the scope of ``x`` (meaning both ``x`` and ``y`` are available
+in the scope of ``y``).
+
+Rebinding a name in a nested scope will hide the original binding::
+
+    > x = 3; (x = x - 1; x * 2) + x
+    7 is number
+    x is number = 3
+
+While the ``x`` in the nested scope (bound to value 2) hides the outer ``x``
+binding to value 3, the outer binding is not actually affected by this -
+the ``+ x`` uses the outer binding.
+
+The above example also somewhat shows, how the scoping works in the interactive
+environment - it is like all the lines read were separated by ``;``. Therefore
+entering a binding will cause all subsequent expressions to become into the
+scope of the binding.
 
 
 Variables
