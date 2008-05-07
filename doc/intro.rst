@@ -359,6 +359,9 @@ the binding of ``y`` is in the scope of ``x`` and the scope of ``y``
 is nested in the scope of ``x`` (meaning both ``x`` and ``y`` are available
 in the scope of ``y``).
 
+The parenthesis were used only to delimit the expressions in the interactive
+environment (otherwise the scope would expand to following expressions).
+
 Rebinding a name in a nested scope will hide the original binding::
 
     > x = 3; (x = x - 1; x * 2) + x
@@ -367,31 +370,26 @@ Rebinding a name in a nested scope will hide the original binding::
 
 While the ``x`` in the nested scope (bound to value 2) hides the outer ``x``
 binding to value 3, the outer binding is not actually affected by this -
-the ``+ x`` uses the outer binding.
+the ``+ x`` uses the outer binding. **Binding a value to a name will never
+modify any existing binding.**
 
 The above example also somewhat shows, how the scoping works in the interactive
 environment - it is like all the lines read were separated by ``;``. Therefore
-entering a binding will cause all subsequent expressions to be in the scope of
-the binding.
+entering a binding will cause all subsequently entered expressions to be in the
+scope of that binding. A consequence of that is, that you can define multiple
+bindings in one line entered into the interactive::
 
+    > a = 5; b = a * 7
+    a is number = 5
+    b is number = 35
+    > b / a
+    7 is number
 
 Variables
 ~~~~~~~~~~~~~~
+
 The value bindings shown before were immutable.
-::
-
-    > x = 3
-    x is number = 3
-    > f = \x 
-    f is 'a -> number = <code$>
-    > x = 4
-    x is number = 4
-    > f ()
-    3 is number
-
-The rebinding of x to a value 4 didn't actually modify the original binding
-of the x. Therefore the f () still returned 3. Variable bindings are
-introduced using ``var`` keyword.
+Variable bindings are introduced using ``var`` keyword.
 ::
 
     > var x = "test"
@@ -408,11 +406,11 @@ binding will result in an error::
 
     > y := 3
     1:1: Unknown identifier: y
-    > f := \3
-    1:3: Non-mutable expression on the left of the assign operator :=
+    > println := \()
+    1:9: Non-mutable expression on the left of the assign operator :=
 
 Assigning a new value to the variable will cause a function referencing
-it also return a new value::
+to it also return a new value::
 
     > g = \x
     g is 'a -> string = <code$>
@@ -446,12 +444,4 @@ the functions defined before.
     true is boolean
 
 The g and setX functions retained a reference to the variable defined before
-(in the function definitions scope), regardless of the current binding. Also
-the very first binding of x is still reachable through f (although immutable
-bindings are not really distinguishable from the value that was bound to them).
-::
-
-    > f ()
-    3 is number
-
-
+(in the function definitions scope), regardless of the current binding.
