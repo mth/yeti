@@ -369,8 +369,8 @@ the ``+ x`` uses the outer binding.
 
 The above example also somewhat shows, how the scoping works in the interactive
 environment - it is like all the lines read were separated by ``;``. Therefore
-entering a binding will cause all subsequent expressions to become into the
-scope of the binding.
+entering a binding will cause all subsequent expressions to be in the scope of
+the binding.
 
 
 Variables
