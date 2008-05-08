@@ -471,7 +471,7 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitJumpInsn(GOTO, nojmp);
                 }
                 ctx.m.visitLabel(nonull);
-                if (!eq)
+                if (!eq && ctx.compilation.isGCJ)
                     ctx.m.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
                 ctx.m.visitInsn(SWAP); // 1-2
             } else {
@@ -485,7 +485,7 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitJumpInsn(ROP[op], to);
                     return;
                 }
-                if (!eq)
+                if (!eq && ctx.compilation.isGCJ)
                     ctx.m.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
                 arg2.gen(ctx);
                 ctx.visitLine(line);

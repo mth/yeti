@@ -84,6 +84,7 @@ interface YetiCode {
         private SourceReader reader;
         private String[] preload;
         private Map compiled = new HashMap();
+        final boolean isGCJ;
         ClassFinder classPath;
         Map classes = new HashMap();
         Map types = new HashMap();
@@ -95,6 +96,8 @@ interface YetiCode {
             this.writer = writer;
             this.preload = preload;
             this.classPath = finder;
+            // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
+            isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
         }
 
         static CompileCtx current() {
@@ -661,14 +664,17 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
+            int ins = object == null ? INVOKESTATIC :
+                        method.classType.javaType.isInterface()
+                            ? INVOKEINTERFACE : INVOKEVIRTUAL;
             if (object != null) {
                 object.gen(ctx);
-                ctx.m.visitTypeInsn(CHECKCAST,
-                    method.classType.javaType.className());
+                if (ctx.compilation.isGCJ || ins != INVOKEINTERFACE) {
+                    ctx.m.visitTypeInsn(CHECKCAST,
+                        method.classType.javaType.className());
+                }
             }
-            genCall(ctx, object == null ? INVOKESTATIC :
-                        method.classType.javaType.isInterface()
-                            ? INVOKEINTERFACE : INVOKEVIRTUAL);
+            genCall(ctx, ins);
             convertValue(ctx, method.returnType);
         }
     }
@@ -1499,7 +1505,9 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             val.gen(ctx);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+            if (ctx.compilation.isGCJ) {
+                ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+            }
             key.gen(ctx);
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
@@ -1510,7 +1518,9 @@ interface YetiCode {
             return new Code() {
                 void gen(Ctx ctx) {
                     val.gen(ctx);
-                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+                    if (ctx.compilation.isGCJ) {
+                        ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+                    }
                     key.gen(ctx);
                     setValue.gen(ctx);
                     ctx.visitLine(line);
