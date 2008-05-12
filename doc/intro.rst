@@ -153,7 +153,7 @@ adds number 1 to the argument value. Using the function is called application
 
 Here the same function literal is bound to a name ``inc`` and then value
 2 is applied to it. Since application syntax is simply function value
-followed by argument value, a value can be applied directly to
+followed by an argument value, a value can be applied directly to
 a function value::
 
     > do x: x + 1 done 2
@@ -210,7 +210,7 @@ All of those sub definitions are equivalent, and the last one shows
 explicitly, what really happens. The nesting of function literals gives
 a function, that returns another function as a result.
 When first argument (5 in the example) is applied, the outer function
-returns a instance of the inner function with x bound to the applied value
+returns an instance of the inner function with x bound to the applied value
 (``do y: 5 - y done``, when 5 was applied).
 Actual subtraction is done only when another argument (2 in the example) is
 applied to the returned function. The function returned from the first
