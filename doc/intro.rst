@@ -533,11 +533,11 @@ Loop could be used to define a factorial function::
 
     fac x =
        (var n = x;
-        var v = 1;
+        var accum = 1;
         n > 1 loop
-           (v := v * n;
+           (accum := accum * n;
             n := n - 1);
-        v)
+        accum)
 
 This doesn't look like a definition of factorial. More declarative factorial
 function can be written using recursion::
@@ -602,4 +602,35 @@ Tail-recursive factorial function can be written like that::
 
     fac' x = tailFac 1 x;
 
+Additional argument ``accum`` (accumulator) is introduced for storing the
+intermediate result of computation of the factorial. The accumulator is
+initialized to 1 (since the factorial <= 1 is 1) in the one-argument ``fac'``
+factorial definition. Using accumulator is a standard technique for
+transforming non-tail-recursive algorithms to tail-recursive ones.
+
+The resulting ``fac'`` gives same result as the previous non-tail-recursive
+``fac``, when tried in the interactive environment::
+
+    > tailFac accum x = if x <= 1 then accum else tailFac (accum * x) (x - 1) fi
+    tailFac is number -> number -> number = <code$tailFac>
+    > fac' x = tailFac 1 x
+    fac' is number -> number = <code$fac$z>
+    > fac' 5
+    120 is number
+
+But the evaluation process is different::
+
+    fac' 5 =
+        tailFac 1 5 = tailFac (1 * 5) (5 - 1) =
+        tailFac 5 4  = tailFac (5 * 4) (4 - 1) =
+        tailFac 20 3 = tailFac (20 * 3) (3 - 1) =
+        tailFac 60 2 = tailFac (60 * 2) (2 - 1) =
+        tailFac 120 1 = 120
+
+As it can be seen, the nesting of the expressions and suspension of the
+intermediate function applications won't happen here. The compiler actually
+converts the tail call of the ``tailFac`` into changing the argument values
+and a jump instruction to the start of the function - resulting in a
+code very similar to that of the first factorial example using explicit
+loop.
 
