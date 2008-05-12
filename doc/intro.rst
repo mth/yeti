@@ -529,4 +529,38 @@ is true, and after evaluating *body-expression* the loop will be retried.
 Condition must have a boolean type and the *body-expression* must
 have a unit type. The loop expression itself also has a unit type.
 
+Loop could be used to define a factorial function::
+
+    fac x =
+       (var n = x;
+        var v = 1;
+        n > 1 loop
+           (v := v * n;
+            n := n - 1);
+        v)
+
+This doesn't look like definition of factorial. More declarative factorial
+function can be written using recursion::
+
+    fac x =
+        if x <= 1 then
+            1
+        else
+            x * fac (x - 1)
+        fi
+
+There is a special case of scoping rules for function bindings, which tells
+that when a value bound is a function literal, then the function literal will
+be also in the binding scope (in other words, the *self*-binding can be
+used inside the function). Therefore the fac function can use its own binding.
+
+This resulting function tells basically that factorial of 0 or 1 is 1 and
+factorial of larger numbers is the ``x * fac (x - 1)``. When tried in the
+interactive, it will work as expected::
+
+    > fac x = if x <= 1 then 1 else x * fac (x - 1) fi
+    fac is number -> number = <code$fac>
+    > fac 5
+    120 is number
+
 
