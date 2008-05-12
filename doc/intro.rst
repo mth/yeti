@@ -539,7 +539,7 @@ Loop could be used to define a factorial function::
             n := n - 1);
         v)
 
-This doesn't look like definition of factorial. More declarative factorial
+This doesn't look like a definition of factorial. More declarative factorial
 function can be written using recursion::
 
     fac x =
