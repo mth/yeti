@@ -484,7 +484,7 @@ implicit ``else ()`` had different types.
 
 Because the conditional expression is an expression, and not a statement,
 it is more similar to the Java ternary operator ``?:`` than the ``if``
-statement - it can be used anywhere, where expression is expected.
+statement - it can be used anywhere, where an expression is expected.
 ::
 
     > printAbs x = println if x < 0 then -x else x fi
