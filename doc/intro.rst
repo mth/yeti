@@ -563,4 +563,43 @@ interactive, it will work as expected::
     > fac 5
     120 is number
 
+There is one problem with this implementation - it is less efficient because
+of the nesting of the expressions. Because the value returned is a result
+of the multiplication of x and value of the inner call, the outer functions
+frame must remain active while calling the inner one. The evaluation
+will go on like that::
+
+    fac 5 = 5 * fac 4
+          = 5 * (4 * fac 3)
+          = 5 * (4 * (3 * fac 2))
+          = 5 * (4 * (3 * (2 * fac 1)))
+          = 5 * (4 * (3 * (2 * 1)))
+          = 5 * (4 * (3 * 2))
+          = 5 * (4 * 6)
+          = 5 * 24
+          = 120
+
+The intermediate expression ``5 * (4 * (3 * (2 * fac 1)))`` basically means,
+that all those nested applications of fac 5, fac 4, fac 3, fac 2 are suspended
+(in their stack frames) while evaluating the final fac 1 - producing the
+long unevaluated expression. This consumes extra memory (O(n) stack memory
+usage in this case) and makes the implementation noticeably less efficient.
+
+Solution to this is to rewrite the recursive function to use a *tail recursion*,
+which means that the function return value is directly the result of the 
+recursive application. In this case the storing of the functions intermediate
+states (frames) is not necessary, since the function does nothing after the
+recursive tail call.
+
+Tail-recursive factorial function can be written like that::
+
+    tailFac accum x =
+        if x <= 1 then
+            accum
+        else
+            tailFac (accum * x) (x - 1)
+        fi;
+
+    fac' x = tailFac 1 x;
+
 
