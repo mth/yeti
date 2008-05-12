@@ -603,7 +603,7 @@ Tail-recursive factorial function can be written like that::
     fac' x = tailFac 1 x;
 
 Additional argument ``accum`` (accumulator) is introduced for storing the
-intermediate result of computation of the factorial. The accumulator is
+intermediate result of the computation of the factorial. The accumulator is
 initialized to 1 (since the factorial <= 1 is 1) in the one-argument ``fac'``
 factorial definition. Using accumulator is a standard technique for
 transforming non-tail-recursive algorithms to tail-recursive ones.
