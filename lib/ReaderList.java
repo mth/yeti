@@ -67,8 +67,8 @@ class ReaderList extends LList {
                 }
             }
         } catch (IOException ex) {
-            // TODO unsafe throw
-            throw new RuntimeException(ex);
+            Unsafe.unsafeThrow(ex);
+            return null;
         }
     }
 }

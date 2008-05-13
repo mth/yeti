@@ -51,9 +51,23 @@ public class SpecialLib implements Opcodes {
         storeClass("yeti/lang/Fun2_.class");
     }
 
+    void unsafe() throws Exception {
+        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_2, 0, "yeti/lang/Unsafe", null, "java/lang/Object", null);
+        MethodVisitor mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC,
+                "unsafeThrow", "(Ljava/lang/Throwable;)V", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(ATHROW);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        storeClass("yeti/lang/Unsafe.class");
+    }
+
     public static void main(String[] args) throws Exception {
         SpecialLib l = new SpecialLib();
         l.prefix = args[0] + '/';
         l.fun2_();
+        l.unsafe();
     }
 }
