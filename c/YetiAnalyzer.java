@@ -832,8 +832,9 @@ public final class YetiAnalyzer extends YetiType {
             Function f = new Function(expected != null && expected.type == FUN
                                       ? expected.param[1] : null);
             // make f to know about its outer scope before processing it
-            to.setBody(wrapSeq(f, seq));
+            to.setBody(seq == null || seq[0] == null ? (Code) f : seq[1]);
             lambda(f, (Lambda) lambda.expr, bodyScope, depth);
+            wrapSeq(f, seq);
         } else {
             to.setBody(wrapSeq(analyze(lambda.expr, bodyScope, depth), seq));
         }
