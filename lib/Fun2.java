@@ -35,11 +35,10 @@ public abstract class Fun2 extends Fun {
     public abstract Object apply2(Object a, Object b);
 
     public Object apply(final Object a) {
-        return new Fun() {
-            public Object apply(Object b) {
-                return apply2(a, b);
-            }
-        };
+        Fun2_ f = new Fun2_();
+        f.fun = this;
+        f.arg = a;
+        return f;
     }
 }
 

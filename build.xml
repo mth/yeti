@@ -10,8 +10,14 @@
     <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
 </target>
 
-<target name="lib" unless="no.lib.build">
-    <mkdir dir="${basedir}/.build/lib"/>
+<target name="lib" depends="fetch" unless="no.lib.build">
+    <mkdir dir="${basedir}/.build/util"/>
+    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
+           includes="SpecialLib.java" encoding="UTF-8" classpath="${asm}"/>
+    <java classname="yeti.lang.SpecialLib" failonerror="true"
+          classpath="${asm}:${basedir}/.build/util">
+        <arg value="${basedir}/.build/lib"/>
+    </java>
     <javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib" debug="on"
         encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"/>
 </target>
@@ -20,7 +26,7 @@
     <available property="no.lib.build" file="${basedir}/.build/lib" type="dir"/>
 </target>
 
-<target name="compiler" depends="checklib,lib,fetch">
+<target name="compiler" depends="checklib,lib">
     <mkdir dir="${basedir}/.build/compiler"/>
     <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
