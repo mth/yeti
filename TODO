@@ -1,12 +1,12 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* Struct properties
+* Struct patterns
+* Extendable structs?
+* Built-in regex support
 * Foreign structs
 * Better error messages
-* Built-in regex support
-* Struct properties
-* Struct and list patterns
-* Extendable structs?
 * Lambda inlineing optimisation
 * Direct double optimisation, when it can be deduced,
   that there are always floats.
