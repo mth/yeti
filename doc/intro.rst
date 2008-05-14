@@ -632,5 +632,35 @@ intermediate function applications won't happen here. The compiler actually
 converts the tail call of the ``tailFac`` into changing the argument values
 and a jump instruction to the start of the function - resulting in a
 code very similar to that of the first factorial example using explicit
-loop.
+loop. Yeti does tail-call optimisation only with self-reference from
+single or directly nested function literals (full tail call support is
+somewhat difficult to implement effectivily in the JVM).
+
+The function bindings can be used directly as expressions::
+
+    fac =
+        (tailFac accum x =
+            if x <= 1 then
+                accum
+            else
+                tailFac (accum * x) (x - 1)
+            fi) 1;
+
+Such function binding is basically a function literal with a self-binding -
+the value of the bind expression is the bound function literal.
+In the above example ``1`` is directly applied to that function value (as
+a value for the accum argument) - resulting in an one-argument ``fac``
+function. Reread about the `multiple arguments`_, if you don't remember,
+how the partial application works.
+
+Iteration using **loop**\s and optimised tail-recursion are semantically
+equivalent. So it can be said, that iteration is just a special case of
+recursion. It is usually preferrable in Yeti to use recursive functions
+for iteration - as it is often more declarative and uniform approach.
+Still, the **loop** should be used, when it shows more clearly the intent
+of the code. It should be noted, that direct iteration is needed relatively
+rarely in the Yeti code, as common cases of it can be abstracted away into
+generic functions (some standard library functions like ``for``, ``map``
+and ``fold`` will be discussed later).
+
 
