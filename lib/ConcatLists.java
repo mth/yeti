@@ -55,10 +55,10 @@ public class ConcatLists extends LList {
 
     public static AList concat(AIter src) {
         while (src != null) {
-            AIter h = (AIter) src.first();
+            AList h = (AList) src.first();
             src = src.next();
             if (h != null && !h.isEmpty())
-                return new ConcatLists(h, src);
+                return src == null ? h : new ConcatLists(h, src);
         }
         return null;
     }
