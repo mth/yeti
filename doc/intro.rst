@@ -659,8 +659,8 @@ recursion. It is usually preferrable in Yeti to use recursive functions
 for iteration - as it is often more declarative and uniform approach.
 Still, the **loop** should be used, when it shows more clearly the intent
 of the code. It should be noted, that direct iteration is needed relatively
-rarely in the Yeti code, as common cases of it can be abstracted away into
-generic functions (some standard library functions like ``for``, ``map``
-and ``fold`` will be discussed later).
+rarely in the Yeti code, as the common cases of it can be abstracted away
+into generic functions (some standard library functions like ``for``,
+``map`` and ``fold`` are discussed later).
 
 
