@@ -153,8 +153,12 @@ plus a b = a + b;
         if a < 0 then -a else a fi,
     sum l =
         fold plus 0 l,
-    concat l =
-        fold (++) [] l,
+    concat l is list?<list?<''>> -> list<''> =
+        if empty? l then
+            []
+        else
+            ConcatLists#concat(l) unsafely_as list<''>
+        fi,
     concatMap f =
         concat . (map f),
     any f l =
