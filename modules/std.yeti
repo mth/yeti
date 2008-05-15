@@ -204,6 +204,15 @@ plus a b = a + b;
             TakeList#take(l, n) unsafely_as list<''>
         fi,
 
+    drop n l =
+        if n <= 0 then
+            l
+        elif empty? l then
+            []
+        else
+            drop (n - 1) ((l unsafely_as ~AList)#rest() unsafely_as list<''>)
+        fi,
+
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<''>,
 

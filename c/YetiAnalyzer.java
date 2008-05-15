@@ -877,18 +877,20 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(field, "Duplicate field "
                     + field.name + " in the structure");
             }
+            Function lambda = !field.noRec && field.expr instanceof Lambda
+                                ? new Function(new Type(depth)) : null;
             Code code = values[i] =
-                    !field.noRec && field.expr instanceof Lambda
-                        ? new Function(new Type(depth))
-                        : analyze(field.expr, scope, depth);
+                lambda != null ? lambda : analyze(field.expr, scope, depth);
             names[i] = field.name;
             fields.put(field.name,
                 field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                code.polymorph || field.expr instanceof Lambda ? code.type
+                code.polymorph || lambda != null ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
             if (!field.noRec) {
-                local = new Scope(local, field.name,
-                                  result.bind(i, code, field.var));
+                Binder bind = result.bind(i, code, field.var);
+                if (lambda != null)
+                    lambda.selfBind = bind;
+                local = new Scope(local, field.name, bind);
             }
         }
         for (int i = 0; i < nodes.length; ++i) {
