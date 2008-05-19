@@ -26,6 +26,11 @@
     <available property="no.lib.build" file="${basedir}/.build/lib" type="dir"/>
 </target>
 
+<target name="checkmod">
+    <available property="no.modules.build"
+               file="${basedir}/.build/modules" type="dir"/>
+</target>
+
 <target name="compiler" depends="checklib,lib">
     <mkdir dir="${basedir}/.build/compiler"/>
     <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
@@ -46,12 +51,13 @@
     </yetic>
 </target>
 
-<target name="modules" depends="prepare-build,taskdef">
+<target name="modules" depends="prepare-build,taskdef"
+        unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
            preload=""/>
 </target>
 
-<target name="yeti" depends="compiler,taskdef">
+<target name="yeti" depends="compiler,checkmod,modules">
     <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler">
         <classpath>
             <path location="${basedir}/.build/modules"/>
