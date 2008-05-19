@@ -836,8 +836,7 @@ Such a function is already defined in the standard library, called ``for``::
 In the last example a function literal was given as the function, resulting
 in a code looking very similar to an imperative for loop.
 
-Any strict list function in the standard library could be theoretically
-written in the terms of ``empty?``, ``head``, ``tail`` and ``::``, although
-not always effectively.
+Any strict list function in the standard library can be written in
+the terms of ``empty?``, ``head``, ``tail`` and ``::``.
 
 
