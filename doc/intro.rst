@@ -731,3 +731,35 @@ into generic functions (some standard library functions like ``for``,
 Lists
 ~~~~~~~~
 
+List literals can be written by enclosing comma-separated values between
+square brackets::
+
+    > [1, 3]
+    [1,3] is list<number>
+    > ["one", "two", "three"]
+    ["one","two","three"] is list<string>
+    > []
+    [] is list<'a>
+
+All list elements must have a same type and the element type is a parameter
+for the list type - list<number> means a list of numbers. The element type
+of empty list literal ``[]`` is not determined, because it doesn't contain
+any elements.
+
+Lists are implemented as immutable single-linked lists. This means that
+while it is impossible to modify existing list, it is possible to create
+a new list (node) from some element and existing list. This is done using
+list constructor operator ``::`` - actually the list literal syntax is a
+shorthand for a special case of using ``::``.
+::
+
+    > 1 :: 3 :: []
+    [1,3] is list<number>
+    > "one" :: "two" :: "three" :: []
+    ["one","two","three"] is list<string>
+
+These two list definitions are equivalent to the previous ones.
+The ``::`` operator is right-associative, so ``1 :: 3 :: []`` is parsed
+like ``1 :: (3 :: [])``. 
+
+
