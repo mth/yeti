@@ -247,6 +247,72 @@ Java function::
         return x - y;
     }
 
+Operators and sections
+++++++++++++++++++++++++++
+
+Most Yeti infix operators are functions. Operator can be used like a normal
+function by enclosing it in parenthesis::
+
+    > (+)
+    <yeti.lang.std$plus> is number -> number -> number
+    > 2 + 3
+    5 is number
+    > (+) 2 3
+    5 is number
+
+Since operators are just functions, they can be defined like any other
+function::
+
+    > (|-|) x y = abs (x - y)   
+    |-| is number -> number -> number = <code$$I$m$I>
+    > 2 |-| 3
+    1 is number
+
+Any sequence of symbols can be defined as operator. Syntactically, infix
+operators consist entirely of symbols, while normal identifiers consist
+of alphanumeric characters (_, ? and ' are included in the alphanumeric
+characters set).
+
+Also, any normal identifier bound to a function can be used as a binary
+operator by enclosing it between backticks::
+
+    > min
+    <yeti.lang.std$min> is 'a -> 'a -> 'a
+    > min 2 3
+    2 is number
+    > 2 `min` 3
+    2 is number
+
+Since binary operators are two-argument functions, it is possible to apply
+only first argument::
+
+    > subFrom10 = (-) 10
+    subFrom10 is number -> number = <yeti.lang.Fun2_>
+    > subFrom10 3
+    7 is number
+
+However, there is somewhat more readable syntax for that, called sections::
+
+    > subFrom10 = (5 -)
+    subFrom10 is number -> number = <yeti.lang.Fun2_>
+    > subFrom10 3
+    7 is number
+    > (10 -) 3
+    7 is number
+
+Both of those definitions of ``subFrom10`` are equivalent to the one defined
+before while describing `multiple arguments`_.
+
+Sections also allow partial application with the second argument::
+
+    > half = (/ 2)
+    half is number -> number = <yeti.lang.Bind2nd>
+    > half 5
+    2.5 is number
+
+This ``(/ 2)`` section is practically equivalent to function
+``do x: x / 2 done``.
+
 Unit type and functions
 +++++++++++++++++++++++++++
 
@@ -662,5 +728,6 @@ of the code. It should be noted, that direct iteration is needed relatively
 rarely in the Yeti code, as the common cases of it can be abstracted away
 into generic functions (some standard library functions like ``for``,
 ``map`` and ``fold`` are discussed later).
+
 
 

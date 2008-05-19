@@ -1476,7 +1476,8 @@ interface YetiParser {
                 if (res instanceof Bind || res instanceof StructBind) {
                     res = new Seq(list);
                 }
-                if (res instanceof Seq && (list.length > 1 || first != '(')) {
+                if (res instanceof Seq && (list.length > 1 || first != '(' ||
+                                           list[0] instanceof Bind)) {
                     Seq seq = (Seq) res;
                     seq.isEvalSeq = true;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
