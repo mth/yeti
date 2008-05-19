@@ -760,6 +760,35 @@ shorthand for a special case of using ``::``.
 
 These two list definitions are equivalent to the previous ones.
 The ``::`` operator is right-associative, so ``1 :: 3 :: []`` is parsed
-like ``1 :: (3 :: [])``. 
+like ``1 :: (3 :: [])``. The list structure would be something like this::
 
+    a -> b -> []
+    |    |
+    1    3
 
+The [1,3] list is the ``a`` node. List can be accessed using 3 basic list
+function - ``empty?``, ``head`` and ``tail``. The ``head`` returns value
+associated with the given list node (``head a`` is 1 and ``head b`` is 3).
+The ``tail`` returns next node (``head a`` is ``b`` and ``head b`` is ``[]``).
+The ``empty?`` function just checks whether a given list is empty list (``[]``)
+or not.
+::
+
+    > a = [1,3]
+    a is list<number> = [1,3]
+    > empty? a
+    false is boolean
+    > head a
+    1 is number
+    > b = tail a
+    b is list<number> = [3]
+    > head b
+    3 is number
+    > tail b
+    [] is list<number>
+    > empty? []
+    true is boolean
+
+Any list function in the standard library could be theoretically
+written in terms of ``empty?``, ``head``, ``tail`` and ``::``, although not
+always effectively.
