@@ -310,8 +310,7 @@ Sections also allow partial application with the second argument::
     > half 5
     2.5 is number
 
-This ``(/ 2)`` section is practically equivalent to function
-``do x: x / 2 done``.
+This ``(/ 2)`` section is equivalent to function ``do x: x / 2 done``.
 
 Unit type and functions
 +++++++++++++++++++++++++++
