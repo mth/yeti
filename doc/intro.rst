@@ -301,7 +301,7 @@ However, there is somewhat more readable syntax for that, called sections::
     7 is number
 
 Both of those definitions of ``subFrom10`` are equivalent to the one defined
-before while describing `multiple arguments`_.
+before in the explanation of the `multiple arguments`_.
 
 Sections also allow partial application with the second argument::
 
