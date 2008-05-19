@@ -312,7 +312,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
             String res = null;
             switch (type) {
                 case FUN:
-                    res = (param[0].type == FUN
+                    res = (param[0].deref().type == FUN
                         ? "(" + param[0].str(vars, refs) + ")"
                         : param[0].str(vars, refs))
                         + " -> " + param[1].str(vars, refs);

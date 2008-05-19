@@ -766,7 +766,7 @@ like ``1 :: (3 :: [])``. The list structure would be something like this::
     |    |
     1    3
 
-The [1,3] list is the ``a`` node. List can be accessed using 3 basic list
+The ``[1,3]`` list is the ``a`` node. Lists can be accessed using 3 basic list
 function - ``empty?``, ``head`` and ``tail``. The ``head`` returns value
 associated with the given list node (``head a`` is 1 and ``head b`` is 3).
 The ``tail`` returns next node (``head a`` is ``b`` and ``head b`` is ``[]``).
@@ -789,6 +789,55 @@ or not.
     > empty? []
     true is boolean
 
-Any list function in the standard library could be theoretically
-written in terms of ``empty?``, ``head``, ``tail`` and ``::``, although not
-always effectively.
+This can be used as an example for writing a function, that will print all
+list elements::
+
+    printElem l =
+        if not (empty? l) then
+            println (head l);
+            printElem (tail l)
+        fi;
+
+List head and tail will be printed, if the list is non-empty.
+When tried in the interactive, it works as expected::
+
+  > printElem l = if not (empty? l) then println (head l); printElem (tail l) fi
+  printElem is list?<'a> -> () = <code$printElem>
+  > printElem [1,3]
+  1
+  3
+
+Only ``println`` call in the ``printElem`` function has anything to do with
+printing. The ``println`` can be given as argument, resulting in 
+a generic list iteration function::
+
+    > forEach l f = if not (empty? l) then f (head l); forEach (tail l) f fi;
+    forEach is list?<'a> -> ('a -> ()) -> () = <code$forEach>
+    > forEach [1,3] println
+    1
+    3
+
+This ``forEach`` function can be used for iterating any list, so that a
+function is called for each list element. In a way it is a implementation
+of the visitor pattern.
+
+Such a function is already defined in the standard library, called ``for``::
+
+    > for
+    <yeti.lang.std$for> is list?<'a> -> ('a -> ()) -> ()
+    > for [1,3] println
+    1
+    3
+    > for [2,3,5] do v: println "element is \(v)" done
+    element is 2
+    element is 3
+    element is 5
+
+In the last example a function literal was given as the function, resulting
+in a code looking very similar to an imperative for loop.
+
+Any strict list function in the standard library could be theoretically
+written in the terms of ``empty?``, ``head``, ``tail`` and ``::``, although
+not always effectively.
+
+

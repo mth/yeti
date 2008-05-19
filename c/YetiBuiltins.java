@@ -156,7 +156,7 @@ interface YetiBuiltins extends CaseCode {
 
     class IsEmpty extends IsNullPtr {
         IsEmpty() {
-            super(YetiType.LIST_TO_BOOL, "empty?");
+            super(YetiType.LIST_TO_BOOL, "empty$q");
         }
 
         void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
