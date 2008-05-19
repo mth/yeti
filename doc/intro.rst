@@ -729,5 +729,6 @@ rarely in the Yeti code, as the common cases of it can be abstracted away
 into generic functions (some standard library functions like ``for``,
 ``map`` and ``fold`` are discussed later).
 
-
+Lists
+~~~~~~~~
 
