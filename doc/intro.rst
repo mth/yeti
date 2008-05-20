@@ -886,7 +886,7 @@ using ``for`` is also possible using an accumulator variable::
     20 is number
 
 It is easy to use ``fold`` to define other list iterating operations,
-like ``length`` (which is part of the standard library).
+like ``length`` (which is also part of the standard library).
 ::
 
     > len l = fold do n _: n + 1 done 0 l
