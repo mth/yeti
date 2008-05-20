@@ -790,7 +790,7 @@ the terms of ``empty?``, ``head``, ``tail`` and ``::``.
     > empty? []
     true is boolean
 
-This can be used as an example for writing a function, that will print all
+This can be used as an example for writing a function, that prints all
 list elements::
 
     printElem l =
