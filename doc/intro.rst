@@ -836,7 +836,60 @@ Such a function is already defined in the standard library, called ``for``::
 In the last example a function literal was given as the function, resulting
 in a code looking very similar to an imperative for loop.
 
+A similar list iteration operation is calculating sum::
+
+    > recSum acc l = if empty? l then acc else recSum (head l + acc) (tail l) fi
+    recSum is number -> list?<number> -> number = <code$recSum>
+    > recSum 0 [4,7,9]
+    20 is number
+    > sum [4,7,9]
+    20 is number
+
+The ``sum`` function is part of the standard library.
+The ``recSum`` can be generalised similarly to the above ``printElem``
+function - the only sum specific part is the ``+`` operation, which can be
+given as argument (remember, operators are also functions).
+::
+
+    > foldList f acc l = if empty? l then acc else foldList f (f acc (head l)) (tail l) fi
+    foldList is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a = <code$foldList>
+    > foldList (+) 0 [4,7,9]
+    20 is number
+
+The standard library happens to already contain such list folding function,
+called ``fold``::
+
+    > fold
+    <yeti.lang.std$fold> is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a
+    > fold (+) 0 [4,7,9]
+    20 is number
+
+The ``fold`` is more generic visitor-type iteration function than ``for``,
+which can be defined very easyle using ``fold``::
+
+    > for' l f = fold \f () l
+    for' is list?<'a> -> ('a -> ()) -> () = <code$for$z>
+    > for' [2,3,5] println
+    2
+    3
+    5
+
+Basically, ``for`` is just a ``fold`` without accumulator.
+It is easy to use ``fold`` for other list iteration operations,
+like ``length`` (which is part of standard library).
+::
+
+    > len l = fold do n _: n + 1 done 0 l
+    len is list?<'a> -> number = <code$len>
+    > len [4,7,9]
+    3 is number
+    > length [4,7,9]
+    3 is number
+
 Any strict list function in the standard library can be written in
 the terms of ``empty?``, ``head``, ``tail`` and ``::``.
+
+Streams
++++++++++++
 
 
