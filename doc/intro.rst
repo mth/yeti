@@ -860,6 +860,9 @@ given as an argument (remember, operators are also functions).
     > foldList (+) 0 [4,7,9]
     20 is number
 
+The sum is calculated as ``(((0 + 4) + 7) + 9)``, which looks like folding
+a whole list into one value (using a iteration of some binary operation).
+
 The standard library happens to already contain such list folding function,
 called ``fold``::
 
