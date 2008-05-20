@@ -93,7 +93,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
     static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type LAZYCONS_TYPE =
-        fun2Arg(A, fun(C, A_B_LIST_TYPE), A_LIST_TYPE);
+        fun2Arg(A, fun(UNIT_TYPE, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
     static final Type LIST_TO_BOOL = fun(A_B_LIST_TYPE, BOOL_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);

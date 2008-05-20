@@ -46,4 +46,19 @@ public class LazyList extends LList {
         }
         return rest;
     }
+
+    public String toString() {
+        StringBuffer buf = new StringBuffer("[");
+        buf.append(Core.show(first()));
+        AIter i = rest();
+        for (int n = 0; i != null && ++n <= 100; i = i.next()) {
+            buf.append(',');
+            buf.append(Core.show(i.first()));
+        }
+        if (i != null) {
+            buf.append("...");
+        }
+        buf.append(']');
+        return buf.toString();
+    }
 }

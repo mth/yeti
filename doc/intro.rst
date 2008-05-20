@@ -899,7 +899,112 @@ like ``length`` (which is also part of the standard library).
     > length [4,7,9]
     3 is number
 
-Streams
-+++++++++++
+Lazy lists
++++++++++++++
+
+Lists can be constructed lazyle, when accessed. This is done using a
+lazy list constructor ``:.``, which gets a function instead of the tail::
+
+    > (:.)
+    <yeti.lang.std$$c$d> is 'a -> (() -> list?<'a>) -> list<'a>
+    > 1 :. \[3]
+    [1,3] is list<number>
+    > 1 :. \(println "test1"; [])
+    test1
+    [1] is list<number>
+    > head (1 :. \(println "test2"; []))
+    1 is number
+
+The tail function will be called only when the tail is requested.
+Therefore the last expression which uses head won't print ``test2`` -
+the tail will be not constructed here. This allows constructing infinite lists::
+
+    > seq n = n :. \(seq (n + 1))
+    seq is number -> list<number> = <code$seq>
+    > seq 3
+    [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+    30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,
+    55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,
+    80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,
+    103...] is list<number>
+    > drop 2 [1,3,5,7]
+    [5,7] is list<number>
+    > head (drop 10000 (seq 3))
+    10003 is number
+
+The ``seq`` function here returns an ever-increasing list of numbers.
+This is possible, because only used parts of the list will be constructed.
+The ``drop n l`` function drops first ``n`` elements from ``l`` and returns
+the rest.
+
+Standard library contains a ``iterate`` function for creating infinite lists::
+
+    > iterate
+    <yeti.lang.std$iterate> is ('a -> 'a) -> 'a -> list<'a>
+    > take 10 (iterate (+1) 3)
+    [3,4,5,6,7,8,9,10,11,12] is list<number>
+
+First argument of ``iterate`` is a function, that calculates next element
+from the previous element value. Second argument is the first element.
+The ``take n l`` function creates (lazyly) a list containing first ``n``
+elements of ``l``.
+
+Lazy list construction can be used for transforming existing lists on the fly::
+
+    mapList f l =
+        if empty? l then
+            []
+        else
+            f (head l) :. \(mapList f (tail l))
+        fi;
+
+In the interactive it works like that::
+
+ > mapList f l = if empty? l then [] else f (head l) :. \(mapList f (tail l)) fi
+ mapList is ('a -> 'b) -> list?<'a> -> list<'b> = <code$mapList>
+ > mapList (*2) [2,3,5]
+ [4,6,10] is list<number>
+ > for (mapList do x: println "mapping \(x)"; x * 2 done [2,3,5]) println
+ mapping 2
+ 4
+ mapping 3
+ 6
+ mapping 5
+ 10
+
+It can be seen, that the mapped list is actually created when it is printed.
+The result of the ``mapList (*2) [1,3]`` could be shown like that::
+
+    a -> \(mapList (*2) [3])
+    |
+    2
+
+When tail of the list is asked, it will transform into following::
+
+    a -> b -> \(mapList (*2) [])
+    |    |
+    2    6
+
+Requesting tail of the second node finally results in a full list::
+
+    a -> b -> []
+    |    |
+    2    6
+
+A lazy mapping function is named ``map`` in the standard library::
+
+   > map (*2) [2,3,5]
+   [4,6,10] is list<number>
+   > take 10 (drop 10000 (map (*2) (iterate (+1) 0)))
+   [20000,20002,20004,20006,20008,20010,20012,20014,20016,20018] is list<number>
+
+As it can be seen, the lazy mapping works also fine with infinite lists.
+If the lazy list is iterated only once and there are no other references to
+it, the garbage collector can free the head of the list just after it was
+created - meaning the full list will never be allocated at once. That way
+the lazy lists can be used as iterators or streams.
+
+Ranges
++++++++++
 
 
