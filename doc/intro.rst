@@ -808,6 +808,9 @@ When tried in the interactive, it works as expected::
   1
   3
 
+Iteration using for and fold functions
+++++++++++++++++++++++++++++++++++++++++++
+
 Only ``println`` call in the ``printElem`` function has anything to do with
 printing. The ``println`` can be given as argument, resulting in 
 a generic list iteration function::
