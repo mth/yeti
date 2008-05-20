@@ -985,7 +985,7 @@ When tail of the list is asked, it will transform into following::
     |    |
     2    6
 
-Requesting tail of the second node finally results in a full list::
+Requesting tail of the second node finally results in the full list::
 
     a -> b -> []
     |    |
