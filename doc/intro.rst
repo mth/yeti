@@ -868,7 +868,7 @@ called ``fold``::
     > fold (+) 0 [4,7,9]
     20 is number
 
-The ``fold`` is a bit more generic visitor-type iteration function than
+The ``fold`` is a more functional visitor-type iteration function than
 ``for``, which can be defined very easyle using ``fold``::
 
     > for' l f = fold \f () l
