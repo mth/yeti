@@ -771,7 +771,8 @@ function - ``empty?``, ``head`` and ``tail``. The ``head`` returns value
 associated with the given list node (``head a`` is 1 and ``head b`` is 3).
 The ``tail`` returns next node (``head a`` is ``b`` and ``head b`` is ``[]``).
 The ``empty?`` function just checks whether a given list is empty list (``[]``)
-or not.
+or not. Any strict list function in the standard library can be written in
+the terms of ``empty?``, ``head``, ``tail`` and ``::``.
 ::
 
     > a = [1,3]
@@ -836,7 +837,7 @@ Such a function is already defined in the standard library, called ``for``::
 In the last example a function literal was given as the function, resulting
 in a code looking very similar to an imperative for loop.
 
-A similar list iteration operation is calculating sum::
+A similar list iteration operation is calculating a sum::
 
     > recSum acc l = if empty? l then acc else recSum (head l + acc) (tail l) fi
     recSum is number -> list?<number> -> number = <code$recSum>
@@ -848,7 +849,7 @@ A similar list iteration operation is calculating sum::
 The ``sum`` function is part of the standard library.
 The ``recSum`` can be generalised similarly to the above ``printElem``
 function - the only sum specific part is the ``+`` operation, which can be
-given as argument (remember, operators are also functions).
+given as an argument (remember, operators are also functions).
 ::
 
     > foldList f acc l = if empty? l then acc else foldList f (f acc (head l)) (tail l) fi
@@ -875,8 +876,8 @@ which can be defined very easyle using ``fold``::
     5
 
 Basically, ``for`` is just a ``fold`` without accumulator.
-It is easy to use ``fold`` for other list iteration operations,
-like ``length`` (which is part of standard library).
+It is easy to use ``fold`` to define other list iterating operations,
+like ``length`` (which is part of the standard library).
 ::
 
     > len l = fold do n _: n + 1 done 0 l
@@ -885,9 +886,6 @@ like ``length`` (which is part of standard library).
     3 is number
     > length [4,7,9]
     3 is number
-
-Any strict list function in the standard library can be written in
-the terms of ``empty?``, ``head``, ``tail`` and ``::``.
 
 Streams
 +++++++++++
