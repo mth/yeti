@@ -865,8 +865,8 @@ called ``fold``::
     > fold (+) 0 [4,7,9]
     20 is number
 
-The ``fold`` is more generic visitor-type iteration function than ``for``,
-which can be defined very easyle using ``fold``::
+The ``fold`` is a bit more generic visitor-type iteration function than
+``for``, which can be defined very easyle using ``fold``::
 
     > for' l f = fold \f () l
     for' is list?<'a> -> ('a -> ()) -> () = <code$for$z>
@@ -875,7 +875,13 @@ which can be defined very easyle using ``fold``::
     3
     5
 
-Basically, ``for`` is just a ``fold`` without accumulator.
+Basically, ``for`` is just a ``fold`` without accumulator. Defining ``fold``
+using ``for`` is also possible using an accumulator variable::
+
+    > fold' f acc' l = (var acc = acc'; for l do v: acc := f acc v done; acc)
+    > fold' (+) 0 [4,7,9]
+    20 is number
+
 It is easy to use ``fold`` to define other list iterating operations,
 like ``length`` (which is part of the standard library).
 ::
