@@ -11,7 +11,7 @@ newGame size = {
     show () =
         cell n =
             " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
-        fold (^) "" (map cell [0 .. maxPos]),
+        strJoin "" (map cell [0 .. maxPos]),
     check me op =
         if hasWon me then
             { score = 1, pos = -1 }
