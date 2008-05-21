@@ -1001,7 +1001,7 @@ A lazy mapping function is named ``map`` in the standard library::
 As it can be seen, the lazy mapping works also fine with infinite lists.
 If the lazy list is iterated only once and there are no other references to
 it, the garbage collector can free the head of the list just after it was
-created - meaning the full list will never be allocated at once. That way
+created - meaning the full list never has to be allocated at once. That way
 the lazy lists can be used as iterators or streams.
 
 Ranges
