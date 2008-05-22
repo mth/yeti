@@ -69,4 +69,41 @@ public class Struct {
         v[p - 1] = "}";
         return Core.concat(v);
     }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof Struct))
+            return false;
+        Object[] a = ((Struct) o).values;
+        int i = a.length;
+        if (i != values.length)
+            return false;
+        Object[] b = new Object[i];
+        System.arraycopy(values, 0, b, 0, i);
+    ok: while ((i -= 2) >= 0) {
+            for (int j = i; j >= 0; j -= 2) {
+                if (a[i] == b[j]) {
+                    Object x, y;
+                    if ((x = a[i + 1]) == (y = b[j + 1]) ||
+                        x != null && x.equals(y)) {
+                        if (i != j) {
+                            b[j] = b[i];
+                            b[j + 1] = b[i + 1];
+                        }
+                        continue ok;
+                    }
+                    return false;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public int hashCode() {
+        int res = 0;
+        for (int i = values.length; (i -= 2) >= 0;) {
+            res ^= values[i].hashCode() + values[i + 1].hashCode();
+        }
+        return res;
+    }
 }
