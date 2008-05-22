@@ -1015,8 +1015,8 @@ Range literals are a special case of lazy lists::
     [2,3,4,6,7,8,9] is list<number>
     > sum [1..1000000]
     500000500000 is number
-    > head (reverse [11..1e100])
-    1.0E100 is number
+    > head [11..1e100]
+    11 is number
 
 The range actually only marks the limits of the range and never tries
 to allocate a list containing all elements. The ``tail`` of range is just a
