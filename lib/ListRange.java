@@ -30,6 +30,21 @@
  */
 package yeti.lang;
 
+class RangeIter extends AIter {
+    Num n;
+    Num last;
+    AList rest;
+    int inc;
+
+    public Object first() {
+        return n;
+    }
+
+    public AIter next() {
+        return (n = n.add(inc)).compareTo(last) * inc > 0 ? (AIter) rest : this;
+    }
+}
+
 /** Yeti core library - List. */
 public class ListRange extends AList implements ListIter {
     Num first;
@@ -48,13 +63,21 @@ public class ListRange extends AList implements ListIter {
     }
 
     public AList rest() {
-        int n = first.compareTo(last) * inc;
-        return n > 0 ? rest.rest() : n == 0 ? rest :
-               new ListRange(first.add(inc), last, rest);
+        Num n;
+        return (n = first.add(inc)).compareTo(last) * inc > 0 ? rest :
+                new ListRange(n, last, rest);
     }
 
     public AIter next() {
-        return rest(); // TODO
+        Num n = first.add(inc);
+        if (n.compareTo(last) * inc > 0)
+            return rest;
+        RangeIter i = new RangeIter();
+        i.n = n;
+        i.last = last;
+        i.rest = rest;
+        i.inc = inc;
+        return i;
     }
 
     public int hashCode() {

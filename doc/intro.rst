@@ -1007,4 +1007,33 @@ the lazy lists can be used as iterators or streams.
 Ranges
 +++++++++
 
+Range literals are a special case of lazy lists::
+
+    > [1..5]
+    [1,2,3,4,5] is list<number>
+    > [2..4, 6..9]
+    [2,3,4,6,7,8,9] is list<number>
+    > sum [1..1000000]
+    500000500000 is number
+    > head (reverse [11..1e100])
+    1.0E100 is number
+
+The range actually only marks the limits of the range and never tries
+to allocate a list containing all elements. The ``tail`` of range is just a
+new range or empty list. Many standard library functions (``find``, ``for``,
+``fold``, ``index``, ``length``, ``reverse``) use optimised implementation
+for ranges - for example ``index`` and ``length`` just calculate the result
+and ``reverse`` creates a special reversed range.
+
+Ranges give nice representation to some iterating algorithms - for example
+the factorial function can be written as a ``fold`` over range::
+
+    > fac n = fold (*) 1 [1..n]
+    fac is number -> number = <code$fac>
+    > fac 5
+    120 is number
+
+Arrays
++++++++++
+
 
