@@ -340,6 +340,9 @@ plus a b = a + b;
     shift a is array<'a> -> 'a =
         (a unsafely_as ~MList)#shift() unsafely_as 'a,
 
+    pop a is array<'a> -> 'a =
+        (a unsafely_as ~MList)#pop() unsafely_as 'a,
+
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v),
 
