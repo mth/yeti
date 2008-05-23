@@ -1058,7 +1058,7 @@ This algorithm can be easily tested in the interactive environment::
    > a = array [28,5,4,25,2,21,24,9,17,46,3,37,18,20,15,41,26,39,40,16]
    a is array<number> = [28,5,4,25,2,21,24,9,17,46,3,37,18,20,15,41,26,39,40,16]
    > selectLess i j = if a.[i] < a.[j] then i else j fi;
-   selectLess is number -> number -> number = <code$selectMin>
+   selectLess is number -> number -> number = <code$selectLess>
    > swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
    swapMin is number -> () = <code$swapMin>
    > for [0 .. length a - 2] swapMin
