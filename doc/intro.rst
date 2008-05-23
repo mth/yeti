@@ -1117,8 +1117,8 @@ sort algorithm::
         swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
         for [0 .. length a - 2] swapMin);
 
-Here ``selectLess`` is defined to give index of smaller element and used in
-a fold to find index of smallest element in range [i .. length a - 1]. The
+Here a ``selectLess`` is defined to give index of smaller element and is used
+in a fold to find index of smallest element in range [i .. length a - 1]. The
 ``swapMin`` function swaps the smallest element with the element at index ``i``,
 ensuring that there is no larger element after the element at index ``i``.
 The ``swapMin`` will be repeated for a range ``[0 .. length a - 2]``,
@@ -1126,17 +1126,17 @@ which will ensure the ascending order of the array elements.
 
 This algorithm can be easily tested in the interactive environment::
 
-   > a = array [28,5,4,25,2,21,24,9,17,46,3,37,18,20,15,41,26,39,40,16]
-   a is array<number> = [28,5,4,25,2,21,24,9,17,46,3,37,18,20,15,41,26,39,40,16]
-   > selectLess i j = if a.[i] < a.[j] then i else j fi;
-   selectLess is number -> number -> number = <code$selectLess>
-   > swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
-   swapMin is number -> () = <code$swapMin>
-   > for [0 .. length a - 2] swapMin
-   > a
-   [2,3,4,5,9,15,16,17,18,20,21,24,25,26,28,37,39,40,41,46] is array<number>
+    > a = array [3,1,14,7,15,2,9,12,6,10,5,8,11,4,13]
+    a is array<number> = [3,1,14,7,15,2,9,12,6,10,5,8,11,4,13]
+    > selectLess i j = if a.[i] < a.[j] then i else j fi;
+    selectLess is number -> number -> number = <code$selectLess>
+    > swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
+    swapMin is number -> () = <code$swapMin>
+    > for [0 .. length a - 2] swapMin
+    > a
+    [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] is array<number>
 
-The is a sort function in the standard library::
+There is a sort function (using merge sort algorithm) in the standard library::
 
     > sort
     <yeti.lang.std$sort> is list?<'a> -> list<'a>
