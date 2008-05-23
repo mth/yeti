@@ -1036,4 +1036,5 @@ the factorial function can be written as a ``fold`` over range::
 Arrays
 +++++++++
 
+Arrays are a bit like lists, but mutable.
 

@@ -310,6 +310,9 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<''>,
 
+    asList a is array<''> -> list?<''> =
+        (a unsafely_as ~MList) unsafely_as '',
+
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
