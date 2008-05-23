@@ -4,8 +4,8 @@ asort f less l =
     asList a);
 
 selectionSort less a =
-   (indexOfMin i j = if less a.[i] a.[j] then i else j fi;
-    swapMin i = swapAt a i (fold indexOfMin i [i + 1 .. length a - 1]);
+   (selectMin i j = if less a.[i] a.[j] then i else j fi;
+    swapMin i = swapAt a i (fold selectMin i [i + 1 .. length a - 1]);
     for [0 .. length a - 2] swapMin);
 
 combSort less a =
