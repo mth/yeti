@@ -1036,10 +1036,81 @@ the factorial function can be written as a ``fold`` over range::
 Arrays
 +++++++++
 
-Arrays are a bit like lists, but mutable.
+Arrays are a bit like lists, but with random access by index and mutable.
+An array can be created from list using an ``array`` function::
 
-A simple example of using arrays is the selection sort algorithm.
-::
+    > a = array []
+    a is array<'a> = []
+    > a = array [3..7]
+    a is array<number> = [3,4,5,6,7]
+
+
+Array elements can be referenced by index using *array*\ **.[**\ *index*\ **]**
+syntax::
+
+    > a.[0]
+    3 is number
+    > a.[4]
+    7 is number
+
+An array index is always zero-based. The dot is necessary, because otherwise
+the brackets would be mistaken for a list literal. Array elements can be
+assigned like variables::
+
+    > a.[2] := 33
+    > a
+    [3,4,33,6,7] is array<number>
+
+Two array elements can be swapped using ``swapAt`` function::
+
+    > swapAt a 2 3
+    > a
+    [3,4,6,33,7] is array<number>
+
+It is also possible to add elements to the end of array and remove them
+from end or start::
+
+    > push a 77
+    > a
+    [3,4,6,33,7,77] is array<number>
+    > shift a
+    3 is number
+    > a
+    [4,6,33,7,77] is array<number>
+    > pop a
+    77 is number
+    > a
+    [4,6,33,7] is array<number>
+
+It must be noted, that ``shift`` will never reduce array memory usage -
+it just hides the first element.
+
+Most list functions work also with arrays::
+
+    > head a
+    4 is number
+    > tail a
+    [6,33,7] is list<number>
+    > map (*2) a
+    [8,12,66,14] is list<number>
+
+The functions that work both with lists and arrays have ``list?<'a>`` as the
+argument type::
+
+    > head
+    <yeti.lang.std$head> is list?<'a> -> 'a
+
+The type ``list?`` is actually parametric about the existance of the
+numeric index and can unify both with ``array`` and ``list`` type.
+
+The ``tail`` of an array shares the original array - meaning that modification
+of the original array will be visible in the returned tail.
+It is best to avoid modifying an array after it is used as ``list?``
+(unless you don't use the resulting lists after that) - the results may be
+suprising sometimes, although defined for most list functions.
+
+A simple example of using arrays - an implementation of the selection
+sort algorithm::
 
     selectionSort a =
        (selectLess i j = if a.[i] < a.[j] then i else j fi;
@@ -1064,5 +1135,16 @@ This algorithm can be easily tested in the interactive environment::
    > for [0 .. length a - 2] swapMin
    > a
    [2,3,4,5,9,15,16,17,18,20,21,24,25,26,28,37,39,40,41,46] is array<number>
+
+The is a sort function in the standard library::
+
+    > sort
+    <yeti.lang.std$sort> is list?<'a> -> list<'a>
+    > sort [2,9,8,5,14,8,3]
+    [2,3,5,8,8,9,14] is list<number>
+
+
+Hash maps
+~~~~~~~~~~~~~
 
 
