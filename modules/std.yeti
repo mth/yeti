@@ -229,7 +229,11 @@ plus a b = a + b;
         new Iterate(x, f) unsafely_as list<''>,
 
     sort l is list?<'a> -> list<'a> =
-        (l unsafely_as ~AList)#sort() unsafely_as list<''>,
+        if empty? l then
+            []
+        else
+            (l unsafely_as ~AList)#sort() unsafely_as list<''>
+        fi,
 
     // few math functions
     pi = Math#PI,
