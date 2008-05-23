@@ -1,0 +1,68 @@
+selectionSort a less =
+   (for [0 .. length a - 1] do i:
+        for [i + 1 .. length a - 1] do j:
+            if less a.[j] a.[i] then
+                x = a.[i];
+                a.[i] := a.[j];
+                a.[j] := x
+            fi
+        done
+    done;
+    a);
+
+qsort a less =
+  ((sort l r =
+       (var i = l;
+        var j = r;
+        x = a.[(l + r) div 2];
+           (less a.[i] x loop i := i + 1;
+            less x a.[j] loop j := j - 1;
+            if i <= j then
+                y = a.[i];
+                a.[i] := a.[j];
+                a.[j] := y;
+                i := i + 1;
+                j := j - 1;
+            fi;
+            i <= j) loop;
+        if l < j then
+            sort l j
+        fi;
+        if i < r then
+            sort i r
+        fi)) 0 (length a - 1);
+        a);
+
+mergeSort l less =
+   (merge a b =
+        if empty? a then
+            b
+        elif empty? b then
+            a
+        elif less (head a) (head b) then
+            head a :. \(merge (tail a) b)
+        else
+            head b :. \(merge a (tail b))
+        fi;
+    sort list len =
+        if len <= 1 then
+            list
+        else
+            left = len div 2;
+            {fst, snd} = splitAt left list;
+            merge (sort fst left) (sort snd (len - left))
+        fi) l (length l);
+
+l = map \(randomInt 100) [1..50];
+
+testSort name f =
+   (var n = 0;
+    less x y = (n := n + 1; x < y);
+    a = array l;
+    r = f a less;
+    _ = length r;
+    println "\(name):\(n)\n\(r)");
+
+testSort "selection" selectionSort;
+testSort "qsort" qsort;
+testSort "merge" (mergeSort . asList);
