@@ -141,6 +141,11 @@ plus a b = a + b;
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>,
 
+    swapAt a i j =
+        x = a.[i];
+        a.[i] := a.[j];
+        a.[j] := x,
+
     flip f x y =
         f y x,
     number x =

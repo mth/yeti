@@ -59,13 +59,16 @@ public class ListRange extends AList implements ListIter {
     }
 
     public Object first() {
-        return first.compareTo(last) * inc > 0 ? rest.first() : first;
+        return first;
     }
 
     public AList rest() {
         Num n;
-        return (n = first.add(inc)).compareTo(last) * inc > 0 ? rest :
-                new ListRange(n, last, rest);
+        if ((n = first.add(inc)).compareTo(last) * inc > 0)
+            return rest;
+        ListRange r = new ListRange(n, last, rest);
+        r.inc = inc;
+        return r;
     }
 
     public AIter next() {
@@ -205,7 +208,7 @@ public class ListRange extends AList implements ListIter {
     }
 
     public AList reverse() {
-        ListRange r = new ListRange(last, first, rest);
+        ListRange r = new ListRange(last, first, null);
         r.inc = -inc;
         AList l = r;
         for (AIter i = rest; i != null; i = i.next()) {
