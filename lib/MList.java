@@ -93,7 +93,7 @@ abstract class AMList extends AList implements ListIter {
         Object[] array = array();
         StringBuffer buf = new StringBuffer("[");
         for (int cnt = _size(), i = start; i < cnt; ++i) {
-            if (i != 0) {
+            if (i > start) {
                 buf.append(',');
             }
             buf.append(Core.show(array[i]));
@@ -311,6 +311,13 @@ public class MList extends AMList implements ByKey {
             throw new EmptyArrayException("No first element in empty array");
         }
         return array[start++];
+    }
+
+    public Object pop() {
+        if (start >= size) {
+            throw new EmptyArrayException("Cannot pop from an empty array");
+        }
+        return array[--size];
     }
 
     public Object first() {
