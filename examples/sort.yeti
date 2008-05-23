@@ -1,26 +1,40 @@
-selectionSort a less =
-   (for [0 .. length a - 1] do i:
-        for [i + 1 .. length a - 1] do j:
-            if less a.[j] a.[i] then
-                x = a.[i];
-                a.[i] := a.[j];
-                a.[j] := x
-            fi
-        done
-    done;
+asort f less l =
+   (a = array l;
+    f less a;
     a);
 
-qsort a less =
-  ((sort l r =
+selectionSort less a =
+   (indexOfMin i j = if less a.[i] a.[j] then i else j fi;
+    swapMin i = swapAt a i (fold indexOfMin i [i + 1 .. length a - 1]);
+    for [0 .. length a - 2] swapMin);
+
+combSort less a =
+   (var gap = length a;
+    var swapped = true;
+    gap > 1 or swapped loop
+       (gap := gap * 10 div 13;
+        if gap == 10 or gap == 9 then
+            gap := 11
+        elif gap < 1 then
+            gap := 1
+        fi;
+        swapped := false;
+        for [0 .. length a - gap - 1] do i:
+            if less a.[i + gap] a.[i] then
+                swapAt a i (i + gap);
+                swapped := true
+            fi
+        done));
+
+qsort less a =
+   (sort l r =
        (var i = l;
         var j = r;
         x = a.[(l + r) div 2];
            (less a.[i] x loop i := i + 1;
             less x a.[j] loop j := j - 1;
             if i <= j then
-                y = a.[i];
-                a.[i] := a.[j];
-                a.[j] := y;
+                swapAt a i j;
                 i := i + 1;
                 j := j - 1;
             fi;
@@ -31,9 +45,17 @@ qsort a less =
         if i < r then
             sort i r
         fi)) 0 (length a - 1);
-        a);
 
-mergeSort l less =
+qsort2 less =
+   (qsort l =
+        case l of
+        x :: xs:
+            qsort (filter (not . less x) xs) ++ x :: qsort (filter (less x) xs);
+        _: [];
+        esac;
+    qsort);
+
+mergeSort less l =
    (merge a b =
         if empty? a then
             b
@@ -53,16 +75,38 @@ mergeSort l less =
             merge (sort fst left) (sort snd (len - left))
         fi) l (length l);
 
+insertionSort less l =
+    fold do l e:
+        {fst, snd} = splitBy (not . (`less` e)) l;
+        fst ++ e :: snd
+    done [] l;
+
+insertionSort2 less a =
+    for [1 .. length a - 1] do i:
+        v = a.[i];
+        var j = i - 1;
+        j >= 0 and less v a.[j] loop
+           (a.[j + 1] := a.[j];
+            j := j - 1);
+        a.[j + 1] := v
+    done;
+
 l = map \(randomInt 100) [1..50];
 
 testSort name f =
-   (var n = 0;
+   (var n = 0; // number of comparisions
     less x y = (n := n + 1; x < y);
-    a = array l;
-    r = f a less;
-    _ = length r;
+    r = f less l;
+    _ = length r; // force lists so n would have correct value
     println "\(name):\(n)\n\(r)");
 
-testSort "selection" selectionSort;
-testSort "qsort" qsort;
-testSort "merge" (mergeSort . asList);
+testASort name f = testSort name (asort f);
+
+testASort "selection" selectionSort;
+testASort "comb" combSort;
+testSort "insertion" insertionSort;
+testASort "insertion2" insertionSort2;
+testASort "qsort" qsort;
+testSort "qsort2" qsort2;
+testSort "merge" mergeSort;
+
