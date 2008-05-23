@@ -98,7 +98,7 @@ public class LList extends AList {
         Object x, y;
         while (i != null && j != null &&
                ((x = i.first()) == (y = j.first()) ||
-                x != null && x.equals(j))) {
+                x != null && x.equals(y))) {
             i = i.next();
             j = j.next();
         }
@@ -159,5 +159,9 @@ public class LList extends AList {
             ++n;
         }
         return null;
+    }
+
+    public AList sort() {
+        return new MList(this).asort();
     }
 }

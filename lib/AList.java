@@ -43,6 +43,8 @@ public abstract class AList extends AIter implements Comparable {
 
     public abstract Num index(Object v);
 
+    public abstract AList sort();
+
     public AList map(Fun f) {
         return new MapList(this, f);
     }

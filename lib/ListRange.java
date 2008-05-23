@@ -103,7 +103,7 @@ public class ListRange extends AList implements ListIter {
         Object x, y;
         while (i != null && j != null &&
                ((x = i.first()) == (y = j.first()) ||
-                x != null && x.equals(j))) {
+                x != null && x.equals(y))) {
             i = i.next();
             j = j.next();
         }
@@ -243,5 +243,10 @@ public class ListRange extends AList implements ListIter {
         }
         return last.compareTo(v) <= 0 && first.compareTo(v) >= 0
                 ? ((Num) v).sub(last) : null;
+    }
+
+    public AList sort() {
+        return rest == null ? inc > 0 ? this : reverse()
+                            : new MList(this).asort();
     }
 }

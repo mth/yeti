@@ -1,7 +1,7 @@
 asort f less l =
    (a = array l;
     f less a;
-    a);
+    asList a);
 
 selectionSort less a =
    (indexOfMin i j = if less a.[i] a.[j] then i else j fi;
@@ -91,17 +91,23 @@ insertionSort2 less a =
         a.[j + 1] := v
     done;
 
-l = map \(randomInt 100) [1..50];
+l = map \(randomInt 1000) [1..500];
+sorted = sort l;
 
 testSort name f =
    (var n = 0; // number of comparisions
     less x y = (n := n + 1; x < y);
     r = f less l;
     _ = length r; // force lists so n would have correct value
-    println "\(name):\(n)\n\(r)");
+    if sorted != r then
+        println "\(name): ERROR\n\(r) != \(sorted)"
+    else
+        println "\(name):\(n)"
+    fi);
 
 testASort name f = testSort name (asort f);
 
+println "sorting array of \(length l) elements...";
 testASort "selection" selectionSort;
 testASort "comb" combSort;
 testSort "insertion" insertionSort;

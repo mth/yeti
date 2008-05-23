@@ -30,6 +30,8 @@
  */
 package yeti.lang;
 
+import java.util.Arrays;
+
 abstract class AMList extends AList implements ListIter {
     int start;
 
@@ -79,9 +81,10 @@ abstract class AMList extends AList implements ListIter {
         for (int cnt = _size(), i = start; i < cnt; ++i) {
             if (j == null ||
                 (x = array[i]) != (y = j.first()) &&
-                (x == null || !x.equals(j))) {
+                (x == null || !x.equals(y))) {
                 return false;
             }
+            j = j.next();
         }
         return j == null;
     }
@@ -231,6 +234,14 @@ public class MList extends AMList implements ByKey {
             }
             return null;
         }
+
+        public AList sort() {
+            if (start >= size)
+                return null;
+            Object[] tmp = new Object[size - start];
+            System.arraycopy(array, start, tmp, 0, tmp.length);
+            return new MList(tmp);
+        }
     }
 
     private class Iter extends AIter {
@@ -361,5 +372,18 @@ public class MList extends AMList implements ByKey {
 
     Object[] array() {
         return array;
+    }
+
+    MList asort() {
+        Arrays.sort(array, start, size);
+        return this;
+    }
+
+    public AList sort() {
+        if (start >= size)
+            return null;
+        Object[] tmp = new Object[size - start];
+        System.arraycopy(array, start, tmp, 0, tmp.length);
+        return new MList(tmp);
     }
 }
