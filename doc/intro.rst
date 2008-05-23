@@ -1117,10 +1117,11 @@ sort algorithm::
         swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
         for [0 .. length a - 2] swapMin);
 
-Here a ``selectLess`` is defined to give index of smaller element and is used
-in a fold to find index of smallest element in range [i .. length a - 1]. The
-``swapMin`` function swaps the smallest element with the element at index ``i``,
-ensuring that there is no larger element after the element at index ``i``.
+Here a ``selectLess`` is defined to give index of the smaller element and is
+used in a fold to find index of the smallest element in range
+[i .. length a - 1]. The ``swapMin`` function swaps the smallest element with
+the element at index ``i``, ensuring that there is no smaller element after
+the element at index ``i``.
 The ``swapMin`` will be repeated for a range ``[0 .. length a - 2]``,
 which will ensure the ascending order of the array elements.
 
