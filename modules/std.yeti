@@ -235,6 +235,13 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort() unsafely_as list<''>
         fi,
 
+    sortBy f l is ('a -> 'a -> boolean) -> list?<'a> -> list<'a> =
+        if empty? l then
+            []
+        else
+            (l unsafely_as ~AList)#sort(f) unsafely_as list<''>
+        fi,
+
     // few math functions
     pi = Math#PI,
     ln a = Math#log(a),

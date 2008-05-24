@@ -1137,11 +1137,15 @@ This algorithm can be easily tested in the interactive environment::
     > a
     [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15] is array<number>
 
-There is a sort function (using merge sort algorithm) in the standard library::
+There are sort functions (using merge sort algorithm) in the standard library::
 
     > sort
     <yeti.lang.std$sort> is list?<'a> -> list<'a>
     > sort [2,9,8,5,14,8,3]
+    [2,3,5,8,8,9,14] is list<number>
+    > sortBy
+    <yeti.lang.std$sortBy> is ('a -> 'a -> boolean) -> list?<'a> -> list<'a>
+    > sortBy (<) [2,9,8,5,14,8,3]
     [2,3,5,8,8,9,14] is list<number>
 
 

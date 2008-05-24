@@ -55,4 +55,8 @@ public abstract class AList extends AIter implements Comparable {
             l = l.rest();
         return l;
     }
+
+    public AList sort(Fun isLess) {
+        return new MList(this).asort(isLess);
+    }
 }

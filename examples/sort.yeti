@@ -114,4 +114,5 @@ testASort "insertion2" insertionSort2;
 testASort "qsort" qsort;
 testSort "qsort2" qsort2;
 testSort "merge" mergeSort;
+testSort "sortBy" sortBy;
 

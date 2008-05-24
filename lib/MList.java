@@ -393,4 +393,46 @@ public class MList extends AMList implements ByKey {
         System.arraycopy(array, start, tmp, 0, tmp.length);
         return new MList(tmp);
     }
+
+    // java sort don't know wtf the Fun is
+    private static void sort(Object[] a, Object[] tmp,
+                             int from, int to, Fun2 isLess) {
+        int split = (from + to) / 2;
+        if (split - from > 1)
+            sort(tmp, a, from, split, isLess);
+        if (to - split > 1)
+            sort(tmp, a, split, to, isLess);
+        int i = from, j = split;
+        while (i < split && j < to) {
+            if (isLess.apply2(tmp[i], tmp[j]) == Boolean.TRUE)
+                a[from] = tmp[i++];
+            else
+                a[from] = tmp[j++];
+            ++from;
+        }
+        if (i < split)
+            System.arraycopy(tmp, i, a, from, split - i);
+        else if (j < to)
+            System.arraycopy(tmp, j, a, from, to - j);
+    }
+
+    MList asort(Fun isLess) {
+        if (size - start > 1) {
+            Object[] tmp = new Object[size];
+            System.arraycopy(array, start, tmp, start, size - start);
+            sort(array, tmp, start, size,
+                 isLess instanceof Fun2 ? (Fun2) isLess : new ToFun2(isLess));
+        }
+        return this;
+    }
+
+    public AList sort(Fun isLess) {
+        int len;
+        if ((len = size - start) <= 0)
+            return null;
+        MList l = new MList();
+        System.arraycopy(array, start, l.array = new Object[len], 0, len);
+        l.size = len;
+        return l.asort(isLess);
+    }
 }
