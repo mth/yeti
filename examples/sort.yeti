@@ -110,9 +110,9 @@ testASort name f = testSort name (asort f);
 
 println "sorting array of \(length l) elements...";
 testASort "selection" selectionSort;
-testASort "comb" combSort;
 testSort "insertion" insertionSort;
 testASort "insertion2" insertionSort2;
+testASort "comb" combSort;
 testASort "qsort" qsort;
 testSort "qsort2" qsort2;
 testSort "merge" mergeSort;
