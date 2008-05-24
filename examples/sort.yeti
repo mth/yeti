@@ -90,18 +90,20 @@ insertionSort2 less a =
         a.[j + 1] := v
     done;
 
-l = map \(randomInt 1000) [1..500];
+l = map \(randomInt 4000) [1..2000];
 sorted = sort l;
 
 testSort name f =
    (var n = 0; // number of comparisions
     less x y = (n := n + 1; x < y);
+    t' = System#currentTimeMillis();
     r = f less l;
     _ = length r; // force lists so n would have correct value
+    t = System#currentTimeMillis() - t';
     if sorted != r then
         println "\(name): ERROR\n\(r) != \(sorted)"
     else
-        println "\(name):\(n)"
+        println "\(name):\(n)\t\(t)ms"
     fi);
 
 testASort name f = testSort name (asort f);
