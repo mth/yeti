@@ -52,8 +52,7 @@ qsort2 less =
         x :: xs:
             qsort (filter (not . less x) xs) ++ x :: qsort (filter (less x) xs);
         _: [];
-        esac;
-    qsort);
+        esac);
 
 mergeSort less l =
    (merge a b =

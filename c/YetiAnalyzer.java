@@ -66,15 +66,15 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Bind) {
             Bind bind = (Bind) node;
-            if (bind.name == "_" && !(bind.expr instanceof Lambda)) {
-                return new Cast(analyze(bind.expr, scope, depth),
-                                UNIT_TYPE, false, bind.line);
-            }
             Function r = singleBind(bind, scope, depth);
-            if (bind.name != "_" && !((BindExpr) r.selfBind).used) {
+            if (!((BindExpr) r.selfBind).used) {
                 unusedBinding(bind);
             }
             return r;
+        }
+        if (node instanceof Ignore) {
+            return new Cast(analyze(((Ignore) node).expr, scope, depth),
+                            UNIT_TYPE, false, node.line);
         }
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
@@ -621,9 +621,8 @@ public final class YetiAnalyzer extends YetiType {
         Function lambda = new Function(new Type(depth + 1));
         BindExpr binder = new BindExpr(lambda, bind.var);
         lambda.selfBind = binder;
-        if (!bind.noRec && bind.name != "_") {
+        if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
-        }
         lambdaBind(lambda, bind, scope, depth + 1);
         return lambda;
     }
@@ -702,10 +701,10 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(fields[j],
                     "Expected field pattern, not a " + fields[j]);
             }
-            if (!(nameNode instanceof Sym))
+            if (!(nameNode instanceof Sym) ||
+                (bind.name = ((Sym) nameNode).sym) == "_")
                 throw new CompileException(nameNode,
                     "Binding name expected, not a " + nameNode);
-            bind.name = ((Sym) nameNode).sym;
             Code code = selectMember(fields[j], (Sym) bind.expr,
                           binder.getRef(fields[j].line), scope, depth);
             BindExpr bindExpr = new BindExpr(code, false);
@@ -720,11 +719,8 @@ public final class YetiAnalyzer extends YetiType {
         BindExpr[] bindings = new BindExpr[nodes.length];
         SeqExpr[] last = { null, null };
         for (int i = 0; i < nodes.length - 1; ++i) {
-            Bind bind = null;
-            if (nodes[i] instanceof Bind &&
-                (bind = (Bind) nodes[i]).name == "_") {
-                addSeq(last, new SeqExpr(analyze(bind.expr, scope, depth)));
-            } else if (bind != null) {
+            if (nodes[i] instanceof Bind) {
+                Bind bind = (Bind) nodes[i];
                 BindExpr binder;
                 if (bind.expr instanceof Lambda) {
                     binder = (BindExpr) singleBind(bind, scope, depth).selfBind;

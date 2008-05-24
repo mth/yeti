@@ -134,6 +134,20 @@ interface YetiParser {
         }
     }
 
+    class Ignore extends Node {
+        Node expr;
+
+        Ignore(Node expr) {
+            this.expr = expr;
+            this.line = expr.line;
+            this.col = expr.col;
+        }
+
+        String str() {
+            return "(_ = " + expr.str() + ")";
+        }
+    }
+
     class Bind extends Node {
         String name;
         Node expr;
@@ -1005,10 +1019,13 @@ interface YetiParser {
                 e.line = partial.line;
                 e.col = partial.col;
             }
+            Bind bind;
             return args == null ? e :
                    args.size() == 1 && args.get(0) instanceof Struct
                    ? (Node) new StructBind((Struct) args.get(0), e)
-                   : new Bind(args, e);
+                   : (bind = new Bind(args, e)).name != "_" ? bind
+                   : bind.expr instanceof Lambda
+                        ? bind.expr : new Ignore(bind.expr);
         }
 
         private Node readExpr(String to) {

@@ -1168,7 +1168,7 @@ interface YetiCode {
             if (body instanceof Function) {
                 Function bodyFun = (Function) body;
                 bodyFun.outer = this;
-                if (argCount == 1) {
+                if (argCount == 1 && bodyFun.selfRef == null) {
                     merged = true;
                     ++bodyFun.argCount;
                 }
