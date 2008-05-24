@@ -43,6 +43,7 @@ public class LazyList extends LList {
     public synchronized AList rest() {
         if (!forced) {
             rest = (AList) promise.apply(null);
+            forced = true;
         }
         return rest;
     }

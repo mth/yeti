@@ -61,9 +61,9 @@ mergeSort less l =
         elif empty? b then
             a
         elif less (head a) (head b) then
-            head a :. \(merge (tail a) b)
+            head a :: (merge (tail a) b)
         else
-            head b :. \(merge a (tail b))
+            head b :: (merge a (tail b))
         fi;
     sort list len =
         if len <= 1 then

@@ -198,6 +198,7 @@ public final class Core {
     public static Object badMatch() {
         throw new IllegalArgumentException("bad match");
     }
+
 /*
     public static Object convertList(Object value, String type) {
         if (type == "") {

@@ -38,19 +38,6 @@ notPred f x = not (f x);
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
 
-head l is list?<'a> -> 'a =
-   (if nullptr? l then
-        throw new IllegalArgumentException("Empty list")
-    fi;
-    (l unsafely_as ~AList)#first()) unsafely_as '';
-
-tail l is list?<'a> -> list<'a> =
-    if nullptr? l then
-        [] // tail of empty list is empty list
-    else
-        (l unsafely_as ~AList)#rest() unsafely_as list<''>
-    fi;
-
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
         []
@@ -116,6 +103,8 @@ plus a b = a + b;
     norec nullptr? a = nullptr? a,
     norec defined? a = defined? a,
     norec empty? a = empty? a,
+    norec head a = head a,
+    norec tail a = tail a,
     norec same? a b = same? a b,
     norec for l f = for l f,
     norec synchronized monitor block = synchronized monitor block,
@@ -131,8 +120,6 @@ plus a b = a + b;
 
     // damn struct polymorphism restriction. is it really needed?
     norec array = array,
-    norec tail = tail,
-    norec head = head,
     norec map = map,
     norec fold = fold,
     norec find = find,
@@ -222,7 +209,7 @@ plus a b = a + b;
         elif empty? l then
             []
         else
-            drop (n - 1) ((l unsafely_as ~AList)#rest() unsafely_as list<''>)
+            drop (n - 1) (tail l)
         fi,
 
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =

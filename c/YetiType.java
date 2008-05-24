@@ -95,7 +95,9 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static final Type LAZYCONS_TYPE =
         fun2Arg(A, fun(UNIT_TYPE, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
+    static final Type LIST_TO_A = fun(A_B_LIST_TYPE, A);
     static final Type LIST_TO_BOOL = fun(A_B_LIST_TYPE, BOOL_TYPE);
+    static final Type LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
@@ -134,6 +136,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
         bindPoly("empty?", LIST_TO_BOOL, new IsEmpty(), 0,
         bindPoly("same?", EQ_TYPE, new Same(), 0,
+        bindPoly("head", LIST_TO_A, new Head(), 0,
+        bindPoly("tail", LIST_TO_LIST, new Tail(), 0,
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new Synchronized(), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
@@ -172,7 +176,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null)))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))));
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
 

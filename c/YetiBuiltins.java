@@ -103,11 +103,13 @@ interface YetiBuiltins extends CaseCode {
         public BindRef getRef(int line) {
             return new StaticRef("yeti/lang/std", libName,
                                  type, this, true, line) {
-                Code apply(final Code arg, final YetiType.Type res, int line) {
+                Code apply(final Code arg, final YetiType.Type res,
+                           final int line) {
                     return new Code() {
                         { type = res; }
 
                         void gen(Ctx ctx) {
+                            ctx.visitLine(line);
                             IsNullPtr.this.gen(ctx, arg);
                         }
 
@@ -174,6 +176,36 @@ interface YetiBuiltins extends CaseCode {
             if (ifTrue) {
                 ctx.m.visitJumpInsn(GOTO, to);
             }
+            ctx.m.visitLabel(end);
+        }
+    }
+
+    class Head extends IsNullPtr {
+        Head() {
+            super(YetiType.LIST_TO_A, "head");
+        }
+
+        void gen(Ctx ctx, Code arg) {
+            arg.gen(ctx);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                "first", "()Ljava/lang/Object;");
+        }
+    }
+
+    class Tail extends IsNullPtr {
+        Tail() {
+            super(YetiType.LIST_TO_LIST, "tail");
+        }
+
+        void gen(Ctx ctx, Code arg) {
+            arg.gen(ctx);
+            ctx.m.visitInsn(DUP);
+            Label end = new Label();
+            ctx.m.visitJumpInsn(IFNULL, end);
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                "rest", "()Lyeti/lang/AList;");
             ctx.m.visitLabel(end);
         }
     }
