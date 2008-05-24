@@ -52,10 +52,16 @@ public class ListRange extends AList implements ListIter {
     AList rest;
     int inc = 1;
 
-    public ListRange(Object first, Object last, AList rest) {
-        this.first = (Num) first;
-        this.last  = (Num) last;
+    private ListRange(Num first, Num last, AList rest) {
+        this.first = first;
+        this.last  = last;
         this.rest  = rest;
+    }
+
+    public static AList range(Object first, Object last, AList rest) {
+        Num f;
+        return (f = (Num) first).compareTo(last) > 0 ? rest
+            : new ListRange(f, (Num) last, rest);
     }
 
     public Object first() {

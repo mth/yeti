@@ -1925,8 +1925,6 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/ListRange");
-            ctx.m.visitInsn(DUP);
             from.gen(ctx);
             to.gen(ctx);
         }
@@ -1954,9 +1952,9 @@ interface YetiCode {
             ctx.m.visitInsn(ACONST_NULL);
             for (int i = items.length; --i >= 0;) {
                 if (items[i] instanceof Range) {
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/ListRange",
-                            "<init>", "(Ljava/lang/Object;Ljava/lang/Object;"
-                                    + "Lyeti/lang/AList;)V");
+                    ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/ListRange",
+                            "range", "(Ljava/lang/Object;Ljava/lang/Object;"
+                                    + "Lyeti/lang/AList;)Lyeti/lang/AList;");
                 } else {
                     ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
                             "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
