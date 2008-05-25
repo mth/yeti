@@ -1,6 +1,8 @@
 program yeti.lang.compiler.yeti;
 
+import java.lang.Object;
 import java.lang.Class;
+import java.lang.ClassLoader;
 import yeti.lang.Core;
 
 var target = "";
@@ -22,8 +24,7 @@ compilationOf writer =
                             new ClassFinder(classPath));
 
 execClass writer =
-   (c = Class#forName(strReplace '/' '.' mainClass, true,
-                      writer unsafely_as ~java.lang.ClassLoader);
+   (c = Class#forName(strReplace '/' '.' mainClass, true, writer);
     sm = new SandboxSecurityManager();
     try
         if eval then
@@ -54,7 +55,7 @@ repl () =
             type = compilation#compile((), mainClass, line, flags);
             compilation#write();
             try
-                res = execClass writer;
+                res = execClass (writer as ~ClassLoader);
                 if type#deref()#type != YetiType#UNIT then
                     println "\(Core#show(res)) is \(type)"
                 fi
@@ -185,7 +186,7 @@ yrt;
 
 if exec then
     try
-        v = execClass writer;
+        v = execClass (writer as ~Object unsafely_as ~ClassLoader);
         if resultType#deref()#type != YetiType#UNIT then
             println v
         fi

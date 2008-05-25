@@ -361,6 +361,18 @@ plus a b = a + b;
             new Map2List(f, a, b) unsafely_as list<'c>
         fi,
 
+    revAppend a b is list?<''> -> list<''> -> list<''> =
+        if empty? a then
+            b
+        else
+            var a = a unsafely_as ~AIter;
+            var res = b;
+            not (nullptr? a) loop
+               (res := (a#first() unsafely_as '') :: res;
+                a := a#next());
+            res
+        fi,
+
     reverse l is list?<'a> -> list<'a> =
         if nullptr? l then
             []

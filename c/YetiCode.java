@@ -1510,8 +1510,8 @@ interface YetiCode {
             }
             key.gen(ctx);
             ctx.visitLine(line);
-            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
-                    "vget", "(Ljava/lang/Object;)Ljava/lang/Object;");
+            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
+                                  "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
         Code assign(final Code setValue) {

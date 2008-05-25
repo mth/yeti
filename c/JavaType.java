@@ -415,8 +415,8 @@ class JavaType {
             return;
         }
         try {
-            if (src.isAssignable(dst) < 0 &&
-                (from.type != YetiType.JAVA || dst.isAssignable(src) < 0)) {
+            if (dst.isAssignable(src) < 0 &&
+                (from.type != YetiType.JAVA || src.isAssignable(dst) < 0)) {
                 throw new CompileException(cast,
                     "Illegal cast from " + from + " to " + to);
             }

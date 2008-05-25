@@ -39,6 +39,38 @@ shellSort less a =
             a.[j] := tmp;
             i := i + 1)));
 
+// based on wikipedia pseudocode example
+heapSort less a =
+   (count = length a;
+    var end = 1;
+    end < count loop // heapify
+       (var child = end;
+        child > 0 loop
+           (parent = (child - 1) div 2;
+            if less a.[parent] a.[child] then
+                swapAt a parent child;
+                child := parent
+            else
+                child := 0
+            fi);
+        end := end + 1);
+    end := count - 1;
+    end > 0 loop
+       (swapAt a 0 end;
+        end := end - 1;
+        var root = 0;
+        root * 2 + 1 <= end loop // shiftdown
+           (var child = root * 2 + 1;
+            if child < end and a.[child] < a.[child + 1] then
+                child := child + 1
+            fi;
+            if less a.[root] a.[child] then
+                swapAt a root child;
+                root := child
+            else
+                root := end
+            fi)));
+
 qsort less a =
    (sort l r =
        (var i = l;
@@ -62,21 +94,21 @@ qsort less a =
 qsort2 less =
    (qsort l =
         case l of
-        x :: xs:
+        x :: xs: // could do with half of the compares
             qsort (filter (not . less x) xs) ++ x :: qsort (filter (less x) xs);
         _: [];
         esac);
 
 mergeSort less l =
-   (merge a b =
+   (merge l a b =
         if empty? a then
-            b
+            revAppend l b
         elif empty? b then
-            a
+            revAppend l a
         elif less (head a) (head b) then
-            head a :: (merge (tail a) b)
+            merge (head a :: l) (tail a) b
         else
-            head b :: (merge a (tail b))
+            merge (head b :: l) a (tail b)
         fi;
     sort list len =
         if len <= 1 then
@@ -84,7 +116,7 @@ mergeSort less l =
         else
             left = len div 2;
             {fst, snd} = splitAt left list;
-            merge (sort fst left) (sort snd (len - left))
+            merge [] (sort fst left) (sort snd (len - left))
         fi) l (length l);
 
 insertionSort less l =
@@ -103,7 +135,7 @@ insertionSort2 less a =
         a.[j + 1] := v
     done;
 
-l = map \(randomInt 4000) [1..2000];
+l = map \(randomInt 3000) [1..1500];
 sorted = sort l;
 
 testSort name f =
@@ -127,6 +159,7 @@ testSort "insertion" insertionSort;
 testASort "insertion2" insertionSort2;
 testASort "shell" shellSort;
 testASort "comb" combSort;
+testASort "heap" heapSort;
 testASort "qsort" qsort;
 testSort "qsort2" qsort2;
 testSort "merge" mergeSort;
