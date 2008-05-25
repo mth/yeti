@@ -61,7 +61,7 @@ heapSort less a =
         var root = 0;
         root * 2 + 1 <= end loop // shiftdown
            (var child = root * 2 + 1;
-            if child < end and a.[child] < a.[child + 1] then
+            if child < end and less a.[child] a.[child + 1] then
                 child := child + 1
             fi;
             if less a.[root] a.[child] then
@@ -157,8 +157,8 @@ println "sorting array of \(length l) elements...";
 testASort "selection" selectionSort;
 testSort "insertion" insertionSort;
 testASort "insertion2" insertionSort2;
-testASort "shell" shellSort;
 testASort "comb" combSort;
+testASort "shell" shellSort;
 testASort "heap" heapSort;
 testASort "qsort" qsort;
 testSort "qsort2" qsort2;
