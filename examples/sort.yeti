@@ -26,6 +26,19 @@ combSort less a =
             fi
         done));
 
+shellSort less a =
+   (var inc = length a;
+    (inc := if inc == 2 then 1 else inc * 10 div 23 fi; inc > 0) loop
+       (var i = inc;
+        i < length a loop
+           (tmp = a.[i];
+            var j = i;
+            j >= inc and less tmp a.[j - inc] loop
+               (a.[j] := a.[j - inc];
+                j := j - inc);
+            a.[j] := tmp;
+            i := i + 1)));
+
 qsort less a =
    (sort l r =
        (var i = l;
@@ -112,6 +125,7 @@ println "sorting array of \(length l) elements...";
 testASort "selection" selectionSort;
 testSort "insertion" insertionSort;
 testASort "insertion2" insertionSort2;
+testASort "shell" shellSort;
 testASort "comb" combSort;
 testASort "qsort" qsort;
 testSort "qsort2" qsort2;
