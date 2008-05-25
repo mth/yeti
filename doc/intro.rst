@@ -1152,4 +1152,39 @@ There are sort functions (using merge sort algorithm) in the standard library::
 Hash maps
 ~~~~~~~~~~~~~
 
+TODO
+::
 
+    > h = ["foo": 42, "bar": 13]
+    h is hash<string, number> = ["foo":42,"bar":13]
+    > h.["foo"]
+    42 is number
+    > "bar" in h
+    true is boolean
+    > "zoo" in h
+    false is boolean
+    > h.["zoo"] := 666
+    > h.["bar"] := 22
+    > forHash h do k v: println "\(k): \(v)" done
+    zoo: 666
+    foo: 42
+    bar: 22
+
+Variant types and pattern matching
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TODO
+::
+
+    > someVal n x = case x of Some v: v; None _: n; esac
+    someVal is 'a -> None 'b | Some 'a -> 'a = <code$someVal>
+    > someVal 13 (Some 33)
+    33 is number
+    > someVal 13 (None ())
+    13 is number
+
+Modules
+~~~~~~~~~~
+
+TODO
+ 
