@@ -1061,6 +1061,21 @@ assigned like variables::
     > a
     [3,4,33,6,7] is array<number>
 
+Alternative way for getting array element by index is using ``at`` function::
+
+    > at a 4
+    7 is number
+    > map (at a) [0 .. length a - 1]
+    [3,4,33,6,7] is list<number>
+
+Array can be casted into list using ``asList`` function::
+
+    > asList a
+    [3,4,33,6,7] is list<number>
+
+The returned list will be still backed by the same array, so modifications
+to the array will be visible in the list.
+
 Two array elements can be swapped using ``swapAt`` function::
 
     > swapAt a 2 3
@@ -1157,9 +1172,152 @@ to the map type. Maps can be constructed using map literals::
 
     > h = ["foo": 42, "bar": 13]
     h is hash<string, number> = ["foo":42,"bar":13]
+    > h2 = [:]
+    h2 is hash<'a, 'b> = [:]
 
-The struct can be referenced in a same way as 
-    
+The ``[:]`` literal is an empty map constructor.
+
+The map can be referenced by key in a same way as arrays by index::
+
+    > h.["foo"]
+    42 is number
+    > h.["bar"]
+    13 is number
+
+Attempt to read non-existing key from map results in error::
+
+    > h.["zoo"]
+    yeti.lang.NoSuchKeyException: Key not found (zoo)
+            at yeti.lang.Hash.vget(Hash.java:52)
+            at code.apply(<>:1)
+    ...
+
+Existence of a key in the map can be checked using **in** operator::
+
+    > (in)
+    <yeti.lang.std$in> is 'a -> hash<'a, 'b> -> boolean
+    > "bar" in h
+    true is boolean
+    > "zoo" in h
+    false is boolean
+
+Existing keys can be modified and new ones added using assignment::
+
+    > h.["bar"] := 11
+    > h.["zoo"] := 666
+    > h
+    ["zoo":666,"foo":42,"bar":11] is hash<string, number>
+
+Similarly to arrays, the map values can be fetched by key using
+the same ``at`` function::
+
+    > at h "foo"
+    42 is number
+
+List of map keys can be get using keys function::
+
+    > keys h
+    ["zoo","foo","bar"] is list<string>
+    > map (at h) (keys h)
+    [666,42,11] is list<number>
+
+List of the map values can also be obtained using the ``asList`` function::
+
+    > asList h
+    [666,42,11] is list<number>
+
+The ``asList`` on map creates a new list, which will not change, when the
+map changes.
+
+Maps can be iterated using ``forHash`` and ``mapHash`` functions::
+
+    > forHash
+    <yeti.lang.std$forHash> is hash<'a, 'b> -> ('a -> 'b -> ()) -> ()
+    > mapHash
+    <yeti.lang.std$mapHash> is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c>
+    > forHash h do k v: println "\(k): \(v)" done
+    zoo: 666
+    foo: 42
+    bar: 11
+    > mapHash do k v: "\(k): \(v)" done h
+    ["zoo: 666","foo: 42","bar: 11"] is list?<string>
+
+The main difference between ``forHash`` and ``mapHash`` is that ``mapHash``
+creates a list from the values returned by the given function.
+They are also similar to the correspondending ``for`` and ``map`` functions -
+the hash-map variants just take two-argument function, so they can give both
+the key and value as arguments to it.
+
+Value count in the map can be asked using the ``length`` function::
+
+    > length h
+    3
+
+Keys in the map can be deleted using a ``delete`` function::
+
+    > delete h "foo"
+    > h
+    ["zoo":666,"bar":11] is hash<string, number>
+
+Default values
++++++++++++++++++
+
+It is possible to make a map to compute a values for non-existing keys when
+they are requested. This is done using ``setHashDefault`` function::
+
+    > dh = [:]
+    dh is hash<'a, 'b> = [:]
+    > setHashDefault dh negate
+    > dh.[33]
+    -33 is number
+
+The default fun will be used only when the queried key don't exist in the map.
+::
+
+    > dh.[33] := 11
+    > dh.[33]
+    11 is number
+    > dh.[32]
+    -32 is number
+
+The ``negate`` default was not used, when the ``33`` key was put into the map.
+It must be noted, that the map itself won't put the value returned by default
+function into map. This means for example, that if the default function
+returns different values for same key, then accessing the map will also
+give different results::
+
+    > var counter is number = 0
+    var counter is number = 0
+    > setHashDefault dh \(counter := counter + 1; counter)
+    > dh.[5]
+    1 is number
+    > dh.[5]
+    2 is number
+    > dh
+    [33:11] is hash<number, number>
+
+Still, the default values feature can be used to implement memoizing functions,
+if the function updates the map by itself.
+::
+
+    > fibs = [0: 0, 1: 1]
+    fibs is hash<number, number> = [0:0,1:1]
+    > calcFib x = (fibs.[x] := fibs.[x - 1] + fibs.[x - 2]; fibs.[x])
+    calcFib is number -> number = <code$calcFib>
+    > setHashDefault fibs calcFib
+    > map (at fibs) [0..10]
+    [0,1,1,2,3,5,8,13,21,34,55] is list<number>
+    > fibs.[100]
+    354224848179261915075 is number
+
+Here the ``calcFib`` function will cause calculation of previous values
+and then stores the result. Because the result is stored, futher
+requests for the same value will be not calculated again, avoiding
+the exponential time complexity of the naive recursive algorithm.
+The algorithm remains non-tail-recursive, though.
+
+Connection between list, array and hash types
+++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 Structures

@@ -326,6 +326,9 @@ plus a b = a + b;
                 unsafely_as list<''>
         fi,
 
+    delete h k is hash<'a, ''> -> 'a -> () =
+        _ = (h unsafely_as ~Hash)#remove(k),
+
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
