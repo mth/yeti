@@ -128,11 +128,11 @@ plus a b = a + b;
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>,
 
-    asList a is array<'a> -> list<'a> =
+    asList a is map<'','a> -> list<'a> =
         if empty? a then
             []
         else
-            a unsafely_as ~MList unsafely_as ''
+            (a unsafely_as ~Coll)#asList() unsafely_as list<''>
         fi,
 
     swapAt a i j =
@@ -320,10 +320,6 @@ plus a b = a + b;
 
     keysOf h is hash<'a, ''> -> list<'a> =
         new MList((h unsafely_as ~Hash)#keySet()#toArray())
-            unsafely_as list<''>,
-
-    valuesOf h is hash<'', 'a> -> list<'a> =
-        new MList((h unsafely_as ~Hash)#values()#toArray())
             unsafely_as list<''>,
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =

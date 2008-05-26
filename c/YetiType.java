@@ -85,6 +85,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { NUM_TYPE, B, LIST_TYPE });
     static final Type A_B_MAP_TYPE =
         new Type(MAP, new Type[] { B, A, MAP_TYPE });
+    static final Type A_B_C_MAP_TYPE =
+        new Type(MAP, new Type[] { B, A, C });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
@@ -96,7 +98,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         fun2Arg(A, fun(UNIT_TYPE, A_B_LIST_TYPE), A_LIST_TYPE);
     static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
     static final Type LIST_TO_A = fun(A_B_LIST_TYPE, A);
-    static final Type LIST_TO_BOOL = fun(A_B_LIST_TYPE, BOOL_TYPE);
+    static final Type MAP_TO_BOOL = fun(A_B_C_MAP_TYPE, BOOL_TYPE);
     static final Type LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
     static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
@@ -134,7 +136,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindPoly("for", FOR_TYPE, new For(), 0,
         bindPoly("nullptr?", A_TO_BOOL, new IsNullPtr(A_TO_BOOL, "nullptr?"), 0,
         bindPoly("defined?", A_TO_BOOL, new IsDefined(), 0,
-        bindPoly("empty?", LIST_TO_BOOL, new IsEmpty(), 0,
+        bindPoly("empty?", MAP_TO_BOOL, new IsEmpty(), 0,
         bindPoly("same?", EQ_TYPE, new Same(), 0,
         bindPoly("head", LIST_TO_A, new Head(), 0,
         bindPoly("tail", LIST_TO_LIST, new Tail(), 0,
@@ -177,6 +179,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
         null)))))))))))))))))))))))))))))))))))))))))))))))));
+
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
 

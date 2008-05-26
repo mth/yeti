@@ -158,7 +158,7 @@ interface YetiBuiltins extends CaseCode {
 
     class IsEmpty extends IsNullPtr {
         IsEmpty() {
-            super(YetiType.LIST_TO_BOOL, "empty$q");
+            super(YetiType.MAP_TO_BOOL, "empty$q");
         }
 
         void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
@@ -166,8 +166,9 @@ interface YetiBuiltins extends CaseCode {
             arg.gen(ctx);
             ctx.m.visitInsn(DUP);
             ctx.m.visitJumpInsn(IFNULL, isNull);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            if (ctx.compilation.isGCJ)
+                ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Coll");
+            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Coll",
                                   "isEmpty", "()Z"); 
             ctx.m.visitJumpInsn(IFNE, ifTrue ? to : end);
             ctx.m.visitJumpInsn(GOTO, ifTrue ? end : to);

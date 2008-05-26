@@ -32,5 +32,7 @@ package yeti.lang;
 
 /** Yeti core library - a collection. */
 public interface Coll {
+    AList asList();
     long length();
+    boolean isEmpty();
 }

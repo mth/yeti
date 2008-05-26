@@ -58,6 +58,10 @@ public class Hash extends java.util.HashMap implements ByKey, Coll {
         return size();
     }
 
+    public AList asList() {
+        return new MList(values().toArray());
+    }
+
     public String toString() {
         int n, size = size();
         if (size == 0) {
