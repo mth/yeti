@@ -259,6 +259,13 @@ public final class YetiAnalyzer extends YetiType {
                           MAP_TYPE };
             return new Type(MAP, tp);
         }
+        if (name == "map") {
+            expectsParam(node, 2);
+            Type[] tp = { nodeToType(node.param[1], free, scope, depth),
+                          nodeToType(node.param[0], free, scope, depth),
+                          new Type(depth) };
+            return new Type(MAP, tp);
+        }
         if (Character.isUpperCase(name.charAt(0))) {
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth);

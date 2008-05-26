@@ -318,14 +318,22 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<''>,
 
+    keysOf h is hash<'a, ''> -> list<'a> =
+        new MList((h unsafely_as ~Hash)#keySet()#toArray())
+            unsafely_as list<''>,
+
+    valuesOf h is hash<'', 'a> -> list<'a> =
+        new MList((h unsafely_as ~Hash)#values()#toArray())
+            unsafely_as list<''>,
+
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
-    length l is list?<''> -> number =
+    length l is map<'a, 'b> -> number =
         if nullptr? l then
             0
         else
-            (l unsafely_as ~AList)#iter()#length(l)
+            (l unsafely_as ~Coll)#length()
         fi,
 
     setArrayCapacity a n is array<'a> -> number -> () =

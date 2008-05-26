@@ -1151,24 +1151,37 @@ There are sort functions (using merge sort algorithm) in the standard library::
 
 Hash maps
 ~~~~~~~~~~~~~
+Hash map is a mutable data structure, that maps keys to values. 
+Similarly to lists and arrays the key and value types are parameters
+to the map type. Maps can be constructed using map literals::
+
+    > h = ["foo": 42, "bar": 13]
+    h is hash<string, number> = ["foo":42,"bar":13]
+
+The struct can be referenced in a same way as 
+    
+
+
+Structures
+~~~~~~~~~~~~~~
 
 TODO
 ::
 
-    > h = ["foo": 42, "bar": 13]
-    h is hash<string, number> = ["foo":42,"bar":13]
-    > h.["foo"]
+    > st = {foo = 42, bar = "wtf"}
+    st is {bar is string; .foo is number} = {foo=42; bar="wtf"}
+    > st.foo
     42 is number
-    > "bar" in h
-    true is boolean
-    > "zoo" in h
-    false is boolean
-    > h.["zoo"] := 666
-    > h.["bar"] := 22
-    > forHash h do k v: println "\(k): \(v)" done
-    zoo: 666
-    foo: 42
-    bar: 22
+    > (.bar)
+    <yeti.lang.Selector> is {bar is 'a} -> 'a
+    > (.bar) st
+    "wtf" is string
+    > {foo = a} = st
+    a is number = 42
+    > {foo,bar} = st
+    foo is number = 42
+    bar is string = wtf
+
 
 Variant types and pattern matching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -16,10 +16,16 @@
            includes="SpecialLib.java" encoding="UTF-8" classpath="${asm}"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${basedir}/.build/util">
+        <arg value="pre"/>
         <arg value="${basedir}/.build/lib"/>
     </java>
     <javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib" debug="on"
         encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"/>
+    <java classname="yeti.lang.SpecialLib" failonerror="true"
+          classpath="${asm}:${basedir}/.build/util">
+        <arg value="tr"/>
+        <arg value="${basedir}/.build/lib"/>
+    </java>
 </target>
 
 <target name="checklib">

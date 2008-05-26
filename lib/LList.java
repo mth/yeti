@@ -45,13 +45,6 @@ class LListIter implements ListIter {
             value = f.apply2(value, i.first());
         return value;
     }
-
-    public long length(AIter i) {
-        int n = 0;
-        for (; i != null; i = i.next())
-            ++n;
-        return n;
-    }
 }
 
 /** Yeti core library - List. */
@@ -163,5 +156,9 @@ public class LList extends AList {
 
     public AList sort() {
         return new MList(this).asort();
+    }
+
+    public long length() {
+        return 0;
     }
 }

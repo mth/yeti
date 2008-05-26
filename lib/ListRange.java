@@ -237,7 +237,7 @@ public class ListRange extends AList implements ListIter {
         return l;
     }
 
-    public long length(AIter i) {
+    public long length() {
         long n = last.sub(first).intValue() / inc;
         return n >= 0 ? n + 1 : 0;
     }

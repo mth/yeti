@@ -33,7 +33,7 @@ package yeti.lang;
 import java.util.Map;
 
 /** Yeti core library - Hash. */
-public class Hash extends java.util.HashMap implements ByKey {
+public class Hash extends java.util.HashMap implements ByKey, Coll {
     Fun defaultFun;
 
     public Hash() {
@@ -52,6 +52,10 @@ public class Hash extends java.util.HashMap implements ByKey {
             throw new NoSuchKeyException("Key not found (" + key + ")");
         }
         return x;
+    }
+
+    public long length() {
+        return size();
     }
 
     public String toString() {

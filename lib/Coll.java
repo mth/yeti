@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2008 Madis Janson
+ * Copyright (c) 2007,2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-public interface ListIter {
-    void forEach(Object f, AIter i);
-    Object fold(Fun f, Object v, AIter i);
+/** Yeti core library - a collection. */
+public interface Coll {
+    long length();
 }
