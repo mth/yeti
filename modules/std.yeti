@@ -318,9 +318,13 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<''>,
 
-    keysOf h is hash<'a, ''> -> list<'a> =
-        new MList((h unsafely_as ~Hash)#keySet()#toArray())
-            unsafely_as list<''>,
+    keys h is hash<'a, ''> -> list<'a> =
+        if empty? h then
+            []
+        else
+            new MList((h unsafely_as ~Hash)#keySet()#toArray())
+                unsafely_as list<''>
+        fi,
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
