@@ -33,12 +33,6 @@ package yeti.lang;
 class LListIter implements ListIter {
     static final LListIter ITER = new LListIter();
 
-    public void forEach(Object fun, AIter i) {
-        Fun f = (Fun) fun;
-        for (; i != null; i = i.next())
-            f.apply(i.first());
-    }
-
     public Object fold(Fun g, Object value, AIter i) {
         Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
         for (; i != null; i = i.next())
@@ -160,5 +154,8 @@ public class LList extends AList {
 
     public long length() {
         return 0;
+    }
+
+    public void forEach(Object f) {
     }
 }

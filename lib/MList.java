@@ -102,7 +102,7 @@ abstract class AMList extends AList implements ListIter {
         return buf.toString();
     }
 
-    public void forEach(Object fun, AIter iter) {
+    public void forEach(Object fun) {
         Fun f = (Fun) fun;
         Object[] array = array();
         for (int cnt = _size(), i = start; i < cnt; ++i) {

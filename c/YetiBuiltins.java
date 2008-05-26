@@ -284,16 +284,11 @@ interface YetiBuiltins extends CaseCode {
             fun.gen(ctx);
             ctx.visitLine(line);
             ctx.m.visitInsn(SWAP);
-            ctx.m.visitInsn(DUP);
-            ctx.m.visitJumpInsn(IFNULL, nop);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-            ctx.m.visitInsn(DUP);
+            ctx.m.visitInsn(DUP_X1);
+            ctx.m.visitJumpInsn(IFNULL, nop);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                                  "iter", "()Lyeti/lang/ListIter;");
-            ctx.m.visitInsn(DUP_X2);
-            ctx.m.visitInsn(POP);
-            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ListIter",
-                    "forEach", "(Ljava/lang/Object;Lyeti/lang/AIter;)V");
+                                  "forEach", "(Ljava/lang/Object;)V");
             ctx.m.visitJumpInsn(GOTO, end);
             ctx.m.visitLabel(nop);
             ctx.m.visitInsn(POP2);

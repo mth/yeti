@@ -152,7 +152,7 @@ public class ListRange extends AList implements ListIter {
         return i != null ? 1 : j != null ? -1 : 0;
     }
 
-    public void forEach(Object fun, AIter iter) {
+    public void forEach(Object fun) {
         Fun f = (Fun) fun;
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {

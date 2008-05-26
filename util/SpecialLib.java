@@ -40,7 +40,7 @@ class LListAdapter extends ClassAdapter implements Opcodes {
 
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
-        return "length".equals(name) ? null
+        return "length".equals(name) || "forEach".equals(name) ? null
                 : cv.visitMethod(access, name, desc, signature, exceptions);
     }
 
@@ -63,6 +63,30 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitVarInsn(ILOAD, 0);
         mv.visitInsn(I2L);
         mv.visitInsn(LRETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        mv = cv.visitMethod(ACC_PUBLIC, "forEach",
+                            "(Ljava/lang/Object;)V", null, null);
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitVarInsn(ASTORE, 0);
+        mv.visitInsn(DUP);
+        mv.visitJumpInsn(IFNULL, end = new Label());
+        mv.visitLabel(retry = new Label());
+        mv.visitInsn(DUP2); // fun iter fun iter
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "first", "()Ljava/lang/Object;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
+                           "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        mv.visitInsn(POP);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "next", "()Lyeti/lang/AIter;");
+        mv.visitInsn(DUP);
+        mv.visitJumpInsn(IFNONNULL, retry);
+        mv.visitLabel(end);
+        mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
         cv.visitEnd();

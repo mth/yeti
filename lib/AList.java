@@ -38,6 +38,8 @@ public abstract class AList extends AIter implements Comparable, Coll {
     public abstract AList rest();
 
     public abstract ListIter iter();
+    
+    public abstract void forEach(Object f);
 
     public abstract AList reverse();
 
