@@ -1319,7 +1319,7 @@ The algorithm remains non-tail-recursive, though.
 Connection between list, array and hash types
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
-This section may be skipped if you're not interested in the Yeti typeing
+This section may be skipped if you're not interested in the Yeti typing
 of lists, arrays and hashes. It might still be useful to read as an
 explanation for some of the type error messages.
 
