@@ -1357,17 +1357,17 @@ meaning the mismatching types were really the *list marker* and
 Similarly the only distinction between an *array<>* and *list<>* types
 is in the key type of the *map<>* - it is number for an *array<>* and
 *none* for a *list<>* (both *array<>* and *list<>* have *list marker*
-an the *map<>* kind). This can be again seen in a type error::
+as the *map<>* kind). This can be again seen in a type error::
 
     > push []
     1:6: Cannot apply list<'a> to array<'a> -> 'a -> ()
         Type mismatch: number is not none
 
 The *list<>* type cannot be used as an *array<>*, because it has
-different index (key) type - *none*, while the *array<>* has a number
-as the index type. This is also the explanation of the *list?<>* type
-mentioned earlier - it has a free type variable as the index type
-(and a *list marker* as the *map<>* kind). Therefore the *list?<>* type
+different index (key) type - *none*, while the *array<>* has a *number*
+as the index type. This also explains the *list?<>* type mentioned
+earlier - it has a free type variable as the index type (and
+a *list marker* as the *map<>* kind). Therefore the *list?<>* type
 can be unified both with the *array<>* and the *list<>* type.
 
 Structures
