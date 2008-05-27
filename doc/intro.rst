@@ -1370,8 +1370,14 @@ earlier - it has a free type variable as the index type (and
 a *list marker* as the *map<>* kind). Therefore the *list?<>* type
 can be unified both with the *array<>* and the *list<>* type.
 
+
 Structures
 ~~~~~~~~~~~~~~
+Structures are data types that contain one or more named fields.
+Each of the fields has its own data type. Yeti can infer the structure
+types automatically, similarly to other data types.
+
+
 
 TODO
 ::

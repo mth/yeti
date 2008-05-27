@@ -271,10 +271,12 @@ public class YetiType implements YetiParser, YetiBuiltins {
             Iterator i = m.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
+                boolean partial = partialMembers != null
+                    && partialMembers.containsKey(e.getKey());
                 if (res.length() != 0) {
-                    res.append(partialMembers != null &&
-                               partialMembers.containsKey(e.getKey())
-                               ? sep : sep2);
+                    res.append(partial ? sep : sep2);
+                } else if (!variant && partial) {
+                    res.append('.');
                 }
                 res.append(e.getKey());
                 res.append(variant ? " " : " is ");
