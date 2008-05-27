@@ -1319,6 +1319,56 @@ The algorithm remains non-tail-recursive, though.
 Connection between list, array and hash types
 ++++++++++++++++++++++++++++++++++++++++++++++++
 
+This section may be skipped if you're not interested in the Yeti typeing
+of lists, arrays and hashes. It might still be useful to read as an
+explanation for some of the type error messages.
+
+It could be seen previously, that many functions worked on both lists
+and arrays, some like ``at`` on both arrays and hashes, and some even
+on all of them (``asList`` and ``length`` for example).
+
+This is possible, because all those types - *list<>*, *array<>* and *hash<>*
+are variants of parametric *map<>* type::
+
+    > at
+    <yeti.lang.std$at> is map<'a, 'b> -> 'a -> 'b
+    > length
+    <yeti.lang.std$length> is map<'a, 'b> -> number
+    > asList
+    <yeti.lang.std$asList> is map<'a, 'b> -> list<'b>
+
+The *map<>* type actually has third hidden parameter which determines,
+whether it is a *hash<>* or *list?<>*. The value for third parameter can be
+either *list  marker* or *hash marker* (or free type variable when not
+determined yet). This can be shown by trying to give a hash as argument
+to an array expecting function::
+
+    > push [:]
+    1:6: Cannot apply hash<number, 'a> to array<'a> -> 'a -> ()
+        Type mismatch: list is not hash
+
+Important part is the second line of the error message which states that
+the error is in *list* not being an *hash*. Type parameters are missing
+there because the error occured on unifying the map kind parameter in
+hash<> and array<>, not in unifying themselves (they are both maps!) -
+meaning the mismatching types were really the *list marker* and
+*hash marker*.
+
+Similarly the only distinction between an *array<>* and *list<>* types
+is in the key type of the *map<>* - it is number for an *array<>* and
+*none* for a *list<>* (both *array<>* and *list<>* have *list marker*
+an the *map<>* kind). This can be again seen in a type error::
+
+    > push []
+    1:6: Cannot apply list<'a> to array<'a> -> 'a -> ()
+        Type mismatch: number is not none
+
+The *list<>* type cannot be used as an *array<>*, because it has
+different index (key) type - *none*, while the *array<>* has a number
+as the index type. This is also the explanation of the *list?<>* type
+mentioned earlier - it has a free type variable as the index type
+(and a *list marker* as the *map<>* kind). Therefore the *list?<>* type
+can be unified both with the *array<>* and the *list<>* type.
 
 Structures
 ~~~~~~~~~~~~~~
