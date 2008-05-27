@@ -902,7 +902,7 @@ like ``length`` (which is also part of the standard library).
 Lazy lists
 +++++++++++++
 
-Lists can be constructed lazyle, when accessed. This is done using a
+Lists can be constructed lazily, when accessed. This is done using a
 lazy list constructor ``:.``, which gets a function instead of the tail::
 
     > (:.)
@@ -946,7 +946,7 @@ Standard library contains a ``iterate`` function for creating infinite lists::
 
 First argument of ``iterate`` is a function, that calculates next element
 from the previous element value. Second argument is the first element.
-The ``take n l`` function creates (lazyly) a list containing first ``n``
+The ``take n l`` function creates (lazily) a list containing first ``n``
 elements of ``l``.
 
 Lazy list construction can be used for transforming existing lists on the fly::
