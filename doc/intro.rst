@@ -1443,6 +1443,39 @@ The field bindings in structure literals can also be function definitions
 similarly to ordinary value bindings.
 ::
 
+    > s1 = { half x = x / 2 }
+    s1 is {half is number -> number} = {half=<code$half>}
+    > s1.half
+    <code$half> is number -> number
+    > s1.half 3
+    1.5 is number
+
+The function definitions in structures can be used to create object-like
+structures::
+
+    point x y =
+       (var x = x;
+        var y = y;
+        {
+            show () =
+                println "\(x),\(y)",
+    
+            moveBy dx dy =
+                x := x + dx;
+                y := y + dy
+        });
+
+    p1 = point 13 21;
+    p1.show ();
+    p1.moveBy 5 (-2);
+    p1.show ();
+
+Which gives the following result::
+
+    $ java -jar yeti.jar point.yeti
+    13,21
+    18,19
+
 
 TODO
 ::
