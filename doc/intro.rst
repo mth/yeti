@@ -1377,6 +1377,71 @@ Structures are data types that contain one or more named fields.
 Each of the fields has its own data type. Yeti can infer the structure
 types automatically, similarly to other data types.
 
+Structure values are created using structure literals::
+
+    > st = {foo = 42, bar = "wtf"}
+    st is {bar is string, foo is number} = {foo=42, bar="wtf"}
+    > st.foo
+    42 is number
+    > st.bar
+    "wtf" is string
+    > st.baz
+    1:4: {bar is string, foo is number} do not have .baz field
+
+As it can be seen, the field values are accessed using a field reference
+operator - a field name prefixed with dot. You may put whitespace before
+or after the dot, but if there is whitespace on both sides of the dot, it
+will be parsed as a function composition operator. It is not recommended
+to put any whitespace around the field reference dot unless there is line
+break (in which case the linebreak is best put before the dot).
+Attempt to use non-existent fields unsuprisingly results in a compile error.
+
+Structure types are polymorphic - for example a function taking structure
+as an argument can be given any structure that happens to contain the
+required fields with expected types (this is quite like duck-typeing in
+some dynamically typed languages, although Yeti does this typechecking on
+compile-time).
+::
+
+    > getFoo x = x.foo
+    getFoo is {.foo is 'a} -> 'a = <code$getFoo>
+    > getFoo st
+    42 is number
+    > getFoo {foo = "test"}
+    "test" is string
+    > getFoo {wtf = "test"}
+    1:8: Cannot apply {wtf is string} to {.foo is 'a} -> 'a
+        Type mismatch: {wtf is string} => {.foo is 'a} (member missing: foo)
+
+The ``getFoo`` function accepts any structure having ``foo`` field, because
+the function doesn't have any restrictions on the field type by itself.
+
+Another thing to note about the types here is, that the structure in function
+type signature has the field name prefixed with dot (``{.foo is 'a}``).
+This means that this is expected field in the structure type, not a value
+from a structure literal - a distinction used by the typechecker, which has
+to ensure that all expected fields exist in the structure values.
+
+The ``getFoo`` function definition is actually quite redundant because
+field reference operators can be used as functions by themselves::
+
+    > (.foo)
+    <yeti.lang.Selector> is {.foo is 'a} -> 'a
+    > (.foo) st
+    42 is number
+
+This also works with nested structure field references::
+
+    > (.a.b)
+    <yeti.lang.Selectors> is {.a is {.b is 'a}} -> 'a
+    > (.a.b) {a = {b = 123}}
+    123 is number
+    > (.a.foo) {a = st}
+    42 is number
+
+The field bindings in structure literals can also be function definitions
+similarly to ordinary value bindings.
+::
 
 
 TODO

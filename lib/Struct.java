@@ -64,7 +64,7 @@ public class Struct {
             v[p] = (String) values[i];
             v[p + 1] = "=";
             v[p + 2] = Core.show(values[i + 1]);
-            v[p + 3] = "; ";
+            v[p + 3] = ", ";
         }
         v[p - 1] = "}";
         return Core.concat(v);

@@ -266,13 +266,13 @@ public class YetiType implements YetiParser, YetiBuiltins {
             if (finalMembers != null)
                 m.putAll(finalMembers);
             boolean useNL = m.size() >= 10;
-            String sep = variant ? " | " : useNL ? ";\n" : "; ";
-            String sep2 = variant ? " | " : useNL ? ";\n." : "; .";
+            String sep = variant ? " | " : useNL ? ",\n." : ", .";
+            String sep2 = variant ? " | " : useNL ? ",\n" : ", ";
             Iterator i = m.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
-                boolean partial = partialMembers != null
-                    && partialMembers.containsKey(e.getKey());
+                boolean partial = finalMembers == null
+                    || !finalMembers.containsKey(e.getKey());
                 if (res.length() != 0) {
                     res.append(partial ? sep : sep2);
                 } else if (!variant && partial) {
