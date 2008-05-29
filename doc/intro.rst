@@ -458,7 +458,7 @@ Variable bindings are introduced using ``var`` keyword.
 ::
 
     > var x = "test"
-    var x is string = test
+    var x is string = "test"
     > x
     "test" is string
     > x := "something else"
@@ -1516,7 +1516,7 @@ Destructuring bind
 Destructuring bind is a shorthand for binding names from field references::
 
     > {what = a, timeout = b} = ev
-    a is string = test
+    a is string = "test"
     b is number = 5
     > a ^ b
     "test5" is string
@@ -1531,7 +1531,7 @@ The destructuring bind ``{what = a, timeout = b} = ev`` is equivalent to
 the following code::
 
     > a = ev.what
-    a is string = test
+    a is string = "test"
     > b = ev.timeout
     b is number = 5
 
@@ -1543,7 +1543,7 @@ to same name as the field name in the structure::
 
     > {timeout, what} = ev
     timeout is number = 5
-    what is string = test
+    what is string = "test"
 
 Destructuring bind can be used also with function arguments::
 
