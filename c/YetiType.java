@@ -266,21 +266,21 @@ public class YetiType implements YetiParser, YetiBuiltins {
             if (finalMembers != null)
                 m.putAll(finalMembers);
             boolean useNL = m.size() >= 10;
-            String sep = variant ? " | " : useNL ? ",\n." : ", .";
-            String sep2 = variant ? " | " : useNL ? ",\n" : ", ";
+            String sep = variant ? " | " : useNL ? ",\n" : ", ";
             Iterator i = m.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
-                boolean partial = finalMembers == null
-                    || !finalMembers.containsKey(e.getKey());
-                if (res.length() != 0) {
-                    res.append(partial ? sep : sep2);
-                } else if (!variant && partial) {
+                if (res.length() != 0)
+                    res.append(sep);
+                Type t = (Type) e.getValue();
+                if (!variant && t.field == FIELD_MUTABLE)
+                    res.append("var ");
+                if (!variant && (finalMembers == null ||
+                        !finalMembers.containsKey(e.getKey())))
                     res.append('.');
-                }
                 res.append(e.getKey());
                 res.append(variant ? " " : " is ");
-                res.append(((Type) e.getValue()).str(vars, refs));
+                res.append(t.str(vars, refs));
             }
             return res.toString();
         }

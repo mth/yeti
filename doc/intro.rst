@@ -1476,6 +1476,21 @@ Which gives the following result::
     13,21
     18,19
 
+The variables ``x`` and  ``y`` are here in the scope of the ``point`` function
+and by returning the structure with ``show`` and ``moveBy`` functions
+the references to the variables are implicitly retained (this kind of data
+in the function scope is also called *lexical closure*). 
+The ``point`` function could be called a constructor and the functions in the
+struct methods from OO point of view.
+
+Mutable fields
+++++++++++++++++++
+
+The structures described before were immutable. It is possible to have
+mutable fields by prefixing the field bindings with the **var** keyword.
+
+    
+
 
 TODO
 ::
