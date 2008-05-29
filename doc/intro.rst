@@ -650,6 +650,8 @@ that all those nested applications of fac 5, fac 4, fac 3, fac 2 are suspended
 long unevaluated expression. This consumes extra memory (O(n) stack memory
 usage in this case) and makes the implementation noticeably less efficient.
 
+.. _tail-call optimisation: 
+
 Solution to this is to rewrite the recursive function to use a *tail recursion*,
 which means that the function return value is directly the result of the 
 recursive application. In this case the storing of the functions intermediate
@@ -1483,6 +1485,12 @@ in the function scope is also called *lexical closure*).
 The ``point`` function could be called a constructor and the functions in the
 struct methods from OO point of view.
 
+Scoping in structures
+++++++++++++++++++++++++
+
+
+
+
 Mutable fields
 ++++++++++++++++++
 
@@ -1553,7 +1561,7 @@ The resulting code looks somewhat like using named arguments.
 .. CAUTION::
 
    Current Yeti compiler implementation has a bug which causes
-   tail-recursion elimination to be not done, when the destructuring
+   `tail-call optimisation`_ to be not done, when the destructuring
    bind is used in the function argument(s) declaration.
    
    The workaround is to use normal function argument and do the destructuring
@@ -1572,11 +1580,8 @@ multiple values from a function::
     snd is list<number> = [4,5,6,7]
 
 The ``splitAt`` is a standard function which returns structure containing
-first ``n`` elements from list as ``fst`` field and the rest as the ``snd``
+first n elements from list as ``fst`` field and the rest as the ``snd``
 field.
-
-Scoping in structs
-+++++++++++++++++++++
 
 
 Variant types and pattern matching
