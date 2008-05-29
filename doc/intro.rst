@@ -1488,26 +1488,95 @@ Mutable fields
 
 The structures described before were immutable. It is possible to have
 mutable fields by prefixing the field bindings with the **var** keyword.
-
-    
-
-
-TODO
 ::
 
-    > st = {foo = 42, bar = "wtf"}
-    st is {bar is string; .foo is number} = {foo=42; bar="wtf"}
-    > st.foo
-    42 is number
-    > (.bar)
-    <yeti.lang.Selector> is {bar is 'a} -> 'a
-    > (.bar) st
-    "wtf" is string
-    > {foo = a} = st
-    a is number = 42
-    > {foo,bar} = st
-    foo is number = 42
-    bar is string = wtf
+    > ev = {what = "test", var timeout = 10}
+    ev is {var timeout is number, what is string} = {what="test", timeout=10}
+    > ev.timeout := 5
+    > ev.timeout
+    5 is number
+    > ev.what := "fubar"
+    1:9: Non-mutable expression on the left of the assign operator :=
+
+The mutable fields can be assigned with ordinary assignement operator
+similarly to ordinary variables and array or hash references. Attempt
+to modify immutable field results in an error.
+
+Destructuring bind
++++++++++++++++++++++
+
+Destructuring bind is a shorthand for binding names from field references::
+
+    > {what = a, timeout = b} = ev
+    a is string = test
+    b is number = 5
+    > a ^ b
+    "test5" is string
+
+The left side of the destructuring bind looks like a structure literal,
+where identifiers have to be in the place of value expressions.
+Those identifiers are bound to a field values from the given structure
+value. The ``^`` operator in the example is string concatenation (and it
+also converts any non-string value into some string).
+
+The destructuring bind ``{what = a, timeout = b} = ev`` is equivalent to
+the following code::
+
+    > a = ev.what
+    a is string = test
+    > b = ev.timeout
+    b is number = 5
+
+This means that changing mutable field after binding will not affect the bind
+and the bindings are immutable even when the field in structure were mutable.
+
+The destructuring bind has a shorthand for a case, if you want to bind
+to same name as the field name in the structure::
+
+    > {timeout, what} = ev
+    timeout is number = 5
+    what is string = test
+
+Destructuring bind can be used also with function arguments::
+
+    > f {a = x, b = y} = x + y
+    f is {.a is number, .b is number} -> number = <code$f>
+    > f {a = 5, b = 3}
+    8 is number
+    > g {a, b} = a / b
+    g is {.a is number, .b is number} -> number = <code$g>
+    > g {a = 4, b = 5}
+    0.8 is number
+
+The resulting code looks somewhat like using named arguments.
+
+.. CAUTION::
+
+   Current Yeti compiler implementation has a bug which causes
+   tail-recursion elimination to be not done, when the destructuring
+   bind is used in the function argument(s) declaration.
+   
+   The workaround is to use normal function argument and do the destructuring
+   bind in the function body, when tail recursion is used.
+
+Structures and destructuring bind is also a comfortable way for returning
+multiple values from a function::
+
+    > somePlace () = { x = 4, y = 5 }
+    somePlace is () -> {x is number, y is number} = <code$somePlace>
+    > {x, y} = somePlace ()
+    x is number = 4
+    y is number = 5
+    > {fst, snd} = splitAt 3 [1..7]
+    fst is list<number> = [1,2,3]
+    snd is list<number> = [4,5,6,7]
+
+The ``splitAt`` is a standard function which returns structure containing
+first ``n`` elements from list as ``fst`` field and the rest as the ``snd``
+field.
+
+Scoping in structs
++++++++++++++++++++++
 
 
 Variant types and pattern matching
