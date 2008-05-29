@@ -1432,9 +1432,9 @@ field reference operators can be used as functions by themselves::
 
 This also works with nested structure field references::
 
-    > (.a.b)
-    <yeti.lang.Selectors> is {.a is {.b is 'a}} -> 'a
-    > (.a.b) {a = {b = 123}}
+    > (.a.b.c)
+    <yeti.lang.Selectors> is {.a is {.b is {.c is 'a}}} -> 'a
+    > (.a.b.c) {a = {b = {c = 123}}}
     123 is number
     > (.a.foo) {a = st}
     42 is number
