@@ -1488,13 +1488,13 @@ struct methods from OO point of view.
 Scoping in structures
 ++++++++++++++++++++++++
 
-Similarly to name bindings the structure field bindings treat differently
-bindings, where the value expression is a function literal (the function
-definitions are also function literals).
+Similarly to usual value bindings the structure field bindings treat
+differently bindings, where the value expression is a function literal
+(the function definitions are also function literals).
 
 Field bindings, where the value expression is not a function literal, do not
 see the structures field bindings in their scope. Their value expressions
-are in the same scope, where the structure definition itself is.
+are in the same scope, as the structure definition itself.
 ::
 
     > x = 42
@@ -1515,7 +1515,7 @@ Here the value expression of the field ``x`` do not see the ``weirdConst``
 field for the same reason - the value expression is not in the structures
 inner scope.
 
-Field bindings that have function literal as value expression, will see
+Field bindings that have function literal as a value expression, will see
 all fields (including themselves) in their scope. These inner bindings
 are NOT polymorphic.
 ::
@@ -1527,10 +1527,10 @@ are NOT polymorphic.
    > t.weirdConst
    321 is number
 
-Here the field ``f`` has function literal as value expression and therefore
+Here the field ``f`` has function literal as a value expression and therefore
 sees the ``weirdConst`` field in the structures inner scope.
 
-Similarly, functions field definitions see also other functions and themselves::
+Similarly, function field definitions see also other functions and themselves::
 
     > calc = { half x = x / 2, mean a b = half (a + b) }
     calc is {half is number -> number, mean is number -> number -> number} = {half=<code$half>, mean=<code$mean>}
@@ -1543,7 +1543,7 @@ Similarly, functions field definitions see also other functions and themselves::
     > stFac.fac 5
     120 is number
 
-The ``fac`` is a example of recursion in the structure. Mutual recursion
+The ``fac`` is an example of recursion in the structure. Mutual recursion
 is also possible, because all functions see every other function in the
 same structures inner scope. `Tail-call optimisation`_ is not performed on
 the mutual tail calls, as it is difficult to implement effectively on the JVM.
