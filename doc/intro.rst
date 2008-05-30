@@ -1596,7 +1596,7 @@ This means that changing mutable field after binding will not affect the bind
 and the bindings are immutable even when the field in structure were mutable.
 
 The destructuring bind has a shorthand for a case, if you want to bind
-to same name as the field name in the structure::
+the same name as the field name in the structure::
 
     > {timeout, what} = ev
     timeout is number = 5
@@ -1621,8 +1621,8 @@ The resulting code looks somewhat like using named arguments.
    `tail-call optimisation`_ to be not done, when the destructuring
    bind is used in the function argument(s) declaration.
    
-   The workaround is to use normal function argument and do the destructuring
-   bind in the function body, when tail recursion is used.
+   The workaround is to use a normal function argument and do the
+   destructuring bind in the function body, when tail recursion is used.
 
 Structures and destructuring bind is also a comfortable way for returning
 multiple values from a function::
