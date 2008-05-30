@@ -1394,7 +1394,16 @@ interface YetiCode {
         }
 
         Code apply(Code arg, YetiType.Type res, int line) {
-            Code apply = new Apply(res, this, arg, line);
+            Code apply = new Apply(res, this, arg, line) {
+                void gen(Ctx ctx) {
+                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Tag");
+                    ctx.m.visitInsn(DUP);
+                    arg.gen(ctx);
+                    ctx.m.visitLdcInsn(name);
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Tag",
+                           "<init>", "(Ljava/lang/Object;Ljava/lang/String;)V");
+                }
+            };
             apply.polymorph = arg.polymorph;
             return apply;
         }

@@ -1641,15 +1641,15 @@ first n elements from list as ``fst`` field and the rest as the ``snd``
 field.
 
 
-Variant types and pattern matching
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Variant types
+~~~~~~~~~~~~~~~~
 
 Values can be wrapped into tags::
 
     > Color "yellow"
     Color "yellow" is Color string
 
-Any identificator starting with upper case can be used as a tag constructor.
+Any identifier starting with upper case can be used as a tag constructor.
 
 For unwrapping a case expression can be used::
 
@@ -1717,22 +1717,52 @@ The ``maybePrint`` function can be written in somewhat simpler manner, because
 the standard library has some support for working with the Some/None variants.
 ::
 
+    > maybePrint' v = maybe () println v
+    maybePrint' is None 'a | Some 'b -> () = <code$maybePrint$z>
+    > maybePrint' none
+    > maybePrint' (Some "thing")
+    thing
+
+The ``maybe`` is a function, where the first argument is a value returned for
+``none``, second argument is a function to transform a value wrapped in
+``Some`` and the third argument is the variant value.
+The ``none`` is just a shorthand constant defined for ``None ()`` in the
+standard library. Some more examples about ``maybe`` function::
+
     > none
     None [] is None ()
     > maybe
     <yeti.lang.std$maybe> is 'a -> ('b -> 'a) -> None 'c | Some 'b -> 'a
-    > maybePrint2 v = maybe () println v
-    maybePrint2 is None 'a | Some 'b -> () = <code$maybePrint2>
-    > maybePrint2 none
-    > maybePrint2 (Some "thing")
-    thing
+    > maybe 666 (+2) (Some 3)
+    5 is number
+    > maybe 666 (+2) none
+    666 is number
 
-The ``none`` is just a constant defined for ``None ()`` in the standard
-library as a shorthand. The ``maybe`` is a function, where the first argument
-is a value returned for ``none``, second argument is a function to transform
-a value wrapped in ``Some`` and the third argument is the variant value.
+Tag constructors
++++++++++++++++++++
+
+The previous value tagging examples, like ``Color "green"``, did look
+quite like an application to a function. In fact this tagging is
+application - any uppercase-starting identifier is a tag constructor and
+any tag constructor is a function, when used in the expression.
+::
+
+    > Color
+    <yeti.lang.TagCon> is 'a -> Color 'a
+    > Color "green"
+    Color "green" is Color string
+    > Color 42
+    Color 42 is Color number
+
+Tag constructors can be used like any other function, for example you could
+give it to a ``map`` function to wrap values in the list into some tag::
+
+    > map Some [1..5]
+    [Some 1,Some 2,Some 3,Some 4,Some 5] is list<Some number>
 
 
+Pattern matching
+~~~~~~~~~~~~~~~~~~~
 
 Modules
 ~~~~~~~~~~
