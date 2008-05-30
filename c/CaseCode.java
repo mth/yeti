@@ -220,6 +220,48 @@ interface CaseCode extends YetiCode {
         }
     }
 
+    class StructPattern extends CasePattern {
+        private String[] names;
+        private CasePattern[] patterns;
+
+        StructPattern(String[] names, CasePattern[] patterns) {
+            this.names = names;
+            this.patterns = patterns;
+        }
+
+        int preparePattern(Ctx ctx) {
+            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+            return 1;
+        }
+
+        void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+            boolean dropped = false;
+            Label failed = preserve ? onFail : new Label();
+            for (int i = 0; i < names.length; ++i) {
+                if (patterns[i] == ANY_PATTERN)
+                    continue;
+                if (preserve || i != names.length - 1)
+                    ctx.m.visitInsn(DUP);
+                else dropped = true;
+                ctx.m.visitLdcInsn(names[i]);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                          "get", "(Ljava/lang/String;)Ljava/lang/Object;");
+                patterns[i].preparePattern(ctx);
+                patterns[i].tryMatch(ctx, failed, false);
+            }
+            if (!preserve) {
+                Label ok = new Label();
+                ctx.m.visitJumpInsn(GOTO, ok);
+                ctx.m.visitLabel(failed);
+                ctx.m.visitInsn(POP);
+                ctx.m.visitJumpInsn(GOTO, onFail);
+                ctx.m.visitLabel(ok);
+                if (!dropped)
+                    ctx.m.visitInsn(POP);
+            }
+        }
+    }
+
     class VariantPattern extends CasePattern {
         String variantTag;
         CasePattern variantArg;

@@ -857,6 +857,20 @@ public final class YetiAnalyzer extends YetiType {
         return to;
     }
 
+    private static Bind getField(Node node, Map fields) {
+        if (!(node instanceof Bind)) {
+            throw new CompileException(node,
+                "Unexpected beast in the structure (" + node +
+                "), please give me some field binding.");
+        }
+        Bind field = (Bind) node;
+        if (fields.containsKey(field.name)) {
+            throw new CompileException(field, "Duplicate field "
+                + field.name + " in the structure");
+        }
+        return field;
+    }
+
     static Code structType(Struct st, Scope scope, int depth) {
         Node[] nodes = st.fields;
         if (nodes.length == 0)
@@ -870,16 +884,7 @@ public final class YetiAnalyzer extends YetiType {
         result.polymorph = true;
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
-            if (!(nodes[i] instanceof Bind)) {
-                throw new CompileException(nodes[i],
-                    "Unexpected beast in the structure (" + nodes[i] +
-                    "), please give me some field binding.");
-            }
-            Bind field = (Bind) nodes[i];
-            if (fields.containsKey(field.name)) {
-                throw new CompileException(field, "Duplicate field "
-                    + field.name + " in the structure");
-            }
+            Bind field = getField(nodes[i], fields);
             Function lambda = !field.noRec && field.expr instanceof Lambda
                                 ? new Function(new Type(depth)) : null;
             Code code = values[i] =
@@ -1014,13 +1019,24 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
             if (node instanceof Struct) {
-                Struct st = (Struct) node;
-                if (st.fields.length == 0)
-                    throw new CompileException(st, NONSENSE_STRUCT);
-                Map patterns = new HashMap();
-                for (int i = 0; i < st.fields.length; ++i) {
-                    
+                Node[] fields = ((Struct) node).fields;
+                if (fields.length == 0)
+                    throw new CompileException(node, NONSENSE_STRUCT);
+                String[] names = new String[fields.length];
+                CasePattern[] patterns = new CasePattern[fields.length];
+                Map fieldTypes = new HashMap();
+                for (int i = 0; i < fields.length; ++i) {
+                    Bind field = getField(fields[i], fieldTypes);
+                    Type ft = new Type(depth);
+                    fieldTypes.put(field.name, ft);
+                    names[i] = field.name;
+                    patterns[i] = toPattern(field.expr, ft);
                 }
+                Type res = new Type(STRUCT, (Type[])
+                    fieldTypes.values().toArray(new Type[fieldTypes.size()]));
+                res.partialMembers = fieldTypes;
+                patUnify(node, t, res);
+                return new StructPattern(names, patterns);
             }
             throw new CompileException(node, "Bad case pattern: " + node);
         }

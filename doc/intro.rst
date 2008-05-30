@@ -1764,6 +1764,18 @@ give it to a ``map`` function to wrap values in the list into some tag::
 Pattern matching
 ~~~~~~~~~~~~~~~~~~~
 
+The case expression was mentioned before with variant types, but it can
+do much more. For example, it can be used to match literal values::
+
+    > carrots n = case n of 1: "1 carrot"; _: "\(n) carrots" esac
+    carrots is number -> string = <code$carrots>
+    > carrots 1
+    "1 carrot" is string
+    > carrots 33
+    "33 carrots" is string
+
+The ``_`` is here a placeholder for any value.
+
 
 
 Modules
