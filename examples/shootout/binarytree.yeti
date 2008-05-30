@@ -5,11 +5,11 @@ makeTree item depth =
           right = Some (makeTree (item * 2) (depth - 1)),
         }
     else
-        { item = item, left = None (), right = None () }
+        { item = item, left = none, right = none }
     fi;
 
-fromSomeNode = fromSome 0 (.item);
-check {item, left, right} = item + fromSomeNode left - fromSomeNode right;
+maybeNode = maybe 0 (.item);
+check {item, left, right} = item + maybeNode left - maybeNode right;
 out s depth check = println "\(s) of depth \(depth)\t check: \(check)";
 
 checkDepth depth item =

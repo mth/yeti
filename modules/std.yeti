@@ -30,6 +30,7 @@ module yeti.lang.std;
 
 import java.lang.String;
 import java.lang.IllegalArgumentException;
+import java.util.regex.Pattern;
 
 // like not . f, but a tiny bit faster
 notPred f x = not (f x);
@@ -72,6 +73,8 @@ index v l is 'a -> list?<'a> -> number =
 plus a b = a + b;
 
 {
+    none = None (),
+
     id x = x,
     const x y = x,
     at h k = h.[k],
@@ -166,7 +169,7 @@ plus a b = a + b;
         nullptr? (find (notPred f) l),
     contains v l =
         index v l != -1,
-    fromSome default f opt =
+    maybe default f opt =
         case opt of
         Some v: f v;
         None _: default;
@@ -253,14 +256,32 @@ plus a b = a + b;
     substAll re replacement s is string -> string -> string -> string =
         (s as ~String)#replaceAll(re, replacement),
 
+    like regex is string -> string -> () -> array<string> =
+       (pattern = Pattern#compile(regex, Pattern#DOTALL + Pattern#MULTILINE);
+        do s:
+            m = pattern#matcher(s as ~String);
+            do:
+                a = new MList();
+                if m#find() then
+                    n = m#groupCount();
+                    a#reserve(n + 1);
+                    var i = 0;
+                    i <= n loop
+                       (a#add(m#group(i));
+                        i := i + 1)
+                fi;
+                a unsafely_as array<string>
+            done
+        done),
+
     norec strLength s = strLength s,
     norec strUpper s = strUpper s,
     norec strLower s = strLower s,
     norec strTrim s = strTrim s,
     norec strSlice s start end = strSlice s start end,
     norec strRight s pos = strRight s pos,
-    norec strStartsWith s start = strStartsWith s start,
-    norec strEndsWith s end = strEndsWith s end,
+    norec strStarts s start = strStarts s start,
+    norec strEnds s end = strEnds s end,
     norec strIndexOf haystack needle = strIndexOf haystack needle,
     norec strLastIndexOf haystack needle = strLastIndexOf haystack needle,
 

@@ -28,20 +28,20 @@ syn keyword yetiStat if then elif else fi for forHash synchronized
 syn keyword yetiStat ignore module program try catch finally yrt new throw
 syn keyword yetiStat do done case of esac
 syn keyword yetiAnyVar _
-syn keyword yetiBoolean false true
+syn keyword yetiBoolean false true none
 syn keyword yetiType var norec
 syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at setHashDefault flip sum
-syn keyword yetiFunc nullptr? empty? min max fromSome abs push exit shift
+syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift
 syn keyword yetiFunc defined? wrapArray concat concatMap negate splitBy
 syn keyword yetiFunc ln exp cos sin tan acos asin atan sqrt strReplace
 syn keyword yetiFunc strSplit substAll strLength strUpper strLower strTrim
-syn keyword yetiFunc strSlice strRight strStartsWith strEndsWith strIndexOf
+syn keyword yetiFunc strSlice strRight strStarts strEnds strIndexOf
 syn keyword yetiFunc strLastIndexOf strLeft strLeftOf strRightOf length
 syn keyword yetiFunc drop sort sortBy same? revAppend asList pop swapAt
 syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
 syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
-syn keyword yetiFunc getContents iterate take splitAt strJoin strPad
+syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/

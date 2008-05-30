@@ -1644,15 +1644,95 @@ field.
 Variant types and pattern matching
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO
+Values can be wrapped into tags::
+
+    > Color "yellow"
+    Color "yellow" is Color string
+
+Any identificator starting with upper case can be used as a tag constructor.
+
+For unwrapping a case expression can be used::
+
+    > case Color "yellow" of Color c: c esac
+    "yellow" is string
+
+The case expression may have multiple choices::
+
+    > describe v = case v of Color c: c; Length l: "\(l / 1000)m long" esac
+    describe is Color string | Length number -> string = <code$describe>
+    > describe (Color "green")
+    "green" is string
+    > describe (Length 3146)
+    "3.146m long" is string
+    > printDescr x = println "It's \(describe x)"
+    printDescr is Color string | Length number -> () = <code$printDescr>
+    > for [Color "yellow", Length 1130] printDescr
+    It's yellow
+    It's 1.13m long
+
+The case expression in the ``describe`` function has two cases - first for
+a tag ``Color`` and second for the ``Length``. Therefore different types of
+tagged values can be given to it as an argument - the argument type is
+``Color string | Length number``, a set of two tagged variants. 
+Such types are called variant types and the value of a variant type must
+be one of the tags in the variant set.
 ::
 
-    > someVal n x = case x of Some v: v; None _: n; esac
-    someVal is 'a -> None 'b | Some 'a -> 'a = <code$someVal>
-    > someVal 13 (Some 33)
-    33 is number
-    > someVal 13 (None ())
-    13 is number
+    > describe (Weight 33)
+    1:18: Cannot apply Weight number to Color string | Length number -> string
+        Type mismatch: Color string | Length number => Weight number (member missing: Weight)
+
+Compiler gives an error, because Weight is not one of the tags in the variant
+type of the ``describe`` functions argument.
+
+Variant types can be recursive. This can be used to describe a tree structures::
+
+  > f t = case t of Leaf x: "\(x)"; Branch b: "(\(f b.left), \(f b.right))" esac
+  f is (Branch {.left is 'a, .right is 'a} | Leaf 'b is 'a) -> string = <code$f>
+  > f (Leaf 12)
+  "12" is string
+  > f (Branch {left = Leaf 1, right = Branch {left = Leaf 2, right = Leaf 3}})
+  "(1, (2, 3))" is string
+
+Here the tree may be a branch or a leaf and branches contain another trees
+(meaning they may contain another branches).
+
+C and Java have a concept of a null pointer, which is a reference to no data.
+Yeti don't really support it, but it can be emulated with variants::
+
+    > maybePrint v = case v of Some v: println v; None (): () esac
+    maybePrint is None () | Some 'a -> () = <code$maybePrint>
+    > maybePrint (None ())
+    > maybePrint (Some "thing")
+    thing
+    > Some "thing"
+    Some "thing" is Some string
+
+This has the advantage, that the values that might be missing have a
+variant type and therefore the typesystem can ensure that they won't
+be used without checking their existance. Which should remove a common
+source of the ``NullPointerException`` errors.
+
+The ``maybePrint`` function can be written in somewhat simpler manner, because
+the standard library has some support for working with the Some/None variants.
+::
+
+    > none
+    None [] is None ()
+    > maybe
+    <yeti.lang.std$maybe> is 'a -> ('b -> 'a) -> None 'c | Some 'b -> 'a
+    > maybePrint2 v = maybe () println v
+    maybePrint2 is None 'a | Some 'b -> () = <code$maybePrint2>
+    > maybePrint2 none
+    > maybePrint2 (Some "thing")
+    thing
+
+The ``none`` is just a constant defined for ``None ()`` in the standard
+library as a shorthand. The ``maybe`` is a function, where the first argument
+is a value returned for ``none``, second argument is a function to transform
+a value wrapped in ``Some`` and the third argument is the variant value.
+
+
 
 Modules
 ~~~~~~~~~~
