@@ -1488,8 +1488,65 @@ struct methods from OO point of view.
 Scoping in structures
 ++++++++++++++++++++++++
 
+Similarly to name bindings the structure field bindings treat differently
+bindings, where the value expression is a function literal (the function
+definitions are also function literals).
 
+Field bindings, where the value expression is not a function literal, do not
+see the structures field bindings in their scope. Their value expressions
+are in the same scope, where the structure definition itself is.
+::
 
+    > x = 42
+    x is number = 42
+    > {x = x}
+    {x=42} is {x is number}
+
+Since the value expression of field ``x`` do not see the field itself,
+it will get the ``x`` from the scope, where the structure was defined -
+the ``x`` from ``x = 42``.
+
+::
+
+    > {weirdConst = 321, x = weirdConst}
+    1:24: Unknown identifier: weirdConst
+
+Here the value expression of the field ``x`` do not see the ``weirdConst``
+field for the same reason - the value expression is not in the structures
+inner scope.
+
+Field bindings that have function literal as value expression, will see
+all fields (including themselves) in their scope. These inner bindings
+are NOT polymorphic.
+::
+
+   > t = { f () = weirdConst, weirdConst = 321 }
+   t is {f is () -> number, weirdConst is number} = {f=<code$f>, weirdConst=321}
+   > t.f ()
+   321 is number
+   > t.weirdConst
+   321 is number
+
+Here the field ``f`` has function literal as value expression and therefore
+sees the ``weirdConst`` field in the structures inner scope.
+
+Similarly, functions field definitions see also other functions and themselves::
+
+    > calc = { half x = x / 2, mean a b = half (a + b) }
+    calc is {half is number -> number, mean is number -> number -> number} = {half=<code$half>, mean=<code$mean>}
+    > calc.half 3
+    1.5 is number
+    > calc.mean 2 8
+    5 is number
+    > stFac = { fac x = if x <= 1 then 1 else x * fac (x - 1) fi }
+    stFac is {fac is number -> number} = {fac=<code$fac>}
+    > stFac.fac 5
+    120 is number
+
+The ``fac`` is a example of recursion in the structure. Mutual recursion
+is also possible, because all functions see every other function in the
+same structures inner scope. `Tail-call optimisation`_ is not performed on
+the mutual tail calls, as it is difficult to implement effectively on the JVM.
 
 Mutable fields
 ++++++++++++++++++
