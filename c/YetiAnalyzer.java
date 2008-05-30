@@ -1024,18 +1024,19 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(node, NONSENSE_STRUCT);
                 String[] names = new String[fields.length];
                 CasePattern[] patterns = new CasePattern[fields.length];
-                Map fieldTypes = new HashMap();
+                HashMap uniq = new HashMap();
                 for (int i = 0; i < fields.length; ++i) {
-                    Bind field = getField(fields[i], fieldTypes);
+                    Bind field = getField(fields[i], uniq);
+                    uniq.put(field.name, null);
                     Type ft = new Type(depth);
-                    fieldTypes.put(field.name, ft);
+                    Type part = new Type(STRUCT, new Type[] { ft });
+                    HashMap tm = new HashMap();
+                    tm.put(field.name, ft);
+                    part.partialMembers = tm;
+                    patUnify(field, t, part);
                     names[i] = field.name;
                     patterns[i] = toPattern(field.expr, ft);
                 }
-                Type res = new Type(STRUCT, (Type[])
-                    fieldTypes.values().toArray(new Type[fieldTypes.size()]));
-                res.partialMembers = fieldTypes;
-                patUnify(node, t, res);
                 return new StructPattern(names, patterns);
             }
             throw new CompileException(node, "Bad case pattern: " + node);

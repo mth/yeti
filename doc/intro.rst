@@ -1776,8 +1776,6 @@ do much more. For example, it can be used to match literal values::
 
 The ``_`` is here a placeholder for any value.
 
-
-
 Modules
 ~~~~~~~~~~
 
