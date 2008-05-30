@@ -1724,7 +1724,7 @@ the standard library has some support for working with the Some/None variants.
     thing
 
 The ``maybe`` is a function, where the first argument is a value returned for
-``none``, second argument is a function to transform a value wrapped in
+``None``, second argument is a function to transform a value wrapped in
 ``Some`` and the third argument is the variant value.
 The ``none`` is just a shorthand constant defined for ``None ()`` in the
 standard library. Some more examples about ``maybe`` function::
@@ -1742,9 +1742,9 @@ Tag constructors
 +++++++++++++++++++
 
 The previous value tagging examples, like ``Color "green"``, did look
-quite like an application to a function. In fact this tagging is
-application - any uppercase-starting identifier is a tag constructor and
-any tag constructor is a function, when used in the expression.
+quite like an application. In fact this tagging is application - any
+uppercase-starting identifier is a tag constructor and any tag constructor
+is a function, when used in an expression.
 ::
 
     > Color
@@ -1763,6 +1763,8 @@ give it to a ``map`` function to wrap values in the list into some tag::
 
 Pattern matching
 ~~~~~~~~~~~~~~~~~~~
+
+
 
 Modules
 ~~~~~~~~~~
