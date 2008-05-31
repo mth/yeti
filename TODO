@@ -2,7 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Struct properties
-* Struct patterns
 * Extendable structs?
 * Built-in regex support
 * Foreign structs
