@@ -20,6 +20,8 @@ values (like objects are in OO languages).
 
 Interactive evaluation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _REPL:
+
 Yeti comes with interactive evaluation environment. This can be started
 by simply running ``java -jar yeti.jar``::
 
@@ -49,6 +51,14 @@ systems using ``aptitude install rlwrap`` or ``sudo aptitude install rlwrap``).
 Here expression 42 is typed. REPL answers by telling 42 is number.
 Most expression values are replied in the form ``value is sometype`` -
 here ``42`` is the value of the expression and ``number`` is the type.
+
+Most of the following text contains examples entered into the interactive
+environment - in the examples lines starting with ``> `` are the expressions
+entered into REPL (``>`` being the prompt). These lines are usually followed
+by REPL replies. It is good idea to try to enter these examples by yourself
+into the REPL while reading the text and experiment until you understand
+how the described language feature works.
+
 
 Primitive types
 ~~~~~~~~~~~~~~~~~~
@@ -1842,6 +1852,63 @@ Partial matches are not allowed::
 Here the compiler deduces, that no meaningful result value have been given
 for a case, when the ``n != 1``.
 
+
+Running and compiling source files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Until now almost all example code has been in the form of interaction with
+the REPL_. Running standalone scripts is actually not hard.
+
+Write the following code example into file named ``hello.yeti``::
+
+    println "Hello world!"
+
+After that give a following system command::
+
+    java -jar yeti.jar hello.yeti
+
+If you don't have yeti.jar in current directory, give a path to it instead
+of simple ``yeti.jar`` in the above command. The ``hello.yeti`` file is also
+expected to be in the current directory (although path to it could be given).
+After that a text ``Hello world!`` should be printed on the console.
+
+Yeti actually never interpretates the source code. It just compiles the
+code into java bytecode and classes in the memory, uses classloader to load
+these generated classes and then just invokes the code in them. So the
+only possible interpretation of the code is bytecode interpretation done
+by the JVM (which is also able to JIT-compile it to native machine code).
+
+This compilation to bytecode happens even in the interactive REPL environment -
+any expression evaluated there will be compiled into JVM classes.
+Yeti has only compiler and no interpretator (this is so to simplify the
+implementation).
+
+It is possible to only compile the Yeti code into java ``.class`` files
+by giving ``-d directory`` option to the yeti compiler. The directory
+will specify where to store the generated class files. Give the following
+commands in the directory with ``yeti.jar`` and ``hello.yeti``::
+
+    java -jar yeti.jar -d hello-test hello.yeti
+    java -classpath yeti.jar:hello-test hello
+
+The last command should again cause printing of the ``Hello world`` message.
+Giving ``yeti.jar`` in the java classpath is necessary, because the generated
+class will reference to the yeti standard library.
+
+The name of the generated class is derived from the source file by default.
+The name can be specified by writing ``program package.classname;`` into the
+start of the source code file. The ``hello2.yeti`` file should contain the
+following text::
+
+    program some.test.HelloWorld;
+
+    println "Hello World Again!"
+
+The commands to compile and run are quite similar::
+
+    java -jar yeti.jar -d hello-test2 hello2.yeti
+    java -classpath yeti.jar:hello-test2 some.test.HelloWorld
+
+The message ``Hello World Again!`` should be printed to the console.
 
 Modules
 ~~~~~~~~~~
