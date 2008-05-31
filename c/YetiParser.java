@@ -294,6 +294,14 @@ interface YetiParser {
 
         Struct(Node[] fields) {
             this.fields = fields;
+            for (int i = 0; i < fields.length; ++i) {
+                if (fields[i] instanceof Sym) {
+                    Bind bind = new Bind();
+                    bind.name = ((Sym) fields[i]).sym;
+                    bind.expr = fields[i];
+                    fields[i] = bind;
+                }
+            }
         }
 
         String str() {

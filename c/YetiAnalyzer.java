@@ -692,22 +692,18 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(st, NONSENSE_STRUCT);
         for (int j = 0; j < fields.length; ++j) {
             Bind bind = new Bind();
-            Node nameNode;
-            if (fields[j] instanceof Sym) {
-                bind.expr = nameNode = fields[j];
-            } else if (fields[j] instanceof Bind) {
-                Bind field = (Bind) fields[j];
-                if (field.var || field.property || field.noRec) {
-                    throw new CompileException(field, "Structure " +
-                        "field pattern may not have modifiers");
-                }
-                nameNode = field.expr;
-                bind.expr = new Sym(field.name);
-                bind.expr.pos(bind.line, bind.col);
-            } else {
+            if (!(fields[j] instanceof Bind)) {
                 throw new CompileException(fields[j],
                     "Expected field pattern, not a " + fields[j]);
             }
+            Bind field = (Bind) fields[j];
+            if (field.var || field.property || field.noRec) {
+                throw new CompileException(field, "Structure " +
+                    "field pattern may not have modifiers");
+            }
+            bind.expr = new Sym(field.name);
+            bind.expr.pos(bind.line, bind.col);
+            Node nameNode = field.expr;
             if (!(nameNode instanceof Sym) ||
                 (bind.name = ((Sym) nameNode).sym) == "_")
                 throw new CompileException(nameNode,

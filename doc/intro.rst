@@ -1515,6 +1515,11 @@ Here the value expression of the field ``x`` do not see the ``weirdConst``
 field for the same reason - the value expression is not in the structures
 inner scope.
 
+The ``{x = x}`` struct from above can be written shorter as ``{x}``::
+
+    > {x}
+    {x=42} is {x is number}
+
 Field bindings that have function literal as a value expression, will see
 all fields (including themselves) in their scope. These inner bindings
 are NOT polymorphic.
@@ -1765,7 +1770,39 @@ Pattern matching
 ~~~~~~~~~~~~~~~~~~~
 
 The case expression was mentioned before with variant types, but it can
-do much more. For example, it can be used to match literal values::
+do much more. 
+The syntax of case expression can be described with following ABNF::
+
+    case-expression = "case" expression "of"
+                      *(pattern ":" expression ";")
+                      pattern ":" expression [";"]
+                      "esac"
+    pattern = primitive-literal
+            | "(" pattern ")"
+            | variant-constructor pattern
+            | list-pattern
+            | pattern "::" pattern
+            | struct-pattern
+            | capturing-pattern
+            | "_"
+    list-pattern = "[" *(pattern ",") [ pattern ] "]"
+    structure-pattern = "{" *(field-pattern ",") field-pattern [","] "}"
+    field-pattern = identifier "=" pattern | capturing-pattern
+    capturing-pattern = identifier
+
+The pattern part is basically a identifier or any literal expression,
+with the restriction, that non-primitive literals may contain only
+patterns in the place of expressions. Function literals are also not allowed.
+Identifiers act as wildcards. When a pattern matches the value,
+these identifiers will be bound to the values they were matched against
+and can be used in the expression that follows a pattern.
+The underscore symbol acts also as a wildcard, but do not bind the
+matched value to any name.
+
+The expression following the first matching pattern will be evaluated
+and used as the value of the case expression.
+
+For example, the case expression can be used to match primitive values::
 
     > carrots n = case n of 1: "1 carrot"; _: "\(n) carrots" esac
     carrots is number -> string = <code$carrots>
@@ -1774,7 +1811,37 @@ do much more. For example, it can be used to match literal values::
     > carrots 33
     "33 carrots" is string
 
-The ``_`` is here a placeholder for any value.
+Or to join a string list::
+
+    > join l = case l of [h]: h; h :: t: "\(h), \(join t)"; _: "" esac
+    join is list?<string> -> string = <code$join>
+    > join ["dog", "cat", "apple"]
+    "dog, cat, apple" is string
+
+Although this joining can be done more efficiently using ``strJoin``::
+
+    > strJoin ", " ["dog", "cat", "apple"]
+    "dog, cat, apple" is string
+
+Structures can be matched as well::
+
+    > pointStr p = case p of {x = 0, y = 0}: "point zero!"; {x, y}: "\(x), \(y)" esac
+    pointStr is {.x is number, .y is number} -> string = <code$pointStr>
+    > pointStr {x = 11, y = 2}
+    "11, 2" is string
+    > pointStr {x = 0, y = 0}
+    "point zero!" is string
+
+Matching variant tags has been already described with `variant types`_.
+
+Partial matches are not allowed::
+
+    > carrots n = case n of 1: "1 carrot" esac
+    1:13: Partial match: number
+
+Here the compiler deduces, that no meaningful result value have been given
+for a case, when the ``n != 1``.
+
 
 Modules
 ~~~~~~~~~~
