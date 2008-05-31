@@ -41,7 +41,8 @@ public final class YetiAnalyzer extends YetiType {
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
     static void unusedBinding(Bind bind) {
-        throw new CompileException(bind, "Unused binding: " + bind.name);
+        YetiCode.CompileCtx.current().warn(
+            new CompileException(bind, "Unused binding: " + bind.name));
     }
 
     static Code analyze(Node node, Scope scope, int depth) {
@@ -395,6 +396,14 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code apply(Node where, Code fun, Node arg, Scope scope, int depth) {
         Code argCode = analyze(arg, scope, depth);
+        Type argt, funt, funarg; // try cast java types on apply
+        if ((argt = argCode.type.deref()).type == JAVA &&
+            (funt = fun.type.deref()).type == FUN &&
+            (funarg = funt.param[0].deref()).type == JAVA &&
+            argt.javaType != funarg.javaType &&
+            JavaType.isAssignable(where, funarg, argt, true) >= 0) {
+            argCode = new Cast(argCode, funarg, true, where.line);
+        }
         Type[] applyFun = { argCode.type, new Type(depth) };
         try {
             unify(fun.type, new Type(FUN, applyFun));

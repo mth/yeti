@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import yeti.lang.Fun;
 import yeti.lang.Num;
 import yeti.lang.RatNum;
 import yeti.lang.IntNum;
@@ -84,6 +85,8 @@ interface YetiCode {
         private SourceReader reader;
         private String[] preload;
         private Map compiled = new HashMap();
+        private List warnings = new ArrayList();
+        private String currentSrc;
         final boolean isGCJ;
         ClassFinder classPath;
         Map classes = new HashMap();
@@ -102,6 +105,17 @@ interface YetiCode {
 
         static CompileCtx current() {
             return (CompileCtx) currentCompileCtx.get();
+        }
+
+        void warn(CompileException ex) {
+            ex.fn = currentSrc;
+            warnings.add(ex);
+        }
+
+        public void enumWarns(Fun f) {
+            for (int i = 0, cnt = warnings.size(); i < cnt; ++i) {
+                f.apply(warnings.get(i));
+            }
         }
 
         private void generateModuleFields(Map fields, Ctx ctx) {
@@ -156,6 +170,7 @@ interface YetiCode {
             RootClosure codeTree;
             Object oldCompileCtx = currentCompileCtx.get();
             currentCompileCtx.set(this);
+            currentSrc = sourceName;
             this.flags = flags;
             try {
                 codeTree = YetiAnalyzer.toCode(sourceName, name, code, flags,

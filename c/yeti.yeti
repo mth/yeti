@@ -23,6 +23,9 @@ compilationOf writer =
     new YetiCode$CompileCtx(new YetiC(()), writer, preload,
                             new ClassFinder(classPath));
 
+printMessage ex is ~Exception -> () =
+    println ex#getMessage();
+
 execClass writer =
    (c = Class#forName(strReplace '/' '.' mainClass, true, writer);
     sm = new SandboxSecurityManager();
@@ -51,11 +54,11 @@ repl () =
         try
             bindings = YetiEval#get()#bindings;
             bindBarrier = bindings#size();
-            compilation = compilationOf (writer as ~CodeWriter);
+            compilation = compilationOf writer;
             type = compilation#compile((), mainClass, line, flags);
             compilation#write();
             try
-                res = execClass (writer as ~ClassLoader);
+                res = execClass writer;
                 if type#deref()#type != YetiType#UNIT then
                     println "\(Core#show(res)) is \(type)"
                 fi
@@ -75,7 +78,7 @@ repl () =
                            fi)";
             done
         catch CompileException ex:
-            println ex#getMessage()
+            printMessage ex
         yrt;
         repl ()
     else
@@ -183,9 +186,11 @@ try
             mainClass := compilation#compile(src, flags)
         done;
         compilation#write()
-    fi
+    fi;
+    compilation#enumWarns(printMessage)
 catch CompileException ex:
-    println ex#getMessage();
+    compilation#enumWarns(printMessage);
+    printMessage ex;
     sysExit 1;
 yrt;
 
