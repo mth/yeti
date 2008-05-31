@@ -53,7 +53,7 @@ Most expression values are replied in the form ``value is sometype`` -
 here ``42`` is the value of the expression and ``number`` is the type.
 
 Most of the following text contains examples entered into the interactive
-environment - in the examples lines starting with ``> `` are the expressions
+environment - in the examples lines starting with ``>`` are the expressions
 entered into REPL (``>`` being the prompt). These lines are usually followed
 by REPL replies. It is good idea to try to enter these examples by yourself
 into the REPL while reading the text and experiment until you understand
@@ -1872,7 +1872,7 @@ expected to be in the current directory (although path to it could be given).
 After that a text ``Hello world!`` should be printed on the console.
 
 Yeti actually never interpretates the source code. It just compiles the
-code into java bytecode and classes in the memory, uses classloader to load
+code into Java bytecode and classes in the memory, uses classloader to load
 these generated classes and then just invokes the code in them. So the
 only possible interpretation of the code is bytecode interpretation done
 by the JVM (which is also able to JIT-compile it to native machine code).
@@ -1882,7 +1882,7 @@ any expression evaluated there will be compiled into JVM classes.
 Yeti has only compiler and no interpretator (this is so to simplify the
 implementation).
 
-It is possible to only compile the Yeti code into java ``.class`` files
+It is possible to only compile the Yeti code into Java ``.class`` files
 by giving ``-d directory`` option to the yeti compiler. The directory
 will specify where to store the generated class files. Give the following
 commands in the directory with ``yeti.jar`` and ``hello.yeti``::
@@ -1891,7 +1891,7 @@ commands in the directory with ``yeti.jar`` and ``hello.yeti``::
     java -classpath yeti.jar:hello-test hello
 
 The last command should again cause printing of the ``Hello world`` message.
-Giving ``yeti.jar`` in the java classpath is necessary, because the generated
+Giving ``yeti.jar`` in the Java classpath is necessary, because the generated
 class will reference to the yeti standard library.
 
 The name of the generated class is derived from the source file by default.
