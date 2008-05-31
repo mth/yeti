@@ -296,9 +296,12 @@ interface YetiParser {
             this.fields = fields;
             for (int i = 0; i < fields.length; ++i) {
                 if (fields[i] instanceof Sym) {
+                    Sym s = (Sym) fields[i];
                     Bind bind = new Bind();
-                    bind.name = ((Sym) fields[i]).sym;
-                    bind.expr = fields[i];
+                    bind.name = s.sym;
+                    bind.expr = s;
+                    bind.col = s.col;
+                    bind.line = s.line;
                     fields[i] = bind;
                 }
             }
