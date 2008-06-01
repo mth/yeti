@@ -291,7 +291,7 @@ Also, any normal identifier bound to a function can be used as a binary
 operator by enclosing it between backticks::
 
     > min
-    <yeti.lang.std$min> is 'a -> 'a -> 'a
+    <yeti.lang.std$min> is ^a -> ^a -> ^a
     > min 2 3
     2 is number
     > 2 `min` 3
@@ -872,7 +872,7 @@ given as an argument (remember, operators are also functions).
 ::
 
     > foldList f acc l = if empty? l then acc else foldList f (f acc (head l)) (tail l) fi
-    foldList is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a = <code$foldList>
+    foldList is ('a -> 'b -> 'a) -> 'a -> list<'b> -> 'a = <code$foldList>
     > foldList (+) 0 [4,7,9]
     20 is number
 
@@ -1171,11 +1171,11 @@ This algorithm can be easily tested in the interactive environment::
 There are sort functions (using merge sort algorithm) in the standard library::
 
     > sort
-    <yeti.lang.std$sort> is list?<'a> -> list<'a>
+    <yeti.lang.std$sort> is list?<^a> -> list<^a>
     > sort [2,9,8,5,14,8,3]
     [2,3,5,8,8,9,14] is list<number>
     > sortBy
-    <yeti.lang.std$sortBy> is ('a -> 'a -> boolean) -> list?<'a> -> list<'a>
+    <yeti.lang.std$sortBy> is (^a -> ^a -> boolean) -> list?<^a> -> list<^a>
     > sortBy (<) [2,9,8,5,14,8,3]
     [2,3,5,8,8,9,14] is list<number>
 
@@ -1914,8 +1914,8 @@ The commands to compile and run are quite similar::
 
 The message ``Hello World Again!`` should be printed to the console.
 
+
 Modules
 ~~~~~~~~~~
-
-TODO
+Libraries need some way.
  

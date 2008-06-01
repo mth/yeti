@@ -1415,9 +1415,13 @@ interface YetiParser {
             } else {
                 int start = i;
                 char c = ' ', dot = '_';
-                if (i < src.length && (c = src[i]) == '~') {
-                    ++i;
-                    dot = '.';
+                if (i < src.length) {
+                    if ((c = src[i]) == '~') {
+                        ++i;
+                        dot = '.';
+                    } else if (c == '^') {
+                        ++i;
+                    }
                 }
                 boolean maybeArr = c == '~' || c == '\'';
                 while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'

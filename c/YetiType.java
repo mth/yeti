@@ -288,7 +288,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         private String getVarName(Map vars) {
             String v = (String) vars.get(this);
             if (v == null) {
-                v = "'";
+                v = (flags & FL_ORDERED_REQUIRED) == 0 ? "'" : "^";
                 int n = vars.size();
                 do {
                     v += (char) ('a' + n % 26);
@@ -333,15 +333,17 @@ public class YetiType implements YetiParser, YetiBuiltins {
                     res = hstr(vars, refs);
                     break;
                 case MAP:
-                    res = param[2].type == LIST_MARKER
-                        ? (param[1].type == NONE ? "list<" :
-                                param[1].type == NUM ? "array<" : "list?<")
+                    Type p1 = param[1].deref();
+                    Type p2 = param[2].deref();
+                    res = p2.type == LIST_MARKER
+                        ? (p1.type == NONE ? "list<" : p1.type == NUM
+                            ? "array<" : "list?<")
                           + param[0].str(vars, refs) + ">"
-                        : param[2].type == MAP_MARKER ||
-                          param[1].type != NUM && param[1].type != VAR
-                            ? "hash<" + param[1].str(vars, refs) + ", "
+                        : p2.type == MAP_MARKER ||
+                          p1.type != NUM && p1.type != VAR
+                            ? "hash<" + p1.str(vars, refs) + ", "
                                       + param[0].str(vars, refs) + ">"
-                            :  "map<" + param[1].str(vars, refs) + ", "
+                            :  "map<" + p1.str(vars, refs) + ", "
                                       + param[0].str(vars, refs) + ">";
                     break;
                 case JAVA:

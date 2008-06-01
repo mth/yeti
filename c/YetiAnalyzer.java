@@ -277,17 +277,24 @@ public final class YetiAnalyzer extends YetiType {
             name = name.substring(0, name.length() - 2);
         }
         Type t;
-        if (name.startsWith("~")) {
+        char c = name.charAt(0);
+        if (c == '~') {
             String cn = name.substring(1).replace('.', '/').intern();
             Type[] tp = new Type[node.param.length];
             for (int i = tp.length; --i >= 0;)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
             t = typeOfClass(cn, scope);
             t.param = tp;
-        } else if (name.startsWith("'")) {
+        } else if (c == '\'') {
             t = (Type) free.get(name);
             if (t == null)
                 free.put(name, t = new Type(depth));
+        } else if (c == '^') {
+            t = (Type) free.get(name);
+            if (t == null) {
+                free.put(name, t = new Type(depth));
+                t.flags = FL_ORDERED_REQUIRED;
+            }
         } else {
             throw new CompileException(node, "Unknown type: " + name);
         }
