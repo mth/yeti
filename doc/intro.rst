@@ -1914,8 +1914,37 @@ The commands to compile and run are quite similar::
 
 The message ``Hello World Again!`` should be printed to the console.
 
+The content of the source file containing a program is considered to be one
+expression (ignoring the ``program`` header), which is evaluated when
+the program is runned. The type of the expression must be the unit type.
 
 Modules
 ~~~~~~~~~~
-Libraries need some way.
- 
+
+Writing bigger programs and/or libraries requires some way to have and use code
+in separate files. Yeti uses modules to achieve that. Source files containing
+modules start with ``module package.name;`` where the package part may be
+missing. The module name determines the name of the generated class.
+
+Similarly to program a module is just an expression. Differently from programs
+the module expression may have any type (as long the type do not contain
+unknown non-polymorphic types).
+
+Modules can be loaded using ``load`` expression (``load package.modulename``).
+
+Write the following into file ``fortytwo.yeti``::
+
+    module fortytwo;
+
+    42
+
+After that start REPL_ in the same directory and type ``load fortytwo``::
+
+    > load fortytwo
+    42 is number
+
+That's how the modules work. If you'd make the value of the module to be
+a function, it could be called. The most common way of using modules is
+to make the module to be a structure, where fields are functions or some
+other constants that are useful to the user of the module.
+
