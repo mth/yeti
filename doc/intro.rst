@@ -4,6 +4,8 @@
 Short introduction to Yeti
 ===========================
 
+:Author: Madis Janson
+
 .. contents:: Contents
 .. _yeti.jar: http://linux.ee/~mzz/yeti/yeti.jar
 
