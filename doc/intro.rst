@@ -395,7 +395,9 @@ Compose operator
 +++++++++++++++++++
 
 Sometimes it is useful to combine functions so that argument to the first one
-would be a result of the second one. Compose operator allows doing just that::
+would be a result of the second one.
+
+Compose operator allows doing just that::
 
     > printHalf = println . (/ 2)
     printHalf is number -> () = <yeti.lang.Compose>
