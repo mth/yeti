@@ -309,7 +309,7 @@ only first argument::
 
 However, there is somewhat more readable syntax for that, called sections::
 
-    > subFrom10 = (5 -)
+    > subFrom10 = (10 -)
     subFrom10 is number -> number = <yeti.lang.Fun2_>
     > subFrom10 3
     7 is number
@@ -390,6 +390,21 @@ ignore the argument::
     3 is number
     > \"wtf" ()
     "wtf" is string
+
+Compose operator
++++++++++++++++++++
+
+Sometimes it is useful to combine functions so that argument to the first one
+would be a result of the second one. Compose operator allows doing just that::
+
+    > printHalf = println . (/ 2)
+    printHalf is number -> () = <yeti.lang.Compose>
+    > printHalf 5
+    2.5
+
+Generally ``f . g`` is equivalent to a function literal ``do x: f (g x) done``.
+The compose operator dot must have whitespace on the both sides - otherwise
+it will be parsed as a `reference operator`_.
 
 Sequences and bind scopes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1405,6 +1420,8 @@ Structure values are created using structure literals::
     "wtf" is string
     > st.baz
     1:4: {bar is string, foo is number} do not have .baz field
+
+.. _reference operator:
 
 As it can be seen, the field values are accessed using a field reference
 operator - a field name prefixed with dot. You may put whitespace before
