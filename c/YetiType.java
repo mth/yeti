@@ -464,6 +464,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static void unifyMembers(Type a, Type b) throws TypeException {
+        b.ref = a; // just fake ref now to avoid cycles...
         Map ff;
         if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
             // VARIANT types are sometimes ordered.
