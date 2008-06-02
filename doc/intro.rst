@@ -2185,7 +2185,7 @@ Some casts not allowed by ``as`` are possible using ``unsafely_as``::
     > l unsafely_as ~yeti.lang.LList
     [1] is ~yeti.lang.LList
 
-Last one was a cast into child cast, which succeeded, because normal list
+Last one was a cast into child class, which succeeded, because normal list
 literals are instances of the LList. Casting into AList required also
 unsafe cast, because such casts allow circumventing the Yeti typesystem
 (which normally tries to avoid runtime type errors).
