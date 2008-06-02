@@ -1459,7 +1459,7 @@ The field bindings in structure literals can also be function definitions
 similarly to ordinary value bindings.
 ::
 
-    > s1 = { half x = x / 2 }
+    > s1 = {half x = x / 2}
     s1 is {half is number -> number} = {half=<code$half>}
     > s1.half
     <code$half> is number -> number
@@ -1646,7 +1646,7 @@ The resulting code looks somewhat like using named arguments.
 Structures and destructuring bind is also a comfortable way for returning
 multiple values from a function::
 
-    > somePlace () = { x = 4, y = 5 }
+    > somePlace () = {x = 4, y = 5}
     somePlace is () -> {x is number, y is number} = <code$somePlace>
     > {x, y} = somePlace ()
     x is number = 4
@@ -2024,7 +2024,7 @@ A following test program should be saved as ``moduletest.yeti``::
 
 Now executing ``java -jar yeti.jar moduletest.yeti`` in a directory
 containing the modified ``fortytwo.yeti`` and the ``moduletest.yeti``
-should print the following to the console::
+files should print the following to the console::
 
     Start
     TEST!
@@ -2038,7 +2038,279 @@ Compiling modules
 +++++++++++++++++++
 
 In the previous examples modules were compiled automatically in the
-memory together with the test programs.
+memory together with the test programs. This kind of automatic compilation
+works with compiling to class files::
 
+    java -jar yeti.jar -d bt-test bttest.yeti
+    java -classpath yeti.jar:bt-test bttest
 
+Modules can also be compiled on their own::
+
+    java -jar yeti.jar -d btree btree.yeti
+
+Now ``btree/examples`` will contain some binary class files generated
+by the compiler from the ``btree.yeti`` module.
+
+Now make an empty directory, go there and try to compile the
+``bttest.yeti`` using only these btree binary class files::
+
+    mkdir test2
+    cd test2
+    java -jar ../yeti.jar -cp ../bt-test -d . ../bttest.yeti 
+    java -classpath ../yeti.jar:../bt-test:. bttest
+
+It should again give the ``[true,false]`` test output. To verify, that
+the compiled module was realy used, you could try to omit the ``-cp`` option
+from compiler command line::
+
+    java -jar ../yeti.jar -d . ../bttest.yeti
+
+Which should give the error, that ``examples/bttree.yeti`` is missing
+This message is caused by the fact, that compiler didn't found the compiled
+class files and therefore tried to compile from sources, which it didn't
+found either. The ``-cp`` option sets classpath for the compiler. The
+compiler also attempts to use its JVM classloader to find libraries.
+
+Using Java classes from Yeti code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Java has quite many libraries, which can be useful sometimes. Yeti has
+some syntax for using these directly from Yeti code. Most of it looks
+almost like a Java code where dots are replaced with ``#`` symbol.
+::
+
+    > System#out
+    java.io.PrintStream@13582d is ~java.io.PrintStream
+
+This would have been ``System.out`` in the Java - the value of the static
+``out`` field from the ``System`` class. The classname in the type is
+preceded with ``~`` to distinguish it from Yeti types.
+
+A classic ``System.out.println("something");`` in the Yeti::
+
+    > System#out#println("something")
+    something
+
+The Yeti *string* type was automatically casted into *~java.lang.String*,
+when the string was given as an argument (Yeti strings are actually represented
+as Java Strings, so nothing but type changed here).
+
+Calling static methods is similar::
+
+    > t = System#currentTimeMillis();
+    t is number = 1212439486032
+
+Here the resulting *long* value was automatically casted into Yeti *number*.
+
+Creating new objects is also same as in the Java::
+
+    > date = new java.util.Date(t);
+    date is ~java.util.Date = Mon Jun 02 23:44:46 EEST 2008
+
+A longer example would be using Java Calendar class::
+
+    import java.util.Calendar;
+
+    cal = Calendar#getInstance();
+    cal#set(2000, 0, 0);
+    cal#add(Calendar#DAY_OF_YEAR, 13);
+    println cal#getTime();
+
+Here an import declaration is used to import the Calender class into current
+scope. This is necessary, because ``java.util.Calendar#getInstance()`` would
+have been parsed as accessing ``util`` field on the ``java`` value binding.
+The ``import`` declaration can be inside any expression (differently from
+the Java language).
+
+Yeti is also able to automatically cast Yeti lists and arrays into Java
+Collection or List::
+
+    > import java.util.Arrays; Arrays#asList([1..5])
+    [1, 2, 3, 4, 5] is ~java.util.List
+    > new java.util.ArrayList([1..5])
+    [1, 2, 3, 4, 5] is ~java.util.ArrayList
+    > new java.util.HashMap([111: "foo", 23: "bar"])
+    {23=bar, 111=foo} is ~java.util.HashMap
+
+Those casts done on the method arguments can be done by hand using
+**as** operator::
+
+    > [1..5] as ~java.util.List
+    [1, 2, 3, 4, 5] is ~java.util.List
+    > [1..5] as ~java.lang.Number[]
+    [Ljava.lang.Number;@12152e6 is ~java.lang.Number[]
+    > [111: "foo", 23: "bar"] as ~java.util.Map
+    [23:"bar",111:"foo"] is ~java.util.Map
+
+Arrays of Java objects can be wrapped into Yeti arrays::
+
+    > wrapArray ("some test" as ~java.lang.String)#split(" ")
+    ["some","test"] is array<~java.lang.String>
+
+Sometimes you want to give null pointer to a Java method. This can be
+done by casting unit value::
+
+    > () as ~java.util.Date
+    [] is ~java.util.Date
+    > import java.lang.String; String#valueOf(() as ~java.util.Date)
+    "null" is string
+
+This works because Yeti represents unit value in the JVM as a ``null`` pointer.
+
+Some casts not allowed by ``as`` are possible using ``unsafely_as``::
+
+    > l = [1] unsafely_as ~yeti.lang.AList
+    l is ~yeti.lang.AList = [1]
+    > l unsafely_as ~yeti.lang.LList
+    [1] is ~yeti.lang.LList
+
+Last one was a cast into child cast, which succeeded, because normal list
+literals are instances of the LList. Casting into AList required also
+unsafe cast, because such casts allow circumventing the Yeti typesystem
+(which normally tries to avoid runtime type errors).
+::
+
+    > a = array [1..5]
+    a is array<number> = [1,2,3,4,5]
+    > aa = a unsafely_as ~yeti.lang.MList
+    aa is ~yeti.lang.MList = [1,2,3,4,5]
+    > aa#add("fish")
+    > a
+    [1,2,3,4,5,"fish"] is array<number>
+    > pop a + 1
+    java.lang.ClassCastException: java.lang.String cannot be cast to yeti.lang.Num
+            at code.apply(<>:1)
+            ...
+
+Yeti code style
+~~~~~~~~~~~~~~~~~~
+
+Lines should be shorter than 80 characters.
+
+Four spaces should be used as a unit of indention. Using tabs is possible,
+but not encouraged as it can cause problems with differently configured
+systems and editors.
+
+Identifiers should be written in camelCaseStyle.
+
+Operators should be surrounded with whitespace (with expection of
+the dereferencing dot, which should have no whitespace around it).
+Line breaks should be generally put before operators.
+
+Commas should be always followed with a whitespace or line break.
+
+Value bindings may be on one line::
+
+    a = 1;
+    f x = x + 1;
+
+Function applications should always have space after the function::
+
+    f (min x 0 * 2)
+
+Putting unneeded parenthesis around function argument like ``f (x)`` is
+NOT allowed.
+
+Value bindings with longer expressions may have the expression on another line::
+
+    geometricMean x y =
+        sqrt (x * y);
+        
+Empty lines should be put around bindings with long value expressions.
+
+Sequence expressions should be written on multiple lines::
+
+    printTwoMessages a b =
+       (println a;
+        println b);
+
+Note that the opening paren is indented one space less, allowing the
+sequence subexpressions to be lined with same indention depth.
+
+Conditional expressions should be indented like the following example::
+
+    if a == 1 then
+        foo1;
+        bar1
+    elif a == 2 then
+        fubar
+    elif a == 3 then
+        fubar2
+    else
+        something
+    fi
+
+When such conditional expression is a function argument, it should be
+aligned after the function::
+
+    println if name == "" then
+                "no name"
+            else
+                name
+            fi;
+
+Writing very short ``if cond then a else b fi`` conditional expression on
+one line is allowed.
+
+Pattern matching with case-expression should have the opening **case**,
+patterns and closing **esac** indented with same depth and the expressions
+for individual cases indented one step deeper (very short expression
+may be written to the same line after pattern).
+::
+
+    case t of
+    Some {left, right, value}:
+        if v < value then
+            exists left v
+        else
+            value == v or exists right v
+        fi;
+    None (): false
+    esac,
+
+Function literals defined with **do** ... **done** should have the body
+indented::
+
+    do x y:
+        if x.a < y.a then
+            x
+        else
+            y
+        fi
+    done
+
+Vvery short function literals may be written on one line,
+but the anonymous binding syntax like ``(_ a b = a + b)`` may be
+considered then.
+
+List literals should have no spaces after ``[`` and before ``]``::
+
+    [1, 2, 3]
+
+Structure literals written on one line should also avoid whitespace after ``{``
+and before ``}``::
+
+    {x = 2, y = y1 + 2}
+
+Unless the structure contains function literals, which should be preceded with
+whitespace::
+
+    { f x = x + 1 }
+
+Structure literals containing many fields or long field definitions
+should be written with each field on the separate line::
+
+    {
+        a = 123,
+        b = 421,
+
+        min x y =
+            if x < y then
+                x
+            else
+                y
+            fi,
+    }
+
+The empty line is used to visually separate the multiline function definiton.
 
