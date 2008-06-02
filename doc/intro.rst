@@ -1930,7 +1930,7 @@ Similarly to program a module is just an expression. Differently from programs
 the module expression may have any type (as long the type do not contain
 unknown non-polymorphic types).
 
-Modules can be loaded using ``load`` expression (``load package.modulename``).
+Modules can be loaded using ``load`` expression - ``load package.modulename``.
 
 Write the following into file ``fortytwo.yeti``::
 
@@ -1947,4 +1947,98 @@ That's how the modules work. If you'd make the value of the module to be
 a function, it could be called. The most common way of using modules is
 to make the module to be a structure, where fields are functions or some
 other constants that are useful to the user of the module.
+
+The following example implements a simple, non-balancing binary tree::
+
+    module examples.btree;
+
+    {
+        insert t v =
+            case t of
+            Some {left, right, value}:
+                if v < value then
+                    Some {left = insert left v, right, value}
+                elif v > value then
+                    Some {left, right = insert right v, value}
+                else
+                    t
+                fi;
+            None (): Some {left = none, right = none, value = v};
+            esac,
+
+        exists t v =
+            case t of
+            Some {left, right, value}:
+                if v < value then
+                    exists left v
+                else
+                    value == v or exists right v
+                fi;
+            None (): false
+            esac,
+    }
+
+It is expected to be in a file named ``btree.yeti``, so the compiler could
+find it, when some code tries to load it. The body of this module is a
+structure containing three functions. A following program can be used to
+test it::
+
+    {insert, exists} = load examples.btree;
+
+    values = [11, 3, 1, 26];
+    t = fold insert none values;
+    println [all (exists t) values, exists t 12];
+
+When this is saved as ``bttest.yeti``, running
+``java -jar yeti.jar bttest.yeti`` will print ``[true, false]``,
+indicating that all inserted values existed in the tree and 12 didn't.
+
+The first line of the test program used destructuring bind to import the
+functions from the ``btree`` module into the local scope.
+There is a simpler way to create bindings for all fields of the module
+structure into local scope - using the ``load`` as a statement on the left
+side of the sequence operator::
+
+    load examples.btree;
+
+    values = [11, 3, 1, 26];
+    t = fold insert none values;
+    println [all (exists t) values, exists t 12];
+
+This works of course only when the module type is a structure. 
+
+Modules are evaluated and loaded only once. This can be demonstrated by adding
+println to the fortytwo module that was shown previously::
+
+    module fortytwo;
+
+    println "TEST!";
+
+    42
+
+A following test program should be saved as ``moduletest.yeti``::
+
+    println "Start";
+    println load fortytwo;
+    println load fortytwo;
+
+Now executing ``java -jar yeti.jar moduletest.yeti`` in a directory
+containing the modified ``fortytwo.yeti`` and the ``moduletest.yeti``
+should print the following to the console::
+
+    Start
+    TEST!
+    42
+    42
+
+It can be seen that the module was evaluated only once, when the first
+``load`` was evaluated.
+
+Compiling modules
++++++++++++++++++++
+
+In the previous examples modules were compiled automatically in the
+memory together with the test programs.
+
+
 
