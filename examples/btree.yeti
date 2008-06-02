@@ -1,0 +1,27 @@
+module examples.btree;
+
+{
+    insert t v =
+        case t of
+        Some {left, right, value}:
+            if v < value then
+                Some {left = insert left v, right, value}
+            elif v > value then
+                Some {left, right = insert right v, value}
+            else
+                t
+            fi;
+        None (): Some {left = none, right = none, value = v};
+        esac,
+
+    exists t v =
+        case t of
+        Some {left, right, value}:
+            if v < value then
+                exists left v
+            else
+                value == v or exists right v
+            fi;
+        None (): false
+        esac,
+}
