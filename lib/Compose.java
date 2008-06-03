@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-public class Compose extends Fun {
+public final class Compose extends Fun {
     private Fun f;
     private Fun g;
 

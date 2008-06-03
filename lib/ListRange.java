@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-class RangeIter extends AIter {
+final class RangeIter extends AIter {
     Num n;
     Num last;
     AList rest;
@@ -46,7 +46,7 @@ class RangeIter extends AIter {
 }
 
 /** Yeti core library - List. */
-public class ListRange extends AList implements ListIter {
+public final class ListRange extends AList implements ListIter {
     Num first;
     Num last;
     AList rest;

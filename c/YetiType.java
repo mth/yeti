@@ -89,6 +89,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { B, A, C });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
+    static final Type A_ARRAY_TYPE =
+        new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
         new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
     static final Type STRING_ARRAY =
@@ -174,11 +176,20 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindStr("strLastIndexOf",
                 fun2Arg(STR_TYPE, STR_TYPE, fun(NUM_TYPE, NUM_TYPE)),
                 "lastIndexOf", "(Ljava/lang/String;I)I",
+        bindRegex("strSplit", "yeti/lang/StrSplit",
+                  fun2Arg(STR_TYPE, STR_TYPE, STRING_ARRAY), 
+        bindRegex("like", "yeti/lang/Like",
+                  fun2Arg(STR_TYPE, STR_TYPE, fun(UNIT_TYPE, STRING_ARRAY)), 
+        bindRegex("substAll", "yeti/lang/SubstAll",
+                  fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), 
+        bindRegex("matchAll", "yeti/lang/MatchAll",
+                  fun2Arg(STR_TYPE, fun(STRING_ARRAY, A),
+                  fun2Arg(fun(STR_TYPE, A), STR_TYPE, A_ARRAY_TYPE)), 
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
-        null)))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
@@ -202,6 +213,10 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static Scope bindStr(String name, Type type, String method, String sig,
                          Scope scope) {
         return bindScope(name, new StrOp(name, method, sig, type), scope);
+    }
+
+    static Scope bindRegex(String name, String impl, Type type, Scope scope) {
+        return bindPoly(name, type, new Regex(name, impl, type), 0, scope);
     }
 
     static Scope bindImport(String name, String className, Scope scope) {

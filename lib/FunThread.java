@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-class FunThread extends Thread {
+final class FunThread extends Thread {
     private Fun f;
     private Object v;
 

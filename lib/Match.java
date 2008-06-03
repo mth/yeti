@@ -32,11 +32,11 @@ package yeti.lang;
 
 import java.util.regex.Pattern;
 
-public class Match extends Fun {
+public final class Match extends Fun {
     private Pattern p;
 
     public Match(Object pattern) {
-        p = Pattern.compile((String) pattern);
+        p = Pattern.compile((String) pattern, Pattern.DOTALL);
     }
 
     public Object apply(Object v) {

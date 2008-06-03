@@ -244,35 +244,9 @@ plus a b = a + b;
     atan a = Math#atan(a),
     sqrt a = Math#sqrt(a),
 
+    asString x = "\(x)",
     strReplace needle replacement haystack =
         Core#replace(needle, replacement, haystack),
-
-    // TODO ineffective
-    strSplit re s is string -> string -> list?<string> =
-        new MList((s as ~String)#split(re))
-            unsafely_as list?<string>,
-
-    // TODO ineffective
-    substAll re replacement s is string -> string -> string -> string =
-        (s as ~String)#replaceAll(re, replacement),
-
-    like regex is string -> string -> () -> array<string> =
-       (pattern = Pattern#compile(regex, Pattern#DOTALL + Pattern#MULTILINE);
-        do s:
-            m = pattern#matcher(s as ~String);
-            do:
-                a = new MList();
-                if m#find() then
-                    n = m#groupCount();
-                    a#reserve(n + 1);
-                    var i = 0;
-                    i <= n loop
-                       (a#add(m#group(i));
-                        i := i + 1)
-                fi;
-                a unsafely_as array<string>
-            done
-        done),
 
     norec strLength s = strLength s,
     norec strUpper s = strUpper s,
@@ -284,6 +258,10 @@ plus a b = a + b;
     norec strEnds s end = strEnds s end,
     norec strIndexOf haystack needle = strIndexOf haystack needle,
     norec strLastIndexOf haystack needle = strLastIndexOf haystack needle,
+    norec strSplit re = strSplit re,
+    norec substAll re = substAll re,
+    norec matchAll re = matchAll re,
+    norec like re = like re,
 
     strLeft s end = strSlice s 0 end,
 
@@ -295,7 +273,7 @@ plus a b = a + b;
         i = strLastIndexOf s subString 0;
         if i < 0 then '' else strRight s (i + strLength subString) fi,
 
-    strJoin sep list is string -> list<''> -> string =
+    strJoin sep list is string -> list?<''> -> string =
         if empty? list then
             ""
         else

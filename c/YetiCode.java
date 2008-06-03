@@ -473,7 +473,7 @@ interface YetiCode {
 
     class StaticRef extends BindRef implements DirectBind {
         private String className;
-        private String name;
+        protected String funFieldName;
         int line;
        
         StaticRef(String className, String fieldName, YetiType.Type type,
@@ -481,14 +481,14 @@ interface YetiCode {
             this.type = type;
             this.binder = binder;
             this.className = className;
-            this.name = fieldName;
+            this.funFieldName = fieldName;
             this.polymorph = polymorph;
             this.line = line;
         }
         
         void gen(Ctx ctx) {
             ctx.visitLine(line);
-            ctx.m.visitFieldInsn(GETSTATIC, className, name,
+            ctx.m.visitFieldInsn(GETSTATIC, className, funFieldName,
                                  'L' + javaType(type) + ';');
         }
     }

@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Lazy list. */
-public class LazyList extends LList {
+public final class LazyList extends LList {
     private Fun promise;
     private boolean forced;
 

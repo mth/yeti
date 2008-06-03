@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-class LListIter implements ListIter {
+final class LListIter implements ListIter {
     static final LListIter ITER = new LListIter();
 
     public Object fold(Fun g, Object value, AIter i) {

@@ -42,7 +42,7 @@ public abstract class Fun2 extends Fun {
     }
 }
 
-class ToFun2 extends Fun2 {
+final class ToFun2 extends Fun2 {
     private Fun f;
 
     ToFun2(Fun f) {

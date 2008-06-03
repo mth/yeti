@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Map list. */
-class FilterList extends LList {
+final class FilterList extends LList {
     private boolean checked;
     private AIter src;
     private Fun f;

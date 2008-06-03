@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Map list. */
-class TakeList extends LList {
+final class TakeList extends LList {
     private boolean mappedRest;
     private AIter src;
     private int left;

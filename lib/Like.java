@@ -33,23 +33,33 @@ package yeti.lang;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class Like extends Fun {
-    private static Object[] NONE = {};
-    private Pattern p;
+final class LikeMatcher extends Fun {
+    private Matcher m;
 
-    public Like(Object pattern) {
-        p = Pattern.compile((String) pattern);
+    LikeMatcher(Matcher m) {
+        this.m = m;
     }
 
-    public Object apply(Object v) {
-        Matcher m = p.matcher((CharSequence) v);
+    public Object apply(Object _) {
         if (!m.find()) {
-            return new MList(NONE);
+            return new MList();
         }
         Object[] r = new Object[m.groupCount() + 1];
         for (int i = r.length; --i >= 0;) {
             r[i] = m.group(i);
         }
         return new MList(r);
+    }
+}
+
+public final class Like extends Fun {
+    private Pattern p;
+
+    public Like(Object pattern) {
+        p = Pattern.compile((String) pattern, Pattern.DOTALL);
+    }
+
+    public Object apply(Object v) {
+        return new LikeMatcher(p.matcher((CharSequence) v));
     }
 }

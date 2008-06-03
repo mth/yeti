@@ -747,13 +747,13 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitTypeInsn(NEW, "yeti/lang/Match");
                     ctx.m.visitInsn(DUP);
                     arg2.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Match",
                                           "<init>", "(Ljava/lang/Object;)V");
                 }
             };
-            if (!(arg2 instanceof StringConstant)) {
+            if (!(arg2 instanceof StringConstant))
                 return matcher;
-            }
             return new Code() {
                 { type = t; }
 
@@ -770,6 +770,56 @@ interface YetiBuiltins extends CaseCode {
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     "TRUE", "Ljava/lang/Boolean;");
             ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+        }
+    }
+
+    class RegexFun extends StaticRef {
+        private String impl;
+
+        RegexFun(String fun, String impl, YetiType.Type type, Binder binder) {
+            super("yeti/lang/std", fun, type, null, false, 0);
+            this.binder = binder;
+            this.impl = impl;
+        }
+
+        Code apply(final Code arg, final YetiType.Type t, final int line) {
+            final Code f = new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.m.visitTypeInsn(NEW, impl);
+                    ctx.m.visitInsn(DUP);
+                    arg.gen(ctx);
+                    ctx.visitLine(line);
+                    ctx.m.visitMethodInsn(INVOKESPECIAL, impl, "<init>",
+                                          "(Ljava/lang/Object;)V");
+                }
+            };
+            if (!(arg instanceof StringConstant))
+                return f;
+            return new Code() {
+                { type = t; }
+
+                void gen(Ctx ctx) {
+                    ctx.constant(funFieldName + ':' +
+                        ((StringConstant) arg).str, f);
+                }
+            };
+        }
+    }
+
+    class Regex implements Binder {
+        private String fun, impl;
+        private YetiType.Type type;
+
+        Regex(String fun, String impl, YetiType.Type type) {
+            this.fun = fun;
+            this.impl = impl;
+            this.type = type;
+        }
+
+        public BindRef getRef(int line) {
+            return new RegexFun(fun, impl, type, this);
         }
     }
 

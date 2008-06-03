@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/*
- * Yeti core library.
+/**
+ * Yeti core library - strSplit.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,30 +30,17 @@
  */
 package yeti.lang;
 
-/** Yeti core library - Map 2 lists. */
-final class Map2List extends LList {
-    private boolean mappedRest;
-    private AIter src;
-    private AIter src2;
-    private Fun f;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
-    public Map2List(Fun f, AIter src, AIter src2) {
-        super(((Fun) f.apply(src.first())).apply(src2.first()), null);
-        this.src = src;
-        this.src2 = src2;
-        this.f = f;
+public final class StrSplit extends Fun {
+    private Pattern p;
+
+    public StrSplit(Object pattern) {
+        p = Pattern.compile((String) pattern, Pattern.DOTALL);
     }
 
-    public synchronized AList rest() {
-        if (!mappedRest) {
-            AIter i = src.next();
-            AIter j = src2.next();
-            rest = i == null || j == null ? null : new Map2List(f, i, j);
-            src = null;
-            src2 = null;
-            f = null;
-            mappedRest = true;
-        }
-        return rest;
+    public Object apply(Object v) {
+        return new MList(p.split((CharSequence) v));
     }
 }

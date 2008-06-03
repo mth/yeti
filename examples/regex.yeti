@@ -1,17 +1,23 @@
+foo = "Saba 2";
+
 if foo =~ '[a-z]' then
     println 'contains small letter'
-fi
+fi;
+
+str = "kala, 33, pattern, 34, 123!";
 
 matcher = like 'pattern.*!' str;
 (
     match = matcher ();
-    print match;
-    match != [];
+    println match;
+    not (empty? match);
 ) loop;
 
-join '' (matchAll '\d+' do s: str (number s.[0] + 1) done id str)
-join '' (matchAll '\d+' (str . (+1) . number . head) id str)
-join '' (matchAll ',\s+' (const ';') id str)
-replaceAll ',\s+' ';' str
-split ',\s+' str
+for [
+    strJoin '' (matchAll '\d+' do s: "\(number s.[0] + 1)" done id str),
+    strJoin '' (matchAll '\d+' (asString . (+1) . number . head) id str),
+    strJoin '' (matchAll ',\s+' \';' id str),
+    substAll ',\s+' ';' str,
+    "\(strSplit ',\s+' str)",
+] println;
 

@@ -30,7 +30,7 @@
  */
 package yeti.lang;
 
-public class Bind2nd extends Fun {
+public final class Bind2nd extends Fun {
     private Fun fun;
     private Object arg2;
 

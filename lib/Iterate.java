@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Iterate function. */
-class Iterate extends LList {
+final class Iterate extends LList {
     private Fun f;
 
     Iterate(Object v, Fun f) {

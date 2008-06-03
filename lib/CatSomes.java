@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - CatSomes. */
-public class CatSomes extends LList {
+final class CatSomes extends LList {
     private boolean checked;
     private AIter src;
 

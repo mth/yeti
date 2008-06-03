@@ -3,7 +3,6 @@
 
 * Struct properties
 * Extendable structs?
-* Built-in regex support
 * Foreign structs
 * Better error messages
 * Lambda inlineing optimisation

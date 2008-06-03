@@ -31,7 +31,7 @@
 package yeti.lang;
 
 /** Yeti core library - Concat list. */
-public class ConcatList extends LList {
+final class ConcatList extends LList {
     private boolean mappedRest;
     private AIter src;
     private AList tail;
