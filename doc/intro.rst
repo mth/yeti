@@ -94,6 +94,7 @@ Double-quoted strings may contain embedded expressions::
     "1 + 2 = 3" is string
 
 Booleans have just two possible values::
+
     > true
     true is boolean
     > false
@@ -2301,7 +2302,7 @@ indented::
         fi
     done
 
-Vvery short function literals may be written on one line,
+Very short function literals may be written on one line,
 but the anonymous binding syntax like ``(_ a b = a + b)`` may be
 considered then.
 
