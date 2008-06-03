@@ -147,7 +147,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
         bindArith("shl", "shl", bindArith("shr", "shr",
-        bindScope("=~", new MatchOpFun(),
+        bindScope("=~", new MatchOp(),
         bindScope("not", new NotOp(),
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),

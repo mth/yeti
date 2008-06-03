@@ -722,24 +722,26 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class MatchOpFun extends BinOpRef implements Binder {
-        MatchOpFun() {
+    class MatchOpFun extends BinOpRef {
+        private int line;
+
+        MatchOpFun(int line) {
             type = YetiType.STR2_PRED_TYPE;
             coreFun = mangle("=~");
-        }
-
-        public BindRef getRef(int line) {
-            return this;
+            this.line = line;
         }
 
         void binGen(Ctx ctx, Code arg1, final Code arg2) {
-            apply2nd(arg2, YetiType.STR2_PRED_TYPE, 0).gen(ctx);
+            apply2nd(arg2, YetiType.STR2_PRED_TYPE, line).gen(ctx);
             arg1.gen(ctx);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                     "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
         Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {
+            if (line == 0) {
+                throw new NullPointerException();
+            }
             final Code matcher = new Code() {
                 { type = t; }
 
@@ -773,11 +775,18 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
+    class MatchOp implements Binder {
+        public BindRef getRef(int line) {
+            return new MatchOpFun(line);
+        }
+    }
+
     class RegexFun extends StaticRef {
         private String impl;
 
-        RegexFun(String fun, String impl, YetiType.Type type, Binder binder) {
-            super("yeti/lang/std", fun, type, null, false, 0);
+        RegexFun(String fun, String impl, YetiType.Type type,
+                 Binder binder, int line) {
+            super("yeti/lang/std", fun, type, null, false, line);
             this.binder = binder;
             this.impl = impl;
         }
@@ -819,7 +828,7 @@ interface YetiBuiltins extends CaseCode {
         }
 
         public BindRef getRef(int line) {
-            return new RegexFun(fun, impl, type, this);
+            return new RegexFun(fun, impl, type, this, line);
         }
     }
 
