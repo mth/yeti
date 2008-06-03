@@ -187,7 +187,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         Type result = new Type(type, tp);
         result.partialMembers = members;
-        result.finalMembers = new HashMap(members);
+//        result.finalMembers = new HashMap(members);
         return result;
     }
 

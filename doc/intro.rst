@@ -8,6 +8,7 @@ Short introduction to Yeti
 
 .. contents:: Contents
 .. _yeti.jar: http://linux.ee/~mzz/yeti/yeti.jar
+.. _home page: http://linux.ee/~mzz/yeti/
 
 What is Yeti?
 ~~~~~~~~~~~~~~~~~~
@@ -34,7 +35,7 @@ by simply running ``java -jar yeti.jar``::
     >
 
 At least J2SE 1.4 compatible JVM is required. The `yeti.jar`_ file can be
-downloaded from Yeti home page or built from sources (the sources can be
+downloaded from Yeti `home page`_ or built from sources (the sources can be
 fetched using ``git clone git://github.com/mth/yeti.git``).
 
 REPL means Read-Eval-Print-Loop - a short description of the interactive
