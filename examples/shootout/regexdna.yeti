@@ -1,6 +1,6 @@
-seq = join '' stdin.lines ();
+seq = stdin.contents ();
 ilen = strLength seq;
-var seq = substAll '(?:>.*)?\n' '' seq;
+var seq = substAll '(?-s)(?:>.*)?\n' '' seq;
 clen = strLength seq;
 
 variants =
@@ -15,7 +15,7 @@ variants =
     'agggtaa[cgt]|[acg]ttaccct'];
 
 for variants do f:
-    println "\(f)\(length (catSome (matchAll f Some None seq)))"
+    println "\(f)\(sum (matchAll f \1 \0 seq))";
 done;
 
 subst =
@@ -24,7 +24,7 @@ subst =
     'V': '(a|c|g)', 'W': '(a|t)',     'Y': '(c|t)'];
 
 forHash subst do f r:
-    seq := subst f r seq
+    seq := substAll f r seq
 done;
 
-println "\n\(ilen)\n\(clen)\n\(count seq)";
+println "\n\(ilen)\n\(clen)\n\(strLength seq)";
