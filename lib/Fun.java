@@ -3,7 +3,7 @@
 /**
  * Yeti core library - function interface.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007, 2008 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,10 @@ package yeti.lang;
 
 public abstract class Fun {
     public abstract Object apply(Object arg);
+
+    public Object apply(Object a, Object b) {
+        return ((Fun) apply(a)).apply(b);
+    }
 
     public String toString() {
         return '<' + getClass().getName() + '>';

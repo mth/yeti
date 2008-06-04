@@ -89,6 +89,37 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
+/*        mv = cv.visitMethod(ACC_PUBLIC, "fold",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+                    null, null);
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        mv.visitVarInsn(ASTORE, 1);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitJumpInsn(IFNULL, end = new Label());
+
+        mv.visitLabel(retry = new Label());
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "first", "()Ljava/lang/Object;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        mv.visitVarInsn(ASTORE, 2);
+
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "next", "()Lyeti/lang/AIter;");
+        mv.visitInsn(DUP);
+        mv.visitVarInsn(ASTORE, 0);
+        mv.visitJumpInsn(IFNONNULL, retry);
+        mv.visitLabel(end);
+
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();*/
         cv.visitEnd();
     }
 }
@@ -142,7 +173,7 @@ public class SpecialLib implements Opcodes {
         mv.visitVarInsn(ALOAD, 1);
         mv.visitInsn(ACONST_NULL);
         mv.visitVarInsn(ASTORE, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun2", "apply2",
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun2", "apply",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitInsn(ARETURN);
         mv.visitMaxs(0, 0);

@@ -65,7 +65,7 @@ final public class MatchAll extends Fun2 {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);
     }
 
-    public Object apply2(Object matchFun, Object skipFun) {
+    public Object apply(Object matchFun, Object skipFun) {
         MatchAllFun f = new MatchAllFun();
         f.pattern = p;
         f.matchFun = (Fun) matchFun;

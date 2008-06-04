@@ -39,7 +39,7 @@ public final class SubstAll extends Fun2 {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);
     }
 
-    public Object apply2(Object replacement, Object str) {
+    public Object apply(Object replacement, Object str) {
         return p.matcher((String) str).replaceAll((String) replacement);
     }
 }

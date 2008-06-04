@@ -33,10 +33,9 @@ package yeti.lang;
 final class LListIter implements ListIter {
     static final LListIter ITER = new LListIter();
 
-    public Object fold(Fun g, Object value, AIter i) {
-        Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
+    public Object fold(Fun f, Object value, AIter i) {
         for (; i != null; i = i.next())
-            value = f.apply2(value, i.first());
+            value = f.apply(value, i.first());
         return value;
     }
 }

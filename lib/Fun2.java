@@ -28,28 +28,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package yeti.lang;
 
 public abstract class Fun2 extends Fun {
-    public abstract Object apply2(Object a, Object b);
+    public abstract Object apply(Object a, Object b);
 
     public Object apply(Object a) {
         Fun2_ f = new Fun2_();
         f.fun = this;
         f.arg = a;
         return f;
-    }
-}
-
-final class ToFun2 extends Fun2 {
-    private Fun f;
-
-    ToFun2(Fun f) {
-        this.f = f;
-    }
-
-    public Object apply2(Object a, Object b) {
-        return ((Fun) f.apply(a)).apply(b);
     }
 }

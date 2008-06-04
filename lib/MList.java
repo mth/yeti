@@ -114,11 +114,10 @@ abstract class AMList extends AList implements ListIter {
         return this;
     }
 
-    public Object fold(Fun g, Object v, AIter _) {
-        Fun2 f = g instanceof Fun2 ? (Fun2) g : new ToFun2(g);
+    public Object fold(Fun f, Object v, AIter _) {
         Object[] array = array();
         for (int cnt = _size(), i = start; i < cnt; ++i) {
-            v = f.apply2(v, array[i]);
+            v = f.apply(v, array[i]);
         }
         return v;
     }
@@ -396,7 +395,7 @@ public class MList extends AMList implements ByKey {
 
     // java sort don't know wtf the Fun is
     private static void sort(Object[] a, Object[] tmp,
-                             int from, int to, Fun2 isLess) {
+                             int from, int to, Fun isLess) {
         int split = (from + to) / 2;
         if (split - from > 1)
             sort(tmp, a, from, split, isLess);
@@ -404,7 +403,7 @@ public class MList extends AMList implements ByKey {
             sort(tmp, a, split, to, isLess);
         int i = from, j = split;
         while (i < split && j < to) {
-            if (isLess.apply2(tmp[i], tmp[j]) == Boolean.TRUE)
+            if (isLess.apply(tmp[i], tmp[j]) == Boolean.TRUE)
                 a[from] = tmp[i++];
             else
                 a[from] = tmp[j++];
@@ -420,8 +419,7 @@ public class MList extends AMList implements ByKey {
         if (size - start > 1) {
             Object[] tmp = new Object[size];
             System.arraycopy(array, start, tmp, start, size - start);
-            sort(array, tmp, start, size,
-                 isLess instanceof Fun2 ? (Fun2) isLess : new ToFun2(isLess));
+            sort(array, tmp, start, size, isLess);
         }
         return this;
     }

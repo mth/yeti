@@ -1265,7 +1265,7 @@ interface YetiCode {
             fun.createInit(0, funClass);
 
             Ctx apply = argCount == 2
-                ? fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply2",
+                ? fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
                 : fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
@@ -1384,6 +1384,27 @@ interface YetiCode {
             ctx.visitLine(line);
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                     "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+
+        Code apply(final Code arg2, final YetiType.Type res,
+                   final int line2) {
+            if (fun instanceof Function) // hopefully will be inlined.
+                return super.apply(arg2, res, line2);
+            return new Code() {
+                { type = res; }
+
+                void gen(Ctx ctx) {
+                    fun.gen(ctx);
+                    ctx.visitLine(line);
+                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+                    arg.gen(ctx);
+                    arg2.gen(ctx);
+                    ctx.visitLine(line2);
+                    ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                                          "yeti/lang/Fun", "apply",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+                }
+            };
         }
     }
 
