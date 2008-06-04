@@ -38,23 +38,47 @@ final class MatchAllFun extends Fun {
     Fun matchFun;
     Fun skipFun;
 
+    final class Match extends LList {
+        private boolean forced;
+        int last;
+        String str;
+        Matcher m;
+
+        Match(Object v) {
+            super(v, null);
+        }
+
+        public synchronized AList rest() {
+            if (!forced) {
+                rest = get(str, m, last);
+                forced = true;
+            }
+            return rest;
+        }
+    }
+
+    AList get(String s, Matcher m, int last) {
+        if (!m.find()) {
+            return (s = s.substring(last)).length() == 0
+                    ? null : new LList(skipFun.apply(s), null);
+        }
+        int st = m.start();
+        Object skip = last >= st ? null :
+            skipFun.apply(s.substring(last, st));
+        Object[] r = new Object[m.groupCount() + 1];
+        for (int i = r.length; --i >= 0;) {
+            r[i] = m.group(i);
+        }
+        Match l = new Match(matchFun.apply(new MList(r)));
+        l.str = s;
+        l.m = m;
+        l.last = m.end();
+        return last < st ? new LList(skip, l) : l;
+    }
+
     public Object apply(Object str) {
         String s = (String) str;
-        Matcher m = pattern.matcher(s);
-        MList result = new MList();
-        int end = 0;
-        while (m.find()) {
-            result.add(skipFun.apply(s.substring(end, m.start())));
-            end = m.end();
-            Object[] r = new Object[m.groupCount() + 1];
-            for (int i = r.length; --i >= 0;) {
-                r[i] = m.group(i);
-            }
-            result.add(matchFun.apply(new MList(r)));
-        }
-        if (end < s.length())
-            result.add(skipFun.apply(s.substring(end, s.length())));
-        return result;
+        return get(s, pattern.matcher(s), 0);
     }
 }
 

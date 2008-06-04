@@ -89,8 +89,6 @@ public class YetiType implements YetiParser, YetiBuiltins {
         new Type(MAP, new Type[] { B, A, C });
     static final Type A_LIST_TYPE =
         new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
-    static final Type A_ARRAY_TYPE =
-        new Type(MAP, new Type[] { A, NUM_TYPE, LIST_TYPE });
     static final Type C_LIST_TYPE =
         new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
     static final Type STRING_ARRAY =
@@ -184,7 +182,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
                   fun2Arg(STR_TYPE, STR_TYPE, fun(STR_TYPE, STR_TYPE)), 
         bindRegex("matchAll", "yeti/lang/MatchAll",
                   fun2Arg(STR_TYPE, fun(STRING_ARRAY, A),
-                  fun2Arg(fun(STR_TYPE, A), STR_TYPE, A_ARRAY_TYPE)), 
+                  fun2Arg(fun(STR_TYPE, A), STR_TYPE, A_LIST_TYPE)), 
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
