@@ -40,7 +40,8 @@ class LListAdapter extends ClassAdapter implements Opcodes {
 
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
-        return "length".equals(name) || "forEach".equals(name) ? null
+        return "length".equals(name) || "forEach".equals(name) ||
+               "fold".equals(name) ? null
                 : cv.visitMethod(access, name, desc, signature, exceptions);
     }
 
@@ -89,37 +90,33 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
-/*        mv = cv.visitMethod(ACC_PUBLIC, "fold",
-                    "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+
+        mv = cv.visitMethod(ACC_PUBLIC, "fold",
+                    "(Lyeti/lang/Fun;Ljava/lang/Object;)Ljava/lang/Object;",
                     null, null);
-        mv.visitVarInsn(ALOAD, 1);
-        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-        mv.visitVarInsn(ASTORE, 1);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitVarInsn(ASTORE, 2);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitJumpInsn(IFNULL, end = new Label());
-
         mv.visitLabel(retry = new Label());
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitVarInsn(ALOAD, 2);
+        mv.visitInsn(SWAP);
         mv.visitVarInsn(ALOAD, 0);
         mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                            "first", "()Ljava/lang/Object;");
         mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        mv.visitVarInsn(ASTORE, 2);
-
-        mv.visitVarInsn(ALOAD, 0);
+        mv.visitVarInsn(ALOAD, 0); 
         mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                            "next", "()Lyeti/lang/AIter;");
         mv.visitInsn(DUP);
         mv.visitVarInsn(ASTORE, 0);
         mv.visitJumpInsn(IFNONNULL, retry);
         mv.visitLabel(end);
-
-        mv.visitVarInsn(ALOAD, 2);
         mv.visitInsn(ARETURN);
         mv.visitMaxs(0, 0);
-        mv.visitEnd();*/
+        mv.visitEnd();
         cv.visitEnd();
     }
 }

@@ -32,7 +32,7 @@ package yeti.lang;
 
 import java.util.Arrays;
 
-abstract class AMList extends AList implements ListIter {
+abstract class AMList extends AList {
     int start;
 
     abstract int _size();
@@ -110,11 +110,7 @@ abstract class AMList extends AList implements ListIter {
         }
     }
 
-    public ListIter iter() {
-        return this;
-    }
-
-    public Object fold(Fun f, Object v, AIter _) {
+    public Object fold(Fun f, Object v) {
         Object[] array = array();
         for (int cnt = _size(), i = start; i < cnt; ++i) {
             v = f.apply(v, array[i]);

@@ -30,16 +30,6 @@
  */
 package yeti.lang;
 
-final class LListIter implements ListIter {
-    static final LListIter ITER = new LListIter();
-
-    public Object fold(Fun f, Object value, AIter i) {
-        for (; i != null; i = i.next())
-            value = f.apply(value, i.first());
-        return value;
-    }
-}
-
 /** Yeti core library - List. */
 public class LList extends AList {
     Object first;
@@ -115,10 +105,6 @@ public class LList extends AList {
         return i != null ? 1 : j != null ? -1 : 0;
     }
 
-    public ListIter iter() {
-        return LListIter.ITER;
-    }
-
     public AList reverse() {
         AList l = null;
         for (AIter i = this; i != null; i = i.next()) {
@@ -156,5 +142,9 @@ public class LList extends AList {
     }
 
     public void forEach(Object f) {
+    }
+
+    public Object fold(Fun f, Object value) {
+        return null;
     }
 }

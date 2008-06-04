@@ -135,7 +135,7 @@ insertionSort2 less a =
         a.[j + 1] := v
     done;
 
-l = map \(randomInt 3000) [1..1500];
+l = map \(randomInt 3200) [1..1600];
 sorted = sort l;
 
 testSort name f =

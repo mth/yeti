@@ -51,7 +51,7 @@ fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
         if nullptr? l then
             v
         else
-            (l unsafely_as ~AList)#iter()#fold(f, v, l) unsafely_as ''
+            (l unsafely_as ~AList)#fold(f, v) unsafely_as ''
         fi;
     f2);
 

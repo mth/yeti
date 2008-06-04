@@ -46,7 +46,7 @@ final class RangeIter extends AIter {
 }
 
 /** Yeti core library - List. */
-public final class ListRange extends AList implements ListIter {
+public final class ListRange extends AList {
     Num first;
     Num last;
     AList rest;
@@ -180,11 +180,7 @@ public final class ListRange extends AList implements ListIter {
         }
     }
 
-    public ListIter iter() {
-        return this;
-    }
-
-    public Object fold(Fun f, Object v, AIter _) {
+    public Object fold(Fun f, Object v) {
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
             if (first.compareTo(last) <= 0) {
