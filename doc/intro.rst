@@ -2058,7 +2058,7 @@ It can be seen that the module was evaluated only once, when the first
 ``load`` was evaluated.
 
 Compiling modules
-+++++++++++++++++++
+++++++++++++++++++++
 
 In the previous examples modules were compiled automatically in the
 memory together with the test programs. This kind of automatic compilation
@@ -2093,6 +2093,56 @@ This message is caused by the fact, that compiler didn't found the compiled
 class files and therefore tried to compile from sources, which it didn't
 found either. The ``-cp`` option sets classpath for the compiler. The
 compiler also attempts to use its JVM classloader to find libraries.
+
+Calling modules from Java code
++++++++++++++++++++++++++++++++++
+
+Yeti modules can be accessed from normal Java code. For example, the
+``println`` function from the ``yeti.lang.io`` module could be called in
+the following way::
+
+    import yeti.lang.io;
+
+    public class CallYeti {
+        public static void main(String[] args) {
+            // use the static field
+            io.println.apply("Yeti!");
+        }
+
+        static {
+            // ensure that the module is initialised
+            io.eval();
+        }
+    }
+
+This uses the fact, that modules with structure values have static fields
+generated for each of the structure fields. Compiler uses this to optimise
+the module imports.
+
+Alternative way would be to access the structure returned by the eval call::
+
+    import yeti.lang.Fun;
+    import yeti.lang.Struct;
+    import yeti.lang.io;
+
+    public class CallYeti2 {
+        public static void main(String[] args) {
+            Struct module = (Struct) io.eval();
+            Fun println = (Fun) module.get("println");
+            println.apply("Yeti!");
+        }
+    }
+
+Since curring is used on the function calls, giving multiple arguments is
+more complicated. The ``Fun`` class has also 2-argument apply, but for example
+calling 3-argument function would look like ``((Fun) f.apply(a, b)).apply(c)``.
+This works regardless of the actual implementation of f. Uncurring also
+3-argument functions is actually planned as an optimisation, but not yet
+implemented.
+
+Since accessing Yeti code from Java loses type information and is somewhat
+cumbersome, it is best to try to minimise such interfaces.
+
 
 Using Java classes from Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
