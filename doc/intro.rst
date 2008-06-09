@@ -2094,7 +2094,7 @@ class files and therefore tried to compile from sources, which it didn't
 found either. The ``-cp`` option sets classpath for the compiler. The
 compiler also attempts to use its JVM classloader to find libraries.
 
-Calling modules from Java code
+Using modules from Java code
 +++++++++++++++++++++++++++++++++
 
 Yeti modules can be accessed from normal Java code. For example, the
