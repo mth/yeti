@@ -2141,7 +2141,7 @@ This works regardless of the actual implementation of f. Uncurring also
 implemented.
 
 Since accessing Yeti code from Java loses type information and is somewhat
-cumbersome, it is best to try to minimize such interfaces.
+cumbersome, it is best to try to minimise such interfaces.
 
 
 Using Java classes from Yeti code
