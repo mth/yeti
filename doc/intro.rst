@@ -2115,9 +2115,8 @@ the following way::
         }
     }
 
-This uses the fact, that modules with structure values have static fields
-generated for each of the structure fields. Compiler uses this to optimise
-the module imports.
+Modules with structure values have static fields generated for each of the
+structure fields. Compiler uses this to optimise the module imports.
 
 Alternative way would be to access the structure returned by the eval call::
 
