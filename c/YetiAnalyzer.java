@@ -167,8 +167,10 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof ClassOf) {
             ClassOf co = (ClassOf) node;
-            return new ClassOfExpr(resolveFullClass(co.className, scope, co)
-                                   .javaType.resolve(co));
+            Type t = co.className != "module" ? null :
+                        resolveClass("module", scope, false);
+            return new ClassOfExpr(t != null ? t.javaType :
+                resolveFullClass(co.className, scope, co).javaType.resolve(co));
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -1321,8 +1323,6 @@ public final class YetiAnalyzer extends YetiType {
             RootClosure root = new RootClosure();
             Scope scope = new Scope((flags & YetiC.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
-            if ((flags & YetiC.CF_NO_IMPORT) != 0) {
-            }
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
                     scope = explodeStruct(null, new LoadModule(preload[i],
@@ -1330,6 +1330,8 @@ public final class YetiAnalyzer extends YetiType {
                           scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
             }
+            if (parser.isModule)
+                scope = bindImport("module", className, scope);
             if ((flags & YetiC.CF_EVAL_BIND) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
