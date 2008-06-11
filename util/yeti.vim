@@ -29,7 +29,7 @@ syn keyword yetiStat ignore module program try catch finally yrt new throw
 syn keyword yetiStat do done case of esac
 syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none
-syn keyword yetiType var norec
+syn keyword yetiType var norec get set
 syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at setHashDefault flip sum
 syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift

@@ -2,13 +2,13 @@ newGame size = {
     maxPos = size * size - 1,
     pos x y = x + y * size,
     board = array (map \' ' [1 .. size * size]),
-    isFull () = not (contains ' ' board),
+    full? () = not (contains ' ' board),
     hasWon player =
         m = size - 1;
         chk from by = all do p: board.[p * by + from] == player done [0 .. m];
         line i = chk i size or chk (i * size) 1;
         chk 0 (m + 2) or chk m m or any line [0 .. m],
-    show () =
+    get show () =
         cell n =
             " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
         strJoin "" (map cell [0 .. maxPos]),
@@ -17,7 +17,7 @@ newGame size = {
             { score = 1, pos = -1 }
         elif hasWon op then
             { score = -1, pos = -1 }
-        elif isFull () then
+        elif full? () then
             { score = 0, pos = -1 }
         else
             (tryPos best pos =
@@ -48,10 +48,10 @@ human = 'O';
         println "Game over. Computer won."
     elif game.hasWon human then
         println "You won! Impossible!"
-    elif game.isFull () then
+    elif game.full? () then
         println "Draw."
     elif humanMove then
-        print "\(game.show ())move xy> ";
+        print "\(game.show)move xy> ";
         move = number (readln ());
         move = game.pos (move div 10 - 1) (move % 10 - 1);
         if move < 0 or move > game.maxPos or game.board.[move] != ' ' then
@@ -65,4 +65,4 @@ human = 'O';
         game.putBest computer;
         play true
     fi) true;
-print (game.show ());
+print game.show;
