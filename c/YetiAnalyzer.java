@@ -875,12 +875,12 @@ public final class YetiAnalyzer extends YetiType {
                 "Unexpected beast in the structure (" + node +
                 "), please give me some field binding.");
         }
-        Bind field = (Bind) node;
-        if (fields.containsKey(field.name)) {
-            throw new CompileException(field, "Duplicate field "
-                + field.name + " in the structure");
-        }
-        return field;
+        return (Bind) node;
+    }
+
+    private static void duplicateField(Bind field) {
+        throw new CompileException(field,
+                    "Duplicate field " + field.name + " in the structure");
     }
 
     static Code structType(Struct st, Scope scope, int depth) {
@@ -889,38 +889,92 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope;
         Map fields = new HashMap();
-        Map codeFields = new HashMap();
-        String[] names = new String[nodes.length];
-        Code[] values  = new Code[nodes.length];
-        StructConstructor result = new StructConstructor(names, values);
+        Map codeMap = new HashMap();
+        List values = new ArrayList();
+        List props = new ArrayList();
+        Function[] funs = new Function[nodes.length];
+        StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = getField(nodes[i], fields);
             Function lambda = !field.noRec && field.expr instanceof Lambda
-                                ? new Function(new Type(depth)) : null;
-            Code code = values[i] =
+                            ? funs[i] = new Function(new Type(depth)) : null;
+            Code code =
                 lambda != null ? lambda : analyze(field.expr, scope, depth);
-            names[i] = field.name;
-            fields.put(field.name,
-                field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                code.polymorph || lambda != null ? code.type
+            StructField sf = (StructField) codeMap.get(field.name);
+            if (field.property) {
+                if (sf == null) {
+                    sf = new StructField();
+                    sf.property = true;
+                    sf.name = field.name;
+                    codeMap.put(sf.name, sf);
+                    props.add(sf);
+                } else if (!sf.property ||
+                           (field.var ? sf.setter : sf.value) != null) {
+                    duplicateField(field);
+                }
+                // get is () -> t, set is t -> ()
+                Type t = (Type) fields.get(field.name);
+                if (t == null) {
+                    t = new Type(depth);
+                    t.field = FIELD_NON_POLYMORPHIC;
+                    fields.put(field.name, t);
+                }
+                if (field.var)
+                    t.field = FIELD_MUTABLE;
+                Type f = new Type(FUN, field.var ? new Type[] { t, UNIT_TYPE }
+                                                 : new Type[] { UNIT_TYPE, t });
+                try {
+                    unify(code.type, f);
+                } catch (TypeException ex) {
+                    throw new CompileException(nodes[i],
+                        (field.var ? "Setter " : "Getter ") + field.name +
+                        " type " + code.type + " is not " + f);
+                }
+                if (field.var) {
+                    sf.setter = code;
+                } else {
+                    sf.value = code;
+                }
+            } else {
+                if (sf != null)
+                    duplicateField(field);
+                sf = new StructField();
+                sf.name = field.name;
+                sf.value = code;
+                codeMap.put(field.name, sf);
+                int n = values.size();
+                values.add(sf);
+                fields.put(field.name,
+                    field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
+                    code.polymorph || lambda != null ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
-            if (!field.noRec) {
-                Binder bind = result.bind(i, code, field.var);
-                if (lambda != null)
-                    lambda.selfBind = bind;
-                local = new Scope(local, field.name, bind);
+                if (!field.noRec) {
+                    Binder bind = result.bind(n, code, field.var);
+                    if (lambda != null)
+                        lambda.selfBind = bind;
+                    local = new Scope(local, field.name, bind);
+                }
             }
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
-            if (field.expr instanceof Lambda) {
-                lambdaBind((Function) values[i], field, local, depth);
+            if (funs[i] != null) {
+                lambdaBind(funs[i], field, local, depth);
             }
         }
+        StructField[] properties = 
+            (StructField[]) props.toArray(new StructField[props.size()]);
+        result.fields =
+            (StructField[]) values.toArray(new StructField[values.size()]);
+        result.properties = properties;
         result.type = new Type(STRUCT,
             (Type[]) fields.values().toArray(new Type[fields.size()]));
+        for (int i = result.properties.length; --i >= 0; )
+            if (properties[i].value == null)
+                throw new CompileException(st,
+                    "Property " + properties[i].name + " has no getter");
         result.type.finalMembers = fields;
         return result;
     }
@@ -1039,6 +1093,8 @@ public final class YetiAnalyzer extends YetiType {
                 HashMap uniq = new HashMap();
                 for (int i = 0; i < fields.length; ++i) {
                     Bind field = getField(fields[i], uniq);
+                    if (uniq.containsKey(field.name))
+                        duplicateField(field);
                     uniq.put(field.name, null);
                     Type ft = new Type(depth);
                     Type part = new Type(STRUCT, new Type[] { ft });

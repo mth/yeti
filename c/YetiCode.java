@@ -1834,9 +1834,16 @@ interface YetiCode {
         }
     }
 
+    class StructField {
+        boolean property;
+        String name;
+        Code value;
+        Code setter;
+    }
+
     class StructConstructor extends Code {
-        String[] names;
-        Code[] values;
+        StructField[] fields;
+        StructField[] properties;
         Bind[] binds;
 
         private class Bind extends BindRef implements Binder, CaptureWrapper {
@@ -1887,10 +1894,8 @@ interface YetiCode {
             }
         }
 
-        StructConstructor(String[] names, Code[] values) {
-            this.names = names;
-            this.values = values;
-            binds = new Bind[names.length];
+        StructConstructor(int maxBinds) {
+            binds = new Bind[maxBinds];
         }
 
         Binder bind(int num, Code code, boolean mutable) {
@@ -1908,7 +1913,7 @@ interface YetiCode {
             for (int i = 0; i < binds.length; ++i) {
                 if (binds[i] != null) {
                     if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                        ((Function) values[i]).prepareGen(ctx);
+                        ((Function) fields[i].value).prepareGen(ctx);
                         ctx.m.visitVarInsn(ASTORE,
                                 binds[i].var = ctx.localVarCount++);
                     } else {
@@ -1921,21 +1926,22 @@ interface YetiCode {
                     }
                 }
             }
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/Struct");
+            ctx.m.visitTypeInsn(NEW, properties.length == 0
+                ? "yeti/lang/Struct" : "yeti/lang/PStruct");
             ctx.m.visitInsn(DUP);
-            ctx.intConst(names.length * 2);
+            ctx.intConst(fields.length * 2);
             ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             if (arrayVar != -1) {
                 ctx.m.visitVarInsn(ASTORE, arrayVar);
             }
-            for (int i = 0, cnt = names.length - 1; i <= cnt; ++i) {
+            for (int i = 0, cnt = fields.length; i < cnt; ++i) {
                 if (arrayVar != -1) {
                     ctx.m.visitVarInsn(ALOAD, arrayVar);
                 } else {
                     ctx.m.visitInsn(DUP);
                 }
                 ctx.intConst(i * 2);
-                ctx.m.visitLdcInsn(names[i]);
+                ctx.m.visitLdcInsn(fields[i].name);
                 ctx.m.visitInsn(AASTORE);
                 if (arrayVar != -1) {
                     ctx.m.visitVarInsn(ALOAD, arrayVar);
@@ -1945,17 +1951,40 @@ interface YetiCode {
                 ctx.intConst(i * 2 + 1);
                 if (binds[i] != null) {
                     binds[i].gen(ctx);
-                    ((Function) values[i]).finishGen(ctx);
+                    ((Function) fields[i].value).finishGen(ctx);
                 } else {
-                    values[i].gen(ctx);
+                    fields[i].value.gen(ctx);
                 }
                 ctx.m.visitInsn(AASTORE);
             }
             if (arrayVar != -1) {
                 ctx.m.visitVarInsn(ALOAD, arrayVar);
             }
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
-                    "<init>", "([Ljava/lang/Object;)V");
+            if (properties.length == 0) {
+                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
+                        "<init>", "([Ljava/lang/Object;)V");
+                return;
+            }
+            ctx.intConst(properties.length * 3);
+            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            for (int i = 0, cnt = properties.length; i < cnt; ++i) {
+                ctx.m.visitInsn(DUP);
+                ctx.intConst(i * 3);
+                ctx.m.visitLdcInsn(properties[i].name);
+                ctx.m.visitInsn(AASTORE);
+                ctx.m.visitInsn(DUP);
+                ctx.intConst(i * 3 + 1);
+                properties[i].value.gen(ctx);
+                ctx.m.visitInsn(AASTORE);
+                if (properties[i].setter != null) {
+                    ctx.m.visitInsn(DUP);
+                    ctx.intConst(i * 3 + 2);
+                    properties[i].setter.gen(ctx);
+                    ctx.m.visitInsn(AASTORE);
+                }
+            }
+            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/PStruct",
+                    "<init>", "([Ljava/lang/Object;[Ljava/lang/Object;)V");
         }
     }
 

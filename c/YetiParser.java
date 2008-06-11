@@ -177,11 +177,11 @@ interface YetiParser {
                 String s = ((Sym) nameNode).sym;
                 if (s == "get") {
                     property = true;
-                    ++first;
+                    nameNode = (Node) args.get(first++);
                 } else if (s == "set") {
                     property = true;
                     var = true;
-                    ++first;
+                    nameNode = (Node) args.get(first++);
                 }
             }
             if (first == 0 || first > args.size()) {
