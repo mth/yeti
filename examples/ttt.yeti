@@ -30,7 +30,7 @@ newGame size = {
                     res = -(check op me).score;
                     board.[pos] := ' ';
                     if res > best.score then
-                        tryPos { score = res, pos = pos } (pos + 1)
+                        tryPos { score = res, pos } (pos + 1)
                     else
                         tryPos best (pos + 1)
                     fi
