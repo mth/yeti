@@ -525,6 +525,9 @@ class JavaType {
             staticFields.putAll(ii.staticFields);
             putMethods(mm, ii.methods);
         }
+        if (parent != null) {
+            interfaces.putAll(parent.interfaces);
+        }
         fields.putAll(t.fields);
         staticFields.putAll(t.staticFields);
         putMethods(mm, t.methods);

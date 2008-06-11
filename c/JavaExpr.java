@@ -114,8 +114,8 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, tmpClass,
                                   "size", "()I"); // an
 
-            descr = t.javaType.description;
-            if (t.type != YetiType.JAVA || descr.length() != 1) {
+            if (t.type != YetiType.JAVA ||
+                (descr = t.javaType.description).length() != 1) {
                 ctx.m.visitTypeInsn(ANEWARRAY, s); // aA
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL,
                     tmpClass, "toArray",

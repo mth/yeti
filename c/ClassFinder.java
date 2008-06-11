@@ -33,27 +33,79 @@ package yeti.lang.compiler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.util.Collections;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Enumeration;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+
+abstract class ClassPathItem {
+    abstract InputStream getStream(String name) throws IOException;
+}
+
+class ClassDir extends ClassPathItem {
+    String path;
+
+    ClassDir(String path) {
+        this.path = path.length() > 0 ? path.concat("/") : "";
+    }
+
+    InputStream getStream(String name) throws IOException {
+        return new FileInputStream(path.concat(name));
+    }
+}
+
+class ClassJar extends ClassPathItem {
+    JarFile jar;
+    Map entries = Collections.EMPTY_MAP;
+
+    ClassJar(String path) {
+        try {
+            jar = new JarFile(path);
+            Enumeration e = jar.entries();
+            entries = new HashMap();
+            while (e.hasMoreElements()) {
+                ZipEntry entry = (ZipEntry) e.nextElement();
+                String name = entry.getName();
+                if (name.endsWith(".class"))
+                    entries.put(name, entry);
+            }
+        } catch (IOException ex) {
+        }
+    }
+
+    InputStream getStream(String name) throws IOException {
+        ZipEntry entry = (ZipEntry) entries.get(name);
+        return entry == null ? null : jar.getInputStream(entry);
+    }
+}
 
 class ClassFinder {
-    private String[] classPath;
+    private ClassPathItem[] classPath;
 
     ClassFinder(String cp) {
-        classPath = cp.split(":");
+        this(cp.split(":"));
     }
 
     ClassFinder(String[] cp) {
-        classPath = cp;
+        classPath = new ClassPathItem[cp.length];
+        for (int i = 0; i < cp.length; ++i) {
+            classPath[i] = cp[i].endsWith(".jar")
+                ? (ClassPathItem) new ClassJar(cp[i]) : new ClassDir(cp[i]);
+        }
     }
 
     public InputStream findClass(String name) {
+        InputStream in;
         for (int i = 0; i < classPath.length; ++i) {
             try {
-                return new FileInputStream(classPath[i].length() > 0
-                                ? classPath[i] + '/' + name : name);
+                if ((in = classPath[i].getStream(name)) != null)
+                    return in;
             } catch (IOException ex) {
             }
         }
-        InputStream in = Thread.currentThread().getContextClassLoader()
+        in = Thread.currentThread().getContextClassLoader()
                            .getResourceAsStream(name);
         return in != null ? in :
                 getClass().getClassLoader().getResourceAsStream(name);
