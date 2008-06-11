@@ -1271,6 +1271,11 @@ public final class YetiAnalyzer extends YetiType {
             if (type == null) {
                 type = codeItems[i].type;
             } else {
+                Type t = JavaType.mergeTypes(type, codeItems[i].type);
+                if (t != null) {
+                    type = t;
+                    continue;
+                }
                 try {
                     unify(type, codeItems[i].type);
                 } catch (TypeException ex) {
