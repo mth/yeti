@@ -654,8 +654,15 @@ public class YetiType implements YetiParser, YetiBuiltins {
         Map result = new HashMap();
         for (Iterator i = types.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
-            result.put(entry.getKey(),
-                    copyType((Type) entry.getValue(), free, known));
+            Type t = (Type) entry.getValue();
+            Type nt = copyType(t, free, known);
+            // looks like a hack, but fixing here avoids unnecessery refs
+            if (t.field != nt.field) {
+                nt = mutableFieldRef(nt);
+                nt.field = t.field;
+                nt.flags = t.flags;
+            }
+            result.put(entry.getKey(), nt);
         }
         return result;
     }
@@ -703,9 +710,11 @@ public class YetiType implements YetiParser, YetiBuiltins {
                 }
                 HashMap vars = new HashMap();
                 for (int i = scope.free.length; --i >= 0;) {
-                    Type free = new Type(depth);
-                    free.flags = scope.free[i].flags;
-                    vars.put(scope.free[i], free);
+                    Type t = new Type(depth);
+                    Type free = scope.free[i];
+                    t.flags = free.flags;
+                    t.field = free.field;
+                    vars.put(free, t);
                 }
                 ref.type = copyType(ref.type, vars, new HashMap());
                 return ref;

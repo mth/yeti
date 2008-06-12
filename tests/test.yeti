@@ -2,7 +2,7 @@ h = [0.5e: true, 33.2: false];
 trueTests = [
 'id': \(id true),
 'const': const true,
-'ignore': \(ignore false; true),
+'ignore': \(_ = false; true),
 'at' : \(at h 0.5 and not (at h 33.2e)),
 'not': \(not false and (not true) == false),
 'and': \(true and not (false and true)),
@@ -39,6 +39,7 @@ trueTests = [
 'all': \(not (all (!= 3) [1 .. 5]) and (all (!= 3) [5 .. 10])),
 'contains': \(contains 3 [1 .. 5] and not (contains 3 [5 .. 10])),
 'maybe': \(maybe false not (Some false)),
+'struct': \(f a = { var x = a }; (f 33).x := 3; true)
 ];
 
 forHash trueTests do name f:
