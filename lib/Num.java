@@ -106,4 +106,8 @@ public abstract class Num extends Number implements Comparable {
     public BigDecimal toBigDecimal() {
         return new BigDecimal(toString());
     }
+
+    public static Num parseNum(String str) {
+        return Core.parseNum(str);
+    }
 }
