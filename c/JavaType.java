@@ -894,6 +894,18 @@ class JavaType {
         a = a.deref();
         b = b.deref();
         if (a.type != YetiType.JAVA || b.type != YetiType.JAVA) {
+            // immutable lists can be recursively merged
+            if (a.type == YetiType.MAP && b.type == YetiType.MAP &&
+                a.param[1].type == YetiType.NONE &&
+                a.param[2].type == YetiType.LIST_MARKER &&
+                b.param[1].type == YetiType.NONE &&
+                b.param[2].type == YetiType.LIST_MARKER) {
+                YetiType.Type t = mergeTypes(a.param[0], b.param[0]);
+                if (t != null) {
+                    return new YetiType.Type(YetiType.MAP, new YetiType.Type[] {
+                                    t, YetiType.NO_TYPE, YetiType.LIST_TYPE });
+                }
+            }
             return null;
         }
         if (a.javaType == b.javaType) {
