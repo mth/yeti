@@ -628,7 +628,7 @@ interface YetiParser {
         }
 
         String str() {
-            return "classof " + className;
+            return "classOf " + className;
         }
     }
 
@@ -975,7 +975,7 @@ interface YetiParser {
                                  "Expected class path after 'import', not a "));
             } else if (s == "throw") {
                 res = new ThrowSym();
-            } else if (s == "classof") {
+            } else if (s == "classOf") {
                 res = new ClassOf(
                             readDotted(false, "Expected class name, not a "));
             } else if (s == "instanceof") {
