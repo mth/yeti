@@ -79,7 +79,8 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
-            if (op.op == "") {
+            String opop = op.op;
+            if (opop == "") {
                 if (op.left instanceof ThrowSym) {
                     Code throwable = analyze(op.right, scope, depth);
                     JavaType.checkThrowable(op.left, throwable.type);
@@ -88,7 +89,7 @@ public final class YetiAnalyzer extends YetiType {
                 return apply(node, analyze(op.left, scope, depth),
                              op.right, scope, depth);
             }
-            if (op.op == FIELD_OP) {
+            if (opop == FIELD_OP) {
                 if (op.right instanceof NList) {
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (NList) op.right, scope, depth);
@@ -97,34 +98,39 @@ public final class YetiAnalyzer extends YetiType {
                 return selectMember(op, (Sym) op.right,
                         analyze(op.left, scope, depth), scope, depth);
             }
-            if (op.op == ":=") {
+            if (opop == ":=") {
                 return assignOp(op, scope, depth);
             }
-            if (op.op == "\\") {
+            if (opop == "\\") {
                 return lambda(new Function(null),
                               new Lambda(new Sym("_").pos(op.line, op.col),
                                          op.right, null), scope, depth);
             }
-            if (op.op == "is" || op.op == "as" || op.op == "unsafely_as") {
+            if (opop == "is" || opop == "as" || opop == "unsafely_as") {
                 return isOp(op, ((TypeOp) op).type,
                             analyze(op.right, scope, depth), scope, depth);
             }
-            if (op.op == "#") {
+            if (opop == "#") {
                 return objectRef((ObjectRefOp) op, scope, depth);
             }
-            if (op.op == "loop") {
+            if (opop == "loop") {
                 return loop(op, scope, depth);
             }
-            if (op.op == "-" && op.left == null) {
+            if (opop == "-" && op.left == null) {
                 return apply(op, resolve("negate", op, scope, depth),
                                  op.right, scope, depth);
+            }
+            if (opop == "instanceof") {
+                JavaType jt = resolveFullClass(((InstanceOf) op).className,
+                                               scope, op).javaType.resolve(op);
+                return new InstanceOfExpr(analyze(op.right, scope, depth), jt);
             }
             if (op.left == null) {
                 throw new CompileException(op,
                     "Internal error (incomplete operator " + op.op + ")");
             }
             return apply(op.right,
-                         apply(op, resolve(op.op, op, scope, depth),
+                         apply(op, resolve(opop, op, scope, depth),
                                op.left, scope, depth),
                          op.right, scope, depth);
         }

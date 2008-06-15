@@ -853,6 +853,29 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
+    class InstanceOfExpr extends Code {
+        Code expr;
+        String className;
+
+        InstanceOfExpr(Code expr, JavaType what) {
+            type = YetiType.BOOL_TYPE;
+            this.expr = expr;
+            className = what.className();
+        }
+
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            expr.gen(ctx);
+            ctx.m.visitTypeInsn(INSTANCEOF, className);
+            ctx.m.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+        }
+
+        void gen(Ctx ctx) {
+            Label label = new Label();
+            genIf(ctx, label, false);
+            ctx.genBoolean(label);
+        }
+    }
+
     Code NOP_CODE = new Code() {
         void gen(Ctx ctx) {
         }

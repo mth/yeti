@@ -588,6 +588,16 @@ interface YetiParser {
         }
     }
 
+    class InstanceOf extends BinOp {
+        String className;
+
+        InstanceOf(String className) {
+            super("instanceof", Parser.IS_OP_LEVEL, true);
+            postfix = true;
+            this.className = className;
+        }
+    }
+
     class NewOp extends Node {
         String name;
         Node[] arguments;
@@ -967,6 +977,9 @@ interface YetiParser {
                 res = new ThrowSym();
             } else if (s == "classOf") {
                 res = new ClassOf(
+                            readDotted(false, "Expected class name, not a "));
+            } else if (s == "instanceof") {
+                res = new InstanceOf(
                             readDotted(false, "Expected class name, not a "));
             } else {
                 if (s.charAt(0) != '`') {

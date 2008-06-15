@@ -23,7 +23,7 @@ syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=De
 
 " Standard Rattrap Keywords
 syn keyword yetiOperator not and or in is unsafely_as as or div loop shl shr
-syn keyword yetiOperator classOf
+syn keyword yetiOperator classOf instanceof
 syn keyword yetiStat if then elif else fi for forHash synchronized
 syn keyword yetiStat ignore module program try catch finally yrt new throw
 syn keyword yetiStat do done case of esac
