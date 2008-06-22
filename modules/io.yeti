@@ -105,7 +105,7 @@ withHandle h block =
     yrt;
 
 {
-    norec withHandle = withHandle,
+    withHandle,
 
     readln () = stdin.readln (),
 
