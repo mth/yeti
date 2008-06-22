@@ -302,6 +302,7 @@ interface YetiParser {
                     bind.expr = s;
                     bind.col = s.col;
                     bind.line = s.line;
+                    bind.noRec = true;
                     fields[i] = bind;
                 }
             }

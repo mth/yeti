@@ -122,11 +122,7 @@ plus a b = a + b;
         fi,
 
     // damn struct polymorphism restriction. is it really needed?
-    norec array = array,
-    norec map = map,
-    norec fold = fold,
-    norec find = find,
-    norec index = index,
+    array, map, fold, find, index,
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>,

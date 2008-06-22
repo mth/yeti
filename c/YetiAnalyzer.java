@@ -721,7 +721,7 @@ public final class YetiAnalyzer extends YetiType {
                     "Expected field pattern, not a " + fields[j]);
             }
             Bind field = (Bind) fields[j];
-            if (field.var || field.property || field.noRec) {
+            if (field.var || field.property) {
                 throw new CompileException(field, "Structure " +
                     "field pattern may not have modifiers");
             }
