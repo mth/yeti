@@ -102,8 +102,10 @@ public class Struct {
     public int hashCode() {
         int res = 0;
         for (int i = values.length; (i -= 2) >= 0;) {
-            res ^= values[i].hashCode() + values[i + 1].hashCode();
+            Object v = values[i + 1];
+            res ^= values[i].hashCode() + (v == null ? 0 : v.hashCode());
         }
         return res;
     }
+
 }
