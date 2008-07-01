@@ -287,12 +287,13 @@ public final class YetiAnalyzer extends YetiType {
         Type t;
         char c = name.charAt(0);
         if (c == '~') {
+            expectsParam(node, 0);
             String cn = name.substring(1).replace('.', '/').intern();
-            Type[] tp = new Type[node.param.length];
-            for (int i = tp.length; --i >= 0;)
-                tp[i] = nodeToType(node.param[i], free, scope, depth);
+//            Type[] tp = new Type[node.param.length];
+//            for (int i = tp.length; --i >= 0;)
+//                tp[i] = nodeToType(node.param[i], free, scope, depth);
             t = typeOfClass(cn, scope);
-            t.param = tp;
+//            t.param = tp;
         } else if (c == '\'') {
             t = (Type) free.get(name);
             if (t == null)
@@ -304,7 +305,10 @@ public final class YetiAnalyzer extends YetiType {
                 t.flags = FL_ORDERED_REQUIRED;
             }
         } else {
-            throw new CompileException(node, "Unknown type: " + name);
+            Type[] tp = new Type[node.param.length];
+            for (int i = 0; i < tp.length; ++i)
+                tp[i] = nodeToType(node.param[i], free, scope, depth);
+            t = resolveTypeDef(scope, name, tp, node);
         }
         while (--arrays >= 0) {
             t = new Type(JAVA_ARRAY, new Type[] { t });
@@ -741,6 +745,25 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
+    static Scope bindTypeDef(TypeDef typeDef, Scope scope) {
+        Scope defScope = scope;
+        Type[] def = new Type[typeDef.param.length + 1];
+        // binding typedef arguments
+        for (int i = typeDef.param.length; --i >= 0;) {
+            Type arg = new Type(-1);
+            def[i] = arg;
+            defScope = new Scope(defScope, typeDef.param[i], null);
+            defScope.typeDef = new Type[] { arg };
+            defScope.free = NO_PARAM;
+        }
+        Type type =
+            nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
+        def[def.length - 1] = type;
+        scope = bindPoly(typeDef.name, type, null, 0, scope);
+        scope.typeDef = def;
+        return scope;
+    }
+
     static Code analSeq(Seq seq, Scope scope, int depth) {
         Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
@@ -781,6 +804,8 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
                 scope.importClass = new Type("L" + name + ';');
+            } else if (nodes[i] instanceof TypeDef) {
+                scope = bindTypeDef((TypeDef) nodes[i], scope);
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {

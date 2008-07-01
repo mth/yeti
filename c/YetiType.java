@@ -412,6 +412,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
         Type[] free;
         Closure closure; // non-null means outer scopes must be proxied
         Type importClass;
+        Type[] typeDef;
+
         String packageName;
 
         public Scope(Scope outer, String name, Binder binder) {
@@ -701,22 +703,26 @@ public class YetiType implements YetiParser, YetiBuiltins {
         return res;
     }
 
+    private static Map createFreeVars(Type[] freeTypes, int depth) {
+        HashMap vars = new HashMap();
+        for (int i = freeTypes.length; --i >= 0;) {
+            Type t = new Type(depth);
+            Type free = freeTypes[i];
+            t.flags = free.flags;
+            t.field = free.field;
+            vars.put(free, t);
+        }
+        return vars;
+    }
+
     static BindRef resolve(String sym, Node where, Scope scope, int depth) {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == sym && scope.binder != null) {
                 BindRef ref = scope.binder.getRef(where.line);
-                if (scope.free == null) {
-                    return ref;
+                if (scope.free != null) {
+                    Map vars = createFreeVars(scope.free, depth);
+                    ref.type = copyType(ref.type, vars, new HashMap());
                 }
-                HashMap vars = new HashMap();
-                for (int i = scope.free.length; --i >= 0;) {
-                    Type t = new Type(depth);
-                    Type free = scope.free[i];
-                    t.flags = free.flags;
-                    t.field = free.field;
-                    vars.put(free, t);
-                }
-                ref.type = copyType(ref.type, vars, new HashMap());
                 return ref;
             }
             if (scope.closure != null) {
@@ -787,5 +793,26 @@ public class YetiType implements YetiParser, YetiBuiltins {
         scope = new Scope(scope, name, value);
         scope.free = (Type[]) free.toArray(new Type[free.size()]);
         return scope;
+    }
+
+    static Type resolveTypeDef(Scope scope, String name, Type[] param,
+                               Node where) {
+        for (; scope != null; scope = scope.outer) {
+            if (scope.typeDef != null && scope.name == name) {
+                if (scope.typeDef.length - 1 != param.length) {
+                    throw new CompileException(where,
+                        "Type " + name + " expects "
+                        + (scope.typeDef.length == 2 ?  "1 parameter"
+                            : (scope.typeDef.length - 1) + " parameters")
+                        + ", not " + param.length);
+                }
+                Map vars = createFreeVars(scope.free, 1);
+                for (int i = param.length; --i >= 0;)
+                    vars.put(scope.typeDef[i], param[i]);
+                return copyType(scope.typeDef[param.length], vars,
+                                new HashMap());
+            }
+        }
+        throw new CompileException(where, "Unknown type: " + name);
     }
 }
