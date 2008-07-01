@@ -1281,19 +1281,26 @@ interface YetiParser {
                     if (((SepOp) sym).sep != sep) {
                         break;
                     }
-                    res.add(def(args, l, end == '}'));
-                    args = null;
-                    l = new ArrayList();
+                    if (args != null || l.size() != 0) {
+                        res.add(def(args, l, end == '}'));
+                        args = null;
+                        l = new ArrayList();
+                    }
                     continue;
                 }
                 l.add(sym);
+                if (sep == ';' && sym instanceof TypeDef) {
+                    res.add(def(args, l, false));
+                    args = null;
+                    l = new ArrayList();
+                }
             }
             eofWas = sym;
             if (end != ' ' && (p >= src.length || src[p++] != end)) {
                 throw new CompileException(line, p - lineStart + 1,
                                            "Expecting " + end);
             }
-            if (!l.isEmpty()) {
+            if (l.size() != 0) {
                 res.add(def(args, l, end == '}'));
             }
             return (Node[]) res.toArray(new Node[res.size()]);
