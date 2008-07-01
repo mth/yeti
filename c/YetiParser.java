@@ -1281,7 +1281,7 @@ interface YetiParser {
                     if (((SepOp) sym).sep != sep) {
                         break;
                     }
-                    if (args != null || l.size() != 0) {
+                    if (args != null || sep != ';' || l.size() != 0) {
                         res.add(def(args, l, end == '}'));
                         args = null;
                         l = new ArrayList();
