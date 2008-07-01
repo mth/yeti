@@ -110,3 +110,24 @@ Automatic conversion on return values of java methods:
 -       char   --> string
 -       void   --> ()
 
+
+Class definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class Foo(int x) extends Iterator {
+    var n = x,
+
+    next () =
+        n := n + 1;
+        "\(n)",
+
+    hasNext () =
+        n < 10,
+
+    remove () =
+        (),
+
+    setValue v =
+        n := v
+}
+

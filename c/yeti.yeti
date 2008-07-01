@@ -55,12 +55,12 @@ repl () =
             bindings = YetiEval#get()#bindings;
             bindBarrier = bindings#size();
             compilation = compilationOf writer;
-            type = compilation#compile((), mainClass, line, flags);
+            type_ = compilation#compile((), mainClass, line, flags);
             compilation#write();
             try
                 res = execClass writer;
-                if type#deref()#type != YetiType#UNIT then
-                    println "\(Core#show(res)) is \(type)"
+                if type_#deref()#type != YetiType#UNIT then
+                    println "\(Core#show(res)) is \(type_)"
                 fi
             catch Exception ex:
                 ex#printStackTrace()

@@ -538,6 +538,29 @@ interface YetiParser {
         }
     }
 
+    class TypeDef extends Node {
+        String name;
+        String[] param;
+        TypeNode type;
+
+        String str() {
+            StringBuffer buf = new StringBuffer("type ");
+            buf.append(name);
+            if (param.length > 0) {
+                buf.append('<');
+                for (int i = 0; i < param.length; ++i) {
+                    if (i != 0)
+                        buf.append(", ");
+                    buf.append(param[i]);
+                }
+                buf.append('>');
+            }
+            buf.append(" = ");
+            buf.append(type.str());
+            return buf.toString();
+        }
+    }
+
     class TypeOp extends BinOp {
         TypeNode type;
 
@@ -963,6 +986,8 @@ interface YetiParser {
             } else if (s == "load") {
                 res = new Load(readDotted(false,
                                 "Expected module name after 'load', not a "));
+            } else if (s == "type") {
+                res = readTypeDef();
             } else if (s == "try") {
                 res = readTry();
             } else if (s == "catch") {
@@ -1376,6 +1401,36 @@ interface YetiParser {
                 p = ++i;
             } while (i < src.length && src[i++] == '\'');
             return new Str(s);
+        }
+
+        String getTypename(Node node) {
+            if (!(node instanceof Sym)) {
+                throw new CompileException(node,
+                            "Expected typename, not a " + node);
+            }
+            return ((Sym) node).sym;
+        }
+
+        TypeDef readTypeDef() {
+            TypeDef def = new TypeDef();
+            def.name = getTypename(fetch());
+            List param = new ArrayList();
+            Node node = fetch();
+            if (node instanceof BinOp && ((BinOp) node).op == "<") {
+                do {
+                    param.add(getTypename(fetch()));
+                } while ((node = fetch()) instanceof SepOp &&
+                         ((SepOp) node).sep == ',');
+                if (!(node instanceof BinOp) || ((BinOp) node).op != ">")
+                    throw new CompileException(node,
+                                 "Expected '>', not a " + node);
+                node = fetch();
+            }
+            if (!(node instanceof BindOp))
+                throw new CompileException(node, "Expected '=', not a " + node);
+            def.param = (String[]) param.toArray(new String[param.size()]);
+            def.type = readType(true);
+            return def;
         }
 
         // ugly all-in-one bastard type expression parser
