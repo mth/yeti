@@ -796,7 +796,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static Type resolveTypeDef(Scope scope, String name, Type[] param,
-                               Node where) {
+                               int depth, Node where) {
         for (; scope != null; scope = scope.outer) {
             if (scope.typeDef != null && scope.name == name) {
                 if (scope.typeDef.length - 1 != param.length) {
@@ -806,7 +806,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
                             : (scope.typeDef.length - 1) + " parameters")
                         + ", not " + param.length);
                 }
-                Map vars = createFreeVars(scope.free, 1);
+                Map vars = createFreeVars(scope.free, depth);
                 for (int i = param.length; --i >= 0;)
                     vars.put(scope.typeDef[i], param[i]);
                 return copyType(scope.typeDef[param.length], vars,

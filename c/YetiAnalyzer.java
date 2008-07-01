@@ -308,7 +308,7 @@ public final class YetiAnalyzer extends YetiType {
             Type[] tp = new Type[node.param.length];
             for (int i = 0; i < tp.length; ++i)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
-            t = resolveTypeDef(scope, name, tp, node);
+            t = resolveTypeDef(scope, name, tp, depth, node);
         }
         while (--arrays >= 0) {
             t = new Type(JAVA_ARRAY, new Type[] { t });
