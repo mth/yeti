@@ -708,9 +708,14 @@ class JavaType {
             from = from.param[0].deref();
             smart = false;
         }
-        return to.type == YetiType.JAVA && from.type == YetiType.JAVA &&
-               to.javaType != from.javaType &&
-               isAssignable(where, to, from, smart) >= 0;
+        try {
+            return to.type == YetiType.JAVA && from.type == YetiType.JAVA &&
+                   to.javaType != from.javaType &&
+                   (smart ? isAssignable(where, to, from, true)
+                          : to.javaType.isAssignable(from.javaType)) >= 0;
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(where, ex);
+        }
     }
 
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
