@@ -124,6 +124,9 @@ withHandle h block =
     println v =
         System#out#println(v),
 
+    eprintln v =
+        System#err#println(v),
+
     sysExit exitCode =
         System#exit(exitCode),
 

@@ -58,9 +58,10 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             return; // better than thinking, that array was given...
                     // still FIXME for a case of different arrays
         }
-        if (argType.type == YetiType.JAVA_ARRAY ||
-            argType.type == YetiType.JAVA &&
-                argType.javaType.isCollection()) {
+        if (given.type != YetiType.JAVA &&
+            (argType.type == YetiType.JAVA_ARRAY ||
+             argType.type == YetiType.JAVA &&
+                argType.javaType.isCollection())) {
             Label retry = new Label(), end = new Label();
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AIter"); // i
             String tmpClass = descr != "Ljava/lang/Set;"
