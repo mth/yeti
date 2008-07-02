@@ -188,6 +188,9 @@ public final class YetiAnalyzer extends YetiType {
         Type[] tp = new Type[param.length];
         for (int i = 0; i < param.length; ++i) {
             tp[i] = nodeToType(param[i].param[0], free, scope, depth);
+            if (param[i].var) {
+                tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
+            }
             if (members.put(param[i].name, tp[i]) != null) {
                 throw new CompileException(param[i], "Duplicate field name "
                                     + param[i].name + " in structure type");
@@ -414,13 +417,14 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code apply(Node where, Code fun, Node arg, Scope scope, int depth) {
-        Code argCode = analyze(arg, scope, depth);
-        Type argt, funt, funarg; // try cast java types on apply
-        if ((argt = argCode.type.deref()).type == JAVA &&
-            (funt = fun.type.deref()).type == FUN &&
-            (funarg = funt.param[0].deref()).type == JAVA &&
-            argt.javaType != funarg.javaType &&
-            JavaType.isAssignable(where, funarg, argt, true) >= 0) {
+        // try cast java types on apply
+        Type funt = fun.type.deref(),
+             funarg = funt.type == FUN ? funt.param[0].deref() : null;
+        Code argCode = arg instanceof Lambda // prespecifing the lambda type
+                ? lambda(new Function(funarg), (Lambda) arg, scope, depth)
+                : analyze(arg, scope, depth);
+        if (funarg != null &&
+            JavaType.isSafeCast(where, funarg, argCode.type)) {
             argCode = new Cast(argCode, funarg, true, where.line);
         }
         Type[] applyFun = { argCode.type, new Type(depth) };

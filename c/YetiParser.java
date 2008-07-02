@@ -659,6 +659,7 @@ interface YetiParser {
     class TypeNode extends Node {
         String name;
         TypeNode[] param;
+        boolean var;
 
         TypeNode(String name, TypeNode[] param) {
             this.name = name;
@@ -768,7 +769,7 @@ interface YetiParser {
     class Parser {
         private static final char[] CHS =
            ("                                " + // 0x
-            " .'....x  .. ../xxxxxxxxxx. ...x" + // 2x
+            " .'.x..x  .. ../xxxxxxxxxx. ...x" + // 2x
             ".xxxxxxxxxxxxxxxxxxxxxxxxxx[ ].x" + // 4x
             "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
@@ -901,9 +902,10 @@ interface YetiParser {
                     return new BinOp("\\", 1, false).pos(line, col);
             }
             p = i;
-            while (i < src.length && (c = src[i]) <= '~' && (CHS[c] == '.' ||
-                   c == '/' && (i + 1 >= src.length ||
-                                (c = src[i + 1]) != '/' && c != '*'))) ++i;
+            while (i < src.length && (c = src[i]) <= '~' &&
+                   (CHS[c] == '.' || c == '$' ||
+                    c == '/' && (i + 1 >= src.length ||
+                                 (c = src[i + 1]) != '/' && c != '*'))) ++i;
             if (i != p) {
                 String s = new String(src, p, i - p).intern();
                 p = i;
@@ -1468,14 +1470,22 @@ interface YetiParser {
                 Node t, field = null;
                 ArrayList param = new ArrayList();
                 String expect = "Expecting field name or '}' here, not ";
-                while ((field = fetch()) instanceof Sym) {
+                for (;;) {
+                    boolean isVar = (field = fetch()) instanceof VarSym;
+                    if (isVar && !((field = fetch()) instanceof Sym))
+                        throw new CompileException(field,
+                            "Exepcting field name after var");
+                    if (!(field instanceof Sym))
+                        break;
                     if (!((t = fetch()) instanceof IsOp) ||
-                        ((BinOp) t).right != null) {
+                            ((BinOp) t).right != null) {
                         throw new CompileException(t,
                             "Expecting 'is' after field name");
                     }
-                    param.add(new TypeNode(((Sym) field).sym,
-                                new TypeNode[] { ((IsOp) t).type }));
+                    TypeNode f = new TypeNode(((Sym) field).sym,
+                                    new TypeNode[] { ((IsOp) t).type });
+                    f.var = isVar;
+                    param.add(f);
                     if (!((field = fetch()) instanceof SepOp) ||
                         ((SepOp) field).sep != ',') {
                         expect = "Expecting ',' or '}' here, not ";

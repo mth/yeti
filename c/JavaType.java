@@ -694,6 +694,23 @@ class JavaType {
         }
     }
 
+    static boolean isSafeCast(YetiParser.Node where,
+                              YetiType.Type to, YetiType.Type from) {
+        to = to.deref();
+        from = from.deref();
+        while (to.type == YetiType.MAP && from.type == YetiType.MAP &&
+               to.param[2].type == YetiType.LIST_MARKER &&
+               to.param[1].type != YetiType.NUM &&
+               from.param[2].type == YetiType.LIST_MARKER &&
+               from.param[1].type == YetiType.NONE) {
+            to = to.param[0].deref();
+            from = from.param[0].deref();
+        }
+        return to.type == YetiType.JAVA && from.type == YetiType.JAVA &&
+               to.javaType != from.javaType &&
+               isAssignable(where, to, from, true) >= 0;
+    }
+
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
                                  String name, YetiCode.Code[] args,
                                  YetiType.Type objType) {
