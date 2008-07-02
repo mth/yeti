@@ -698,6 +698,7 @@ class JavaType {
                               YetiType.Type to, YetiType.Type from) {
         to = to.deref();
         from = from.deref();
+        boolean smart = true;
         while (to.type == YetiType.MAP && from.type == YetiType.MAP &&
                to.param[2].type == YetiType.LIST_MARKER &&
                to.param[1].type != YetiType.NUM &&
@@ -705,10 +706,11 @@ class JavaType {
                from.param[1].type == YetiType.NONE) {
             to = to.param[0].deref();
             from = from.param[0].deref();
+            smart = false;
         }
         return to.type == YetiType.JAVA && from.type == YetiType.JAVA &&
                to.javaType != from.javaType &&
-               isAssignable(where, to, from, true) >= 0;
+               isAssignable(where, to, from, smart) >= 0;
     }
 
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,

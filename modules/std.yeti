@@ -28,7 +28,6 @@
  */
 module yeti.lang.std;
 
-import java.lang.String;
 import java.lang.IllegalArgumentException;
 import java.util.regex.Pattern;
 

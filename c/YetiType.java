@@ -188,7 +188,9 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
         bindImport("Object", "java/lang/Object",
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        bindImport("Integer", "java/lang/Integer",
+        bindImport("String", "java/lang/String",
+        null))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
