@@ -45,6 +45,17 @@ public final class YetiAnalyzer extends YetiType {
             new CompileException(bind, "Unused binding: " + bind.name));
     }
 
+    static Lambda shortLambda(BinOp op) {
+        return new Lambda(new Sym("_").pos(op.line, op.col), op.right, null);
+    }
+
+    static Lambda asLambda(Node node) {
+        BinOp op;
+        return node instanceof Lambda ? (Lambda) node
+                : node instanceof BinOp && (op = (BinOp) node).op == "\\"
+                ? shortLambda(op) : null;
+    }
+
     static Code analyze(Node node, Scope scope, int depth) {
         if (node instanceof Sym) {
             String sym = ((Sym) node).sym;
@@ -102,9 +113,8 @@ public final class YetiAnalyzer extends YetiType {
                 return assignOp(op, scope, depth);
             }
             if (opop == "\\") {
-                return lambda(new Function(null),
-                              new Lambda(new Sym("_").pos(op.line, op.col),
-                                         op.right, null), scope, depth);
+                return lambda(new Function(null), shortLambda(op),
+                              scope, depth);
             }
             if (opop == "is" || opop == "as" || opop == "unsafely_as") {
                 return isOp(op, ((TypeOp) op).type,
@@ -420,8 +430,9 @@ public final class YetiAnalyzer extends YetiType {
         // try cast java types on apply
         Type funt = fun.type.deref(),
              funarg = funt.type == FUN ? funt.param[0].deref() : null;
-        Code argCode = arg instanceof Lambda // prespecifing the lambda type
-                ? lambda(new Function(funarg), (Lambda) arg, scope, depth)
+        Lambda lambdaArg = asLambda(arg);
+        Code argCode = lambdaArg != null // prespecifing the lambda type
+                ? lambda(new Function(funarg), lambdaArg, scope, depth)
                 : analyze(arg, scope, depth);
         if (funarg != null &&
             JavaType.isSafeCast(where, funarg, argCode.type)) {
@@ -888,7 +899,14 @@ public final class YetiAnalyzer extends YetiType {
             lambda(f, (Lambda) lambda.expr, bodyScope, depth);
             wrapSeq(f, seq);
         } else {
-            to.setBody(wrapSeq(analyze(lambda.expr, bodyScope, depth), seq));
+            Code body = analyze(lambda.expr, bodyScope, depth);
+            Type res; // try casting to expected type
+            if (expected != null && expected.type == FUN &&
+                JavaType.isSafeCast(lambda, res = expected.param[1].deref(),
+                                    body.type)) {
+                body = new Cast(body, res, true, lambda.expr.line);
+            }
+            to.setBody(wrapSeq(body, seq));
         }
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
