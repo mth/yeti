@@ -87,7 +87,7 @@ interface YetiCode {
         private Map compiled = new HashMap();
         private List warnings = new ArrayList();
         private String currentSrc;
-        final boolean isGCJ;
+        boolean isGCJ;
         ClassFinder classPath;
         Map classes = new HashMap();
         Map types = new HashMap();
@@ -101,6 +101,7 @@ interface YetiCode {
             this.classPath = finder;
             // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
             isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
+//            isGCJ = true;
         }
 
         static CompileCtx current() {

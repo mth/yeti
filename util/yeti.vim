@@ -42,7 +42,7 @@ syn keyword yetiFunc drop sort sortBy same? revAppend asList pop swapAt
 syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
 syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
 syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
-syn keyword yetiFunc delete keys matchAll asString apply
+syn keyword yetiFunc delete keys matchAll asString apply clearHash
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/

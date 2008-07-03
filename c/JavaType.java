@@ -579,7 +579,7 @@ class JavaType {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
             return from.type == YetiType.VAR ? 1 :
-                   from.type == YetiType.NUM ? 2 : 10;
+                   from.type == YetiType.NUM ? 5 : 10;
         }
         switch (from.type) {
         case YetiType.STR:

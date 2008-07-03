@@ -327,6 +327,9 @@ plus a b = a + b;
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
+    clearHash h is hash<'a, 'b> -> () =
+        (h unsafely_as ~Hash)#clear(),
+
     length l is map<'a, 'b> -> number =
         if nullptr? l then
             0
