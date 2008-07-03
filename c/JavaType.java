@@ -578,8 +578,7 @@ class JavaType {
             throws JavaClassNotFoundException, YetiType.TypeException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
-            return from.type == YetiType.VAR ? 1 :
-                   from.type == YetiType.NUM ? 5 : 10;
+            return from.type == YetiType.VAR ? 1 : 10;
         }
         switch (from.type) {
         case YetiType.STR:
