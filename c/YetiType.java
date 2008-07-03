@@ -184,13 +184,14 @@ public class YetiType implements YetiParser, YetiBuiltins {
                   fun2Arg(STR_TYPE, fun(STRING_ARRAY, A),
                   fun2Arg(fun(STR_TYPE, A), STR_TYPE, A_LIST_TYPE)), 
         bindImport("EmptyArray", "yeti/lang/EmptyArrayException",
+        bindImport("Failure", "yeti/lang/FailureException",
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("Math", "java/lang/Math",
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);

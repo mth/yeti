@@ -141,6 +141,7 @@ plus a b = a + b;
 
     flip f x y =
         f y x,
+
     number x =
         Core#parseNum(x is string),
     min a b =
@@ -320,6 +321,9 @@ plus a b = a + b;
             new MList((h unsafely_as ~Hash)#keySet()#toArray())
                 unsafely_as list<''>
         fi,
+
+    failWith message =
+        throw new FailureException(message),
 
     delete h k is hash<'a, ''> -> 'a -> () =
         _ = (h unsafely_as ~Hash)#remove(k),
