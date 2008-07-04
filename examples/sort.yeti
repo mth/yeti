@@ -99,25 +99,31 @@ qsort2 less =
         _: [];
         esac);
 
+merge less l a b =
+    if empty? a then
+        revAppend l b
+    elif empty? b then
+        revAppend l a
+    elif less (head a) (head b) then
+        merge less (head a :: l) (tail a) b
+    else
+        merge less (head b :: l) a (tail b)
+    fi;
+
+splitList l fst snd =
+    case l of
+        h1 :: h2 :: t: splitList t (h1 :: fst) (h2 :: snd);
+        h :: _: { fst, snd = h :: snd };
+        _: { fst, snd };
+    esac;
+
 mergeSort less l =
-   (merge l a b =
-        if empty? a then
-            revAppend l b
-        elif empty? b then
-            revAppend l a
-        elif less (head a) (head b) then
-            merge (head a :: l) (tail a) b
-        else
-            merge (head b :: l) a (tail b)
-        fi;
-    sort list len =
-        if len <= 1 then
-            list
-        else
-            left = len div 2;
-            {fst, snd} = splitAt left list;
-            merge [] (sort fst left) (sort snd (len - left))
-        fi) l (length l);
+    if empty? l or empty? (tail l) then
+        l
+    else
+        {fst, snd} = splitList l [] [];
+        merge less [] (mergeSort less fst) (mergeSort less snd)
+    fi;
 
 insertionSort less l =
     fold do l e:
@@ -135,33 +141,40 @@ insertionSort2 less a =
         a.[j + 1] := v
     done;
 
-l = map \(randomInt 3200) [1..1600];
-sorted = sort l;
 
-testSort name f =
-   (var n = 0; // number of comparisions
-    less x y = (n := n + 1; x < y);
-    t' = System#currentTimeMillis();
-    r = f less l;
-    _ = length r; // force lists so n would have correct value
-    t = System#currentTimeMillis() - t';
-    if sorted != r then
-        println "\(name): ERROR\n\(r) != \(sorted)"
-    else
-        println "\(name):\(n)\t\(t)ms"
-    fi);
+test n slow =
+   (l = map \(randomInt (n * 2)) [1..n];
+    sorted = sort l;
 
-testASort name f = testSort name (asort f);
+    testSort name f =
+       (var n = 0; // number of comparisions
+        less x y = (n := n + 1; x < y);
+        t' = System#currentTimeMillis();
+        r = f less l;
+        _ = length r; // force lists so n would have correct value
+        t = System#currentTimeMillis() - t';
+        if sorted != r then
+            println "\(name): ERROR\n\(r) != \(sorted)"
+        else
+            println "\(name):\(n)\t\(t)ms"
+        fi);
 
-println "sorting array of \(length l) elements...";
-testASort "selection" selectionSort;
-testSort "insertion" insertionSort;
-testASort "insertion2" insertionSort2;
-testASort "comb" combSort;
-testASort "shell" shellSort;
-testASort "heap" heapSort;
-testASort "qsort" qsort;
-testSort "qsort2" qsort2;
-testSort "merge" mergeSort;
-testSort "sortBy" sortBy;
+    testASort name f = testSort name (asort f);
+
+    println "sorting array of \(length l) elements...";
+    if slow then
+        testASort "selection" selectionSort;
+        testSort "insertion" insertionSort;
+        testASort "insertion2" insertionSort2;
+        testSort "qsort2" qsort2;
+    fi;
+    testASort "comb" combSort;
+    testASort "shell" shellSort;
+    testASort "heap" heapSort;
+    testASort "qsort" qsort;
+    testSort "merge" mergeSort;
+    testSort "sortBy" sortBy);
+
+test 1600 true;
+test 20000 false;
 
