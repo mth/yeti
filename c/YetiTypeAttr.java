@@ -280,7 +280,7 @@ class YetiTypeAttr extends Attribute {
             while (in[p] != END) {
                 String name = cr.readUTF8(p, buf);
                 p += 2;
-                result.put(name, readArray());
+                result.put(name.intern(), readArray());
             }
             ++p;
             return result;
