@@ -39,7 +39,7 @@ execClass writer =
             f ()
         else
             c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
-             #invoke((), [argv as ~java.lang.String[]])
+             #invoke((), [argv as ~java.lang.String[]] as ~java.lang.String[][])
         fi
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();
