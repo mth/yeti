@@ -277,11 +277,14 @@ interface YetiParser {
     }
 
     class Seq extends Node {
-        boolean isEvalSeq;
-        Node[] st;
+        static final Object EVAL = new Object();
 
-        Seq(Node[] st) {
+        Node[] st;
+        Object kind;
+
+        Seq(Node[] st, Object kind) {
             this.st = st;
+            this.kind = kind;
         }
 
         String str() {
@@ -881,7 +884,7 @@ interface YetiParser {
                 case ',':
                     return new SepOp(',').pos(line, col);
                 case '(':
-                    return readSeq(')');
+                    return readSeq(')', null);
                 case '[':
                     if (i + 2 < src.length && src[i + 1] == ':' &&
                         src[i + 2] == ']') {
@@ -1150,10 +1153,10 @@ interface YetiParser {
             List branches = new ArrayList();
             do {
                 Node cond = readExpr("then");
-                branches.add(new Node[] { readSeq(' '), cond });
+                branches.add(new Node[] { readSeq(' ', null), cond });
             } while (eofWas instanceof Elif);
             branches.add(new Node[] {
-                eofWas instanceof Else ? readSeq(' ')
+                eofWas instanceof Else ? readSeq(' ', null)
                     : new UnitLiteral().pos(eofWas.line, eofWas.col) });
             if (!(eofWas instanceof Fi)) {
                 throw new CompileException(eofWas,
@@ -1176,7 +1179,7 @@ interface YetiParser {
         private Node readTry() {
             List catches = new ArrayList();
             Try t = new Try();
-            t.block = readSeq(' ');
+            t.block = readSeq(' ', null);
             while (!(eofWas instanceof Finally)) {
                 if (!(eofWas instanceof Catch)) {
                     throw new CompileException(eofWas,
@@ -1196,11 +1199,11 @@ interface YetiParser {
                         (c.bind == null ? " or identifier" : "") +
                         ", but found " + n);
                 }
-                c.handler = readSeq(' ');
+                c.handler = readSeq(' ', null);
             }
             t.catches = (Catch[]) catches.toArray(new Catch[catches.size()]);
             if (!(eofWas instanceof Yrt)) {
-                t.cleanup = readSeq(' ');
+                t.cleanup = readSeq(' ', null);
                 if (!(eofWas instanceof Yrt)) {
                     throw new CompileException(eofWas,
                         "Expected yrt, found " + eofWas);
@@ -1219,7 +1222,7 @@ interface YetiParser {
                     throw new CompileException(arg, "Unexpected " + arg);
                 }
                 if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
-                    Node expr = readSeq(' ');
+                    Node expr = readSeq(' ', null);
                     if (!(eofWas instanceof Done)) {
                         throw new CompileException(eofWas,
                                     "Expected done, found " + eofWas);
@@ -1271,7 +1274,7 @@ interface YetiParser {
                 if (sym instanceof BindOp) {
                     args = l;
                     if (end == '}') {
-                        l = Collections.singletonList(readSeq(' '));
+                        l = Collections.singletonList(readSeq(' ', null));
                         if ((sym = eofWas) instanceof Eof)
                             break;
                     } else {
@@ -1308,7 +1311,7 @@ interface YetiParser {
             return (Node[]) res.toArray(new Node[res.size()]);
         }
 
-        private Node readSeq(char end) {
+        private Node readSeq(char end, Object kind) {
             Node[] list = readMany(';', end);
             if (list.length == 1) {
                 return list[0];
@@ -1321,7 +1324,7 @@ interface YetiParser {
                            (bo = (BinOp) w).left != null;) {
                 w = bo.left;
             }
-            return new Seq(list).pos(w.line, w.col);
+            return new Seq(list, kind).pos(w.line, w.col);
         }
 
         private Node readStr() {
@@ -1361,7 +1364,7 @@ interface YetiParser {
                             if (res.length() != 0) {
                                 parts.add(new Str(res.toString()));
                             }
-                            parts.add(readSeq(')'));
+                            parts.add(readSeq(')', null));
                             res.setLength(0);
                             st = --p;
                             break;
@@ -1573,7 +1576,7 @@ interface YetiParser {
                             .pos(sline, scol);
         }
 
-        Node parse() {
+        Node parse(Object topLevel) {
             int i = p = skipSpace();
             while (i < src.length && src[i] < '~' && CHS[src[i]] == 'x')
                 ++i;
@@ -1590,14 +1593,14 @@ interface YetiParser {
                 Node[] list = readMany(';', ' ');
                 res = list.length == 1 ? list[0]
                     : list.length == 0 ? (Node) new UnitLiteral()
-                    : new Seq(list);
+                    : new Seq(list, null);
                 if (res instanceof Bind || res instanceof StructBind) {
-                    res = new Seq(list);
+                    res = new Seq(list, null);
                 }
                 if (res instanceof Seq && (list.length > 1 || first != '(' ||
                                            list[0] instanceof Bind)) {
                     Seq seq = (Seq) res;
-                    seq.isEvalSeq = true;
+                    seq.kind = Seq.EVAL;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
                         seq.st[seq.st.length - 1] instanceof StructBind) {
                         Node[] tmp = new Node[seq.st.length + 1];
@@ -1608,7 +1611,7 @@ interface YetiParser {
                     }
                 }
             } else {
-                res = readSeq(' ');
+                res = readSeq(' ', topLevel);
             }
             if (eofWas != EOF) {
                 throw new CompileException(eofWas, "Unexpected " + eofWas);

@@ -38,6 +38,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public final class YetiAnalyzer extends YetiType {
+    static class TopLevel {
+        Map typeDefs = new HashMap();
+    }
+
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
     static void unusedBinding(Bind bind) {
@@ -761,9 +765,10 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static Scope bindTypeDef(TypeDef typeDef, Scope scope) {
+    static Scope bindTypeDef(TypeDef typeDef, Object seqKind, Scope scope) {
         Scope defScope = scope;
         Type[] def = new Type[typeDef.param.length + 1];
+
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
             Type arg = new Type(-1);
@@ -777,6 +782,9 @@ public final class YetiAnalyzer extends YetiType {
         def[def.length - 1] = type;
         scope = bindPoly(typeDef.name, type, null, 0, scope);
         scope.typeDef = def;
+        if (seqKind instanceof TopLevel) {
+            ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
+        }
         return scope;
     }
 
@@ -797,7 +805,8 @@ public final class YetiAnalyzer extends YetiType {
                         isOp(bind, bind.type, binder.st, scope, depth);
                     }
                 }
-                scope = genericBind(bind, binder, seq.isEvalSeq, scope, depth);
+                scope = genericBind(bind, binder, seq.kind == Seq.EVAL,
+                                    scope, depth);
                 bindings[i] = binder;
                 addSeq(last, binder);
             } else if (nodes[i] instanceof StructBind) {
@@ -805,12 +814,20 @@ public final class YetiAnalyzer extends YetiType {
                 Code expr = analyze(sbind.expr, scope, depth + 1);
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
-                scope = bindStruct(binder, sbind.bindings, seq.isEvalSeq,
+                scope = bindStruct(binder, sbind.bindings, seq.kind == Seq.EVAL,
                                    scope, depth, last);
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 addSeq(last, new SeqExpr(m));
+                Iterator j = m.moduleType.typeDefs.entrySet().iterator();
+                while (j.hasNext()) {
+                    Map.Entry e = (Map.Entry) j.next();
+                    Type[] typeDef = (Type[]) e.getValue();
+                    scope = bindPoly((String) e.getKey(),
+                                typeDef[typeDef.length - 1], null, 0, scope);
+                    scope.typeDef = typeDef;
+                }
             } else if (nodes[i] instanceof Import) {
                 if ((YetiCode.CompileCtx.current().flags
                         & YetiC.CF_NO_IMPORT) != 0)
@@ -821,7 +838,7 @@ public final class YetiAnalyzer extends YetiType {
                               : name.substring(lastSlash + 1)).intern(), null);
                 scope.importClass = new Type("L" + name + ';');
             } else if (nodes[i] instanceof TypeDef) {
-                scope = bindTypeDef((TypeDef) nodes[i], scope);
+                scope = bindTypeDef((TypeDef) nodes[i], seq.kind, scope);
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {
@@ -836,7 +853,8 @@ public final class YetiAnalyzer extends YetiType {
         }
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
         for (int i = bindings.length; --i >= 0;) {
-            if (bindings[i] != null && !bindings[i].used && !seq.isEvalSeq) {
+            if (bindings[i] != null && !bindings[i].used &&
+                seq.kind != Seq.EVAL) {
                 unusedBinding((Bind) nodes[i]);
             }
         }
@@ -1362,11 +1380,12 @@ public final class YetiAnalyzer extends YetiType {
     public static RootClosure toCode(String sourceName, String className,
                                      char[] src, int flags, Map classes,
                                      String[] preload) {
+        TopLevel topLevel = new TopLevel();
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
             Parser parser = new Parser(sourceName, src, flags);
-            Node n = parser.parse();
+            Node n = parser.parse(topLevel);
             if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.show());
             }
@@ -1402,6 +1421,7 @@ public final class YetiAnalyzer extends YetiType {
             root.type = root.code.type;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
+            root.typeDefs = topLevel.typeDefs;
             if ((flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type, -1);

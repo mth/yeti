@@ -118,12 +118,12 @@ splitList l fst snd =
     esac;
 
 mergeSort less l =
-    if empty? l or empty? (tail l) then
-        l
-    else
-        {fst, snd} = splitList l [] [];
-        merge less [] (mergeSort less fst) (mergeSort less snd)
-    fi;
+    case l of
+    _::_::_:
+       ({fst, snd} = splitList l [] [];
+        merge less [] (mergeSort less fst) (mergeSort less snd));
+    _: l
+    esac;
 
 insertionSort less l =
     fold do l e:

@@ -190,7 +190,8 @@ interface YetiCode {
                         (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
             constants.ctx = ctx;
             if (module) {
-                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type));
+                ctx.cw.visitAttribute(
+                    new YetiTypeAttr(codeTree.type, codeTree.typeDefs));
                 ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                                   "Ljava/lang/Object;", null, null).visitEnd();
                 ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
@@ -214,7 +215,8 @@ interface YetiCode {
                 ctx.intConst(1);
                 ctx.m.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.m.visitInsn(ARETURN);
-                types.put(name, codeTree.type);
+                types.put(name, new ModuleType(codeTree.type,
+                                               codeTree.typeDefs));
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
@@ -1325,6 +1327,7 @@ interface YetiCode {
         String[] preload;
         String moduleName;
         boolean isModule;
+        Map typeDefs;
 
         public BindRef refProxy(BindRef code) {
             return code;
@@ -1813,10 +1816,12 @@ interface YetiCode {
 
     class LoadModule extends Code {
         String moduleName;
+        ModuleType moduleType;
 
-        LoadModule(String moduleName, YetiType.Type type) {
-            this.type = type;
+        LoadModule(String moduleName, ModuleType type) {
+            this.type = type.type;
             this.moduleName = moduleName;
+            moduleType = type;
             polymorph = true;
         }
 
