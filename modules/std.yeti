@@ -325,8 +325,8 @@ plus a b = a + b;
     failWith message =
         throw new FailureException(message),
 
-    delete h k is hash<'a, ''> -> 'a -> () =
-        _ = (h unsafely_as ~Hash)#remove(k),
+    delete h k is map<'a, ''> -> 'a -> () =
+        _ = (h unsafely_as ~ByKey)#remove(k),
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),

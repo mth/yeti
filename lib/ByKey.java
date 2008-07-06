@@ -41,4 +41,9 @@ public interface ByKey {
      * Put object by key.
      */
     Object put(Object key, Object value);
+
+    /**
+     * Remove object by key.
+     */
+    Object remove(Object key);
 }

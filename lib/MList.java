@@ -355,6 +355,20 @@ public class MList extends AMList implements ByKey {
         return null;
     }
 
+    public Object remove(Object index) {
+        int i, n;
+        if ((i = ((Number) index).intValue()) < 0) {
+            throw new NoSuchKeyException(i, size);
+        }
+        if ((i += start) >= size) {
+            throw new NoSuchKeyException(i - start, size);
+        }
+        if ((n = --size - i) > 0) {
+            System.arraycopy(array, i + 1, array, i, n);
+        }
+        return null;
+    }
+
     public AList find(Fun pred) {
         for (int cnt = size, i = start; i < cnt; ++i) {
             if (pred.apply(array[i]) == Boolean.TRUE) {
