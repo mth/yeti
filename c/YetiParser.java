@@ -1313,7 +1313,7 @@ interface YetiParser {
 
         private Node readSeq(char end, Object kind) {
             Node[] list = readMany(';', end);
-            if (list.length == 1) {
+            if (list.length == 1 && kind != Seq.EVAL) {
                 return list[0];
             }
             if (list.length == 0) {
@@ -1590,17 +1590,9 @@ interface YetiParser {
             char first = p < src.length ? src[p] : ' ';
             Node res;
             if ((flags & YetiC.CF_EVAL_BIND) != 0) {
-                Node[] list = readMany(';', ' ');
-                res = list.length == 1 ? list[0]
-                    : list.length == 0 ? (Node) new UnitLiteral()
-                    : new Seq(list, null);
-                if (res instanceof Bind || res instanceof StructBind) {
-                    res = new Seq(list, null);
-                }
-                if (res instanceof Seq && (list.length > 1 || first != '(' ||
-                                           list[0] instanceof Bind)) {
+                res = readSeq(' ', Seq.EVAL);
+                if (res instanceof Seq) {
                     Seq seq = (Seq) res;
-                    seq.kind = Seq.EVAL;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
                         seq.st[seq.st.length - 1] instanceof StructBind) {
                         Node[] tmp = new Node[seq.st.length + 1];
@@ -1608,6 +1600,8 @@ interface YetiParser {
                         tmp[tmp.length - 1] =
                             new UnitLiteral().pos(seq.line, seq.col);
                         seq.st = tmp;
+                    } else if (seq.st.length == 1) {
+                        res = seq.st[0];
                     }
                 }
             } else {
