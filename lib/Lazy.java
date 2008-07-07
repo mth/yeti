@@ -2,7 +2,7 @@ package yeti.lang;
 
 class Lazy extends Fun {
     private Object value;
-    private boolean undef;
+    private boolean forced;
     private Fun f;
 
     Lazy(Fun f) {
@@ -10,9 +10,9 @@ class Lazy extends Fun {
     }
 
     public Object apply(Object _) {
-        if (undef) {
+        if (!forced) {
             value = ((Fun) f).apply(null);
-            undef = false;
+            forced = true;
         }
         return value;
     }
