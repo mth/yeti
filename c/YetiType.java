@@ -205,7 +205,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
     }
 
     static Scope bindArith(String op, String method, Scope scope) {
-        return bindScope(op, new ArithOpFun(op, method, NUMOP_TYPE), scope);
+        return bindScope(op, new ArithOp(op, method, NUMOP_TYPE), scope);
     }
 
     static Scope bindCore(String name, Type type, String field, Scope scope) {

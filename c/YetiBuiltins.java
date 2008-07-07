@@ -109,25 +109,24 @@ interface YetiBuiltins extends CaseCode {
                         { type = res; }
 
                         void gen(Ctx ctx) {
-                            ctx.visitLine(line);
-                            IsNullPtr.this.gen(ctx, arg);
+                            IsNullPtr.this.gen(ctx, arg, line);
                         }
 
                         void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                            IsNullPtr.this.genIf(ctx, arg, to, ifTrue);
+                            IsNullPtr.this.genIf(ctx, arg, to, ifTrue, line);
                         }
                     };
                 }
             };
         }
 
-        void gen(Ctx ctx, Code arg) {
+        void gen(Ctx ctx, Code arg, int line) {
             Label label = new Label();
-            genIf(ctx, arg, label, false);
+            genIf(ctx, arg, label, false, line);
             ctx.genBoolean(label);
         }
 
-        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
             arg.gen(ctx);
             ctx.m.visitJumpInsn(ifTrue ? IFNULL : IFNONNULL, to);
         }
@@ -138,7 +137,7 @@ interface YetiBuiltins extends CaseCode {
             super(YetiType.A_TO_BOOL, "defined?");
         }
 
-        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
             Label isNull = new Label(), end = new Label();
             arg.gen(ctx);
             ctx.m.visitInsn(DUP);
@@ -161,9 +160,10 @@ interface YetiBuiltins extends CaseCode {
             super(YetiType.MAP_TO_BOOL, "empty$q");
         }
 
-        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue) {
+        void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
             Label isNull = new Label(), end = new Label();
             arg.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitInsn(DUP);
             ctx.m.visitJumpInsn(IFNULL, isNull);
             if (ctx.compilation.isGCJ)
@@ -186,8 +186,9 @@ interface YetiBuiltins extends CaseCode {
             super(YetiType.LIST_TO_A, "head");
         }
 
-        void gen(Ctx ctx, Code arg) {
+        void gen(Ctx ctx, Code arg, int line) {
             arg.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "first", "()Ljava/lang/Object;");
@@ -199,8 +200,9 @@ interface YetiBuiltins extends CaseCode {
             super(YetiType.LIST_TO_LIST, "tail");
         }
 
-        void gen(Ctx ctx, Code arg) {
+        void gen(Ctx ctx, Code arg, int line) {
             arg.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitInsn(DUP);
             Label end = new Label();
             ctx.m.visitJumpInsn(IFNULL, end);
@@ -232,6 +234,7 @@ interface YetiBuiltins extends CaseCode {
 
                 void gen(Ctx ctx) {
                     arg1.gen(ctx);
+                    ctx.visitLine(line);
                     ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
                     ctx.m.visitLdcInsn(new Long(0));
                     ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
@@ -400,20 +403,22 @@ interface YetiBuiltins extends CaseCode {
 
         abstract void binGen(Ctx ctx, Code arg1, Code arg2);
 
-        void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                Label to, boolean ifTrue) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
             throw new UnsupportedOperationException("binGenIf");
         }
     }
 
-    class ArithOpFun extends BinOpRef implements Binder {
-        String method;
+    class ArithOpFun extends BinOpRef {
+        private String method;
+        private int line;
 
-        public ArithOpFun(String op, String method, YetiType.Type type) {
+        public ArithOpFun(String fun, String method, YetiType.Type type,
+                          Binder binder, int line) {
             this.type = type;
             this.method = method;
-            binder = this;
-            coreFun = mangle(op);
+            coreFun = fun;
+            this.binder = binder;
+            this.line = line;
         }
 
         public BindRef getRef(int line) {
@@ -422,11 +427,13 @@ interface YetiBuiltins extends CaseCode {
 
         void binGen(Ctx ctx, Code arg1, Code arg2) {
             arg1.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
             boolean ii = method == "intDiv" || method == "rem" ||
                          method == "shl" || method == "shr";
             if (arg2 instanceof NumericConstant &&
                 ((NumericConstant) arg2).genInt(ctx, ii)) {
+                ctx.visitLine(line);
                 if (method == "shr") {
                     method = "shl";
                     ctx.m.visitInsn(INEG);
@@ -436,6 +443,7 @@ interface YetiBuiltins extends CaseCode {
                 return;
             }
             arg2.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
             if (method == "shl" || method == "shr") {
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
@@ -449,6 +457,22 @@ interface YetiBuiltins extends CaseCode {
             }
             ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                     method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
+        }
+    }
+
+    class ArithOp implements Binder {
+        private String fun;
+        private String method;
+        private YetiType.Type type;
+
+        ArithOp(String op, String method, YetiType.Type type) {
+            fun = Code.mangle(op);
+            this.method = method;
+            this.type = type;
+        }
+
+        public BindRef getRef(int line) {
+            return new ArithOpFun(fun, method, type, this, line);
         }
     }
 
@@ -466,8 +490,7 @@ interface YetiBuiltins extends CaseCode {
         int op;
         int line;
 
-        void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                Label to, boolean ifTrue) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
             YetiType.Type t = arg1.type.deref();
             int op = this.op;
             boolean eq = (op & (COND_LT | COND_GT)) == 0;
@@ -504,6 +527,7 @@ interface YetiBuiltins extends CaseCode {
                 ctx.m.visitInsn(SWAP); // 1-2
             } else {
                 arg1.gen(ctx);
+                ctx.visitLine(line);
                 if (arg2.isIntNum()) {
                     ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
                     ((NumericConstant) arg2).genInt(ctx, false);
@@ -581,9 +605,9 @@ interface YetiBuiltins extends CaseCode {
     class InOpFun extends BoolBinOp {
         int line;
 
-        void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                Label to, boolean ifTrue) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
             arg2.gen(ctx);
+            ctx.visitLine(line);
             ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Hash");
             arg1.gen(ctx);
             ctx.visitLine(line);
@@ -658,8 +682,7 @@ interface YetiBuiltins extends CaseCode {
             }
         }
 
-        void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                      Label to, boolean ifTrue) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
             if (orOp == ifTrue) {
                 arg1.genIf(ctx, to, orOp);
                 arg2.genIf(ctx, to, orOp);
@@ -766,8 +789,7 @@ interface YetiBuiltins extends CaseCode {
             };
         }
 
-        void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                Label to, boolean ifTrue) {
+        void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
             binGen(ctx, arg1, arg2);
             ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     "TRUE", "Ljava/lang/Boolean;");
@@ -914,11 +936,13 @@ interface YetiBuiltins extends CaseCode {
                     return;
                 }
                 ((StrApply) argv.get(argv.size() - 1)).arg.gen(ctx);
+                ctx.visitLine(line);
                 ctx.m.visitTypeInsn(CHECKCAST, "java/lang/String");
                 for (int i = 0, last = argv.size() - 2; i <= last; ++i) {
                     StrApply a = (StrApply) argv.get(last - i);
                     JavaExpr.convertedArg(ctx, a.arg, argTypes[i], a.line);
                 }
+                ctx.visitLine(line);
                 ctx.m.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
                                       method, sig);
                 JavaExpr.convertValue(ctx, argTypes[argTypes.length - 1]);
