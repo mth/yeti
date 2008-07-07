@@ -142,6 +142,9 @@ plus a b = a + b;
     flip f x y =
         f y x,
 
+    lazy f is (() -> 'a) -> (() -> 'a) =
+        new Lazy(f) unsafely_as (() -> ''),
+
     number x =
         Core#parseNum(x is string),
     min a b =
