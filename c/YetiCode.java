@@ -144,7 +144,12 @@ interface YetiCode {
                 return className;
             }
             String[] srcName = { sourceName };
-            char[] src = reader.getSource(srcName);
+            char[] src;
+            try {
+                src = reader.getSource(srcName);
+            } catch (IOException ex) {
+                throw new CompileException(null, ex.getMessage());
+            }
             int dot = srcName[0].lastIndexOf('.');
             className = dot < 0 ? srcName[0] : srcName[0].substring(0, dot);
             dot = className.lastIndexOf('.');
