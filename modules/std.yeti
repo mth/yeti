@@ -280,6 +280,8 @@ plus a b = a + b;
     norec matchAll re = matchAll re,
     norec like re = like re,
 
+    strChar s pos = strSlice s pos (pos + 1),
+
     strLeft s end = strSlice s 0 end,
 
     strLeftOf subString s is string -> string -> string =

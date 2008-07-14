@@ -404,6 +404,7 @@ public class MList extends AMList implements ByKey {
             return null;
         Object[] tmp = new Object[size - start];
         System.arraycopy(array, start, tmp, 0, tmp.length);
+        Arrays.sort(tmp);
         return new MList(tmp);
     }
 
