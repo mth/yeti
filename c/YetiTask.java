@@ -42,6 +42,7 @@ public class YetiTask extends MatchingTask {
     private String[] preload = YetiC.PRELOAD;
     private String target;
     private Path classPath;
+    private boolean gcj;
 
     public void setSrcDir(String dir) {
         this.dir = new java.io.File(dir);
@@ -66,6 +67,10 @@ public class YetiTask extends MatchingTask {
         return classPath;
     }
 
+    public void setICast(boolean icast) {
+        gcj = icast;
+    }
+
     public void execute() {
         if (dir == null) {
             dir = getProject().getBaseDir();
@@ -80,6 +85,7 @@ public class YetiTask extends MatchingTask {
         YetiCode.CompileCtx compilation =
             new YetiCode.CompileCtx(new YetiC(dir.getPath()), writer, preload,
                                     new ClassFinder(classPath));
+        compilation.setGCJ(gcj);
         log("Compiling " + files.length + " files.");
         try {
             for (int i = 0; i < files.length; ++i) {

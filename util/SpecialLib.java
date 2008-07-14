@@ -41,7 +41,7 @@ class LListAdapter extends ClassAdapter implements Opcodes {
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
         return "length".equals(name) || "forEach".equals(name) ||
-               "fold".equals(name) ? null
+               "fold".equals(name) || "map".equals(name) ? null
                 : cv.visitMethod(access, name, desc, signature, exceptions);
     }
 
@@ -117,6 +117,40 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitInsn(ARETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
+
+        mv = cv.visitMethod(ACC_PUBLIC, "map",
+                            "(Lyeti/lang/Fun;)Lyeti/lang/AList;", null, null);
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(DUP);
+        mv.visitJumpInsn(IFNULL, end = new Label());
+        mv.visitTypeInsn(NEW, "yeti/lang/MList");
+        mv.visitInsn(DUP);
+        mv.visitMethodInsn(INVOKESPECIAL, "yeti/lang/MList",
+                           "<init>", "()V");
+        mv.visitVarInsn(ASTORE, 0);
+        mv.visitLabel(retry = new Label());
+        mv.visitInsn(DUP2); // fun iter fun iter
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "first", "()Ljava/lang/Object;"); // i -> v
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", // f v -> v'
+                           "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(SWAP);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/MList",
+                           "add", "(Ljava/lang/Object;)V"); // l v' -> ()
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                           "next", "()Lyeti/lang/AIter;"); // i -> i'
+        mv.visitInsn(DUP);
+        mv.visitJumpInsn(IFNONNULL, retry);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(ARETURN);
+        mv.visitLabel(end);
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        
         cv.visitEnd();
     }
 }

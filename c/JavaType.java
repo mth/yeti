@@ -746,6 +746,10 @@ class JavaType {
                     mAss += ass + 1;
                 }
             }
+            if (m.returnType.javaType != null &&
+                (m.returnType.javaType.resolve(n).access &
+                    Opcodes.ACC_PUBLIC) == 0)
+                mAss += 10;
             if (mAss == 0) {
                 res = index;
                 break;

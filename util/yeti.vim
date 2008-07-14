@@ -48,6 +48,7 @@ syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/
 syn match yetiConst /\u\(\w\|'\)*\>/
+syn match yetiExternal "^#!/[/a-yz]\+/yeti$"
 
 "syn keyword yetiErr done esac of
 

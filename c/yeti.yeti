@@ -15,13 +15,14 @@ var mainClass = "code";
 var classPath = "";
 var flags = 0;
 var sandbox = false;
+var gcj = false;
 
 srcs = array [];
 argv = array _argv;
 
 compilationOf writer =
     new YetiCode$CompileCtx(new YetiC(()), writer, preload,
-                            new ClassFinder(classPath));
+                            new ClassFinder(classPath))#setGCJ(gcj);
 
 printMessage ex is ~Exception -> () =
     println ex#getMessage();
@@ -132,6 +133,7 @@ options = [
         sysExit 13;
     done),
     "-safe-eval": \(sandbox := true; eval := true; src := shift argv),
+    "-icast": \(gcj := true),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop

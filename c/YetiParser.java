@@ -1577,6 +1577,8 @@ interface YetiParser {
         }
 
         Node parse(Object topLevel) {
+            if (src.length > 2 && src[0] == '#' && src[1] == '!')
+                for (p = 2; p < src.length && src[p] != '\n'; ++p);
             int i = p = skipSpace();
             while (i < src.length && src[i] < '~' && CHS[src[i]] == 'x')
                 ++i;

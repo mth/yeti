@@ -117,17 +117,16 @@ Class definition
 class Foo(int x) extends Iterator {
     var n = x,
 
-    next () =
+    Object next()
         n := n + 1;
         "\(n)",
 
-    hasNext () =
+    boolean hasNext()
         n < 10,
 
-    remove () =
+    void remove()
         (),
 
-    setValue v =
+    void setValue(int v)
         n := v
 }
-

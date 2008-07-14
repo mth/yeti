@@ -232,6 +232,37 @@ public final class ListRange extends AList {
         return l;
     }
 
+    public AList map(Fun f) {
+        MList l;
+        if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
+                       last.rCompare(Integer.MAX_VALUE) > 0) {
+            int i = first.intValue(), e = last.intValue();
+            if (i > e)
+                return rest.map(f);
+            l = new MList();
+            l.reserve(e - i + 1);
+            while (i <= e) {
+                l.add(f.apply(new IntNum(i++)));
+            }
+        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+                   last.rCompare(Integer.MIN_VALUE) < 0) {
+            int i = first.intValue(), e = last.intValue();
+            if (i < e)
+                return rest.map(f);
+            l = new MList();
+            l.reserve(i - e + 1);
+            while (i >= e) {
+                l.add(f.apply(new IntNum(i--)));
+            }
+        } else {
+            return new MapList(this, f);
+        }
+        for (AIter i = rest; i != null; i = i.next()) {
+            l.add(f.apply(i.first()));
+        }
+        return l;
+    }
+
     public long length() {
         long n = last.sub(first).intValue() / inc;
         return n >= 0 ? n + 1 : 0;

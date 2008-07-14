@@ -38,13 +38,6 @@ notPred f x = not (f x);
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
 
-map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-    if empty? l then
-        []
-    else
-        (l unsafely_as ~AList)#map(f) unsafely_as list<''>
-    fi;
-
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
    (f2 v l is 'a -> list?<''> -> 'a = // hack to get good code for gc
         if nullptr? l then
@@ -122,7 +115,7 @@ plus a b = a + b;
         fi,
 
     // damn struct polymorphism restriction. is it really needed?
-    array, map, fold, find, index,
+    array, fold, find, index,
 
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>,
@@ -155,25 +148,49 @@ plus a b = a + b;
         if a < 0 then -a else a fi,
     sum l =
         fold plus 0 l,
+
     concat l is list?<list?<''>> -> list<''> =
         if empty? l then
             []
         else
             ConcatLists#concat(l) unsafely_as list<''>
         fi,
-    concatMap f =
-        concat . (map f),
+
+    concatMap f l =
+        if empty? l then
+            []
+        else
+            concat ((l unsafely_as ~AList)#smartMap(f) unsafely_as list<''>)
+        fi,
+
     any f l =
         not (nullptr? (find f l)),
+
     all f l =
         nullptr? (find (notPred f) l),
+
     contains v l =
         index v l != -1,
+
     maybe default f opt =
         case opt of
         Some v: f v;
         None _: default;
         esac,
+
+    map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+        if empty? l then
+            []
+        else
+            (l unsafely_as ~AList)#map(f) unsafely_as list<''>
+        fi,
+
+    lazyMap f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+        if empty? l then
+            []
+        else
+            new MapList(l unsafely_as ~AIter, f) unsafely_as list<''>
+        fi,
 
     splitBy pred list is (('a -> boolean) -> list<'a>
                           -> { fst is list<'a>, snd is list<'a> }) = 

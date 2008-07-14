@@ -113,6 +113,11 @@ interface YetiCode {
             warnings.add(ex);
         }
 
+        CompileCtx setGCJ(boolean gcj) {
+            isGCJ |= gcj;
+            return this;
+        }
+
         public void enumWarns(Fun f) {
             for (int i = 0, cnt = warnings.size(); i < cnt; ++i) {
                 f.apply(warnings.get(i));

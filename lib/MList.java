@@ -149,6 +149,10 @@ abstract class AMList extends AList {
         return new MList(result);
     }
 
+    public AList smartMap(Fun f) {
+        return map(f);
+    }
+
     public int compareTo(Object other) {
         AMList o = (AMList) other;
         Object[] array = array();

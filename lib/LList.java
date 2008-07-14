@@ -147,4 +147,8 @@ public class LList extends AList {
     public Object fold(Fun f, Object value) {
         return null;
     }
+
+    public AList map(Fun f) {
+        return null;
+    }
 }
