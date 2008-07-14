@@ -1028,11 +1028,11 @@ Requesting tail of the second node finally results in the full list::
     |    |
     2    6
 
-A lazy mapping function is named ``map`` in the standard library::
+A lazy mapping function is named ``lazyMap`` in the standard library::
 
-   > map (*2) [2,3,5]
+   > lazyMap (*2) [2,3,5]
    [4,6,10] is list<number>
-   > take 10 (drop 10000 (map (*2) (iterate (+1) 0)))
+   > take 10 (drop 10000 (lazyMap (*2) (iterate (+1) 0)))
    [20000,20002,20004,20006,20008,20010,20012,20014,20016,20018] is list<number>
 
 As it can be seen, the lazy mapping works also fine with infinite lists.
@@ -1040,6 +1040,15 @@ If the lazy list is iterated only once and there are no other references to
 it, the garbage collector can free the head of the list just after it was
 created - meaning the full list never has to be allocated at once. That way
 the lazy lists can be used as iterators or streams.
+
+The standard library has also a strict map function that uses internally
+arrays as storage::
+
+    > map (*2) [2,3,5]
+    [4,6,10] is list<number>
+
+The strict map is usually faster, when you consume the resulting list
+multiple times.
 
 Ranges
 +++++++++
