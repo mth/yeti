@@ -232,13 +232,13 @@ public final class ListRange extends AList {
         return l;
     }
 
-    public AList map(Fun f) {
+    public AList smap(Fun f) {
         MList l;
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
             int i = first.intValue(), e = last.intValue();
             if (i > e)
-                return rest.map(f);
+                return rest.smap(f);
             l = new MList();
             l.reserve(e - i + 1);
             while (i <= e) {
@@ -248,7 +248,7 @@ public final class ListRange extends AList {
                    last.rCompare(Integer.MIN_VALUE) < 0) {
             int i = first.intValue(), e = last.intValue();
             if (i < e)
-                return rest.map(f);
+                return rest.smap(f);
             l = new MList();
             l.reserve(i - e + 1);
             while (i >= e) {

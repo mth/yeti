@@ -47,9 +47,9 @@ public abstract class AList extends AIter implements Comparable, Coll {
 
     public abstract AList sort();
     
-    public abstract AList map(Fun f);
+    public abstract AList smap(Fun f);
 
-    public AList smartMap(Fun f) {
+    public AList map(Fun f) {
         return new MapList(this, f);
     }
 

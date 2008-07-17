@@ -148,7 +148,7 @@ public class LList extends AList {
         return null;
     }
 
-    public AList map(Fun f) {
+    public AList smap(Fun f) {
         return null;
     }
 }

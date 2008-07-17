@@ -160,7 +160,7 @@ plus a b = a + b;
         if empty? l then
             []
         else
-            concat ((l unsafely_as ~AList)#smartMap(f) unsafely_as list<''>)
+            concat ((l unsafely_as ~AList)#map(f) unsafely_as list<''>)
         fi,
 
     any f l =
@@ -185,11 +185,12 @@ plus a b = a + b;
             (l unsafely_as ~AList)#map(f) unsafely_as list<''>
         fi,
 
-    lazyMap f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+    // strict map
+    map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if empty? l then
             []
         else
-            new MapList(l unsafely_as ~AIter, f) unsafely_as list<''>
+            (l unsafely_as ~AList)#smap(f) unsafely_as list<''>
         fi,
 
     splitBy pred list is (('a -> boolean) -> list<'a>
@@ -260,6 +261,7 @@ plus a b = a + b;
     asin a = Math#asin(a),
     atan a = Math#atan(a),
     sqrt a = Math#sqrt(a),
+    int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
     asString x = "\(x)",
     strReplace needle replacement haystack =

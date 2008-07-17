@@ -41,7 +41,7 @@ class LListAdapter extends ClassAdapter implements Opcodes {
     public MethodVisitor visitMethod(int access, String name, String desc,
                                      String signature, String[] exceptions) {
         return "length".equals(name) || "forEach".equals(name) ||
-               "fold".equals(name) || "map".equals(name) ? null
+               "fold".equals(name) || "smap".equals(name) ? null
                 : cv.visitMethod(access, name, desc, signature, exceptions);
     }
 
@@ -118,7 +118,7 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitMaxs(0, 0);
         mv.visitEnd();
 
-        mv = cv.visitMethod(ACC_PUBLIC, "map",
+        mv = cv.visitMethod(ACC_PUBLIC, "smap",
                             "(Lyeti/lang/Fun;)Lyeti/lang/AList;", null, null);
         mv.visitVarInsn(ALOAD, 1);
         mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");

@@ -114,7 +114,7 @@ Automatic conversion on return values of java methods:
 Class definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class Foo(int x) extends Iterator {
+class Foo(int x) extends Iterator
     var n = x,
 
     Object next()
@@ -129,4 +129,4 @@ class Foo(int x) extends Iterator {
 
     void setValue(int v)
         n := v
-}
+end
