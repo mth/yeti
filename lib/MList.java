@@ -137,7 +137,7 @@ abstract class AMList extends AList {
         return null;
     }
 
-    public AList smap(Fun f) {
+    public AList map(Fun f) {
         int cnt = _size();
         if (start >= cnt)
             return null;
@@ -149,8 +149,8 @@ abstract class AMList extends AList {
         return new MList(result);
     }
 
-    public AList map(Fun f) {
-        return smap(f);
+    public AList smap(Fun f) {
+        return map(f);
     }
 
     public int compareTo(Object other) {
