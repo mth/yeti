@@ -54,6 +54,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
     static final int VARIANT = 12;
     static final int JAVA = 13;
     static final int JAVA_ARRAY = 14;
+    static final int STRUCT_EX = 15;
 
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_ANY_PATTERN = 0x4000;
@@ -462,7 +463,74 @@ public class YetiType implements YetiParser, YetiBuiltins {
         throw new TypeException("Type mismatch: " + a + " is not " + b);
     }
 
-    static void finalizeStruct(Type partial, Type src) throws TypeException {
+    // 'a with { x is 'b } is { .x is 'c, .y is 'd }
+    //   => ('a is { .y is 'd }) with { x is ('b is 'd) }
+    // 'a with { x is 'b, z is 'e } is { x is 'c, y is 'd }
+    //   => ('a is { y is 'd }) with { x is ('b is 'd) }
+    static void unifyStructEx(Type st, Type ex) throws TypeException {
+        Type exBase = ex.param[0].deref();
+        Type exWith = ex.param[1];
+        Map ff = exWith.finalMembers;
+
+        // Unify final or partial members of the struct and exWith
+        if (st.finalMembers != null) {
+            ff = new HashMap(ff);
+            unifyFinalMembers(ff, st.finalMembers);
+            finalizeStruct(exWith, st, false);
+
+            // empty ff means that result is not an extend type
+            if (ff.isEmpty()) {
+                ex.type = VAR;
+                ex.ref = exBase;
+                unifyMembers(exBase, st);
+                return;
+            }
+
+            exWith.finalMembers = ff;
+            exWith.param = (Type[]) ff.values().toArray(new Type[ff.size()]);
+        } else {
+            finalizeStruct(st, exWith, true);
+        }
+
+        // Combine structs unmatched partial and final members
+        // into new struct and match this with the exBase.
+        Type rest = new Type(STRUCT, NO_PARAM);
+        if (st.finalMembers != null) {
+            rest.finalMembers = new HashMap(st.finalMembers);
+            rest.finalMembers.keySet().removeAll(ff.keySet());
+            if (rest.finalMembers.isEmpty()) {
+                rest.finalMembers = null;
+            }
+        }
+        if (st.partialMembers != null) {
+            rest.partialMembers = new HashMap();
+            exWith.partialMembers = exWith.partialMembers == null
+                ? new HashMap() : new HashMap(exWith.partialMembers);
+            Iterator i = st.partialMembers.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                Object name = e.getKey();
+                if (ff.containsKey(name)) {
+                    exWith.partialMembers.put(name, e.getValue());
+                } else {
+                    rest.partialMembers.put(name, e.getValue());
+                }
+            }
+            if (exWith.partialMembers.isEmpty()) {
+                exWith.partialMembers = null;
+            }
+        }
+        if (rest.finalMembers != null || rest.partialMembers != null) {
+            unifyMembers(exBase, rest);
+        }
+
+        // Make st to be a reference to the ex.
+        st.type = VAR;
+        st.ref = ex;
+    }
+
+    static void finalizeStruct(Type partial, Type src,
+                               boolean allowMissing) throws TypeException {
         if (src.finalMembers == null || partial.partialMembers == null /*||
                 partial.finalMembers != null*/) {
             return; // nothing to check
@@ -472,6 +540,8 @@ public class YetiType implements YetiParser, YetiBuiltins {
             Map.Entry entry = (Map.Entry) i.next();
             Type ff = (Type) src.finalMembers.get(entry.getKey());
             if (ff == null) {
+                if (allowMissing)
+                    continue;
                 throw new TypeException("Type mismatch: " + src + " => "
                        + partial + " (member missing: " + entry.getKey() + ")");
             }
@@ -481,6 +551,26 @@ public class YetiType implements YetiParser, YetiBuiltins {
                     + "' constness mismatch: " + src + " => " + partial);
             }
             unify(partField, ff);
+        }
+    }
+
+    static void unifyFinalMembers(Map ff, Map other) throws TypeException {
+        for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Map.Entry) i.next();
+            Type f = (Type) other.get(entry.getKey());
+            if (f != null) {
+                Type t = (Type) entry.getValue();
+                unify(f, t);
+                // constness spreads
+                if (t.field != f.field) {
+                    if (t.field == 0) {
+                        entry.setValue(t = f);
+                    }
+                    t.field = FIELD_NON_POLYMORPHIC;
+                }
+            } else {
+                i.remove();
+            }
         }
     }
 
@@ -503,29 +593,13 @@ public class YetiType implements YetiParser, YetiBuiltins {
         } else {
             // unify final members
             ff = new HashMap(a.finalMembers);
-            for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
-                Map.Entry entry = (Map.Entry) i.next();
-                Type f = (Type) b.finalMembers.get(entry.getKey());
-                if (f != null) {
-                    Type t = (Type) entry.getValue();
-                    unify(f, t);
-                    // constness spreads
-                    if (t.field != f.field) {
-                        if (t.field == 0) {
-                            entry.setValue(t = f);
-                        }
-                        t.field = FIELD_NON_POLYMORPHIC;
-                    }
-                } else {
-                    i.remove();
-                }
-            }
+            unifyFinalMembers(ff, b.finalMembers);
             if (ff.isEmpty()) {
                 mismatch(a, b);
             }
         }
-        finalizeStruct(a, b);
-        finalizeStruct(b, a);
+        finalizeStruct(a, b, false);
+        finalizeStruct(b, a, false);
         if (a.partialMembers == null) {
             a.partialMembers = b.partialMembers;
         } else if (b.partialMembers != null) {
