@@ -747,11 +747,13 @@ interface YetiBuiltins extends CaseCode {
 
     class MatchOpFun extends BinOpRef {
         private int line;
+        private boolean yes;
 
-        MatchOpFun(int line) {
+        MatchOpFun(int line, boolean yes) {
             type = YetiType.STR2_PRED_TYPE;
-            coreFun = mangle("=~");
+            coreFun = mangle(yes ? "=~" : "!~");
             this.line = line;
+            this.yes = yes;
         }
 
         void binGen(Ctx ctx, Code arg1, final Code arg2) {
@@ -772,9 +774,10 @@ interface YetiBuiltins extends CaseCode {
                     ctx.m.visitTypeInsn(NEW, "yeti/lang/Match");
                     ctx.m.visitInsn(DUP);
                     arg2.gen(ctx);
+                    ctx.intConst(yes ? 1 : 0);
                     ctx.visitLine(line);
                     ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Match",
-                                          "<init>", "(Ljava/lang/Object;)V");
+                                          "<init>", "(Ljava/lang/Object;Z)V");
                 }
             };
             if (!(arg2 instanceof StringConstant))
@@ -783,8 +786,8 @@ interface YetiBuiltins extends CaseCode {
                 { type = t; }
 
                 void gen(Ctx ctx) {
-                    ctx.constant("MATCH-FUN:".concat(((StringConstant) arg2)
-                                    .str), matcher);
+                    ctx.constant((yes ? "MATCH-FUN:" : "MATCH!FUN:")
+                        .concat(((StringConstant) arg2).str), matcher);
                 }
             };
         }
@@ -798,8 +801,14 @@ interface YetiBuiltins extends CaseCode {
     }
 
     class MatchOp implements Binder {
+        boolean yes;
+
+        MatchOp(boolean yes) {
+            this.yes = yes;
+        }
+
         public BindRef getRef(int line) {
-            return new MatchOpFun(line);
+            return new MatchOpFun(line, yes);
         }
     }
 

@@ -34,13 +34,15 @@ import java.util.regex.Pattern;
 
 public final class Match extends Fun {
     private Pattern p;
+    private boolean yes;
 
-    public Match(Object pattern) {
+    public Match(Object pattern, boolean yes) {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);
+        this.yes = yes;
     }
 
     public Object apply(Object v) {
-        return p.matcher((CharSequence) v).find()
+        return p.matcher((CharSequence) v).find() == yes
                 ? Boolean.TRUE : Boolean.FALSE;
     }
 }
