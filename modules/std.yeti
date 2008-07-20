@@ -233,6 +233,13 @@ plus a b = a + b;
             drop (n - 1) (tail l)
         fi,
 
+    takeWhile pred l is ('' -> boolean) -> list<''> -> list<''> =
+        if empty? l then
+            []
+        else
+            TakeWhile#take(l, pred) unsafely_as list<''>
+        fi,
+
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<''>,
 
