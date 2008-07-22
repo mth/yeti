@@ -13,7 +13,7 @@ check {item, left, right} = item + maybeNode left - maybeNode right;
 out s depth check = println "\(s) of depth \(depth)\t check: \(check)";
 
 checkDepth depth item =
-    check (makeTree item depth) + check (makeTree (0 - item) depth);
+    check (makeTree item depth) + check (makeTree (-item) depth);
 
 minDepth = 4;
 n = if empty? _argv then 2 else number _argv.[0] fi;
