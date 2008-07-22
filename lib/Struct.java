@@ -41,17 +41,15 @@ public class Struct {
     // expecting type system to not allow getting nonexisting fields.
     // IndexOutOfBoundsException will happen otherwise, speed matters ;)
     public Object get(String field) {
-        Object[] v = values;
-        int i = 0;
-        for (; v[i] != field; i += 2);
-        return v[i + 1];
+        int i = -2;
+        while (values[i += 2] != field);
+        return values[i + 1];
     }
 
     public void set(String field, Object value) {
-        Object[] v = values;
-        int i = 0;
-        for (; v[i] != field; i += 2);
-        v[i + 1] = value;
+        int i = -2;
+        while (values[i += 2] != field);
+        values[i + 1] = value;
     }
 
     public String toString() {
