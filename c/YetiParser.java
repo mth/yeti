@@ -153,6 +153,8 @@ interface YetiParser {
         }
 
         String str() {
+            if (expr == null)
+                return ":".concat(kind);
             StringBuffer buf = new StringBuffer("(:");
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
