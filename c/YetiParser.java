@@ -258,18 +258,6 @@ interface YetiParser {
         }
     }
 
-    class Load extends Node {
-        String moduleName;
-
-        Load(String moduleName) {
-            this.moduleName = moduleName;
-        }
-
-        String str() {
-            return "load " + moduleName.replace('/', '.');
-        }
-    }
-
     class Import extends Node {
         String className;
 
@@ -995,8 +983,9 @@ interface YetiParser {
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load") {
-                res = new Load(readDotted(false,
-                                "Expected module name after 'load', not a "));
+                res = new XNode("load", new Sym(readDotted(false,
+                                  "Expected module name after 'load', not a "))
+                                  .pos(line, col));
             } else if (s == "type") {
                 res = readTypeDef();
             } else if (s == "try") {

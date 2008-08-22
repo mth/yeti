@@ -95,6 +95,12 @@ public final class YetiAnalyzer extends YetiType {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
             }
+            if (kind == "load") {
+                if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
+                     != 0) throw new CompileException(node, "load is disabled");
+                String nam = ((Sym) x.expr[0]).sym;
+                return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
+            }
             throw new CompileException(node,
                 "I think that this " + node + " should not be here.");
         }
@@ -171,12 +177,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof ConcatStr) {
             return concatStr((ConcatStr) node, scope, depth);
-        }
-        if (node instanceof Load) {
-            if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
-                throw new CompileException(node, "load is disabled");
-            String name = ((Load) node).moduleName;
-            return new LoadModule(name, YetiTypeVisitor.getType(node, name));
         }
         if (node instanceof RSection) {
             return rsection((RSection) node, scope, depth);
@@ -822,7 +822,7 @@ public final class YetiAnalyzer extends YetiType {
                 addSeq(last, binder);
                 scope = bindStruct(binder, (Struct) x.expr[0],
                                    seq.kind == Seq.EVAL, scope, depth, last);
-            } else if (nodes[i] instanceof Load) {
+            } else if (nodes[i].kind() == "load") {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 addSeq(last, new SeqExpr(m));
