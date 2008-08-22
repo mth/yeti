@@ -383,20 +383,6 @@ interface YetiParser {
         }
     }
 
-    class RSection extends Node {
-        String sym;
-        Node arg;
-
-        RSection(String sym, Node arg) {
-            this.sym = sym;
-            this.arg = arg;
-        }
-
-        String str() {
-            return "(" + sym + " " + arg.str() + ")";
-        }
-    }
-
     class TypeDef extends Node {
         String name;
         String[] param;
@@ -876,7 +862,8 @@ interface YetiParser {
                     r.parent = r; // so it would be considered "processed"
                     e = r;
                 } else {
-                    e = new RSection(s, parseExpr.result());
+                    e = new XNode("rsection",
+                                new Node[] { new Sym(s), parseExpr.result() });
                 }
                 e.line = partial.line;
                 e.col = partial.col;

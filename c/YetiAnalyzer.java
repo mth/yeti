@@ -117,6 +117,9 @@ public final class YetiAnalyzer extends YetiType {
                                         resolveFullClass(name, scope, x), args)
                                     .check(x, scope.packageName), args, x.line);
             }
+            if (kind == "rsection") {
+                return rsection(x, scope, depth);
+            }
             if (kind == "load") {
                 if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
@@ -191,9 +194,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
-        }
-        if (node instanceof RSection) {
-            return rsection((RSection) node, scope, depth);
         }
         if (node instanceof Try) {
             return tryCatch((Try) node, scope, depth);
@@ -460,10 +460,11 @@ public final class YetiAnalyzer extends YetiType {
         return fun.apply(argCode, applyFun[1], where.line);
     }
 
-    static Code rsection(RSection section, Scope scope, int depth) {
-        if (section.sym == FIELD_OP) {
+    static Code rsection(XNode section, Scope scope, int depth) {
+        String sym = ((Sym) section.expr[0]).sym;
+        if (sym == FIELD_OP) {
             LinkedList parts = new LinkedList();
-            Node x = section.arg;
+            Node x = section.expr[1];
             for (BinOp op; x instanceof BinOp; x = op.left) {
                 op = (BinOp) x;
                 if (op.op != FIELD_OP) {
@@ -484,8 +485,8 @@ public final class YetiAnalyzer extends YetiType {
             return new SelectMemberFun(new Type(FUN, new Type[] { arg, res }),
                                        fields);
         }
-        Code fun = resolve(section.sym, section, scope, depth);
-        Code arg = analyze(section.arg, scope, depth);
+        Code fun = resolve(sym, section, scope, depth);
+        Code arg = analyze(section.expr[1], scope, depth);
         Type[] r = { new Type(depth), new Type(depth) };
         Type[] afun = { r[0], new Type(FUN, new Type[] { arg.type, r[1] }) };
         try {
