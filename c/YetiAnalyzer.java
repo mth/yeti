@@ -100,7 +100,7 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "concat") {
                 return concatStr(x, scope, depth);
             }
-            if (kind == "cond") {
+            if (kind == "if") {
                 return cond(x, scope, depth);
             }
             if (kind == "_") {
@@ -598,46 +598,51 @@ public final class YetiAnalyzer extends YetiType {
         return new ConcatStrings(parts);
     }
 
+    static Type mergeIfType(Node where, Type result, Type val) {
+        Type t = JavaType.mergeTypes(result, val);
+        if (t != null) {
+            return t;
+        }
+        try {
+            unify(result, val);
+        } catch (TypeException ex) {
+            throw new CompileException(where,
+                "This if branch has a " + val +
+                " type, while another was a " + result, ex);
+        }
+        return result;
+    }
+
     static Code cond(XNode condition, Scope scope, int depth) {
-        Node[] choices = condition.expr;
-        Code[][] conds = new Code[(choices.length + 1) / 2][];
+        List conds = new ArrayList();
         Type result = null;
         boolean poly = true;
-        for (int i = 0; i < conds.length; ++i) {
-            int j = i * 2;
-            Code val = analyze(choices[j], scope, depth);
-            if (j + 1 == choices.length) {
-                conds[i] = new Code[] { val };
-            } else {
-                Code cond = analyze(choices[j + 1], scope, depth);
-                try {
-                    unify(BOOL_TYPE, cond.type);
-                } catch (TypeException ex) {
-                    throw new CompileException(choices[j + 1],
-                        "if condition must have a boolean type (but here was "
-                        + cond.type + ")");
-                }
-                conds[i] = new Code[] { val, cond };
+        for (;;) {
+            Code cond = analyze(condition.expr[0], scope, depth);
+            try {
+                unify(BOOL_TYPE, cond.type);
+            } catch (TypeException ex) {
+                throw new CompileException(condition.expr[0],
+                    "if condition must have a boolean type (but here was "
+                    + cond.type + ")");
             }
+            Code val = analyze(condition.expr[1], scope, depth);
+            conds.add(new Code[] { val, cond });
             poly &= val.polymorph;
             if (result == null) {
                 result = val.type;
             } else {
-                Type t = JavaType.mergeTypes(result, val.type);
-                if (t != null) {
-                    result = t;
-                    continue;
-                }
-                try {
-                    unify(result, val.type);
-                } catch (TypeException ex) {
-                    throw new CompileException(choices[j],
-                        "This if branch has a " + val.type +
-                        " type, while another was a " + result, ex);
-                }
+                result = mergeIfType(condition.expr[1], result, val.type);
             }
+            if (condition.expr[2].kind() != "if")
+                break;
+            condition = (XNode) condition.expr[2];
         }
-        return new ConditionalExpr(result, conds, poly);
+        Code val = analyze(condition.expr[2], scope, depth);
+        result = mergeIfType(condition.expr[2], result, val.type);
+        conds.add(new Code[] { val });
+        Code[][] expr = (Code[][]) conds.toArray(new Code[conds.size()][]);
+        return new ConditionalExpr(result, expr, poly && val.polymorph);
     }
 
     static Code loop(BinOp loop, Scope scope, int depth) {

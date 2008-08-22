@@ -1002,20 +1002,23 @@ interface YetiParser {
         }
 
         private Node readIf() {
-            List branches = new ArrayList();
-            do {
-                Node cond = readExpr("then");
-                branches.add(readSeq(' ', null));
-                branches.add(cond);
-            } while (eofWas instanceof Elif);
-            branches.add(eofWas instanceof Else ? readSeq(' ', null)
-                    : new XNode("()").pos(eofWas.line, eofWas.col));
-            if (!(eofWas instanceof Fi)) {
-                throw new CompileException(eofWas,
-                    "Expected fi, found " + eofWas);
+            Node cond = readExpr("then");
+            Node expr = readSeq(' ', null);
+            Node els;
+            if (eofWas instanceof Elif) {
+                els = readIf();
+            } else {
+                if (eofWas instanceof Else) {
+                    els = readSeq(' ', null);
+                } else {
+                    els = new XNode("()").pos(eofWas.line, eofWas.col);
+                }
+                if (!(eofWas instanceof Fi)) {
+                    throw new CompileException(eofWas,
+                        "Expected fi, found " + eofWas);
+                }
             }
-            return new XNode("cond", (Node[]) branches.toArray(
-                                        new Node[branches.size()]));
+            return new XNode("if", new Node[] { cond, expr, els });
         }
 
         private Node readCase() {
