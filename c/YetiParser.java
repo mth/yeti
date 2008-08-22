@@ -57,10 +57,7 @@ interface YetiParser {
     class Node {
         int line;
         int col;
-
-        String kind() {
-            return null;
-        }
+        String kind;
 
         String show() {
             return str();
@@ -133,7 +130,6 @@ interface YetiParser {
     }
 
     class XNode extends Node {
-        String kind;
         Node[] expr;
 
         XNode(String kind) {
@@ -163,10 +159,6 @@ interface YetiParser {
             }
             buf.append(')');
             return buf.toString();
-        }
-
-        String kind() {
-            return kind;
         }
 
         static XNode struct(Node[] fields) {
@@ -926,7 +918,7 @@ interface YetiParser {
             }
             Bind bind;
             return args == null ? e :
-                   args.size() == 1 && ((Node) args.get(0)).kind() == "struct"
+                   args.size() == 1 && ((Node) args.get(0)).kind == "struct"
                    ? (Node) new XNode("struct-bind",
                         new Node[] { (XNode) args.get(0), e })
                    : (bind = new Bind(args, e)).name != "_" ? bind
@@ -1456,7 +1448,7 @@ interface YetiParser {
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
-                        seq.st[seq.st.length - 1].kind() == "struct-bind") {
+                        seq.st[seq.st.length - 1].kind == "struct-bind") {
                         Node[] tmp = new Node[seq.st.length + 1];
                         System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
                         tmp[tmp.length - 1] =

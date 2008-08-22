@@ -85,7 +85,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             return r;
         }
-        String kind = node.kind();
+        String kind = node.kind;
         if (kind != null) {
             XNode x = (XNode) node;
             if (kind == "()") {
@@ -97,15 +97,15 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "struct") {
                 return structType(x, scope, depth);
             }
-            if (kind == "concat") {
-                return concatStr(x, scope, depth);
-            }
             if (kind == "if") {
                 return cond(x, scope, depth);
             }
             if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
+            }
+            if (kind == "concat") {
+                return concatStr(x, scope, depth);
             }
             if (kind == "case") {
                 return caseType(x, scope, depth);
@@ -146,7 +146,7 @@ public final class YetiAnalyzer extends YetiType {
                              op.right, scope, depth);
             }
             if (opop == FIELD_OP) {
-                if (op.right.kind() == "list") {
+                if (op.right.kind == "list") {
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (XNode) op.right, scope, depth);
                 }
@@ -634,7 +634,7 @@ public final class YetiAnalyzer extends YetiType {
             } else {
                 result = mergeIfType(condition.expr[1], result, val.type);
             }
-            if (condition.expr[2].kind() != "if")
+            if (condition.expr[2].kind != "if")
                 break;
             condition = (XNode) condition.expr[2];
         }
@@ -820,14 +820,14 @@ public final class YetiAnalyzer extends YetiType {
                                     scope, depth);
                 bindings[i] = binder;
                 addSeq(last, binder);
-            } else if (nodes[i].kind() == "struct-bind") {
+            } else if (nodes[i].kind == "struct-bind") {
                 XNode x = (XNode) nodes[i];
                 Code expr = analyze(x.expr[1], scope, depth + 1);
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
                 scope = bindStruct(binder, (XNode) x.expr[0],
                                    seq.seqKind == Seq.EVAL, scope, depth, last);
-            } else if (nodes[i].kind() == "load") {
+            } else if (nodes[i].kind == "load") {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 addSeq(last, new SeqExpr(m));
@@ -839,7 +839,7 @@ public final class YetiAnalyzer extends YetiType {
                                 typeDef[typeDef.length - 1], null, 0, scope);
                     scope.typeDef = typeDef;
                 }
-            } else if (nodes[i].kind() == "import") {
+            } else if (nodes[i].kind == "import") {
                 if ((YetiCode.CompileCtx.current().flags
                         & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
@@ -904,9 +904,9 @@ public final class YetiAnalyzer extends YetiType {
             String argName = ((Sym) lambda.arg).sym;
             if (argName != "_")
                 bodyScope = new Scope(scope, argName, to);
-        } else if (lambda.arg.kind() == "()") {
+        } else if (lambda.arg.kind == "()") {
             to.arg.type = UNIT_TYPE;
-        } else if (lambda.arg.kind() == "struct") {
+        } else if (lambda.arg.kind == "struct") {
             to.arg.type = new Type(depth);
             seq = new SeqExpr[] { null, null };
             bodyScope = bindStruct(to, (XNode) lambda.arg,
@@ -1094,7 +1094,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, name, binding);
                 return binding;
             }
-            if (node.kind() == "()") {
+            if (node.kind == "()") {
                 patUnify(node, t, UNIT_TYPE);
                 return ANY_PATTERN;
             }
@@ -1111,7 +1111,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 return new ConstPattern(c);
             }
-            if (node.kind() == "list") {
+            if (node.kind == "list") {
                 XNode list = (XNode) node;
                 Type itemt = new Type(depth);
                 Type lt = new Type(MAP,
@@ -1169,7 +1169,7 @@ public final class YetiAnalyzer extends YetiType {
                     return new ConsPattern(hd, tl);
                 }
             }
-            if (node.kind() == "struct") {
+            if (node.kind == "struct") {
                 Node[] fields = ((XNode) node).expr;
                 if (fields.length == 0)
                     throw new CompileException(node, NONSENSE_STRUCT);
