@@ -88,9 +88,6 @@ interface YetiParser {
         }
     }
 
-    class BindOp extends Node {
-    }
-
     class SepOp extends Node {
         char sep;
 
@@ -751,7 +748,7 @@ interface YetiParser {
                 String s = new String(src, p, i - p).intern();
                 p = i;
                 if (s == "=")
-                    return new BindOp().pos(line, col);
+                    return new XNode("=").pos(line, col);
                 if (s == ".")
                     return new BinOp(FIELD_OP, 0, true).pos(line, col);
                 if (s == "#")
@@ -1115,7 +1112,7 @@ interface YetiParser {
             // TODO check for (blaah=) error
             Node sym;
             while (!((sym = fetch()) instanceof Eof)) {
-                if (sym instanceof BindOp) {
+                if (sym.kind == "=") {
                     args = l;
                     if (end == '}') {
                         l = Collections.singletonList(readSeq(' ', null));
@@ -1282,7 +1279,7 @@ interface YetiParser {
                                  "Expected '>', not a " + node);
                 node = fetch();
             }
-            if (!(node instanceof BindOp))
+            if (node.kind != "=")
                 throw new CompileException(node, "Expected '=', not a " + node);
             def.param = (String[]) param.toArray(new String[param.size()]);
             def.type = readType(true);
