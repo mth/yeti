@@ -88,9 +88,14 @@ public final class YetiAnalyzer extends YetiType {
             }
             return r;
         }
-        if (node instanceof Ignore) {
-            return new Cast(analyze(((Ignore) node).expr, scope, depth),
-                            UNIT_TYPE, false, node.line);
+        if (node instanceof XNode) {
+            XNode x = (XNode) node;
+            if (x.kind == "_") {
+                return new Cast(analyze(x.expr[0], scope, depth),
+                                UNIT_TYPE, false, node.line);
+            }
+            throw new CompileException(node,
+                "I think that this " + node + " should not be here.");
         }
         if (node instanceof BinOp) {
             BinOp op = (BinOp) node;

@@ -134,17 +134,29 @@ interface YetiParser {
         }
     }
 
-    class Ignore extends Node {
-        Node expr;
+    class XNode extends Node {
+        String kind;
+        Node[] expr;
 
-        Ignore(Node expr) {
+        XNode(String kind, Node[] expr) {
+            this.kind = kind;
             this.expr = expr;
-            this.line = expr.line;
-            this.col = expr.col;
+        }
+        
+        XNode(String kind, Node expr) {
+            this.kind = kind;
+            this.expr = new Node[] { expr };
         }
 
         String str() {
-            return "(_ = " + expr.str() + ")";
+            StringBuffer buf = new StringBuffer("(:");
+            buf.append(kind);
+            for (int i = 0; i < expr.length; ++i) {
+                buf.append(' ');
+                buf.append(expr[i]);
+            }
+            buf.append(')');
+            return buf.toString();
         }
     }
 
@@ -1080,7 +1092,7 @@ interface YetiParser {
                    ? (Node) new StructBind((Struct) args.get(0), e)
                    : (bind = new Bind(args, e)).name != "_" ? bind
                    : bind.expr instanceof Lambda
-                        ? bind.expr : new Ignore(bind.expr);
+                        ? bind.expr : new XNode("_", bind.expr);
         }
 
         private Node readExpr(String to) {
