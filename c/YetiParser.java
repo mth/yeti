@@ -298,18 +298,6 @@ interface YetiParser {
         }
     }
 
-    class NList extends Node {
-        Node[] items;
-
-        NList(Node[] items) {
-            this.items = items;
-        }
-
-        String str() {
-            return showList('[', ']', items);
-        }
-    }
-
     class Condition extends Node {
         Node[][] choices;
 
@@ -871,9 +859,9 @@ interface YetiParser {
                     if (i + 2 < src.length && src[i + 1] == ':' &&
                         src[i + 2] == ']') {
                         p = i + 3;
-                        return new NList(null).pos(line,col);
+                        return new XNode("list", (Node[]) null).pos(line,col);
                     }
-                    return new NList(readMany(',', ']')).pos(line, col);
+                    return new XNode("list", readMany(',', ']')).pos(line, col);
                 case '{':
                     return new Struct(readMany(',', '}')).pos(line, col);
                 case ')': case ']': case '}':

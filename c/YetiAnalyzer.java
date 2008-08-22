@@ -91,6 +91,9 @@ public final class YetiAnalyzer extends YetiType {
         String kind = node.kind();
         if (kind != null) {
             XNode x = (XNode) node;
+            if (kind == "list") {
+                return list(x, scope, depth);
+            }
             if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
@@ -117,9 +120,9 @@ public final class YetiAnalyzer extends YetiType {
                              op.right, scope, depth);
             }
             if (opop == FIELD_OP) {
-                if (op.right instanceof NList) {
+                if (op.right.kind() == "list") {
                     return keyRefExpr(analyze(op.left, scope, depth),
-                                      (NList) op.right, scope, depth);
+                                      (XNode) op.right, scope, depth);
                 }
                 checkSelectorSym(op, op.right);
                 return selectMember(op, (Sym) op.right,
@@ -165,9 +168,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Struct) {
             return structType((Struct) node, scope, depth);
-        }
-        if (node instanceof NList) {
-            return list((NList) node, scope, depth);
         }
         if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
@@ -555,14 +555,14 @@ public final class YetiAnalyzer extends YetiType {
         };
     }
 
-    static Code keyRefExpr(Code val, NList keyList, Scope scope, int depth) {
-        if (keyList.items == null || keyList.items.length == 0) {
+    static Code keyRefExpr(Code val, XNode keyList, Scope scope, int depth) {
+        if (keyList.expr == null || keyList.expr.length == 0) {
             throw new CompileException(keyList, ".[] - missing key expression");
         }
-        if (keyList.items.length != 1) {
+        if (keyList.expr.length != 1) {
             throw new CompileException(keyList, "Unexpected , inside .[]");
         }
-        Code key = analyze(keyList.items[0], scope, depth);
+        Code key = analyze(keyList.expr[0], scope, depth);
         Type[] param = { new Type(depth), key.type, new Type(depth) };
         try {
             unify(val.type, new Type(MAP, param));
@@ -1106,19 +1106,19 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 return new ConstPattern(c);
             }
-            if (node instanceof NList) {
-                NList list = (NList) node;
+            if (node.kind() == "list") {
+                XNode list = (XNode) node;
                 Type itemt = new Type(depth);
                 Type lt = new Type(MAP,
                         new Type[] { itemt, new Type(depth), LIST_TYPE });
                 lt.flags |= FL_PARTIAL_PATTERN;
-                if (list.items == null || list.items.length == 0) {
+                if (list.expr == null || list.expr.length == 0) {
                     patUnify(node, t, lt);
                     return EMPTY_PATTERN;
                 }
-                CasePattern[] items = new CasePattern[list.items.length];
+                CasePattern[] items = new CasePattern[list.expr.length];
                 for (int i = 0; i < items.length; ++i) {
-                    items[i] = toPattern(list.items[i], itemt);
+                    items[i] = toPattern(list.expr[i], itemt);
                 }
                 patUnify(node, t, lt);
                 return new ListPattern(items);
@@ -1291,8 +1291,8 @@ public final class YetiAnalyzer extends YetiType {
         return cc.exp;
     }
 
-    static Code list(NList list, Scope scope, int depth) {
-        Node[] items = list.items == null ? new Node[0] : list.items;
+    static Code list(XNode list, Scope scope, int depth) {
+        Node[] items = list.expr == null ? new Node[0] : list.expr;
         Code[] keyItems = null;
         Code[] codeItems = new Code[items.length];
         Type type = null;
@@ -1372,7 +1372,7 @@ public final class YetiAnalyzer extends YetiType {
         if (kind == null) {
             kind = LIST_TYPE;
         }
-        if (list.items == null) {
+        if (list.expr == null) {
             keyType = new Type(depth);
             kind = MAP_TYPE;
         }
