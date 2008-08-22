@@ -133,10 +133,7 @@ public final class YetiAnalyzer extends YetiType {
                 return new ClassOfExpr(t != null ? t.javaType :
                             resolveFullClass(cn, scope, x).javaType.resolve(x));
             }
-            throw new CompileException(node,
-                "I think that this " + node + " should not be here.");
-        }
-        if (node instanceof BinOp) {
+        } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             String opop = op.op;
             if (opop == "") {
@@ -191,11 +188,9 @@ public final class YetiAnalyzer extends YetiType {
                          apply(op, resolve(opop, op, scope, depth),
                                op.left, scope, depth),
                          op.right, scope, depth);
-        }
-        if (node instanceof Lambda) {
+        } else if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
-        }
-        if (node instanceof Try) {
+        } else if (node instanceof Try) {
             return tryCatch((Try) node, scope, depth);
         }
         throw new CompileException(node,
