@@ -533,18 +533,6 @@ interface YetiParser {
         }
     }
 
-    class ClassOf extends Node {
-        String className;
-
-        ClassOf(String className) {
-            this.className = className.intern();
-        }
-
-        String str() {
-            return "classOf " + className;
-        }
-    }
-
     class TypeNode extends Node {
         String name;
         TypeNode[] param;
@@ -874,11 +862,11 @@ interface YetiParser {
                 res = new NoRecSym();
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
-            } else if (s == "load" || s == "import") {
-                res = new XNode(s, new Sym(readDotted(false, s == "load"
-                            ? "Expected module name after 'load', not a "
-                            : "Expected class path after 'import', not a "))
-                                  .pos(line, col));
+            } else if (s == "load" || s == "import" || s == "classOf") {
+                res = new XNode(s, new Sym(readDotted(false,
+                    s == "load" ? "Expected module name after 'load', not a " :
+                    s == "import" ? "Expected class path after 'import', not a "
+                    : "Expected class name, not a ")).pos(line, col));
             } else if (s == "type") {
                 res = readTypeDef();
             } else if (s == "try") {
@@ -891,9 +879,6 @@ interface YetiParser {
                 res = new Yrt();
             } else if (s == "throw") {
                 res = new ThrowSym();
-            } else if (s == "classOf") {
-                res = new ClassOf(
-                            readDotted(false, "Expected class name, not a "));
             } else if (s == "instanceof") {
                 res = new InstanceOf(
                             readDotted(false, "Expected class name, not a "));

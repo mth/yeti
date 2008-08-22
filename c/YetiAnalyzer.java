@@ -116,6 +116,13 @@ public final class YetiAnalyzer extends YetiType {
                 String nam = ((Sym) x.expr[0]).sym;
                 return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
             }
+            if (kind == "classOf") {
+                String cn = ((Sym) x.expr[0]).sym;
+                Type t = cn != "module" ? null :
+                            resolveClass("module", scope, false);
+                return new ClassOfExpr(t != null ? t.javaType :
+                            resolveFullClass(cn, scope, x).javaType.resolve(x));
+            }
             throw new CompileException(node,
                 "I think that this " + node + " should not be here.");
         }
@@ -190,13 +197,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Try) {
             return tryCatch((Try) node, scope, depth);
-        }
-        if (node instanceof ClassOf) {
-            ClassOf co = (ClassOf) node;
-            Type t = co.className != "module" ? null :
-                        resolveClass("module", scope, false);
-            return new ClassOfExpr(t != null ? t.javaType :
-                resolveFullClass(co.className, scope, co).javaType.resolve(co));
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
