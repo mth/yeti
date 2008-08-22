@@ -262,11 +262,11 @@ interface YetiParser {
         static final Object EVAL = new Object();
 
         Node[] st;
-        Object kind;
+        Object seqKind;
 
         Seq(Node[] st, Object kind) {
             this.st = st;
-            this.kind = kind;
+            this.seqKind = kind;
         }
 
         String str() {

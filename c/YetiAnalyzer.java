@@ -811,7 +811,7 @@ public final class YetiAnalyzer extends YetiType {
                         isOp(bind, bind.type, binder.st, scope, depth);
                     }
                 }
-                scope = genericBind(bind, binder, seq.kind == Seq.EVAL,
+                scope = genericBind(bind, binder, seq.seqKind == Seq.EVAL,
                                     scope, depth);
                 bindings[i] = binder;
                 addSeq(last, binder);
@@ -821,7 +821,7 @@ public final class YetiAnalyzer extends YetiType {
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
                 scope = bindStruct(binder, (Struct) x.expr[0],
-                                   seq.kind == Seq.EVAL, scope, depth, last);
+                                   seq.seqKind == Seq.EVAL, scope, depth, last);
             } else if (nodes[i].kind() == "load") {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
@@ -844,7 +844,7 @@ public final class YetiAnalyzer extends YetiType {
                               : name.substring(lastSlash + 1)).intern(), null);
                 scope.importClass = new Type("L" + name + ';');
             } else if (nodes[i] instanceof TypeDef) {
-                scope = bindTypeDef((TypeDef) nodes[i], seq.kind, scope);
+                scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {
@@ -860,7 +860,7 @@ public final class YetiAnalyzer extends YetiType {
         Code code = analyze(nodes[nodes.length - 1], scope, depth);
         for (int i = bindings.length; --i >= 0;) {
             if (bindings[i] != null && !bindings[i].used &&
-                seq.kind != Seq.EVAL) {
+                seq.seqKind != Seq.EVAL) {
                 unusedBinding((Bind) nodes[i]);
             }
         }
