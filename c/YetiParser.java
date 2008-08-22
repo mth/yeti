@@ -159,7 +159,7 @@ interface YetiParser {
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
                 buf.append(' ');
-                buf.append(expr[i]);
+                buf.append(expr[i].str());
             }
             buf.append(')');
             return buf.toString();
