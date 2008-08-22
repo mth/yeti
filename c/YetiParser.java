@@ -826,7 +826,7 @@ interface YetiParser {
                     if (i + 2 < src.length && src[i + 1] == ':' &&
                         src[i + 2] == ']') {
                         p = i + 3;
-                        return new XNode("list", (Node[]) null).pos(line,col);
+                        return new XNode("list").pos(line,col);
                     }
                     return new XNode("list", readMany(',', ']')).pos(line, col);
                 case '{':
