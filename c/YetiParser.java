@@ -96,15 +96,6 @@ interface YetiParser {
         }
     }
 
-    class VarSym extends Node {
-    }
-
-    class NoRecSym extends Node {
-    }
-
-    class ThrowSym extends Node {
-    }
-
     class XNode extends Node {
         Node[] expr;
 
@@ -171,9 +162,9 @@ interface YetiParser {
             while (first < args.size()) {
                 nameNode = (Node) args.get(first);
                 ++first;
-                if (nameNode instanceof VarSym) {
+                if (nameNode.kind == "var") {
                     var = true;
-                } else if (nameNode instanceof NoRecSym) {
+                } else if (nameNode.kind == "norec") {
                     noRec = true;
                 } else {
                     break;
@@ -783,10 +774,8 @@ interface YetiParser {
                             .pos(line, col);
             } else if (s == "new") {
                 res = readNew();
-            } else if (s == "var") {
-                res = new VarSym();
-            } else if (s == "norec") {
-                res = new NoRecSym();
+            } else if (s == "var" || s == "norec" || s == "throw") {
+                res = new XNode(s);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load" || s == "import" || s == "classOf") {
@@ -800,8 +789,6 @@ interface YetiParser {
                 res = readTry();
             } else if (s == "catch") {
                 res = new Catch();
-            } else if (s == "throw") {
-                res = new ThrowSym();
             } else if (s == "instanceof") {
                 res = new InstanceOf(
                             readDotted(false, "Expected class name, not a "));
@@ -1278,7 +1265,7 @@ interface YetiParser {
                 ArrayList param = new ArrayList();
                 String expect = "Expecting field name or '}' here, not ";
                 for (;;) {
-                    boolean isVar = (field = fetch()) instanceof VarSym;
+                    boolean isVar = (field = fetch()).kind == "var";
                     if (isVar && !((field = fetch()) instanceof Sym))
                         throw new CompileException(field,
                             "Exepcting field name after var");

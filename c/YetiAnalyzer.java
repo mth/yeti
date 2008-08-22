@@ -140,7 +140,7 @@ public final class YetiAnalyzer extends YetiType {
             BinOp op = (BinOp) node;
             String opop = op.op;
             if (opop == "") {
-                if (op.left instanceof ThrowSym) {
+                if (op.left.kind == "throw") {
                     Code throwable = analyze(op.right, scope, depth);
                     JavaType.checkThrowable(op.left, throwable.type);
                     return new Throw(throwable, new Type(depth));
