@@ -288,29 +288,6 @@ interface YetiParser {
         }
     }
 
-    class Case extends Node {
-        Node value;
-        Node[] choices;
-        
-        Case(Node value, Node[] choices) {
-            this.value = value;
-            this.choices = choices;
-        }
-
-        String str() {
-            StringBuffer buf = new StringBuffer();
-            buf.append("\ncase ");
-            buf.append(value.show());
-            buf.append(" of");
-            for (int i = 0; i < choices.length; ++i) {
-                buf.append("\n ");
-                buf.append(choices[i].show());
-            }
-            buf.append("\nesac\n");
-            return buf.toString();
-        }
-    }
-
     class Sym extends Node {
         String sym;
 
@@ -1082,7 +1059,10 @@ interface YetiParser {
                 throw new CompileException(eofWas,
                     "Expected esac, found " + eofWas);
             }
-            return new Case(val, choices);
+            Node[] expr = new Node[choices.length + 1];
+            expr[0] = val;
+            System.arraycopy(choices, 0, expr, 1, choices.length);
+            return new XNode("case", expr);
         }
 
         private Node readTry() {

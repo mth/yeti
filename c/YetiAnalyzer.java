@@ -107,6 +107,9 @@ public final class YetiAnalyzer extends YetiType {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
             }
+            if (kind == "case") {
+                return caseType(x, scope, depth);
+            }
             if (kind == "load") {
                 if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
@@ -174,9 +177,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
-        }
-        if (node instanceof Case) {
-            return caseType((Case) node, scope, depth);
         }
         if (node instanceof RSection) {
             return rsection((RSection) node, scope, depth);
@@ -1250,17 +1250,17 @@ public final class YetiAnalyzer extends YetiType {
         return null;
     }
 
-    static Code caseType(Case ex, Scope scope, int depth) {
-        Node[] choices = ex.choices;
-        if (choices.length == 0) {
+    static Code caseType(XNode ex, Scope scope, int depth) {
+        Node[] choices = ex.expr;
+        if (choices.length <= 1) {
             throw new CompileException(ex, "case expects some option!");
         }
-        Code val = analyze(ex.value, scope, depth);
+        Code val = analyze(choices[0], scope, depth);
         CaseCompiler cc = new CaseCompiler(val, depth);
         CasePattern[] pats = new CasePattern[choices.length];
         Scope[] scopes = new Scope[choices.length];
         Type argType = new Type(depth);
-        for (int i = 0; i < choices.length; ++i) {
+        for (int i = 1; i < choices.length; ++i) {
             cc.scope = scope;
             BinOp choice;
             if (!(choices[i] instanceof BinOp) ||
@@ -1277,13 +1277,13 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(ex, "Partial match: " + partialError);
         }
         cc.finalizeVariants();
-        for (int i = 0; i < choices.length; ++i) {
+        for (int i = 1; i < choices.length; ++i) {
             cc.mergeChoice(pats[i], ((BinOp) choices[i]).right, scopes[i]);
         }
         try {
             unify(val.type, argType);
         } catch (TypeException e) {
-            throw new CompileException(ex.value,
+            throw new CompileException(choices[0],
                 "Inferred type for case argument is " + argType +
                 ", but a " + val.type + " is given\n    (" +
                 e.getMessage() + ")");
