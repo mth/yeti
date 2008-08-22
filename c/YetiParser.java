@@ -511,28 +511,6 @@ interface YetiParser {
         }
     }
 
-    class NewOp extends Node {
-        String name;
-        Node[] arguments;
-
-        NewOp(String name, Node[] arguments) {
-            this.name = name.intern();
-            this.arguments = arguments;
-        }
-
-        String str() {
-            StringBuffer buf = new StringBuffer("new ");
-            buf.append(name);
-            buf.append('(');
-            for (int i = 0; i < arguments.length; ++i) {
-                if (i != 0)
-                    buf.append(", ");
-                buf.append(arguments[i].str());
-            }
-            return buf + ")";
-        }
-    }
-
     class TypeNode extends Node {
         String name;
         TypeNode[] param;
@@ -1002,7 +980,10 @@ interface YetiParser {
                     name += c == '.' ? '/' : c;
                 }
             }
-            return new NewOp(name, args);
+            Node[] ex = new Node[args.length + 1];
+            ex[0] = new Sym(name.intern());
+            System.arraycopy(args, 0, ex, 1, args.length);
+            return new XNode("new", ex);
         }
 
         // #something or #something(...)

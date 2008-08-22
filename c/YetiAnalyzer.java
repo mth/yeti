@@ -110,6 +110,13 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "case") {
                 return caseType(x, scope, depth);
             }
+            if (kind == "new") {
+                String name = ((Sym) x.expr[0]).sym;
+                Code[] args = mapArgs(1, x.expr, scope, depth);
+                return new NewExpr(JavaType.resolveConstructor(x,
+                                        resolveFullClass(name, scope, x), args)
+                                    .check(x, scope.packageName), args, x.line);
+            }
             if (kind == "load") {
                 if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
@@ -187,13 +194,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof RSection) {
             return rsection((RSection) node, scope, depth);
-        }
-        if (node instanceof NewOp) {
-            NewOp op = (NewOp) node;
-            Code[] args = mapArgs(op.arguments, scope, depth);
-            return new NewExpr(JavaType.resolveConstructor(op,
-                                    resolveFullClass(op.name, scope, op), args)
-                                .check(op, scope.packageName), args, op.line);
         }
         if (node instanceof Try) {
             return tryCatch((Try) node, scope, depth);
@@ -368,12 +368,12 @@ public final class YetiAnalyzer extends YetiType {
         return value;
     }
 
-    static Code[] mapArgs(Node[] args, Scope scope, int depth) {
+    static Code[] mapArgs(int start, Node[] args, Scope scope, int depth) {
         if (args == null)
             return null;
-        Code[] res = new Code[args.length];
-        for (int i = 0; i < args.length; ++i) {
-            res[i] = analyze(args[i], scope, depth);
+        Code[] res = new Code[args.length - start];
+        for (int i = start; i < args.length; ++i) {
+            res[i - start] = analyze(args[i], scope, depth);
         }
         return res;
     }
@@ -397,7 +397,7 @@ public final class YetiAnalyzer extends YetiType {
             f.check(ref, scope.packageName);
             return new ClassField(obj, f, ref.line);
         }
-        Code[] args = mapArgs(ref.arguments, scope, depth);
+        Code[] args = mapArgs(0, ref.arguments, scope, depth);
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null)
                         .check(ref, scope.packageName), args, ref.line);

@@ -807,7 +807,7 @@ class JavaType {
         return objType.javaType.resolve(where);
     }
 
-    static Method resolveConstructor(YetiParser.NewOp call,
+    static Method resolveConstructor(YetiParser.XNode call,
                                      YetiType.Type t,
                                      YetiCode.Code[] args) {
         JavaType jt = t.javaType.resolve(call);
