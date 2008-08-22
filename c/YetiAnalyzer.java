@@ -1398,7 +1398,7 @@ public final class YetiAnalyzer extends YetiType {
             Parser parser = new Parser(sourceName, src, flags);
             Node n = parser.parse(topLevel);
             if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
-                System.err.println(n.show());
+                System.err.println(n.str());
             }
             if (parser.moduleName != null) {
                 className = parser.moduleName;

@@ -59,29 +59,8 @@ interface YetiParser {
         int col;
         String kind;
 
-        String show() {
-            return str();
-        }
-
         String str() {
             return toString();
-        }
-
-        String showList(char open, char close, Node[] list) {
-            StringBuffer res = new StringBuffer();
-            res.append(open);
-            if (list == null) {
-                res.append(':');
-            } else {
-                for (int i = 0; i < list.length; ++i) {
-                    if (i != 0) {
-                        res.append(", ");
-                    }
-                    res.append(list[i].show());
-                }
-            }
-            res.append(close);
-            return res.toString();
         }
 
         Node pos(int line, int col) {
@@ -244,7 +223,7 @@ interface YetiParser {
         }
 
         String str() {
-            return name + " = " + expr.show();
+            return name + " = " + expr.str();
         }
     }
 
@@ -262,7 +241,7 @@ interface YetiParser {
         }
 
         String str() {
-            return "\\" + arg.show() + " -> " + expr.show();
+            return "\\" + arg.str() + " -> " + expr.str();
         }
     }
 
@@ -278,7 +257,20 @@ interface YetiParser {
         }
 
         String str() {
-            return showList('(', ')', st);
+            StringBuffer res = new StringBuffer();
+            res.append('(');
+            if (st == null) {
+                res.append(':');
+            } else {
+                for (int i = 0; i < st.length; ++i) {
+                    if (i != 0) {
+                        res.append(", ");
+                    }
+                    res.append(st[i].str());
+                }
+            }
+            res.append(')');
+            return res.toString();
         }
     }
 
@@ -366,7 +358,7 @@ interface YetiParser {
             this.c = c;
         }
 
-        String show() {
+        String str() {
             return new String(new char[] { c });
         }
     }
@@ -402,8 +394,8 @@ interface YetiParser {
         }
 
         String str() {
-            return '(' + (left == null ? "<>" : left.show()) + ' ' + op + ' '
-                       + (right == null ? "<>" : right.show()) + ')';
+            return '(' + (left == null ? "<>" : left.str()) + ' ' + op + ' '
+                       + (right == null ? "<>" : right.str()) + ')';
         }
     }
 
@@ -454,7 +446,7 @@ interface YetiParser {
         }
 
         String str() {
-            return (right == null ? "<>" : right.show())
+            return (right == null ? "<>" : right.str())
                         + ' ' + op + ' ' + type.str();
         }
     }
@@ -478,7 +470,7 @@ interface YetiParser {
 
         String str() {
             StringBuffer buf =
-                new StringBuffer(right == null ? "<>" : right.show());
+                new StringBuffer(right == null ? "<>" : right.str());
             buf.append('#');
             buf.append(name);
             if (arguments != null) {
