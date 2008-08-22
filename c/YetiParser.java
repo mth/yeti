@@ -334,45 +334,32 @@ interface YetiParser {
         String bind;
         Node handler;
 
+        Catch() {
+            super("catch");
+        }
+
         String str() {
             return "\ncatch " + exception + ' ' + bind + ":\n" + handler.str();
         }
     }
 
-    class Finally extends Eof {
-    }
-
-    class Yrt extends Finally {
-    }
-
-    class Eof extends Node {
+    class Eof extends XNode {
+        Eof(String kind) {
+            super(kind);
+        }
     }
 
     class CloseBracket extends Eof {
         char c;
 
         CloseBracket(char c) {
+            super(")");
             this.c = c;
         }
 
         String str() {
             return new String(new char[] { c });
         }
-    }
-
-    class Elif extends Eof {
-    }
-
-    class Else extends Eof {
-    }
-
-    class Fi extends Eof {
-    }
-
-    class Esac extends Eof {
-    }
-
-    class Done extends Eof {
     }
 
     class BinOp extends Node {
@@ -627,7 +614,7 @@ interface YetiParser {
         private static final int COMP_OP_LEVEL = opLevel("<");
         private static final int DOT_OP_LEVEL = opLevel(".");
         static final int IS_OP_LEVEL = opLevel("is");
-        private static final Eof EOF = new Eof() {
+        private static final Eof EOF = new Eof("EOF") {
             public String toString() {
                 return "EOF";
             }
@@ -787,20 +774,13 @@ interface YetiParser {
             Node res;
             if (s == "if") {
                 res = readIf();
-            } else if (s == "elif") {
-                res = new Elif();
-            } else if (s == "else") {
-                res = new Else();
-            } else if (s == "fi") {
-                res = new Fi();
+            } else if (s == "elif" || s == "else" || s == "fi" || s == "esac"
+                       || s == "done" || s == "finally" || s == "yrt") {
+                res = new Eof(s);
             } else if (s == "case") {
                 res = readCase();
-            } else if (s == "esac") {
-                res = new Esac();
             } else if (s == "do") {
                 res = readDo();
-            } else if (s == "done") {
-                res = new Done();
             } else if (s == "and" || s == "or") {
                 res = new BinOp(s, COMP_OP_LEVEL + 1, true);
             } else if (s == "in") {
@@ -834,10 +814,6 @@ interface YetiParser {
                 res = readTry();
             } else if (s == "catch") {
                 res = new Catch();
-            } else if (s == "finally") {
-                res = new Finally();
-            } else if (s == "yrt") {
-                res = new Yrt();
             } else if (s == "throw") {
                 res = new ThrowSym();
             } else if (s == "instanceof") {
@@ -988,15 +964,15 @@ interface YetiParser {
             Node cond = readExpr("then");
             Node expr = readSeq(' ', null);
             Node els;
-            if (eofWas instanceof Elif) {
+            if (eofWas.kind == "elif") {
                 els = readIf();
             } else {
-                if (eofWas instanceof Else) {
+                if (eofWas.kind == "else") {
                     els = readSeq(' ', null);
                 } else {
                     els = new XNode("()").pos(eofWas.line, eofWas.col);
                 }
-                if (!(eofWas instanceof Fi)) {
+                if (eofWas.kind != "fi") {
                     throw new CompileException(eofWas,
                         "Expected fi, found " + eofWas);
                 }
@@ -1007,7 +983,7 @@ interface YetiParser {
         private Node readCase() {
             Node val = readExpr("of");
             Node[] choices = readMany(';', ' ');
-            if (!(eofWas instanceof Esac)) {
+            if (eofWas.kind != "esac") {
                 throw new CompileException(eofWas,
                     "Expected esac, found " + eofWas);
             }
@@ -1021,7 +997,7 @@ interface YetiParser {
             List catches = new ArrayList();
             Try t = new Try();
             t.block = readSeq(' ', null);
-            while (!(eofWas instanceof Finally)) {
+            while (eofWas.kind != "finally" && eofWas.kind != "yrt") {
                 if (!(eofWas instanceof Catch)) {
                     throw new CompileException(eofWas,
                         "Expected finally or yrt, found " + eofWas);
@@ -1043,9 +1019,9 @@ interface YetiParser {
                 c.handler = readSeq(' ', null);
             }
             t.catches = (Catch[]) catches.toArray(new Catch[catches.size()]);
-            if (!(eofWas instanceof Yrt)) {
+            if (eofWas.kind != "yrt") {
                 t.cleanup = readSeq(' ', null);
-                if (!(eofWas instanceof Yrt)) {
+                if (eofWas.kind != "yrt") {
                     throw new CompileException(eofWas,
                         "Expected yrt, found " + eofWas);
                 }
@@ -1064,7 +1040,7 @@ interface YetiParser {
                 }
                 if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
                     Node expr = readSeq(' ', null);
-                    if (!(eofWas instanceof Done)) {
+                    if (eofWas.kind != "done") {
                         throw new CompileException(eofWas,
                                     "Expected done, found " + eofWas);
                     }
