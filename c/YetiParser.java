@@ -258,18 +258,6 @@ interface YetiParser {
         }
     }
 
-    class Import extends Node {
-        String className;
-
-        Import(String className) {
-            this.className = className;
-        }
-
-        String str() {
-            return "import " + className.replace('/', '.');
-        }
-    }
-
     class Seq extends Node {
         static final Object EVAL = new Object();
 
@@ -982,9 +970,10 @@ interface YetiParser {
                 res = new NoRecSym();
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
-            } else if (s == "load") {
-                res = new XNode("load", new Sym(readDotted(false,
-                                  "Expected module name after 'load', not a "))
+            } else if (s == "load" || s == "import") {
+                res = new XNode(s, new Sym(readDotted(false, s == "load"
+                            ? "Expected module name after 'load', not a "
+                            : "Expected class path after 'import', not a "))
                                   .pos(line, col));
             } else if (s == "type") {
                 res = readTypeDef();
@@ -996,9 +985,6 @@ interface YetiParser {
                 res = new Finally();
             } else if (s == "yrt") {
                 res = new Yrt();
-            } else if (s == "import") {
-                res = new Import(readDotted(false,
-                                 "Expected class path after 'import', not a "));
             } else if (s == "throw") {
                 res = new ThrowSym();
             } else if (s == "classOf") {

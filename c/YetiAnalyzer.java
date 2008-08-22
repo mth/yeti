@@ -834,11 +834,11 @@ public final class YetiAnalyzer extends YetiType {
                                 typeDef[typeDef.length - 1], null, 0, scope);
                     scope.typeDef = typeDef;
                 }
-            } else if (nodes[i] instanceof Import) {
+            } else if (nodes[i].kind() == "import") {
                 if ((YetiCode.CompileCtx.current().flags
                         & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
-                String name = ((Import) nodes[i]).className;
+                String name = ((Sym) ((XNode) nodes[i]).expr[0]).sym;
                 int lastSlash = name.lastIndexOf('/');
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
