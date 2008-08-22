@@ -94,6 +94,9 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "list") {
                 return list(x, scope, depth);
             }
+            if (kind == "struct") {
+                return structType(x, scope, depth);
+            }
             if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
@@ -165,9 +168,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Condition) {
             return cond((Condition) node, scope, depth);
-        }
-        if (node instanceof Struct) {
-            return structType((Struct) node, scope, depth);
         }
         if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
@@ -739,9 +739,9 @@ public final class YetiAnalyzer extends YetiType {
         last[0] = expr;
     }
 
-    static Scope bindStruct(Binder binder, Struct st, boolean isEval,
+    static Scope bindStruct(Binder binder, XNode st, boolean isEval,
                             Scope scope, int depth, SeqExpr[] last) {
-        Node[] fields = st.fields;
+        Node[] fields = st.expr;
         if (fields.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
         for (int j = 0; j < fields.length; ++j) {
@@ -820,7 +820,7 @@ public final class YetiAnalyzer extends YetiType {
                 Code expr = analyze(x.expr[1], scope, depth + 1);
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
-                scope = bindStruct(binder, (Struct) x.expr[0],
+                scope = bindStruct(binder, (XNode) x.expr[0],
                                    seq.seqKind == Seq.EVAL, scope, depth, last);
             } else if (nodes[i].kind() == "load") {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
@@ -901,10 +901,10 @@ public final class YetiAnalyzer extends YetiType {
                 bodyScope = new Scope(scope, argName, to);
         } else if (lambda.arg instanceof UnitLiteral) {
             to.arg.type = UNIT_TYPE;
-        } else if (lambda.arg instanceof Struct) {
+        } else if (lambda.arg.kind() == "struct") {
             to.arg.type = new Type(depth);
             seq = new SeqExpr[] { null, null };
-            bodyScope = bindStruct(to, (Struct) lambda.arg,
+            bodyScope = bindStruct(to, (XNode) lambda.arg,
                                    false, scope, depth, seq);
         } else {
             throw new CompileException(lambda.arg,
@@ -963,8 +963,8 @@ public final class YetiAnalyzer extends YetiType {
                     "Duplicate field " + field.name + " in the structure");
     }
 
-    static Code structType(Struct st, Scope scope, int depth) {
-        Node[] nodes = st.fields;
+    static Code structType(XNode st, Scope scope, int depth) {
+        Node[] nodes = st.expr;
         if (nodes.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope;
@@ -1164,8 +1164,8 @@ public final class YetiAnalyzer extends YetiType {
                     return new ConsPattern(hd, tl);
                 }
             }
-            if (node instanceof Struct) {
-                Node[] fields = ((Struct) node).fields;
+            if (node.kind() == "struct") {
+                Node[] fields = ((XNode) node).expr;
                 if (fields.length == 0)
                     throw new CompileException(node, NONSENSE_STRUCT);
                 String[] names = new String[fields.length];

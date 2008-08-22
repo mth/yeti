@@ -168,6 +168,22 @@ interface YetiParser {
         String kind() {
             return kind;
         }
+
+        static XNode struct(Node[] fields) {
+            for (int i = 0; i < fields.length; ++i) {
+                if (fields[i] instanceof Sym) {
+                    Sym s = (Sym) fields[i];
+                    Bind bind = new Bind();
+                    bind.name = s.sym;
+                    bind.expr = s;
+                    bind.col = s.col;
+                    bind.line = s.line;
+                    bind.noRec = true;
+                    fields[i] = bind;
+                }
+            }
+            return new XNode("struct", fields);
+        }
     }
 
     class Bind extends Node {
@@ -271,30 +287,6 @@ interface YetiParser {
 
         String str() {
             return showList('(', ')', st);
-        }
-    }
-
-    class Struct extends Node {
-        Node[] fields;
-
-        Struct(Node[] fields) {
-            this.fields = fields;
-            for (int i = 0; i < fields.length; ++i) {
-                if (fields[i] instanceof Sym) {
-                    Sym s = (Sym) fields[i];
-                    Bind bind = new Bind();
-                    bind.name = s.sym;
-                    bind.expr = s;
-                    bind.col = s.col;
-                    bind.line = s.line;
-                    bind.noRec = true;
-                    fields[i] = bind;
-                }
-            }
-        }
-
-        String str() {
-            return showList('{', '}', fields);
         }
     }
 
@@ -863,7 +855,7 @@ interface YetiParser {
                     }
                     return new XNode("list", readMany(',', ']')).pos(line, col);
                 case '{':
-                    return new Struct(readMany(',', '}')).pos(line, col);
+                    return XNode.struct(readMany(',', '}')).pos(line, col);
                 case ')': case ']': case '}':
                     p = i;
                     return new CloseBracket(src[i]).pos(line, col);
@@ -1045,9 +1037,9 @@ interface YetiParser {
             }
             Bind bind;
             return args == null ? e :
-                   args.size() == 1 && args.get(0) instanceof Struct
+                   args.size() == 1 && ((Node) args.get(0)).kind() == "struct"
                    ? (Node) new XNode("struct-bind",
-                        new Node[] { (Struct) args.get(0), e })
+                        new Node[] { (XNode) args.get(0), e })
                    : (bind = new Bind(args, e)).name != "_" ? bind
                    : bind.expr instanceof Lambda
                         ? bind.expr : new XNode("_", bind.expr);
