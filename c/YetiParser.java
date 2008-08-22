@@ -288,34 +288,6 @@ interface YetiParser {
         }
     }
 
-    class Condition extends Node {
-        Node[][] choices;
-
-        Condition(Node[][] choices) {
-            this.choices = choices;
-        }
-
-        String str() {
-            StringBuffer buf = new StringBuffer();
-            buf.append("\nif ");
-            for (int i = 0; i < choices.length; ++i) {
-                Node[] choice = choices[i];
-                if (choice.length >= 2) {
-                    if (i != 0) {
-                        buf.append("\nelif ");
-                    }
-                    buf.append(choice[1].show());
-                    buf.append(" then\n  ");
-                } else {
-                    buf.append("\nelse\n  ");
-                }
-                buf.append(choice[0].show());
-            }
-            buf.append("\nfi\n");
-            return buf.toString();
-        }
-    }
-
     class Case extends Node {
         Node value;
         Node[] choices;
@@ -1090,17 +1062,17 @@ interface YetiParser {
             List branches = new ArrayList();
             do {
                 Node cond = readExpr("then");
-                branches.add(new Node[] { readSeq(' ', null), cond });
+                branches.add(readSeq(' ', null));
+                branches.add(cond);
             } while (eofWas instanceof Elif);
-            branches.add(new Node[] {
-                eofWas instanceof Else ? readSeq(' ', null)
-                    : new XNode("()").pos(eofWas.line, eofWas.col) });
+            branches.add(eofWas instanceof Else ? readSeq(' ', null)
+                    : new XNode("()").pos(eofWas.line, eofWas.col));
             if (!(eofWas instanceof Fi)) {
                 throw new CompileException(eofWas,
                     "Expected fi, found " + eofWas);
             }
-            return new Condition((Node[][]) branches.toArray(
-                            new Node[branches.size()][]));
+            return new XNode("cond", (Node[]) branches.toArray(
+                                        new Node[branches.size()]));
         }
 
         private Node readCase() {

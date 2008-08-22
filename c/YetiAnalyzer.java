@@ -100,6 +100,9 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "concat") {
                 return concatStr(x, scope, depth);
             }
+            if (kind == "cond") {
+                return cond(x, scope, depth);
+            }
             if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
@@ -168,9 +171,6 @@ public final class YetiAnalyzer extends YetiType {
                          apply(op, resolve(opop, op, scope, depth),
                                op.left, scope, depth),
                          op.right, scope, depth);
-        }
-        if (node instanceof Condition) {
-            return cond((Condition) node, scope, depth);
         }
         if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
@@ -598,22 +598,22 @@ public final class YetiAnalyzer extends YetiType {
         return new ConcatStrings(parts);
     }
 
-    static Code cond(Condition condition, Scope scope, int depth) {
-        Node[][] choices = condition.choices;
-        Code[][] conds = new Code[choices.length][];
+    static Code cond(XNode condition, Scope scope, int depth) {
+        Node[] choices = condition.expr;
+        Code[][] conds = new Code[(choices.length + 1) / 2][];
         Type result = null;
         boolean poly = true;
-        for (int i = 0; i < choices.length; ++i) {
-            Node[] choice = choices[i];
-            Code val = analyze(choice[0], scope, depth);
-            if (choice.length == 1) {
+        for (int i = 0; i < conds.length; ++i) {
+            int j = i * 2;
+            Code val = analyze(choices[j], scope, depth);
+            if (j + 1 == choices.length) {
                 conds[i] = new Code[] { val };
             } else {
-                Code cond = analyze(choice[1], scope, depth);
+                Code cond = analyze(choices[j + 1], scope, depth);
                 try {
                     unify(BOOL_TYPE, cond.type);
                 } catch (TypeException ex) {
-                    throw new CompileException(choice[1],
+                    throw new CompileException(choices[j + 1],
                         "if condition must have a boolean type (but here was "
                         + cond.type + ")");
                 }
@@ -631,7 +631,7 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     unify(result, val.type);
                 } catch (TypeException ex) {
-                    throw new CompileException(choice[0],
+                    throw new CompileException(choices[j],
                         "This if branch has a " + val.type +
                         " type, while another was a " + result, ex);
                 }
