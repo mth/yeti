@@ -58,6 +58,10 @@ interface YetiParser {
         int line;
         int col;
 
+        String kind() {
+            return null;
+        }
+
         String show() {
             return str();
         }
@@ -146,6 +150,8 @@ interface YetiParser {
         XNode(String kind, Node expr) {
             this.kind = kind;
             this.expr = new Node[] { expr };
+            line = expr.line;
+            col = expr.col;
         }
 
         String str() {
@@ -157,6 +163,10 @@ interface YetiParser {
             }
             buf.append(')');
             return buf.toString();
+        }
+
+        String kind() {
+            return kind;
         }
     }
 
@@ -245,22 +255,6 @@ interface YetiParser {
 
         String str() {
             return "\\" + arg.show() + " -> " + expr.show();
-        }
-    }
-
-    class StructBind extends Node {
-        Struct bindings;
-        Node expr;
-
-        StructBind(Struct bindings, Node expr) {
-            this.bindings = bindings;
-            this.expr = expr;
-            line = bindings.line;
-            col = bindings.col;
-        }
-
-        String str() {
-            return bindings + " = " + expr;
         }
     }
 
@@ -1089,7 +1083,8 @@ interface YetiParser {
             Bind bind;
             return args == null ? e :
                    args.size() == 1 && args.get(0) instanceof Struct
-                   ? (Node) new StructBind((Struct) args.get(0), e)
+                   ? (Node) new XNode("struct-bind",
+                        new Node[] { (Struct) args.get(0), e })
                    : (bind = new Bind(args, e)).name != "_" ? bind
                    : bind.expr instanceof Lambda
                         ? bind.expr : new XNode("_", bind.expr);
@@ -1608,7 +1603,7 @@ interface YetiParser {
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;
                     if (seq.st[seq.st.length - 1] instanceof Bind ||
-                        seq.st[seq.st.length - 1] instanceof StructBind) {
+                        seq.st[seq.st.length - 1].kind() == "struct-bind") {
                         Node[] tmp = new Node[seq.st.length + 1];
                         System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
                         tmp[tmp.length - 1] =

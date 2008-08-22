@@ -88,9 +88,10 @@ public final class YetiAnalyzer extends YetiType {
             }
             return r;
         }
-        if (node instanceof XNode) {
+        String kind = node.kind();
+        if (kind != null) {
             XNode x = (XNode) node;
-            if (x.kind == "_") {
+            if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
             }
@@ -814,13 +815,13 @@ public final class YetiAnalyzer extends YetiType {
                                     scope, depth);
                 bindings[i] = binder;
                 addSeq(last, binder);
-            } else if (nodes[i] instanceof StructBind) {
-                StructBind sbind = (StructBind) nodes[i];
-                Code expr = analyze(sbind.expr, scope, depth + 1);
+            } else if (nodes[i].kind() == "struct-bind") {
+                XNode x = (XNode) nodes[i];
+                Code expr = analyze(x.expr[1], scope, depth + 1);
                 BindExpr binder = new BindExpr(expr, false);
                 addSeq(last, binder);
-                scope = bindStruct(binder, sbind.bindings, seq.kind == Seq.EVAL,
-                                   scope, depth, last);
+                scope = bindStruct(binder, (Struct) x.expr[0],
+                                   seq.kind == Seq.EVAL, scope, depth, last);
             } else if (nodes[i] instanceof Load) {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
