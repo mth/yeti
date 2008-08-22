@@ -369,29 +369,6 @@ interface YetiParser {
         }
     }
 
-    class ConcatStr extends Node {
-        Node[] param;
-
-        ConcatStr(Node[] param) {
-            this.param = param;
-        }
-
-        String str() {
-            StringBuffer buf = new StringBuffer("\"");
-            for (int i = 0; i < param.length; ++i) {
-                if (param[i] instanceof Str) {
-                    buf.append(((Str) param[i]).str);
-                } else {
-                    buf.append("\\(");
-                    buf.append(param[i].show());
-                    buf.append(")");
-                }
-            }
-            buf.append('"');
-            return buf.toString();
-        }
-    }
-
     class NumLit extends Node {
         Num num;
 
@@ -1355,7 +1332,7 @@ interface YetiParser {
             if (res.length() != 0) {
                 parts.add(new Str(res.toString()));
             }
-            return new ConcatStr((Node[]) parts.toArray(
+            return new XNode("concat", (Node[]) parts.toArray(
                                             new Node[parts.size()]));
         }
 

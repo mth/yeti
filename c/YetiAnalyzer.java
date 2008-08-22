@@ -97,6 +97,9 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "struct") {
                 return structType(x, scope, depth);
             }
+            if (kind == "concat") {
+                return concatStr(x, scope, depth);
+            }
             if (kind == "_") {
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
@@ -174,9 +177,6 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (node instanceof Case) {
             return caseType((Case) node, scope, depth);
-        }
-        if (node instanceof ConcatStr) {
-            return concatStr((ConcatStr) node, scope, depth);
         }
         if (node instanceof RSection) {
             return rsection((RSection) node, scope, depth);
@@ -590,10 +590,10 @@ public final class YetiAnalyzer extends YetiType {
         return assign;
     }
 
-    static Code concatStr(ConcatStr concat, Scope scope, int depth) {
-        Code[] parts = new Code[concat.param.length];
+    static Code concatStr(XNode concat, Scope scope, int depth) {
+        Code[] parts = new Code[concat.expr.length];
         for (int i = 0; i < parts.length; ++i) {
-            parts[i] = analyze(concat.param[i], scope, depth);
+            parts[i] = analyze(concat.expr[i], scope, depth);
         }
         return new ConcatStrings(parts);
     }
