@@ -132,15 +132,13 @@ interface YetiParser {
     class ThrowSym extends Node {
     }
 
-    class UnitLiteral extends Node {
-        String str() {
-            return "()";
-        }
-    }
-
     class XNode extends Node {
         String kind;
         Node[] expr;
+
+        XNode(String kind) {
+            this.kind = kind;
+        }
 
         XNode(String kind, Node[] expr) {
             this.kind = kind;
@@ -1096,7 +1094,7 @@ interface YetiParser {
             } while (eofWas instanceof Elif);
             branches.add(new Node[] {
                 eofWas instanceof Else ? readSeq(' ', null)
-                    : new UnitLiteral().pos(eofWas.line, eofWas.col) });
+                    : new XNode("()").pos(eofWas.line, eofWas.col) });
             if (!(eofWas instanceof Fi)) {
                 throw new CompileException(eofWas,
                     "Expected fi, found " + eofWas);
@@ -1256,7 +1254,7 @@ interface YetiParser {
                 return list[0];
             }
             if (list.length == 0) {
-                return new UnitLiteral().pos(line, p - lineStart);
+                return new XNode("()").pos(line, p - lineStart);
             }
             Node w = list[list.length - 1];
             for (BinOp bo; w instanceof BinOp &&
@@ -1539,7 +1537,7 @@ interface YetiParser {
                         Node[] tmp = new Node[seq.st.length + 1];
                         System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
                         tmp[tmp.length - 1] =
-                            new UnitLiteral().pos(seq.line, seq.col);
+                            new XNode("()").pos(seq.line, seq.col);
                         seq.st = tmp;
                     } else if (seq.st.length == 1) {
                         res = seq.st[0];

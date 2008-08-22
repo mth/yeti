@@ -74,9 +74,6 @@ public final class YetiAnalyzer extends YetiType {
         if (node instanceof Str) {
             return new StringConstant(((Str) node).str);
         }
-        if (node instanceof UnitLiteral) {
-            return new UnitConstant();
-        }
         if (node instanceof Seq) {
             return analSeq((Seq) node, scope, depth);
         }
@@ -91,6 +88,9 @@ public final class YetiAnalyzer extends YetiType {
         String kind = node.kind();
         if (kind != null) {
             XNode x = (XNode) node;
+            if (kind == "()") {
+                return new UnitConstant();
+            }
             if (kind == "list") {
                 return list(x, scope, depth);
             }
@@ -899,7 +899,7 @@ public final class YetiAnalyzer extends YetiType {
             String argName = ((Sym) lambda.arg).sym;
             if (argName != "_")
                 bodyScope = new Scope(scope, argName, to);
-        } else if (lambda.arg instanceof UnitLiteral) {
+        } else if (lambda.arg.kind() == "()") {
             to.arg.type = UNIT_TYPE;
         } else if (lambda.arg.kind() == "struct") {
             to.arg.type = new Type(depth);
@@ -1089,7 +1089,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, name, binding);
                 return binding;
             }
-            if (node instanceof UnitLiteral) {
+            if (node.kind() == "()") {
                 patUnify(node, t, UNIT_TYPE);
                 return ANY_PATTERN;
             }
