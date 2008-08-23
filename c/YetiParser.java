@@ -86,6 +86,11 @@ interface YetiParser {
                      c != '[' && c != ']' && c != '{' && c != '}'));
             return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\''; 
         }
+
+        String sym() {
+            throw new CompileException(this,
+                "Expected symbol here, not a " + this);
+        }
     }
 
     class SepOp extends Node {
@@ -269,6 +274,10 @@ interface YetiParser {
             this.sym = sym;
         }
 
+        String sym() {
+            return sym;
+        }
+
         String str() {
             return sym;
         }
@@ -299,20 +308,6 @@ interface YetiParser {
 
         String str() {
             return String.valueOf(num);
-        }
-    }
-
-    class Catch extends Eof {
-        String exception;
-        String bind;
-        Node handler;
-
-        Catch() {
-            super("catch");
-        }
-
-        String str() {
-            return "\ncatch " + exception + ' ' + bind + ":\n" + handler.str();
         }
     }
 
@@ -733,15 +728,16 @@ interface YetiParser {
             Node res;
             if (s == "if") {
                 res = readIf();
-            } else if (s == "elif" || s == "else" || s == "fi" || s == "esac"
-                       || s == "done" || s == "finally" || s == "yrt") {
-                res = new Eof(s);
-            } else if (s == "case") {
-                res = readCase();
             } else if (s == "do") {
                 res = readDo();
             } else if (s == "and" || s == "or") {
                 res = new BinOp(s, COMP_OP_LEVEL + 1, true);
+            } else if (s == "elif" || s == "else" || s == "fi" ||
+                       s == "esac" || s == "done" ||
+                       s == "catch" || s == "finally" || s == "yrt") {
+                res = new Eof(s);
+            } else if (s == "case") {
+                res = readCase();
             } else if (s == "in") {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
             } else if (s == "div" || s == "shr" || s == "shl") {
@@ -761,19 +757,17 @@ interface YetiParser {
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load" || s == "import" || s == "classOf") {
-                res = new XNode(s, new Sym(readDotted(false,
+                res = new XNode(s, readDotted(false,
                     s == "load" ? "Expected module name after 'load', not a " :
                     s == "import" ? "Expected class path after 'import', not a "
-                    : "Expected class name, not a ")).pos(line, col));
+                    : "Expected class name, not a "));
             } else if (s == "type") {
                 res = readTypeDef();
             } else if (s == "try") {
                 res = readTry();
-            } else if (s == "catch") {
-                res = new Catch();
             } else if (s == "instanceof") {
                 res = new InstanceOf(
-                            readDotted(false, "Expected class name, not a "));
+                        readDotted(false, "Expected class name, not a ").sym);
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
@@ -953,25 +947,29 @@ interface YetiParser {
             List catches = new ArrayList();
             catches.add(readSeq(' ', null));
             while (eofWas.kind != "finally" && eofWas.kind != "yrt") {
-                if (!(eofWas instanceof Catch)) {
+                if (eofWas.kind != "catch") {
                     throw new CompileException(eofWas,
                         "Expected finally or yrt, found " + eofWas);
                 }
-                Catch c = (Catch) eofWas;
+                XNode c = (XNode) eofWas;
                 catches.add(c);
-                c.exception =
-                    readDotted(false, "Expected exception name, not ").intern();
+                c.expr = new Node[3];
+                c.expr[0] =
+                    readDotted(false, "Expected exception name, not ");
                 Node n = fetch();
                 if (n instanceof Sym) {
-                    c.bind = ((Sym) n).sym;
+                    c.expr[1] = n;
                     n = fetch();
                 }
                 if (!(n instanceof BinOp) || ((BinOp) n).op != ":") {
                     throw new CompileException(n, "Expected ':'" +
-                        (c.bind == null ? " or identifier" : "") +
+                        (c.expr[1] == null ? " or identifier" : "") +
                         ", but found " + n);
                 }
-                c.handler = readSeq(' ', null);
+                if (c.expr[1] == null) {
+                    c.expr[1] = new Sym("_").pos(n.line, n.col);
+                }
+                c.expr[2] = readSeq(' ', null);
             }
             if (eofWas.kind != "yrt") {
                 catches.add(readSeq(' ', null));
@@ -1012,29 +1010,32 @@ interface YetiParser {
             }
         }
 
-        private String readDotted(boolean decl, String err) {
+        private Sym readDotted(boolean decl, String err) {
+            Node first = fetch();
             String result = "";
-            for (;;) {
-                Node n = fetch();
+            for (Node n = first;; n = fetch()) {
                 if (!(n instanceof Sym)) {
                     throw new CompileException(n, err + n);
                 }
                 result += ((Sym) n).sym;
                 p = skipSpace();
                 if (p >= src.length)
-                    return result;
+                    break;
                 if (src[p] != '.') {
                     if (!decl)
-                        return result;
+                        break;
                     if (src[p] == ';') {
                         ++p;
-                        return result;
+                        break;
                     }
                     throw new CompileException(n, "Expected ';', not a " + n);
                 }
                 ++p;
                 result += "/";
             }
+            Sym sym = new Sym(result.intern());
+            sym.pos(first.line, first.col);
+            return sym;
         }
 
         private Node[] readMany(char sep, char end) {
@@ -1359,7 +1360,7 @@ interface YetiParser {
             if (s.equals("module") || s.equals("program")) {
                 p = i;
                 moduleName = readDotted(true,
-                    "Expected " + s + " name, not a ");
+                    "Expected " + s + " name, not a ").sym;
                 isModule = s.equals("module");
             }
             char first = p < src.length ? src[p] : ' ';

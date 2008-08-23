@@ -111,7 +111,7 @@ public final class YetiAnalyzer extends YetiType {
                 return caseType(x, scope, depth);
             }
             if (kind == "new") {
-                String name = ((Sym) x.expr[0]).sym;
+                String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 return new NewExpr(JavaType.resolveConstructor(x,
                                         resolveFullClass(name, scope, x), args)
@@ -126,11 +126,11 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "load") {
                 if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
-                String nam = ((Sym) x.expr[0]).sym;
+                String nam = x.expr[0].sym();
                 return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
             }
             if (kind == "classOf") {
-                String cn = ((Sym) x.expr[0]).sym;
+                String cn = x.expr[0].sym();
                 Type t = cn != "module" ? null :
                             resolveClass("module", scope, false);
                 return new ClassOfExpr(t != null ? t.javaType :
@@ -378,7 +378,7 @@ public final class YetiAnalyzer extends YetiType {
         Code obj = null;
         Type t = null;
         if (ref.right instanceof Sym) {
-            String className = ((Sym) ref.right).sym;
+            String className = ref.right.sym();
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
                 (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
@@ -405,7 +405,7 @@ public final class YetiAnalyzer extends YetiType {
         scope.closure = tc;
         tc.setBlock(analyze(t.expr[0], scope, depth));
         int lastCatch = t.expr.length - 1;
-        if (!(t.expr[lastCatch] instanceof Catch)) {
+        if (t.expr[lastCatch].kind != "catch") {
             tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
             try {
                 unify(tc.cleanup.type, UNIT_TYPE);
@@ -417,16 +417,18 @@ public final class YetiAnalyzer extends YetiType {
             --lastCatch;
         }
         for (int i = 1; i <= lastCatch; ++i) {
-            Catch c = (Catch) t.expr[i];
-            Type exception = resolveFullClass(c.exception, scope, null);
+            XNode c = (XNode) t.expr[i];
+            Type exception =
+                resolveFullClass(c.expr[0].sym(), scope, null);
             exception.javaType.resolve(c);
             TryCatch.Catch cc = tc.addCatch(exception);
-            cc.handler = analyze(c.handler,
-                c.bind == null ? scope : new Scope(scope, c.bind, cc), depth);
+            String bind = c.expr[1].sym();
+            cc.handler = analyze(c.expr[2], bind == "_" ? scope
+                                    : new Scope(scope, bind, cc), depth);
             try {
                 unify(tc.block.type, cc.handler.type);
             } catch (TypeException ex) {
-                throw new CompileException(c.handler,
+                throw new CompileException(c.expr[2],
                             "This catch has " + cc.handler.type +
                             " type, while try block was " + tc.block.type, ex);
             }
@@ -459,7 +461,7 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code rsection(XNode section, Scope scope, int depth) {
-        String sym = ((Sym) section.expr[0]).sym;
+        String sym = section.expr[0].sym();
         if (sym == FIELD_OP) {
             LinkedList parts = new LinkedList();
             Node x = section.expr[1];
@@ -470,10 +472,10 @@ public final class YetiAnalyzer extends YetiType {
                         "Unexpected " + op.op + " in field selector");
                 }
                 checkSelectorSym(op, op.right);
-                parts.addFirst(((Sym) op.right).sym);
+                parts.addFirst(op.right.sym());
             }
             checkSelectorSym(section, x);
-            parts.addFirst(((Sym) x).sym);
+            parts.addFirst(x.sym());
             String[] fields =
                 (String[]) parts.toArray(new String[parts.size()]);
             Type res = new Type(depth), arg = res;
@@ -763,7 +765,7 @@ public final class YetiAnalyzer extends YetiType {
             bind.expr.pos(bind.line, bind.col);
             Node nameNode = field.expr;
             if (!(nameNode instanceof Sym) ||
-                (bind.name = ((Sym) nameNode).sym) == "_")
+                (bind.name = nameNode.sym()) == "_")
                 throw new CompileException(nameNode,
                     "Binding name expected, not a " + nameNode);
             Code code = selectMember(fields[j], (Sym) bind.expr,
@@ -842,7 +844,7 @@ public final class YetiAnalyzer extends YetiType {
                 if ((YetiCode.CompileCtx.current().flags
                         & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
-                String name = ((Sym) ((XNode) nodes[i]).expr[0]).sym;
+                String name = ((XNode) nodes[i]).expr[0].sym();
                 int lastSlash = name.lastIndexOf('/');
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
@@ -900,7 +902,7 @@ public final class YetiAnalyzer extends YetiType {
             } else {
                 to.arg.type = new Type(depth);
             }
-            String argName = ((Sym) lambda.arg).sym;
+            String argName = lambda.arg.sym();
             if (argName != "_")
                 bodyScope = new Scope(scope, argName, to);
         } else if (lambda.arg.kind == "()") {
@@ -1086,7 +1088,7 @@ public final class YetiAnalyzer extends YetiType {
         CasePattern toPattern(Node node, Type t) {
             if (node instanceof Sym) {
                 t.flags |= FL_ANY_PATTERN;
-                String name = ((Sym) node).sym;
+                String name = node.sym();
                 if (name == "_")
                     return ANY_PATTERN;
                 BindPattern binding = new BindPattern(exp, t);
@@ -1130,7 +1132,7 @@ public final class YetiAnalyzer extends YetiType {
             if (node instanceof BinOp) {
                 BinOp pat = (BinOp) node;
                 if (pat.op == "" && pat.left instanceof Sym) {
-                    String variant = ((Sym) pat.left).sym;
+                    String variant = pat.left.sym();
                     if (!Character.isUpperCase(variant.charAt(0))) {
                         throw new CompileException(pat.left, variant +
                             ": Variant constructor must start with upper case");
