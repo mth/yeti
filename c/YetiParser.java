@@ -295,7 +295,7 @@ interface YetiParser {
         }
 
         String str() {
-            return '"' + str + '"';
+            return Core.show(str);
         }
     }
 
