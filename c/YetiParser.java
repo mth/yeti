@@ -89,7 +89,7 @@ interface YetiParser {
 
         String sym() {
             throw new CompileException(this,
-                "Expected symbol here, not a " + this);
+                "Expected symbol here, not " + this);
         }
     }
 
