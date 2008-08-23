@@ -120,6 +120,9 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "rsection") {
                 return rsection(x, scope, depth);
             }
+            if (kind == "try") {
+                return tryCatch(x, scope, depth);
+            }
             if (kind == "load") {
                 if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
@@ -190,8 +193,6 @@ public final class YetiAnalyzer extends YetiType {
                          op.right, scope, depth);
         } else if (node instanceof Lambda) {
             return lambda(new Function(null), (Lambda) node, scope, depth);
-        } else if (node instanceof Try) {
-            return tryCatch((Try) node, scope, depth);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -398,23 +399,25 @@ public final class YetiAnalyzer extends YetiType {
                         .check(ref, scope.packageName), args, ref.line);
     }
 
-    static Code tryCatch(Try t, Scope scope, int depth) {
+    static Code tryCatch(XNode t, Scope scope, int depth) {
         TryCatch tc = new TryCatch();
         scope = new Scope(scope, null, null); // closure frame
         scope.closure = tc;
-        tc.setBlock(analyze(t.block, scope, depth));
-        if (t.cleanup != null) {
-            tc.cleanup = analyze(t.cleanup, scope, depth);
+        tc.setBlock(analyze(t.expr[0], scope, depth));
+        int lastCatch = t.expr.length - 1;
+        if (!(t.expr[lastCatch] instanceof Catch)) {
+            tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
             try {
                 unify(tc.cleanup.type, UNIT_TYPE);
             } catch (TypeException ex) {
-                throw new CompileException(t.cleanup,
+                throw new CompileException(t.expr[lastCatch],
                                 "finally block must have a unit type, not "
                                 + tc.cleanup.type, ex);
             }
+            --lastCatch;
         }
-        for (int i = 0; i < t.catches.length; ++i) {
-            Catch c = t.catches[i];
+        for (int i = 1; i <= lastCatch; ++i) {
+            Catch c = (Catch) t.expr[i];
             Type exception = resolveFullClass(c.exception, scope, null);
             exception.javaType.resolve(c);
             TryCatch.Catch cc = tc.addCatch(exception);

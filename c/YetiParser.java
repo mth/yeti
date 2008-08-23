@@ -302,24 +302,6 @@ interface YetiParser {
         }
     }
 
-    class Try extends Node {
-        Node block;
-        Catch[] catches;
-        Node cleanup;
-
-        String str() {
-            StringBuffer buf = new StringBuffer("try\n");
-            for (int i = 0; i < catches.length; ++i)
-                buf.append(catches[i].str());
-            if (cleanup != null) {
-                buf.append("\nfinally\n");
-                buf.append(cleanup.str());
-            }
-            buf.append("\nyrt\n");
-            return buf.toString();
-        }
-    }
-
     class Catch extends Eof {
         String exception;
         String bind;
@@ -969,8 +951,7 @@ interface YetiParser {
 
         private Node readTry() {
             List catches = new ArrayList();
-            Try t = new Try();
-            t.block = readSeq(' ', null);
+            catches.add(readSeq(' ', null));
             while (eofWas.kind != "finally" && eofWas.kind != "yrt") {
                 if (!(eofWas instanceof Catch)) {
                     throw new CompileException(eofWas,
@@ -992,18 +973,19 @@ interface YetiParser {
                 }
                 c.handler = readSeq(' ', null);
             }
-            t.catches = (Catch[]) catches.toArray(new Catch[catches.size()]);
             if (eofWas.kind != "yrt") {
-                t.cleanup = readSeq(' ', null);
+                catches.add(readSeq(' ', null));
                 if (eofWas.kind != "yrt") {
                     throw new CompileException(eofWas,
                         "Expected yrt, found " + eofWas);
                 }
-            } else if (t.catches.length == 0) {
+            }
+            Node[] expr = (Node[]) catches.toArray(new Node[catches.size()]);
+            if (expr.length <= 1) {
                 throw new CompileException(eofWas,
                     "try block must contain at least one catch or finally");
             }
-            return t;
+            return new XNode("try", expr);
         }
 
         private Node readDo() {
