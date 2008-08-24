@@ -257,7 +257,7 @@ interface YetiParser {
         }
     }
 
-    class Sym extends Node {
+    final class Sym extends Node {
         String sym;
 
         Sym(String sym) {
@@ -277,7 +277,7 @@ interface YetiParser {
         }
     }
 
-    class Str extends Node {
+    final class Str extends Node {
         String str;
 
         Str(String str) {
@@ -289,7 +289,7 @@ interface YetiParser {
         }
     }
 
-    class NumLit extends Node {
+    final class NumLit extends Node {
         Num num;
 
         NumLit(Num num) {
@@ -477,7 +477,7 @@ interface YetiParser {
         }
     }
 
-    class ParseExpr {
+    final class ParseExpr {
         private boolean lastOp = true;
         private BinOp root = new BinOp(null, -1, false);
         private BinOp cur = root;
@@ -535,7 +535,7 @@ interface YetiParser {
         }
     }
 
-    class Parser {
+    final class Parser {
         private static final char[] CHS =
            ("                                " + // 0x
             " .'.x..x  .. ../xxxxxxxxxx. ...x" + // 2x
