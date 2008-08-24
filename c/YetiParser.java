@@ -293,22 +293,13 @@ interface YetiParser {
         }
     }
 
-    class Eof extends XNode {
+    final class Eof extends XNode {
         Eof(String kind) {
             super(kind);
         }
-    }
 
-    class CloseBracket extends Eof {
-        char c;
-
-        CloseBracket(char c) {
-            super(")");
-            this.c = c;
-        }
-
-        String str() {
-            return new String(new char[] { c });
+        public String toString() {
+            return kind;
         }
     }
 
@@ -550,11 +541,7 @@ interface YetiParser {
         private static final int COMP_OP_LEVEL = opLevel("<");
         private static final int DOT_OP_LEVEL = opLevel(".");
         static final int IS_OP_LEVEL = opLevel("is");
-        private static final Eof EOF = new Eof("EOF") {
-            public String toString() {
-                return "EOF";
-            }
-        };
+        private static final Eof EOF = new Eof("EOF");
         private char[] src;
         private int p;
         private Node eofWas;
@@ -652,9 +639,15 @@ interface YetiParser {
                     return new XNode("list", readMany(",", ']')).pos(line, col);
                 case '{':
                     return XNode.struct(readMany(",", '}')).pos(line, col);
-                case ')': case ']': case '}':
+                case ')':
                     p = i;
-                    return new CloseBracket(src[i]).pos(line, col);
+                    return new Eof(")").pos(line, col);
+                case ']':
+                    p = i;
+                    return new Eof("]").pos(line, col);
+                case '}':
+                    p = i;
+                    return new Eof("}").pos(line, col);
                 case '"':
                     return readStr().pos(line, col);
                 case '\'':
@@ -1250,9 +1243,10 @@ interface YetiParser {
                         break;
                     }
                 }
-                if (!(field instanceof CloseBracket) || src[p++] != '}') {
+                if (field.kind != "}") {
                     throw new CompileException(field, expect + field);
                 }
+                ++p;
                 res = new TypeNode("",
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
