@@ -148,6 +148,15 @@ interface YetiParser {
             }
             return new XNode("struct", fields);
         }
+
+        static XNode lambda(Node arg, Node expr, String name) {
+            XNode lambda = new XNode("lambda",
+                name == null ? new Node[] { arg, expr } : new Node[] {
+                    arg, expr, new Sym(name).pos(arg.line, arg.col) });
+            lambda.line = arg.line;
+            lambda.col = arg.col;
+            return lambda;
+        }
     }
 
     class Bind extends Node {
@@ -209,7 +218,7 @@ interface YetiParser {
                 --i;
             }
             for (; i >= first; --i) {
-                expr = new Lambda((Node) args.get(i), expr,
+                expr = XNode.lambda((Node) args.get(i), expr,
                         i == first ? name : null);
             }
             this.expr = expr;
@@ -217,24 +226,6 @@ interface YetiParser {
 
         String str() {
             return name + " = " + expr.str();
-        }
-    }
-
-    class Lambda extends Node {
-        Node arg;
-        Node expr;
-        String bindName;
-
-        Lambda(Node arg, Node expr, String name) {
-            this.arg = arg;
-            this.expr = expr;
-            this.bindName = name;
-            line = arg.line;
-            col = arg.col;
-        }
-
-        String str() {
-            return "\\" + arg.str() + " -> " + expr.str();
         }
     }
 
@@ -837,7 +828,7 @@ interface YetiParser {
                    ? (Node) new XNode("struct-bind",
                         new Node[] { (XNode) args.get(0), e })
                    : (bind = new Bind(args, e)).name != "_" ? bind
-                   : bind.expr instanceof Lambda
+                   : bind.expr.kind == "lambda"
                         ? bind.expr : new XNode("_", bind.expr);
         }
 
@@ -999,10 +990,11 @@ interface YetiParser {
                                     "Expected done, found " + eofWas);
                     }
                     if (args.isEmpty()) {
-                        return new Lambda(new Sym("_"), expr, null);
+                        return XNode.lambda(new Sym("_").pos(arg.line, arg.col),
+                                            expr, null);
                     }
                     for (int i = args.size(); --i >= 0;) {
-                        expr = new Lambda((Node) args.get(i), expr, null);
+                        expr = XNode.lambda((Node) args.get(i), expr, null);
                     }
                     return expr;
                 }

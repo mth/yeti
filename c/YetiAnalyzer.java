@@ -49,13 +49,13 @@ public final class YetiAnalyzer extends YetiType {
             new CompileException(bind, "Unused binding: " + bind.name));
     }
 
-    static Lambda shortLambda(BinOp op) {
-        return new Lambda(new Sym("_").pos(op.line, op.col), op.right, null);
+    static XNode shortLambda(BinOp op) {
+        return XNode.lambda(new Sym("_").pos(op.line, op.col), op.right, null);
     }
 
-    static Lambda asLambda(Node node) {
+    static XNode asLambda(Node node) {
         BinOp op;
-        return node instanceof Lambda ? (Lambda) node
+        return node.kind == "lambda" ? (XNode) node
                 : node instanceof BinOp && (op = (BinOp) node).op == "\\"
                 ? shortLambda(op) : null;
     }
@@ -93,6 +93,9 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (kind == "list") {
                 return list(x, scope, depth);
+            }
+            if (kind == "lambda") {
+                return lambda(new Function(null), x, scope, depth);
             }
             if (kind == "struct") {
                 return structType(x, scope, depth);
@@ -191,8 +194,6 @@ public final class YetiAnalyzer extends YetiType {
                          apply(op, resolve(opop, op, scope, depth),
                                op.left, scope, depth),
                          op.right, scope, depth);
-        } else if (node instanceof Lambda) {
-            return lambda(new Function(null), (Lambda) node, scope, depth);
         }
         throw new CompileException(node,
             "I think that this " + node + " should not be here.");
@@ -440,7 +441,7 @@ public final class YetiAnalyzer extends YetiType {
         // try cast java types on apply
         Type funt = fun.type.deref(),
              funarg = funt.type == FUN ? funt.param[0].deref() : null;
-        Lambda lambdaArg = asLambda(arg);
+        XNode lambdaArg = asLambda(arg);
         Code argCode = lambdaArg != null // prespecifing the lambda type
                 ? lambda(new Function(funarg), lambdaArg, scope, depth)
                 : analyze(arg, scope, depth);
@@ -680,7 +681,7 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Function singleBind(Bind bind, Scope scope, int depth) {
-        if (!(bind.expr instanceof Lambda)) {
+        if (bind.expr.kind != "lambda") {
             throw new CompileException(bind,
                 "Closed binding must be a function binding");
         }
@@ -808,7 +809,7 @@ public final class YetiAnalyzer extends YetiType {
             if (nodes[i] instanceof Bind) {
                 Bind bind = (Bind) nodes[i];
                 BindExpr binder;
-                if (bind.expr instanceof Lambda) {
+                if (bind.expr.kind == "lambda") {
                     binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
                 } else {
                     Code code = analyze(bind.expr, scope, depth + 1);
@@ -888,33 +889,32 @@ public final class YetiAnalyzer extends YetiType {
         if (bind.type != null) {
             isOp(bind, bind.type, to, scope, depth);
         }
-        return lambda(to, (Lambda) bind.expr, scope, depth);
+        return lambda(to, (XNode) bind.expr, scope, depth);
     } 
 
-    static Code lambda(Function to, Lambda lambda, Scope scope, int depth) {
+    static Code lambda(Function to, XNode lambda, Scope scope, int depth) {
         Type expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
         Scope bodyScope = null;
         SeqExpr[] seq = null;
-        if (lambda.arg instanceof Sym) {
+        Node arg = lambda.expr[0];
+        if (arg instanceof Sym) {
             if (expected != null && expected.type == FUN) {
                 to.arg.type = expected.param[0];
             } else {
                 to.arg.type = new Type(depth);
             }
-            String argName = lambda.arg.sym();
+            String argName = arg.sym();
             if (argName != "_")
                 bodyScope = new Scope(scope, argName, to);
-        } else if (lambda.arg.kind == "()") {
+        } else if (arg.kind == "()") {
             to.arg.type = UNIT_TYPE;
-        } else if (lambda.arg.kind == "struct") {
+        } else if (arg.kind == "struct") {
             to.arg.type = new Type(depth);
             seq = new SeqExpr[] { null, null };
-            bodyScope = bindStruct(to, (XNode) lambda.arg,
-                                   false, scope, depth, seq);
+            bodyScope = bindStruct(to, (XNode) arg, false, scope, depth, seq);
         } else {
-            throw new CompileException(lambda.arg,
-                                       "Bad argument: " + lambda.arg);
+            throw new CompileException(arg, "Bad argument: " + arg);
         }
         if (bodyScope == null)
             bodyScope = new Scope(scope, null, to);
@@ -922,20 +922,20 @@ public final class YetiAnalyzer extends YetiType {
         while (marker.outer != scope)
             marker = marker.outer;
         marker.closure = to;
-        if (lambda.expr instanceof Lambda) {
+        if (lambda.expr[1].kind == "lambda") {
             Function f = new Function(expected != null && expected.type == FUN
                                       ? expected.param[1] : null);
             // make f to know about its outer scope before processing it
             to.setBody(seq == null || seq[0] == null ? (Code) f : seq[1]);
-            lambda(f, (Lambda) lambda.expr, bodyScope, depth);
+            lambda(f, (XNode) lambda.expr[1], bodyScope, depth);
             wrapSeq(f, seq);
         } else {
-            Code body = analyze(lambda.expr, bodyScope, depth);
+            Code body = analyze(lambda.expr[1], bodyScope, depth);
             Type res; // try casting to expected type
             if (expected != null && expected.type == FUN &&
                 JavaType.isSafeCast(lambda, res = expected.param[1].deref(),
                                     body.type)) {
-                body = new Cast(body, res, true, lambda.expr.line);
+                body = new Cast(body, res, true, lambda.expr[1].line);
             }
             to.setBody(wrapSeq(body, seq));
         }
@@ -950,7 +950,7 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
         to.type = fun;
-        to.bindName = lambda.bindName;
+        to.bindName = lambda.expr.length > 2 ? lambda.expr[2].sym() : null;
         to.body.markTail();
         return to;
     }
@@ -984,7 +984,7 @@ public final class YetiAnalyzer extends YetiType {
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = getField(nodes[i], fields);
-            Function lambda = !field.noRec && field.expr instanceof Lambda
+            Function lambda = !field.noRec && field.expr.kind == "lambda"
                             ? funs[i] = new Function(new Type(depth)) : null;
             Code code =
                 lambda != null ? lambda : analyze(field.expr, scope, depth);
