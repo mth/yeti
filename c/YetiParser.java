@@ -149,10 +149,9 @@ interface YetiParser {
             return new XNode("struct", fields);
         }
 
-        static XNode lambda(Node arg, Node expr, String name) {
-            XNode lambda = new XNode("lambda",
-                name == null ? new Node[] { arg, expr } : new Node[] {
-                    arg, expr, new Sym(name).pos(arg.line, arg.col) });
+        static XNode lambda(Node arg, Node expr, Node name) {
+            XNode lambda = new XNode("lambda", name == null
+                ? new Node[] { arg, expr } : new Node[] { arg, expr, name });
             lambda.line = arg.line;
             lambda.col = arg.col;
             return lambda;
@@ -219,7 +218,7 @@ interface YetiParser {
             }
             for (; i >= first; --i) {
                 expr = XNode.lambda((Node) args.get(i), expr,
-                        i == first ? name : null);
+                        i == first ? nameNode : null);
             }
             this.expr = expr;
         }
