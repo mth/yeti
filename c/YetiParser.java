@@ -93,14 +93,6 @@ interface YetiParser {
         }
     }
 
-    class SepOp extends Node {
-        char sep;
-
-        SepOp(char sep) {
-            this.sep = sep;
-        }
-    }
-
     class XNode extends Node {
         Node[] expr;
 
@@ -646,9 +638,9 @@ interface YetiParser {
                                     .pos(line, col);
                     break;
                 case ';':
-                    return new SepOp(';').pos(line, col);
+                    return new XNode(";").pos(line, col);
                 case ',':
-                    return new SepOp(',').pos(line, col);
+                    return new XNode(",").pos(line, col);
                 case '(':
                     return readSeq(')', null);
                 case '[':
@@ -657,9 +649,9 @@ interface YetiParser {
                         p = i + 3;
                         return new XNode("list").pos(line,col);
                     }
-                    return new XNode("list", readMany(',', ']')).pos(line, col);
+                    return new XNode("list", readMany(",", ']')).pos(line, col);
                 case '{':
-                    return XNode.struct(readMany(',', '}')).pos(line, col);
+                    return XNode.struct(readMany(",", '}')).pos(line, col);
                 case ')': case ']': case '}':
                     p = i;
                     return new CloseBracket(src[i]).pos(line, col);
@@ -853,7 +845,7 @@ interface YetiParser {
                 return null;
             }
             ++p;
-            return readMany(',', ')');
+            return readMany(",", ')');
         }
 
         // new ClassName(...)
@@ -922,7 +914,7 @@ interface YetiParser {
 
         private Node readCase() {
             Node val = readExpr("of");
-            Node[] choices = readMany(';', ' ');
+            Node[] choices = readMany(";", ' ');
             if (eofWas.kind != "esac") {
                 throw new CompileException(eofWas,
                     "Expected esac, found " + eofWas);
@@ -1029,7 +1021,7 @@ interface YetiParser {
             return sym;
         }
 
-        private Node[] readMany(char sep, char end) {
+        private Node[] readMany(String sep, char end) {
             List res = new ArrayList();
             List args = null;
             List l = new ArrayList();
@@ -1047,11 +1039,11 @@ interface YetiParser {
                         continue;
                     }
                 }
-                if (sym instanceof SepOp) {
-                    if (((SepOp) sym).sep != sep) {
+                if (sym.kind == ";" || sym.kind == ",") {
+                    if (sym.kind != sep) {
                         break;
                     }
-                    if (args != null || sep != ';' || l.size() != 0) {
+                    if (args != null || sep != ";" || l.size() != 0) {
                         res.add(def(args, l, end == '}'));
                         args = null;
                         l = new ArrayList();
@@ -1059,7 +1051,7 @@ interface YetiParser {
                     continue;
                 }
                 l.add(sym);
-                if (sep == ';' && sym instanceof TypeDef) {
+                if (sep == ";" && sym instanceof TypeDef) {
                     res.add(def(args, l, false));
                     args = null;
                     l = new ArrayList();
@@ -1077,7 +1069,7 @@ interface YetiParser {
         }
 
         private Node readSeq(char end, Object kind) {
-            Node[] list = readMany(';', end);
+            Node[] list = readMany(";", end);
             if (list.length == 1 && kind != Seq.EVAL) {
                 return list[0];
             }
@@ -1196,8 +1188,7 @@ interface YetiParser {
             if (node instanceof BinOp && ((BinOp) node).op == "<") {
                 do {
                     param.add(getTypename(fetch()));
-                } while ((node = fetch()) instanceof SepOp &&
-                         ((SepOp) node).sep == ',');
+                } while ((node = fetch()).kind == ",");
                 if (!(node instanceof BinOp) || ((BinOp) node).op != ">")
                     throw new CompileException(node,
                                  "Expected '>', not a " + node);
@@ -1254,8 +1245,7 @@ interface YetiParser {
                                     new TypeNode[] { ((IsOp) t).type });
                     f.var = isVar;
                     param.add(f);
-                    if (!((field = fetch()) instanceof SepOp) ||
-                        ((SepOp) field).sep != ',') {
+                    if ((field = fetch()).kind != ",") {
                         expect = "Expecting ',' or '}' here, not ";
                         break;
                     }
