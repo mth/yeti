@@ -1,86 +1,27 @@
 program yeti.lang.compiler.yeti;
 
-import java.lang.Object;
-import java.lang.Class;
 import java.lang.ClassLoader;
-import yeti.lang.Core;
 
 var target = "";
 var eval = false;
+var flags = 0;
 var exec = true;
 var printType = false;
-var preload = ["yeti/lang/std", "yeti/lang/io"];
 var src = "";
-var mainClass = "code";
-var classPath = "";
-var flags = 0;
-var sandbox = false;
-var gcj = false;
 
 srcs = array [];
 argv = array _argv;
 
-compilationOf writer =
-    new YetiCode$CompileCtx(new YetiC(()), writer, preload,
-                            new ClassFinder(classPath))#setGCJ(gcj);
+evaluator = load yeti.lang.compiler.repl argv;
 
 printMessage ex is ~Exception -> () =
     println ex#getMessage();
-
-execClass writer =
-   (c = Class#forName(strReplace '/' '.' mainClass, true, writer);
-    sm = new SandboxSecurityManager();
-    try
-        if eval then
-            f = c#newInstance() unsafely_as () -> '';
-            if sandbox then
-                System#setSecurityManager(sm);
-                sm#setActive();
-            fi;
-            f ()
-        else
-            c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
-             #invoke((), [argv as ~java.lang.String[]] as ~java.lang.String[][])
-        fi
-    catch java.lang.reflect.InvocationTargetException ex:
-        t = ex#getCause();
-        throw if defined? t then t else ex fi;
-    yrt);
 
 repl () =
    (print "> ";
     line = readln ();
     if defined? line then
-        writer = new Loader();
-        try
-            bindings = YetiEval#get()#bindings;
-            bindBarrier = bindings#size();
-            compilation = compilationOf writer;
-            type_ = compilation#compile((), mainClass, line, flags);
-            compilation#write();
-            try
-                res = execClass writer;
-                if type_#deref()#type != YetiType#UNIT then
-                    println "\(Core#show(res)) is \(type_)"
-                fi
-            catch Exception ex:
-                ex#printStackTrace()
-            catch java.lang.StackOverflowError ex:
-                ex#printStackTrace()
-            yrt;
-            for [bindBarrier .. bindings#size() - 1] do i:
-                binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
-                println "\(if binding#mutable then "var " else "" fi)\
-                        "\(binding#name) is \(binding#type) = \
-                        "\(if binding#type#deref()#type == YetiType#UNIT then
-                               "()"
-                           else
-                               Core#show(binding#val())
-                           fi)";
-            done
-        catch CompileException ex:
-            printMessage ex
-        yrt;
+        print (evaluator.evaluate line flags);
         repl ()
     else
         println "";
@@ -89,8 +30,6 @@ repl () =
 
 startRepl () =
    (println "Yeti REPL.\n";
-    eval := true;
-    flags := YetiC#CF_EVAL + YetiC#CF_EVAL_BIND;
     oldEval = YetiEval#set(new YetiEval());
     try
         repl ()
@@ -121,9 +60,9 @@ options = [
     done,
     "-e": \(eval := true; src := shift argv),
     "-h": help,
-    "-cp": \(classPath := shift argv),
+    "-cp": \(evaluator.classPath := shift argv),
     "-help": help,
-    "-preload": \(preload := asList (strSplit ':' (shift argv))),
+    "-preload": \(evaluator.preload := asList (strSplit ':' (shift argv))),
     "-type": \(printType := true; exec := false),
     "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
     "-no-import": \(flags := flags + YetiC#CF_NO_IMPORT),
@@ -132,8 +71,9 @@ options = [
         println "(terminated)";
         sysExit 13;
     done),
-    "-safe-eval": \(sandbox := true; eval := true; src := shift argv),
-    "-icast": \(gcj := true),
+    "-safe-eval":
+        \(evaluator.sandbox := true; eval := true; src := shift argv),
+    "-icast": \(evaluator.gcj := true),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop
@@ -166,13 +106,13 @@ writer =
         new ToFile(target)
     fi;
 
-compilation = compilationOf writer;
+compilation = evaluator.compilationOf writer;
 var resultType = YetiType#UNIT_TYPE;
 
 try
     if eval then
         flags := flags + YetiC#CF_EVAL;
-        resultType := compilation#compile((), mainClass, src, flags);
+        resultType := compilation#compile((), evaluator.mainClass, src, flags);
         if printType then
             println resultType
         else
@@ -185,7 +125,7 @@ try
         done
     else
         for srcs do src:
-            mainClass := compilation#compile(src, flags)
+            evaluator.mainClass := compilation#compile(src, flags)
         done;
         compilation#write()
     fi;
@@ -196,18 +136,21 @@ catch CompileException ex:
     sysExit 1;
 yrt;
 
+out = if evaluator.sandbox then System#out else System#err fi;
+
 if exec then
     try
-        v = execClass (writer as ~Object unsafely_as ~ClassLoader);
+        v = evaluator.execClass eval
+                                (writer as ~Object unsafely_as ~ClassLoader);
         if resultType#deref()#type != YetiType#UNIT then
             println v
         fi
     catch java.lang.StackOverflowError ex:
-        if sandbox then System#out else System#err fi#println("Stack overflow");
+        out#println("Stack overflow");
     catch java.lang.OutOfMemoryError ex:
-        if sandbox then System#out else System#err fi#println("Out of memory");
+        out#println("Out of memory");
     catch Exception ex:
-        ex#printStackTrace(if sandbox then System#out else System#err fi);
+        ex#printStackTrace(out);
         sysExit 2;
     yrt
 fi
