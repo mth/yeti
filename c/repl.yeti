@@ -1,0 +1,79 @@
+module yeti.lang.compiler.repl;
+
+import java.lang.Object;
+import java.lang.Class;
+import java.lang.ClassLoader;
+import yeti.lang.Core;
+
+do argv: {
+    var preload = ["yeti/lang/std", "yeti/lang/io"],
+    var mainClass = "code",
+    var classPath = "",
+    var sandbox = false,
+    var gcj = false,
+
+    compilationOf writer =
+        new YetiCode$CompileCtx(new YetiC(()), writer, preload,
+                                new ClassFinder(classPath))#setGCJ(gcj),
+
+    getTrace ex is ~java.lang.Throwable -> string =
+        sw = new java.io.StringWriter();
+        ex#printStackTrace(new java.io.PrintWriter(sw));
+        sw#toString(),
+
+    execClass eval writer =
+        c = Class#forName(strReplace '/' '.' mainClass, true, writer);
+        sm = new SandboxSecurityManager();
+        try
+            if eval then
+                f = c#newInstance() unsafely_as () -> '';
+                if sandbox then
+                    System#setSecurityManager(sm);
+                    sm#setActive();
+                fi;
+                f ()
+            else
+                c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
+                 #invoke((), [argv is array<string> as ~java.lang.String[]]
+                                as ~java.lang.String[][])
+            fi
+        catch java.lang.reflect.InvocationTargetException ex:
+            t = ex#getCause();
+            throw if defined? t then t else ex fi;
+        yrt,
+
+    evaluate line flags =
+        writer = new Loader();
+        res = array [];
+        try
+            bindings = YetiEval#get()#bindings;
+            bindBarrier = bindings#size();
+            compilation = compilationOf writer;
+            type_ = compilation#compile((), mainClass, line is string, flags +
+                                            YetiC#CF_EVAL + YetiC#CF_EVAL_BIND);
+            compilation#write();
+            try
+                val = execClass true writer;
+                if type_#deref()#type != YetiType#UNIT then
+                    push res "\(Core#show(val)) is \(type_)"
+                fi
+            catch Exception ex:
+                push res (getTrace ex)
+            catch java.lang.StackOverflowError ex:
+                push res (getTrace ex)
+            yrt;
+            for [bindBarrier .. bindings#size() - 1] do i:
+                binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
+                push res "\(if binding#mutable then "var " else "" fi)\
+                         "\(binding#name) is \(binding#type) = \
+                         "\(if binding#type#deref()#type == YetiType#UNIT then
+                                "()"
+                            else
+                                Core#show(binding#val())
+                            fi)";
+            done
+        catch CompileException ex:
+            push res ex#getMessage()
+        yrt;
+        strJoin '' (map (^ "\n") res)
+} done
