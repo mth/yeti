@@ -56,6 +56,10 @@ class ToFile implements CodeWriter {
 class Loader extends ClassLoader implements CodeWriter {
     private Map classes = new HashMap();
 
+    public Loader() {
+        super(Loader.class.getClassLoader());
+    }
+
     public void writeClass(String name, byte[] code) {
         // to a dotted classname used by loadClass
         classes.put(name.substring(0, name.length() - 6).replace('/', '.'),
