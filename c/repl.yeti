@@ -10,6 +10,7 @@ do argv: {
     var classPath = "",
     var sandbox = false,
     var gcj = false,
+    var parentLoader = classOf module#getClassLoader(),
 
     compilationOf writer =
         new YetiCode$CompileCtx(new YetiC(()), writer, preload,
@@ -42,7 +43,7 @@ do argv: {
         yrt,
 
     evaluate line flags =
-        writer = new Loader();
+        writer = new Loader(parentLoader);
         res = array [];
         try
             bindings = YetiEval#get()#bindings;

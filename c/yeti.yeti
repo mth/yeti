@@ -101,7 +101,7 @@ fi;
 
 writer =
     if exec then
-        new Loader()
+        new Loader(evaluator.parentLoader)
     else
         new ToFile(target)
     fi;
