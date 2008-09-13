@@ -150,6 +150,8 @@ public class YetiC implements SourceReader {
                     buf = tmp;
                 }
             }
+        } catch (IOException ex) {
+            throw new IOException(name + ": " + ex.getMessage());
         } finally {
             stream.close();
         }
