@@ -1,10 +1,6 @@
 program yeti.lang.compiler.yeti;
 
-import java.lang.Object;
-import java.lang.Class;
 import java.lang.ClassLoader;
-import yeti.lang.Core;
-
 
 var target = "";
 var eval = false;

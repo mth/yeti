@@ -1,6 +1,5 @@
 module yeti.lang.compiler.repl;
 
-import java.lang.Object;
 import java.lang.Class;
 import java.lang.ClassLoader;
 import yeti.lang.Core;
