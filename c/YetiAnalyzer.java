@@ -850,6 +850,8 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
                 scope.importClass = new Type("L" + name + ';');
+                if (seq.seqKind == Seq.EVAL)
+                    YetiEval.registerImport(scope.name, scope.importClass);
             } else if (nodes[i] instanceof TypeDef) {
                 scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else {
@@ -1421,6 +1423,11 @@ public final class YetiAnalyzer extends YetiType {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
+                    if (bind.isImport) {
+                        scope = new Scope(scope, bind.name, null);
+                        scope.importClass = bind.type;
+                        continue;
+                    }
                     scope = bind.polymorph ? bindPoly(bind.name, bind.type,
                                                 new EvalBind(bind), 0, scope)
                         : new Scope(scope, bind.name, new EvalBind(bind));

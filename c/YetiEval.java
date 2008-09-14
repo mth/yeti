@@ -44,6 +44,7 @@ public class YetiEval {
         YetiType.Type type;
         boolean mutable;
         boolean polymorph;
+        boolean isImport;
 
         Object val() {
             return value[index];
@@ -71,6 +72,14 @@ public class YetiEval {
         bind.bindId = bindings.size();
         bindings.add(bind);
         return bind.bindId;
+    }
+
+    static void registerImport(String name, YetiType.Type type) {
+        Binding bind = new Binding();
+        bind.name = name;
+        bind.type = type;
+        bind.isImport = true;
+        get().bindings.add(bind);
     }
 
     public static void setBind(int binding, Object[] value, int index) {

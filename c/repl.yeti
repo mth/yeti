@@ -63,13 +63,16 @@ do argv: {
             yrt;
             for [bindBarrier .. bindings#size() - 1] do i:
                 binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
-                push res "\(if binding#mutable then "var " else "" fi)\
-                         "\(binding#name) is \(binding#type) = \
-                         "\(if binding#type#deref()#type == YetiType#UNIT then
-                                "()"
-                            else
-                                Core#show(binding#val())
-                            fi)";
+                if not binding#isImport then
+                    t = binding#type;
+                    push res "\(if binding#mutable then "var " else "" fi)\
+                             "\(binding#name) is \(t) = \
+                             "\(if t#deref()#type == YetiType#UNIT then
+                                    "()"
+                                else
+                                    Core#show(binding#val())
+                                fi)"
+                fi
             done
         catch CompileException ex:
             push res ex#getMessage()
