@@ -2206,7 +2206,8 @@ the Java language).
 Yeti is also able to automatically cast Yeti lists and arrays into Java
 Collection or List::
 
-    > import java.util.Arrays; Arrays#asList([1..5])
+    > import java.util.Arrays
+    > Arrays#asList([1..5])
     [1, 2, 3, 4, 5] is ~java.util.List
     > new java.util.ArrayList([1..5])
     [1, 2, 3, 4, 5] is ~java.util.ArrayList
@@ -2233,7 +2234,7 @@ done by casting unit value::
 
     > () as ~java.util.Date
     [] is ~java.util.Date
-    > import java.lang.String; String#valueOf(() as ~java.util.Date)
+    > String#valueOf(() as ~java.util.Date)
     "null" is string
 
 This works because Yeti represents unit value in the JVM as a ``null`` pointer.
