@@ -485,7 +485,7 @@ interface YetiParser {
                 throw new CompileException(op, "Do not stack operators");
             } else {
                 while (to.parent != null && (to.postfix || to.prio < op.prio ||
-                                            to.prio == op.prio && op.toRight)) {
+                            to.prio == op.prio && op.toRight)) {
                     to = to.parent;
                 }
                 op.right = to.right;
@@ -511,7 +511,7 @@ interface YetiParser {
 
         Node result() {
             if (cur.left == null && cur.prio != -1 && cur.prio != 1 &&
-                !cur.postfix || cur.right == null) {
+                    !cur.postfix || cur.right == null) {
                 throw new CompileException(cur, "Expecting some value");
             }
             return root.right;
@@ -520,10 +520,10 @@ interface YetiParser {
 
     final class Parser {
         private static final char[] CHS =
-           ("                                " + // 0x
-            " .'.x..x  .. ../xxxxxxxxxx. ...x" + // 2x
-            ".xxxxxxxxxxxxxxxxxxxxxxxxxx[ ].x" + // 4x
-            "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
+            ("                                " + // 0x
+             " .'.x..x  .. ../xxxxxxxxxx. ...x" + // 2x
+             ".xxxxxxxxxxxxxxxxxxxxxxxxxx[ ].x" + // 4x
+             "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
         private static final String[][] OPS = {
             { "*", "/", "%" },
@@ -580,7 +580,7 @@ interface YetiParser {
                 if (i + 1 < src.length && src[i] == '/') {
                     if (src[i + 1] == '/') {
                         while (i < src.length && src[i] != '\n'
-                                              && src[i] != '\r') ++i;
+                                && src[i] != '\r') ++i;
                         continue;
                     }
                     if (src[i + 1] == '*') {
@@ -589,7 +589,7 @@ interface YetiParser {
                         for (int level = 1; level > 0;) {
                             if (++i >= src.length) {
                                 throw new CompileException(l, col,
-                                    "Unclosed /* comment");
+                                        "Unclosed /* comment");
                             }
                             if ((c = src[i - 1]) == '\n') {
                                 ++line;
@@ -619,10 +619,10 @@ interface YetiParser {
             switch (src[i]) {
                 case '.':
                     if ((i <= 0 || (c = src[i - 1]) < '~' && CHS[c] == ' ' &&
-                        (i >= src.length ||
-                            (c = src[i + 1]) < '~' && CHS[c] == ' ')))
+                                (i >= src.length ||
+                                 (c = src[i + 1]) < '~' && CHS[c] == ' ')))
                         return new BinOp(".", DOT_OP_LEVEL, true)
-                                    .pos(line, col);
+                            .pos(line, col);
                     break;
                 case ';':
                     return new XNode(";").pos(line, col);
@@ -632,7 +632,7 @@ interface YetiParser {
                     return readSeq(')', null);
                 case '[':
                     if (i + 2 < src.length && src[i + 1] == ':' &&
-                        src[i + 2] == ']') {
+                            src[i + 2] == ']') {
                         p = i + 3;
                         return new XNode("list").pos(line,col);
                     }
@@ -967,13 +967,13 @@ interface YetiParser {
             p = skipSpace();
             if (p >= src.length || src[p] != '(')
                 throw new CompileException(line, p - lineStart, "Expecting (");
+            int line_ = line, col_ = p++ - lineStart + 1;
             List args = new ArrayList();
             while ((p = skipSpace()) < src.length && src[p] != ')') {
                 if (args.size() != 0 && src[p] != ',') {
                     throw new CompileException(line, p - lineStart,
                                                "Expecting , or )");
                 }
-                ++p;
                 args.add(readDotted(false, "Expected argument type, found "));
                 Node name = fetch();
                 if (!(name instanceof Sym)) {
@@ -982,20 +982,23 @@ interface YetiParser {
                 }
                 args.add(name);
             }
-            return new XNode("argument-list",
-                             (Node[]) args.toArray(new Node[args.size()]));
+            ++p;
+            return new XNode("argument-list", (Node[]) args.toArray(
+                                new Node[args.size()])).pos(line_, col_);
         }
 
         private Node readClassDef() {
-            Node name = fetch();
-            if (!(name instanceof Sym)) {
-                throw new CompileException(name,
-                    "Expected a class name, found " + name);
-            }
-            Node args = readArgDefs();
+            List defs = new ArrayList();
+            Node node = fetch();
+            if (!(node instanceof Sym))
+                throw new CompileException(node,
+                            "Expected a class name, found " + node);
+            defs.add(node);
+            defs.add(readArgDefs());
             List l = new ArrayList();
-            Node node = readDotted(false, "Expected extends, field or "
-                                          + "method definition, found ");
+            node = readDotted(false, "Expected extends, field or "
+                                     + "method definition, found ");
+            Node epos = node;
             if (node.sym() == "extends") {
                 do {
                     l.add(readDotted(false, "Expected a class name, found "));
@@ -1003,21 +1006,42 @@ interface YetiParser {
                 --p;
                 node = fetch();
             }
-            Node extendList = new XNode("extends",
-                                        (Node[]) l.toArray(new Node[l.size()]));
+            defs.add(new XNode("extends", (Node[]) l.toArray(
+                            new Node[l.size()])).pos(epos.line, epos.col));
             l.clear();
-            for (;;) {
+            eofWas = node;
+            while (!(eofWas instanceof Sym) || ((Sym) eofWas).sym != "end") {
+                if (node == null)
+                    node = fetch();
                 if (node.sym() == "var") {
                     l.add(new XNode("var").pos(node.line, node.col));
                     node = fetch();
                 }
-                l.add(node);
                 Node snd = fetch();
+                Node args = null;
                 if (snd.kind == "=") {
-                    // field
+                    l.add(node);
+                } else if (l.size() != 0) {
+                    throw new CompileException((Node) l.get(0),
+                                "Expected '=', found " + l.get(0));
+                } else {
+                    args = readArgDefs();
                 }
-                return node;
+                Node expr = readSeq('e', null);
+                if (eofWas instanceof Eof)
+                    throw new CompileException(eofWas, "Unexpected " + eofWas);
+                if (args == null) {
+                    defs.add(new Bind(l, expr));
+                    l.clear();
+                } else {
+                    defs.add(new XNode("method",
+                                       new Node[] { node, snd, args, expr })
+                                    .pos(node.line, node.col));
+                }
+                node = null;
             }
+            return new XNode("class",
+                             (Node[]) defs.toArray(new Node[defs.size()]));
         }
 
         private Node readDo() {
@@ -1083,6 +1107,9 @@ interface YetiParser {
             // TODO check for (blaah=) error
             Node sym;
             while (!((sym = fetch()) instanceof Eof)) {
+                // hack for class end - end is not reserved word
+                if (end == 'e' && sym instanceof Sym && sym.sym() == "end")
+                    break;
                 if (sym.kind == "=") {
                     args = l;
                     if (end == '}') {
@@ -1113,7 +1140,8 @@ interface YetiParser {
                 }
             }
             eofWas = sym;
-            if (end != ' ' && (p >= src.length || src[p++] != end)) {
+            if (end != ' ' && end != 'e' &&
+                (p >= src.length || src[p++] != end)) {
                 throw new CompileException(line, p - lineStart + 1,
                                            "Expecting " + end);
             }
