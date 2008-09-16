@@ -743,6 +743,8 @@ interface YetiParser {
             } else if (s == "instanceof") {
                 res = new InstanceOf(
                         readDotted(false, "Expected class name, not a ").sym);
+            } else if (s == "class") {
+                res = readClassDef();
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
@@ -961,6 +963,63 @@ interface YetiParser {
             return new XNode("try", expr);
         }
 
+        private Node readArgDefs() {
+            p = skipSpace();
+            if (p >= src.length || src[p] != '(')
+                throw new CompileException(line, p - lineStart, "Expecting (");
+            List args = new ArrayList();
+            while ((p = skipSpace()) < src.length && src[p] != ')') {
+                if (args.size() != 0 && src[p] != ',') {
+                    throw new CompileException(line, p - lineStart,
+                                               "Expecting , or )");
+                }
+                ++p;
+                args.add(readDotted(false, "Expected argument type, found "));
+                Node name = fetch();
+                if (!(name instanceof Sym)) {
+                    throw new CompileException(name,
+                        "Expected a argument name, found " + name);
+                }
+                args.add(name);
+            }
+            return new XNode("argument-list",
+                             (Node[]) args.toArray(new Node[args.size()]));
+        }
+
+        private Node readClassDef() {
+            Node name = fetch();
+            if (!(name instanceof Sym)) {
+                throw new CompileException(name,
+                    "Expected a class name, found " + name);
+            }
+            Node args = readArgDefs();
+            List l = new ArrayList();
+            Node node = readDotted(false, "Expected extends, field or "
+                                          + "method definition, found ");
+            if (node.sym() == "extends") {
+                do {
+                    l.add(readDotted(false, "Expected a class name, found "));
+                } while ((p = skipSpace()) < src.length && src[p++] == ',');
+                --p;
+                node = fetch();
+            }
+            Node extendList = new XNode("extends",
+                                        (Node[]) l.toArray(new Node[l.size()]));
+            l.clear();
+            for (;;) {
+                if (node.sym() == "var") {
+                    l.add(new XNode("var").pos(node.line, node.col));
+                    node = fetch();
+                }
+                l.add(node);
+                Node snd = fetch();
+                if (snd.kind == "=") {
+                    // field
+                }
+                return node;
+            }
+        }
+
         private Node readDo() {
             for (List args = new ArrayList();;) {
                 Node arg = fetch();
@@ -991,9 +1050,12 @@ interface YetiParser {
             String result = "";
             for (Node n = first;; n = fetch()) {
                 if (!(n instanceof Sym)) {
-                    throw new CompileException(n, err + n);
+                    if (n.kind != "var")
+                        throw new CompileException(n, err + n);
+                    result += n.kind;
+                } else {
+                    result += ((Sym) n).sym;
                 }
-                result += ((Sym) n).sym;
                 p = skipSpace();
                 if (p >= src.length)
                     break;
