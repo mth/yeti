@@ -707,8 +707,8 @@ interface YetiParser {
                 res = readDo();
             } else if (s == "and" || s == "or") {
                 res = new BinOp(s, COMP_OP_LEVEL + 1, true);
-            } else if (s == "elif" || s == "else" || s == "fi" ||
-                       s == "esac" || s == "done" ||
+            } else if (s == "then" || s == "elif" || s == "else" ||
+                       s == "fi" || s == "of" || s == "esac" || s == "done" ||
                        s == "catch" || s == "finally" || s == "yrt") {
                 res = new Eof(s);
             } else if (s == "case") {
@@ -818,23 +818,6 @@ interface YetiParser {
                         ? bind.expr : new XNode("_", bind.expr);
         }
 
-        private Node readExpr(String to) {
-            for (List res = new ArrayList();;) {
-                Node node = fetch();
-                if (node instanceof Eof) {
-                    throw new CompileException(node,
-                                    to + " expected, not " + node);
-                }
-                if (node instanceof Sym && to == ((Sym) node).sym) {
-                    if (res.isEmpty()) {
-                        throw new CompileException(node, "no condition?");
-                    }
-                    return def(null, res, false);
-                }
-                res.add(node);
-            }
-        }
-
         private Node[] readArgs() {
             if ((p = skipSpace()) >= src.length || src[p] != '(') {
                 return null;
@@ -888,7 +871,7 @@ interface YetiParser {
         }
 
         private Node readIf() {
-            Node cond = readExpr("then");
+            Node cond = readSeqTo("then");
             Node expr = readSeq(' ', null);
             Node els;
             if (eofWas.kind == "elif") {
@@ -908,7 +891,7 @@ interface YetiParser {
         }
 
         private Node readCase() {
-            Node val = readExpr("of");
+            Node val = readSeqTo("of");
             Node[] choices = readMany(";", ' ');
             if (eofWas.kind != "esac") {
                 throw new CompileException(eofWas,
@@ -949,11 +932,7 @@ interface YetiParser {
                 c.expr[2] = readSeq(' ', null);
             }
             if (eofWas.kind != "yrt") {
-                catches.add(readSeq(' ', null));
-                if (eofWas.kind != "yrt") {
-                    throw new CompileException(eofWas,
-                        "Expected yrt, found " + eofWas);
-                }
+                catches.add(readSeqTo("yrt"));
             }
             Node[] expr = (Node[]) catches.toArray(new Node[catches.size()]);
             if (expr.length <= 1) {
@@ -1051,11 +1030,7 @@ interface YetiParser {
                     throw new CompileException(arg, "Unexpected " + arg);
                 }
                 if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
-                    Node expr = readSeq(' ', null);
-                    if (eofWas.kind != "done") {
-                        throw new CompileException(eofWas,
-                                    "Expected done, found " + eofWas);
-                    }
+                    Node expr = readSeqTo("done");
                     if (args.isEmpty()) {
                         return XNode.lambda(new Sym("_").pos(arg.line, arg.col),
                                             expr, null);
@@ -1165,6 +1140,15 @@ interface YetiParser {
                 w = bo.left;
             }
             return new Seq(list, kind).pos(w.line, w.col);
+        }
+
+        private Node readSeqTo(String endKind) {
+            Node node = readSeq(' ', null);
+            if (eofWas.kind != endKind) {
+                throw new CompileException(eofWas,
+                    "Expected " + endKind + ", found " + eofWas);
+            }
+            return node;
         }
 
         private Node readStr() {
