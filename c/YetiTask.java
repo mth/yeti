@@ -35,6 +35,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.Parameter;
+import yeti.lang.Fun;
 
 public class YetiTask extends MatchingTask {
     private List paths = new ArrayList();
@@ -102,5 +103,11 @@ public class YetiTask extends MatchingTask {
         } catch (Exception ex) {
             throw new BuildException(ex);
         }
+        compilation.enumWarns(new Fun() {
+            public Object apply(Object warn) {
+                log(((Throwable) warn).getMessage());
+                return null;
+            }
+        });
     }
 }
