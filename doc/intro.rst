@@ -2269,7 +2269,7 @@ Yeti code style
 
 Lines should be shorter than 80 characters.
 
-Four spaces should be used as a unit of indention. Using tabs is possible,
+Four spaces should be used as an unit of indention. Using tabs is possible,
 but not encouraged as it can cause problems with differently configured
 systems and editors.
 

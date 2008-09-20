@@ -1,22 +1,41 @@
-script = map do v: { like = like (head v),
+script = map do v: { like = like (head v) . strLower,
                      replies = array (tail v) } done
    [['(father|mother|brother|sister)', "Tell me about your %."],
-    [' (?:am|i''m) +(.*)$', "Why are you %?"],
-    [' I +(.*)$', "Why do you %?"],
-    [' you +(.*)$', "We're talking about you, not me.",
-                    "Please don't be so personal."],
-    ['', "That's very interesting. Do go on.",
-         "Tell me more.",
-         "I'm not sure that I understand you fully.",
-         "Please elaborate that.",
-         "Can you elaborate on that?"]];
+    [' (?:am|i''m) +(.*) $', "Why are you %?"],
+    [' i +(.*) $', "Why do you %?"],
+    [' you +(.*) $', "We're talking about you, not me.",
+                     "Please don't be so personal.",
+                     "Your master",
+                     "You don't want to know that...",
+                     "I'm a worst nightmare you've seen."],
+    [' hello| hi ', "Nice to see you.", "Hello...",
+                     "What has happened to you?",
+                     "Nice ass you've got..."],
+    [' why', "Why? Why are you such a pathetic bastard?",
+             "I don't know, why...",
+             "Because you suck.",
+             "Why not?"],
+    [' (suck|fuck)', "Do you like to %?",
+                     "I like to %!",
+                     "Go fuck yourself!",
+                     "Would you % me?",
+                     "Lick my shiny metal ass!"]];
+
+defaults =
+    ["That's very interesting. Do go on.",
+     "Tell me more.",
+     "I'm not sure that I understand you fully.",
+     "Please elaborate that.",
+     "Can you elaborate on that?"];
+
+oneOf a = a.[randomInt (length a)];
 
 answer s pat =
    (r = pat.like s ();
     if empty? r then
         None ()
     else
-        reply = pat.replies.[randomInt (length pat.replies)];
+        reply = oneOf pat.replies;
         Some if length r <= 1 then
             reply
         else
@@ -29,5 +48,7 @@ var s = "";
 (print "? ";
  s := readln();
  defined? s) loop
-   (s = ' ' ^ s;
-    println (head (catSome (map (answer s) script))))
+   (s = " \(s) ";
+    replies = catSome (map (answer s) script);
+    replies = if replies == [] then defaults else replies fi;
+    print "\(oneOf (array replies))\n")
