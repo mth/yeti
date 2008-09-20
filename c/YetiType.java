@@ -720,23 +720,32 @@ public class YetiType implements YetiParser, YetiBuiltins {
         return vars;
     }
 
-    static BindRef resolve(String sym, Node where, Scope scope, int depth) {
+    private static BindRef resolveRef(String sym, Node where,
+                                      Scope scope, Scope[] r) {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == sym && scope.binder != null) {
-                BindRef ref = scope.binder.getRef(where.line);
-                if (scope.free != null) {
-                    Map vars = createFreeVars(scope.free, depth);
-                    ref.type = copyType(ref.type, vars, new HashMap());
-                }
-                return ref;
+                r[0] = scope;
+                return scope.binder.getRef(where.line);
             }
             if (scope.closure != null) {
-                BindRef ref = scope.closure.refProxy(
-                                resolve(sym, where, scope.outer, depth));
-                return ref;
+                return scope.closure.refProxy(
+                            resolveRef(sym, where, scope.outer, r));
             }
         }
         throw new CompileException(where, "Unknown identifier: " + sym);
+    }
+
+    static BindRef resolve(String sym, Node where, Scope scope, int depth) {
+        Scope[] r = new Scope[1];
+        BindRef ref = resolveRef(sym, where, scope, r);
+        if (r[0].free != null) {
+            if (r[0].free.length != 0) {
+                ref = ref.unshare();
+            }
+            Map vars = createFreeVars(r[0].free, depth);
+            ref.type = copyType(ref.type, vars, new HashMap());
+        }
+        return ref;
     }
 
     static Type resolveClass(String name, Scope scope, boolean shadow) {

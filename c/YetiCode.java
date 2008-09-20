@@ -479,6 +479,35 @@ interface YetiCode {
         boolean assign() {
             return false;
         }
+
+        // unshare. normally bindrefs are not shared
+        // Capture shares refs and therefore has to copy for unshareing
+        BindRef unshare() {
+            return this;
+        }
+    }
+
+    class BindWrapper extends BindRef {
+        private BindRef ref;
+
+        BindWrapper(BindRef ref) {
+            this.ref = ref;
+            this.binder = ref.binder;
+            this.type = ref.type;
+            this.polymorph = ref.polymorph;
+        }
+
+        CaptureWrapper capture() {
+            return ref.capture();
+        }
+
+        boolean assign() {
+            return ref.assign();
+        }
+
+        void gen(Ctx ctx) {
+            ref.gen(ctx);
+        }
     }
 
     interface DirectBind {
@@ -1090,6 +1119,10 @@ interface YetiCode {
         public String captureType() {
             return wrapper == null ? "Ljava/lang/Object;"
                                    : wrapper.captureType();
+        }
+
+        BindRef unshare() {
+            return new BindWrapper(this);
         }
     }
 
