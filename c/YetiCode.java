@@ -240,8 +240,18 @@ interface YetiCode {
                 ctx.m.visitVarInsn(ALOAD, 0);
                 ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
                                       "setArgv", "([Ljava/lang/String;)V");
+                Label codeStart = new Label(), exitStart = new Label();
+                ctx.m.visitTryCatchBlock(codeStart, exitStart, exitStart,
+                                         "yeti/lang/ExitError");
+                ctx.m.visitLabel(codeStart);
                 codeTree.gen(ctx);
                 ctx.m.visitInsn(POP);
+                ctx.m.visitInsn(RETURN);
+                ctx.m.visitLabel(exitStart);
+                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
+                                      "getExitCode", "()I");
+                ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/System",
+                                      "exit", "(I)V");
                 ctx.m.visitInsn(RETURN);
             }
             ctx.closeMethod();

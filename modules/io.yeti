@@ -128,7 +128,7 @@ withHandle h block =
         System#err#println(v),
 
     sysExit exitCode =
-        System#exit(exitCode),
+        throw new ExitError(exitCode),
 
     readerHandle reader = lazyReaderHandle \reader,
 
