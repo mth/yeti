@@ -4,7 +4,7 @@ public class ExitError extends RuntimeException {
     private int exitCode;
 
     public ExitError(int exitCode) {
-        super("sysExit(" + exitCode + ")");
+        super("sysExit " + exitCode);
     	this.exitCode = exitCode;
     }
 
