@@ -1,6 +1,6 @@
 package yeti.lang;
 
-public class ExitError extends RuntimeException {
+public class ExitError extends Error {
     private int exitCode;
 
     public ExitError(int exitCode) {
