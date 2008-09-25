@@ -114,19 +114,21 @@ Automatic conversion on return values of java methods:
 Class definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class Foo(int x) extends Iterator
-    var n = x,
+::
+        class Foo(int x) extends Iterator
+            var n = x,
+        
+            Object next()
+                n := n + 1;
+                "\(n)",
+        
+            boolean hasNext()
+                n < 10,
+        
+            void remove()
+                (),
+        
+            void setValue(int v)
+                n := v
+        end
 
-    Object next()
-        n := n + 1;
-        "\(n)",
-
-    boolean hasNext()
-        n < 10,
-
-    void remove()
-        (),
-
-    void setValue(int v)
-        n := v
-end
