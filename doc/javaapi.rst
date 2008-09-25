@@ -115,6 +115,7 @@ Class definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
+
         class Foo(int x) extends Iterator
             var n = x,
         
