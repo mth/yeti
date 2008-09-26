@@ -2199,4 +2199,58 @@ interface YetiCode {
             return "[Ljava/lang/Object;";
         }
     }
+
+    class JavaClass extends Code {
+        final Meth constr = new Meth();
+
+        private static class Arg extends BindRef implements Binder {
+            private int argn;
+            final YetiType.Type javaType;
+
+            Arg(int n, YetiType.Type javaType, YetiType.Type yetiType) {
+                this.javaType = javaType;
+                this.type = yetiType;
+                binder = this;
+                argn = n;
+            }
+
+            public BindRef getRef(int line) {
+                return this;
+            }
+
+            void gen(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, argn);
+            }
+        }
+
+        static class Meth {
+            private List args = new ArrayList();
+            private String name;
+            private YetiType.Type returnType;
+            private YetiType.Type returnYeti;
+            Code code;
+
+            Binder addArg(YetiType.Type javaType, YetiType.Type yetiType) {
+                Arg arg = new Arg(args.size() + 1, javaType, yetiType);
+                args.add(arg);
+                return arg;
+            }
+        }
+
+        JavaClass() {
+            type = YetiType.UNIT_TYPE;
+        }
+
+        // type is expected
+        Meth addMethod(String name, YetiType.Type returnType) {
+            Meth m = new Meth();
+            m.name = name;
+            m.returnType = returnType;
+            return m;
+        }
+
+        void gen(Ctx ctx) {
+            ctx.m.visitInsn(ACONST_NULL);
+        }
+    }
 }
