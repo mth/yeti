@@ -2291,7 +2291,7 @@ interface YetiCode {
         private static class Field extends Code
                 implements Binder, CaptureWrapper {
             String name; // mangled name
-            String javaType;
+            private String javaType;
             String descr;
             Code value;
             boolean var;
@@ -2300,8 +2300,6 @@ interface YetiCode {
                 this.name = name;
                 this.value = value;
                 this.var = var;
-                javaType = Code.javaType(value.type);
-                descr = 'L' + javaType + ';';
             }
 
             public void genPreGet(Ctx ctx) {
@@ -2327,6 +2325,10 @@ interface YetiCode {
             }
 
             public BindRef getRef(int line) {
+                if (javaType == null) {
+                    javaType = Code.javaType(value.type);
+                    descr = 'L' + javaType + ';';
+                }
                 BindRef ref = new BindRef() {
                     void gen(Ctx ctx) {
                         genPreGet(ctx);
@@ -2356,6 +2358,11 @@ interface YetiCode {
             }
 
             void gen(Ctx ctx) {
+                if (javaType == null) {
+                    value.gen(ctx);
+                    ctx.m.visitInsn(POP);
+                    return;
+                }
                 ctx.cw.visitField(var ? ACC_PRIVATE : ACC_PRIVATE | ACC_FINAL,
                                   name, descr, null, null).visitEnd();
                 genPreGet(ctx);
