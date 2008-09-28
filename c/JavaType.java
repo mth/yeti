@@ -986,6 +986,7 @@ class JavaType {
             name == "float"   ? "F" :
             name == "short"   ? "S" :
             name == "string"  ?  "Ljava/lang/String;" :
+            name == "number"  ?  "Lyeti/lang/Num;" :
             null;
         return descr == null ? YetiType.typeOfClass(name, scope)
                              : new YetiType.Type(descr);
