@@ -1464,6 +1464,7 @@ interface YetiCode {
                 ctx.visitFieldInsn(PUTFIELD, name, c.id,
                         c.captureType());
             }
+            ctx.forceType("yeti/lang/Fun");
         }
 
         void gen(Ctx ctx) {
@@ -1551,8 +1552,7 @@ interface YetiCode {
                     arg.gen(ctx);
                     arg2.gen(ctx);
                     ctx.visitLine(line2);
-                    ctx.visitMethodInsn(INVOKEVIRTUAL,
-                                          "yeti/lang/Fun", "apply",
+                    ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
                 }
             };
