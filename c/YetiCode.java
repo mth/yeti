@@ -408,7 +408,7 @@ interface YetiCode {
             int p = desc.lastIndexOf(')') + 1;
             if (desc.charAt(p) == 'L') {
                 lastInsn = -2;
-                lastType = desc.substring(p, desc.length() - 1);
+                lastType = desc.substring(p + 1, desc.length() - 1);
             }
         }
 
@@ -679,7 +679,6 @@ interface YetiCode {
                 ctx.visitInsn(DUP);
                 ctx.visitLdcInsn(val);
                 ctx.visitInit(jtype, sig);
-                ctx.forceType("yeti/lang/Num");
             }
         }
 
@@ -694,7 +693,6 @@ interface YetiCode {
                         ctx.intConst(rat.numerator());
                         ctx.intConst(rat.denominator());
                         ctx.visitInit("yeti/lang/RatNum", "(II)V");
-                        ctx.forceType("yeti/lang/Num");
                     }
                 });
                 return;
@@ -708,6 +706,7 @@ interface YetiCode {
                         IntNum.__1.equals(num) ? "__1" :
                         IntNum.__2.equals(num) ? "__2" : "_" + num,
                         "Lyeti/lang/IntNum;");
+                    ctx.forceType("yeti/lang/Num");
                     return;
                 }
                 v.val = new Long(num.longValue());
@@ -2355,6 +2354,7 @@ interface YetiCode {
                         case 'D': ins = DLOAD; break;
                         case 'F': ins = FLOAD; break;
                         case 'J': ins = LLOAD; break;
+                        case '[':
                         case 'L': ins = ALOAD; break;
                     }
                     ctx.visitVarInsn(ins, i + 1);
@@ -2372,7 +2372,15 @@ interface YetiCode {
                     ctx.visitInsn(POP);
                     ctx.visitInsn(RETURN);
                 } else {
-                    ctx.visitInsn(ARETURN);
+                    int ins = IRETURN;
+                    switch (returnType.javaType.description.charAt(0)) {
+                        case 'D': ins = DRETURN; break;
+                        case 'F': ins = FRETURN; break;
+                        case 'J': ins = LRETURN; break;
+                        case '[':
+                        case 'L': ins = ARETURN; break;
+                    }
+                    ctx.visitInsn(ins);
                 }
                 ctx.closeMethod();
             }
@@ -2430,6 +2438,7 @@ interface YetiCode {
                             void gen(Ctx ctx) {
                                 genPreGet(ctx);
                                 genSet(ctx, value);
+                                ctx.visitInsn(ACONST_NULL);
                             }
                         } : null;
                     }
