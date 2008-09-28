@@ -275,6 +275,7 @@ interface YetiCode {
         ClassWriter cw;
         private MethodVisitor m;
         private int lastInsn = -1;
+        private String lastType;
         Constants constants;
         int localVarCount;
         int fieldCounter;
@@ -354,7 +355,7 @@ interface YetiCode {
         }
 
         final void visitInsn(int opcode) {
-            if (lastInsn != -1) {
+            if (lastInsn != -1 && lastInsn != -2) {
                 if (lastInsn == ACONST_NULL && opcode == POP) {
                     lastInsn = -1;
                     return;
@@ -370,6 +371,10 @@ interface YetiCode {
         }
 
         final void visitTypeInsn(int opcode, String type) {
+            if (lastInsn == -2 && opcode == CHECKCAST &&
+                type.equals(lastType)) {
+                return; // no cast necessary
+            }
             visitInsn(-1);
             m.visitTypeInsn(opcode, type);
         }
@@ -378,12 +383,22 @@ interface YetiCode {
                                   String name, String desc) {
             visitInsn(-1);
             m.visitFieldInsn(opcode, owner, name, desc);
+            if ((opcode == GETSTATIC || opcode == GETFIELD) &&
+                desc.charAt(0) == 'L') {
+                lastInsn = -2;
+                lastType = desc.substring(1, desc.length() - 1);
+            }
         }
 
         final void visitMethodInsn(int opcode, String owner,
                                    String name, String desc) {
             visitInsn(-1);
             m.visitMethodInsn(opcode, owner, name, desc);
+            int p = desc.lastIndexOf(')') + 1;
+            if (desc.charAt(p) == 'L') {
+                lastInsn = -2;
+                lastType = desc.substring(p, desc.length() - 1);
+            }
         }
 
         final void visitJumpInsn(int opcode, Label label) {
@@ -399,6 +414,10 @@ interface YetiCode {
         final void visitLdcInsn(Object cst) {
             visitInsn(-1);
             m.visitLdcInsn(cst);
+            if (cst instanceof String) {
+                lastInsn = -2;
+                lastType = "java/lang/String";
+            }
         }
         
         final void visitTryCatchBlock(Label start, Label end,
