@@ -362,9 +362,6 @@ interface YetiCode {
                 m.visitInsn(lastInsn);
             }
             lastInsn = opcode;
-            /*if (opcode != -1) {
-                m.visitInsn(opcode);
-            }*/
         }
 
         final void visitVarInsn(int opcode, int var) {
