@@ -418,8 +418,8 @@ public final class YetiAnalyzer extends YetiType {
             Node[] m = ((XNode) cl.expr[i]).expr;
             Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
                                 JavaType.typeOfName(m[0].sym(), scope);
-            JavaClass.Meth method =
-                c.addMethod(m[1].sym(), returnType, kind != "method");
+            JavaClass.Meth method = c.addMethod(m[1].sym(), returnType,
+                                                kind != "method", m[3].line);
             method.code =
                 analyze(m[3], addMethArgs(method, m[2], mscope), depth);
             if (JavaType.isAssignable(m[3], method.returnType,

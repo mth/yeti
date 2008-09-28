@@ -2323,9 +2323,9 @@ interface YetiCode {
 
         static class Meth extends JavaType.Method {
             private List args = new ArrayList();
-            String descr;
+            private String descr;
+            private int line;
             Code code;
-            int line;
 
             Binder addArg(YetiType.Type type, String name) {
                 Arg arg = new Arg(type);
@@ -2478,12 +2478,14 @@ interface YetiCode {
             constr.returnType = YetiType.UNIT_TYPE;
         }
 
-        Meth addMethod(String name, YetiType.Type returnType, boolean static_) {
+        Meth addMethod(String name, YetiType.Type returnType,
+                       boolean static_, int line) {
             Meth m = new Meth();
             m.name = name;
             m.returnType = returnType;
             m.className = className;
             m.access = static_ ? ACC_PUBLIC | ACC_STATIC : ACC_PUBLIC;
+            m.line = line;
             methods.add(m);
             return m;
         }
