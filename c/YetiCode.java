@@ -452,11 +452,11 @@ interface YetiCode {
         }
 
         void popn(int n) {
+            if ((n & 1) != 0) {
+                visitInsn(POP);
+            }
             for (; n >= 2; n -= 2) {
                 visitInsn(POP2);
-            }
-            if (n != 0) {
-                visitInsn(POP);
             }
         }
     }
