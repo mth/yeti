@@ -139,6 +139,9 @@ public final class YetiAnalyzer extends YetiType {
                 return new ClassOfExpr(t != null ? t.javaType :
                             resolveFullClass(cn, scope, x).javaType.resolve(x));
             }
+            if (kind == "class") {
+                return defineClass(x, scope, depth);
+            }
         } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             String opop = op.op;
@@ -233,15 +236,6 @@ public final class YetiAnalyzer extends YetiType {
         { "number",  NUM_TYPE  },
         { "string",  STR_TYPE  }
     };
-
-    static Type typeOfClass(String className, Scope scope) {
-        if (className.indexOf('/') > 0)
-            return JavaType.typeOfClass(null, className);
-        Type t = resolveClass(className, scope, false);
-        if (t != null)
-            return t;
-        return JavaType.typeOfClass(scope.packageName, className);
-    }
 
     static Type nodeToType(TypeNode node, Map free, Scope scope, int depth) {
         String name = node.name;
@@ -363,6 +357,75 @@ public final class YetiAnalyzer extends YetiType {
                         " (when checking " + value.type + " is " + t + ")");
         }
         return value;
+    }
+
+    static Scope addMethArgs(JavaClass.Meth method, Node argList, Scope scope) {
+        Node[] args = ((XNode) argList).expr;
+        Scope rscope = scope;
+        for (int i = 0; i < args.length; i += 2) {
+            Type t = JavaType.typeOfName(args[i].sym(), scope);
+            String name = args[i + 1].sym();
+            rscope = new Scope(rscope, name, method.addArg(t, name));
+        }
+        return rscope;
+    }
+
+    /*
+     * (:class Foo (:argument-list int x) (:extends Object)
+     * (foo = x)
+     * (:method String getBlaah (:argument-list int y) (:concat (x + y))))
+     */
+    static Code defineClass(XNode cl, Scope scope, int depth) {
+        JavaClass c = new JavaClass(cl.expr[0].sym());
+        Scope local = addMethArgs(c.constr, cl.expr[1], scope);
+        // field defs
+        for (int i = 2; i < cl.expr.length; ++i) {
+            if (cl.expr[i] instanceof Bind) {
+                Bind bind = (Bind) cl.expr[i];
+                if (bind.property) {
+                    throw new CompileException(bind,
+                        "Class field cannot be a property");
+                }
+                Binder binder;
+                Code code;
+                if (bind.expr.kind == "lambda") {
+                    Function lambda = new Function(new Type(depth + 1));
+                    lambda.selfBind = binder =
+                        c.addField(bind.name, lambda, bind.var);
+                    lambdaBind(lambda, bind, bind.noRec ? local :
+                            new Scope(local, bind.name, binder), depth + 1);
+                    code = lambda;
+                } else {
+                    code = analyze(bind.expr, local, depth + 1);
+                    binder = c.addField(bind.name, code, bind.var);
+                    if (bind.type != null) {
+                        isOp(bind, bind.type, code, scope, depth);
+                    }
+                }
+                if (code.polymorph && !bind.var) {
+                    local = bindPoly(bind.name, code.type, binder,
+                                     depth, local);
+                } else {
+                    local = new Scope(local, bind.name, binder);
+                }
+            }
+        }
+        for (int i = 2; i < cl.expr.length; ++i) {
+            if (cl.expr[i].kind != "method")
+                continue;
+            Node[] m = ((XNode) cl.expr[i]).expr;
+            Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
+                                JavaType.typeOfName(m[0].sym(), scope);
+            JavaClass.Meth method = c.addMethod(m[1].sym(), returnType);
+            method.code =
+                analyze(m[3], addMethArgs(method, m[2], local), depth);
+            if (JavaType.isAssignable(m[3], method.returnType,
+                                      method.code.type, true) < 0) {
+                throw new CompileException(m[3], "Cannot return " +
+                            method.code.type + " as " + method.returnType);
+            }
+        }
+        return c;
     }
 
     static Code[] mapArgs(int start, Node[] args, Scope scope, int depth) {

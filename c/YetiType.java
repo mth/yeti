@@ -771,6 +771,15 @@ public class YetiType implements YetiParser, YetiBuiltins {
         return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
     }
 
+    static Type typeOfClass(String className, Scope scope) {
+        if (className.indexOf('/') > 0)
+            return JavaType.typeOfClass(null, className);
+        Type t = resolveClass(className, scope, false);
+        if (t != null)
+            return t;
+        return JavaType.typeOfClass(scope.packageName, className);
+    }
+
     static void getFreeVar(List vars, List deny, Type type, int depth) {
         if (type.seen) {
             return;

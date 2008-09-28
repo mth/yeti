@@ -2201,17 +2201,26 @@ interface YetiCode {
     }
 
     class JavaClass extends Code {
-        final Meth constr = new Meth();
+        private String className;
+        private String parentClass = "java/lang/Object";
+        private List fields = new ArrayList();
+        private List methods = new ArrayList();
+        private Map fieldNames = new HashMap();
+        final Meth constr = new Meth() {
+            Binder addArg(YetiType.Type type, String name) {
+                return addField(name, super.addArg(type, name).getRef(0),
+                                false);
+            }
+        };
 
         private static class Arg extends BindRef implements Binder {
-            private int argn;
+            int argn;
             final YetiType.Type javaType;
 
-            Arg(int n, YetiType.Type javaType, YetiType.Type yetiType) {
-                this.javaType = javaType;
-                this.type = yetiType;
+            Arg(YetiType.Type type) {
+                this.javaType = type;
+                this.type = JavaType.convertValueType(type);
                 binder = this;
-                argn = n;
             }
 
             public BindRef getRef(int line) {
@@ -2223,34 +2232,182 @@ interface YetiCode {
             }
         }
 
-        static class Meth {
+        static class Meth extends JavaType.Method {
             private List args = new ArrayList();
-            private String name;
-            private YetiType.Type returnType;
-            private YetiType.Type returnYeti;
+            String descr;
             Code code;
+            int line;
 
-            Binder addArg(YetiType.Type javaType, YetiType.Type yetiType) {
-                Arg arg = new Arg(args.size() + 1, javaType, yetiType);
+            Binder addArg(YetiType.Type type, String name) {
+                Arg arg = new Arg(type);
                 args.add(arg);
+                arg.argn = args.size();
                 return arg;
+            }
+            
+            void init() {
+                arguments = new YetiType.Type[args.size()];
+                for (int i = 0; i < arguments.length; ++i) {
+                    Arg arg = (Arg) args.get(i);
+                    arguments[i] = arg.javaType;
+                }
+                sig = name.concat(descr = descr());
+            }
+
+            void convertArgs(Ctx ctx) {
+                ctx.localVarCount = args.size() + 1;
+                for (int i = 0; i < arguments.length; ++i) {
+                    String descr = arguments[i].javaType.description;
+                    if (descr != "Ljava/lang/String;" && descr.charAt(0) == 'L')
+                        continue;
+                    int ins = ILOAD;
+                    switch (descr.charAt(0)) {
+                        case 'D': ins = DLOAD; break;
+                        case 'F': ins = FLOAD; break;
+                        case 'J': ins = LLOAD; break;
+                        case 'L': ins = ALOAD; break;
+                    }
+                    ctx.m.visitVarInsn(ins, i + 1);
+                    JavaExpr.convertValue(ctx, arguments[i]);
+                    ctx.m.visitVarInsn(ASTORE, i + 1);
+                }
+            }
+
+            void gen(Ctx ctx) {
+                init();
+                ctx = ctx.newMethod(ACC_PUBLIC, name, descr);
+                convertArgs(ctx);
+                JavaExpr.convertedArg(ctx, code, returnType, line);
+                if (returnType.type == YetiType.UNIT) {
+                    ctx.m.visitInsn(POP);
+                    ctx.m.visitInsn(RETURN);
+                } else {
+                    ctx.m.visitInsn(ARETURN);
+                }
+                ctx.closeMethod();
             }
         }
 
-        JavaClass() {
-            type = YetiType.UNIT_TYPE;
+        private static class Field extends Code
+                implements Binder, CaptureWrapper {
+            String name; // mangled name
+            String javaType;
+            String descr;
+            Code value;
+            boolean var;
+
+            Field(String name, Code value, boolean var) {
+                this.name = name;
+                this.value = value;
+                this.var = var;
+                javaType = Code.javaType(value.type);
+                descr = 'L' + javaType + ';';
+            }
+
+            public void genPreGet(Ctx ctx) {
+                ctx.m.visitVarInsn(ALOAD, 0);
+            }
+
+            public void genGet(Ctx ctx) {
+                ctx.m.visitFieldInsn(GETFIELD, ctx.className, name, descr);
+            }
+
+            public void genSet(Ctx ctx, Code value) {
+                value.gen(ctx);
+                ctx.m.visitTypeInsn(CHECKCAST, javaType);
+                ctx.m.visitFieldInsn(PUTFIELD, ctx.className, name, descr);
+            }
+
+            public Object captureIdentity() {
+                return this;
+            }
+
+            public String captureType() {
+                return descr;
+            }
+
+            public BindRef getRef(int line) {
+                BindRef ref = new BindRef() {
+                    void gen(Ctx ctx) {
+                        genPreGet(ctx);
+                        genGet(ctx);
+                    }
+
+                    Code assign(final Code value) {
+                        return var ? new Code() {
+                            void gen(Ctx ctx) {
+                                genPreGet(ctx);
+                                genSet(ctx, value);
+                            }
+                        } : null;
+                    }
+
+                    boolean assign() {
+                        return var;
+                    }
+
+                    CaptureWrapper capture() {
+                        return Field.this;
+                    }
+                };
+                ref.type = value.type;
+                ref.binder = this;
+                return ref;
+            }
+
+            void gen(Ctx ctx) {
+                ctx.cw.visitField(var ? ACC_PRIVATE : ACC_PRIVATE | ACC_FINAL,
+                                  name, descr, null, null).visitEnd();
+                genPreGet(ctx);
+                genSet(ctx, value);
+            }
         }
 
-        // type is expected
+        JavaClass(String className) {
+            type = YetiType.UNIT_TYPE;
+            this.className = className;
+            constr.name = "<init>";
+            constr.returnType = YetiType.UNIT_TYPE;
+        }
+
         Meth addMethod(String name, YetiType.Type returnType) {
             Meth m = new Meth();
             m.name = name;
             m.returnType = returnType;
+            m.className = className;
+            methods.add(m);
             return m;
+        }
+
+        Binder addField(String name, Code value, boolean var) {
+            name = mangle(name);
+            String fname = name;
+            int n = fieldNames.size();
+            while (fieldNames.containsKey(fname)) {
+                fname = name + n++;
+            }
+            Field field = new Field(fname, value, var);
+            fields.add(field);
+            return field;
         }
 
         void gen(Ctx ctx) {
             ctx.m.visitInsn(ACONST_NULL);
+            Ctx c = ctx.newClass(ACC_STATIC | ACC_PUBLIC,
+                                 className, parentClass);
+            constr.init();
+            Ctx init = c.newMethod(ACC_PUBLIC, "<init>", constr.descr);
+            init.m.visitVarInsn(ALOAD, 0); // this.
+            init.m.visitMethodInsn(INVOKESPECIAL, parentClass, "<init>", "()V");
+            constr.convertArgs(init);
+            for (int i = 0, cnt = fields.size(); i < cnt; ++i) {
+                ((Code) fields.get(i)).gen(init);
+            }
+            init.m.visitInsn(RETURN);
+            init.closeMethod();
+            for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
+                ((Meth) methods.get(i)).gen(c);
+            }
         }
     }
 }

@@ -293,7 +293,11 @@ class JavaType {
                 result.append(argDescr(i));
             }
             result.append(')');
-            result.append(descriptionOf(returnType));
+            if (returnType.type == YetiType.UNIT) {
+                result.append('V');
+            } else {
+                result.append(descriptionOf(returnType));
+            }
             return result.toString();
         }
     }
@@ -969,6 +973,22 @@ class JavaType {
         YetiType.Type t = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
         t.javaType = common;
         return t;
+    }
+
+    static YetiType.Type typeOfName(String name, YetiType.Scope scope) {
+        String descr =
+            name == "int"     ? "I" :
+            name == "long"    ? "J" :
+            name == "boolean" ? "Z" :
+            name == "byte"    ? "B" :
+            name == "char"    ? "C" :
+            name == "double"  ? "D" :
+            name == "float"   ? "F" :
+            name == "short"   ? "S" :
+            name == "string"  ?  "Ljava/lang/String;" :
+            null;
+        return descr == null ? YetiType.typeOfClass(name, scope)
+                             : new YetiType.Type(descr);
     }
 }
 
