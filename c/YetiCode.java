@@ -415,7 +415,9 @@ interface YetiCode {
         }
 
         final void visitLabel(Label label) {
-            visitInsn(-1);
+            if (lastInsn != -1 && lastInsn != -2) {
+                visitInsn(-1);
+            }
             m.visitLabel(label);
         }
 
