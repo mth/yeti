@@ -2330,7 +2330,8 @@ interface YetiCode {
             Binder addArg(YetiType.Type type, String name) {
                 Arg arg = new Arg(type);
                 args.add(arg);
-                arg.argn = args.size();
+                arg.argn = (access & ACC_STATIC) == 0
+                                ? args.size() : args.size() - 1;
                 return arg;
             }
             
@@ -2344,7 +2345,8 @@ interface YetiCode {
             }
 
             void convertArgs(Ctx ctx) {
-                ctx.localVarCount = args.size() + 1;
+                int n = (access & ACC_STATIC) == 0 ? 1 : 0;
+                ctx.localVarCount = args.size() + n;
                 for (int i = 0; i < arguments.length; ++i) {
                     String descr = arguments[i].javaType.description;
                     if (descr != "Ljava/lang/String;" && descr.charAt(0) == 'L')
@@ -2357,9 +2359,9 @@ interface YetiCode {
                         case '[':
                         case 'L': ins = ALOAD; break;
                     }
-                    ctx.visitVarInsn(ins, i + 1);
+                    ctx.visitVarInsn(ins, i + n);
                     JavaExpr.convertValue(ctx, arguments[i]);
-                    ctx.visitVarInsn(ASTORE, i + 1);
+                    ctx.visitVarInsn(ASTORE, i + n);
                 }
             }
 
