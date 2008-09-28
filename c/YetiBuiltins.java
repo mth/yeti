@@ -311,8 +311,8 @@ interface YetiBuiltins extends CaseCode {
             arg1.gen(ctx);
             arg2.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Compose",
-                    "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+            ctx.visitInit("yeti/lang/Compose",
+                          "(Ljava/lang/Object;Ljava/lang/Object;)V");
         }
     }
 
@@ -710,8 +710,9 @@ interface YetiBuiltins extends CaseCode {
                     arg2.gen(ctx);
                     ctx.visitLine(line);
                     ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
-                        "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                    ctx.visitInit("yeti/lang/LList",
+                                  "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                    ctx.forceType("yeti/lang/AList");
                 }
             };
         }
@@ -735,8 +736,9 @@ interface YetiBuiltins extends CaseCode {
                     arg2.gen(ctx);
                     ctx.visitLine(line);
                     ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LazyList",
-                        "<init>", "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
+                    ctx.visitInit("yeti/lang/LazyList",
+                                  "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
+                    ctx.forceType("yeti/lang/AList");
                 }
             };
         }
@@ -771,8 +773,8 @@ interface YetiBuiltins extends CaseCode {
                     arg2.gen(ctx);
                     ctx.intConst(yes ? 1 : 0);
                     ctx.visitLine(line);
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Match",
-                                        "<init>", "(Ljava/lang/Object;Z)V");
+                    ctx.visitInit("yeti/lang/Match",
+                                  "(Ljava/lang/Object;Z)V");
                 }
             };
             if (!(arg2 instanceof StringConstant))
@@ -826,8 +828,7 @@ interface YetiBuiltins extends CaseCode {
                     ctx.visitInsn(DUP);
                     arg.gen(ctx);
                     ctx.visitLine(line);
-                    ctx.visitMethodInsn(INVOKESPECIAL, impl, "<init>",
-                                        "(Ljava/lang/Object;)V");
+                    ctx.visitInit(impl, "(Ljava/lang/Object;)V");
                 }
             };
             if (!(arg instanceof StringConstant))

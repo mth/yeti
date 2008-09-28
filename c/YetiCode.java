@@ -379,6 +379,17 @@ interface YetiCode {
             m.visitTypeInsn(opcode, type);
         }
 
+        final void visitInit(String type, String descr) {
+            visitInsn(-2);
+            m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr);
+            lastType = type;
+        }
+
+        final void forceType(String type) {
+            visitInsn(-2);
+            lastType = type;
+        }
+
         final void visitFieldInsn(int opcode, String owner,
                                   String name, String desc) {
             visitInsn(-1);
@@ -477,8 +488,8 @@ interface YetiCode {
                     ctx.visitInsn(DUP);
                     Code.this.gen(ctx);
                     arg2.gen(ctx);
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Bind2nd",
-                        "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
+                    ctx.visitInit("yeti/lang/Bind2nd",
+                                  "(Ljava/lang/Object;Ljava/lang/Object;)V");
                 }
             };
         }
@@ -667,7 +678,8 @@ interface YetiCode {
                 ctx.visitTypeInsn(NEW, jtype);
                 ctx.visitInsn(DUP);
                 ctx.visitLdcInsn(val);
-                ctx.visitMethodInsn(INVOKESPECIAL, jtype, "<init>", sig);
+                ctx.visitInit(jtype, sig);
+                ctx.forceType("yeti/lang/Num");
             }
         }
 
@@ -681,8 +693,8 @@ interface YetiCode {
                         RatNum rat = ((RatNum) num).reduce();
                         ctx.intConst(rat.numerator());
                         ctx.intConst(rat.denominator());
-                        ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
-                                              "<init>", "(II)V");
+                        ctx.visitInit("yeti/lang/RatNum", "(II)V");
+                        ctx.forceType("yeti/lang/Num");
                     }
                 });
                 return;
@@ -1431,7 +1443,7 @@ interface YetiCode {
 
             ctx.visitTypeInsn(NEW, name);
             ctx.visitInsn(DUP);
-            ctx.visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V");
+            ctx.visitInit(name, "()V");
         }
 
         void finishGen(Ctx ctx) {
@@ -1562,8 +1574,7 @@ interface YetiCode {
                     ctx.visitTypeInsn(NEW, "yeti/lang/TagCon");
                     ctx.visitInsn(DUP);
                     ctx.visitLdcInsn(name);
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
-                            "<init>", "(Ljava/lang/String;)V");
+                    ctx.visitInit("yeti/lang/TagCon", "(Ljava/lang/String;)V");
                 }
             });
         }
@@ -1575,8 +1586,8 @@ interface YetiCode {
                     ctx.visitInsn(DUP);
                     arg.gen(ctx);
                     ctx.visitLdcInsn(name);
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Tag",
-                           "<init>", "(Ljava/lang/Object;Ljava/lang/String;)V");
+                    ctx.visitInit("yeti/lang/Tag",
+                                  "(Ljava/lang/Object;Ljava/lang/String;)V");
                 }
             };
             apply.polymorph = arg.polymorph;
@@ -1653,9 +1664,8 @@ interface YetiCode {
                         ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
                         ctx.visitInsn(DUP);
                         ctx.visitLdcInsn(names[0]);
-                        ctx.visitMethodInsn(INVOKESPECIAL,
-                                "yeti/lang/Selector", "<init>",
-                                "(Ljava/lang/String;)V");
+                        ctx.visitInit("yeti/lang/Selector",
+                                      "(Ljava/lang/String;)V");
                         return;
                     }
                     ctx.visitTypeInsn(NEW, "yeti/lang/Selectors");
@@ -1668,8 +1678,8 @@ interface YetiCode {
                         ctx.visitLdcInsn(names[i]);
                         ctx.visitInsn(AASTORE);
                     }
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
-                                          "<init>", "([Ljava/lang/String;)V");
+                    ctx.visitInit("yeti/lang/Selectors",
+                                  "([Ljava/lang/String;)V");
                 }
             });
         }
@@ -2102,8 +2112,7 @@ interface YetiCode {
                 ctx.visitVarInsn(ALOAD, arrayVar);
             }
             if (properties.length == 0) {
-                ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
-                        "<init>", "([Ljava/lang/Object;)V");
+                ctx.visitInit("yeti/lang/Struct", "([Ljava/lang/Object;)V");
                 return;
             }
             ctx.intConst(properties.length * 3);
@@ -2124,8 +2133,8 @@ interface YetiCode {
                     ctx.visitInsn(AASTORE);
                 }
             }
-            ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/PStruct",
-                    "<init>", "([Ljava/lang/Object;[Ljava/lang/Object;)V");
+            ctx.visitInit("yeti/lang/PStruct",
+                          "([Ljava/lang/Object;[Ljava/lang/Object;)V");
         }
     }
 
@@ -2171,8 +2180,9 @@ interface YetiCode {
                             "range", "(Ljava/lang/Object;Ljava/lang/Object;"
                                     + "Lyeti/lang/AList;)Lyeti/lang/AList;");
                 } else {
-                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
-                            "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                    ctx.visitInit("yeti/lang/LList",
+                                  "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+                    ctx.forceType("yeti/lang/AList");
                 }
             }
         }
@@ -2196,11 +2206,9 @@ interface YetiCode {
             ctx.visitInsn(DUP);
             if (items.length > 16) {
                 ctx.intConst(items.length);
-                ctx.visitMethodInsn(INVOKESPECIAL,
-                        "yeti/lang/Hash", "<init>", "(I)V");
+                ctx.visitInit("yeti/lang/Hash", "(I)V");
             } else {
-                ctx.visitMethodInsn(INVOKESPECIAL,
-                        "yeti/lang/Hash", "<init>", "()V");
+                ctx.visitInit("yeti/lang/Hash", "()V");
             }
             for (int i = 0; i < items.length; ++i) {
                 ctx.visitInsn(DUP);

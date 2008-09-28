@@ -68,8 +68,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
                 ? "java/util/ArrayList" : "java/util/HashSet";
             ctx.visitTypeInsn(NEW, tmpClass); // ia
             ctx.visitInsn(DUP);               // iaa
-            ctx.visitMethodInsn(INVOKESPECIAL, tmpClass,
-                                "<init>", "()V"); // ia
+            ctx.visitInit(tmpClass, "()V"); // ia
             ctx.visitInsn(SWAP); // ai
             ctx.visitInsn(DUP); // aii
             ctx.visitJumpInsn(IFNULL, end); // ai
@@ -197,8 +196,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
         }
         convertNum(ctx, descr);
         if (newInstr != null) {
-            ctx.visitMethodInsn(INVOKESPECIAL, newInstr,
-                                "<init>", "(" + descr + ")V");
+            ctx.visitInit(newInstr, "(" + descr + ")V");
         }
     }
 
@@ -298,7 +296,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             ctx.visitJumpInsn(IFNONNULL, nonnull);
             ctx.visitInsn(POP);
             ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "UNDEF_STR",
-                                 "Ljava/lang/String;");
+                               "Ljava/lang/String;");
             ctx.visitLabel(nonnull);
         } else if (descr == "Z") {
             Label skip = new Label(), end = new Label();
@@ -308,7 +306,7 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
             ctx.visitJumpInsn(GOTO, end);
             ctx.visitLabel(skip);
             ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean", "FALSE",
-                                 "Ljava/lang/Boolean;");
+                               "Ljava/lang/Boolean;");
             ctx.visitLabel(end);
         } else if (descr == "B" || descr == "S" ||
                    descr == "I" || descr == "J") {
@@ -321,8 +319,9 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
                 ctx.visitInsn(DUP_X1);
                 ctx.visitInsn(SWAP);
             }
-            ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/IntNum",
-                                "<init>", descr == "J" ? "(J)V" : "(I)V");
+            ctx.visitInit("yeti/lang/IntNum",
+                          descr == "J" ? "(J)V" : "(I)V");
+            ctx.forceType("yeti/lang/Num");
         } else if (descr == "D" || descr == "F") {
             ctx.visitTypeInsn(NEW, "yeti/lang/FloatNum");
             if (descr == "F") {
@@ -334,8 +333,8 @@ abstract class JavaExpr extends YetiCode.Code implements YetiCode {
                 ctx.visitInsn(DUP_X2);
                 ctx.visitInsn(POP);
             }
-            ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/FloatNum",
-                                "<init>", "(D)V");
+            ctx.visitInit("yeti/lang/FloatNum", "(D)V");
+            ctx.forceType("yeti/lang/Num");
         } else if (descr == "C") {
             ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                                 "valueOf", "(C)Ljava/lang/String;");
