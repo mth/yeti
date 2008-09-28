@@ -65,16 +65,16 @@ interface YetiCode {
                 ctx.cw.visitField(ACC_STATIC | ACC_FINAL, name, descr,
                                   null, null).visitEnd();
                 code.gen(sb);
-                sb.m.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
+                sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
                 constants.put(key, name);
             }
             final String fieldName = name;
-            ctx_.m.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
+            ctx_.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
         }
 
         void close() {
             if (sb != null) {
-                sb.m.visitInsn(RETURN);
+                sb.visitInsn(RETURN);
                 sb.closeMethod();
             }
         }
@@ -125,7 +125,7 @@ interface YetiCode {
         }
 
         private void generateModuleFields(Map fields, Ctx ctx) {
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
             for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
                 Map.Entry entry = (Map.Entry) i.next();
                 String name = (String) entry.getKey();
@@ -134,12 +134,12 @@ interface YetiCode {
                 String descr = 'L' + type + ';';
                 ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, jname,
                         descr, null, null).visitEnd();
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitLdcInsn(name);
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                ctx.visitInsn(DUP);
+                ctx.visitLdcInsn(name);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                     "get", "(Ljava/lang/String;)Ljava/lang/Object;");
-                ctx.m.visitTypeInsn(CHECKCAST, type);
-                ctx.m.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
+                ctx.visitTypeInsn(CHECKCAST, type);
+                ctx.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
             }
         }
 
@@ -208,23 +208,23 @@ interface YetiCode {
                                   null, Boolean.FALSE);
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
                                     "eval", "()Ljava/lang/Object;");
-                ctx.m.visitFieldInsn(GETSTATIC, name, "_$", "Z");
+                ctx.visitFieldInsn(GETSTATIC, name, "_$", "Z");
                 Label eval = new Label();
-                ctx.m.visitJumpInsn(IFEQ, eval);
-                ctx.m.visitFieldInsn(GETSTATIC, name, "$",
+                ctx.visitJumpInsn(IFEQ, eval);
+                ctx.visitFieldInsn(GETSTATIC, name, "$",
                                      "Ljava/lang/Object;");
-                ctx.m.visitInsn(ARETURN);
-                ctx.m.visitLabel(eval);
+                ctx.visitInsn(ARETURN);
+                ctx.visitLabel(eval);
                 codeTree.gen(ctx);
                 if (codeTree.type.type == YetiType.STRUCT) {
                     generateModuleFields(codeTree.type.finalMembers, ctx);
                 }
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitFieldInsn(PUTSTATIC, name, "$",
+                ctx.visitInsn(DUP);
+                ctx.visitFieldInsn(PUTSTATIC, name, "$",
                                      "Ljava/lang/Object;");
                 ctx.intConst(1);
-                ctx.m.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
-                ctx.m.visitInsn(ARETURN);
+                ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
+                ctx.visitInsn(ARETURN);
                 types.put(name, new ModuleType(codeTree.type,
                                                codeTree.typeDefs));
             } else if ((flags & YetiC.CF_EVAL) != 0) {
@@ -232,27 +232,27 @@ interface YetiCode {
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
                                     "(Ljava/lang/Object;)Ljava/lang/Object;");
                 codeTree.gen(ctx);
-                ctx.m.visitInsn(ARETURN);
+                ctx.visitInsn(ARETURN);
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");
                 ctx.localVarCount++;
-                ctx.m.visitVarInsn(ALOAD, 0);
-                ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
-                                      "setArgv", "([Ljava/lang/String;)V");
+                ctx.visitVarInsn(ALOAD, 0);
+                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                    "setArgv", "([Ljava/lang/String;)V");
                 Label codeStart = new Label(), exitStart = new Label();
-                ctx.m.visitTryCatchBlock(codeStart, exitStart, exitStart,
-                                         "yeti/lang/ExitError");
-                ctx.m.visitLabel(codeStart);
+                ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
+                                       "yeti/lang/ExitError");
+                ctx.visitLabel(codeStart);
                 codeTree.gen(ctx);
-                ctx.m.visitInsn(POP);
-                ctx.m.visitInsn(RETURN);
-                ctx.m.visitLabel(exitStart);
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
-                                      "getExitCode", "()I");
-                ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/System",
-                                      "exit", "(I)V");
-                ctx.m.visitInsn(RETURN);
+                ctx.visitInsn(POP);
+                ctx.visitInsn(RETURN);
+                ctx.visitLabel(exitStart);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
+                                    "getExitCode", "()I");
+                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/System",
+                                    "exit", "(I)V");
+                ctx.visitInsn(RETURN);
             }
             ctx.closeMethod();
             constants.close();
@@ -273,7 +273,8 @@ interface YetiCode {
         CompileCtx compilation;
         String className;
         ClassWriter cw;
-        MethodVisitor m;
+        private MethodVisitor m;
+        private int lastInsn = -1;
         Constants constants;
         int localVarCount;
         int fieldCounter;
@@ -309,6 +310,7 @@ interface YetiCode {
         }
 
         void closeMethod() {
+            visitInsn(-1);
             m.visitMaxs(0, 0);
             m.visitEnd();
         }
@@ -324,8 +326,9 @@ interface YetiCode {
 
         void intConst(int n) {
             if (n >= -1 && n <= 5) {
-                m.visitInsn(n + 3);
+                visitInsn(n + 3);
             } else {
+                visitInsn(-1);
                 m.visitLdcInsn(new Integer(n));
             }
         }
@@ -340,8 +343,8 @@ interface YetiCode {
         }
 
         void genBoolean(Label label) {
-            m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                    "TRUE", "Ljava/lang/Boolean;");
+            visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+                           "TRUE", "Ljava/lang/Boolean;");
             Label end = new Label();
             m.visitJumpInsn(GOTO, end);
             m.visitLabel(label);
@@ -350,16 +353,73 @@ interface YetiCode {
             m.visitLabel(end);
         }
 
+        final void visitInsn(int opcode) {
+            if (lastInsn != -1) {
+                if (lastInsn == ACONST_NULL && opcode == POP) {
+                    lastInsn = -1;
+                    return;
+                }
+                m.visitInsn(lastInsn);
+            }
+            lastInsn = opcode;
+            /*if (opcode != -1) {
+                m.visitInsn(opcode);
+            }*/
+        }
+
+        final void visitVarInsn(int opcode, int var) {
+            visitInsn(-1);
+            m.visitVarInsn(opcode, var);
+        }
+
+        final void visitTypeInsn(int opcode, String type) {
+            visitInsn(-1);
+            m.visitTypeInsn(opcode, type);
+        }
+
+        final void visitFieldInsn(int opcode, String owner,
+                                  String name, String desc) {
+            visitInsn(-1);
+            m.visitFieldInsn(opcode, owner, name, desc);
+        }
+
+        final void visitMethodInsn(int opcode, String owner,
+                                   String name, String desc) {
+            visitInsn(-1);
+            m.visitMethodInsn(opcode, owner, name, desc);
+        }
+
+        final void visitJumpInsn(int opcode, Label label) {
+            visitInsn(-1);
+            m.visitJumpInsn(opcode, label);
+        }
+
+        final void visitLabel(Label label) {
+            visitInsn(-1);
+            m.visitLabel(label);
+        }
+
+        final void visitLdcInsn(Object cst) {
+            visitInsn(-1);
+            m.visitLdcInsn(cst);
+        }
+        
+        final void visitTryCatchBlock(Label start, Label end,
+                                      Label handler, String type) {
+            visitInsn(-1);
+            m.visitTryCatchBlock(start, end, handler, type);
+        }
+                                      
         void constant(Object key, Code code) {
             constants.registerConstant(key, code, this);
         }
 
         void popn(int n) {
             for (; n >= 2; n -= 2) {
-                m.visitInsn(POP2);
+                visitInsn(POP2);
             }
             if (n != 0) {
-                m.visitInsn(POP);
+                visitInsn(POP);
             }
         }
     }
@@ -387,11 +447,11 @@ interface YetiCode {
                 { type = t; }
 
                 void gen(Ctx ctx) {
-                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Bind2nd");
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitTypeInsn(NEW, "yeti/lang/Bind2nd");
+                    ctx.visitInsn(DUP);
                     Code.this.gen(ctx);
                     arg2.gen(ctx);
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Bind2nd",
+                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Bind2nd",
                         "<init>", "(Ljava/lang/Object;Ljava/lang/Object;)V");
                 }
             };
@@ -418,9 +478,9 @@ interface YetiCode {
         // Boolean codes have ability to generate jumps.
         void genIf(Ctx ctx, Label to, boolean ifTrue) {
             gen(ctx);
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+            ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     "TRUE", "Ljava/lang/Boolean;");
-            ctx.m.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+            ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
         }
 
         // Used to tell that this code is at tail position in a function.
@@ -540,7 +600,7 @@ interface YetiCode {
         
         void gen(Ctx ctx) {
             ctx.visitLine(line);
-            ctx.m.visitFieldInsn(GETSTATIC, className, funFieldName,
+            ctx.visitFieldInsn(GETSTATIC, className, funFieldName,
                                  'L' + javaType(type) + ';');
         }
     }
@@ -563,7 +623,7 @@ interface YetiCode {
             }
             long n = num.longValue();
             if (!small) {
-                ctx.m.visitLdcInsn(new Long(n));
+                ctx.visitLdcInsn(new Long(n));
             } else if (n >= (long) Integer.MIN_VALUE &&
                        n <= (long) Integer.MAX_VALUE) {
                 ctx.intConst((int) n);
@@ -578,10 +638,10 @@ interface YetiCode {
             Object val;
 
             void gen(Ctx ctx) {
-                ctx.m.visitTypeInsn(NEW, jtype);
-                ctx.m.visitInsn(DUP);
-                ctx.m.visitLdcInsn(val);
-                ctx.m.visitMethodInsn(INVOKESPECIAL, jtype, "<init>", sig);
+                ctx.visitTypeInsn(NEW, jtype);
+                ctx.visitInsn(DUP);
+                ctx.visitLdcInsn(val);
+                ctx.visitMethodInsn(INVOKESPECIAL, jtype, "<init>", sig);
             }
         }
 
@@ -590,12 +650,12 @@ interface YetiCode {
                 ctx.constant(num, new Code() {
                     { type = YetiType.NUM_TYPE; }
                     void gen(Ctx ctx) {
-                        ctx.m.visitTypeInsn(NEW, "yeti/lang/RatNum");
-                        ctx.m.visitInsn(DUP);
+                        ctx.visitTypeInsn(NEW, "yeti/lang/RatNum");
+                        ctx.visitInsn(DUP);
                         RatNum rat = ((RatNum) num).reduce();
                         ctx.intConst(rat.numerator());
                         ctx.intConst(rat.denominator());
-                        ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
+                        ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/RatNum",
                                               "<init>", "(II)V");
                     }
                 });
@@ -606,7 +666,7 @@ interface YetiCode {
                 v.jtype = "yeti/lang/IntNum";
                 if (IntNum.__1.compareTo(num) <= 0 &&
                     IntNum._9.compareTo(num) >= 0) {
-                    ctx.m.visitFieldInsn(GETSTATIC, v.jtype,
+                    ctx.visitFieldInsn(GETSTATIC, v.jtype,
                         IntNum.__1.equals(num) ? "__1" :
                         IntNum.__2.equals(num) ? "__2" : "_" + num,
                         "Lyeti/lang/IntNum;");
@@ -637,7 +697,7 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitLdcInsn(str);
+            ctx.visitLdcInsn(str);
         }
     }
 
@@ -647,7 +707,7 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.visitInsn(ACONST_NULL);
         }
     }
 
@@ -665,13 +725,13 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+            ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
         }
 
         void genIf(Ctx ctx, Label to, boolean ifTrue) {
             if (val == ifTrue) {
-                ctx.m.visitJumpInsn(GOTO, to);
+                ctx.visitJumpInsn(GOTO, to);
             }
         }
     }
@@ -688,24 +748,24 @@ interface YetiCode {
             if (param.length == 1) {
                 param[0].gen(ctx);
                 if (param[0].type.deref().type != YetiType.STR) {
-                    ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                    ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                         "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
                 }
                 return;
             }
             ctx.intConst(param.length);
-            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
             for (int i = 0; i < param.length; ++i) {
-                ctx.m.visitInsn(DUP);
+                ctx.visitInsn(DUP);
                 ctx.intConst(i);
                 param[i].gen(ctx);
                 if (param[i].type.deref().type != YetiType.STR) {
-                    ctx.m.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                    ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                         "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
                 }
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitInsn(AASTORE);
             }
-            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+            ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
                 "concat", "([Ljava/lang/String;)Ljava/lang/String;");
         }
     }
@@ -718,8 +778,8 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             String name = method.classType.javaType.className();
-            ctx.m.visitTypeInsn(NEW, name);
-            ctx.m.visitInsn(DUP);
+            ctx.visitTypeInsn(NEW, name);
+            ctx.visitInsn(DUP);
             genCall(ctx, INVOKESPECIAL);
         }
     }
@@ -737,7 +797,7 @@ interface YetiCode {
             if (object != null) {
                 object.gen(ctx);
                 if (ctx.compilation.isGCJ || ins != INVOKEINTERFACE) {
-                    ctx.m.visitTypeInsn(CHECKCAST,
+                    ctx.visitTypeInsn(CHECKCAST,
                         method.classType.javaType.className());
                 }
             }
@@ -756,7 +816,7 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             throwable.gen(ctx);
-            ctx.m.visitInsn(ATHROW);
+            ctx.visitInsn(ATHROW);
         }
     }
 
@@ -776,9 +836,9 @@ interface YetiCode {
             ctx.visitLine(line);
             String className = field.classType.javaType.className();
             if (object != null) {
-                ctx.m.visitTypeInsn(CHECKCAST, className);
+                ctx.visitTypeInsn(CHECKCAST, className);
             }
-            ctx.m.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
+            ctx.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
                                  className, field.name,
                                  JavaType.descriptionOf(field.type));
             convertValue(ctx, field.type);
@@ -793,16 +853,16 @@ interface YetiCode {
                     String className = field.classType.javaType.className();
                     if (object != null) {
                         object.gen(ctx);
-                        ctx.m.visitTypeInsn(CHECKCAST, className);
+                        ctx.visitTypeInsn(CHECKCAST, className);
                     }
                     genValue(ctx, setValue, field.type, line);
                     String descr = JavaType.descriptionOf(field.type);
-                    ctx.m.visitTypeInsn(CHECKCAST,
+                    ctx.visitTypeInsn(CHECKCAST,
                         field.type.type == YetiType.JAVA
                             ? field.type.javaType.className() : descr);
-                    ctx.m.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
+                    ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
                                          className, field.name, descr);
-                    ctx.m.visitInsn(ACONST_NULL);
+                    ctx.visitInsn(ACONST_NULL);
                 }
             };
         }
@@ -846,7 +906,7 @@ interface YetiCode {
             }
 
             void gen(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, exVar);
+                ctx.visitVarInsn(ALOAD, exVar);
             }
         }
 
@@ -892,10 +952,9 @@ interface YetiCode {
             sigb.append(")Ljava/lang/Object;");
             String sig = sigb.toString();
             String name = "_" + ctx.methodCounter++;
-            ctx.m.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
+            ctx.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
             Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
             mc.localVarCount = argc;
-            MethodVisitor m = mc.m;
 
             Label codeStart = new Label(), codeEnd = new Label();
             Label cleanupStart = cleanup == null ? null : new Label();
@@ -903,54 +962,54 @@ interface YetiCode {
             int catchCount = catches.size();
             for (int i = 0; i < catchCount; ++i) {
                 Catch c = (Catch) catches.get(i);
-                m.visitTryCatchBlock(codeStart, codeEnd, c.start,
+                mc.visitTryCatchBlock(codeStart, codeEnd, c.start,
                                      c.type.javaType.className());
                 if (cleanupStart != null) {
                     c.end = new Label();
-                    m.visitTryCatchBlock(c.start, c.end, cleanupStart, null);
+                    mc.visitTryCatchBlock(c.start, c.end, cleanupStart, null);
                 }
             }
             genClosureInit(mc);
             int retVar = -1;
             if (cleanupStart != null) {
                 retVar = mc.localVarCount++;
-                m.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
-                m.visitInsn(ACONST_NULL);
-                m.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
+                mc.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
+                mc.visitInsn(ACONST_NULL);
+                mc.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
             }
-            m.visitLabel(codeStart);
+            mc.visitLabel(codeStart);
             block.gen(mc);
-            m.visitLabel(codeEnd);
+            mc.visitLabel(codeEnd);
             exVar = mc.localVarCount++;
             if (cleanupStart != null) {
                 Label goThrow = new Label();
-                m.visitLabel(cleanupEntry);
-                m.visitVarInsn(ASTORE, retVar);
-                m.visitInsn(ACONST_NULL);
-                m.visitLabel(cleanupStart);
-                m.visitVarInsn(ASTORE, exVar);
+                mc.visitLabel(cleanupEntry);
+                mc.visitVarInsn(ASTORE, retVar);
+                mc.visitInsn(ACONST_NULL);
+                mc.visitLabel(cleanupStart);
+                mc.visitVarInsn(ASTORE, exVar);
                 cleanup.gen(mc);
-                m.visitInsn(POP); // cleanup's null
-                m.visitVarInsn(ALOAD, exVar);
-                m.visitJumpInsn(IFNONNULL, goThrow);
-                m.visitVarInsn(ALOAD, retVar);
-                m.visitInsn(ARETURN);
-                m.visitLabel(goThrow);
-                m.visitVarInsn(ALOAD, exVar);
-                m.visitInsn(ATHROW);
+                mc.visitInsn(POP); // cleanup's null
+                mc.visitVarInsn(ALOAD, exVar);
+                mc.visitJumpInsn(IFNONNULL, goThrow);
+                mc.visitVarInsn(ALOAD, retVar);
+                mc.visitInsn(ARETURN);
+                mc.visitLabel(goThrow);
+                mc.visitVarInsn(ALOAD, exVar);
+                mc.visitInsn(ATHROW);
             } else {
-                m.visitInsn(ARETURN);
+                mc.visitInsn(ARETURN);
             }
             for (int i = 0; i < catchCount; ++i) {
                 Catch c = (Catch) catches.get(i);
-                m.visitLabel(c.start);
-                m.visitVarInsn(ASTORE, exVar);
+                mc.visitLabel(c.start);
+                mc.visitVarInsn(ASTORE, exVar);
                 c.handler.gen(mc);
                 if (c.end != null) {
-                    m.visitLabel(c.end);
-                    m.visitJumpInsn(GOTO, cleanupEntry);
+                    mc.visitLabel(c.end);
+                    mc.visitJumpInsn(GOTO, cleanupEntry);
                 } else {
-                    m.visitInsn(ARETURN);
+                    mc.visitInsn(ARETURN);
                 }
             }
             mc.closeMethod();
@@ -994,13 +1053,13 @@ interface YetiCode {
                     return;
                 }
                 genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
-                ctx.m.visitVarInsn(ASTORE, capturer.argCount);
+                ctx.visitVarInsn(ASTORE, capturer.argCount);
                 if (argCaptures != null) {
                     for (int i = argCaptures.length; --i >= 0;) {
-                        ctx.m.visitVarInsn(ASTORE, argCaptures[i].localVar);
+                        ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
                     }
                 }
-                ctx.m.visitJumpInsn(GOTO, capturer.restart);
+                ctx.visitJumpInsn(GOTO, capturer.restart);
             }
 
             void markTail() {
@@ -1089,7 +1148,7 @@ interface YetiCode {
                     } else {
                         genPreGet(ctx);
                         wrapper.genSet(ctx, value);
-                        ctx.m.visitInsn(ACONST_NULL);
+                        ctx.visitInsn(ACONST_NULL);
                     }
                 }
             };
@@ -1097,11 +1156,11 @@ interface YetiCode {
 
         public void genPreGet(Ctx ctx) {
             if (localVar == -1) {
-                ctx.m.visitVarInsn(ALOAD, 0);
-                ctx.m.visitFieldInsn(GETFIELD, ctx.className, id,
+                ctx.visitVarInsn(ALOAD, 0);
+                ctx.visitFieldInsn(GETFIELD, ctx.className, id,
                     captureType());
             } else {
-                ctx.m.visitVarInsn(ALOAD, localVar);
+                ctx.visitVarInsn(ALOAD, localVar);
             }
         }
 
@@ -1156,8 +1215,8 @@ interface YetiCode {
             }
             if (mvarcount > 0) {
                 ctx.intConst(mvarcount);
-                ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-                ctx.m.visitVarInsn(ASTORE, id);
+                ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+                ctx.visitVarInsn(ASTORE, id);
             }
         }
     }
@@ -1202,11 +1261,11 @@ interface YetiCode {
                 if (uncaptureArg != null) {
                     uncaptureArg.gen(ctx);
                 } else {
-                    ctx.m.visitVarInsn(ALOAD, argCount);
+                    ctx.visitVarInsn(ALOAD, argCount);
                     // inexact nulling...
                     if (--argUsed == 0 && ctx.tainted == 0) {
-                        ctx.m.visitInsn(ACONST_NULL);
-                        ctx.m.visitVarInsn(ASTORE, argCount);
+                        ctx.visitInsn(ACONST_NULL);
+                        ctx.visitVarInsn(ASTORE, argCount);
                     }
                 }
             }
@@ -1258,7 +1317,7 @@ interface YetiCode {
                 if (selfRef == null) {
                     selfRef = new CaptureRef() {
                         void gen(Ctx ctx) {
-                            ctx.m.visitVarInsn(ALOAD, 0);
+                            ctx.visitVarInsn(ALOAD, 0);
                         }
                     };
                     selfRef.binder = selfBind;
@@ -1333,20 +1392,20 @@ interface YetiCode {
                         c.gen(apply);
                         c.localVar = apply.localVarCount;
                         c.ignoreGet = true;
-                        apply.m.visitVarInsn(ASTORE, apply.localVarCount++);
+                        apply.visitVarInsn(ASTORE, apply.localVarCount++);
                     }
                 }
             }
             genClosureInit(apply);
-            apply.m.visitLabel(restart = new Label());
+            apply.visitLabel(restart = new Label());
             body.gen(apply);
             restart = null;
-            apply.m.visitInsn(ARETURN);
+            apply.visitInsn(ARETURN);
             apply.closeMethod();
 
-            ctx.m.visitTypeInsn(NEW, name);
-            ctx.m.visitInsn(DUP);
-            ctx.m.visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V");
+            ctx.visitTypeInsn(NEW, name);
+            ctx.visitInsn(DUP);
+            ctx.visitMethodInsn(INVOKESPECIAL, name, "<init>", "()V");
         }
 
         void finishGen(Ctx ctx) {
@@ -1358,13 +1417,13 @@ interface YetiCode {
             for (Capture c = captures; c != null; c = c.next) {
                 if (c.uncaptured)
                     continue;
-                ctx.m.visitInsn(DUP);
+                ctx.visitInsn(DUP);
                 if (c.wrapper == null) {
                     c.ref.gen(ctx);
                 } else {
                     c.wrapper.genPreGet(ctx);
                 }
-                ctx.m.visitFieldInsn(PUTFIELD, name, c.id,
+                ctx.visitFieldInsn(PUTFIELD, name, c.id,
                         c.captureType());
             }
         }
@@ -1390,9 +1449,9 @@ interface YetiCode {
             genClosureInit(ctx);
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(ctx.className)) {
-                    ctx.m.visitMethodInsn(INVOKESTATIC, preload[i],
+                    ctx.visitMethodInsn(INVOKESTATIC, preload[i],
                         "eval", "()Ljava/lang/Object;");
-                    ctx.m.visitInsn(POP);
+                    ctx.visitInsn(POP);
                 }
             }
             code.gen(ctx);
@@ -1414,7 +1473,7 @@ interface YetiCode {
             int var;
 
             void gen(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, var);
+                ctx.visitVarInsn(ALOAD, var);
             }
         }
 
@@ -1427,7 +1486,7 @@ interface YetiCode {
                 if (f.uncapture(arg_)) {
                     arg.gen(ctx);
                     arg_.var = ctx.localVarCount++;
-                    ctx.m.visitVarInsn(ASTORE, arg_.var);
+                    ctx.visitVarInsn(ASTORE, arg_.var);
                     f.body.gen(ctx);
                     return;
                 }
@@ -1436,10 +1495,10 @@ interface YetiCode {
             // XXX this cast could be optimised away sometimes
             //  - when the fun really is Fun by java types
             ctx.visitLine(line);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
             arg.gen(ctx);
             ctx.visitLine(line);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                     "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
@@ -1453,11 +1512,11 @@ interface YetiCode {
                 void gen(Ctx ctx) {
                     fun.gen(ctx);
                     ctx.visitLine(line);
-                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+                    ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
                     arg.gen(ctx);
                     arg2.gen(ctx);
                     ctx.visitLine(line2);
-                    ctx.m.visitMethodInsn(INVOKEVIRTUAL,
+                    ctx.visitMethodInsn(INVOKEVIRTUAL,
                                           "yeti/lang/Fun", "apply",
                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
                 }
@@ -1477,10 +1536,10 @@ interface YetiCode {
             ctx.constant("TAG:".concat(name), new Code() {
                 { type = VariantConstructor.this.type; }
                 void gen(Ctx ctx) {
-                    ctx.m.visitTypeInsn(NEW, "yeti/lang/TagCon");
-                    ctx.m.visitInsn(DUP);
-                    ctx.m.visitLdcInsn(name);
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
+                    ctx.visitTypeInsn(NEW, "yeti/lang/TagCon");
+                    ctx.visitInsn(DUP);
+                    ctx.visitLdcInsn(name);
+                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/TagCon",
                             "<init>", "(Ljava/lang/String;)V");
                 }
             });
@@ -1489,11 +1548,11 @@ interface YetiCode {
         Code apply(Code arg, YetiType.Type res, int line) {
             Code apply = new Apply(res, this, arg, line) {
                 void gen(Ctx ctx) {
-                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Tag");
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitTypeInsn(NEW, "yeti/lang/Tag");
+                    ctx.visitInsn(DUP);
                     arg.gen(ctx);
-                    ctx.m.visitLdcInsn(name);
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Tag",
+                    ctx.visitLdcInsn(name);
+                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Tag",
                            "<init>", "(Ljava/lang/Object;Ljava/lang/String;)V");
                 }
             };
@@ -1520,9 +1579,9 @@ interface YetiCode {
         void gen(Ctx ctx) {
             st.gen(ctx);
             ctx.visitLine(line);
-            ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-            ctx.m.visitLdcInsn(name);
-            ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+            ctx.visitLdcInsn(name);
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                     "get", "(Ljava/lang/String;)Ljava/lang/Object;");
         }
 
@@ -1535,13 +1594,13 @@ interface YetiCode {
                 void gen(Ctx ctx) {
                     st.gen(ctx);
                     ctx.visitLine(line);
-                    ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-                    ctx.m.visitLdcInsn(name);
+                    ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+                    ctx.visitLdcInsn(name);
                     setValue.gen(ctx);
                     ctx.visitLine(line);
-                    ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                    ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                             "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
-                    ctx.m.visitInsn(ACONST_NULL);
+                    ctx.visitInsn(ACONST_NULL);
                 }
             };
         }
@@ -1568,25 +1627,25 @@ interface YetiCode {
                 { type = SelectMemberFun.this.type; }
                 void gen(Ctx ctx) {
                     if (names.length == 1) {
-                        ctx.m.visitTypeInsn(NEW, "yeti/lang/Selector");
-                        ctx.m.visitInsn(DUP);
-                        ctx.m.visitLdcInsn(names[0]);
-                        ctx.m.visitMethodInsn(INVOKESPECIAL,
+                        ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
+                        ctx.visitInsn(DUP);
+                        ctx.visitLdcInsn(names[0]);
+                        ctx.visitMethodInsn(INVOKESPECIAL,
                                 "yeti/lang/Selector", "<init>",
                                 "(Ljava/lang/String;)V");
                         return;
                     }
-                    ctx.m.visitTypeInsn(NEW, "yeti/lang/Selectors");
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitTypeInsn(NEW, "yeti/lang/Selectors");
+                    ctx.visitInsn(DUP);
                     ctx.intConst(names.length);
-                    ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+                    ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
                     for (int i = 0; i < names.length; ++i) {
-                        ctx.m.visitInsn(DUP);
+                        ctx.visitInsn(DUP);
                         ctx.intConst(i);
-                        ctx.m.visitLdcInsn(names[i]);
-                        ctx.m.visitInsn(AASTORE);
+                        ctx.visitLdcInsn(names[i]);
+                        ctx.visitInsn(AASTORE);
                     }
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
+                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Selectors",
                                           "<init>", "([Ljava/lang/String;)V");
                 }
             });
@@ -1608,11 +1667,11 @@ interface YetiCode {
         void gen(Ctx ctx) {
             val.gen(ctx);
             if (ctx.compilation.isGCJ) {
-                ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
             }
             key.gen(ctx);
             ctx.visitLine(line);
-            ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
                                   "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
@@ -1621,12 +1680,12 @@ interface YetiCode {
                 void gen(Ctx ctx) {
                     val.gen(ctx);
                     if (ctx.compilation.isGCJ) {
-                        ctx.m.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+                        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
                     }
                     key.gen(ctx);
                     setValue.gen(ctx);
                     ctx.visitLine(line);
-                    ctx.m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+                    ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                             "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
                             "Ljava/lang/Object;");
                 }
@@ -1650,11 +1709,11 @@ interface YetiCode {
                 if (choices[i].length == 2) {
                     choices[i][1].genIf(ctx, jmpNext, false); // condition
                     choices[i][0].gen(ctx); // body
-                    ctx.m.visitJumpInsn(GOTO, end);
+                    ctx.visitJumpInsn(GOTO, end);
                 } else {
                     choices[i][0].gen(ctx);
                 }
-                ctx.m.visitLabel(jmpNext);
+                ctx.visitLabel(jmpNext);
             }
         }
 
@@ -1665,11 +1724,11 @@ interface YetiCode {
                 if (choices[i].length == 2) {
                     choices[i][1].genIf(ctx, jmpNext, false); // condition
                     choices[i][0].genIf(ctx, to, ifTrue); // body
-                    ctx.m.visitJumpInsn(GOTO, end);
+                    ctx.visitJumpInsn(GOTO, end);
                 } else {
                     choices[i][0].genIf(ctx, to, ifTrue);
                 }
-                ctx.m.visitLabel(jmpNext);
+                ctx.visitLabel(jmpNext);
             }
         }
 
@@ -1692,15 +1751,15 @@ interface YetiCode {
         void gen(Ctx ctx) {
             Label start = new Label();
             Label end = new Label();
-            ctx.m.visitLabel(start);
+            ctx.visitLabel(start);
             ++ctx.tainted;
             cond.genIf(ctx, end, false);
             body.gen(ctx);
             --ctx.tainted;
-            ctx.m.visitInsn(POP);
-            ctx.m.visitJumpInsn(GOTO, start);
-            ctx.m.visitLabel(end);
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.visitInsn(POP);
+            ctx.visitJumpInsn(GOTO, start);
+            ctx.visitLabel(end);
+            ctx.visitInsn(ACONST_NULL);
         }
     }
 
@@ -1714,13 +1773,13 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             st.gen(ctx);
-            ctx.m.visitInsn(POP); // ignore the result of st expr
+            ctx.visitInsn(POP); // ignore the result of st expr
             result.gen(ctx);
         }
 
         void genIf(Ctx ctx, Label to, boolean ifTrue) {
             st.gen(ctx);
-            ctx.m.visitInsn(POP); // ignore the result of st expr
+            ctx.visitInsn(POP); // ignore the result of st expr
             result.genIf(ctx, to, ifTrue);
         }
 
@@ -1780,7 +1839,7 @@ interface YetiCode {
                         return new Code() {
                             void gen(Ctx ctx) {
                                 genLocalSet(ctx, value);
-                                ctx.m.visitInsn(ACONST_NULL);
+                                ctx.visitInsn(ACONST_NULL);
                             }
                         };
                     }
@@ -1810,31 +1869,31 @@ interface YetiCode {
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.m.visitVarInsn(ALOAD, mvar == -1 ? id : mvar);
+            ctx.visitVarInsn(ALOAD, mvar == -1 ? id : mvar);
         }
 
         public void genGet(Ctx ctx) {
             if (mvar != -1) {
                 ctx.intConst(id);
-                ctx.m.visitInsn(AALOAD);
+                ctx.visitInsn(AALOAD);
             }
         }
 
         public void genSet(Ctx ctx, Code value) {
             ctx.intConst(id);
             value.gen(ctx);
-            ctx.m.visitInsn(AASTORE);
+            ctx.visitInsn(AASTORE);
         }
 
         private void genLocalSet(Ctx ctx, Code value) {
             if (mvar == -1) {
                 value.gen(ctx);
-                ctx.m.visitVarInsn(ASTORE, id);
+                ctx.visitVarInsn(ASTORE, id);
             } else {
-                ctx.m.visitVarInsn(ALOAD, mvar);
+                ctx.visitVarInsn(ALOAD, mvar);
                 ctx.intConst(id);
                 value.gen(ctx);
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitInsn(AASTORE);
             }
         }
 
@@ -1849,7 +1908,7 @@ interface YetiCode {
                 if (mvar != -1) {
                     ctx.intConst(id);
                 }
-                ctx.m.visitMethodInsn(INVOKESTATIC,
+                ctx.visitMethodInsn(INVOKESTATIC,
                     "yeti/lang/compiler/YetiEval", "setBind",
                     mvar == -1 ? "(ILjava/lang/Object;)V"
                                : "(I[Ljava/lang/Object;I)V");
@@ -1879,7 +1938,7 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitMethodInsn(INVOKESTATIC, moduleName,
+            ctx.visitMethodInsn(INVOKESTATIC, moduleName,
                 "eval", "()Ljava/lang/Object;");
         }
 
@@ -1926,22 +1985,22 @@ interface YetiCode {
             }
 
             void gen(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, var);
+                ctx.visitVarInsn(ALOAD, var);
             }
 
             public void genPreGet(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, var);
+                ctx.visitVarInsn(ALOAD, var);
             }
 
             public void genGet(Ctx ctx) {
                 ctx.intConst(index);
-                ctx.m.visitInsn(AALOAD);
+                ctx.visitInsn(AALOAD);
             }
 
             public void genSet(Ctx ctx, Code value) {
                 ctx.intConst(index);
                 value.gen(ctx);
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitInsn(AASTORE);
             }
 
             public Object captureIdentity() {
@@ -1973,7 +2032,7 @@ interface YetiCode {
                 if (binds[i] != null) {
                     if (binds[i].used && !binds[i].mutable && binds[i].fun) {
                         ((Function) fields[i].value).prepareGen(ctx);
-                        ctx.m.visitVarInsn(ASTORE,
+                        ctx.visitVarInsn(ASTORE,
                                 binds[i].var = ctx.localVarCount++);
                     } else {
                         if (arrayVar == -1) {
@@ -1985,27 +2044,27 @@ interface YetiCode {
                     }
                 }
             }
-            ctx.m.visitTypeInsn(NEW, properties.length == 0
+            ctx.visitTypeInsn(NEW, properties.length == 0
                 ? "yeti/lang/Struct" : "yeti/lang/PStruct");
-            ctx.m.visitInsn(DUP);
+            ctx.visitInsn(DUP);
             ctx.intConst(fields.length * 2);
-            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             if (arrayVar != -1) {
-                ctx.m.visitVarInsn(ASTORE, arrayVar);
+                ctx.visitVarInsn(ASTORE, arrayVar);
             }
             for (int i = 0, cnt = fields.length; i < cnt; ++i) {
                 if (arrayVar != -1) {
-                    ctx.m.visitVarInsn(ALOAD, arrayVar);
+                    ctx.visitVarInsn(ALOAD, arrayVar);
                 } else {
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitInsn(DUP);
                 }
                 ctx.intConst(i * 2);
-                ctx.m.visitLdcInsn(fields[i].name);
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitLdcInsn(fields[i].name);
+                ctx.visitInsn(AASTORE);
                 if (arrayVar != -1) {
-                    ctx.m.visitVarInsn(ALOAD, arrayVar);
+                    ctx.visitVarInsn(ALOAD, arrayVar);
                 } else {
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitInsn(DUP);
                 }
                 ctx.intConst(i * 2 + 1);
                 if (binds[i] != null) {
@@ -2014,35 +2073,35 @@ interface YetiCode {
                 } else {
                     fields[i].value.gen(ctx);
                 }
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitInsn(AASTORE);
             }
             if (arrayVar != -1) {
-                ctx.m.visitVarInsn(ALOAD, arrayVar);
+                ctx.visitVarInsn(ALOAD, arrayVar);
             }
             if (properties.length == 0) {
-                ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
+                ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Struct",
                         "<init>", "([Ljava/lang/Object;)V");
                 return;
             }
             ctx.intConst(properties.length * 3);
-            ctx.m.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
             for (int i = 0, cnt = properties.length; i < cnt; ++i) {
-                ctx.m.visitInsn(DUP);
+                ctx.visitInsn(DUP);
                 ctx.intConst(i * 3);
-                ctx.m.visitLdcInsn(properties[i].name);
-                ctx.m.visitInsn(AASTORE);
-                ctx.m.visitInsn(DUP);
+                ctx.visitLdcInsn(properties[i].name);
+                ctx.visitInsn(AASTORE);
+                ctx.visitInsn(DUP);
                 ctx.intConst(i * 3 + 1);
                 properties[i].value.gen(ctx);
-                ctx.m.visitInsn(AASTORE);
+                ctx.visitInsn(AASTORE);
                 if (properties[i].setter != null) {
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitInsn(DUP);
                     ctx.intConst(i * 3 + 2);
                     properties[i].setter.gen(ctx);
-                    ctx.m.visitInsn(AASTORE);
+                    ctx.visitInsn(AASTORE);
                 }
             }
-            ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/PStruct",
+            ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/PStruct",
                     "<init>", "([Ljava/lang/Object;[Ljava/lang/Object;)V");
         }
     }
@@ -2072,24 +2131,24 @@ interface YetiCode {
 
         void gen(Ctx ctx) {
             if (items.length == 0) {
-                ctx.m.visitInsn(ACONST_NULL);
+                ctx.visitInsn(ACONST_NULL);
                 return;
             }
             for (int i = 0; i < items.length; ++i) {
                 if (!(items[i] instanceof Range)) {
-                    ctx.m.visitTypeInsn(NEW, "yeti/lang/LList");
-                    ctx.m.visitInsn(DUP);
+                    ctx.visitTypeInsn(NEW, "yeti/lang/LList");
+                    ctx.visitInsn(DUP);
                 }
                 items[i].gen(ctx);
             }
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.visitInsn(ACONST_NULL);
             for (int i = items.length; --i >= 0;) {
                 if (items[i] instanceof Range) {
-                    ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/ListRange",
+                    ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/ListRange",
                             "range", "(Ljava/lang/Object;Ljava/lang/Object;"
                                     + "Lyeti/lang/AList;)Lyeti/lang/AList;");
                 } else {
-                    ctx.m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
+                    ctx.visitMethodInsn(INVOKESPECIAL, "yeti/lang/LList",
                             "<init>", "(Ljava/lang/Object;Lyeti/lang/AList;)V");
                 }
             }
@@ -2110,23 +2169,23 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitTypeInsn(NEW, "yeti/lang/Hash");
-            ctx.m.visitInsn(DUP);
+            ctx.visitTypeInsn(NEW, "yeti/lang/Hash");
+            ctx.visitInsn(DUP);
             if (items.length > 16) {
                 ctx.intConst(items.length);
-                ctx.m.visitMethodInsn(INVOKESPECIAL,
+                ctx.visitMethodInsn(INVOKESPECIAL,
                         "yeti/lang/Hash", "<init>", "(I)V");
             } else {
-                ctx.m.visitMethodInsn(INVOKESPECIAL,
+                ctx.visitMethodInsn(INVOKESPECIAL,
                         "yeti/lang/Hash", "<init>", "()V");
             }
             for (int i = 0; i < items.length; ++i) {
-                ctx.m.visitInsn(DUP);
+                ctx.visitInsn(DUP);
                 keyItems[i].gen(ctx);
                 items[i].gen(ctx);
-                ctx.m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash", "put",
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash", "put",
                     "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-                ctx.m.visitInsn(POP);
+                ctx.visitInsn(POP);
             }
         }
 
@@ -2159,7 +2218,7 @@ interface YetiCode {
                         void gen(Ctx ctx) {
                             genPreGet(ctx);
                             genSet(ctx, value);
-                            ctx.m.visitInsn(ACONST_NULL);
+                            ctx.visitInsn(ACONST_NULL);
                         }
                     } : null;
                 }
@@ -2176,19 +2235,19 @@ interface YetiCode {
 
         public void genPreGet(Ctx ctx) {
             ctx.intConst(bind.bindId);
-            ctx.m.visitMethodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
+            ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
                                   "getBind", "(I)[Ljava/lang/Object;");
         }
 
         public void genGet(Ctx ctx) {
             ctx.intConst(bind.index);
-            ctx.m.visitInsn(AALOAD);
+            ctx.visitInsn(AALOAD);
         }
 
         public void genSet(Ctx ctx, Code value) {
             ctx.intConst(bind.index);
             value.gen(ctx);
-            ctx.m.visitInsn(AASTORE);
+            ctx.visitInsn(AASTORE);
         }
 
         public Object captureIdentity() {
@@ -2228,7 +2287,7 @@ interface YetiCode {
             }
 
             void gen(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, argn);
+                ctx.visitVarInsn(ALOAD, argn);
             }
         }
 
@@ -2267,9 +2326,9 @@ interface YetiCode {
                         case 'J': ins = LLOAD; break;
                         case 'L': ins = ALOAD; break;
                     }
-                    ctx.m.visitVarInsn(ins, i + 1);
+                    ctx.visitVarInsn(ins, i + 1);
                     JavaExpr.convertValue(ctx, arguments[i]);
-                    ctx.m.visitVarInsn(ASTORE, i + 1);
+                    ctx.visitVarInsn(ASTORE, i + 1);
                 }
             }
 
@@ -2279,10 +2338,10 @@ interface YetiCode {
                 convertArgs(ctx);
                 JavaExpr.convertedArg(ctx, code, returnType, line);
                 if (returnType.type == YetiType.UNIT) {
-                    ctx.m.visitInsn(POP);
-                    ctx.m.visitInsn(RETURN);
+                    ctx.visitInsn(POP);
+                    ctx.visitInsn(RETURN);
                 } else {
-                    ctx.m.visitInsn(ARETURN);
+                    ctx.visitInsn(ARETURN);
                 }
                 ctx.closeMethod();
             }
@@ -2303,17 +2362,17 @@ interface YetiCode {
             }
 
             public void genPreGet(Ctx ctx) {
-                ctx.m.visitVarInsn(ALOAD, 0);
+                ctx.visitVarInsn(ALOAD, 0);
             }
 
             public void genGet(Ctx ctx) {
-                ctx.m.visitFieldInsn(GETFIELD, ctx.className, name, descr);
+                ctx.visitFieldInsn(GETFIELD, ctx.className, name, descr);
             }
 
             public void genSet(Ctx ctx, Code value) {
                 value.gen(ctx);
-                ctx.m.visitTypeInsn(CHECKCAST, javaType);
-                ctx.m.visitFieldInsn(PUTFIELD, ctx.className, name, descr);
+                ctx.visitTypeInsn(CHECKCAST, javaType);
+                ctx.visitFieldInsn(PUTFIELD, ctx.className, name, descr);
             }
 
             public Object captureIdentity() {
@@ -2360,7 +2419,7 @@ interface YetiCode {
             void gen(Ctx ctx) {
                 if (javaType == null) {
                     value.gen(ctx);
-                    ctx.m.visitInsn(POP);
+                    ctx.visitInsn(POP);
                     return;
                 }
                 ctx.cw.visitField(var ? ACC_PRIVATE : ACC_PRIVATE | ACC_FINAL,
@@ -2399,18 +2458,18 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            ctx.m.visitInsn(ACONST_NULL);
+            ctx.visitInsn(ACONST_NULL);
             Ctx c = ctx.newClass(ACC_STATIC | ACC_PUBLIC,
                                  className, parentClass);
             constr.init();
             Ctx init = c.newMethod(ACC_PUBLIC, "<init>", constr.descr);
-            init.m.visitVarInsn(ALOAD, 0); // this.
-            init.m.visitMethodInsn(INVOKESPECIAL, parentClass, "<init>", "()V");
+            init.visitVarInsn(ALOAD, 0); // this.
+            init.visitMethodInsn(INVOKESPECIAL, parentClass, "<init>", "()V");
             constr.convertArgs(init);
             for (int i = 0, cnt = fields.size(); i < cnt; ++i) {
                 ((Code) fields.get(i)).gen(init);
             }
-            init.m.visitInsn(RETURN);
+            init.visitInsn(RETURN);
             init.closeMethod();
             for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
                 ((Meth) methods.get(i)).gen(c);
