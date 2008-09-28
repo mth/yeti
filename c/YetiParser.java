@@ -984,6 +984,8 @@ interface YetiParser {
                 } while ((p = skipSpace()) < src.length && src[p++] == ',');
                 --p;
                 node = fetch();
+            } else if (node.sym() == "var") {
+                node = new XNode("var").pos(node.line, node.col);
             }
             defs.add(new XNode("extends", (Node[]) l.toArray(
                             new Node[l.size()])).pos(epos.line, epos.col));
@@ -992,8 +994,8 @@ interface YetiParser {
             while (!(eofWas instanceof Sym) || ((Sym) eofWas).sym != "end") {
                 if (node == null)
                     node = fetch();
-                if (node.sym() == "var") {
-                    l.add(new XNode("var").pos(node.line, node.col));
+                if (node.kind == "var" || node.kind == "norec") {
+                    l.add(node);
                     node = fetch();
                 }
                 Node args = null;
@@ -1012,9 +1014,14 @@ interface YetiParser {
                     l.add(node);
                     node = fetch();
                 }
-                if (args == null && node.kind != "=") {
-                    throw new CompileException(node,
-                        "Expected '=' or argument list, found " + node);
+                if (args == null) {
+                    if (node instanceof IsOp) {
+                        l.add(node);
+                        node = fetch();
+                    }
+                    if (node.kind != "=")
+                        throw new CompileException(node,
+                            "Expected '=' or argument list, found " + node);
                 }
                 Node expr = readSeq('e', null);
                 if (eofWas instanceof Eof)
