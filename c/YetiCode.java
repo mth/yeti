@@ -269,7 +269,7 @@ interface YetiCode {
         }
     }
 
-    class Ctx implements Opcodes {
+    final class Ctx implements Opcodes {
         CompileCtx compilation;
         String className;
         ClassWriter cw;
@@ -354,7 +354,7 @@ interface YetiCode {
             m.visitLabel(end);
         }
 
-        final void visitInsn(int opcode) {
+        void visitInsn(int opcode) {
             if (lastInsn != -1 && lastInsn != -2) {
                 if (lastInsn == ACONST_NULL && opcode == POP) {
                     lastInsn = -1;
@@ -365,12 +365,12 @@ interface YetiCode {
             lastInsn = opcode;
         }
 
-        final void visitVarInsn(int opcode, int var) {
+        void visitVarInsn(int opcode, int var) {
             visitInsn(-1);
             m.visitVarInsn(opcode, var);
         }
 
-        final void visitTypeInsn(int opcode, String type) {
+        void visitTypeInsn(int opcode, String type) {
             if (lastInsn == -2 && opcode == CHECKCAST &&
                 type.equals(lastType)) {
                 return; // no cast necessary
@@ -379,18 +379,18 @@ interface YetiCode {
             m.visitTypeInsn(opcode, type);
         }
 
-        final void visitInit(String type, String descr) {
+        void visitInit(String type, String descr) {
             visitInsn(-2);
             m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr);
             lastType = type;
         }
 
-        final void forceType(String type) {
+        void forceType(String type) {
             visitInsn(-2);
             lastType = type;
         }
 
-        final void visitFieldInsn(int opcode, String owner,
+        void visitFieldInsn(int opcode, String owner,
                                   String name, String desc) {
             visitInsn(-1);
             m.visitFieldInsn(opcode, owner, name, desc);
@@ -401,7 +401,7 @@ interface YetiCode {
             }
         }
 
-        final void visitMethodInsn(int opcode, String owner,
+        void visitMethodInsn(int opcode, String owner,
                                    String name, String desc) {
             visitInsn(-1);
             m.visitMethodInsn(opcode, owner, name, desc);
@@ -412,7 +412,7 @@ interface YetiCode {
             }
         }
 
-        final void visitApply(Code arg, int line) {
+        void visitApply(Code arg, int line) {
             arg.gen(this);
             visitInsn(-1);
             visitLine(line);
@@ -420,19 +420,19 @@ interface YetiCode {
                     "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
 
-        final void visitJumpInsn(int opcode, Label label) {
+        void visitJumpInsn(int opcode, Label label) {
             visitInsn(-1);
             m.visitJumpInsn(opcode, label);
         }
 
-        final void visitLabel(Label label) {
+        void visitLabel(Label label) {
             if (lastInsn != -1 && lastInsn != -2) {
                 visitInsn(-1);
             }
             m.visitLabel(label);
         }
 
-        final void visitLdcInsn(Object cst) {
+        void visitLdcInsn(Object cst) {
             visitInsn(-1);
             m.visitLdcInsn(cst);
             if (cst instanceof String) {
@@ -441,7 +441,7 @@ interface YetiCode {
             }
         }
         
-        final void visitTryCatchBlock(Label start, Label end,
+        void visitTryCatchBlock(Label start, Label end,
                                       Label handler, String type) {
             visitInsn(-1);
             m.visitTryCatchBlock(start, end, handler, type);
