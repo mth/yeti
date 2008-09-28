@@ -943,9 +943,6 @@ interface YetiParser {
         }
 
         private Node readArgDefs() {
-            p = skipSpace();
-            if (p >= src.length || src[p] != '(')
-                throw new CompileException(line, p - lineStart, "Expecting (");
             int line_ = line, col_ = p++ - lineStart + 1;
             List args = new ArrayList();
             while ((p = skipSpace()) < src.length && src[p] != ')') {
@@ -972,6 +969,9 @@ interface YetiParser {
             if (!(node instanceof Sym))
                 throw new CompileException(node,
                             "Expected a class name, found " + node);
+            p = skipSpace();
+            if (p >= src.length || src[p] != '(')
+                throw new CompileException(line, p - lineStart, "Expecting (");
             defs.add(node);
             defs.add(readArgDefs());
             List l = new ArrayList();
@@ -996,27 +996,36 @@ interface YetiParser {
                     l.add(new XNode("var").pos(node.line, node.col));
                     node = fetch();
                 }
-                Node snd = fetch();
                 Node args = null;
-                if (snd.kind == "=") {
+                while (node instanceof Sym) {
+                    p = skipSpace();
+                    if (p < src.length && src[p] == '(') {
+                        if (l.size() == 0) {
+                            throw new CompileException(line, p - lineStart + 1,
+                                            "Expected method name, found (");
+                        }
+                        if (l.size() == 1) {
+                            args = readArgDefs();
+                        }
+                        break;
+                    }
                     l.add(node);
-                } else if (l.size() != 0) {
-                    throw new CompileException((Node) l.get(0),
-                                "Expected '=', found " + l.get(0));
-                } else {
-                    args = readArgDefs();
+                    node = fetch();
+                }
+                if (args == null && node.kind != "=") {
+                    throw new CompileException(node,
+                        "Expected '=' or argument list, found " + node);
                 }
                 Node expr = readSeq('e', null);
                 if (eofWas instanceof Eof)
                     throw new CompileException(eofWas, "Unexpected " + eofWas);
                 if (args == null) {
                     defs.add(new Bind(l, expr));
-                    l.clear();
                 } else {
-                    defs.add(new XNode("method",
-                                       new Node[] { node, snd, args, expr })
-                                    .pos(node.line, node.col));
+                    defs.add(new XNode("method", new Node[] { (Node) l.get(0),
+                                node, args, expr }).pos(node.line, node.col));
                 }
+                l.clear();
                 node = null;
             }
             return new XNode("class",
