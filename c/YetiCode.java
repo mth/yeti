@@ -2365,7 +2365,7 @@ interface YetiCode {
 
             void gen(Ctx ctx) {
                 init();
-                ctx = ctx.newMethod(ACC_PUBLIC, name, descr);
+                ctx = ctx.newMethod(access, name, descr);
                 convertArgs(ctx);
                 JavaExpr.convertedArg(ctx, code, returnType, line);
                 if (returnType.type == YetiType.UNIT) {
@@ -2476,11 +2476,12 @@ interface YetiCode {
             constr.returnType = YetiType.UNIT_TYPE;
         }
 
-        Meth addMethod(String name, YetiType.Type returnType) {
+        Meth addMethod(String name, YetiType.Type returnType, boolean static_) {
             Meth m = new Meth();
             m.name = name;
             m.returnType = returnType;
             m.className = className;
+            m.access = static_ ? ACC_PUBLIC | ACC_STATIC : ACC_PUBLIC;
             methods.add(m);
             return m;
         }

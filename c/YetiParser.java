@@ -998,10 +998,16 @@ interface YetiParser {
                     l.add(node);
                     node = fetch();
                 }
+                String meth = "method";
                 Node args = null;
                 while (node instanceof Sym) {
                     p = skipSpace();
                     if (p < src.length && src[p] == '(') {
+                        if (l.size() != 0 &&
+                            ((Node) l.get(0)).sym() == "static") {
+                            meth = "static-method";
+                            l.remove(0);
+                        }
                         if (l.size() == 0) {
                             throw new CompileException(line, p - lineStart + 1,
                                             "Expected method name, found (");
@@ -1029,7 +1035,7 @@ interface YetiParser {
                 if (args == null) {
                     defs.add(new Bind(l, expr));
                 } else {
-                    defs.add(new XNode("method", new Node[] { (Node) l.get(0),
+                    defs.add(new XNode(meth, new Node[] { (Node) l.get(0),
                                 node, args, expr }).pos(node.line, node.col));
                 }
                 l.clear();
