@@ -388,10 +388,7 @@ interface YetiBuiltins extends CaseCode {
 
                 void gen(Ctx ctx) {
                     BinOpRef.this.gen(ctx);
-                    arg1.gen(ctx);
-                    ctx.visitLine(line);
-                    ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
-                        "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    ctx.visitApply(arg1, line);
                 }
             };
         }
@@ -758,9 +755,7 @@ interface YetiBuiltins extends CaseCode {
 
         void binGen(Ctx ctx, Code arg1, final Code arg2) {
             apply2nd(arg2, YetiType.STR2_PRED_TYPE, line).gen(ctx);
-            arg1.gen(ctx);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
-                    "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+            ctx.visitApply(arg1, line);
         }
 
         Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {

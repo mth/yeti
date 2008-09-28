@@ -401,6 +401,14 @@ interface YetiCode {
             }
         }
 
+        final void visitApply(Code arg, int line) {
+            arg.gen(this);
+            visitInsn(-1);
+            visitLine(line);
+            m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
+                    "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        }
+
         final void visitJumpInsn(int opcode, Label label) {
             visitInsn(-1);
             m.visitJumpInsn(opcode, label);
@@ -1512,10 +1520,7 @@ interface YetiCode {
             //  - when the fun really is Fun by java types
             ctx.visitLine(line);
             ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-            arg.gen(ctx);
-            ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
-                    "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+            ctx.visitApply(arg, line);
         }
 
         Code apply(final Code arg2, final YetiType.Type res,
