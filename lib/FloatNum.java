@@ -173,6 +173,14 @@ public final class FloatNum extends Num {
         return new IntNum(num | (long) v);
     }
 
+    public Num xor(Num num) {
+        return num.xor((long) v);
+    }
+
+    public Num xor(long num) {
+        return new IntNum(num ^ (long) v);
+    }
+
     public byte byteValue() {
         return (byte) v;
     }

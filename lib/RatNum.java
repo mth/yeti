@@ -291,6 +291,14 @@ public final class RatNum extends Num {
         return new IntNum(num | (numerator / denominator));
     }
 
+    public Num xor(Num num) {
+        return num.xor(numerator / denominator);
+    }
+
+    public Num xor(long num) {
+        return new IntNum(num ^ (numerator / denominator));
+    }
+
     public RatNum reduce() {
         long gcd = gcd(numerator, denominator);
         return new RatNum(numerator / gcd, denominator / gcd);

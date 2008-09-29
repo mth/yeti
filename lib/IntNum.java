@@ -194,6 +194,14 @@ public final class IntNum extends Num {
         return new IntNum(num | v);
     }
 
+    public Num xor(Num num) {
+        return num.xor(v);
+    }
+
+    public Num xor(long num) {
+        return new IntNum(num ^ v);
+    }
+
     public byte byteValue() {
         return (byte) v;
     }

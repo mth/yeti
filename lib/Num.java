@@ -63,6 +63,8 @@ public abstract class Num extends Number implements Comparable {
     public abstract Num and(BigInteger num);
     public abstract Num or(Num num);
     public abstract Num or(long num);
+    public abstract Num xor(Num num);
+    public abstract Num xor(long num);
     public abstract int rCompare(long num);
     public abstract int rCompare(RatNum num);
     public abstract int rCompare(BigInteger num);

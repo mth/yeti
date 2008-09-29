@@ -146,6 +146,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindArith("%", "rem", bindArith("div", "intDiv",
         bindArith("shl", "shl", bindArith("shr", "shr",
         bindArith("&", "and", bindArith("|", "or",
+        bindArith("xor", "xor",
         bindScope("=~", new MatchOp(true),
         bindScope("!~", new MatchOp(false),
         bindScope("not", new NotOp(),
@@ -193,7 +194,7 @@ public class YetiType implements YetiParser, YetiBuiltins {
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);

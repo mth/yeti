@@ -168,6 +168,14 @@ public final class BigNum extends Num {
         return new BigNum(v.or(BigInteger.valueOf(num)));
     }
 
+    public Num xor(Num num) {
+        return new BigNum(v.xor(num.toBigInteger()));
+    }
+
+    public Num xor(long num) {
+        return new BigNum(v.xor(BigInteger.valueOf(num)));
+    }
+
     public byte byteValue() {
         return v.byteValue();
     }
