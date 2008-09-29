@@ -380,10 +380,10 @@ interface YetiCode {
         }
 
         void captureCast(String type) {
-            if (type.charAt(0) == 'L') {
+            if (type.charAt(0) == 'L')
                 type = type.substring(1, type.length() - 1);
-            }
-            visitTypeInsn(CHECKCAST, type);
+            if (!type.equals("java/lang/Object"))
+                visitTypeInsn(CHECKCAST, type);
         }
 
         void visitInit(String type, String descr) {
