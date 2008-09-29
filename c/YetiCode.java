@@ -543,6 +543,16 @@ interface YetiCode {
                 case YetiType.FUN: return "yeti/lang/Fun";
                 case YetiType.STRUCT: return "yeti/lang/Struct";
                 case YetiType.VARIANT: return "yeti/lang/Tag";
+                case YetiType.MAP: {
+                    int k = t.param[2].deref().type;
+                    if (k == YetiType.MAP_MARKER)
+                        return "yeti/lang/Hash";
+                    if (k != YetiType.LIST_MARKER)
+                        return "java/lang/Object";
+                    if (t.param[1].deref().type == YetiType.NUM)
+                        return "yeti/lang/MList";
+                    return "yeti/lang/AList";
+                }
                 case YetiType.JAVA: return t.javaType.className();
             }
             return "java/lang/Object";
@@ -818,6 +828,7 @@ interface YetiCode {
             ctx.visitTypeInsn(NEW, name);
             ctx.visitInsn(DUP);
             genCall(ctx, INVOKESPECIAL);
+            ctx.forceType(name);
         }
     }
 
@@ -1836,6 +1847,8 @@ interface YetiCode {
         private int id;
         private int mvar = -1;
         private final boolean var;
+        private String javaType;
+        private String javaDescr;
         private Closure closure;
         boolean assigned;
         boolean captured;
@@ -1897,11 +1910,16 @@ interface YetiCode {
         }
 
         public String captureType() {
-            return mvar == -1 ? "Ljava/lang/Object;" : "[Ljava/lang/Object;";
+            return mvar == -1 ? javaDescr : "[Ljava/lang/Object;";
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, mvar == -1 ? id : mvar);
+            if (mvar == -1) {
+                ctx.visitVarInsn(ALOAD, id);
+                ctx.forceType(javaType);
+            } else {
+                ctx.visitVarInsn(ALOAD, mvar);
+            }
         }
 
         public void genGet(Ctx ctx) {
@@ -1920,6 +1938,8 @@ interface YetiCode {
         private void genLocalSet(Ctx ctx, Code value) {
             if (mvar == -1) {
                 value.gen(ctx);
+                if (!javaType.equals("java/lang/Object"))
+                    ctx.visitTypeInsn(CHECKCAST, javaType);
                 ctx.visitVarInsn(ASTORE, id);
             } else {
                 ctx.visitVarInsn(ALOAD, mvar);
@@ -1933,6 +1953,8 @@ interface YetiCode {
             if (mvar == -1) {
                 id = ctx.localVarCount++;
             }
+            javaType = javaType(st.type);
+            javaDescr = 'L' + javaType + ';';
             genLocalSet(ctx, st);
             if (evalId != -1) {
                 ctx.intConst(evalId);

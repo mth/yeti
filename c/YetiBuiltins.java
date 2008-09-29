@@ -203,10 +203,10 @@ interface YetiBuiltins extends CaseCode {
         void gen(Ctx ctx, Code arg, int line) {
             arg.gen(ctx);
             ctx.visitLine(line);
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
             ctx.visitInsn(DUP);
             Label end = new Label();
             ctx.visitJumpInsn(IFNULL, end);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "rest", "()Lyeti/lang/AList;");
             ctx.visitLabel(end);
