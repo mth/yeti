@@ -379,6 +379,13 @@ interface YetiCode {
             m.visitTypeInsn(opcode, type);
         }
 
+        void captureCast(String type) {
+            if (type.charAt(0) == 'L') {
+                type = type.substring(1, type.length() - 1);
+            }
+            visitTypeInsn(CHECKCAST, type);
+        }
+
         void visitInit(String type, String descr) {
             visitInsn(-2);
             m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr);
@@ -987,9 +994,11 @@ interface YetiCode {
                     }
                 }
                 c.localVar = argc++;
-                sigb.append(c.captureType());
+                String captureType = c.captureType();
+                sigb.append(captureType);
                 if (c.wrapper == null) {
                     c.ref.gen(ctx);
+                    ctx.captureCast(captureType);
                 } else {
                     c.wrapper.genPreGet(ctx);
                 }
@@ -1162,6 +1171,7 @@ interface YetiCode {
         int localVar = -1; // -1 - use this - not copied
         boolean uncaptured;
         boolean ignoreGet;
+        private String refType;
 
         void gen(Ctx ctx) {
             if (uncaptured) {
@@ -1204,7 +1214,7 @@ interface YetiCode {
             if (localVar == -1) {
                 ctx.visitVarInsn(ALOAD, 0);
                 ctx.visitFieldInsn(GETFIELD, ctx.className, id,
-                    captureType());
+                                   captureType());
             } else {
                 ctx.visitVarInsn(ALOAD, localVar);
             }
@@ -1232,8 +1242,11 @@ interface YetiCode {
         }
 
         public String captureType() {
-            return wrapper == null ? "Ljava/lang/Object;"
-                                   : wrapper.captureType();
+            if (refType == null) {
+                refType = wrapper == null ? 'L' + javaType(ref.type) + ';'
+                    : wrapper.captureType();
+            }
+            return refType;
         }
 
         BindRef unshare() {
@@ -1466,11 +1479,11 @@ interface YetiCode {
                 ctx.visitInsn(DUP);
                 if (c.wrapper == null) {
                     c.ref.gen(ctx);
+                    ctx.captureCast(c.captureType());
                 } else {
                     c.wrapper.genPreGet(ctx);
                 }
-                ctx.visitFieldInsn(PUTFIELD, name, c.id,
-                        c.captureType());
+                ctx.visitFieldInsn(PUTFIELD, name, c.id, c.captureType());
             }
             ctx.forceType("yeti/lang/Fun");
         }
@@ -2286,7 +2299,7 @@ interface YetiCode {
         public void genPreGet(Ctx ctx) {
             ctx.intConst(bind.bindId);
             ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
-                                  "getBind", "(I)[Ljava/lang/Object;");
+                                "getBind", "(I)[Ljava/lang/Object;");
         }
 
         public void genGet(Ctx ctx) {
