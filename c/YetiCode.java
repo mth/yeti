@@ -1221,10 +1221,7 @@ interface YetiCode {
         }
 
         public void genGet(Ctx ctx) {
-            if (wrapper == null) {
-                String t = captureType();
-                ctx.forceType(t.substring(1, t.length() - 1));
-            } else if (!ignoreGet) {
+            if (wrapper != null && !ignoreGet) {
                 wrapper.genGet(ctx);
             }
         }
