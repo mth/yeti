@@ -178,6 +178,22 @@ public final class IntNum extends Num {
         return new BigNum(num.subtract(BigInteger.valueOf(v)));
     }
 
+    public Num and(Num num) {
+        return new IntNum(num.longValue() & v);
+    }
+
+    public Num and(BigInteger num) {
+        return new IntNum(num.longValue() & v);
+    }
+
+    public Num or(Num num) {
+        return num.or(v);
+    }
+
+    public Num or(long num) {
+        return new IntNum(num | v);
+    }
+
     public byte byteValue() {
         return (byte) v;
     }

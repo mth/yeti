@@ -424,6 +424,21 @@ interface YetiBuiltins extends CaseCode {
         }
 
         void binGen(Ctx ctx, Code arg1, Code arg2) {
+            if (method == "and" && arg2 instanceof NumericConstant &&
+                ((NumericConstant) arg2).isIntNum()) {
+                ctx.visitTypeInsn(NEW, "yeti/lang/IntNum");
+                ctx.visitInsn(DUP);
+                arg1.gen(ctx);
+                ctx.visitLine(line);
+                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                    "longValue", "()J");
+                ((NumericConstant) arg2).genInt(ctx, false);
+                ctx.visitInsn(LAND);
+                ctx.visitInit("yeti/lang/IntNum", "(J)V");
+                ctx.forceType("yeti/lang/Num");
+                return;
+            }
             arg1.gen(ctx);
             ctx.visitLine(line);
             ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");

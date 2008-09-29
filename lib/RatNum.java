@@ -275,6 +275,22 @@ public final class RatNum extends Num {
         return new RatNum(c, d);
     }
 
+    public Num and(Num num) {
+        return new IntNum(num.longValue() & (numerator / denominator));
+    }
+
+    public Num and(BigInteger num) {
+        return new IntNum(num.longValue() & (numerator / denominator));
+    }
+
+    public Num or(Num num) {
+        return num.or(numerator / denominator);
+    }
+
+    public Num or(long num) {
+        return new IntNum(num | (numerator / denominator));
+    }
+
     public RatNum reduce() {
         long gcd = gcd(numerator, denominator);
         return new RatNum(numerator / gcd, denominator / gcd);

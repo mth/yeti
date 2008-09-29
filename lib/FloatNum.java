@@ -157,6 +157,22 @@ public final class FloatNum extends Num {
         return new FloatNum(num.doubleValue() - v);
     }
 
+    public Num and(Num num) {
+        return new IntNum(num.longValue() & (long) v);
+    }
+
+    public Num and(BigInteger num) {
+        return new IntNum(num.longValue() & (long) v);
+    }
+
+    public Num or(Num num) {
+        return num.or((long) v);
+    }
+
+    public Num or(long num) {
+        return new IntNum(num | (long) v);
+    }
+
     public byte byteValue() {
         return (byte) v;
     }

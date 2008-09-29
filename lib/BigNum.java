@@ -152,6 +152,22 @@ public final class BigNum extends Num {
         return new BigNum(v.shiftLeft(num));
     }
 
+    public Num and(Num num) {
+        return num.and(v);
+    }
+
+    public Num and(BigInteger num) {
+        return new BigNum(v.and(num));
+    }
+
+    public Num or(Num num) {
+        return new BigNum(v.or(num.toBigInteger()));
+    }
+
+    public Num or(long num) {
+        return new BigNum(v.or(BigInteger.valueOf(num)));
+    }
+
     public byte byteValue() {
         return v.byteValue();
     }
