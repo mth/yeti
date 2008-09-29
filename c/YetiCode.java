@@ -426,9 +426,7 @@ interface YetiCode {
         }
 
         void visitLabel(Label label) {
-            if (lastInsn != -1 && lastInsn != -2) {
-                visitInsn(-1);
-            }
+            visitInsn(-1);
             m.visitLabel(label);
         }
 

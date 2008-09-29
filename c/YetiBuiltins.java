@@ -210,6 +210,7 @@ interface YetiBuiltins extends CaseCode {
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "rest", "()Lyeti/lang/AList;");
             ctx.visitLabel(end);
+            ctx.forceType("yeti/lang/AList");
         }
     }
 
