@@ -1394,7 +1394,6 @@ interface YetiCode {
             //expecting max 2 merged
             if (outer != null && outer.merged &&
                 (code == outer.selfRef || code == outer.arg)) {
-                c.localVar = 1; // really evil hack for tail-recursion.
                 /*
                  * It's actually simple - because nested functions are merged,
                  * the parent argument is now real argument that can be
@@ -1414,6 +1413,7 @@ interface YetiCode {
                  * by selfRefs). Probable alternative would be to set it
                  * when the copy code generation is skipped.
                  */
+                c.localVar = 1; // really evil hack for tail-recursion.
                 c.uncaptured = true;
             }
             return c;
