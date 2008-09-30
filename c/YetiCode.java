@@ -1395,6 +1395,18 @@ interface YetiCode {
             if (outer != null && outer.merged &&
                 (code == outer.selfRef || code == outer.arg)) {
                 c.localVar = 1; // really evil hack for tail-recursion.
+                /*
+                 * It's actually simple - because nested functions are merged,
+                 * the parent argument is now real argument that can be
+                 * directly accessed. Therefore capture proxy would only
+                 * fuck things up - and so that proxy is marked uncaptured.
+                 * Same goes for the parent-self-ref - it is now our this.
+                 * Only problem is that tail-rec optimisation generates code,
+                 * that wants to store into the "captured" variable before
+                 * jumping back into the start of the function. Therefore
+                 * the captures localVar is set to 1, which happens to be
+                 * parent args register (and is ignored by selfRefs).
+                 */
                 c.uncaptured = true;
             }
             return c;
