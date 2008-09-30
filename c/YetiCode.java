@@ -1401,11 +1401,18 @@ interface YetiCode {
                  * directly accessed. Therefore capture proxy would only
                  * fuck things up - and so that proxy is marked uncaptured.
                  * Same goes for the parent-self-ref - it is now our this.
+                 *
                  * Only problem is that tail-rec optimisation generates code,
-                 * that wants to store into the "captured" variable before
-                 * jumping back into the start of the function. Therefore
-                 * the captures localVar is set to 1, which happens to be
-                 * parent args register (and is ignored by selfRefs).
+                 * that wants to store into the "captured" variables copy
+                 * before jumping back into the start of the function.
+                 * The optimiser sets argCaptures which should be copied
+                 * into local vars by function class generator, but this
+                 * coping is skipped as pointless for uncaptured ones.
+                 *
+                 * Therefore the captures localVar is simply set here to 1,
+                 * which happens to be parent args register (and is ignored
+                 * by selfRefs). Probable alternative would be to set it
+                 * when the copy code generation is skipped.
                  */
                 c.uncaptured = true;
             }
