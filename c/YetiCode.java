@@ -979,30 +979,21 @@ interface YetiCode {
             return c;
         }
 
+        void captureInit(Ctx ctx, Capture c, int n) {
+            c.localVar = n;
+            if (c.wrapper == null) {
+                c.ref.gen(ctx);
+                ctx.captureCast(c.captureType());
+            } else {
+                c.wrapper.genPreGet(ctx);
+            }
+        }
+
         void gen(Ctx ctx) {
+            int argc = mergeCaptures(ctx);
             StringBuffer sigb = new StringBuffer("(");
-            int argc = 0;
-            Capture prev = null;
-        next_capture: // copy-paste from Function :(
             for (Capture c = captures; c != null; c = c.next) {
-                Object identity = c.identity = c.captureIdentity();
-                for (Capture i = captures; i != c; i = i.next) {
-                    if (i.identity == identity) {
-                        c.localVar = i.localVar; // copy old one's var
-                        prev.next = c.next;
-                        continue next_capture;
-                    }
-                }
-                c.localVar = argc++;
-                String captureType = c.captureType();
-                sigb.append(captureType);
-                if (c.wrapper == null) {
-                    c.ref.gen(ctx);
-                    ctx.captureCast(captureType);
-                } else {
-                    c.wrapper.genPreGet(ctx);
-                }
-                prev = c;
+                sigb.append(c.captureType());
             }
             sigb.append(")Ljava/lang/Object;");
             String sig = sigb.toString();
@@ -1299,6 +1290,33 @@ interface YetiCode {
             captures = c;
             return c;
         }
+
+        // Called by mergeCaptures to initialize a capture.
+        // It must be ok to copy capture after that.
+        abstract void captureInit(Ctx fun, Capture c, int n);
+
+        int mergeCaptures(Ctx ctx) {
+            int counter = 0;
+            Capture prev = null;
+        next_capture:
+            for (Capture c = captures; c != null; c = c.next) {
+                Object identity = c.identity = c.captureIdentity();
+                if (c.uncaptured)
+                    continue;
+                // remove shared captures
+                for (Capture i = captures; i != c; i = i.next) {
+                    if (i.identity == identity) {
+                        c.id = i.id; // copy old one's id
+                        c.localVar = i.localVar;
+                        prev.next = c.next;
+                        continue next_capture;
+                    }
+                }
+                captureInit(ctx, c, counter++);
+                prev = c;
+            }
+            return counter;
+        }
     }
 
     class Function extends CapturingClosure implements Binder {
@@ -1419,6 +1437,12 @@ interface YetiCode {
             return c;
         }
 
+        // called by mergeCaptures
+        void captureInit(Ctx fun, Capture c, int n) {
+            fun.cw.visitField(0, c.getId(fun), c.captureType(),
+                              null, null).visitEnd();
+        }
+
         void prepareGen(Ctx ctx) {
             if (merged) {
                 ((Function) body).bindName = bindName;
@@ -1437,24 +1461,8 @@ interface YetiCode {
             String funClass =
                 argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
             Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name, funClass);
-            Capture prev = null;
-        next_capture:
-            for (Capture c = captures; c != null; c = c.next) {
-                Object identity = c.identity = c.captureIdentity();
-                if (c.uncaptured)
-                    continue;
-                // remove shared captures
-                for (Capture i = captures; i != c; i = i.next) {
-                    if (i.identity == identity) {
-                        c.id = i.id; // copy old one's id
-                        prev.next = c.next;
-                        continue next_capture;
-                    }
-                }
-                fun.cw.visitField(0, c.getId(fun),
-                        c.captureType(), null, null).visitEnd();
-                prev = c;
-            }
+
+            mergeCaptures(fun);
             fun.createInit(0, funClass);
 
             Ctx apply = argCount == 2
