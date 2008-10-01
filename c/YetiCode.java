@@ -48,7 +48,7 @@ import yeti.lang.BigNum;
 interface YetiCode {
     ThreadLocal currentCompileCtx = new ThreadLocal();
 
-    class Constants implements Opcodes {
+    final class Constants implements Opcodes {
         private Map constants = new HashMap();
         private Ctx sb;
         String sourceName;
@@ -81,7 +81,7 @@ interface YetiCode {
         }
     }
 
-    class CompileCtx implements Opcodes {
+    final class CompileCtx implements Opcodes {
         private CodeWriter writer;
         private SourceReader reader;
         private String[] preload;
@@ -469,15 +469,15 @@ interface YetiCode {
 
     abstract class Code implements Opcodes {
         // constants used by flagop
-        public static final int CONST      = 1;
-        public static final int PURE       = 2;
+        static final int CONST      = 1;
+        static final int PURE       = 2;
         
         // for bindrefs, mark as used lvalue
-        public static final int ASSIGN     = 4;
-        public static final int INT_NUM    = 8;
+        static final int ASSIGN     = 4;
+        static final int INT_NUM    = 8;
 
         // Comparision operators use this for some optimisation.
-        public static final int EMPTY_LIST = 16;
+        static final int EMPTY_LIST = 16;
 
         YetiType.Type type;
         boolean polymorph;
@@ -604,7 +604,7 @@ interface YetiCode {
         }
     }
 
-    class BindWrapper extends BindRef {
+    final class BindWrapper extends BindRef {
         private BindRef ref;
 
         BindWrapper(BindRef ref) {
@@ -652,7 +652,7 @@ interface YetiCode {
         }
     }
 
-    class NumericConstant extends Code {
+    final class NumericConstant extends Code {
         Num num;
 
         NumericConstant(Num num) {
@@ -736,7 +736,7 @@ interface YetiCode {
         }
     }
 
-    class StringConstant extends Code {
+    final class StringConstant extends Code {
         String str;
 
         StringConstant(String str) {
@@ -753,7 +753,7 @@ interface YetiCode {
         }
     }
 
-    class UnitConstant extends Code {
+    final class UnitConstant extends Code {
         UnitConstant() {
             type = YetiType.UNIT_TYPE;
         }
@@ -767,7 +767,7 @@ interface YetiCode {
         }
     }
 
-    class BooleanConstant extends BindRef implements Binder {
+    final class BooleanConstant extends BindRef implements Binder {
         boolean val;
 
         BooleanConstant(boolean val) {
@@ -796,7 +796,7 @@ interface YetiCode {
         }
     }
 
-    class ConcatStrings extends Code {
+    final class ConcatStrings extends Code {
         Code[] param;
 
         ConcatStrings(Code[] param) {
@@ -830,7 +830,7 @@ interface YetiCode {
         }
     }
 
-    class NewExpr extends JavaExpr {
+    final class NewExpr extends JavaExpr {
         NewExpr(JavaType.Method init, Code[] args, int line) {
             super(null, init, args, line);
             type = init.classType;
@@ -845,7 +845,7 @@ interface YetiCode {
         }
     }
 
-    class MethodCall extends JavaExpr {
+    final class MethodCall extends JavaExpr {
         MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
             super(object, method, args, line);
             type = method.convertedReturnType();
@@ -867,7 +867,7 @@ interface YetiCode {
         }
     }
 
-    class Throw extends Code {
+    final class Throw extends Code {
         Code throwable;
 
         Throw(Code throwable, YetiType.Type type) {
@@ -881,7 +881,7 @@ interface YetiCode {
         }
     }
 
-    class ClassField extends JavaExpr {
+    final class ClassField extends JavaExpr {
         private JavaType.Field field;
 
         ClassField(Code object, JavaType.Field field, int line) {
@@ -929,7 +929,7 @@ interface YetiCode {
         }
     }
 
-    class Cast extends JavaExpr {
+    final class Cast extends JavaExpr {
         boolean convert;
 
         Cast(Code code, YetiType.Type type, boolean convert, int line) {
@@ -951,13 +951,13 @@ interface YetiCode {
     // Since the stupid JVM discards local stack when catching exceptions,
     // try catch blocks have to be converted into fucking closures
     // (at least for the generic case).
-    class TryCatch extends CapturingClosure {
+    final class TryCatch extends CapturingClosure {
         private List catches = new ArrayList();
         private int exVar;
         Code block;
         Code cleanup;
 
-        class Catch extends BindRef implements Binder {
+        final class Catch extends BindRef implements Binder {
             Code handler;
             Label start = new Label();
             Label end;
@@ -1078,7 +1078,7 @@ interface YetiCode {
         Binder[] args;
         Capture[] argCaptures;
 
-        class SelfApply extends Apply {
+        final class SelfApply extends Apply {
             boolean tail;
             int depth;
 
@@ -1158,7 +1158,7 @@ interface YetiCode {
         }
     }
 
-    class Capture extends CaptureRef implements CaptureWrapper {
+    final class Capture extends CaptureRef implements CaptureWrapper {
         String id;
         Capture next;
         CaptureWrapper wrapper;
@@ -1333,7 +1333,7 @@ interface YetiCode {
         }
     };
 
-    class Function extends CapturingClosure implements Binder {
+    final class Function extends CapturingClosure implements Binder {
         private String name;
         Binder selfBind;
         Code body;
@@ -1564,7 +1564,7 @@ interface YetiCode {
         }
     }
 
-    class RootClosure extends AClosure {
+    final class RootClosure extends AClosure {
         Code code;
         String[] preload;
         String moduleName;
@@ -1650,7 +1650,7 @@ interface YetiCode {
         }
     }
 
-    class VariantConstructor extends Code {
+    final class VariantConstructor extends Code {
         String name;
 
         VariantConstructor(YetiType.Type type, String name) {
@@ -1733,7 +1733,7 @@ interface YetiCode {
         abstract boolean mayAssign();
     }
 
-    class SelectMemberFun extends Code {
+    final class SelectMemberFun extends Code {
         String[] names;
         
         SelectMemberFun(YetiType.Type type, String[] names) {
@@ -1776,7 +1776,7 @@ interface YetiCode {
         }
     }
 
-    class KeyRefExpr extends Code {
+    final class KeyRefExpr extends Code {
         Code val;
         Code key;
         int line;
@@ -1817,7 +1817,7 @@ interface YetiCode {
         }
     }
 
-    class ConditionalExpr extends Code {
+    final class ConditionalExpr extends Code {
         Code[][] choices;
 
         ConditionalExpr(YetiType.Type type, Code[][] choices, boolean poly) {
@@ -1863,7 +1863,7 @@ interface YetiCode {
         }
     }
 
-    class LoopExpr extends Code {
+    final class LoopExpr extends Code {
         Code cond, body;
 
         LoopExpr(Code cond, Code body) {
@@ -1924,7 +1924,7 @@ interface YetiCode {
         String captureType();
     }
 
-    class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
+    final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         private int id;
         private int mvar = -1;
         private final boolean var;
@@ -2063,7 +2063,7 @@ interface YetiCode {
         }
     }
 
-    class LoadModule extends Code {
+    final class LoadModule extends Code {
         String moduleName;
         ModuleType moduleType;
 
@@ -2089,14 +2089,14 @@ interface YetiCode {
         }
     }
 
-    class StructField {
+    final class StructField {
         boolean property;
         String name;
         Code value;
         Code setter;
     }
 
-    class StructConstructor extends Code {
+    final class StructConstructor extends Code {
         StructField[] fields;
         StructField[] properties;
         Bind[] binds;
@@ -2242,7 +2242,7 @@ interface YetiCode {
         }
     }
 
-    class Range extends Code {
+    final class Range extends Code {
         private Code from;
         private Code to;
 
@@ -2258,7 +2258,7 @@ interface YetiCode {
         }
     }
 
-    class ListConstructor extends Code {
+    final class ListConstructor extends Code {
         Code[] items;
 
         ListConstructor(Code[] items) {
@@ -2297,7 +2297,7 @@ interface YetiCode {
         }
     }
 
-    class MapConstructor extends Code {
+    final class MapConstructor extends Code {
         Code[] keyItems;
         Code[] items;
 
@@ -2330,7 +2330,7 @@ interface YetiCode {
         }
     }
 
-    class EvalBind implements Binder, CaptureWrapper, Opcodes {
+    final class EvalBind implements Binder, CaptureWrapper, Opcodes {
         YetiEval.Binding bind;
 
         EvalBind(YetiEval.Binding bind) {
@@ -2395,7 +2395,7 @@ interface YetiCode {
         }
     }
 
-    class JavaClass extends CapturingClosure {
+    final class JavaClass extends CapturingClosure {
         private String className;
         private String parentClass = "java/lang/Object";
         private List fields = new ArrayList();
@@ -2494,7 +2494,7 @@ interface YetiCode {
             }
         }
 
-        private static class Field extends Code
+        private static final class Field extends Code
                 implements Binder, CaptureWrapper {
             String name; // mangled name
             private String javaType;

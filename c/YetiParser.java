@@ -150,7 +150,7 @@ interface YetiParser {
         }
     }
 
-    class Bind extends Node {
+    final class Bind extends Node {
         String name;
         Node expr;
         TypeNode type;
@@ -220,7 +220,7 @@ interface YetiParser {
         }
     }
 
-    class Seq extends Node {
+    final class Seq extends Node {
         static final Object EVAL = new Object();
 
         Node[] st;
@@ -324,7 +324,7 @@ interface YetiParser {
         }
     }
 
-    class TypeDef extends Node {
+    final class TypeDef extends Node {
         String name;
         String[] param;
         TypeNode type;
@@ -362,13 +362,13 @@ interface YetiParser {
         }
     }
 
-    class IsOp extends TypeOp {
+    final class IsOp extends TypeOp {
         IsOp(TypeNode type) {
             super("is", type);
         }
     }
 
-    class ObjectRefOp extends BinOp {
+    final class ObjectRefOp extends BinOp {
         String name;
         Node[] arguments;
 
@@ -398,7 +398,7 @@ interface YetiParser {
         }
     }
 
-    class InstanceOf extends BinOp {
+    final class InstanceOf extends BinOp {
         String className;
 
         InstanceOf(String className) {

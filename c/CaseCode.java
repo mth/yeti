@@ -48,7 +48,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class BindPattern extends CasePattern implements Binder {
+    final class BindPattern extends CasePattern implements Binder {
         private CaseExpr caseExpr;
         private int nth;
 
@@ -93,7 +93,7 @@ interface CaseCode extends YetiCode {
         }
     };
 
-    class ConstPattern extends CasePattern {
+    final class ConstPattern extends CasePattern {
         Code v;
 
         ConstPattern(Code value) {
@@ -161,7 +161,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class ConsPattern extends AListPattern {
+    final class ConsPattern extends AListPattern {
         private CasePattern hd;
         private CasePattern tl;
 
@@ -193,7 +193,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class ListPattern extends AListPattern {
+    final class ListPattern extends AListPattern {
         private CasePattern[] items;
 
         ListPattern(CasePattern[] items) {
@@ -220,7 +220,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class StructPattern extends CasePattern {
+    final class StructPattern extends CasePattern {
         private String[] names;
         private CasePattern[] patterns;
 
@@ -262,7 +262,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class VariantPattern extends CasePattern {
+    final class VariantPattern extends CasePattern {
         String variantTag;
         CasePattern variantArg;
 
@@ -311,7 +311,7 @@ interface CaseCode extends YetiCode {
         }
     }
 
-    class CaseExpr extends Code {
+    final class CaseExpr extends Code {
         private int totalParams;
         private Code caseValue;
         private List choices = new ArrayList();
@@ -322,7 +322,7 @@ interface CaseCode extends YetiCode {
             this.caseValue = caseValue;
         }
 
-        private static class Choice {
+        private static final class Choice {
             CasePattern pattern;
             Code expr;
         }

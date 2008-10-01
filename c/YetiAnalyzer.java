@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 public final class YetiAnalyzer extends YetiType {
-    static class TopLevel {
+    static final class TopLevel {
         Map typeDefs = new HashMap();
     }
 
@@ -1141,7 +1141,7 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
-    static class CaseCompiler {
+    static final class CaseCompiler {
         CaseExpr exp;
         Scope scope;
         int depth;

@@ -42,7 +42,7 @@ interface YetiBuiltins extends CaseCode {
     int COND_LE  = COND_NOT | COND_GT;
     int COND_GE  = COND_NOT | COND_LT;
 
-    class Argv implements Binder, DirectBind {
+    final class Argv implements Binder, DirectBind {
         public BindRef getRef(int line) {
             return new BindRef() {
                 { type = YetiType.STRING_ARRAY; }
@@ -76,7 +76,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class CoreFun implements Binder {
+    final class CoreFun implements Binder {
         private YetiType.Type type;
         private String name;
 
@@ -132,7 +132,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class IsDefined extends IsNullPtr {
+    final class IsDefined extends IsNullPtr {
         IsDefined() {
             super(YetiType.A_TO_BOOL, "defined?");
         }
@@ -155,7 +155,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class IsEmpty extends IsNullPtr {
+    final class IsEmpty extends IsNullPtr {
         IsEmpty() {
             super(YetiType.MAP_TO_BOOL, "empty$q");
         }
@@ -181,7 +181,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Head extends IsNullPtr {
+    final class Head extends IsNullPtr {
         Head() {
             super(YetiType.LIST_TO_A, "head");
         }
@@ -195,7 +195,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Tail extends IsNullPtr {
+    final class Tail extends IsNullPtr {
         Tail() {
             super(YetiType.LIST_TO_LIST, "tail");
         }
@@ -214,7 +214,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Negate extends StaticRef implements Binder {
+    final class Negate extends StaticRef implements Binder {
         Negate() {
             super("yeti/lang/std", "negate", YetiType.NUM_TO_NUM,
                   null, false, 0);
@@ -277,7 +277,7 @@ interface YetiBuiltins extends CaseCode {
         abstract void genApply2(Ctx ctx, Code arg1, Code arg2, int line);
     }
 
-    class For extends Bind2Core {
+    final class For extends Bind2Core {
         For() {
             super("for", YetiType.FOR_TYPE);
         }
@@ -301,7 +301,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Compose extends Bind2Core {
+    final class Compose extends Bind2Core {
         Compose() {
             super("$d", YetiType.COMPOSE_TYPE);
         }
@@ -317,7 +317,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Synchronized extends Bind2Core {
+    final class Synchronized extends Bind2Core {
         Synchronized() {
             super("synchronized", YetiType.SYNCHRONIZED_TYPE);
         }
@@ -406,7 +406,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class ArithOpFun extends BinOpRef {
+    final class ArithOpFun extends BinOpRef {
         private String method;
         private int line;
 
@@ -473,7 +473,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class ArithOp implements Binder {
+    final class ArithOp implements Binder {
         private String fun;
         private String method;
         private YetiType.Type type;
@@ -497,7 +497,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class CompareFun extends BoolBinOp {
+    final class CompareFun extends BoolBinOp {
         static final int[] OPS = { IFEQ, IFNE, IFLT, IFGE, IFGT, IFLE };
         static final int[] ROP = { IFEQ, IFNE, IFGT, IFLE, IFLT, IFGE };
         int op;
@@ -571,7 +571,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Compare implements Binder {
+    final class Compare implements Binder {
         YetiType.Type type;
         int op;
         String fun;
@@ -595,7 +595,7 @@ interface YetiBuiltins extends CaseCode {
     }
 
 
-    class Same implements Binder {
+    final class Same implements Binder {
         public BindRef getRef(int line) {
             return new BoolBinOp() {
                 {
@@ -616,7 +616,7 @@ interface YetiBuiltins extends CaseCode {
     }
 
 
-    class InOpFun extends BoolBinOp {
+    final class InOpFun extends BoolBinOp {
         int line;
 
         void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
@@ -631,7 +631,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class InOp implements Binder {
+    final class InOp implements Binder {
         public BindRef getRef(int line) {
             InOpFun f = new InOpFun();
             f.type = YetiType.IN_TYPE;
@@ -643,7 +643,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class NotOp implements Binder {
+    final class NotOp implements Binder {
         public BindRef getRef(int line) {
             return new StaticRef("yeti/lang/std", "not",
                                  YetiType.BOOL_TO_BOOL, this, false, line) {
@@ -666,7 +666,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class BoolOpFun extends BoolBinOp implements Binder {
+    final class BoolOpFun extends BoolBinOp implements Binder {
         boolean orOp;
 
         BoolOpFun(boolean orOp) {
@@ -709,7 +709,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Cons implements Binder {
+    final class Cons implements Binder {
         public BindRef getRef(final int line) {
             return new BinOpRef() {
                 {
@@ -740,7 +740,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class LazyCons implements Binder {
+    final class LazyCons implements Binder {
         public BindRef getRef(final int line) {
             return new BinOpRef() {
                 {
@@ -766,7 +766,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class MatchOpFun extends BinOpRef {
+    final class MatchOpFun extends BinOpRef {
         private int line;
         private boolean yes;
 
@@ -819,7 +819,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class MatchOp implements Binder {
+    final class MatchOp implements Binder {
         boolean yes;
 
         MatchOp(boolean yes) {
@@ -831,7 +831,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class RegexFun extends StaticRef {
+    final class RegexFun extends StaticRef {
         private String impl;
 
         RegexFun(String fun, String impl, YetiType.Type type,
@@ -866,7 +866,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class Regex implements Binder {
+    final class Regex implements Binder {
         private String fun, impl;
         private YetiType.Type type;
 
@@ -881,7 +881,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class ClassOfExpr extends Code implements DirectBind {
+    final class ClassOfExpr extends Code implements DirectBind {
         String className;
 
         ClassOfExpr(JavaType what) {
@@ -902,7 +902,7 @@ interface YetiBuiltins extends CaseCode {
         }
     }
 
-    class InstanceOfExpr extends Code {
+    final class InstanceOfExpr extends Code {
         Code expr;
         String className;
 
@@ -930,12 +930,12 @@ interface YetiBuiltins extends CaseCode {
         }
     };
 
-    class StrOp extends StaticRef implements DirectBind, Binder {
+    final class StrOp extends StaticRef implements DirectBind, Binder {
         String method;
         String sig;
         YetiType.Type argTypes[];
 
-        class StrApply extends Apply {
+        final class StrApply extends Apply {
             StrApply prev;
 
             StrApply(Code arg, YetiType.Type type, StrApply prev, int line) {
