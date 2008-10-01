@@ -66,7 +66,8 @@ interface YetiCode {
                                   null, null).visitEnd();
                 code.gen(sb);
                 sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
-                constants.put(key, name);
+                if (key != null)
+                    constants.put(key, name);
             }
             final String fieldName = name;
             ctx_.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
@@ -1521,8 +1522,13 @@ interface YetiCode {
         }
 
         void gen(Ctx ctx) {
-            prepareGen(ctx);
-            finishGen(ctx);
+            if (captures != null || ctx.constants.ctx.cw == ctx.cw ||
+                merged && ((Function) body).captures != null) {
+                prepareGen(ctx);
+                finishGen(ctx);
+            } else {
+                ctx.constant(null, this);
+            }
         }
     }
 
