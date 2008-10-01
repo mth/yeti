@@ -825,14 +825,6 @@ interface YetiCode {
             this.param = param;
         }
 
-        boolean isConstant() {
-            for (int i = 0; i < param.length; ++i) {
-                if (!param[i].isConstant())
-                    return false;
-            }
-            return true;
-        }
-
         void gen(Ctx ctx) {
             if (param.length == 1) {
                 param[0].gen(ctx);
@@ -1446,10 +1438,6 @@ interface YetiCode {
                     selfRef = new CaptureRef() {
                         void gen(Ctx ctx) {
                             ctx.visitVarInsn(ALOAD, 0);
-                        }
-
-                        boolean isPure() {
-                            return true;
                         }
                     };
                     selfRef.binder = selfBind;
