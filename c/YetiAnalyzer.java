@@ -928,7 +928,7 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(nodes[i],
                         "Unit type expected here, not a " + code.type);
                 }
-                code.ignoreValue();
+                //code.ignoreValue();
                 addSeq(last, new SeqExpr(code));
             }
         }

@@ -480,7 +480,6 @@ interface YetiCode {
         public static final int EMPTY_LIST = 16;
 
         YetiType.Type type;
-        boolean ignoreValue;
         boolean polymorph;
 
         /**
@@ -515,12 +514,6 @@ interface YetiCode {
         // on binding (possibly useful for inline-optimisations).
         BindRef bindRef() {
             return null;
-        }
-
-        // Not used currently. Tells to code snippet, if it's value will be
-        // ignored. Probably should be deleted together with that flag.
-        void ignoreValue() {
-            ignoreValue = true;
         }
 
         // When the code is a lvalue, then this method returns code that
