@@ -650,10 +650,6 @@ interface YetiCode {
             ctx.visitFieldInsn(GETSTATIC, className, funFieldName,
                                  'L' + javaType(type) + ';');
         }
-
-        boolean flagop(int fl) {
-            return (fl & (PURE | CONST)) != 0;
-        }
     }
 
     class NumericConstant extends Code {
@@ -2122,7 +2118,7 @@ interface YetiCode {
             }
 
             public boolean flagop(int fl) {
-                return mutable && (fl & ASSIGN) != 0;
+                return (fl & ASSIGN) != 0 && mutable;
             }
 
             void gen(Ctx ctx) {
