@@ -968,10 +968,6 @@ interface YetiCode {
             this.block = block;
         }
 
-        public BindRef refProxy(BindRef code) {
-            return code instanceof DirectBind ? code : captureRef(code);
-        }
-
         Catch addCatch(YetiType.Type ex) {
             Catch c = new Catch();
             c.type = ex;
@@ -1291,6 +1287,10 @@ interface YetiCode {
             return c;
         }
 
+        public BindRef refProxy(BindRef code) {
+            return code instanceof DirectBind ? code : captureRef(code);
+        }
+
         // Called by mergeCaptures to initialize a capture.
         // It must be ok to copy capture after that.
         abstract void captureInit(Ctx fun, Capture c, int n);
@@ -1439,12 +1439,14 @@ interface YetiCode {
 
         // called by mergeCaptures
         void captureInit(Ctx fun, Capture c, int n) {
+            // c.getId() initialises the captures id as a side effect
             fun.cw.visitField(0, c.getId(fun), c.captureType(),
                               null, null).visitEnd();
         }
 
         void prepareGen(Ctx ctx) {
             if (merged) {
+                // 2 nested lambdas have been optimised into 1
                 ((Function) body).bindName = bindName;
                 ((Function) body).prepareGen(ctx);
                 return;
@@ -1471,7 +1473,10 @@ interface YetiCode {
                 : fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
                     "(Ljava/lang/Object;)Ljava/lang/Object;");
             apply.localVarCount = argCount + 1; // this, arg
+            
             if (argCaptures != null) {
+                // Tail recursion needs all args to be in local registers
+                // - otherwise it couldn't modify them safely before restarting
                 for (int i = 0; i < argCaptures.length; ++i) {
                     Capture c = argCaptures[i];
                     if (!c.uncaptured) {
@@ -2349,7 +2354,7 @@ interface YetiCode {
         }
     }
 
-    class JavaClass extends Code {
+    class JavaClass extends CapturingClosure {
         private String className;
         private String parentClass = "java/lang/Object";
         private List fields = new ArrayList();
@@ -2562,11 +2567,19 @@ interface YetiCode {
             return field;
         }
 
+        // called by mergeCaptures
+        void captureInit(Ctx fun, Capture c, int n) {
+            // c.getId() initialises the captures id as a side effect
+            fun.cw.visitField(0, c.getId(fun), c.captureType(),
+                              null, null).visitEnd();
+        }
+
         void gen(Ctx ctx) {
             ctx.visitInsn(ACONST_NULL);
             Ctx c = ctx.newClass(ACC_STATIC | ACC_PUBLIC,
                                  className, parentClass);
             constr.init();
+            mergeCaptures(c);
             Ctx init = c.newMethod(ACC_PUBLIC, "<init>", constr.descr);
             init.visitVarInsn(ALOAD, 0); // this.
             init.visitMethodInsn(INVOKESPECIAL, parentClass, "<init>", "()V");
