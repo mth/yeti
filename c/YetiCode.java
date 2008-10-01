@@ -540,6 +540,10 @@ interface YetiCode {
             return false;
         }
 
+        boolean isPure() {
+            return isConstant();
+        }
+
         boolean isIntNum() {    
             return false;
         }
@@ -1213,6 +1217,10 @@ interface YetiCode {
             return ref.assign();
         }
 
+        boolean isPure() {
+            return ref.isPure();
+        }
+
         Code assign(final Code value) {
             if (!ref.assign()) {
                 return null;
@@ -1352,6 +1360,12 @@ interface YetiCode {
         }
     }
 
+    Code NEVER = new Code() {
+        void gen(Ctx ctx) {
+            throw new UnsupportedOperationException();
+        }
+    };
+
     class Function extends CapturingClosure implements Binder {
         private String name;
         Binder selfBind;
@@ -1378,6 +1392,10 @@ interface YetiCode {
                         ctx.visitVarInsn(ASTORE, argCount);
                     }
                 }
+            }
+
+            boolean isPure() {
+                return true;
             }
         };
 
@@ -1428,6 +1446,10 @@ interface YetiCode {
                     selfRef = new CaptureRef() {
                         void gen(Ctx ctx) {
                             ctx.visitVarInsn(ALOAD, 0);
+                        }
+
+                        boolean isPure() {
+                            return true;
                         }
                     };
                     selfRef.binder = selfBind;
@@ -1561,10 +1583,15 @@ interface YetiCode {
         void gen(Ctx ctx) {
             if (isConstant() && ctx.constants.ctx.cw != ctx.cw) {
                 ctx.constant(null, this);
-            } else if (argUsed == 0 && body.isConstant()) {
+            } else if (argUsed == 0 && body.isPure() && uncapture(NEVER)) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/Const");
                 ctx.visitInsn(DUP);
-                body.gen(ctx);
+                try {
+                    body.gen(ctx);
+                } catch (RuntimeException ex) {
+                    ex.printStackTrace();
+                    throw ex;
+                }
                 ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
                 ctx.forceType("yeti/lang/Fun");
             } else {
@@ -1982,6 +2009,10 @@ interface YetiCode {
 
                     boolean assign() {
                         return var ? assigned = true : false;
+                    }
+
+                    boolean isPure() {
+                        return !var;
                     }
 
                     CaptureWrapper capture() {
