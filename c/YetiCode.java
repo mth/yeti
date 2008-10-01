@@ -536,6 +536,10 @@ interface YetiCode {
             return false;
         }
 
+        boolean isConstant() {
+            return false;
+        }
+
         boolean isIntNum() {    
             return false;
         }
@@ -656,6 +660,10 @@ interface YetiCode {
             ctx.visitFieldInsn(GETSTATIC, className, funFieldName,
                                  'L' + javaType(type) + ';');
         }
+
+        boolean isConstant() {
+            return true;
+        }
     }
 
     class NumericConstant extends Code {
@@ -668,6 +676,10 @@ interface YetiCode {
 
         boolean isIntNum() {
             return num instanceof IntNum;
+        }
+
+        boolean isConstant() {
+            return true;
         }
 
         boolean genInt(Ctx ctx, boolean small) {
@@ -749,6 +761,10 @@ interface YetiCode {
             this.str = str;
         }
 
+        boolean isConstant() {
+            return true;
+        }
+
         void gen(Ctx ctx) {
             ctx.visitLdcInsn(str);
         }
@@ -757,6 +773,10 @@ interface YetiCode {
     class UnitConstant extends Code {
         UnitConstant() {
             type = YetiType.UNIT_TYPE;
+        }
+
+        boolean isConstant() {
+            return true;
         }
 
         void gen(Ctx ctx) {
@@ -777,6 +797,10 @@ interface YetiCode {
             return this;
         }
 
+        boolean isConstant() {
+            return true;
+        }
+
         void gen(Ctx ctx) {
             ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                     val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
@@ -795,6 +819,14 @@ interface YetiCode {
         ConcatStrings(Code[] param) {
             type = YetiType.STR_TYPE;
             this.param = param;
+        }
+
+        boolean isConstant() {
+            for (int i = 0; i < param.length; ++i) {
+                if (!param[i].isConstant())
+                    return false;
+            }
+            return true;
         }
 
         void gen(Ctx ctx) {
@@ -1521,13 +1553,23 @@ interface YetiCode {
             ctx.forceType("yeti/lang/Fun");
         }
 
+        boolean isConstant() {
+            return captures == null &&
+                    (!merged || ((Function) body).captures == null);
+        }
+
         void gen(Ctx ctx) {
-            if (captures != null || ctx.constants.ctx.cw == ctx.cw ||
-                merged && ((Function) body).captures != null) {
+            if (isConstant() && ctx.constants.ctx.cw != ctx.cw) {
+                ctx.constant(null, this);
+            } else if (argUsed == 0 && body.isConstant()) {
+                ctx.visitTypeInsn(NEW, "yeti/lang/Const");
+                ctx.visitInsn(DUP);
+                body.gen(ctx);
+                ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
+                ctx.forceType("yeti/lang/Fun");
+            } else {
                 prepareGen(ctx);
                 finishGen(ctx);
-            } else {
-                ctx.constant(null, this);
             }
         }
     }
