@@ -468,6 +468,17 @@ interface YetiCode {
     }
 
     abstract class Code implements Opcodes {
+        // constants used by flagop
+        public static final int CONST      = 1;
+        public static final int PURE       = 2;
+        
+        // for bindrefs, mark as used lvalue
+        public static final int ASSIGN     = 4;
+        public static final int INT_NUM    = 8;
+
+        // Comparision operators use this for some optimisation.
+        public static final int EMPTY_LIST = 16;
+
         YetiType.Type type;
         boolean ignoreValue;
         boolean polymorph;
@@ -531,20 +542,7 @@ interface YetiCode {
         void markTail() {
         }
 
-        // Comparision operators use this for some optimisation.
-        boolean isEmptyList() {
-            return false;
-        }
-
-        boolean isConstant() {
-            return false;
-        }
-
-        boolean isPure() {
-            return isConstant();
-        }
-
-        boolean isIntNum() {    
+        boolean flagop(int flag) {
             return false;
         }
 
@@ -606,11 +604,6 @@ interface YetiCode {
             return null;
         }
 
-        // mark as used lvalue
-        boolean assign() {
-            return false;
-        }
-
         // unshare. normally bindrefs are not shared
         // Capture shares refs and therefore has to copy for unshareing
         BindRef unshare() {
@@ -632,8 +625,8 @@ interface YetiCode {
             return ref.capture();
         }
 
-        boolean assign() {
-            return ref.assign();
+        boolean flagop(int fl) {
+            return (fl & (PURE | ASSIGN)) != 0 && ref.flagop(fl);
         }
 
         void gen(Ctx ctx) {
@@ -665,8 +658,8 @@ interface YetiCode {
                                  'L' + javaType(type) + ';');
         }
 
-        boolean isConstant() {
-            return true;
+        boolean flagop(int fl) {
+            return (fl & (PURE | CONST)) != 0;
         }
     }
 
@@ -678,12 +671,9 @@ interface YetiCode {
             this.num = num;
         }
 
-        boolean isIntNum() {
-            return num instanceof IntNum;
-        }
-
-        boolean isConstant() {
-            return true;
+        boolean flagop(int fl) {
+            return ((fl & INT_NUM) != 0 && num instanceof IntNum) ||
+                   (fl & (PURE | CONST | INT_NUM)) != 0;
         }
 
         boolean genInt(Ctx ctx, boolean small) {
@@ -765,8 +755,8 @@ interface YetiCode {
             this.str = str;
         }
 
-        boolean isConstant() {
-            return true;
+        boolean flagop(int fl) {
+            return (fl & (CONST | PURE)) != 0;
         }
 
         void gen(Ctx ctx) {
@@ -779,8 +769,8 @@ interface YetiCode {
             type = YetiType.UNIT_TYPE;
         }
 
-        boolean isConstant() {
-            return true;
+        boolean flagop(int fl) {
+            return (fl & (CONST | PURE)) != 0;
         }
 
         void gen(Ctx ctx) {
@@ -801,8 +791,8 @@ interface YetiCode {
             return this;
         }
 
-        boolean isConstant() {
-            return true;
+        boolean flagop(int fl) {
+            return (fl & (CONST | PURE)) != 0;
         }
 
         void gen(Ctx ctx) {
@@ -1205,16 +1195,12 @@ interface YetiCode {
             return id;
         }
 
-        boolean assign() {
-            return ref.assign();
-        }
-
-        boolean isPure() {
-            return ref.isPure();
+        boolean flagop(int fl) {
+            return (fl & (PURE | ASSIGN)) != 0 && ref.flagop(fl);
         }
 
         Code assign(final Code value) {
-            if (!ref.assign()) {
+            if (!ref.flagop(ASSIGN)) {
                 return null;
             }
             return new Code() {
@@ -1386,8 +1372,8 @@ interface YetiCode {
                 }
             }
 
-            boolean isPure() {
-                return true;
+            boolean flagop(int fl) {
+                return (fl & PURE) != 0;
             }
         };
 
@@ -1433,7 +1419,7 @@ interface YetiCode {
             if (code instanceof DirectBind) {
                 return code;
             }
-            if (selfBind == code.binder && !code.assign()) {
+            if (selfBind == code.binder && !code.flagop(ASSIGN)) {
                 if (selfRef == null) {
                     selfRef = new CaptureRef() {
                         void gen(Ctx ctx) {
@@ -1563,15 +1549,15 @@ interface YetiCode {
             ctx.forceType("yeti/lang/Fun");
         }
 
-        boolean isConstant() {
-            return captures == null &&
+        boolean flagop(int fl) {
+            return (fl & (PURE | CONST)) != 0 && captures == null &&
                     (!merged || ((Function) body).captures == null);
         }
 
         void gen(Ctx ctx) {
-            if (isConstant() && ctx.constants.ctx.cw != ctx.cw) {
+            if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
                 ctx.constant(null, this);
-            } else if (argUsed == 0 && body.isPure() && uncapture(NEVER)) {
+            } else if (argUsed == 0 && body.flagop(PURE) && uncapture(NEVER)) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/Const");
                 ctx.visitInsn(DUP);
                 try {
@@ -1995,12 +1981,10 @@ interface YetiCode {
                         };
                     }
 
-                    boolean assign() {
-                        return var ? assigned = true : false;
-                    }
-
-                    boolean isPure() {
-                        return !var;
+                    boolean flagop(int fl) {
+                        if ((fl & ASSIGN) != 0)
+                            return var ? assigned = true : false;
+                        return (fl & PURE) != 0 && !var;
                     }
 
                     CaptureWrapper capture() {
@@ -2144,8 +2128,8 @@ interface YetiCode {
                 return !fun || mutable ? this : null;
             }
 
-            public boolean assign() {
-                return mutable;
+            public boolean flagop(int fl) {
+                return mutable && (fl & ASSIGN) != 0;
             }
 
             void gen(Ctx ctx) {
@@ -2318,8 +2302,9 @@ interface YetiCode {
             }
         }
 
-        boolean isEmptyList() {
-            return items.length == 0;
+        boolean flagop(int fl) {
+            return (fl & (CONST | PURE)) != 0 ||
+                   (fl & EMPTY_LIST) != 0 && items.length == 0;
         }
     }
 
@@ -2351,8 +2336,8 @@ interface YetiCode {
             }
         }
 
-        boolean isEmptyList() {
-            return items.length == 0;
+        boolean flagop(int fl) {
+            return (fl & EMPTY_LIST) != 0 && items.length == 0;
         }
     }
 
@@ -2385,8 +2370,8 @@ interface YetiCode {
                     } : null;
                 }
 
-                boolean assign() {
-                    return bind.mutable;
+                boolean flagop(int fl) {
+                    return (fl & ASSIGN) != 0 && bind.mutable;
                 }
 
                 CaptureWrapper capture() {
@@ -2577,8 +2562,8 @@ interface YetiCode {
                         } : null;
                     }
 
-                    boolean assign() {
-                        return var;
+                    boolean flagop(int fl) {
+                        return (fl & ASSIGN) != 0 && var;
                     }
 
                     CaptureWrapper capture() {

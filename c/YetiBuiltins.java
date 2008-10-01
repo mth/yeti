@@ -69,8 +69,8 @@ interface YetiBuiltins extends CaseCode {
                     };
                 }
 
-                public boolean assign() {
-                    return true;
+                public boolean flagop(int fl) {
+                    return (fl & ASSIGN) != 0;
                 }
             };
         }
@@ -425,7 +425,7 @@ interface YetiBuiltins extends CaseCode {
 
         void binGen(Ctx ctx, Code arg1, Code arg2) {
             if (method == "and" && arg2 instanceof NumericConstant &&
-                ((NumericConstant) arg2).isIntNum()) {
+                ((NumericConstant) arg2).flagop(INT_NUM)) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/IntNum");
                 ctx.visitInsn(DUP);
                 arg1.gen(ctx);
@@ -523,7 +523,8 @@ interface YetiBuiltins extends CaseCode {
                 ctx.visitJumpInsn(IFNONNULL, nonull); // 2-1
                 // reach here, when 1 was null
                 if (op == COND_GT || op == COND_LE ||
-                    arg2.isEmptyList() && (op == COND_EQ || op == COND_NOT)) {
+                    arg2.flagop(EMPTY_LIST) &&
+                        (op == COND_EQ || op == COND_NOT)) {
                     // null is never greater and always less or equal
                     ctx.visitInsn(POP2);
                     ctx.visitJumpInsn(GOTO,
@@ -541,7 +542,7 @@ interface YetiBuiltins extends CaseCode {
             } else {
                 arg1.gen(ctx);
                 ctx.visitLine(line);
-                if (arg2.isIntNum()) {
+                if (arg2.flagop(INT_NUM)) {
                     ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
                     ((NumericConstant) arg2).genInt(ctx, false);
                     ctx.visitLine(line);
