@@ -11,5 +11,3 @@
   that there are always floats.
 * Direct struct-ref optimisation, when only known structs are accessed
 * Java classes
-* Constness optimisations (especially \() -> const () :))
-* Remove unneccesary casts, store/load pairs and const/load->pop pairs
