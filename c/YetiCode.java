@@ -129,8 +129,8 @@ final class CompileCtx implements Opcodes {
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
-            //if (ignore.containsKey(name))
-              //  continue;
+            if (ignore.containsKey(name))
+                continue;
             String jname = Code.mangle(name);
             String type = Code.javaType((YetiType.Type) entry.getValue());
             String descr = 'L' + type + ';';
@@ -2235,8 +2235,9 @@ final class StructConstructor extends Code {
         for (int i = 0; i < fields.length; ++i) {
             if (fields[i].property || binds[i] != null ||
                 !(fields[i].value instanceof Function) ||
-                !fields[i].value.flagop(CONST))
+                !fields[i].value.flagop(CONST)) {
                 continue;
+            }
             r.put(fields[i].name, ((Function) fields[i].value).name);
         }
         return r;
@@ -2246,8 +2247,10 @@ final class StructConstructor extends Code {
         int arrayVar = -1;
         for (int i = 0; i < binds.length; ++i) {
             if (binds[i] != null) {
-                if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                    ((Function) fields[i].value).prepareGen(ctx, false);
+                Function f;
+                if (binds[i].used && !binds[i].mutable && binds[i].fun &&
+                    ((f = (Function) fields[i].value) != null)) { //.flagop(CONST))) {
+                    f.prepareGen(ctx, false);
                     ctx.visitVarInsn(ASTORE,
                             binds[i].var = ctx.localVarCount++);
                 } else {

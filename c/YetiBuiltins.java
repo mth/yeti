@@ -93,7 +93,7 @@ class IsNullPtr implements Binder, Opcodes {
     }
 
     public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std", libName,
+        return new StaticRef("yeti/lang/std$" + libName, "_",
                              type, this, true, line) {
             Code apply(final Code arg, final YetiType.Type res,
                        final int line) {
@@ -208,7 +208,7 @@ final class Tail extends IsNullPtr {
 
 final class Negate extends StaticRef implements Binder {
     Negate() {
-        super("yeti/lang/std", "negate", YetiType.NUM_TO_NUM,
+        super("yeti/lang/std$negate", "_", YetiType.NUM_TO_NUM,
               null, false, 0);
         binder = this;
     }
@@ -248,7 +248,7 @@ abstract class Bind2Core implements Binder, Opcodes {
     }
 
     public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std", coreFun,
+        return new StaticRef("yeti/lang/std$" + coreFun, "_",
                              type, this, true, line) {
             Code apply(final Code arg1, YetiType.Type res, int line1) {
                 return new Apply(res, this, arg1, line1) {
@@ -388,8 +388,8 @@ abstract class BinOpRef extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/std",
-                             coreFun, "Lyeti/lang/Fun;");
+        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/std" + coreFun,
+                           "_", "Lyeti/lang/Fun;");
     }
 
     abstract void binGen(Ctx ctx, Code arg1, Code arg2);
@@ -650,7 +650,7 @@ final class InOp implements Binder {
 
 final class NotOp implements Binder {
     public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std", "not",
+        return new StaticRef("yeti/lang/std$not", "_",
                              YetiType.BOOL_TO_BOOL, this, false, line) {
             Code apply(final Code arg, YetiType.Type res, int line) {
                 return new Code() {
@@ -841,7 +841,7 @@ final class RegexFun extends StaticRef {
 
     RegexFun(String fun, String impl, YetiType.Type type,
              Binder binder, int line) {
-        super("yeti/lang/std", fun, type, null, false, line);
+        super("yeti/lang/std$" + fun, "_", type, null, false, line);
         this.binder = binder;
         this.impl = impl;
     }
@@ -991,7 +991,7 @@ final class StrOp extends StaticRef implements Binder {
     }
 
     StrOp(String fun, String method, String sig, YetiType.Type type) {
-        super("yeti/lang/std", fun, type, null, false, 0);
+        super("yeti/lang/std" + fun, "_", type, null, false, 0);
         this.method = method;
         this.sig = sig;
         binder = this;
