@@ -55,6 +55,9 @@ import java.io.InputStream;
  *   typeDef array of type descriptions (FF)
  *   ...>
  *  FF
+ * Follows utf8 encoded direct field mapping.
+ *  XX XX XX length
+ *  'F' fieldName 00 function-class 00
  */
 class YetiTypeAttr extends Attribute {
     static final byte END = -1;
@@ -64,12 +67,14 @@ class YetiTypeAttr extends Attribute {
 
     YetiType.Type type;
     Map typeDefs;
+    Map directFields;
     private ByteVector encoded;
 
-    YetiTypeAttr(YetiType.Type type, Map typeDefs) {
+    YetiTypeAttr(YetiType.Type type, Map typeDefs, Map directFields) {
         super("YetiModuleType");
         this.type = type;
         this.typeDefs = typeDefs;
+        this.directFields = directFields;
     }
 
     private static final class EncodeType {
@@ -161,6 +166,26 @@ class YetiTypeAttr extends Attribute {
                 writeArray((YetiType.Type[]) e.getValue());
             }
             buf.putByte(END);
+        }
+
+        void writeDirectFields(Map fields) {
+            StringBuffer r = new StringBuffer();
+            Iterator i = fields.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                r.append('F');
+                r.append(e.getKey());
+                r.append('\000');
+                r.append(e.getValue());
+                r.append('\000');
+            }
+            try {
+                byte[] v = r.toString().getBytes("UTF-8");
+                buf.putInt(v.length);
+                buf.putByteArray(v, 0, v.length);
+            } catch (java.io.UnsupportedEncodingException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 
@@ -285,6 +310,27 @@ class YetiTypeAttr extends Attribute {
             ++p;
             return result;
         }
+
+        Map readDirectFields() {
+            int len = cr.readInt(p);
+            String code;
+            try {
+                code = new String(in, p + 4, len, "UTF-8");
+            } catch (java.io.UnsupportedEncodingException ex) {
+                throw new RuntimeException(ex);
+            }
+            p += len + 4;
+            Map result = new HashMap();
+            for (int e, n = 0;;) {
+                if ((e = code.indexOf('\000', n)) < 0)
+                    break;
+                String name = code.substring(n + 1, e);
+                if ((n = code.indexOf('\000', ++e)) < 0)
+                    break;
+                result.put(name, code.substring(e, n++));
+            }
+            return result;
+        }
     }
 
     protected Attribute read(ClassReader cr, int off, int len, char[] buf,
@@ -294,7 +340,8 @@ class YetiTypeAttr extends Attribute {
         }
         DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
         YetiType.Type t = decoder.read();
-        return new YetiTypeAttr(t, decoder.readTypeDefs());
+        Map typeDefs = decoder.readTypeDefs();
+        return new YetiTypeAttr(t, typeDefs, decoder.readDirectFields());
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -307,6 +354,7 @@ class YetiTypeAttr extends Attribute {
         enc.buf.putByte(0); // encoding version
         enc.write(type);
         enc.writeTypeDefs(typeDefs);
+        enc.writeDirectFields(directFields);
         return encoded = enc.buf;
     }
 
@@ -368,7 +416,8 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType readType(ClassReader reader) {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
-        reader.accept(visitor, new Attribute[] { new YetiTypeAttr(null, null) },
+        reader.accept(visitor,
+                      new Attribute[] { new YetiTypeAttr(null, null, null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         return visitor.typeAttr == null ? null
             : new ModuleType(visitor.typeAttr.type, visitor.typeAttr.typeDefs);

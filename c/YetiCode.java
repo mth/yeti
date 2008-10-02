@@ -205,8 +205,6 @@ final class CompileCtx implements Opcodes {
                     (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
         constants.ctx = ctx;
         if (module) {
-            ctx.cw.visitAttribute(
-                new YetiTypeAttr(codeTree.type, codeTree.typeDefs));
             ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                               "Ljava/lang/Object;", null, null).visitEnd();
             ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
@@ -221,6 +219,16 @@ final class CompileCtx implements Opcodes {
             ctx.visitInsn(ARETURN);
             ctx.visitLabel(eval);
             codeTree.gen(ctx);
+            Code codeTail = codeTree.code;
+            while (codeTail instanceof SeqExpr) {
+                codeTail = ((SeqExpr) codeTail).result;
+            }
+            Map directFields = java.util.Collections.EMPTY_MAP;
+            if (codeTail instanceof StructConstructor) {
+                directFields = ((StructConstructor) codeTail).getDirect();
+            }
+            ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
+                                        codeTree.typeDefs, directFields));
             if (codeTree.type.type == YetiType.STRUCT) {
                 generateModuleFields(codeTree.type.finalMembers, ctx);
             }
@@ -1346,7 +1354,7 @@ final class Function extends CapturingClosure implements Binder {
         }
     };
 
-    private String name;
+    String name;
     Binder selfBind;
     Code body;
     String bindName;
@@ -2206,6 +2214,18 @@ final class StructConstructor extends Code {
         bind.fun = code instanceof Function;
         binds[num] = bind;
         return bind;
+    }
+
+    Map getDirect() {
+        Map r = new HashMap();
+        for (int i = 0; i < fields.length; ++i) {
+            if (fields[i].property || binds[i] != null ||
+                !(fields[i].value instanceof Function) ||
+                !fields[i].value.flagop(CONST))
+                continue;
+            r.put(fields[i].name, ((Function) fields[i].value).name);
+        }
+        return r;
     }
 
     void gen(Ctx ctx) {
