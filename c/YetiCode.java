@@ -761,7 +761,7 @@ final class UnitConstant extends Code {
     }
 }
 
-final class BooleanConstant extends BindRef implements Binder {
+final class BooleanConstant extends BindRef implements Binder, DirectBind {
     boolean val;
 
     BooleanConstant(boolean val) {
