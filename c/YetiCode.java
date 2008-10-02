@@ -46,7 +46,7 @@ import yeti.lang.IntNum;
 import yeti.lang.BigNum;
 
 final class Constants implements Opcodes {
-    private Map constants = new HashMap();
+    final Map constants = new HashMap();
     private Ctx sb;
     String sourceName;
     Ctx ctx;
@@ -164,7 +164,12 @@ final class CompileCtx implements Opcodes {
             if (dot >= 0)
                 className = className.substring(dot + 1);
         }
-        compile(srcName[0], className, src, flags);
+        try {
+            compile(srcName[0], className, src, flags);
+        } catch (RuntimeException ex) {
+            ex.printStackTrace();
+            throw ex;
+        }
         className = (String) compiled.get(srcName[0]);
         compiled.put(sourceName, className);
         return className;
@@ -473,6 +478,12 @@ abstract class Code implements Opcodes {
     // Comparision operators use this for some optimisation.
     static final int EMPTY_LIST = 16;
 
+    // no capturing
+    static final int DIRECT_BIND = 32;
+
+    // normal constant is also pure and don't need capturing
+    static final int STD_CONST = CONST | PURE | DIRECT_BIND;
+
     YetiType.Type type;
     boolean polymorph;
 
@@ -613,7 +624,7 @@ final class BindWrapper extends BindRef {
     }
 
     boolean flagop(int fl) {
-        return (fl & (PURE | ASSIGN)) != 0 && ref.flagop(fl);
+        return (fl & (PURE | ASSIGN | DIRECT_BIND)) != 0 && ref.flagop(fl);
     }
 
     void gen(Ctx ctx) {
@@ -621,10 +632,7 @@ final class BindWrapper extends BindRef {
     }
 }
 
-interface DirectBind {
-}
-
-class StaticRef extends BindRef implements DirectBind {
+class StaticRef extends BindRef {
     private String className;
     protected String funFieldName;
     int line;
@@ -644,6 +652,10 @@ class StaticRef extends BindRef implements DirectBind {
         ctx.visitFieldInsn(GETSTATIC, className, funFieldName,
                              'L' + javaType(type) + ';');
     }
+
+    boolean flagop(int fl) {
+        return (fl & DIRECT_BIND) != 0;
+    }
 }
 
 final class NumericConstant extends Code {
@@ -656,7 +668,7 @@ final class NumericConstant extends Code {
 
     boolean flagop(int fl) {
         return ((fl & INT_NUM) != 0 && num instanceof IntNum) ||
-               (fl & (PURE | CONST | INT_NUM)) != 0;
+               (fl & STD_CONST) != 0;
     }
 
     boolean genInt(Ctx ctx, boolean small) {
@@ -688,6 +700,10 @@ final class NumericConstant extends Code {
     }
 
     void gen(Ctx ctx) {
+        if (ctx.constants.constants.containsKey(num)) {
+            ctx.constant(num, this);
+            return;
+        }
         if (num instanceof RatNum) {
             ctx.constant(num, new Code() {
                 { type = YetiType.NUM_TYPE; }
@@ -738,12 +754,12 @@ final class StringConstant extends Code {
         this.str = str;
     }
 
-    boolean flagop(int fl) {
-        return (fl & (CONST | PURE)) != 0;
-    }
-
     void gen(Ctx ctx) {
         ctx.visitLdcInsn(str);
+    }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0;
     }
 }
 
@@ -752,16 +768,16 @@ final class UnitConstant extends Code {
         type = YetiType.UNIT_TYPE;
     }
 
-    boolean flagop(int fl) {
-        return (fl & (CONST | PURE)) != 0;
-    }
-
     void gen(Ctx ctx) {
         ctx.visitInsn(ACONST_NULL);
     }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0;
+    }
 }
 
-final class BooleanConstant extends BindRef implements Binder, DirectBind {
+final class BooleanConstant extends BindRef implements Binder {
     boolean val;
 
     BooleanConstant(boolean val) {
@@ -775,7 +791,7 @@ final class BooleanConstant extends BindRef implements Binder, DirectBind {
     }
 
     boolean flagop(int fl) {
-        return (fl & (CONST | PURE)) != 0;
+        return (fl & STD_CONST) != 0;
     }
 
     void gen(Ctx ctx) {
@@ -1292,7 +1308,7 @@ abstract class CapturingClosure extends AClosure {
     }
 
     public BindRef refProxy(BindRef code) {
-        return code instanceof DirectBind ? code : captureRef(code);
+        return code.flagop(DIRECT_BIND) ? code : captureRef(code);
     }
 
     // Called by mergeCaptures to initialize a capture.
@@ -1343,6 +1359,7 @@ final class Function extends CapturingClosure implements Binder {
     private boolean merged;
     private int argUsed;
     private boolean constFun;
+    private boolean shared;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -1402,7 +1419,7 @@ final class Function extends CapturingClosure implements Binder {
     // a refProxy (of the ending closure) is called, possibly
     // transforming the BindRef.
     public BindRef refProxy(BindRef code) {
-        if (code instanceof DirectBind) {
+        if (code.flagop(DIRECT_BIND)) {
             return code;
         }
         if (selfBind == code.binder && !code.flagop(ASSIGN)) {
@@ -1551,6 +1568,10 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     void gen(Ctx ctx) {
+        if (shared) {
+            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+            return;
+        }
         if (constFun || argUsed == 0 && body.flagop(PURE) && uncapture(NEVER)) {
             if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
                 constFun = true;
@@ -1568,6 +1589,7 @@ final class Function extends CapturingClosure implements Binder {
             ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
             ctx.forceType("yeti/lang/Fun");
         } else if (flagop(CONST)) {
+            shared = true;
             prepareGen(ctx, true);
         } else {
             prepareGen(ctx, false);
@@ -1947,6 +1969,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     boolean captured;
     boolean used;
     int evalId = -1;
+    private boolean directBind;
 
     BindExpr(Code expr, boolean var) {
         super(expr);
@@ -1965,8 +1988,12 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         if (res == null) {
             res = new BindRef() {
                 void gen(Ctx ctx) {
-                    genPreGet(ctx);
-                    genGet(ctx);
+                    if (directBind) {
+                        st.gen(ctx);
+                    } else {
+                        genPreGet(ctx);
+                        genGet(ctx);
+                    }
                 }
 
                 Code assign(final Code value) {
@@ -1985,6 +2012,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                 boolean flagop(int fl) {
                     if ((fl & ASSIGN) != 0)
                         return var ? assigned = true : false;
+                    if ((fl & DIRECT_BIND) != 0)
+                        return directBind;
                     return (fl & PURE) != 0 && !var;
                 }
 
@@ -2045,11 +2074,15 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     }
 
     private void genBind(Ctx ctx) {
+        javaType = javaType(st.type);
+        javaDescr = 'L' + javaType + ';';
+        if (!var && st.flagop(CONST)) {
+            directBind = true;
+            return;
+        }
         if (mvar == -1) {
             id = ctx.localVarCount++;
         }
-        javaType = javaType(st.type);
-        javaDescr = 'L' + javaType + ';';
         genLocalSet(ctx, st);
         if (evalId != -1) {
             ctx.intConst(evalId);
@@ -2304,7 +2337,7 @@ final class ListConstructor extends Code {
     }
 
     boolean flagop(int fl) {
-        return (fl & (CONST | PURE)) != 0 ||
+        return //(fl & (CONST | PURE)) != 0 ||
                (fl & EMPTY_LIST) != 0 && items.length == 0;
     }
 }

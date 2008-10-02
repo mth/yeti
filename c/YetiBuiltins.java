@@ -34,7 +34,7 @@ package yeti.lang.compiler;
 import org.objectweb.asm.*;
 import java.util.*;
 
-final class Argv implements Binder, DirectBind {
+final class Argv implements Binder {
     public BindRef getRef(int line) {
         return new BindRef() {
             { type = YetiType.STRING_ARRAY; }
@@ -61,8 +61,8 @@ final class Argv implements Binder, DirectBind {
                 };
             }
 
-            public boolean flagop(int fl) {
-                return (fl & ASSIGN) != 0;
+            boolean flagop(int fl) {
+                return (fl & (ASSIGN | DIRECT_BIND)) != 0;
             }
         };
     }
@@ -352,7 +352,7 @@ final class Synchronized extends Bind2Core {
     }
 }
 
-abstract class BinOpRef extends BindRef implements DirectBind {
+abstract class BinOpRef extends BindRef {
     boolean markTail2;
     String coreFun;
 
@@ -396,6 +396,10 @@ abstract class BinOpRef extends BindRef implements DirectBind {
 
     void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
         throw new UnsupportedOperationException("binGenIf");
+    }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0;
     }
 }
 
@@ -882,7 +886,7 @@ final class Regex implements Binder {
     }
 }
 
-final class ClassOfExpr extends Code implements DirectBind {
+final class ClassOfExpr extends Code {
     String className;
 
     ClassOfExpr(JavaType what) {
@@ -901,6 +905,10 @@ final class ClassOfExpr extends Code implements DirectBind {
                 ctx.forceType("java/lang/Class");
             }
         });
+    }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0;
     }
 }
 
@@ -927,7 +935,7 @@ final class InstanceOfExpr extends Code {
     }
 }
 
-final class StrOp extends StaticRef implements DirectBind, Binder {
+final class StrOp extends StaticRef implements Binder {
     final static Code NOP_CODE = new Code() {
         void gen(Ctx ctx) {
         }
@@ -996,5 +1004,9 @@ final class StrOp extends StaticRef implements DirectBind, Binder {
 
     Code apply(final Code arg, final YetiType.Type res, final int line) {
         return new StrApply(arg, res, null, line);
+    }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0;
     }
 }
