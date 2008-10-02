@@ -33,7 +33,7 @@ package yeti.lang.compiler;
 
 import org.objectweb.asm.*;
 
-abstract class JavaExpr extends YetiCode.Code implements YetiCode {
+abstract class JavaExpr extends Code {
     Code object;
     JavaType.Method method;
     Code[] args;

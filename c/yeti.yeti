@@ -119,7 +119,7 @@ try
             compilation#write()
         fi
     elif printType then
-        YetiCode#currentCompileCtx#set(compilation);
+        CompileCtx#currentCompileCtx#set(compilation);
         for srcs do src:
             println YetiTypeVisitor#getType((), src)
         done

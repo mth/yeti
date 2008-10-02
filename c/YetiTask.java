@@ -83,8 +83,8 @@ public class YetiTask extends MatchingTask {
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
         CodeWriter writer = new ToFile(target);
-        YetiCode.CompileCtx compilation =
-            new YetiCode.CompileCtx(new YetiC(dir.getPath()), writer, preload,
+        CompileCtx compilation =
+            new CompileCtx(new YetiC(dir.getPath()), writer, preload,
                                     new ClassFinder(classPath));
         compilation.setGCJ(gcj);
         log("Compiling " + files.length + " files.");

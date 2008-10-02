@@ -722,7 +722,7 @@ class JavaType {
     }
 
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
-                                 String name, YetiCode.Code[] args,
+                                 String name, Code[] args,
                                  YetiType.Type objType) {
         name = name.intern();
         int rAss = Integer.MAX_VALUE;
@@ -812,15 +812,13 @@ class JavaType {
     }
 
     static Method resolveConstructor(YetiParser.XNode call,
-                                     YetiType.Type t,
-                                     YetiCode.Code[] args) {
+                                     YetiType.Type t, Code[] args) {
         JavaType jt = t.javaType.resolve(call);
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
     static Method resolveMethod(YetiParser.ObjectRefOp ref,
-                                YetiType.Type objType,
-                                YetiCode.Code[] args,
+                                YetiType.Type objType, Code[] args,
                                 boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot call method on");

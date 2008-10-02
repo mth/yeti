@@ -45,7 +45,7 @@ public final class YetiAnalyzer extends YetiType {
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
     static void unusedBinding(Bind bind) {
-        YetiCode.CompileCtx.current().warn(
+        CompileCtx.current().warn(
             new CompileException(bind, "Unused binding: " + bind.name));
     }
 
@@ -127,7 +127,7 @@ public final class YetiAnalyzer extends YetiType {
                 return tryCatch(x, scope, depth);
             }
             if (kind == "load") {
-                if ((YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
+                if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
                 return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
@@ -448,7 +448,7 @@ public final class YetiAnalyzer extends YetiType {
             String className = ref.right.sym();
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
-                (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
+                (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.packageName, className);
         }
         if (t == null) {
@@ -908,7 +908,7 @@ public final class YetiAnalyzer extends YetiType {
                     scope.typeDef = typeDef;
                 }
             } else if (nodes[i].kind == "import") {
-                if ((YetiCode.CompileCtx.current().flags
+                if ((CompileCtx.current().flags
                         & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
                 String name = ((XNode) nodes[i]).expr[0].sym();
@@ -1158,14 +1158,14 @@ public final class YetiAnalyzer extends YetiType {
                 t.flags |= FL_ANY_PATTERN;
                 String name = node.sym();
                 if (name == "_")
-                    return ANY_PATTERN;
+                    return CasePattern.ANY_PATTERN;
                 BindPattern binding = new BindPattern(exp, t);
                 scope = new Scope(scope, name, binding);
                 return binding;
             }
             if (node.kind == "()") {
                 patUnify(node, t, UNIT_TYPE);
-                return ANY_PATTERN;
+                return CasePattern.ANY_PATTERN;
             }
             if (node instanceof NumLit || node instanceof Str) {
                 Code c = analyze(node, scope, depth);
@@ -1188,7 +1188,7 @@ public final class YetiAnalyzer extends YetiType {
                 lt.flags |= FL_PARTIAL_PATTERN;
                 if (list.expr == null || list.expr.length == 0) {
                     patUnify(node, t, lt);
-                    return EMPTY_PATTERN;
+                    return AListPattern.EMPTY_PATTERN;
                 }
                 CasePattern[] items = new CasePattern[list.expr.length];
                 for (int i = 0; i < items.length; ++i) {

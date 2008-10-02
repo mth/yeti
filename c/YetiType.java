@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public class YetiType implements YetiParser, YetiBuiltins {
+public class YetiType implements YetiParser {
     static final int VAR  = 0;
     static final int UNIT = 1;
     static final int STR  = 2;
@@ -121,12 +121,12 @@ public class YetiType implements YetiParser, YetiBuiltins {
           "object" };
 
     static final Scope ROOT_SCOPE =
-        bindCompare("==", EQ_TYPE, COND_EQ, // equals returns 0 for false
-        bindCompare("!=", EQ_TYPE, COND_NOT, // equals returns 0 for false
-        bindCompare("<" , LG_TYPE, COND_LT,
-        bindCompare("<=", LG_TYPE, COND_LE,
-        bindCompare(">" , LG_TYPE, COND_GT,
-        bindCompare(">=", LG_TYPE, COND_GE,
+        bindCompare("==", EQ_TYPE, CompareFun.COND_EQ, // equals is 0 for false
+        bindCompare("!=", EQ_TYPE, CompareFun.COND_NOT, // equals is 0 for false
+        bindCompare("<" , LG_TYPE, CompareFun.COND_LT,
+        bindCompare("<=", LG_TYPE, CompareFun.COND_LE,
+        bindCompare(">" , LG_TYPE, CompareFun.COND_GT,
+        bindCompare(">=", LG_TYPE, CompareFun.COND_GE,
         bindPoly("_argv", STRING_ARRAY, new Argv(), 0,
         bindPoly(".", COMPOSE_TYPE, new Compose(), 0,
         bindCore("randomInt", fun(NUM_TYPE, NUM_TYPE), "RANDINT",
@@ -764,11 +764,11 @@ public class YetiType implements YetiParser, YetiBuiltins {
 
     static Type resolveFullClass(String name, Scope scope, Node checkPerm) {
         if (checkPerm != null && name.indexOf('/') >= 0 &&
-            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
         Type t = resolveClass(name, scope, false);
         if (t == null && checkPerm != null &&
-            (YetiCode.CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
         return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
     }

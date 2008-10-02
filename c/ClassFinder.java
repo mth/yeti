@@ -112,6 +112,6 @@ class ClassFinder {
     }
 
     static InputStream find(String name) {
-        return YetiCode.CompileCtx.current().classPath.findClass(name);
+        return CompileCtx.current().classPath.findClass(name);
     }
 }

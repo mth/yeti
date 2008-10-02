@@ -12,8 +12,8 @@ do argv: {
     var gcj = false,
 
     compilationOf writer =
-        new YetiCode$CompileCtx(new YetiC(()), writer, preload,
-                                new ClassFinder(classPath))#setGCJ(gcj),
+        new CompileCtx(new YetiC(()), writer, preload,
+                       new ClassFinder(classPath))#setGCJ(gcj),
 
     getTrace ex is ~java.lang.Throwable -> string =
         sw = new java.io.StringWriter();

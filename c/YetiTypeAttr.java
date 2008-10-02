@@ -375,7 +375,7 @@ class YetiTypeVisitor implements ClassVisitor {
     }
 
     static ModuleType getType(YetiParser.Node node, String name) {
-        YetiCode.CompileCtx ctx = YetiCode.CompileCtx.current();
+        CompileCtx ctx = CompileCtx.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null) {
             return t;
