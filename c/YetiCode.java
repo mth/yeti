@@ -124,11 +124,13 @@ final class CompileCtx implements Opcodes {
         }
     }
 
-    private void generateModuleFields(Map fields, Ctx ctx) {
+    private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
+            //if (ignore.containsKey(name))
+              //  continue;
             String jname = Code.mangle(name);
             String type = Code.javaType((YetiType.Type) entry.getValue());
             String descr = 'L' + type + ';';
@@ -230,7 +232,8 @@ final class CompileCtx implements Opcodes {
             ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
                                         codeTree.typeDefs, directFields));
             if (codeTree.type.type == YetiType.STRUCT) {
-                generateModuleFields(codeTree.type.finalMembers, ctx);
+                generateModuleFields(codeTree.type.finalMembers, ctx,
+                                     directFields);
             }
             ctx.visitInsn(DUP);
             ctx.visitFieldInsn(PUTSTATIC, name, "$",
@@ -239,7 +242,8 @@ final class CompileCtx implements Opcodes {
             ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
             ctx.visitInsn(ARETURN);
             types.put(name, new ModuleType(codeTree.type,
-                                           codeTree.typeDefs));
+                                           codeTree.typeDefs,
+                                           directFields));
         } else if ((flags & YetiC.CF_EVAL) != 0) {
             ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
             ctx = ctx.newMethod(ACC_PUBLIC, "apply",
@@ -1502,10 +1506,11 @@ final class Function extends CapturingClosure implements Binder {
 
         String funClass =
             argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
-        Ctx fun = ctx.newClass(ACC_STATIC | ACC_FINAL, name, funClass);
+        Ctx fun = ctx.newClass(makeConst ? ACC_PUBLIC | ACC_STATIC | ACC_FINAL
+                                    : ACC_STATIC | ACC_FINAL, name, funClass);
 
         mergeCaptures(fun);
-        fun.createInit(0, funClass);
+        fun.createInit(makeConst ? ACC_PRIVATE : 0, funClass);
 
         Ctx apply = argCount == 2
             ? fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
@@ -1608,7 +1613,7 @@ final class Function extends CapturingClosure implements Binder {
 
 final class RootClosure extends AClosure {
     Code code;
-    String[] preload;
+    LoadModule[] preload;
     String moduleName;
     boolean isModule;
     Map typeDefs;
@@ -1620,9 +1625,8 @@ final class RootClosure extends AClosure {
     void gen(Ctx ctx) {
         genClosureInit(ctx);
         for (int i = 0; i < preload.length; ++i) {
-            if (!preload[i].equals(ctx.className)) {
-                ctx.visitMethodInsn(INVOKESTATIC, preload[i],
-                    "eval", "()Ljava/lang/Object;");
+            if (preload[i] != null) {
+                preload[i].gen(ctx);
                 ctx.visitInsn(POP);
             }
         }
@@ -2119,6 +2123,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 final class LoadModule extends Code {
     String moduleName;
     ModuleType moduleType;
+    boolean checkUsed;
+    private boolean used;
 
     LoadModule(String moduleName, ModuleType type) {
         this.type = type.type;
@@ -2128,15 +2134,23 @@ final class LoadModule extends Code {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitMethodInsn(INVOKESTATIC, moduleName,
-            "eval", "()Ljava/lang/Object;");
+        if (checkUsed && !used)
+            ctx.visitInsn(ACONST_NULL);
+        else
+            ctx.visitMethodInsn(INVOKESTATIC, moduleName,
+                "eval", "()Ljava/lang/Object;");
     }
 
     Binder bindField(final String name, final YetiType.Type type) {
         return new Binder() {
             public BindRef getRef(int line) {
-                return new StaticRef(moduleName, mangle(name), type,
-                                     this, true, line);
+                String directRef = (String) moduleType.directFields.get(name);
+                if (directRef == null) {
+                    used = true;
+                    return new StaticRef(moduleName, mangle(name), type,
+                                         this, true, line);
+                }
+                return new StaticRef(directRef, "_", type, this, true, line);
             }
         };
     }

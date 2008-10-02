@@ -363,10 +363,12 @@ class YetiTypeAttr extends Attribute {
 class ModuleType {
     YetiType.Type type;
     Map typeDefs;
+    Map directFields;
 
-    ModuleType(YetiType.Type type, Map typeDefs) {
+    ModuleType(YetiType.Type type, Map typeDefs, Map directFields) {
         this.type = type;
         this.typeDefs = typeDefs;
+        this.directFields = directFields;
     }
 }
 
@@ -420,7 +422,9 @@ class YetiTypeVisitor implements ClassVisitor {
                       new Attribute[] { new YetiTypeAttr(null, null, null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         return visitor.typeAttr == null ? null
-            : new ModuleType(visitor.typeAttr.type, visitor.typeAttr.typeDefs);
+            : new ModuleType(visitor.typeAttr.type,
+                             visitor.typeAttr.typeDefs,
+                             visitor.typeAttr.directFields);
     }
 
     static ModuleType getType(YetiParser.Node node, String name) {

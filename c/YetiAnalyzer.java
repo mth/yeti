@@ -763,6 +763,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Scope explodeStruct(Node where, LoadModule m,
                                Scope scope, int depth, boolean noRoot) {
+        m.checkUsed = true;
         if (m.type.type == STRUCT) {
             Iterator j = m.type.finalMembers.entrySet().iterator();
         members:
@@ -1476,11 +1477,14 @@ public final class YetiAnalyzer extends YetiType {
             RootClosure root = new RootClosure();
             Scope scope = new Scope((flags & YetiC.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
+            LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
-                    scope = explodeStruct(null, new LoadModule(preload[i],
-                          YetiTypeVisitor.getType(null, preload[i])),
-                          scope, 0, "yeti/lang/std".equals(preload[i]));
+                    preloadModules[i] =
+                        new LoadModule(preload[i],
+                                YetiTypeVisitor.getType(null, preload[i]));
+                    scope = explodeStruct(null, preloadModules[i],
+                              scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
             }
             if (parser.isModule)
@@ -1499,7 +1503,7 @@ public final class YetiAnalyzer extends YetiType {
                         : new Scope(scope, bind.name, new EvalBind(bind));
                 }
             }
-            root.preload = preload;
+            root.preload = preloadModules;
             scope.closure = root;
             scope.packageName = JavaType.packageOfClass(className);
             root.code = analyze(n, scope, 0);
