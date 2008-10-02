@@ -2319,6 +2319,7 @@ final class MapConstructor extends Code {
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
             ctx.visitInsn(POP);
         }
+        ctx.forceType("yeti/lang/Hash");
     }
 
     boolean flagop(int fl) {
