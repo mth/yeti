@@ -1342,6 +1342,7 @@ final class Function extends CapturingClosure implements Binder {
     int argCount = 1; // Used by CaptureRef
     private boolean merged;
     private int argUsed;
+    private boolean constFun;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -1458,11 +1459,11 @@ final class Function extends CapturingClosure implements Binder {
                           null, null).visitEnd();
     }
 
-    void prepareGen(Ctx ctx) {
+    void prepareGen(Ctx ctx, boolean makeConst) {
         if (merged) {
             // 2 nested lambdas have been optimised into 1
             ((Function) body).bindName = bindName;
-            ((Function) body).prepareGen(ctx);
+            ((Function) body).prepareGen(ctx, makeConst);
             return;
         }
         if (bindName == null) {
@@ -1508,9 +1509,19 @@ final class Function extends CapturingClosure implements Binder {
         apply.visitInsn(ARETURN);
         apply.closeMethod();
 
-        ctx.visitTypeInsn(NEW, name);
-        ctx.visitInsn(DUP);
-        ctx.visitInit(name, "()V");
+        Ctx valueCtx =
+            makeConst ? fun.newMethod(ACC_STATIC, "<clinit>", "()V") : ctx;
+        valueCtx.visitTypeInsn(NEW, name);
+        valueCtx.visitInsn(DUP);
+        valueCtx.visitInit(name, "()V");
+        if (makeConst) {
+            fun.cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
+                              "_", "Lyeti/lang/Fun;", null, null).visitEnd();
+            valueCtx.visitFieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
+            valueCtx.visitInsn(RETURN);
+            valueCtx.closeMethod();
+            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+        }
     }
 
     void finishGen(Ctx ctx) {
@@ -1540,9 +1551,12 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     void gen(Ctx ctx) {
-        if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
-            ctx.constant(null, this);
-        } else if (argUsed == 0 && body.flagop(PURE) && uncapture(NEVER)) {
+        if (constFun || argUsed == 0 && body.flagop(PURE) && uncapture(NEVER)) {
+            if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
+                constFun = true;
+                ctx.constant(null, this);
+                return;
+            }
             ctx.visitTypeInsn(NEW, "yeti/lang/Const");
             ctx.visitInsn(DUP);
             try {
@@ -1553,8 +1567,10 @@ final class Function extends CapturingClosure implements Binder {
             }
             ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
             ctx.forceType("yeti/lang/Fun");
+        } else if (flagop(CONST)) {
+            prepareGen(ctx, true);
         } else {
-            prepareGen(ctx);
+            prepareGen(ctx, false);
             finishGen(ctx);
         }
     }
@@ -2164,7 +2180,7 @@ final class StructConstructor extends Code {
         for (int i = 0; i < binds.length; ++i) {
             if (binds[i] != null) {
                 if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                    ((Function) fields[i].value).prepareGen(ctx);
+                    ((Function) fields[i].value).prepareGen(ctx, false);
                     ctx.visitVarInsn(ASTORE,
                             binds[i].var = ctx.localVarCount++);
                 } else {
