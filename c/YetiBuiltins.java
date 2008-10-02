@@ -232,6 +232,7 @@ final class Negate extends StaticRef implements Binder {
                 ctx.visitLdcInsn(new Long(0));
                 ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                                     "subFrom", "(J)Lyeti/lang/Num;");
+                ctx.forceType("yeti/lang/Num");
             }
         };
     }
@@ -445,6 +446,7 @@ final class ArithOpFun extends BinOpRef {
             }
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                 method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
+            ctx.forceType("yeti/lang/Num");
             return;
         }
         arg2.gen(ctx);
@@ -458,10 +460,11 @@ final class ArithOpFun extends BinOpRef {
             }
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                                 "shl", "(I)Lyeti/lang/Num;");
-            return;
+        } else {
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                    method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
         }
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
+        ctx.forceType("yeti/lang/Num");
     }
 }
 
@@ -895,6 +898,7 @@ final class ClassOfExpr extends Code implements DirectBind {
                 ctx.visitLdcInsn(className);
                 ctx.visitMethodInsn(INVOKESTATIC, "java/lang/Class",
                     "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+                ctx.forceType("java/lang/Class");
             }
         });
     }
@@ -970,7 +974,11 @@ final class StrOp extends StaticRef implements DirectBind, Binder {
             ctx.visitLine(line);
             ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
                                 method, sig);
-            JavaExpr.convertValue(ctx, argTypes[argTypes.length - 1]);
+            if (type.deref().type == YetiType.STR) {
+                ctx.forceType("java/lang/String;");
+            } else {
+                JavaExpr.convertValue(ctx, argTypes[argTypes.length - 1]);
+            }
         }
     }
 

@@ -222,6 +222,9 @@ abstract class JavaExpr extends Code {
         ctx.visitLine(line);
         ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
                             method.name, method.descr());
+        JavaType jt = method.returnType.javaType;
+        if (jt != null && jt.description.charAt(0) == 'L')
+            ctx.forceType(jt.className());
     }
 
     static void convertedArg(Ctx ctx, Code arg, YetiType.Type argType,
@@ -338,6 +341,7 @@ abstract class JavaExpr extends Code {
         } else if (descr == "C") {
             ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                                 "valueOf", "(C)Ljava/lang/String;");
+            ctx.forceType("java/lang/String");
         }
     }
 }

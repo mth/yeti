@@ -412,11 +412,6 @@ final class Ctx implements Opcodes {
                                String name, String desc) {
         visitInsn(-1);
         m.visitMethodInsn(opcode, owner, name, desc);
-        int p = desc.lastIndexOf(')') + 1;
-        if (desc.charAt(p) == 'L') {
-            lastInsn = -2;
-            lastType = desc.substring(p + 1, desc.length() - 1);
-        }
     }
 
     void visitApply(Code arg, int line) {
@@ -809,6 +804,7 @@ final class ConcatStrings extends Code {
             if (param[0].type.deref().type != YetiType.STR) {
                 ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
                     "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
+                ctx.forceType("java/lang/String");
             }
             return;
         }
@@ -826,6 +822,7 @@ final class ConcatStrings extends Code {
         }
         ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
             "concat", "([Ljava/lang/String;)Ljava/lang/String;");
+        ctx.forceType("java/lang/String");
     }
 }
 
@@ -2285,9 +2282,9 @@ final class ListConstructor extends Code {
             } else {
                 ctx.visitInit("yeti/lang/LList",
                               "(Ljava/lang/Object;Lyeti/lang/AList;)V");
-                ctx.forceType("yeti/lang/AList");
             }
         }
+        ctx.forceType("yeti/lang/AList");
     }
 
     boolean flagop(int fl) {
