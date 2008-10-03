@@ -2134,7 +2134,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private void genBind(Ctx ctx) {
         javaType = javaType(st.type);
         javaDescr = 'L' + javaType + ';';
-        if (!var && st.prepareConst(ctx)) {
+        if (!var && st.prepareConst(ctx) && evalId == -1) {
             directBind = true;
             return;
         }
