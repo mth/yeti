@@ -625,6 +625,10 @@ abstract class BindRef extends Code {
     BindRef unshare() {
         return this;
     }
+
+    Code unref() {
+        return null;
+    }
 }
 
 final class BindWrapper extends BindRef {
@@ -1583,8 +1587,9 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     boolean flagop(int fl) {
-        return (fl & (PURE | CONST)) != 0 && (shared || captures == null &&
-                (!merged || ((Function) body).captures == null));
+        if (merged)
+            return ((Function) body).flagop(fl);
+        return (fl & (PURE | CONST)) != 0 && (shared || captures == null);
     }
 
     boolean prepareConst(Ctx ctx) {
@@ -2066,7 +2071,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                 boolean flagop(int fl) {
                     if ((fl & ASSIGN) != 0)
                         return var ? assigned = true : false;
-                    if ((fl & DIRECT_BIND) != 0)
+                    if ((fl & (DIRECT_BIND | CONST)) != 0)
                         return directBind;
                     return (fl & PURE) != 0 && !var;
                 }
@@ -2074,6 +2079,10 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                 CaptureWrapper capture() {
                     captured = true;
                     return var ? BindExpr.this : null;
+                }
+
+                Code unref() {
+                    return directBind ? st : null;
                 }
             };
             res.binder = this;
@@ -2240,6 +2249,10 @@ final class StructConstructor extends Code {
             return false;
         }
 
+        boolean prepareConst(Ctx ctx) {
+            return !mutable && value.prepareConst(ctx);
+        }
+
         void gen(Ctx ctx) {
             if (direct)
                 value.gen(ctx);
@@ -2289,12 +2302,13 @@ final class StructConstructor extends Code {
     Map getDirect() {
         Map r = new HashMap();
         for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].property || binds[i] != null ||
-                !(fields[i].value instanceof Function) ||
-                !fields[i].value.flagop(CONST)) {
+            if (fields[i].property || binds[i] != null)
                 continue;
-            }
-            r.put(fields[i].name, ((Function) fields[i].value).name);
+            Code v = fields[i].value;
+            while (v instanceof BindRef)
+                v = ((BindRef) v).unref();
+            if (v instanceof Function && v.flagop(CONST))
+                r.put(fields[i].name, ((Function) v).name);
         }
         return r;
     }
@@ -2307,7 +2321,7 @@ final class StructConstructor extends Code {
                     binds[i] = null;
                     continue;
                 }
-                if (!binds[i].mutable && binds[i].prepareConst(ctx)) {
+                if (binds[i].prepareConst(ctx)) {
                     binds[i].direct = true;
                     binds[i] = null;
                     continue;
