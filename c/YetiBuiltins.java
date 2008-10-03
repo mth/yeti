@@ -90,12 +90,6 @@ final class BuiltIn implements Binder {
         case 15:
             r = new NotOp(line);
             break;
-        case 16:
-            r = new BoolOpFun(false);
-            break;
-        case 17:
-            r = new BoolOpFun(true);
-            break;
         case 18:
             r = new BooleanConstant(false);
             break;
@@ -702,14 +696,19 @@ final class NotOp extends StaticRef {
     }
 }
 
-final class BoolOpFun extends BoolBinOp {
+final class BoolOpFun extends BoolBinOp implements Binder {
     boolean orOp;
 
     BoolOpFun(boolean orOp) {
         this.type = YetiType.BOOLOP_TYPE;
         this.orOp = orOp;
+        this.binder = this;
         markTail2 = true;
         coreFun = orOp ? "or" : "and";
+    }
+
+    public BindRef getRef(int line) {
+        return this;
     }
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
