@@ -146,21 +146,6 @@ final class Argv extends BindRef {
     }
 }
 
-final class CoreFun implements Binder {
-    private YetiType.Type type;
-    private String name;
-
-    CoreFun(YetiType.Type type, String field) {
-        this.type = type;
-        name = field;
-    }
-
-    public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/Core", name,
-                             type, this, true, line);
-    }
-}
-
 class IsNullPtr extends StaticRef {
     private String libName;
 
