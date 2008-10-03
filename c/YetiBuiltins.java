@@ -388,7 +388,7 @@ abstract class BinOpRef extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/std" + coreFun,
+        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/std$" + coreFun,
                            "_", "Lyeti/lang/Fun;");
     }
 
@@ -478,7 +478,7 @@ final class ArithOp implements Binder {
     private YetiType.Type type;
 
     ArithOp(String op, String method, YetiType.Type type) {
-        fun = Code.mangle(op);
+        fun = op == "+" ? "plus" : Code.mangle(op);
         this.method = method;
         this.type = type;
     }
