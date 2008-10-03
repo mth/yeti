@@ -1497,8 +1497,10 @@ final class Function extends CapturingClosure implements Binder {
     void prepareGen(Ctx ctx, boolean makeConst) {
         if (merged) {
             // 2 nested lambdas have been optimised into 1
-            ((Function) body).bindName = bindName;
-            ((Function) body).prepareGen(ctx, makeConst);
+            Function inner = (Function) body;
+            inner.bindName = bindName;
+            inner.prepareGen(ctx, makeConst);
+            name = inner.name;
             return;
         }
         if (bindName == null) {
@@ -1581,16 +1583,26 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     boolean flagop(int fl) {
-        return (fl & (PURE | CONST)) != 0 && captures == null &&
-                (!merged || ((Function) body).captures == null);
+        return (fl & (PURE | CONST)) != 0 && (shared || captures == null &&
+                (!merged || ((Function) body).captures == null));
     }
 
     boolean prepareConst(Ctx ctx) {
-        if (shared || constFun || argUsed == 0 && body.flagop(PURE))
+        if (shared)
+            return true;
+        if (merged) {
+            Function inner = (Function) body;
+            inner.bindName = bindName;
+            if (inner.prepareConst(ctx)) {
+                name = inner.name;
+                return true;
+            }
+            return false;
+        }
+        if (constFun || argUsed == 0 && body.flagop(PURE))
             return flagop(CONST);
-        if (merged)
-            return ((Function) body).prepareConst(ctx);
         Capture prev = null;
+        boolean isConst = true;
         for (Capture c = captures; c != null; c = c.next)
             if (c.ref.flagop(DIRECT_BIND)) {
                 c.uncaptured = true;
@@ -1599,13 +1611,15 @@ final class Function extends CapturingClosure implements Binder {
                 else
                     prev.next = c.next;
             } else {
+                if (!c.uncaptured)
+                    isConst = false;
                 prev = c;
             }
-        if (captures != null)
-            return false;
-        shared = true;
-        prepareGen(ctx, true);
-        return true;
+        if (isConst) {
+            shared = true;
+            prepareGen(ctx, true);
+        }
+        return isConst;
     }
 
     void gen(Ctx ctx) {
@@ -1613,7 +1627,8 @@ final class Function extends CapturingClosure implements Binder {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
             return;
         }
-        if (constFun || argUsed == 0 && body.flagop(PURE) && uncapture(NEVER)) {
+        if (constFun || argUsed == 0 && !merged &&
+                body.flagop(PURE) && uncapture(NEVER)) {
             if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
                 constFun = true;
                 ctx.constant(null, this);
@@ -1629,9 +1644,7 @@ final class Function extends CapturingClosure implements Binder {
             }
             ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
             ctx.forceType("yeti/lang/Fun");
-        } else if (flagop(CONST)) {
-            shared = true;
-            prepareGen(ctx, true);
+        } else if (prepareConst(ctx)) {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         } else {
             prepareGen(ctx, false);
@@ -2201,8 +2214,10 @@ final class StructConstructor extends Code {
         boolean mutable;
         boolean used;
         boolean fun;
+        boolean direct;
         int var;
         int index;
+        Code value;
 
         public BindRef getRef(int line) {
             used = true;
@@ -2214,11 +2229,22 @@ final class StructConstructor extends Code {
         }
 
         public boolean flagop(int fl) {
-            return (fl & ASSIGN) != 0 && mutable;
+            if ((fl & ASSIGN) != 0)
+                return mutable;
+            if ((fl & PURE) != 0)
+                return !mutable;
+            if ((fl & DIRECT_BIND) != 0)
+                return direct;
+            if ((fl & CONST) != 0)
+                return !mutable && value.flagop(CONST);
+            return false;
         }
 
         void gen(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, var);
+            if (direct)
+                value.gen(ctx);
+            else
+                ctx.visitVarInsn(ALOAD, var);
         }
 
         public void genPreGet(Ctx ctx) {
@@ -2255,6 +2281,7 @@ final class StructConstructor extends Code {
         bind.binder = bind;
         bind.mutable = mutable;
         bind.fun = code instanceof Function;
+        bind.value = code;
         binds[num] = bind;
         return bind;
     }
@@ -2276,10 +2303,18 @@ final class StructConstructor extends Code {
         int arrayVar = -1;
         for (int i = 0; i < binds.length; ++i) {
             if (binds[i] != null) {
+                if (!binds[i].used) {
+                    binds[i] = null;
+                    continue;
+                }
+                if (!binds[i].mutable && binds[i].prepareConst(ctx)) {
+                    binds[i].direct = true;
+                    binds[i] = null;
+                    continue;
+                }
                 Function f;
-                if (binds[i].used && !binds[i].mutable && binds[i].fun &&
-                    ((f = (Function) fields[i].value) != null)) { //.flagop(CONST))) {
-                    f.prepareGen(ctx, false);
+                if (binds[i].used && !binds[i].mutable && binds[i].fun) {
+                    ((Function) fields[i].value).prepareGen(ctx, false);
                     ctx.visitVarInsn(ASTORE,
                             binds[i].var = ctx.localVarCount++);
                 } else {
