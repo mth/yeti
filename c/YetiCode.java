@@ -556,6 +556,12 @@ abstract class Code implements Opcodes {
         return false;
     }
 
+    // Called by bind for direct bindings
+    // bindings can use this for "preparation"
+    boolean prepareConst(Ctx ctx) {
+        return flagop(CONST);
+    }
+
     static final String javaType(YetiType.Type t) {
         t = t.deref();
         switch (t.type) {
@@ -1550,7 +1556,6 @@ final class Function extends CapturingClosure implements Binder {
             valueCtx.visitFieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
             valueCtx.visitInsn(RETURN);
             valueCtx.closeMethod();
-            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         }
     }
 
@@ -1580,6 +1585,29 @@ final class Function extends CapturingClosure implements Binder {
                 (!merged || ((Function) body).captures == null);
     }
 
+    boolean prepareConst(Ctx ctx) {
+        if (shared || constFun || argUsed == 0 && body.flagop(PURE))
+            return flagop(CONST);
+        if (merged)
+            return ((Function) body).prepareConst(ctx);
+        Capture prev = null;
+        for (Capture c = captures; c != null; c = c.next)
+            if (c.ref.flagop(DIRECT_BIND)) {
+                c.uncaptured = true;
+                if (prev == null)
+                    captures = c.next;
+                else
+                    prev.next = c.next;
+            } else {
+                prev = c;
+            }
+        if (captures != null)
+            return false;
+        shared = true;
+        prepareGen(ctx, true);
+        return true;
+    }
+
     void gen(Ctx ctx) {
         if (shared) {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
@@ -1604,6 +1632,7 @@ final class Function extends CapturingClosure implements Binder {
         } else if (flagop(CONST)) {
             shared = true;
             prepareGen(ctx, true);
+            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         } else {
             prepareGen(ctx, false);
             finishGen(ctx);
@@ -2088,7 +2117,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private void genBind(Ctx ctx) {
         javaType = javaType(st.type);
         javaDescr = 'L' + javaType + ';';
-        if (!var && st.flagop(CONST)) {
+        if (!var && st.prepareConst(ctx)) {
             directBind = true;
             return;
         }
