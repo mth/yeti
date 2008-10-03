@@ -799,17 +799,12 @@ final class UnitConstant extends Code {
     }
 }
 
-final class BooleanConstant extends BindRef implements Binder {
+final class BooleanConstant extends BindRef {
     boolean val;
 
     BooleanConstant(boolean val) {
-        binder = this;
         type = YetiType.BOOL_TYPE;
         this.val = val;
-    }
-
-    public BindRef getRef(int line) {
-        return this;
     }
 
     boolean flagop(int fl) {

@@ -34,37 +34,115 @@ package yeti.lang.compiler;
 import org.objectweb.asm.*;
 import java.util.*;
 
-final class Argv implements Binder {
-    public BindRef getRef(int line) {
-        return new BindRef() {
-            { type = YetiType.STRING_ARRAY; }
+final class BuiltIn implements Binder {
+    int op;
 
+    public BuiltIn(int op) {
+        this.op = op;
+    }
+
+    public BindRef getRef(int line) {
+        BindRef r = null;
+        switch (op) {
+        case 1:
+            r = new Argv();
+            r.type = YetiType.STRING_ARRAY;
+            break;
+        case 2:
+            r = new InOpFun(line);
+            break;
+        case 3:
+            r = new Cons(line);
+            break;
+        case 4:
+            r = new LazyCons(line);
+            break;
+        case 5:
+            r = new For(line);
+            break;
+        case 6:
+            r = new Compose(line);
+            break;
+        case 7:
+            r = new Synchronized(line);
+            break;
+        case 8:
+            r = new IsNullPtr(YetiType.A_TO_BOOL, "nullptr?", line);
+            break;
+        case 9:
+            r = new IsDefined(line);
+            break;
+        case 10:
+            r = new IsEmpty(line);
+            break;
+        case 11:
+            r = new Head(line);
+            break;
+        case 12:
+            r = new Tail(line);
+            break;
+        case 13:
+            r = new MatchOpFun(line, true);
+            break;
+        case 14:
+            r = new MatchOpFun(line, false);
+            break;
+        case 15:
+            r = new NotOp(line);
+            break;
+        case 16:
+            r = new BoolOpFun(false);
+            break;
+        case 17:
+            r = new BoolOpFun(true);
+            break;
+        case 18:
+            r = new BooleanConstant(false);
+            break;
+        case 19:
+            r = new BooleanConstant(true);
+            break;
+        case 20:
+            r = new Negate();
+            break;
+        case 21:
+            r = new Same();
+            break;
+        case 22:
+            r = new StaticRef("yeti/lang/Core", "RANDINT",
+                              YetiType.NUM_TO_NUM, this, true, line);
+            break;
+        }
+        r.binder = this;
+        return r;
+    }
+}
+
+final class Argv extends BindRef {
+    void gen(Ctx ctx) {
+        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                             "ARGV", "Ljava/lang/ThreadLocal;");
+        ctx.visitMethodInsn(INVOKEVIRTUAL,
+            "java/lang/ThreadLocal",
+            "get", "()Ljava/lang/Object;");
+    }
+
+    Code assign(final Code value) {
+        return new Code() {
             void gen(Ctx ctx) {
                 ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
-                                     "ARGV", "Ljava/lang/ThreadLocal;");
+                             "ARGV", "Ljava/lang/ThreadLocal;");
+                value.gen(ctx);
                 ctx.visitMethodInsn(INVOKEVIRTUAL,
                     "java/lang/ThreadLocal",
-                    "get", "()Ljava/lang/Object;");
-            }
-
-            Code assign(final Code value) {
-                return new Code() {
-                    void gen(Ctx ctx) {
-                        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
-                                     "ARGV", "Ljava/lang/ThreadLocal;");
-                        value.gen(ctx);
-                        ctx.visitMethodInsn(INVOKEVIRTUAL,
-                            "java/lang/ThreadLocal",
-                            "get", "(Ljava/lang/Object;)V");
-                        ctx.visitInsn(ACONST_NULL);
-                    }
-                };
-            }
-
-            boolean flagop(int fl) {
-                return (fl & (ASSIGN | DIRECT_BIND)) != 0;
+                    "get", "(Ljava/lang/Object;)V");
+                ctx.visitInsn(ACONST_NULL);
             }
         };
+    }
+
+    boolean flagop(int fl) {
+        return (fl & (ASSIGN | DIRECT_BIND)) != 0;
     }
 }
 
@@ -83,31 +161,24 @@ final class CoreFun implements Binder {
     }
 }
 
-class IsNullPtr implements Binder, Opcodes {
+class IsNullPtr extends StaticRef {
     private String libName;
-    private YetiType.Type type;
 
-    IsNullPtr(YetiType.Type type, String fun) {
-        this.type = type;
-        libName = fun;
+    IsNullPtr(YetiType.Type type, String fun, int line) {
+        super("yeti/lang/std$" + fun, "_", type, null, true, line);
     }
 
-    public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std$" + libName, "_",
-                             type, this, true, line) {
-            Code apply(final Code arg, final YetiType.Type res,
-                       final int line) {
-                return new Code() {
-                    { type = res; }
+    Code apply(final Code arg, final YetiType.Type res,
+               final int line) {
+        return new Code() {
+            { type = res; }
 
-                    void gen(Ctx ctx) {
-                        IsNullPtr.this.gen(ctx, arg, line);
-                    }
+            void gen(Ctx ctx) {
+                IsNullPtr.this.gen(ctx, arg, line);
+            }
 
-                    void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                        IsNullPtr.this.genIf(ctx, arg, to, ifTrue, line);
-                    }
-                };
+            void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                IsNullPtr.this.genIf(ctx, arg, to, ifTrue, line);
             }
         };
     }
@@ -125,8 +196,8 @@ class IsNullPtr implements Binder, Opcodes {
 }
 
 final class IsDefined extends IsNullPtr {
-    IsDefined() {
-        super(YetiType.A_TO_BOOL, "defined?");
+    IsDefined(int line) {
+        super(YetiType.A_TO_BOOL, "defined?", line);
     }
 
     void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
@@ -148,8 +219,8 @@ final class IsDefined extends IsNullPtr {
 }
 
 final class IsEmpty extends IsNullPtr {
-    IsEmpty() {
-        super(YetiType.MAP_TO_BOOL, "empty$q");
+    IsEmpty(int line) {
+        super(YetiType.MAP_TO_BOOL, "empty$q", line);
     }
 
     void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
@@ -174,8 +245,8 @@ final class IsEmpty extends IsNullPtr {
 }
 
 final class Head extends IsNullPtr {
-    Head() {
-        super(YetiType.LIST_TO_A, "head");
+    Head(int line) {
+        super(YetiType.LIST_TO_A, "head", line);
     }
 
     void gen(Ctx ctx, Code arg, int line) {
@@ -188,8 +259,8 @@ final class Head extends IsNullPtr {
 }
 
 final class Tail extends IsNullPtr {
-    Tail() {
-        super(YetiType.LIST_TO_LIST, "tail");
+    Tail(int line) {
+        super(YetiType.LIST_TO_LIST, "tail", line);
     }
 
     void gen(Ctx ctx, Code arg, int line) {
@@ -206,15 +277,10 @@ final class Tail extends IsNullPtr {
     }
 }
 
-final class Negate extends StaticRef implements Binder {
+final class Negate extends StaticRef {
     Negate() {
         super("yeti/lang/std$negate", "_", YetiType.NUM_TO_NUM,
               null, false, 0);
-        binder = this;
-    }
-
-    public BindRef getRef(int line) {
-        return this;
     }
 
     Code apply(final Code arg1, final YetiType.Type res1, final int line) {
@@ -238,29 +304,20 @@ final class Negate extends StaticRef implements Binder {
     }
 }
 
-abstract class Bind2Core implements Binder, Opcodes {
-    private String coreFun;
-    YetiType.Type type;
-
-    Bind2Core(String fun, YetiType.Type type) {
-        coreFun = fun;
-        this.type = type;
+abstract class Core2 extends StaticRef {
+    Core2(String coreFun, YetiType.Type type, int line) {
+        super("yeti/lang/std$" + coreFun, "_", type, null, true, line);
     }
 
-    public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std$" + coreFun, "_",
-                             type, this, true, line) {
-            Code apply(final Code arg1, YetiType.Type res, int line1) {
-                return new Apply(res, this, arg1, line1) {
-                    Code apply(final Code arg2, final YetiType.Type res,
-                               final int line2) {
-                        return new Code() {
-                            { type = res; }
+    Code apply(final Code arg1, YetiType.Type res, int line1) {
+        return new Apply(res, this, arg1, line1) {
+            Code apply(final Code arg2, final YetiType.Type res,
+                       final int line2) {
+                return new Code() {
+                    { type = res; }
 
-                            void gen(Ctx ctx) {
-                                genApply2(ctx, arg1, arg2, line2);
-                            }
-                        };
+                    void gen(Ctx ctx) {
+                        genApply2(ctx, arg1, arg2, line2);
                     }
                 };
             }
@@ -270,9 +327,9 @@ abstract class Bind2Core implements Binder, Opcodes {
     abstract void genApply2(Ctx ctx, Code arg1, Code arg2, int line);
 }
 
-final class For extends Bind2Core {
-    For() {
-        super("for", YetiType.FOR_TYPE);
+final class For extends Core2 {
+    For(int line) {
+        super("for", YetiType.FOR_TYPE, line);
     }
 
     void genApply2(Ctx ctx, Code list, Code fun, int line) {
@@ -294,9 +351,9 @@ final class For extends Bind2Core {
     }
 }
 
-final class Compose extends Bind2Core {
-    Compose() {
-        super("$d", YetiType.COMPOSE_TYPE);
+final class Compose extends Core2 {
+    Compose(int line) {
+        super("$d", YetiType.COMPOSE_TYPE, line);
     }
 
     void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {
@@ -310,9 +367,9 @@ final class Compose extends Bind2Core {
     }
 }
 
-final class Synchronized extends Bind2Core {
-    Synchronized() {
-        super("synchronized", YetiType.SYNCHRONIZED_TYPE);
+final class Synchronized extends Core2 {
+    Synchronized(int line) {
+        super("synchronized", YetiType.SYNCHRONIZED_TYPE, line);
     }
 
     void genApply2(Ctx ctx, Code monitor, Code block, int line) {
@@ -600,29 +657,30 @@ final class Compare implements Binder {
 }
 
 
-final class Same implements Binder {
-    public BindRef getRef(int line) {
-        return new BoolBinOp() {
-            {
-                type = YetiType.EQ_TYPE;
-                binder = Same.this;
-                polymorph = true;
-                coreFun = "same$q";
-            }
+final class Same extends BoolBinOp {
+    Same() {
+        type = YetiType.EQ_TYPE;
+        polymorph = true;
+        coreFun = "same$q";
+    }
 
-            void binGenIf(Ctx ctx, Code arg1, Code arg2,
-                          Label to, boolean ifTrue) {
-                arg1.gen(ctx);
-                arg2.gen(ctx);
-                ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
-            }
-        };
+    void binGenIf(Ctx ctx, Code arg1, Code arg2,
+                  Label to, boolean ifTrue) {
+        arg1.gen(ctx);
+        arg2.gen(ctx);
+        ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
     }
 }
 
-
 final class InOpFun extends BoolBinOp {
     int line;
+
+    InOpFun(int line) {
+        type = YetiType.IN_TYPE;
+        this.line = line;
+        polymorph = true;
+        coreFun = "in";
+    }
 
     void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
         arg2.gen(ctx);
@@ -636,54 +694,37 @@ final class InOpFun extends BoolBinOp {
     }
 }
 
-final class InOp implements Binder {
-    public BindRef getRef(int line) {
-        InOpFun f = new InOpFun();
-        f.type = YetiType.IN_TYPE;
-        f.line = line;
-        f.polymorph = true;
-        f.coreFun = "in";
-        f.binder = this;
-        return f;
+final class NotOp extends StaticRef {
+    NotOp(int line) {
+        super("yeti/lang/std$not", "_",
+              YetiType.BOOL_TO_BOOL, null, false, line);
     }
-}
 
-final class NotOp implements Binder {
-    public BindRef getRef(int line) {
-        return new StaticRef("yeti/lang/std$not", "_",
-                             YetiType.BOOL_TO_BOOL, this, false, line) {
-            Code apply(final Code arg, YetiType.Type res, int line) {
-                return new Code() {
-                    { type = YetiType.BOOL_TYPE; }
+    Code apply(final Code arg, YetiType.Type res, int line) {
+        return new Code() {
+            { type = YetiType.BOOL_TYPE; }
 
-                    void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                        arg.genIf(ctx, to, !ifTrue);
-                    }
+            void genIf(Ctx ctx, Label to, boolean ifTrue) {
+                arg.genIf(ctx, to, !ifTrue);
+            }
 
-                    void gen(Ctx ctx) {
-                        Label label = new Label();
-                        arg.genIf(ctx, label, true);
-                        ctx.genBoolean(label);
-                    }
-                };
+            void gen(Ctx ctx) {
+                Label label = new Label();
+                arg.genIf(ctx, label, true);
+                ctx.genBoolean(label);
             }
         };
     }
 }
 
-final class BoolOpFun extends BoolBinOp implements Binder {
+final class BoolOpFun extends BoolBinOp {
     boolean orOp;
 
     BoolOpFun(boolean orOp) {
         this.type = YetiType.BOOLOP_TYPE;
         this.orOp = orOp;
-        binder = this;
         markTail2 = true;
         coreFun = orOp ? "or" : "and";
-    }
-
-    public BindRef getRef(int line) {
-        return this;
     }
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
@@ -714,60 +755,56 @@ final class BoolOpFun extends BoolBinOp implements Binder {
     }
 }
 
-final class Cons implements Binder {
-    public BindRef getRef(final int line) {
-        return new BinOpRef() {
-            {
-                type = YetiType.CONS_TYPE;
-                binder = Cons.this;
-                coreFun = "$c$c";
-                polymorph = true;
-            }
+final class Cons extends BinOpRef {
+    private int line;
 
-            void binGen(Ctx ctx, Code arg1, Code arg2) {
-                String lclass = "yeti/lang/LList";
-                if (arg2.type.deref().param[1].deref()
-                        != YetiType.NO_TYPE) {
-                    lclass = "yeti/lang/LMList";
-                }
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(NEW, lclass);
-                ctx.visitInsn(DUP);
-                arg1.gen(ctx);
-                arg2.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-                ctx.visitInit(lclass,
-                              "(Ljava/lang/Object;Lyeti/lang/AList;)V");
-                ctx.forceType("yeti/lang/AList");
-            }
-        };
+    Cons(int line) {
+        type = YetiType.CONS_TYPE;
+        coreFun = "$c$c";
+        polymorph = true;
+        this.line = line;
+    }
+
+    void binGen(Ctx ctx, Code arg1, Code arg2) {
+        String lclass = "yeti/lang/LList";
+        if (arg2.type.deref().param[1].deref()
+                != YetiType.NO_TYPE) {
+            lclass = "yeti/lang/LMList";
+        }
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(NEW, lclass);
+        ctx.visitInsn(DUP);
+        arg1.gen(ctx);
+        arg2.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+        ctx.visitInit(lclass,
+                      "(Ljava/lang/Object;Lyeti/lang/AList;)V");
+        ctx.forceType("yeti/lang/AList");
     }
 }
 
-final class LazyCons implements Binder {
-    public BindRef getRef(final int line) {
-        return new BinOpRef() {
-            {
-                type = YetiType.LAZYCONS_TYPE;
-                binder = LazyCons.this;
-                coreFun = "$c$d";
-                polymorph = true;
-            }
+final class LazyCons extends BinOpRef {
+    private int line;
 
-            void binGen(Ctx ctx, Code arg1, Code arg2) {
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(NEW, "yeti/lang/LazyList");
-                ctx.visitInsn(DUP);
-                arg1.gen(ctx);
-                arg2.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-                ctx.visitInit("yeti/lang/LazyList",
-                              "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
-                ctx.forceType("yeti/lang/AList");
-            }
-        };
+    LazyCons(int line) {
+        type = YetiType.LAZYCONS_TYPE;
+        coreFun = "$c$d";
+        polymorph = true;
+        this.line = line;
+    }
+
+    void binGen(Ctx ctx, Code arg1, Code arg2) {
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(NEW, "yeti/lang/LazyList");
+        ctx.visitInsn(DUP);
+        arg1.gen(ctx);
+        arg2.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        ctx.visitInit("yeti/lang/LazyList",
+                      "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
+        ctx.forceType("yeti/lang/AList");
     }
 }
 
@@ -821,18 +858,6 @@ final class MatchOpFun extends BinOpRef {
         ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
                 "TRUE", "Ljava/lang/Boolean;");
         ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
-    }
-}
-
-final class MatchOp implements Binder {
-    boolean yes;
-
-    MatchOp(boolean yes) {
-        this.yes = yes;
-    }
-
-    public BindRef getRef(int line) {
-        return new MatchOpFun(line, yes);
     }
 }
 
