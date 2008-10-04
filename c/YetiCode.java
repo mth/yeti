@@ -220,14 +220,17 @@ final class CompileCtx implements Opcodes {
                                  "Ljava/lang/Object;");
             ctx.visitInsn(ARETURN);
             ctx.visitLabel(eval);
-            codeTree.gen(ctx);
             Code codeTail = codeTree.code;
             while (codeTail instanceof SeqExpr) {
                 codeTail = ((SeqExpr) codeTail).result;
             }
             Map directFields = java.util.Collections.EMPTY_MAP;
             if (codeTail instanceof StructConstructor) {
+                ((StructConstructor) codeTail).publish();
+                codeTree.gen(ctx);
                 directFields = ((StructConstructor) codeTail).getDirect();
+            } else {
+                codeTree.gen(ctx);
             }
             ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
                                         codeTree.typeDefs, directFields));
@@ -627,7 +630,7 @@ abstract class BindRef extends Code {
         return this;
     }
 
-    Code unref() {
+    Code unref(boolean force) {
         return null;
     }
 }
@@ -1379,6 +1382,7 @@ final class Function extends CapturingClosure implements Binder {
     private int argUsed;
     private boolean constFun;
     private boolean shared;
+    boolean publish;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -1495,12 +1499,12 @@ final class Function extends CapturingClosure implements Binder {
                           null, null).visitEnd();
     }
 
-    void prepareGen(Ctx ctx, boolean makeConst) {
+    void prepareGen(Ctx ctx) {
         if (merged) {
             // 2 nested lambdas have been optimised into 1
             Function inner = (Function) body;
             inner.bindName = bindName;
-            inner.prepareGen(ctx, makeConst);
+            inner.prepareGen(ctx);
             name = inner.name;
             return;
         }
@@ -1515,10 +1519,10 @@ final class Function extends CapturingClosure implements Binder {
 
         String funClass =
             argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
-        Ctx fun = ctx.newClass(makeConst ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
+        Ctx fun = ctx.newClass(publish ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
                                     : ACC_SUPER + ACC_FINAL, name, funClass);
 
-        if (makeConst) {
+        if (publish) {
             String fn = name.substring(ctx.className.length() + 1);
             ctx.cw.visitInnerClass(name, ctx.className, fn,
                                    ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
@@ -1526,7 +1530,7 @@ final class Function extends CapturingClosure implements Binder {
                                    ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
         }
         mergeCaptures(fun);
-        fun.createInit(makeConst ? ACC_PRIVATE : 0, funClass);
+        fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 
         Ctx apply = argCount == 2
             ? fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
@@ -1556,11 +1560,11 @@ final class Function extends CapturingClosure implements Binder {
         apply.closeMethod();
 
         Ctx valueCtx =
-            makeConst ? fun.newMethod(ACC_STATIC, "<clinit>", "()V") : ctx;
+            shared ? fun.newMethod(ACC_STATIC, "<clinit>", "()V") : ctx;
         valueCtx.visitTypeInsn(NEW, name);
         valueCtx.visitInsn(DUP);
         valueCtx.visitInit(name, "()V");
-        if (makeConst) {
+        if (shared) {
             fun.cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
                               "_", "Lyeti/lang/Fun;", null, null).visitEnd();
             valueCtx.visitFieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
@@ -1602,6 +1606,7 @@ final class Function extends CapturingClosure implements Binder {
         if (merged) {
             Function inner = (Function) body;
             inner.bindName = bindName;
+            inner.publish = publish;
             if (inner.prepareConst(ctx)) {
                 name = inner.name;
                 return true;
@@ -1626,7 +1631,7 @@ final class Function extends CapturingClosure implements Binder {
             }
         if (isConst) {
             shared = true;
-            prepareGen(ctx, true);
+            prepareGen(ctx);
         }
         return isConst;
     }
@@ -1656,7 +1661,7 @@ final class Function extends CapturingClosure implements Binder {
         } else if (prepareConst(ctx)) {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         } else {
-            prepareGen(ctx, false);
+            prepareGen(ctx);
             finishGen(ctx);
         }
     }
@@ -2085,8 +2090,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                     return var ? BindExpr.this : null;
                 }
 
-                Code unref() {
-                    return directBind ? st : null;
+                Code unref(boolean force) {
+                    return force || directBind ? st : null;
                 }
             };
             res.binder = this;
@@ -2303,6 +2308,16 @@ final class StructConstructor extends Code {
         return bind;
     }
 
+    void publish() {
+        for (int i = 0; i < fields.length; ++i) {
+            Code v = fields[i].value;
+            while (v instanceof BindRef)
+                v = ((BindRef) v).unref(true);
+            if (v instanceof Function)
+                ((Function) v).publish = true;
+        }
+    }
+
     Map getDirect() {
         Map r = new HashMap();
         for (int i = 0; i < fields.length; ++i) {
@@ -2310,7 +2325,7 @@ final class StructConstructor extends Code {
                 continue;
             Code v = fields[i].value;
             while (v instanceof BindRef)
-                v = ((BindRef) v).unref();
+                v = ((BindRef) v).unref(false);
             if (v instanceof Function && v.flagop(CONST))
                 r.put(fields[i].name, ((Function) v).name);
         }
@@ -2332,7 +2347,7 @@ final class StructConstructor extends Code {
                 }
                 Function f;
                 if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                    ((Function) fields[i].value).prepareGen(ctx, false);
+                    ((Function) fields[i].value).prepareGen(ctx);
                     ctx.visitVarInsn(ASTORE,
                             binds[i].var = ctx.localVarCount++);
                 } else {
