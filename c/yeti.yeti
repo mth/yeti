@@ -40,12 +40,12 @@ startRepl () =
 help () =
    (println "yeti -flags... files\n\n\
       "  -h               Print this help\n\
-      "  -C               Compile to classes\n\
       "  -e expr          Evaluate expr and print result\n\
       "  -d directory     Store generated files in the given directory\n\
       "                   (implies compile to classes)\n\
       "  -cp path         Give classpath\n\
       "  -preload modules Preload modules (: separated list)\n\
+      "  -icast           Generate superfluous casts for broken JVMs\n\
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
