@@ -203,7 +203,7 @@ final class CompileCtx implements Opcodes {
         Constants constants = new Constants();
         constants.sourceName = sourceName == null ? "<>" : sourceName;
         Ctx ctx = new Ctx(this, constants, null, null)
-                        .newClass(ACC_PUBLIC, name,
+                        .newClass(ACC_PUBLIC | ACC_SUPER, name,
                     (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
         constants.ctx = ctx;
         if (module) {
@@ -1032,7 +1032,8 @@ final class TryCatch extends CapturingClosure {
         String sig = sigb.toString();
         String name = "_" + ctx.methodCounter++;
         ctx.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
-        Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
+        Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
+                               name, sig);
         mc.localVarCount = argc;
 
         Label codeStart = new Label(), codeEnd = new Label();
@@ -1513,16 +1514,23 @@ final class Function extends CapturingClosure implements Binder {
 
         String funClass =
             argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
-        Ctx fun = ctx.newClass(makeConst ? ACC_PUBLIC | ACC_STATIC | ACC_FINAL
-                                    : ACC_STATIC | ACC_FINAL, name, funClass);
+        Ctx fun = ctx.newClass(makeConst ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
+                                    : ACC_SUPER + ACC_FINAL, name, funClass);
 
+        if (makeConst) {
+            String fn = name.substring(ctx.className.length() + 1);
+            ctx.cw.visitInnerClass(name, ctx.className, fn,
+                                   ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
+            fun.cw.visitInnerClass(name, ctx.className, fn,
+                                   ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
+        }
         mergeCaptures(fun);
         fun.createInit(makeConst ? ACC_PRIVATE : 0, funClass);
 
         Ctx apply = argCount == 2
-            ? fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
+            ? fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
-            : fun.newMethod(ACC_PUBLIC | ACC_FINAL, "apply",
+            : fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
                 "(Ljava/lang/Object;)Ljava/lang/Object;");
         apply.localVarCount = argCount + 1; // this, arg
         
@@ -2773,7 +2781,7 @@ final class JavaClass extends CapturingClosure {
 
     void gen(Ctx ctx) {
         ctx.visitInsn(ACONST_NULL);
-        Ctx c = ctx.newClass(ACC_STATIC | ACC_PUBLIC,
+        Ctx c = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
                              className, parentClass);
         constr.init();
         mergeCaptures(c);
