@@ -1517,6 +1517,7 @@ final class Function extends CapturingClosure implements Binder {
             name = nameBase + i;
         }
 
+        publish &= shared;
         String funClass =
             argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
         Ctx fun = ctx.newClass(publish ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
