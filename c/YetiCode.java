@@ -1789,7 +1789,7 @@ final class VariantConstructor extends Code {
     }
 }
 
-abstract class SelectMember extends Code {
+abstract class SelectMember extends BindRef {
     private boolean assigned = false;
     Code st;
     String name;
@@ -2204,12 +2204,28 @@ final class LoadModule extends Code {
 
     Binder bindField(final String name, final YetiType.Type type) {
         return new Binder() {
-            public BindRef getRef(int line) {
-                String directRef = (String) moduleType.directFields.get(name);
-                if (directRef == null) {
+            public BindRef getRef(final int line) {
+                if (!moduleType.directFields.containsKey(name)) {
                     used = true;
                     return new StaticRef(moduleName, mangle(name), type,
                                          this, true, line);
+                }
+                String directRef = (String) moduleType.directFields.get(name);
+                if (directRef == null) { // property or mutable field
+                    used = true;
+                    final boolean mutable =
+                        type.field == YetiType.FIELD_MUTABLE;
+                    return new SelectMember(type, LoadModule.this,
+                                            name, line, false) {
+                        boolean mayAssign() {
+                            return mutable;
+                        }
+
+                        boolean flagop(int fl) {
+                            return (fl & DIRECT_BIND) != 0 ||
+                                   (fl & ASSIGN) != 0 && mutable;
+                        }
+                    };
                 }
                 return new StaticRef(directRef, "_", type, this, true, line);
             }
@@ -2219,6 +2235,7 @@ final class LoadModule extends Code {
 
 final class StructField {
     boolean property;
+    boolean mutable;
     String name;
     Code value;
     Code setter;
@@ -2322,13 +2339,20 @@ final class StructConstructor extends Code {
     Map getDirect() {
         Map r = new HashMap();
         for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].property || binds[i] != null)
+            if (fields[i].mutable) {
+                r.put(fields[i].name, null);
+                continue;
+            }
+            if (binds[i] != null)
                 continue;
             Code v = fields[i].value;
             while (v instanceof BindRef)
                 v = ((BindRef) v).unref(false);
             if (v instanceof Function && v.flagop(CONST))
                 r.put(fields[i].name, ((Function) v).name);
+        }
+        for (int i = 0; i < properties.length; ++i) {
+            r.put(properties[i].name, null);
         }
         return r;
     }

@@ -56,8 +56,9 @@ import java.io.InputStream;
  *   ...>
  *  FF
  * Follows utf8 encoded direct field mapping.
- *  XX XX XX length
+ *  XX XX XX XX - length
  *  'F' fieldName 00 function-class 00
+ *  'P' fieldName 00 - property (field mapping as null)
  */
 class YetiTypeAttr extends Attribute {
     static final byte END = -1;
@@ -173,11 +174,14 @@ class YetiTypeAttr extends Attribute {
             Iterator i = fields.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
-                r.append('F');
+                Object v = e.getValue();
+                r.append(v == null ? 'P' : 'F');
                 r.append(e.getKey());
                 r.append('\000');
-                r.append(e.getValue());
-                r.append('\000');
+                if (v != null) {
+                    r.append(v);
+                    r.append('\000');
+                }
             }
             try {
                 byte[] v = r.toString().getBytes("UTF-8");
@@ -325,6 +329,11 @@ class YetiTypeAttr extends Attribute {
                 if ((e = code.indexOf('\000', n)) < 0)
                     break;
                 String name = code.substring(n + 1, e);
+                if (code.charAt(n) == 'P') {
+                    n = e + 1;
+                    result.put(name, null);
+                    continue;
+                }
                 if ((n = code.indexOf('\000', ++e)) < 0)
                     break;
                 result.put(name, code.substring(e, n++));

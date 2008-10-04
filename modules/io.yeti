@@ -41,35 +41,34 @@ import java.lang.Thread;
 
 load yeti.lang.std;
 
-var stdin' = () as ~BufferedReader;
+var stdin' = none;
 
-lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
-   (var l = [];
+readerHandle reader is ~BufferedReader -> '' =
+   (var l = []; // used for forcing on close
     var used = false;
     {
         read num =
-            Core#read(reader (), num),
+            Core#read(reader, num),
 
         readln () =
             synchronized reader do:
                 if used then
                     Core#UNDEF_STR
                 else
-                    (reader ())#readLine()
+                    reader#readLine()
                 fi
             done,
 
         contents () =
-            synchronized lazyReaderHandle do:
+            synchronized reader do:
                 if used then
                     Core#UNDEF_STR
                 else
-                    r = reader ();
                     used := true;
                     try
-                        Core#readAll(r)
+                        Core#readAll(reader)
                     finally
-                        r#close()
+                        reader#close()
                     yrt
                 fi
             done,
@@ -80,7 +79,7 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                     []
                 else
                     used := true;
-                    l := (ReaderList#lines(reader ()) unsafely_as list<string>);
+                    l := (ReaderList#lines(reader) unsafely_as list<string>);
                     l
                 fi
             done,
@@ -93,9 +92,19 @@ lazyReaderHandle reader is (() -> ~BufferedReader) -> '' =
                     fi
                 done
             finally
-                (reader ())#close()
+                reader#close()
             yrt,
     });
+
+stdin () =
+    case stdin' of
+    Some rh: rh;
+    None _:
+       (rh = readerHandle new BufferedReader(
+                            new InputStreamReader(System#in), 8192);
+        stdin' := Some rh;
+        rh);
+    esac;
 
 withHandle h block =
     try
@@ -107,15 +116,7 @@ withHandle h block =
 {
     withHandle,
 
-    readln () = stdin.readln (),
-
-    stdin = lazyReaderHandle do:
-        if nullptr? stdin' then
-            stdin' :=
-                new BufferedReader(new InputStreamReader(System#in), 8192);
-        fi;
-        stdin'
-    done,
+    readln () = (stdin ()).readln (),
 
     print v =
         System#out#print(v);
@@ -130,7 +131,9 @@ withHandle h block =
     sysExit exitCode =
         throw new ExitError(exitCode),
 
-    readerHandle reader = lazyReaderHandle \reader,
+    readerHandle,
+
+    get stdin = stdin,
 
     inputHandle stream encoding is ~InputStream -> string -> '' =
         var nok = true;

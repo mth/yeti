@@ -1098,6 +1098,7 @@ public final class YetiAnalyzer extends YetiType {
                 sf = new StructField();
                 sf.name = field.name;
                 sf.value = code;
+                sf.mutable = field.var;
                 codeMap.put(field.name, sf);
                 int n = values.size();
                 values.add(sf);
