@@ -69,7 +69,7 @@ options = [
     "-guard": \(runDaemonThread (number (shift argv)) do time:
         sleep time;
         println "(terminated)";
-        sysExit 13;
+        System#exit(13)
     done),
     "-safe-eval":
         \(evaluator.sandbox := true; eval := true; src := shift argv),
