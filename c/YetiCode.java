@@ -310,7 +310,8 @@ final class Ctx implements Opcodes {
 
     Ctx newClass(int flags, String name, String extend) {
         Ctx ctx = new Ctx(compilation, constants,
-                new ClassWriter(ClassWriter.COMPUTE_MAXS), name);
+                new ClassWriter(ClassWriter.COMPUTE_MAXS |
+                                ClassWriter.COMPUTE_FRAMES), name);
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, null);
         ctx.cw.visitSource(constants.sourceName, null);
