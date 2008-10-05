@@ -1614,8 +1614,8 @@ final class Function extends CapturingClosure implements Binder {
             }
             return false;
         }
-        if (constFun || argUsed == 0 && body.flagop(PURE))
-            return flagop(CONST);
+        if (constFun || argUsed == 0 && argCount == 1 && body.flagop(PURE))
+            return captures == null;
         Capture prev = null;
         boolean isConst = true;
         for (Capture c = captures; c != null; c = c.next)
