@@ -1608,7 +1608,7 @@ final class Function extends CapturingClosure implements Binder {
             inner.bindName = bindName;
             inner.publish = publish;
             if (inner.prepareConst(ctx)) {
-                name = inner.name;
+                name = inner.name; // used by gen
                 return true;
             }
             return false;
@@ -1639,9 +1639,7 @@ final class Function extends CapturingClosure implements Binder {
     void gen(Ctx ctx) {
         if (shared) {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
-            return;
-        }
-        if (constFun || argUsed == 0 && !merged &&
+        } else if (constFun || argUsed == 0 && !merged &&
                 body.flagop(PURE) && uncapture(NEVER)) {
             if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
                 constFun = true;
