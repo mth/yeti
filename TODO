@@ -1,7 +1,8 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Struct properties
+* Fix structs - better comparision (with sorting) and
+                restructure holding properties
 * Java classes
 * Fix case A _: 1; _: 2 esac
 * Allow case A _: f (); g(); B: h() esac
