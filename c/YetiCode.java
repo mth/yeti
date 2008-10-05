@@ -1596,9 +1596,8 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     boolean flagop(int fl) {
-        if (merged)
-            return ((Function) body).flagop(fl);
-        return (fl & (PURE | CONST)) != 0 && (shared || captures == null);
+        return merged ? ((Function) body).flagop(fl) :
+                (fl & (PURE | CONST)) != 0 && (shared || captures == null);
     }
 
     boolean prepareConst(Ctx ctx) {
