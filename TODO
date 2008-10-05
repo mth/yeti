@@ -2,12 +2,12 @@
 ~~~~~~~~~~~~~~~~~
 
 * Struct properties
+* Java classes
 * Fix case A _: 1; _: 2 esac
+* Allow case A _: f (); g(); B: h() esac
 * Extendable structs?
 * Foreign structs
 * Better error messages
-* Lambda inlineing optimisation
 * Direct double optimisation, when it can be deduced,
   that there are always floats.
 * Direct struct-ref optimisation, when only known structs are accessed
-* Java classes
