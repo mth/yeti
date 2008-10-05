@@ -1648,12 +1648,7 @@ final class Function extends CapturingClosure implements Binder {
             }
             ctx.visitTypeInsn(NEW, "yeti/lang/Const");
             ctx.visitInsn(DUP);
-            try {
-                body.gen(ctx);
-            } catch (RuntimeException ex) {
-                ex.printStackTrace();
-                throw ex;
-            }
+            body.gen(ctx);
             ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
             ctx.forceType("yeti/lang/Fun");
         } else if (prepareConst(ctx)) {
