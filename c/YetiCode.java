@@ -63,8 +63,7 @@ final class Constants implements Opcodes {
                               null, null).visitEnd();
             code.gen(sb);
             sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
-            if (key != null)
-                constants.put(key, name);
+            constants.put(key, name);
         }
         final String fieldName = name;
         ctx_.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
@@ -1380,7 +1379,6 @@ final class Function extends CapturingClosure implements Binder {
     int argCount = 1; // Used by CaptureRef
     private boolean merged;
     private int argUsed;
-    private boolean constFun;
     private boolean shared;
     boolean publish;
 
@@ -1613,8 +1611,8 @@ final class Function extends CapturingClosure implements Binder {
             }
             return false;
         }
-        if (constFun || argUsed == 0 && argCount == 1 && body.flagop(PURE))
-            return captures == null;
+        if (argUsed == 0 && argCount == 1 && body.flagop(PURE))
+            return false; //captures == null;
         Capture prev = null;
         boolean isConst = true;
         for (Capture c = captures; c != null; c = c.next)
@@ -1639,13 +1637,8 @@ final class Function extends CapturingClosure implements Binder {
     void gen(Ctx ctx) {
         if (shared) {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
-        } else if (constFun || argUsed == 0 && !merged &&
-                body.flagop(PURE) && uncapture(NEVER)) {
-            if (flagop(CONST) && ctx.constants.ctx.cw != ctx.cw) {
-                constFun = true;
-                ctx.constant(null, this);
-                return;
-            }
+        } else if (!merged && argUsed == 0 && body.flagop(PURE) &&
+                   uncapture(NEVER)) {
             ctx.visitTypeInsn(NEW, "yeti/lang/Const");
             ctx.visitInsn(DUP);
             body.gen(ctx);
