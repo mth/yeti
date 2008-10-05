@@ -41,7 +41,7 @@ import java.lang.Thread;
 
 load yeti.lang.std;
 
-var stdin' = none;
+var stdin' = None ();
 
 readerHandle reader is ~BufferedReader -> '' =
    (var l = []; // used for forcing on close
