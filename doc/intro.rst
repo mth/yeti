@@ -2115,17 +2115,19 @@ the following way::
     public class CallYeti {
         public static void main(String[] args) {
             // use the static field
-            io.println.apply("Yeti!");
-        }
-
-        static {
-            // ensure that the module is initialised
-            io.eval();
+            io.println._.apply("Yeti!");
         }
     }
 
-Modules with structure values have static fields generated for each of the
-structure fields. Compiler uses this to optimise the module imports.
+Functions published from structure-valued modules, which are not closures
+are compiled into public inner classes with _ field being an constant
+function instance.  It is not recommended to rely on this behavior as
+it depends on compiler optimisations that may change in the future.
+
+Modules with structure values will also have static fields generated for
+each of the constant structure fields that are not non-closure function.
+
+Compiler uses this to optimise the module imports.
 
 Alternative way would be to access the structure returned by the eval call::
 
