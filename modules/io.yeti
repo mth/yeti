@@ -88,7 +88,7 @@ readerHandle reader is ~BufferedReader -> '' =
             try
                 synchronized reader do:
                     if used then
-                        _ = (length l)
+                        _ = length l
                     fi
                 done
             finally
@@ -139,11 +139,11 @@ withHandle h block =
         var nok = true;
         try
             r = new BufferedReader(
-                    if encoding == "" then
-                        new InputStreamReader(stream)
-                    else
-                        new InputStreamReader(stream, encoding)
-                    fi, 8192);
+                        if encoding == "" then
+                            new InputStreamReader(stream)
+                        else
+                            new InputStreamReader(stream, encoding)
+                        fi, 8192);
             nok := false;
             readerHandle r
         finally
