@@ -31,9 +31,6 @@ module yeti.lang.std;
 import java.lang.IllegalArgumentException;
 import java.util.regex.Pattern;
 
-// like not . f, but a tiny bit faster
-notPred f x = not (f x);
-
 // struct inner bindings are non-polymorphic
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;
@@ -173,7 +170,7 @@ plus a b = a + b;
         not (nullptr? (find f l)),
 
     all f l =
-        nullptr? (find (notPred f) l),
+        nullptr? (find (_ x = not (f x)) l),
 
     contains v l =
         index v l != -1,
