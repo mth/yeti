@@ -124,7 +124,7 @@ plus a b = a + b;
     wrapArray a is 'a[] -> array<'a> =
         new MList(a) unsafely_as array<''>,
 
-    asList a is map<'','a> -> list<'a> =
+    list a is map<'','a> -> list<'a> =
         if empty? a then
             []
         else
@@ -276,7 +276,6 @@ plus a b = a + b;
     sqrt a = Math#sqrt(a),
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
-    asString x = "\(x)",
     strReplace needle replacement haystack =
         Core#replace(needle, replacement, haystack),
 

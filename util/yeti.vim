@@ -38,11 +38,11 @@ syn keyword yetiFunc ln exp cos sin tan acos asin atan sqrt strReplace
 syn keyword yetiFunc strSplit substAll strLength strUpper strLower strTrim
 syn keyword yetiFunc strSlice strRight strStarts strEnds strIndexOf
 syn keyword yetiFunc strLastIndexOf strLeft strLeftOf strRightOf length
-syn keyword yetiFunc drop sort sortBy same? revAppend asList pop swapAt
+syn keyword yetiFunc drop sort sortBy same? revAppend list pop swapAt
 syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
 syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
 syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
-syn keyword yetiFunc delete keys matchAll asString apply clearHash strChar
+syn keyword yetiFunc delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunc failWith lazy int map' takeWhile
 syn keyword yetiExternal load import
 
