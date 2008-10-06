@@ -50,7 +50,7 @@ final class JavaClass extends CapturingClosure {
         }
     };
 
-    private static class Arg extends BindRef implements Binder {
+    static class Arg extends BindRef implements Binder {
         int argn;
         final YetiType.Type javaType;
 
@@ -136,7 +136,7 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    private static final class Field extends Code
+    static final class Field extends Code
             implements Binder, CaptureWrapper {
         String name; // mangled name
         private String javaType;
