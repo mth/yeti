@@ -1,7 +1,7 @@
 asort f less l =
    (a = array l;
     f less a;
-    asList a);
+    list a);
 
 selectionSort less a =
    (selectLess i j = if less a.[i] a.[j] then i else j fi;
