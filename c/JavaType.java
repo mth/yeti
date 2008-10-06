@@ -287,11 +287,13 @@ class JavaType {
             return descriptionOf(arguments[arg]);
         }
 
-        String descr() {
+        String descr(String extra) {
             StringBuffer result = new StringBuffer("(");
             for (int i = 0; i < arguments.length; ++i) {
                 result.append(argDescr(i));
             }
+            if (extra != null)
+                result.append(extra);
             result.append(')');
             if (returnType.type == YetiType.UNIT) {
                 result.append('V');

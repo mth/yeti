@@ -221,7 +221,7 @@ abstract class JavaExpr extends Code {
         }
         ctx.visitLine(line);
         ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
-                            method.name, method.descr());
+                            method.name, method.descr(null));
         JavaType jt = method.returnType.javaType;
         if (jt != null && jt.description.charAt(0) == 'L')
             ctx.forceType(jt.className());
