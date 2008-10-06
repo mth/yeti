@@ -142,6 +142,8 @@ plus a b = a + b;
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> ''),
 
+    string x =
+        "\(x)",
     number x =
         Core#parseNum(x is string),
     min a b =
