@@ -925,9 +925,10 @@ public final class YetiAnalyzer extends YetiType {
                 int lastSlash = name.lastIndexOf('/');
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
-                scope.importClass = new Type("L" + name + ';');
+                Type classType = new Type("L" + name + ';');
+                scope.importClass = new ClassBinding(classType, null);
                 if (seq.seqKind == Seq.EVAL)
-                    YetiEval.registerImport(scope.name, scope.importClass);
+                    YetiEval.registerImport(scope.name, classType);
             } else if (nodes[i] instanceof TypeDef) {
                 scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else if (nodes[i].kind == "class") {
@@ -1510,7 +1511,7 @@ public final class YetiAnalyzer extends YetiType {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
                     if (bind.isImport) {
                         scope = new Scope(scope, bind.name, null);
-                        scope.importClass = bind.type;
+                        scope.importClass = new ClassBinding(bind.type, null);
                         continue;
                     }
                     scope = bind.polymorph ? bindPoly(bind.name, bind.type,

@@ -976,6 +976,11 @@ class JavaType {
     }
 
     static YetiType.Type typeOfName(String name, YetiType.Scope scope) {
+        int arrays = 0;
+        while (name.endsWith("[]")) {
+            ++arrays;
+            name = name.substring(0, name.length() - 2);
+        }
         String descr =
             name == "int"     ? "I" :
             name == "long"    ? "J" :
@@ -988,8 +993,13 @@ class JavaType {
             name == "string"  ?  "Ljava/lang/String;" :
             name == "number"  ?  "Lyeti/lang/Num;" :
             null;
-        return descr == null ? YetiType.typeOfClass(name, scope)
-                             : new YetiType.Type(descr);
+        YetiType.Type t =
+            descr == null ? YetiType.resolveFullClass(name, scope, null)
+                          : new YetiType.Type(descr);
+        while (--arrays >= 0)
+            t = new YetiType.Type(YetiType.JAVA_ARRAY,
+                                  new YetiType.Type[] { t });
+        return t;
     }
 }
 

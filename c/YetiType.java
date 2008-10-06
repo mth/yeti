@@ -222,7 +222,8 @@ public class YetiType implements YetiParser {
 
     static Scope bindImport(String name, String className, Scope scope) {
         scope = new Scope(scope, name, null);
-        scope.importClass = new Type('L' + className + ';');
+        scope.importClass =
+            new ClassBinding(new Type('L' + className + ';'), null);
         return scope;
     }
 
@@ -408,13 +409,23 @@ public class YetiType implements YetiParser {
         return t;
     }
 
+    static final class ClassBinding {
+        final Type type;
+        final BindRef[] captures;
+
+        public ClassBinding(Type classType, BindRef[] captures) {
+            this.type = classType;
+            this.captures = captures;
+        }
+    }
+
     static final class Scope {
         Scope outer;
         String name;
         Binder binder;
         Type[] free;
         Closure closure; // non-null means outer scopes must be proxied
-        Type importClass;
+        ClassBinding importClass;
         Type[] typeDef;
 
         String packageName;
@@ -748,11 +759,13 @@ public class YetiType implements YetiParser {
         if (name.indexOf('/') >= 0) {
             return JavaType.typeOfClass(null, name);
         }
-        for (; scope != null; scope = scope.outer) {
-            if (scope.name == name && (scope.importClass != null || shadow)) {
-                return scope.importClass;
+        for (; scope != null; scope = scope.outer)
+            if (scope.name == name) {
+                if (scope.importClass != null)
+                    return scope.importClass.type;
+                if (shadow)
+                    break;
             }
-        }
         return null;
     }
 
