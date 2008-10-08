@@ -134,6 +134,11 @@ public final class YetiAnalyzer extends YetiType {
                 String nam = x.expr[0].sym();
                 return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
             }
+            if (kind == "throw") {
+                Code throwable = analyze(x.expr[0], scope, depth);
+                JavaType.checkThrowable(x, throwable.type);
+                return new Throw(throwable, new Type(depth));
+            }
             if (kind == "classOf") {
                 String cn = x.expr[0].sym();
                 Type t = cn != "module" ? null :
@@ -149,11 +154,6 @@ public final class YetiAnalyzer extends YetiType {
             BinOp op = (BinOp) node;
             String opop = op.op;
             if (opop == "") {
-                if (op.left.kind == "throw") {
-                    Code throwable = analyze(op.right, scope, depth);
-                    JavaType.checkThrowable(op.left, throwable.type);
-                    return new Throw(throwable, new Type(depth));
-                }
                 return apply(node, analyze(op.left, scope, depth),
                              op.right, scope, depth);
             }

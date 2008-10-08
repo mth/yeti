@@ -39,7 +39,7 @@ do argv: {
                     System#setSecurityManager(new Sandbox());
                     // can't activate before, because
                     // setSecurityManager would fail otherwise
-                    sandboxed := \(throw new java.lang.SecurityException());
+                    sandboxed := \throw new java.lang.SecurityException();
                 fi;
                 f ()
             else

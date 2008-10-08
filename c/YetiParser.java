@@ -729,8 +729,10 @@ interface YetiParser {
                             .pos(line, col);
             } else if (s == "new") {
                 res = readNew();
-            } else if (s == "var" || s == "norec" || s == "throw") {
+            } else if (s == "var" || s == "norec") {
                 res = new XNode(s);
+            } else if (s == "throw") {
+                res = new XNode(s, new Node[] { fetch() });
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load" || s == "import" || s == "classOf") {
