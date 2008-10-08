@@ -863,16 +863,19 @@ final class ConcatStrings extends Code {
 }
 
 final class NewExpr extends JavaExpr {
-    NewExpr(JavaType.Method init, Code[] args, int line) {
+    private Code[] extraArgs;
+
+    NewExpr(JavaType.Method init, Code[] args, Code[] extraArgs, int line) {
         super(null, init, args, line);
         type = init.classType;
+        this.extraArgs = extraArgs;
     }
 
     void gen(Ctx ctx) {
         String name = method.classType.javaType.className();
         ctx.visitTypeInsn(NEW, name);
         ctx.visitInsn(DUP);
-        genCall(ctx, INVOKESPECIAL);
+        genCall(ctx, extraArgs, INVOKESPECIAL);
         ctx.forceType(name);
     }
 }
@@ -894,7 +897,7 @@ final class MethodCall extends JavaExpr {
                     method.classType.javaType.className());
             }
         }
-        genCall(ctx, ins);
+        genCall(ctx, null, ins);
         convertValue(ctx, method.returnType);
     }
 }

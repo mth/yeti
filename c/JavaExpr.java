@@ -215,10 +215,13 @@ abstract class JavaExpr extends Code {
                             method, "()" + descr);
     }
 
-    void genCall(Ctx ctx, int invokeInsn) {
+    void genCall(Ctx ctx, Code[] extraArgs, int invokeInsn) {
         for (int i = 0; i < args.length; ++i) {
             convertedArg(ctx, args[i], method.arguments[i], line);
         }
+        if (extraArgs != null)
+            for (int i = 0; i < extraArgs.length; ++i)
+                extraArgs[i].gen(ctx);
         ctx.visitLine(line);
         ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
                             method.name, method.descr(null));
