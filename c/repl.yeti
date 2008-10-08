@@ -23,20 +23,22 @@ do argv: {
 
     execClass eval writer =
         c = Class#forName(strReplace '/' '.' mainClass, true, writer);
-        var sandboxed = \();
-        class Sandbox() extends java.lang.SecurityManager
-            void checkPermission(Permission perm)
-                sandboxed (),
-            void checkPermission(Permission perm, Object context)
-                sandboxed (),
-            void checkExit()
-                ()
-        end;
         try
             if eval then
                 f = c#newInstance() unsafely_as () -> '';
                 if sandbox then
+                    var sandboxed = \();
+                    class Sandbox() extends java.lang.SecurityManager
+                        void checkPermission(Permission perm)
+                            sandboxed (),
+                        void checkPermission(Permission perm, Object context)
+                            sandboxed (),
+                        void checkExit()
+                            ()
+                    end;
                     System#setSecurityManager(new Sandbox());
+                    // can't activate before, because
+                    // setSecurityManager would fail otherwise
                     sandboxed := \(throw new java.lang.SecurityException());
                 fi;
                 f ()
