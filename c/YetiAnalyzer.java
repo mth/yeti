@@ -437,7 +437,11 @@ public final class YetiAnalyzer extends YetiType {
                             method.code.type + " as " + method.returnType);
             }
         }
-        c.close();
+        try {
+            c.close();
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(cl, ex);
+        }
         return c;
     }
 
@@ -932,10 +936,17 @@ public final class YetiAnalyzer extends YetiType {
             } else if (nodes[i] instanceof TypeDef) {
                 scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else if (nodes[i].kind == "class") {
-                return defineClass((XNode) nodes[i],
-                                   seq.seqKind instanceof TopLevel
-                                        && ((TopLevel) seq.seqKind).isModule,
-                                   scope, depth);
+                XNode cl = (XNode) nodes[i];
+                JavaClass c = defineClass(cl, seq.seqKind instanceof TopLevel
+                                           && ((TopLevel) seq.seqKind).isModule,
+                                          scope, depth);
+                Type cType = new Type(JAVA, NO_PARAM);
+                cType.javaType = c.javaType;
+                scope = new Scope(scope, cl.expr[0].sym(), null);
+                scope.importClass = new ClassBinding(cType, c.getCaptures());
+                if (seq.seqKind == Seq.EVAL)
+                    YetiEval.registerImport(scope.name, cType);
+                addSeq(last, new SeqExpr(c));
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {

@@ -240,6 +240,7 @@ class JavaType {
         YetiType.Type classType;
         String className; // name of the class the method actually belongs to
         String sig;
+        private String descr;
 
         Method dup(Method[] arr, int n, YetiType.Type classType) {
             if (classType == this.classType ||
@@ -255,6 +256,7 @@ class JavaType {
             m.classType = classType;
             m.className = className;
             m.sig = sig;
+            m.descr = descr;
             arr[n] = m;
             return m;
         }
@@ -288,6 +290,9 @@ class JavaType {
         }
 
         String descr(String extra) {
+            if (descr != null) {
+                return descr;
+            }
             StringBuffer result = new StringBuffer("(");
             for (int i = 0; i < arguments.length; ++i) {
                 result.append(argDescr(i));
@@ -300,7 +305,7 @@ class JavaType {
             } else {
                 result.append(descriptionOf(returnType));
             }
-            return result.toString();
+            return descr = result.toString();
         }
     }
 
@@ -449,6 +454,11 @@ class JavaType {
         this.description = description.intern();
     }
 
+    JavaType(JavaTypeReader t) throws JavaClassNotFoundException {
+        description = ('L' + t.className + ';').intern();
+        resolve(t);
+    }
+
     boolean isCollection() {
         return description == "Ljava/util/List;" ||
                description == "Ljava/util/Collection;" ||
@@ -504,6 +514,10 @@ class JavaType {
         } catch (IOException ex) {
             throw new JavaClassNotFoundException(dottedName());
         }
+        resolve(t);
+    }
+
+    private void resolve(JavaTypeReader t) throws JavaClassNotFoundException {
         access = t.access;
         interfaces = new HashMap();
         if (t.interfaces != null) {

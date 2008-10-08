@@ -232,6 +232,13 @@ abstract class JavaExpr extends Code {
 
     static void convertedArg(Ctx ctx, Code arg, YetiType.Type argType,
                              int line) {
+        String desc;
+        if (arg instanceof NumericConstant &&
+            (argType = argType.deref()).type == YetiType.JAVA &&
+            ((desc = argType.javaType.description) == "I" || desc == "J") &&
+            ((NumericConstant) arg).genInt(ctx, desc == "I")) {
+            return; // integer arguments can be directly generated
+        }
         if (genRawArg(ctx, arg, argType, line))
             convert(ctx, arg.type, argType);
     }

@@ -898,7 +898,11 @@ final class MethodCall extends JavaExpr {
             }
         }
         genCall(ctx, null, ins);
-        convertValue(ctx, method.returnType);
+        if (method.returnType == YetiType.UNIT_TYPE) {
+            ctx.visitInsn(ACONST_NULL);
+        } else {
+            convertValue(ctx, method.returnType);
+        }
     }
 }
 
