@@ -994,7 +994,7 @@ class JavaType {
             name == "number"  ?  "Lyeti/lang/Num;" :
             null;
         YetiType.Type t =
-            descr == null ? YetiType.resolveFullClass(name, scope, null)
+            descr == null ? YetiType.resolveFullClass(name, scope)
                           : new YetiType.Type(descr);
         while (--arrays >= 0)
             t = new YetiType.Type(YetiType.JAVA_ARRAY,

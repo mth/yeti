@@ -771,7 +771,7 @@ public class YetiType implements YetiParser {
 
     private static final BindRef[] NO_CAPTURES = {};
 
-    static ClassBinding resolveNewClass(String name, Scope scope) {
+    private static ClassBinding resolveNewClass(String name, Scope scope) {
         for (; scope != null; scope = scope.outer) {
             if (scope.name == name && scope.importClass != null) {
                 ClassBinding cb = scope.importClass;
@@ -786,7 +786,7 @@ public class YetiType implements YetiParser {
                 return new ClassBinding(cb.type, tmp);
             }
             if (scope.closure != null) {
-                ClassBinding cb = resolveNewClass(name, scope);
+                ClassBinding cb = resolveNewClass(name, scope.outer);
                 if (cb != null) {
                     BindRef[] r = cb.captures;
                     for (int i = r.length; --i >= 0; )
@@ -798,24 +798,29 @@ public class YetiType implements YetiParser {
         return null;
     }
 
-    static Type resolveFullClass(String name, Scope scope, Node checkPerm) {
-        if (checkPerm != null && name.indexOf('/') >= 0 &&
+    static ClassBinding resolveFullClass(String name, Scope scope,
+                                         boolean refs, Node checkPerm) {
+        String packageName = scope.packageName;
+        Type t;
+        if (name.indexOf('/') >= 0) {
+            packageName = null;
+        } else if (refs) {
+            ClassBinding res;
+            if ((res = resolveNewClass(name, scope)) != null)
+                return res;
+        } else if ((t = resolveClass(name, scope, false)) != null) {
+            return new ClassBinding(t, NO_CAPTURES);
+        }
+        if (checkPerm != null &&
             (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
-        Type t = resolveClass(name, scope, false);
-        if (t == null && checkPerm != null &&
-            (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
-            throw new CompileException(checkPerm, name + " is not imported");
-        return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
+        return new ClassBinding(JavaType.typeOfClass(packageName, name),
+                                NO_CAPTURES);
     }
 
-    static Type typeOfClass(String className, Scope scope) {
-        if (className.indexOf('/') > 0)
-            return JavaType.typeOfClass(null, className);
-        Type t = resolveClass(className, scope, false);
-        if (t != null)
-            return t;
-        return JavaType.typeOfClass(scope.packageName, className);
+    static Type resolveFullClass(String name, Scope scope) {
+        Type t = resolveClass(name, scope, false);
+        return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {

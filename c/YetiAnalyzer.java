@@ -117,8 +117,8 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "new") {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
-                return new NewExpr(JavaType.resolveConstructor(x,
-                                        resolveFullClass(name, scope, x), args)
+                ClassBinding cb = resolveFullClass(name, scope, true, x);
+                return new NewExpr(JavaType.resolveConstructor(x, cb.type, args)
                                     .check(x, scope.packageName), args, x.line);
             }
             if (kind == "rsection") {
@@ -138,7 +138,8 @@ public final class YetiAnalyzer extends YetiType {
                 Type t = cn != "module" ? null :
                             resolveClass("module", scope, false);
                 return new ClassOfExpr(t != null ? t.javaType :
-                            resolveFullClass(cn, scope, x).javaType.resolve(x));
+                                resolveFullClass(cn, scope, false, x)
+                                    .type.javaType.resolve(x));
             }
             if (kind == "class") {
                 return defineClass(x, false, scope, depth);
@@ -187,7 +188,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (opop == "instanceof") {
                 JavaType jt = resolveFullClass(((InstanceOf) op).className,
-                                               scope, op).javaType.resolve(op);
+                                               scope).javaType.resolve(op);
                 return new InstanceOfExpr(analyze(op.right, scope, depth), jt);
             }
             if (op.left == null) {
@@ -307,7 +308,7 @@ public final class YetiAnalyzer extends YetiType {
 //            Type[] tp = new Type[node.param.length];
 //            for (int i = tp.length; --i >= 0;)
 //                tp[i] = nodeToType(node.param[i], free, scope, depth);
-            t = typeOfClass(cn, scope);
+            t = resolveFullClass(cn, scope);
 //            t.param = tp;
         } else if (c == '\'') {
             t = (Type) free.get(name);
@@ -492,8 +493,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         for (int i = 1; i <= lastCatch; ++i) {
             XNode c = (XNode) t.expr[i];
-            Type exception =
-                resolveFullClass(c.expr[0].sym(), scope, null);
+            Type exception = resolveFullClass(c.expr[0].sym(), scope);
             exception.javaType.resolve(c);
             TryCatch.Catch cc = tc.addCatch(exception);
             String bind = c.expr[1].sym();
