@@ -28,7 +28,7 @@ do argv: {
                 f = c#newInstance() unsafely_as () -> '';
                 if sandbox then
                     var sandboxed = \();
-                    class Sandbox() extends java.lang.SecurityManager
+                    class Sandbox extends java.lang.SecurityManager
                         void checkPermission(Permission perm)
                             sandboxed (),
                         void checkPermission(Permission perm, Object context)

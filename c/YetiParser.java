@@ -972,10 +972,9 @@ interface YetiParser {
                 throw new CompileException(node,
                             "Expected a class name, found " + node);
             p = skipSpace();
-            if (p >= src.length || src[p] != '(')
-                throw new CompileException(line, p - lineStart, "Expecting (");
             defs.add(node);
-            defs.add(readArgDefs());
+            defs.add(p < src.length && src[p] == '(' ? readArgDefs()
+                        : new XNode("argument-list", new Node[0]));
             List l = new ArrayList();
             node = readDotted(false, "Expected extends, field or "
                                      + "method definition, found ");
