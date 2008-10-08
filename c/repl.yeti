@@ -33,7 +33,7 @@ do argv: {
                             sandboxed (),
                         void checkPermission(Permission perm, Object context)
                             sandboxed (),
-                        void checkExit()
+                        void checkExit(int status)
                             ()
                     end;
                     System#setSecurityManager(new Sandbox());
