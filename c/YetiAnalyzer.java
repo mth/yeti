@@ -361,19 +361,13 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Scope addMethArgs(JavaClass.Meth method, Node argList,
-                             Scope scope, Closure closure) {
+                             Scope scope) {
         Node[] args = ((XNode) argList).expr;
         Scope rscope = scope;
         for (int i = 0; i < args.length; i += 2) {
             Type t = JavaType.typeOfName(args[i].sym(), scope);
             String name = args[i + 1].sym();
             rscope = new Scope(rscope, name, method.addArg(t, name));
-            if (i == 0)
-                rscope.closure = closure;
-        }
-        if (closure != null && rscope == scope) {
-            rscope = new Scope(scope, null, null);
-            rscope.closure = closure;
         }
         return rscope;
     }
@@ -386,7 +380,11 @@ public final class YetiAnalyzer extends YetiType {
     static Code defineClass(XNode cl, boolean topLevel,
                             Scope scope, int depth) {
         JavaClass c = new JavaClass(cl.expr[0].sym(), topLevel);
-        Scope local = addMethArgs(c.constr, cl.expr[1], scope, c);
+        Scope local = addMethArgs(c.constr, cl.expr[1], scope);
+        if (local == scope) {
+            local = new Scope(scope, null, null);
+        }
+        local.closure = c;
         // field defs
         for (int i = 2; i < cl.expr.length; ++i) {
             if (cl.expr[i] instanceof Bind) {
@@ -430,7 +428,7 @@ public final class YetiAnalyzer extends YetiType {
             JavaClass.Meth method = c.addMethod(m[1].sym(), returnType,
                                                 kind != "method", m[3].line);
             method.code =
-                analyze(m[3], addMethArgs(method, m[2], mscope, null), depth);
+                analyze(m[3], addMethArgs(method, m[2], mscope), depth);
             if (JavaType.isAssignable(m[3], method.returnType,
                                       method.code.type, true) < 0) {
                 throw new CompileException(m[3], "Cannot return " +

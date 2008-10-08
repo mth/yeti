@@ -769,6 +769,35 @@ public class YetiType implements YetiParser {
         return null;
     }
 
+    private static final BindRef[] NO_CAPTURES = {};
+
+    static ClassBinding resolveNewClass(String name, Scope scope) {
+        for (; scope != null; scope = scope.outer) {
+            if (scope.name == name && scope.importClass != null) {
+                ClassBinding cb = scope.importClass;
+                BindRef[] captures = cb.captures;
+                BindRef[] tmp;
+                if (captures == null) {
+                    tmp = NO_CAPTURES;
+                } else {
+                    tmp = new BindRef[captures.length];
+                    System.arraycopy(captures, 0, tmp, 0, tmp.length);
+                }
+                return new ClassBinding(cb.type, tmp);
+            }
+            if (scope.closure != null) {
+                ClassBinding cb = resolveNewClass(name, scope);
+                if (cb != null) {
+                    BindRef[] r = cb.captures;
+                    for (int i = r.length; --i >= 0; )
+                        r[i] = scope.closure.refProxy(r[i]);
+                }
+                return cb;
+            }
+        }
+        return null;
+    }
+
     static Type resolveFullClass(String name, Scope scope, Node checkPerm) {
         if (checkPerm != null && name.indexOf('/') >= 0 &&
             (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
