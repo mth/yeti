@@ -3,6 +3,7 @@ module yeti.lang.compiler.repl;
 import java.lang.Class;
 import java.lang.ClassLoader;
 import yeti.lang.Core;
+import java.security.Permission;
 
 do argv: {
     var preload = ["yeti/lang/std", "yeti/lang/io"],
@@ -22,13 +23,22 @@ do argv: {
 
     execClass eval writer =
         c = Class#forName(strReplace '/' '.' mainClass, true, writer);
-        sm = new SandboxSecurityManager();
+        var sandboxed = \();
+        class Sandbox() extends java.lang.SecurityManager
+            void checkPermission(Permission perm)
+                sandboxed (),
+            //void checkPermission(Permission perm, Object context)
+            //    sandboxed (),
+            void checkExit()
+                ()
+        end;
+        sm = new Sandbox();
         try
             if eval then
                 f = c#newInstance() unsafely_as () -> '';
                 if sandbox then
                     System#setSecurityManager(sm);
-                    sm#setActive();
+                    sandboxed := \(throw new java.lang.SecurityException());
                 fi;
                 f ()
             else

@@ -381,14 +381,33 @@ public final class YetiAnalyzer extends YetiType {
      */
     static JavaClass defineClass(XNode cl, boolean topLevel,
                                  Scope scope, int depth) {
-        JavaClass c = new JavaClass(cl.expr[0].sym(), topLevel);
+        JavaType parentClass = null;
+        Node[] extend = ((XNode) cl.expr[2]).expr;
+        for (int i = 0; i < extend.length; ++i) {
+            JavaType t = resolveFullClass(extend[i].sym(), scope)
+                            .javaType.resolve(extend[i]);
+            if (t.isInterface()) {
+                // TODO
+            } else if (parentClass != null) {
+                throw new CompileException(extend[i],
+                    "Cannot extend multiple non-interface classes (" +
+                        parentClass.className().replace('/', '.') +
+                        " and " + t.className().replace('/', '.') + ')');
+            } else {
+                parentClass = t;
+            }
+        }
+        String className = cl.expr[0].sym();
+        if (scope.packageName != null)
+            className = scope.packageName + '/' + className;
+        JavaClass c = new JavaClass(className, parentClass, topLevel);
         Scope local = addMethArgs(c.constr, cl.expr[1], scope);
         if (local == scope) {
             local = new Scope(scope, null, null);
         }
         local.closure = c;
         // field defs
-        for (int i = 2; i < cl.expr.length; ++i) {
+        for (int i = 3; i < cl.expr.length; ++i) {
             if (cl.expr[i] instanceof Bind) {
                 Bind bind = (Bind) cl.expr[i];
                 if (bind.property) {
@@ -419,7 +438,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
         }
-        for (int i = 2; i < cl.expr.length; ++i) {
+        for (int i = 3; i < cl.expr.length; ++i) {
             String kind = cl.expr[i].kind;
             if (kind != "method" && kind != "static-method")
                 continue;

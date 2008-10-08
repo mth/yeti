@@ -41,7 +41,6 @@ final class JavaClass extends CapturingClosure {
     private List fields = new ArrayList();
     private List methods = new ArrayList();
     private Map fieldNames = new HashMap();
-    private StringBuffer additionalArgs = new StringBuffer();
     private boolean isPublic;
     private int captureCount;
     JavaType javaType;
@@ -74,6 +73,7 @@ final class JavaClass extends CapturingClosure {
     static class Meth extends JavaType.Method {
         private List args = new ArrayList();
         private int line;
+        Capture captures;
         Code code;
 
         Binder addArg(YetiType.Type type, String name) {
@@ -84,14 +84,23 @@ final class JavaClass extends CapturingClosure {
             return arg;
         }
         
-        void init(String extraArgs) {
+        void init() {
             arguments = new YetiType.Type[args.size()];
             for (int i = 0; i < arguments.length; ++i) {
                 Arg arg = (Arg) args.get(i);
                 arguments[i] = arg.javaType;
             }
-            // as a side effect this stores extraArgs in super
-            sig = name.concat(descr(extraArgs));
+            sig = name.concat(super.descr(null));
+            descr = null;
+        }
+
+        String descr(String extra) {
+            if (descr != null)
+                return descr;
+            StringBuffer additionalArgs = new StringBuffer();
+            for (Capture c = captures; c != null; c = c.next)
+                additionalArgs.append(c.captureType());
+            return super.descr(additionalArgs.toString());
         }
 
         void convertArgs(Ctx ctx) {
@@ -116,7 +125,6 @@ final class JavaClass extends CapturingClosure {
         }
 
         void gen(Ctx ctx) {
-            init(null);
             ctx = ctx.newMethod(access, name, descr(null));
             convertArgs(ctx);
             JavaExpr.convertedArg(ctx, code, returnType, line);
@@ -221,7 +229,7 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    JavaClass(String className, boolean isPublic) {
+    JavaClass(String className, JavaType parentClass, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
         constr.name = "<init>";
@@ -229,6 +237,8 @@ final class JavaClass extends CapturingClosure {
         constr.className = className;
         constr.access = isPublic ? ACC_PUBLIC : 0;
         this.isPublic = isPublic;
+        if (parentClass != null)
+            this.parentClass = parentClass.className();
     }
 
     Meth addMethod(String name, YetiType.Type returnType,
@@ -257,12 +267,13 @@ final class JavaClass extends CapturingClosure {
 
     void close() throws JavaClassNotFoundException {
         captureCount = mergeCaptures(null);
-        constr.init(additionalArgs.toString());
+        constr.captures = captures;
+        constr.init();
         JavaTypeReader t = new JavaTypeReader();
         t.constructors.add(constr);
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
             Meth m = (Meth) methods.get(i);
-            m.init(null);
+            m.init();
             ((m.access & ACC_STATIC) != 0 ? t.staticMethods : t.methods).add(m);
         }
         t.parent = parentClass;
@@ -284,7 +295,6 @@ final class JavaClass extends CapturingClosure {
     // called by mergeCaptures
     void captureInit(Ctx fun, Capture c, int n) {
         c.id = "_" + n;
-        additionalArgs.append(c.captureType());
     }
 
     void gen(Ctx ctx) {

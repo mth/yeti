@@ -240,7 +240,7 @@ class JavaType {
         YetiType.Type classType;
         String className; // name of the class the method actually belongs to
         String sig;
-        private String descr;
+        String descr;
 
         Method dup(Method[] arr, int n, YetiType.Type classType) {
             if (classType == this.classType ||

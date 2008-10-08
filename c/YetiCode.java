@@ -1280,6 +1280,8 @@ final class Capture extends CaptureRef implements CaptureWrapper {
         if (refType == null) {
             refType = wrapper == null ? 'L' + javaType(ref.type) + ';'
                 : wrapper.captureType();
+            if (refType == null)
+                throw new IllegalStateException("captureType:" + wrapper);
         }
         return refType;
     }
