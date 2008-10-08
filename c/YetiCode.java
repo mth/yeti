@@ -863,9 +863,9 @@ final class ConcatStrings extends Code {
 }
 
 final class NewExpr extends JavaExpr {
-    private Code[] extraArgs;
+    private BindRef[] extraArgs;
 
-    NewExpr(JavaType.Method init, Code[] args, Code[] extraArgs, int line) {
+    NewExpr(JavaType.Method init, Code[] args, BindRef[] extraArgs, int line) {
         super(null, init, args, line);
         type = init.classType;
         this.extraArgs = extraArgs;
