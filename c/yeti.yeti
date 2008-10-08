@@ -41,8 +41,8 @@ help () =
    (println "yeti -flags... files\n\n\
       "  -h               Print this help\n\
       "  -e expr          Evaluate expr and print result\n\
-      "  -d directory     Store generated files in the given directory\n\
-      "                   (implies compile to classes)\n\
+      "  -d directory     Compile and store the generated class files\n\
+      "                   in the given directory\n\
       "  -cp path         Give classpath\n\
       "  -preload modules Preload modules (: separated list)\n\
       "  -icast           Generate superfluous casts for broken JVMs\n\
@@ -92,7 +92,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         push srcs arg
     fi);
 
-if empty? srcs and src == "" then
+if empty? srcs and not eval then
     if exec and empty? argv then
         startRepl ()
     fi;
