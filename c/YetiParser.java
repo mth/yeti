@@ -474,7 +474,7 @@ interface YetiParser {
 
         private void addOp(BinOp op) {
             BinOp to = cur;
-            if (op.op == "-" && lastOp || op.op == "\\") {
+            if (op.op == "-" && lastOp || op.op == "\\" || op.op == "throw") {
                 if (!lastOp) {
                     apply(op);
                     to = cur;
@@ -732,7 +732,7 @@ interface YetiParser {
             } else if (s == "var" || s == "norec") {
                 res = new XNode(s);
             } else if (s == "throw") {
-                res = new XNode(s, new Node[] { fetch() });
+                res = new BinOp("throw", 1, false);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL, false);
             } else if (s == "load" || s == "import" || s == "classOf") {
@@ -771,7 +771,8 @@ interface YetiParser {
                 Object o = expr.get(0);
                 if (o instanceof BinOp
                     && (partial = (BinOp) o).parent == null
-                    && partial.op != "\\" && partial.op != "-") {
+                    && partial.op != "\\" && partial.op != "-"
+                    && partial.op != "throw") {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
