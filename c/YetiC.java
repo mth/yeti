@@ -85,30 +85,6 @@ class Loader extends ClassLoader implements CodeWriter {
     }
 }
 
-class SandboxSecurityManager extends SecurityManager {
-    private boolean active;
-
-    void setActive() {
-        active = true;
-    }
-
-    public void checkPermission(Permission perm) {
-        if (active) {
-            throw new SecurityException();
-        }
-    }
-
-    public void checkPermission(Permission perm, Object context) {
-        if (active) {
-            throw new SecurityException();
-        }
-    }
-
-    // allow exit
-    public void checkExit(int status) {
-    }
-}
-
 public class YetiC implements SourceReader {
     public static final int CF_COMPILE_MODULE   = 1;
     public static final int CF_PRINT_PARSE_TREE = 2;

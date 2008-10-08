@@ -948,7 +948,7 @@ interface YetiParser {
             int line_ = line, col_ = p++ - lineStart + 1;
             List args = new ArrayList();
             while ((p = skipSpace()) < src.length && src[p] != ')') {
-                if (args.size() != 0 && src[p] != ',') {
+                if (args.size() != 0 && src[p++] != ',') {
                     throw new CompileException(line, p - lineStart,
                                                "Expecting , or )");
                 }
