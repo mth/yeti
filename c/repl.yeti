@@ -32,12 +32,11 @@ do argv: {
             void checkExit()
                 ()
         end;
-        sm = new Sandbox();
         try
             if eval then
                 f = c#newInstance() unsafely_as () -> '';
                 if sandbox then
-                    System#setSecurityManager(sm);
+                    System#setSecurityManager(new Sandbox());
                     sandboxed := \(throw new java.lang.SecurityException());
                 fi;
                 f ()
