@@ -379,8 +379,8 @@ public final class YetiAnalyzer extends YetiType {
      * (foo = x)
      * (:method String getBlaah (:argument-list int y) (:concat (x + y))))
      */
-    static Code defineClass(XNode cl, boolean topLevel,
-                            Scope scope, int depth) {
+    static JavaClass defineClass(XNode cl, boolean topLevel,
+                                 Scope scope, int depth) {
         JavaClass c = new JavaClass(cl.expr[0].sym(), topLevel);
         Scope local = addMethArgs(c.constr, cl.expr[1], scope);
         if (local == scope) {
@@ -437,6 +437,7 @@ public final class YetiAnalyzer extends YetiType {
                             method.code.type + " as " + method.returnType);
             }
         }
+        c.close();
         return c;
     }
 

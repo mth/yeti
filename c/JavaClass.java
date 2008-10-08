@@ -42,7 +42,7 @@ final class JavaClass extends CapturingClosure {
     private List methods = new ArrayList();
     private Map fieldNames = new HashMap();
     private boolean isPublic;
-    private StringBuffer additionalArgs = new StringBuffer();
+    private int captureCount;
     final Meth constr = new Meth() {
         Binder addArg(YetiType.Type type, String name) {
             return addField(name, super.addArg(type, name).getRef(0),
@@ -251,19 +251,35 @@ final class JavaClass extends CapturingClosure {
         return field;
     }
 
+    void close() {
+        captureCount = mergeCaptures(null);
+    }
+
+    // must be called after close
+    BindRef[] getCaptures() {
+        BindRef[] r = new BindRef[captureCount];
+        int n = 0;
+        for (Capture c = captures; c != null; c = c.next) {
+            r[n++] = c.ref;
+        }
+        return r;
+    }
+
     // called by mergeCaptures
     void captureInit(Ctx fun, Capture c, int n) {
-        // c.getId() initialises the captures id as a side effect
-        fun.cw.visitField(0, c.getId(fun), c.captureType(),
-                          null, null).visitEnd();
-        additionalArgs.append(c.captureType());
+        c.id = "_" + n;
     }
 
     void gen(Ctx ctx) {
         ctx.visitInsn(ACONST_NULL);
         Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
                                className, parentClass);
-        mergeCaptures(clc);
+        clc.fieldCounter = captureCount;
+        StringBuffer additionalArgs = new StringBuffer();
+        for (Capture c = captures; c != null; c = c.next) {
+            additionalArgs.append(c.captureType());
+            clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
+        }
         constr.init(additionalArgs.toString());
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr);
         init.visitVarInsn(ALOAD, 0); // this.
