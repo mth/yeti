@@ -398,7 +398,7 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
         String className = cl.expr[0].sym();
-        if (scope.packageName != null)
+        if (scope.packageName != null && scope.packageName.length() != 0)
             className = scope.packageName + '/' + className;
         JavaClass c = new JavaClass(className, parentClass, topLevel);
         Scope local = addMethArgs(c.constr, cl.expr[1], scope);
@@ -963,8 +963,6 @@ public final class YetiAnalyzer extends YetiType {
                 cType.javaType = c.javaType;
                 scope = new Scope(scope, cl.expr[0].sym(), null);
                 scope.importClass = new ClassBinding(cType, c.getCaptures());
-                if (seq.seqKind == Seq.EVAL)
-                    YetiEval.registerImport(scope.name, cType);
                 addSeq(last, new SeqExpr(c));
             } else {
                 Code code = analyze(nodes[i], scope, depth);
