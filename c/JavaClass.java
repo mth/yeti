@@ -68,6 +68,7 @@ final class JavaClass extends CapturingClosure {
 
         void gen(Ctx ctx) {
             ctx.visitVarInsn(ALOAD, argn);
+            ctx.forceType(javaType.javaType.className());
         }
     }
 
