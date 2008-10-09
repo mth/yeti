@@ -1204,7 +1204,7 @@ final class Capture extends CaptureRef implements CaptureWrapper {
     Capture next;
     CaptureWrapper wrapper;
     Object identity;
-    int localVar = -1; // -1 - use this - not copied
+    int localVar = -1; // -1 - use this
     boolean uncaptured;
     boolean ignoreGet;
     private String refType;

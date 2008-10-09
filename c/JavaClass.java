@@ -155,8 +155,7 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    static final class Field extends Code
-            implements Binder, CaptureWrapper {
+    final class Field extends Code implements Binder, CaptureWrapper {
         String name; // mangled name
         private String javaType;
         String descr;
@@ -311,6 +310,8 @@ final class JavaClass extends CapturingClosure {
     // called by mergeCaptures
     void captureInit(Ctx fun, Capture c, int n) {
         c.id = "_" + n;
+        // for super arguments
+        c.localVar = n + constr.args.size() + 1;
     }
 
     void gen(Ctx ctx) {
@@ -318,9 +319,6 @@ final class JavaClass extends CapturingClosure {
         Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
                                className, parentClass, implement);
         clc.fieldCounter = captureCount;
-        for (Capture c = captures; c != null; c = c.next) {
-            clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
-        }
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
         constr.convertArgs(init);
         genClosureInit(init);
@@ -329,17 +327,17 @@ final class JavaClass extends CapturingClosure {
         // extra arguments are used for smugling in captured bindings
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {
+            c.localVar = -1; // reset to using this
+            clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
             init.visitVarInsn(ALOAD, 0);
             init.visitVarInsn(ALOAD, ++n);
             init.visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
-        for (int i = 0, cnt = fields.size(); i < cnt; ++i) {
+        for (int i = 0, cnt = fields.size(); i < cnt; ++i)
             ((Code) fields.get(i)).gen(init);
-        }
         init.visitInsn(RETURN);
         init.closeMethod();
-        for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
+        for (int i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
-        }
     }
 }
