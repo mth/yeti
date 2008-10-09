@@ -985,6 +985,8 @@ interface YetiParser {
             if (node.sym() == "extends") {
                 do {
                     l.add(readDotted(false, "Expected a class name, found "));
+                    int line_ = line, col_ = p - lineStart + 1;
+                    l.add(new XNode("arguments", readArgs()).pos(line_, col_));
                 } while ((p = skipSpace()) < src.length && src[p++] == ',');
                 --p;
                 node = fetch();

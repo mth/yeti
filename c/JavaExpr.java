@@ -33,7 +33,7 @@ package yeti.lang.compiler;
 
 import org.objectweb.asm.*;
 
-abstract class JavaExpr extends Code {
+class JavaExpr extends Code {
     Code object;
     JavaType.Method method;
     Code[] args;
@@ -359,5 +359,9 @@ abstract class JavaExpr extends Code {
                                 "valueOf", "(C)Ljava/lang/String;");
             ctx.forceType("java/lang/String");
         }
+    }
+
+    void gen(Ctx ctx) {
+        throw new UnsupportedOperationException();
     }
 }

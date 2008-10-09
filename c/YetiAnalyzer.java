@@ -363,19 +363,25 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Scope addMethArgs(JavaClass.Meth method, Node argList,
+                             JavaClass regField, Scope fields[],
                              Scope scope) {
         Node[] args = ((XNode) argList).expr;
         Scope rscope = scope;
         for (int i = 0; i < args.length; i += 2) {
             Type t = JavaType.typeOfName(args[i].sym(), scope);
             String name = args[i + 1].sym();
-            rscope = new Scope(rscope, name, method.addArg(t, name));
+            Binder arg = method.addArg(t);
+            rscope = new Scope(rscope, name, arg);
+            if (regField != null) {
+                Binder field = regField.addField(name, arg.getRef(0), false);
+                fields[0] = new Scope(fields[0], name, field);
+            }
         }
         return rscope;
     }
 
     /*
-     * (:class Foo (:argument-list int x) (:extends Object)
+     * (:class Foo (:argument-list int x) (:extends Object (:arguments))
      * (foo = x)
      * (:method String getBlaah (:argument-list int y) (:concat (x + y))))
      */
@@ -383,11 +389,17 @@ public final class YetiAnalyzer extends YetiType {
                                  Scope scope, int depth) {
         JavaType parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
+        Node[] superArgs = null;
+        Node superNode = cl;
         List interfaces = new ArrayList();
-        for (int i = 0; i < extend.length; ++i) {
+        for (int i = 0; i < extend.length; i += 2) {
             JavaType t = resolveFullClass(extend[i].sym(), scope)
                             .javaType.resolve(extend[i]);
+            Node[] args = ((XNode) extend[i + 1]).expr;
             if (t.isInterface()) {
+                if (args != null)
+                    throw new CompileException(extend[i + 1],
+                        "Cannot give arguments to interface");
                 interfaces.add(t.className());
             } else if (parentClass != null) {
                 throw new CompileException(extend[i],
@@ -396,6 +408,8 @@ public final class YetiAnalyzer extends YetiType {
                         " and " + t.className().replace('/', '.') + ')');
             } else {
                 parentClass = t;
+                superArgs = args;
+                superNode = extend[i];
             }
         }
         String className = cl.expr[0].sym();
@@ -405,9 +419,24 @@ public final class YetiAnalyzer extends YetiType {
                                     (String[]) interfaces.toArray(
                                         new String[interfaces.size()]),
                                     topLevel);
-        Scope local = new Scope(scope, null, null);
-        local.closure = c;
-        local = addMethArgs(c.constr, cl.expr[1], local);
+        Scope consScope = new Scope(scope, null, null);
+        consScope.closure = c;
+        Scope[] localRef = { consScope };
+        consScope = addMethArgs(c.constr, cl.expr[1], c, localRef, consScope);
+        Scope local = localRef[0];
+
+        if (parentClass == null)
+            parentClass = JavaType.fromDescription("Ljava/lang/Object;");
+        if (superArgs == null)
+            superArgs = new Node[0];
+        Type parentType = new Type(JAVA, NO_PARAM);
+        parentType.javaType = parentClass;
+        Code[] initArgs = mapArgs(0, superArgs, consScope, depth);
+        JavaType.Method superCons =
+            JavaType.resolveConstructor(superNode, parentType, initArgs)
+                    .check(superNode, scope.packageName);
+        c.superInit(superCons, initArgs, superNode.line);
+
         // field defs
         for (int i = 3; i < cl.expr.length; ++i) {
             if (cl.expr[i] instanceof Bind) {
@@ -451,7 +480,8 @@ public final class YetiAnalyzer extends YetiType {
             JavaClass.Meth method = c.addMethod(m[1].sym(), returnType,
                                                 kind != "method", m[3].line);
             method.code =
-                analyze(m[3], addMethArgs(method, m[2], mscope), depth);
+                analyze(m[3], addMethArgs(method, m[2], null, null, mscope),
+                        depth);
             if (JavaType.isAssignable(m[3], method.returnType,
                                       method.code.type, true) < 0) {
                 throw new CompileException(m[3], "Cannot return " +

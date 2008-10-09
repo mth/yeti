@@ -42,15 +42,11 @@ final class JavaClass extends CapturingClosure {
     private List fields = new ArrayList();
     private List methods = new ArrayList();
     private Map fieldNames = new HashMap();
+    private JavaExpr superInit;
     private boolean isPublic;
     private int captureCount;
     JavaType javaType;
-    final Meth constr = new Meth() {
-        Binder addArg(YetiType.Type type, String name) {
-            return addField(name, super.addArg(type, name).getRef(0),
-                            false);
-        }
-    };
+    final Meth constr = new Meth();
 
     static class Arg extends BindRef implements Binder {
         int argn;
@@ -78,7 +74,7 @@ final class JavaClass extends CapturingClosure {
         Capture captures;
         Code code;
 
-        Binder addArg(YetiType.Type type, String name) {
+        Binder addArg(YetiType.Type type) {
             Arg arg = new Arg(type);
             args.add(arg);
             arg.argn = (access & ACC_STATIC) == 0
@@ -269,6 +265,10 @@ final class JavaClass extends CapturingClosure {
         return field;
     }
 
+    void superInit(JavaType.Method init, Code[] args, int line) {
+        superInit = new JavaExpr(null, init, args, line);
+    }
+
     void close() throws JavaClassNotFoundException {
         captureCount = mergeCaptures(null);
         constr.captures = captures;
@@ -312,7 +312,7 @@ final class JavaClass extends CapturingClosure {
         }
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
         init.visitVarInsn(ALOAD, 0); // this.
-        init.visitMethodInsn(INVOKESPECIAL, parentClass, "<init>", "()V");
+        superInit.genCall(init, null, INVOKESPECIAL);
         // extra arguments are used for smugling in captured bindings
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {
