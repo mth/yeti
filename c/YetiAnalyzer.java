@@ -479,9 +479,11 @@ public final class YetiAnalyzer extends YetiType {
                                 JavaType.typeOfName(m[0].sym(), scope);
             JavaClass.Meth method = c.addMethod(m[1].sym(), returnType,
                                                 kind != "method", m[3].line);
-            method.code =
-                analyze(m[3], addMethArgs(method, m[2], null, null, mscope),
-                        depth);
+            Scope bodyScope = addMethArgs(method, m[2], null, null, mscope);
+            if (bodyScope == mscope)
+                bodyScope = new Scope(bodyScope, null, null);
+            bodyScope.closure = method; // for bind var collection
+            method.code = analyze(m[3], bodyScope, depth);
             if (JavaType.isAssignable(m[3], method.returnType,
                                       method.code.type, true) < 0) {
                 throw new CompileException(m[3], "Cannot return " +
@@ -800,17 +802,7 @@ public final class YetiAnalyzer extends YetiType {
         return new LoopExpr(cond, body);
     }
 
-    static void registerVar(BindExpr binder, Scope scope) {
-        while (scope != null) {
-            if (scope.closure != null) {
-                scope.closure.addVar(binder);
-                return;
-            }
-            scope = scope.outer;
-        }
-    }
-
-    static Function singleBind(Bind bind, Scope scope, int depth) {
+     static Function singleBind(Bind bind, Scope scope, int depth) {
         if (bind.expr.kind != "lambda") {
             throw new CompileException(bind,
                 "Closed binding must be a function binding");
@@ -848,6 +840,16 @@ public final class YetiAnalyzer extends YetiType {
                 ", but only structs can be exploded)");
         }
         return scope;
+    }
+
+   static void registerVar(BindExpr binder, Scope scope) {
+        while (scope != null) {
+            if (scope.closure != null) {
+                scope.closure.addVar(binder);
+                return;
+            }
+            scope = scope.outer;
+        }
     }
 
     static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,

@@ -69,8 +69,9 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    static class Meth extends JavaType.Method {
+    static class Meth extends JavaType.Method implements Closure {
         private List args = new ArrayList();
+        private AClosure closure = new RootClosure(); // just for closure init
         private int line;
         Capture captures;
         Code code;
@@ -81,6 +82,14 @@ final class JavaClass extends CapturingClosure {
             arg.argn = (access & ACC_STATIC) == 0
                             ? args.size() : args.size() - 1;
             return arg;
+        }
+
+        public BindRef refProxy(BindRef code) {
+            return code; // method don't capture - this is outer classes job
+        }
+
+        public void addVar(BindExpr binder) {
+            closure.addVar(binder);
         }
         
         void init() {
@@ -126,6 +135,7 @@ final class JavaClass extends CapturingClosure {
         void gen(Ctx ctx) {
             ctx = ctx.newMethod(access, name, descr(null));
             convertArgs(ctx);
+            closure.genClosureInit(ctx);
             JavaExpr.convertedArg(ctx, code, returnType, line);
             if (returnType.type == YetiType.UNIT) {
                 ctx.visitInsn(POP);
@@ -313,6 +323,7 @@ final class JavaClass extends CapturingClosure {
         }
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
         constr.convertArgs(init);
+        genClosureInit(init);
         init.visitVarInsn(ALOAD, 0); // this.
         superInit.genCall(init, null, INVOKESPECIAL);
         // extra arguments are used for smugling in captured bindings
