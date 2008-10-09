@@ -31,6 +31,10 @@ module yeti.lang.std;
 import java.lang.IllegalArgumentException;
 import java.util.regex.Pattern;
 
+class FailureException(String what)
+    extends RuntimeException(what)
+end;
+
 // struct inner bindings are non-polymorphic
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<''>;

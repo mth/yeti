@@ -64,7 +64,8 @@ final class JavaClass extends CapturingClosure {
 
         void gen(Ctx ctx) {
             ctx.visitVarInsn(ALOAD, argn);
-            ctx.forceType(javaType.javaType.className());
+            if (javaType.javaType.description.charAt(0) == 'L')
+                ctx.forceType(javaType.javaType.className());
         }
     }
 
@@ -311,6 +312,7 @@ final class JavaClass extends CapturingClosure {
             clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
         }
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
+        constr.convertArgs(init);
         init.visitVarInsn(ALOAD, 0); // this.
         superInit.genCall(init, null, INVOKESPECIAL);
         // extra arguments are used for smugling in captured bindings
@@ -320,7 +322,6 @@ final class JavaClass extends CapturingClosure {
             init.visitVarInsn(ALOAD, ++n);
             init.visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
-        constr.convertArgs(init);
         for (int i = 0, cnt = fields.size(); i < cnt; ++i) {
             ((Code) fields.get(i)).gen(init);
         }
