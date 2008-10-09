@@ -113,7 +113,7 @@ withHandle h block =
         h.close ()
     yrt;
 
-class FunThreadImpl(Fun f, Object v) extends java.lang.Thread
+class FunThreadImpl(Fun f, Object v) extends Thread
     void run()
         _ = f#apply(v)
 end;
