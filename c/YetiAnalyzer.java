@@ -383,11 +383,12 @@ public final class YetiAnalyzer extends YetiType {
                                  Scope scope, int depth) {
         JavaType parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
+        List interfaces = new ArrayList();
         for (int i = 0; i < extend.length; ++i) {
             JavaType t = resolveFullClass(extend[i].sym(), scope)
                             .javaType.resolve(extend[i]);
             if (t.isInterface()) {
-                // TODO
+                interfaces.add(t.className());
             } else if (parentClass != null) {
                 throw new CompileException(extend[i],
                     "Cannot extend multiple non-interface classes (" +
@@ -400,12 +401,13 @@ public final class YetiAnalyzer extends YetiType {
         String className = cl.expr[0].sym();
         if (scope.packageName != null && scope.packageName.length() != 0)
             className = scope.packageName + '/' + className;
-        JavaClass c = new JavaClass(className, parentClass, topLevel);
-        Scope local = addMethArgs(c.constr, cl.expr[1], scope);
-        if (local == scope) {
-            local = new Scope(scope, null, null);
-        }
+        JavaClass c = new JavaClass(className, parentClass,
+                                    (String[]) interfaces.toArray(
+                                        new String[interfaces.size()]),
+                                    topLevel);
+        Scope local = new Scope(scope, null, null);
         local.closure = c;
+        local = addMethArgs(c.constr, cl.expr[1], local);
         // field defs
         for (int i = 3; i < cl.expr.length; ++i) {
             if (cl.expr[i] instanceof Bind) {

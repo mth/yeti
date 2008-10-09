@@ -37,6 +37,7 @@ import java.util.ArrayList;
 
 final class JavaClass extends CapturingClosure {
     private String className;
+    private String[] implement;
     private String parentClass = "java/lang/Object";
     private List fields = new ArrayList();
     private List methods = new ArrayList();
@@ -229,7 +230,8 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    JavaClass(String className, JavaType parentClass, boolean isPublic) {
+    JavaClass(String className, JavaType parentClass,
+              String[] interfaces, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
         constr.name = "<init>";
@@ -239,6 +241,7 @@ final class JavaClass extends CapturingClosure {
         this.isPublic = isPublic;
         if (parentClass != null)
             this.parentClass = parentClass.className();
+        implement = interfaces;
     }
 
     Meth addMethod(String name, YetiType.Type returnType,
@@ -278,6 +281,7 @@ final class JavaClass extends CapturingClosure {
         }
         t.parent = parentClass;
         t.className = className;
+        t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
         javaType = new JavaType(t);
     }
@@ -300,7 +304,7 @@ final class JavaClass extends CapturingClosure {
     void gen(Ctx ctx) {
         ctx.visitInsn(ACONST_NULL);
         Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
-                               className, parentClass);
+                               className, parentClass, implement);
         clc.fieldCounter = captureCount;
         for (Capture c = captures; c != null; c = c.next) {
             clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();

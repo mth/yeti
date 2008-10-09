@@ -113,6 +113,11 @@ withHandle h block =
         h.close ()
     yrt;
 
+class FunThreadImpl(Fun f, Object v) extends java.lang.Thread
+    void run()
+        _ = f#apply(v)
+end;
+
 {
     withHandle,
 
@@ -202,10 +207,10 @@ withHandle h block =
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 
     runThread v f is 'a -> ('a -> ()) -> () =
-        new FunThread(f, v)#start(),
+        new FunThreadImpl(f, v)#start(),
 
     runDaemonThread v f is 'a -> ('a -> ()) -> () =
-        th = new FunThread(f, v);
+        th = new FunThreadImpl(f, v);
         th#setDaemon(true);
         th#start(),
 

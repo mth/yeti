@@ -202,8 +202,9 @@ final class CompileCtx implements Opcodes {
         Constants constants = new Constants();
         constants.sourceName = sourceName == null ? "<>" : sourceName;
         Ctx ctx = new Ctx(this, constants, null, null)
-                        .newClass(ACC_PUBLIC | ACC_SUPER, name,
-                    (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null);
+            .newClass(ACC_PUBLIC | ACC_SUPER, name,
+                      (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null,
+                      null);
         constants.ctx = ctx;
         if (module) {
             ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
@@ -310,12 +311,12 @@ final class Ctx implements Opcodes {
         this.className = className;
     }
 
-    Ctx newClass(int flags, String name, String extend) {
+    Ctx newClass(int flags, String name, String extend, String[] interfaces) {
         Ctx ctx = new Ctx(compilation, constants,
                 new ClassWriter(ClassWriter.COMPUTE_MAXS |
                                 ClassWriter.COMPUTE_FRAMES), name);
         ctx.cw.visit(V1_4, flags, name, null,
-                extend == null ? "java/lang/Object" : extend, null);
+                extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
         if (compilation.classes.put(name, ctx) != null) {
             throw new IllegalStateException("Duplicate class: " + name);
@@ -1528,7 +1529,8 @@ final class Function extends CapturingClosure implements Binder {
         String funClass =
             argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
         Ctx fun = ctx.newClass(publish ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
-                                    : ACC_SUPER + ACC_FINAL, name, funClass);
+                                       : ACC_SUPER + ACC_FINAL,
+                               name, funClass, null);
 
         if (publish) {
             String fn = name.substring(ctx.className.length() + 1);
