@@ -115,6 +115,8 @@ final class JavaClass extends CapturingClosure {
             int n = (access & ACC_STATIC) == 0 ? 1 : 0;
             ctx.localVarCount = args.size() + n;
             for (int i = 0; i < arguments.length; ++i) {
+                if (arguments[i].type != YetiType.JAVA)
+                    continue;
                 String descr = arguments[i].javaType.description;
                 if (descr != "Ljava/lang/String;" && descr.charAt(0) == 'L')
                     continue;
@@ -123,7 +125,7 @@ final class JavaClass extends CapturingClosure {
                     case 'D': ins = DLOAD; break;
                     case 'F': ins = FLOAD; break;
                     case 'J': ins = LLOAD; break;
-                    case '[':
+                    case 'C':
                     case 'L': ins = ALOAD; break;
                 }
                 ctx.visitVarInsn(ins, i + n);

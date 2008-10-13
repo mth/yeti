@@ -995,6 +995,8 @@ class JavaType {
             ++arrays;
             name = name.substring(0, name.length() - 2);
         }
+        if (arrays != 0)
+            name = name.intern();
         String descr =
             name == "int"     ? "I" :
             name == "long"    ? "J" :

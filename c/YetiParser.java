@@ -955,7 +955,13 @@ interface YetiParser {
                     throw new CompileException(line, p - lineStart,
                                                "Expecting , or )");
                 }
-                args.add(readDotted(false, "Expected argument type, found "));
+                Sym t = readDotted(false, "Expected argument type, found ");
+                int s = p;
+                while (src.length > p + 1 && src[p] == '[' && src[p + 1] == ']')
+                    p += 2;
+                if (s != p)
+                    t.sym = t.sym.concat(new String(src, s, p - s)).intern();
+                args.add(t);
                 Node name = fetch();
                 if (!(name instanceof Sym)) {
                     throw new CompileException(name,
