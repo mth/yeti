@@ -39,7 +39,8 @@ trueTests = [
 'all': \(not (all (!= 3) [1 .. 5]) and (all (!= 3) [5 .. 10])),
 'contains': \(contains 3 [1 .. 5] and not (contains 3 [5 .. 10])),
 'maybe': \(maybe false not (Some false)),
-'struct': \(f a = { var x = a }; (f 33).x := 3; true)
+'struct': \(f a = { var x = a }; (f 33).x := 3; true),
+'lambda': \(\\\\1 2 3 4 5 == 1)
 ];
 
 forHash trueTests do name f:

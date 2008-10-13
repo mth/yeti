@@ -165,12 +165,7 @@ final class CompileCtx implements Opcodes {
             if (dot >= 0)
                 className = className.substring(dot + 1);
         }
-        try {
-            compile(srcName[0], className, src, flags);
-        } catch (RuntimeException ex) {
-            ex.printStackTrace();
-            throw ex;
-        }
+        compile(srcName[0], className, src, flags);
         className = (String) compiled.get(srcName[0]);
         compiled.put(sourceName, className);
         return className;
@@ -1438,7 +1433,7 @@ final class Function extends CapturingClosure implements Binder {
         if (body instanceof Function) {
             Function bodyFun = (Function) body;
             bodyFun.outer = this;
-            if (argCount == 1 && bodyFun.selfRef == null) {
+            if (argCount == 1 && !bodyFun.merged && bodyFun.selfRef == null) {
                 merged = true;
                 ++bodyFun.argCount;
             }

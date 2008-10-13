@@ -1,7 +1,6 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix \\\\0 0 0 0 0
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * Java classes
