@@ -282,8 +282,6 @@ final class JavaClass extends CapturingClosure {
     }
 
     void close() throws JavaClassNotFoundException {
-        captureCount = mergeCaptures(null);
-        constr.captures = captures;
         constr.init();
         JavaTypeReader t = new JavaTypeReader();
         t.constructors.add(constr);
@@ -301,6 +299,7 @@ final class JavaClass extends CapturingClosure {
 
     // must be called after close
     BindRef[] getCaptures() {
+        captureCount = mergeCaptures(null);
         BindRef[] r = new BindRef[captureCount];
         int n = 0;
         for (Capture c = captures; c != null; c = c.next) {
@@ -317,6 +316,7 @@ final class JavaClass extends CapturingClosure {
     }
 
     void gen(Ctx ctx) {
+        constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
         Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
                                className, parentClass, implement);

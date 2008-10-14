@@ -143,7 +143,7 @@ public final class YetiAnalyzer extends YetiType {
                                     .type.javaType.resolve(x));
             }
             if (kind == "class") {
-                return defineClass(x, false, scope, depth);
+                return defineClass(x, false, new Scope[] { scope }, depth);
             }
         } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
@@ -362,22 +362,55 @@ public final class YetiAnalyzer extends YetiType {
         return value;
     }
 
-    static Scope addMethArgs(JavaClass.Meth method, Node argList,
-                             JavaClass regField, Scope fields[],
-                             Scope scope) {
-        Node[] args = ((XNode) argList).expr;
-        Scope rscope = scope;
-        for (int i = 0; i < args.length; i += 2) {
-            Type t = JavaType.typeOfName(args[i].sym(), scope);
-            String name = args[i + 1].sym();
-            Binder arg = method.addArg(t);
-            rscope = new Scope(rscope, name, arg);
-            if (regField != null) {
-                Binder field = regField.addField(name, arg.getRef(0), false);
-                fields[0] = new Scope(fields[0], name, field);
+    static class MethodDesc {
+        Binder[] arguments;
+        String[] names;
+        JavaClass.Meth method;
+        Node[] m;
+        boolean isStatic;
+
+        MethodDesc(JavaClass.Meth method, Node argList, Scope scope) {
+            this.method = method;
+            Node[] args = ((XNode) argList).expr;
+            arguments = new Binder[args.length / 2];
+            names = new String[arguments.length];
+            for (int i = 0, j = 0; i < arguments.length; ++i, j += 2) {
+                String name = args[j + 1].sym();
+                for (int k = 0; k < i; ++k)
+                    if (name == names[k]) {
+                        throw new CompileException(args[j + 1],
+                                    "Duplicate argument name (" + name + ")");
+                    }
+                names[i] = name;
+                arguments[i] =
+                    method.addArg(JavaType.typeOfName(args[j].sym(), scope));
             }
         }
-        return rscope;
+
+        Scope bindScope(Scope scope, JavaClass regField, Scope fields[]) {
+            for (int i = 0; i < arguments.length; ++i) {
+                scope = new Scope(scope, names[i], arguments[i]);
+                if (regField != null) {
+                    Binder field = regField.addField(names[i],
+                                                arguments[i].getRef(0), false);
+                    fields[0] = new Scope(fields[0], names[i], field);
+                }
+            }
+            return scope;
+        }
+
+        void init(Scope mscope, int depth) {
+            Scope bodyScope = bindScope(mscope, null, null);
+            if (bodyScope == mscope)
+                bodyScope = new Scope(bodyScope, null, null);
+            bodyScope.closure = method; // for bind var collection
+            method.code = analyze(m[3], bodyScope, depth);
+            if (JavaType.isAssignable(m[3], method.returnType,
+                                      method.code.type, true) < 0) {
+                throw new CompileException(m[3], "Cannot return " +
+                            method.code.type + " as " + method.returnType);
+            }
+        }
     }
 
     /*
@@ -386,7 +419,8 @@ public final class YetiAnalyzer extends YetiType {
      * (:method String getBlaah (:argument-list int y) (:concat (x + y))))
      */
     static JavaClass defineClass(XNode cl, boolean topLevel,
-                                 Scope scope, int depth) {
+                                 Scope[] scope_, int depth) {
+        Scope scope = scope_[0];
         JavaType parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
         Node[] superArgs = null;
@@ -422,7 +456,8 @@ public final class YetiAnalyzer extends YetiType {
         Scope consScope = new Scope(scope, null, null);
         consScope.closure = c;
         Scope[] localRef = { consScope };
-        consScope = addMethArgs(c.constr, cl.expr[1], c, localRef, consScope);
+        consScope = new MethodDesc(c.constr, cl.expr[1], scope)
+                        .bindScope(consScope, c, localRef);
         Scope local = localRef[0];
 
         if (parentClass == null)
@@ -436,6 +471,30 @@ public final class YetiAnalyzer extends YetiType {
             JavaType.resolveConstructor(superNode, parentType, initArgs)
                     .check(superNode, scope.packageName);
         c.superInit(superCons, initArgs, superNode.line);
+
+        // method defs
+        List methods = new ArrayList();
+        for (int i = 3; i < cl.expr.length; ++i) {
+            String kind = cl.expr[i].kind;
+            if (kind != "method" && kind != "static-method")
+                continue;
+            Node[] m = ((XNode) cl.expr[i]).expr;
+            Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
+                                JavaType.typeOfName(m[0].sym(), scope);
+            MethodDesc md = 
+                new MethodDesc(c.addMethod(m[1].sym(), returnType,
+                                           kind != "method", m[3].line),
+                               m[2], scope);
+            md.m = m;
+            md.isStatic = kind != "method";
+            methods.add(md);
+        }
+
+        try {
+            c.close();
+        } catch (JavaClassNotFoundException ex) {
+            throw new CompileException(cl, ex);
+        }
 
         // field defs
         for (int i = 3; i < cl.expr.length; ++i) {
@@ -469,32 +528,18 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
         }
-        for (int i = 3; i < cl.expr.length; ++i) {
-            String kind = cl.expr[i].kind;
-            if (kind != "method" && kind != "static-method")
-                continue;
-            Scope mscope = kind == "method" ? local : scope;
-            Node[] m = ((XNode) cl.expr[i]).expr;
-            Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
-                                JavaType.typeOfName(m[0].sym(), scope);
-            JavaClass.Meth method = c.addMethod(m[1].sym(), returnType,
-                                                kind != "method", m[3].line);
-            Scope bodyScope = addMethArgs(method, m[2], null, null, mscope);
-            if (bodyScope == mscope)
-                bodyScope = new Scope(bodyScope, null, null);
-            bodyScope.closure = method; // for bind var collection
-            method.code = analyze(m[3], bodyScope, depth);
-            if (JavaType.isAssignable(m[3], method.returnType,
-                                      method.code.type, true) < 0) {
-                throw new CompileException(m[3], "Cannot return " +
-                            method.code.type + " as " + method.returnType);
-            }
+
+        // method defs
+        for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
+            MethodDesc md = (MethodDesc) methods.get(i);
+            md.init(md.isStatic ? scope : local, depth);
         }
-        try {
-            c.close();
-        } catch (JavaClassNotFoundException ex) {
-            throw new CompileException(cl, ex);
-        }
+
+        Type cType = new Type(JAVA, NO_PARAM);
+        cType.javaType = c.javaType;
+        scope = new Scope(scope, cl.expr[0].sym(), null);
+        scope.importClass = new ClassBinding(cType, c.getCaptures());
+        scope_[0] = scope;
         return c;
     }
 
@@ -989,15 +1034,11 @@ public final class YetiAnalyzer extends YetiType {
             } else if (nodes[i] instanceof TypeDef) {
                 scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else if (nodes[i].kind == "class") {
-                XNode cl = (XNode) nodes[i];
-                JavaClass c = defineClass(cl, seq.seqKind instanceof TopLevel
-                                           && ((TopLevel) seq.seqKind).isModule,
-                                          scope, depth);
-                Type cType = new Type(JAVA, NO_PARAM);
-                cType.javaType = c.javaType;
-                scope = new Scope(scope, cl.expr[0].sym(), null);
-                scope.importClass = new ClassBinding(cType, c.getCaptures());
-                addSeq(last, new SeqExpr(c));
+                Scope scope_[] = { scope };
+                addSeq(last, new SeqExpr(defineClass((XNode) nodes[i],
+                        seq.seqKind instanceof TopLevel &&
+                            ((TopLevel) seq.seqKind).isModule, scope_, depth)));
+                scope = scope_[0];
             } else {
                 Code code = analyze(nodes[i], scope, depth);
                 try {
