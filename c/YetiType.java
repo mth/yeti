@@ -223,8 +223,7 @@ public class YetiType implements YetiParser {
 
     static Scope bindImport(String name, String className, Scope scope) {
         scope = new Scope(scope, name, null);
-        scope.importClass =
-            new ClassBinding(new Type('L' + className + ';'), null);
+        scope.importClass = new ClassBinding(new Type('L' + className + ';'));
         return scope;
     }
 
@@ -410,13 +409,20 @@ public class YetiType implements YetiParser {
         return t;
     }
 
-    static final class ClassBinding {
+    static class ClassBinding {
         final Type type;
-        BindRef[] captures;
 
-        public ClassBinding(Type classType, BindRef[] captures) {
+        ClassBinding(Type classType) {
             this.type = classType;
-            this.captures = captures;
+        }
+
+        BindRef[] getCaptures() {
+            return null;
+        }
+
+        // proxies - List<Closure>
+        ClassBinding dup(List proxies) {
+            return this;
         }
     }
 
@@ -770,35 +776,6 @@ public class YetiType implements YetiParser {
         return null;
     }
 
-    private static final BindRef[] NO_CAPTURES = {};
-
-    private static ClassBinding resolveNewClass(String name, Scope scope) {
-        for (; scope != null; scope = scope.outer) {
-            if (scope.name == name && scope.importClass != null) {
-                ClassBinding cb = scope.importClass;
-                BindRef[] captures = cb.captures;
-                BindRef[] tmp;
-                if (captures == null) {
-                    tmp = NO_CAPTURES;
-                } else {
-                    tmp = new BindRef[captures.length];
-                    System.arraycopy(captures, 0, tmp, 0, tmp.length);
-                }
-                return new ClassBinding(cb.type, tmp);
-            }
-            if (scope.closure != null) {
-                ClassBinding cb = resolveNewClass(name, scope.outer);
-                if (cb != null) {
-                    BindRef[] r = cb.captures;
-                    for (int i = r.length; --i >= 0; )
-                        r[i] = scope.closure.refProxy(r[i]);
-                }
-                return cb;
-            }
-        }
-        return null;
-    }
-
     static ClassBinding resolveFullClass(String name, Scope scope,
                                          boolean refs, Node checkPerm) {
         String packageName = scope.packageName;
@@ -806,17 +783,20 @@ public class YetiType implements YetiParser {
         if (name.indexOf('/') >= 0) {
             packageName = null;
         } else if (refs) {
-            ClassBinding res;
-            if ((res = resolveNewClass(name, scope)) != null)
-                return res;
+            List proxies = new ArrayList();
+            for (Scope s = scope; s != null; s = s.outer) {
+                if (s.name == name && s.importClass != null)
+                    return s.importClass.dup(proxies);
+                if (s.closure != null)
+                    proxies.add(s.closure);
+            }
         } else if ((t = resolveClass(name, scope, false)) != null) {
-            return new ClassBinding(t, NO_CAPTURES);
+            return new ClassBinding(t);
         }
         if (checkPerm != null &&
             (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
-        return new ClassBinding(JavaType.typeOfClass(packageName, name),
-                                NO_CAPTURES);
+        return new ClassBinding(JavaType.typeOfClass(packageName, name));
     }
 
     static Type resolveFullClass(String name, Scope scope) {

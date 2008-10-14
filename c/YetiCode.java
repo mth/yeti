@@ -859,9 +859,10 @@ final class ConcatStrings extends Code {
 }
 
 final class NewExpr extends JavaExpr {
-    private BindRef[] extraArgs;
+    private YetiType.ClassBinding extraArgs;
 
-    NewExpr(JavaType.Method init, Code[] args, BindRef[] extraArgs, int line) {
+    NewExpr(JavaType.Method init, Code[] args,
+            YetiType.ClassBinding extraArgs, int line) {
         super(null, init, args, line);
         type = init.classType;
         this.extraArgs = extraArgs;
@@ -871,7 +872,7 @@ final class NewExpr extends JavaExpr {
         String name = method.classType.javaType.className();
         ctx.visitTypeInsn(NEW, name);
         ctx.visitInsn(DUP);
-        genCall(ctx, extraArgs, INVOKESPECIAL);
+        genCall(ctx, extraArgs.getCaptures(), INVOKESPECIAL);
         ctx.forceType(name);
     }
 }

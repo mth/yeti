@@ -120,7 +120,7 @@ public final class YetiAnalyzer extends YetiType {
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
                 return new NewExpr(JavaType.resolveConstructor(x, cb.type, args)
                                            .check(x, scope.packageName),
-                                   args, cb.captures, x.line);
+                                   args, cb, x.line);
             }
             if (kind == "rsection") {
                 return rsection(x, scope, depth);
@@ -413,6 +413,59 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
+    static class LocalClassBinding extends ClassBinding {
+        private List proxies;
+        private LocalClassBinding next;
+        private BindRef[] captures;
+        
+        LocalClassBinding(Type classType) {
+            super(classType);
+        }
+
+        BindRef[] getCaptures() {
+            if (captures == null)
+                throw new IllegalStateException("Captures not initialized");
+            return captures;
+        }
+
+        ClassBinding dup(List proxies) {
+            LocalClassBinding r = new LocalClassBinding(type);
+            r.proxies = proxies;
+            if (captures != null) {
+                r.proxy(captures);
+            } else {
+                r.next = next;
+                next = r;
+            }
+            return r;
+        }
+
+        private void proxy(BindRef[] captures) {
+            if (captures.length == 0 || proxies.size() == 0) {
+                this.captures = captures;
+                return;
+            }
+            BindRef[] ca = new BindRef[captures.length];
+            System.arraycopy(captures, 0, ca, 0, captures.length);
+            // proxys were collected in reverse order (inner-first)
+            for (int i = proxies.size(); --i >= 0;) {
+                Closure c = (Closure) proxies.get(i);
+                for (int j = 0; j < ca.length; ++j) {
+                    ca[j] = c.refProxy(ca[j]);
+                }
+            }
+            this.captures = ca;
+            proxies = null;
+        }
+
+        void init(BindRef[] captures) {
+            LocalClassBinding cb = this;
+            while ((cb = cb.next) != null)
+                cb.proxy(captures);
+            this.captures = captures;
+        }
+    }
+
     /*
      * (:class Foo (:argument-list int x) (:extends Object (:arguments))
      * (foo = x)
@@ -482,7 +535,8 @@ public final class YetiAnalyzer extends YetiType {
         Type cType = new Type(JAVA, NO_PARAM);
         cType.javaType = c.javaType;
         scope = new Scope(scope, cl.expr[0].sym(), null);
-        scope.importClass = new ClassBinding(cType, null);
+        LocalClassBinding binding = new LocalClassBinding(cType);
+        scope.importClass = binding;
         scope_[0] = scope;
 
         Scope consScope = new Scope(scope, null, null);
@@ -542,7 +596,7 @@ public final class YetiAnalyzer extends YetiType {
             md.init(md.isStatic ? scope : local, depth);
         }
 
-        scope.importClass.captures = c.getCaptures();
+        binding.init(c.getCaptures());
         return c;
     }
 
@@ -1031,7 +1085,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = new Scope(scope, (lastSlash < 0 ? name
                               : name.substring(lastSlash + 1)).intern(), null);
                 Type classType = new Type("L" + name + ';');
-                scope.importClass = new ClassBinding(classType, null);
+                scope.importClass = new ClassBinding(classType);
                 if (seq.seqKind == Seq.EVAL)
                     YetiEval.registerImport(scope.name, classType);
             } else if (nodes[i] instanceof TypeDef) {
@@ -1617,7 +1671,7 @@ public final class YetiAnalyzer extends YetiType {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
                     if (bind.isImport) {
                         scope = new Scope(scope, bind.name, null);
-                        scope.importClass = new ClassBinding(bind.type, null);
+                        scope.importClass = new ClassBinding(bind.type);
                         continue;
                     }
                     scope = bind.polymorph ? bindPoly(bind.name, bind.type,
