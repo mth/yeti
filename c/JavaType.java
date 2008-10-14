@@ -851,9 +851,26 @@ class JavaType {
         if ((jt.access & Opcodes.ACC_INTERFACE) != 0)
             throw new CompileException(call, "Cannot instantiate interface "
                                              + jt.dottedName());
-        if (noAbstract && (jt.access & Opcodes.ACC_ABSTRACT) != 0)
-            throw new CompileException(call, "Cannot construct abstract class "
-                                             + jt.dottedName());
+        if (noAbstract && (jt.access & Opcodes.ACC_ABSTRACT) != 0) {
+            StringBuffer msg =
+                new StringBuffer("Cannot construct abstract class ");
+            msg.append(jt.dottedName());
+            int n = 0;
+            for (int i = 0; i < jt.methods.length; ++i)
+                if ((jt.methods[i].access & Opcodes.ACC_ABSTRACT) != 0) {
+                    if (++n == 1) {
+                        msg.append("\nAbstract methods found in ");
+                        msg.append(jt.dottedName());
+                        msg.append(':');
+                    } else if (n > 2) {
+                        msg.append("\n    ...");
+                        break;
+                    }
+                    msg.append("\n    ");
+                    msg.append(jt.methods[i]);
+                }
+            throw new CompileException(call, msg.toString());
+        }
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
