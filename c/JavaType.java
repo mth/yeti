@@ -1009,8 +1009,9 @@ class JavaType {
         return t;
     }
 
-    static YetiType.Type typeOfName(String name, YetiType.Scope scope) {
+    static YetiType.Type typeOfName(YetiParser.Node sym, YetiType.Scope scope) {
         int arrays = 0;
+        String name = sym.sym();
         while (name.endsWith("[]")) {
             ++arrays;
             name = name.substring(0, name.length() - 2);
@@ -1029,9 +1030,13 @@ class JavaType {
             name == "string"  ?  "Ljava/lang/String;" :
             name == "number"  ?  "Lyeti/lang/Num;" :
             null;
-        YetiType.Type t =
-            descr == null ? YetiType.resolveFullClass(name, scope)
-                          : new YetiType.Type(descr);
+        YetiType.Type t;
+        if (descr == null) {
+            t = YetiType.resolveFullClass(name, scope);
+            t.javaType.resolve(sym).checkPackage(sym, scope.packageName);
+        } else {
+            t = new YetiType.Type(descr);
+        }
         while (--arrays >= 0)
             t = new YetiType.Type(YetiType.JAVA_ARRAY,
                                   new YetiType.Type[] { t });
