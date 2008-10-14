@@ -529,7 +529,6 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
 
-        // method defs
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
             MethodDesc md = (MethodDesc) methods.get(i);
             md.init(md.isStatic ? scope : local, depth);
