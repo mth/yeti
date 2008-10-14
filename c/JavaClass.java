@@ -243,6 +243,7 @@ final class JavaClass extends CapturingClosure {
               String[] interfaces, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
+        javaType = JavaType.createNewClass(className);
         constr.name = "<init>";
         constr.returnType = YetiType.UNIT_TYPE;
         constr.className = className;
@@ -294,7 +295,7 @@ final class JavaClass extends CapturingClosure {
         t.className = className;
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
-        javaType = new JavaType(t);
+        javaType.resolve(t);
     }
 
     // must be called after close

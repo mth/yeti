@@ -454,9 +454,8 @@ class JavaType {
         this.description = description.intern();
     }
 
-    JavaType(JavaTypeReader t) throws JavaClassNotFoundException {
-        description = ('L' + t.className + ';').intern();
-        resolve(t);
+    static JavaType createNewClass(String className) {
+        return new JavaType('L' + className + ';');
     }
 
     boolean isCollection() {
@@ -517,7 +516,7 @@ class JavaType {
         resolve(t);
     }
 
-    private void resolve(JavaTypeReader t) throws JavaClassNotFoundException {
+    void resolve(JavaTypeReader t) throws JavaClassNotFoundException {
         access = t.access;
         interfaces = new HashMap();
         if (t.interfaces != null) {

@@ -506,6 +506,12 @@ public final class YetiAnalyzer extends YetiType {
                                     (String[]) interfaces.toArray(
                                         new String[interfaces.size()]),
                                     topLevel);
+        Type cType = new Type(JAVA, NO_PARAM);
+        cType.javaType = c.javaType;
+        scope = new Scope(scope, cl.expr[0].sym(), null);
+        LocalClassBinding binding = new LocalClassBinding(cType);
+        scope.importClass = binding;
+        scope_[0] = scope;
         MethodDesc consDesc = new MethodDesc(c.constr, cl.expr[1], scope);
 
         // method defs
@@ -531,13 +537,6 @@ public final class YetiAnalyzer extends YetiType {
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(cl, ex);
         }
-
-        Type cType = new Type(JAVA, NO_PARAM);
-        cType.javaType = c.javaType;
-        scope = new Scope(scope, cl.expr[0].sym(), null);
-        LocalClassBinding binding = new LocalClassBinding(cType);
-        scope.importClass = binding;
-        scope_[0] = scope;
 
         Scope consScope = new Scope(scope, null, null);
         consScope.closure = c;
