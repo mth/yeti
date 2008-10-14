@@ -398,13 +398,11 @@ abstract class BinOpRef extends BindRef {
     class Result extends Code {
         private Code arg1;
         private Code arg2;
-        final String fun;
 
         Result(Code arg1, Code arg2, YetiType.Type res) {
             type = res;
             this.arg1 = arg1;
             this.arg2 = arg2;
-            fun = coreFun;
         }
 
         void gen(Ctx ctx) {
