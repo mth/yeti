@@ -226,9 +226,9 @@ class JavaType {
         }
 
         void check(YetiParser.Node where, String packageName) {
-            if ((access & Opcodes.ACC_PUBLIC) == 0) {
+            classType.javaType.checkPackage(where, packageName);
+            if ((access & Opcodes.ACC_PUBLIC) == 0)
                 checkPackage(where, packageName, className, "field", name);
-            }
         }
     }
 
@@ -262,9 +262,9 @@ class JavaType {
         }
 
         Method check(YetiParser.Node where, String packageName) {
-            if ((access & Opcodes.ACC_PUBLIC) == 0) {
+            classType.javaType.checkPackage(where, packageName);
+            if ((access & Opcodes.ACC_PUBLIC) == 0)
                 checkPackage(where, packageName, className, "method", name);
-            }
             return this;
         }
 
@@ -327,9 +327,18 @@ class JavaType {
                              String name, String what, String item) {
         if (!JavaType.packageOfClass(name).equals(packageName))
             throw new CompileException(where,
-                "Non-public " + what + ' ' + name.replace('/', '.') + '#'
-              + item + " cannot be accessed from different package ("
-              + packageName + ")");
+                "Non-public " + what + ' ' + name.replace('/', '.')
+                + (item == null ? "" : "#".concat(item))
+                + " cannot be accessed from different package ("
+                + packageName + ")");
+    }
+
+    JavaType checkPackage(YetiParser.Node where, String packageName) {
+        if ((access & Opcodes.ACC_PUBLIC) == 0)
+            checkPackage(where, packageName, className(),
+                         (access & Opcodes.ACC_INTERFACE) != 0
+                            ? "interface" : "class", null);
+        return this;
     }
 
     boolean isInterface() {
