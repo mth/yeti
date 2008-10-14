@@ -151,7 +151,7 @@ final class MethodDesc extends YetiType {
         if (scope.packageName != null && scope.packageName.length() != 0)
             className = scope.packageName + '/' + className;
         JavaClass c = new JavaClass(className, topLevel);
-        scope.closure = c;
+        scope.closure = c; // to proxy super-class closures
 
         ClassBinding parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
