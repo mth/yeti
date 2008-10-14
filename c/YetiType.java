@@ -104,6 +104,8 @@ public class YetiType implements YetiParser {
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
     static final Type NUM_TO_NUM = fun(NUM_TYPE, NUM_TYPE);
+    static final Type STR_TO_NUM_TO_STR =
+        fun2Arg(STR_TYPE, NUM_TYPE, STR_TYPE);
     static final Type FOR_TYPE =
         fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
     static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
@@ -155,6 +157,7 @@ public class YetiType implements YetiParser {
         bindScope("false", new BuiltIn(18),
         bindScope("true", new BuiltIn(19),
         bindScope("negate", new BuiltIn(20),
+        bindScope("strChar", new BuiltIn(16),
         bindStr("strLength", fun(STR_TYPE, NUM_TYPE), "length", "()I",
         bindStr("strUpper", fun(STR_TYPE, STR_TYPE), "toUpperCase",
                 "()Ljava/lang/String;",
@@ -195,7 +198,7 @@ public class YetiType implements YetiParser {
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);

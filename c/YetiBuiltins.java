@@ -90,6 +90,9 @@ final class BuiltIn implements Binder {
         case 15:
             r = new NotOp(line);
             break;
+        case 16:
+            r = new StrChar(line);
+            break;
         case 18:
             r = new BooleanConstant(false);
             break;
@@ -392,28 +395,39 @@ abstract class BinOpRef extends BindRef {
     boolean markTail2;
     String coreFun;
 
+    class Result extends Code {
+        private Code arg1;
+        private Code arg2;
+        final String fun;
+
+        Result(Code arg1, Code arg2, YetiType.Type res) {
+            type = res;
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+            fun = coreFun;
+        }
+
+        void gen(Ctx ctx) {
+            binGen(ctx, arg1, arg2);
+        }
+
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
+            binGenIf(ctx, arg1, arg2, to, ifTrue);
+        }
+
+        void markTail() {
+            if (markTail2) {
+                arg2.markTail();
+            }
+        }
+    }
+
     Code apply(final Code arg1, final YetiType.Type res1, final int line) {
         return new Code() {
             { type = res1; }
 
-            Code apply(final Code arg2, final YetiType.Type res, int line) {
-                return new Code() {
-                    { type = res; }
-
-                    void gen(Ctx ctx) {
-                        binGen(ctx, arg1, arg2);
-                    }
-
-                    void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                        binGenIf(ctx, arg1, arg2, to, ifTrue);
-                    }
-
-                    void markTail() {
-                        if (markTail2) {
-                            arg2.markTail();
-                        }
-                    }
-                };
+            Code apply(Code arg2, YetiType.Type res, int line) {
+                return new Result(arg1, arg2, res);
             }
 
             void gen(Ctx ctx) {
@@ -1017,5 +1031,30 @@ final class StrOp extends StaticRef implements Binder {
 
     boolean flagop(int fl) {
         return (fl & STD_CONST) != 0;
+    }
+}
+
+final class StrChar extends BinOpRef {
+    private int line;
+
+    StrChar(int line) {
+        coreFun = "strChar";
+        type = YetiType.STR_TO_NUM_TO_STR;
+        this.line = line;
+    }
+
+    void binGen(Ctx ctx, Code arg1, Code arg2) {
+        arg1.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+        arg2.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
+        ctx.visitInsn(DUP);
+        ctx.intConst(1);
+        ctx.visitInsn(IADD);
+        ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
+                            "substring", "(II)Ljava/lang/String;");
+        ctx.forceType("java/lang/String");
     }
 }

@@ -294,8 +294,7 @@ plus a b = a + b;
     norec substAll re = substAll re,
     norec matchAll re = matchAll re,
     norec like re = like re,
-
-    strChar s pos = strSlice s pos (pos + 1),
+    norec strChar s pos = strChar s pos,
 
     strLeft s end = strSlice s 0 end,
 
