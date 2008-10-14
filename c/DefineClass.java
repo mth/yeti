@@ -81,9 +81,7 @@ final class MethodDesc extends YetiType {
                         method.code.type + " as " + method.returnType);
         }
     }
-}
 
-final class DefineClass extends YetiType {
     static final class LocalClassBinding extends ClassBinding {
         private List proxies;
         private LocalClassBinding next;
@@ -142,8 +140,8 @@ final class DefineClass extends YetiType {
      * (foo = x)
      * (:method String getBlaah (:argument-list int y) (:concat (x + y))))
      */
-    static JavaClass def(XNode cl, boolean topLevel,
-                         Scope[] scope_, int depth) {
+    static JavaClass defineClass(XNode cl, boolean topLevel,
+                                 Scope[] scope_, int depth) {
         Scope scope = scope_[0];
         JavaType parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
