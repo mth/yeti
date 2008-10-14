@@ -45,12 +45,18 @@ final class JavaClass extends CapturingClosure {
     private JavaExpr superInit;
     private boolean isPublic;
     private int captureCount;
-    JavaType javaType;
+    YetiType.Type classType;
     final Meth constr = new Meth();
+    final Binder self;
 
     static class Arg extends BindRef implements Binder {
         int argn;
         final YetiType.Type javaType;
+
+        Arg(JavaClass c) {
+            type = javaType = c.classType;
+            binder = this;
+        }
 
         Arg(YetiType.Type type) {
             this.javaType = type;
@@ -243,7 +249,9 @@ final class JavaClass extends CapturingClosure {
               String[] interfaces, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
-        javaType = JavaType.createNewClass(className);
+        classType = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
+        classType.javaType = JavaType.createNewClass(className);
+        self = new Arg(this);
         constr.name = "<init>";
         constr.returnType = YetiType.UNIT_TYPE;
         constr.className = className;
@@ -295,7 +303,7 @@ final class JavaClass extends CapturingClosure {
         t.className = className;
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
-        javaType.resolve(t);
+        classType.javaType.resolve(t);
     }
 
     // must be called after close

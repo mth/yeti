@@ -147,6 +147,8 @@ final class MethodDesc extends YetiType {
         Node[] extend = ((XNode) cl.expr[2]).expr;
         Node[] superArgs = null;
         Node superNode = cl;
+
+        // collect parent class / interfaces (extends)
         List interfaces = new ArrayList();
         for (int i = 0; i < extend.length; i += 2) {
             JavaType t = resolveFullClass(extend[i].sym(), scope)
@@ -176,10 +178,8 @@ final class MethodDesc extends YetiType {
                                     (String[]) interfaces.toArray(
                                         new String[interfaces.size()]),
                                     topLevel);
-        Type cType = new Type(JAVA, NO_PARAM);
-        cType.javaType = c.javaType;
         scope = new Scope(scope, cl.expr[0].sym(), null);
-        LocalClassBinding binding = new LocalClassBinding(cType);
+        LocalClassBinding binding = new LocalClassBinding(c.classType);
         scope.importClass = binding;
         scope_[0] = scope;
         MethodDesc consDesc = new MethodDesc(c.constr, cl.expr[1], scope);
@@ -208,6 +208,7 @@ final class MethodDesc extends YetiType {
             throw new CompileException(cl, ex);
         }
 
+        // constructor arguments
         Scope consScope = new Scope(scope, null, null);
         consScope.closure = c;
         Scope[] localRef = { consScope };
@@ -241,8 +242,11 @@ final class MethodDesc extends YetiType {
                     Function lambda = new Function(new Type(depth + 1));
                     lambda.selfBind = binder =
                         c.addField(bind.name, lambda, bind.var);
-                    YetiAnalyzer.lambdaBind(lambda, bind, bind.noRec ? local :
-                            new Scope(local, bind.name, binder), depth + 1);
+                    // binding this for lambdas is unsafe, but useful
+                    Scope funScope = new Scope(local, "this", c.self);
+                    if (!bind.noRec)
+                        funScope = new Scope(funScope, bind.name, binder);
+                    YetiAnalyzer.lambdaBind(lambda, bind, funScope, depth + 1);
                     code = lambda;
                 } else {
                     code = YetiAnalyzer.analyze(bind.expr, local, depth + 1);
@@ -260,6 +264,9 @@ final class MethodDesc extends YetiType {
             }
         }
 
+        local = new Scope(local, "this", c.self);
+
+        // analyze method bodies
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
             MethodDesc md = (MethodDesc) methods.get(i);
             md.init(md.isStatic ? scope : local, depth);

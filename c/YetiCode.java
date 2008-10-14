@@ -1683,6 +1683,14 @@ final class RootClosure extends AClosure {
     }
 }
 
+final class LoadVar extends Code {
+    int var;
+
+    void gen(Ctx ctx) {
+        ctx.visitVarInsn(ALOAD, var);
+    }
+}
+
 class Apply extends Code {
     Code fun, arg;
     int line;
@@ -1694,18 +1702,10 @@ class Apply extends Code {
         this.line = line;
     }
 
-    class SpecialArg extends Code {
-        int var;
-
-        void gen(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, var);
-        }
-    }
-
     void gen(Ctx ctx) {
         if (fun instanceof Function) {
             Function f = (Function) fun;
-            SpecialArg arg_ = new SpecialArg();
+            LoadVar arg_ = new LoadVar();
             // inline direct calls
             // TODO: constants don't need a temp variable
             if (f.uncapture(arg_)) {
