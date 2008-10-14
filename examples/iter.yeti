@@ -17,9 +17,8 @@ class Foo(int x) extends Iterator
         n := v
 end;
 
-class IterTest(Iterator iter)
+class IterTest(Iterator i)
     void test()
-        var i = iter;
         i#hasNext() loop
             println i#next()
 end;
