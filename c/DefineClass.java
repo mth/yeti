@@ -146,8 +146,14 @@ final class MethodDesc extends YetiType {
      */
     static JavaClass defineClass(XNode cl, boolean topLevel,
                                  Scope[] scope_, int depth) {
-        Scope scope = scope_[0];
-        JavaType parentClass = null;
+        Scope scope = new Scope(scope_[0], null, null);
+        String className = cl.expr[0].sym();
+        if (scope.packageName != null && scope.packageName.length() != 0)
+            className = scope.packageName + '/' + className;
+        JavaClass c = new JavaClass(className, topLevel);
+        scope.closure = c;
+
+        ClassBinding parentClass = null;
         Node[] extend = ((XNode) cl.expr[2]).expr;
         Node[] superArgs = null;
         Node superNode = cl;
@@ -155,34 +161,32 @@ final class MethodDesc extends YetiType {
         // collect parent class / interfaces (extends)
         List interfaces = new ArrayList();
         for (int i = 0; i < extend.length; i += 2) {
-            JavaType t = resolveFullClass(extend[i].sym(), scope)
-                            .javaType.resolve(extend[i]);
-            t.checkPackage(extend[i], scope.packageName);
+            ClassBinding cb =
+                resolveFullClass(extend[i].sym(), scope, true, extend[i]);
+            JavaType jt = cb.type.javaType.resolve(extend[i]);
+            jt.checkPackage(extend[i], scope.packageName);
             Node[] args = ((XNode) extend[i + 1]).expr;
-            if (t.isInterface()) {
+            if (jt.isInterface()) {
                 if (args != null)
                     throw new CompileException(extend[i + 1],
                         "Cannot give arguments to interface");
-                interfaces.add(t.className());
+                interfaces.add(jt.className());
             } else if (parentClass != null) {
                 throw new CompileException(extend[i],
                     "Cannot extend multiple non-interface classes (" +
-                        parentClass.dottedName() +
-                        " and " + t.dottedName() + ')');
+                        parentClass.type.javaType.dottedName() +
+                        " and " + jt.dottedName() + ')');
             } else {
-                parentClass = t;
+                parentClass = cb;
                 superArgs = args;
                 superNode = extend[i];
             }
         }
-        String className = cl.expr[0].sym();
-        if (scope.packageName != null && scope.packageName.length() != 0)
-            className = scope.packageName + '/' + className;
-        JavaClass c = new JavaClass(className, parentClass,
-                                    (String[]) interfaces.toArray(
-                                        new String[interfaces.size()]),
-                                    topLevel);
-        scope = new Scope(scope, cl.expr[0].sym(), null);
+        if (parentClass == null)
+            parentClass = new ClassBinding(OBJECT_TYPE);
+        c.init(parentClass,
+               (String[]) interfaces.toArray(new String[interfaces.size()]));
+        scope = new Scope(scope_[0], cl.expr[0].sym(), null);
         LocalClassBinding binding = new LocalClassBinding(c.classType);
         scope.importClass = binding;
         scope_[0] = scope;
@@ -219,16 +223,12 @@ final class MethodDesc extends YetiType {
         consScope = consDesc.bindScope(consScope, c, localRef);
         Scope local = localRef[0];
 
-        if (parentClass == null)
-            parentClass = JavaType.fromDescription("Ljava/lang/Object;");
         if (superArgs == null)
             superArgs = new Node[0];
-        Type parentType = new Type(JAVA, NO_PARAM);
-        parentType.javaType = parentClass;
-
         Code[] initArgs = YetiAnalyzer.mapArgs(0, superArgs, consScope, depth);
         JavaType.Method superCons =
-            JavaType.resolveConstructor(superNode, parentType, initArgs, false)
+            JavaType.resolveConstructor(superNode, parentClass.type,
+                                        initArgs, false)
                     .check(superNode, scope.packageName);
         c.superInit(superCons, initArgs, superNode.line);
 

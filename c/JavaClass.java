@@ -38,7 +38,7 @@ import java.util.ArrayList;
 final class JavaClass extends CapturingClosure {
     private String className;
     private String[] implement;
-    private String parentClass = "java/lang/Object";
+    private YetiType.ClassBinding parentClass;
     private List fields = new ArrayList();
     private List methods = new ArrayList();
     private Map fieldNames = new HashMap();
@@ -245,8 +245,7 @@ final class JavaClass extends CapturingClosure {
         }
     }
 
-    JavaClass(String className, JavaType parentClass,
-              String[] interfaces, boolean isPublic) {
+    JavaClass(String className, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
         classType = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
@@ -257,8 +256,10 @@ final class JavaClass extends CapturingClosure {
         constr.className = className;
         constr.access = isPublic ? ACC_PUBLIC : 0;
         this.isPublic = isPublic;
-        if (parentClass != null)
-            this.parentClass = parentClass.className();
+    }
+
+    void init(YetiType.ClassBinding parentClass, String[] interfaces) {
+        this.parentClass = parentClass;
         implement = interfaces;
     }
 
@@ -299,7 +300,7 @@ final class JavaClass extends CapturingClosure {
             m.init();
             ((m.access & ACC_STATIC) != 0 ? t.staticMethods : t.methods).add(m);
         }
-        t.parent = parentClass;
+        t.parent = parentClass.type.javaType;
         t.className = className;
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
@@ -328,14 +329,14 @@ final class JavaClass extends CapturingClosure {
     void gen(Ctx ctx) {
         constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
-        Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER,
-                               className, parentClass, implement);
+        Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER, className,
+                            parentClass.type.javaType.className(), implement);
         clc.fieldCounter = captureCount;
         Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
         constr.convertArgs(init);
         genClosureInit(init);
         init.visitVarInsn(ALOAD, 0); // this.
-        superInit.genCall(init, null, INVOKESPECIAL);
+        superInit.genCall(init, parentClass.getCaptures(), INVOKESPECIAL);
         // extra arguments are used for smugling in captured bindings
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {

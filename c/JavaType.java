@@ -48,14 +48,15 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     List methods = new ArrayList();
     List staticMethods = new ArrayList();
     List constructors = new ArrayList();
-    String parent;
+    JavaType parent;
     String className;
     String[] interfaces;
     int access;
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
-        parent = superName;
+        if (superName != null)
+            parent = JavaType.fromDescription('L' + superName + ';');
         this.access = access;
         this.interfaces = interfaces;
 /*        System.err.println("visit: ver=" + version + " | access=" + access
@@ -540,7 +541,7 @@ class JavaType {
         HashMap mm = new HashMap();
         HashMap smm = new HashMap();
         if (t.parent != null) {
-            parent = fromDescription('L' + t.parent + ';');
+            parent = t.parent;
             parent.resolve();
         }
         for (Iterator i = interfaces.values().iterator(); i.hasNext();) {
