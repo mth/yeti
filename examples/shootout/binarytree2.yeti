@@ -1,11 +1,11 @@
-class Node(int item, int depth)
+class Node(number item, number depth)
     left  = if depth > 0 then new Node(item * 2 - 1, depth - 1) else () fi,
     right = if depth > 0 then new Node(item * 2, depth - 1) else () fi,
 
-    int item()
+    number item()
         item,
 
-    int check()
+    number check()
         item + if defined? left  then left#item() else 0 fi
              - if defined? right then right#item() else 0 fi
 end;
