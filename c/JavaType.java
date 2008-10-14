@@ -542,10 +542,6 @@ class JavaType {
         if (t.parent != null) {
             parent = fromDescription('L' + t.parent + ';');
             parent.resolve();
-            fields.putAll(parent.fields);
-            staticFields.putAll(parent.staticFields);
-            putMethods(mm, parent.methods);
-            putMethods(smm, parent.staticMethods);
         }
         for (Iterator i = interfaces.values().iterator(); i.hasNext();) {
             JavaType ii = (JavaType) i.next();
@@ -554,6 +550,10 @@ class JavaType {
         }
         if (parent != null) {
             interfaces.putAll(parent.interfaces);
+            fields.putAll(parent.fields);
+            staticFields.putAll(parent.staticFields);
+            putMethods(mm, parent.methods);
+            putMethods(smm, parent.staticMethods);
         }
         fields.putAll(t.fields);
         staticFields.putAll(t.staticFields);
@@ -563,6 +563,16 @@ class JavaType {
         methods = methodArray(mm.values());
         staticMethods = methodArray(smm.values());
         resolved = true;
+    }
+
+    void checkAbstract() {
+        if ((access & Opcodes.ACC_ABSTRACT) != 0)
+            return;
+        for (int i = methods.length; --i >= 0;)
+            if ((methods[i].access & Opcodes.ACC_ABSTRACT) != 0) {
+                access |= Opcodes.ACC_ABSTRACT;
+                return;
+            }
     }
 
     static final String[] NUMBER_TYPES = {

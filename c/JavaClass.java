@@ -304,6 +304,7 @@ final class JavaClass extends CapturingClosure {
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
         classType.javaType.resolve(t);
+        classType.javaType.checkAbstract();
     }
 
     // must be called after close
