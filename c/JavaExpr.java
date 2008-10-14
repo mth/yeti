@@ -207,7 +207,8 @@ class JavaExpr extends Code {
             case 'D': method = "doubleValue"; break;
             case 'F': method = "floatValue"; break;
             case 'I': method = "intValue"; break;
-            case 'L':
+            case 'L': if (descr == "Lyeti/lang/Num;")
+                          return;
             case 'J': method = "longValue"; break;
             case 'S': method = "shortValue"; break;
         }
