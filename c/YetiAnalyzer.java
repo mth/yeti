@@ -453,24 +453,7 @@ public final class YetiAnalyzer extends YetiType {
                                     (String[]) interfaces.toArray(
                                         new String[interfaces.size()]),
                                     topLevel);
-        Scope consScope = new Scope(scope, null, null);
-        consScope.closure = c;
-        Scope[] localRef = { consScope };
-        consScope = new MethodDesc(c.constr, cl.expr[1], scope)
-                        .bindScope(consScope, c, localRef);
-        Scope local = localRef[0];
-
-        if (parentClass == null)
-            parentClass = JavaType.fromDescription("Ljava/lang/Object;");
-        if (superArgs == null)
-            superArgs = new Node[0];
-        Type parentType = new Type(JAVA, NO_PARAM);
-        parentType.javaType = parentClass;
-        Code[] initArgs = mapArgs(0, superArgs, consScope, depth);
-        JavaType.Method superCons =
-            JavaType.resolveConstructor(superNode, parentType, initArgs)
-                    .check(superNode, scope.packageName);
-        c.superInit(superCons, initArgs, superNode.line);
+        MethodDesc consDesc = new MethodDesc(c.constr, cl.expr[1], scope);
 
         // method defs
         List methods = new ArrayList();
@@ -495,6 +478,31 @@ public final class YetiAnalyzer extends YetiType {
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(cl, ex);
         }
+
+        Type cType = new Type(JAVA, NO_PARAM);
+        cType.javaType = c.javaType;
+        scope = new Scope(scope, cl.expr[0].sym(), null);
+        scope.importClass = new ClassBinding(cType, null);
+        scope_[0] = scope;
+
+        Scope consScope = new Scope(scope, null, null);
+        consScope.closure = c;
+        Scope[] localRef = { consScope };
+        consScope = consDesc.bindScope(consScope, c, localRef);
+        Scope local = localRef[0];
+
+        if (parentClass == null)
+            parentClass = JavaType.fromDescription("Ljava/lang/Object;");
+        if (superArgs == null)
+            superArgs = new Node[0];
+        Type parentType = new Type(JAVA, NO_PARAM);
+        parentType.javaType = parentClass;
+
+        Code[] initArgs = mapArgs(0, superArgs, consScope, depth);
+        JavaType.Method superCons =
+            JavaType.resolveConstructor(superNode, parentType, initArgs)
+                    .check(superNode, scope.packageName);
+        c.superInit(superCons, initArgs, superNode.line);
 
         // field defs
         for (int i = 3; i < cl.expr.length; ++i) {
@@ -534,11 +542,7 @@ public final class YetiAnalyzer extends YetiType {
             md.init(md.isStatic ? scope : local, depth);
         }
 
-        Type cType = new Type(JAVA, NO_PARAM);
-        cType.javaType = c.javaType;
-        scope = new Scope(scope, cl.expr[0].sym(), null);
-        scope.importClass = new ClassBinding(cType, c.getCaptures());
-        scope_[0] = scope;
+        scope.importClass.captures = c.getCaptures();
         return c;
     }
 

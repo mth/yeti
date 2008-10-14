@@ -412,7 +412,7 @@ public class YetiType implements YetiParser {
 
     static final class ClassBinding {
         final Type type;
-        final BindRef[] captures;
+        BindRef[] captures;
 
         public ClassBinding(Type classType, BindRef[] captures) {
             this.type = classType;
