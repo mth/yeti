@@ -118,9 +118,9 @@ public final class YetiAnalyzer extends YetiType {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
-                return new NewExpr(JavaType.resolveConstructor(x, cb.type, args)
-                                           .check(x, scope.packageName),
-                                   args, cb, x.line);
+                return new NewExpr(
+                        JavaType.resolveConstructor(x, cb.type, args, true)
+                                .check(x, scope.packageName), args, cb, x.line);
             }
             if (kind == "rsection") {
                 return rsection(x, scope, depth);
@@ -553,7 +553,7 @@ public final class YetiAnalyzer extends YetiType {
 
         Code[] initArgs = mapArgs(0, superArgs, consScope, depth);
         JavaType.Method superCons =
-            JavaType.resolveConstructor(superNode, parentType, initArgs)
+            JavaType.resolveConstructor(superNode, parentType, initArgs, false)
                     .check(superNode, scope.packageName);
         c.superInit(superCons, initArgs, superNode.line);
 

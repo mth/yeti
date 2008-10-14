@@ -827,11 +827,15 @@ class JavaType {
     }
 
     static Method resolveConstructor(YetiParser.Node call,
-                                     YetiType.Type t, Code[] args) {
+                                     YetiType.Type t, Code[] args,
+                                     boolean noAbstract) {
         JavaType jt = t.javaType.resolve(call);
-        if ((jt.access & Opcodes.ACC_ABSTRACT) != 0)
-            throw new CompileException(call,
-                        "Cannot construct abstract class " + jt.dottedName());
+        if ((jt.access & Opcodes.ACC_INTERFACE) != 0)
+            throw new CompileException(call, "Cannot instantiate interface "
+                                             + jt.dottedName());
+        if (noAbstract && (jt.access & Opcodes.ACC_ABSTRACT) != 0)
+            throw new CompileException(call, "Cannot construct abstract class "
+                                             + jt.dottedName());
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
