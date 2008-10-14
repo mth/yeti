@@ -77,8 +77,12 @@ final class MethodDesc extends YetiType {
         method.code = YetiAnalyzer.analyze(m[3], bodyScope, depth);
         if (JavaType.isAssignable(m[3], method.returnType,
                                   method.code.type, true) < 0) {
-            throw new CompileException(m[3], "Cannot return " +
-                        method.code.type + " as " + method.returnType);
+            try {
+                unify(method.code.type, method.returnType);
+            } catch (TypeException ex) {
+                throw new CompileException(m[3], "Cannot return " +
+                            method.code.type + " as " + method.returnType);
+            }
         }
     }
 

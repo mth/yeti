@@ -1,0 +1,27 @@
+import java.util.Iterator;
+
+class Foo(int x) extends Iterator
+    var n = x,
+
+    Object next()
+        n := n + 1;
+        "\(n)",
+
+    boolean hasNext()
+        n < 10,
+
+    void remove()
+        failWith "Cannot remove",
+
+    void setValue(int v)
+        n := v
+end;
+
+class IterTest(Iterator iter)
+    void test()
+        var i = iter;
+        i#hasNext() loop
+            println i#next()
+end;
+
+new IterTest(new Foo(3))#test()
