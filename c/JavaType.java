@@ -951,6 +951,12 @@ class JavaType {
                                     t, YetiType.NO_TYPE, YetiType.LIST_TYPE });
                 }
             }
+            if (a.type == YetiType.UNIT && (b.type == YetiType.JAVA ||
+                                            b.type == YetiType.JAVA_ARRAY))
+                return b;
+            if (b.type == YetiType.UNIT && (a.type == YetiType.JAVA ||
+                                            a.type == YetiType.JAVA_ARRAY))
+                return a;
             return null;
         }
         if (a.javaType == b.javaType) {
