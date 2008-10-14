@@ -333,12 +333,11 @@ class JavaType {
                 + packageName + ")");
     }
 
-    JavaType checkPackage(YetiParser.Node where, String packageName) {
+    void checkPackage(YetiParser.Node where, String packageName) {
         if ((access & Opcodes.ACC_PUBLIC) == 0)
             checkPackage(where, packageName, className(),
                          (access & Opcodes.ACC_INTERFACE) != 0
                             ? "interface" : "class", null);
-        return this;
     }
 
     boolean isInterface() {
