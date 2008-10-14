@@ -152,7 +152,8 @@ final class DefineClass extends YetiType {
         List interfaces = new ArrayList();
         for (int i = 0; i < extend.length; i += 2) {
             JavaType t = resolveFullClass(extend[i].sym(), scope)
-                            .javaType.resolve(extend[i]);
+                            .javaType.resolve(extend[i])
+                            .checkPackage(extend[i], scope.packageName);
             Node[] args = ((XNode) extend[i + 1]).expr;
             if (t.isInterface()) {
                 if (args != null)
