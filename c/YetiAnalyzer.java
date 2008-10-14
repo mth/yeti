@@ -491,8 +491,8 @@ public final class YetiAnalyzer extends YetiType {
             } else if (parentClass != null) {
                 throw new CompileException(extend[i],
                     "Cannot extend multiple non-interface classes (" +
-                        parentClass.className().replace('/', '.') +
-                        " and " + t.className().replace('/', '.') + ')');
+                        parentClass.dottedName() +
+                        " and " + t.dottedName() + ')');
             } else {
                 parentClass = t;
                 superArgs = args;

@@ -829,6 +829,9 @@ class JavaType {
     static Method resolveConstructor(YetiParser.Node call,
                                      YetiType.Type t, Code[] args) {
         JavaType jt = t.javaType.resolve(call);
+        if ((jt.access & Opcodes.ACC_ABSTRACT) != 0)
+            throw new CompileException(call,
+                        "Cannot construct abstract class " + jt.dottedName());
         return jt.resolveByArgs(call, jt.constructors, "<init>", args, t);
     }
 
@@ -897,8 +900,7 @@ class JavaType {
             default : return "~" + description;
         }
         StringBuffer s = new StringBuffer("~");
-        s.append(description.substring(1, description.length() - 1)
-                            .replace('/', '.'));
+        s.append(dottedName());
         if (param != null && param.length > 0) {
             s.append('<');
             for (int i = 0; i < param.length; ++i) {
