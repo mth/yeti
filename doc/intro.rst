@@ -2269,7 +2269,7 @@ unsafe cast, because such casts allow circumventing the Yeti typesystem
 Defining Java classes in Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Java classes can be defined in Yeti code.
+Java classes can be defined in the Yeti code.
 ::
 
     class Hello
@@ -2283,7 +2283,7 @@ This defined a class ``Hello`` with one ``msg`` method,
 created a new instance of it and called the method. The method return and
 argument types must be specified explicitly (quite like in the Java code).
 
-Super class can be given using extends clause::
+Super class can be specified using extends clause::
 
     class MyException
         extends Exception
@@ -2291,7 +2291,7 @@ Super class can be given using extends clause::
     throw new MyException();
 
 Here the ``MyException`` just extends ``Exception`` without adding any methods.
-Sometimes an arguments have to be given to the super-class constructor::
+Sometimes arguments have to be given to the super-class constructor::
 
     class MyException(String msg, int code)
         extends Exception("Error \(code): \(msg)")
@@ -2318,29 +2318,34 @@ The types used as argument and return types are Java types (Yeti
 list<number> or something similar couldn't be used there).
 
 All argument bindings are immutable, so to add ``move`` method the
-argument values have to be copied into class fields::
+constructor argument values have to be copied into class fields::
 
     class Point(int x, int y)
         var x = x,
         var y = y,
-
+    
         int getX()
             x,
+    
         int getY()
             y,
+    
         void move(int dx, int dy)
             x := x + dx;
             y := y + dy,
+
         String toString()
             "\(x):\(y)"
     end;
+    
     point = new Point(2, 4);
     println point;
     point#move(-3, 1);
     println point;
 
-defining
-multiple constructors 
+The field bindings are quite like normal `value bindings`_ and are by default
+immutable. Therefore the var keyword is used to mark the ``x`` and ``y``
+fields as mutable. Field definitions can see previous field bindings.
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
