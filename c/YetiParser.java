@@ -1015,9 +1015,16 @@ interface YetiParser {
                 while (node instanceof Sym) {
                     p = skipSpace();
                     if (p < src.length && src[p] == '(') {
+                        String s;
                         if (l.size() != 0 &&
-                            ((Node) l.get(0)).sym() == "static") {
-                            meth = "static-method";
+                            ((s = ((Node) l.get(0)).sym()) == "static" ||
+                             s == "abstract")) {
+                            if (meth != "method")
+                                throw new CompileException(line,
+                                            p - lineStart + 1,
+                                            "Static method cannot be abstract");
+                            meth = s == "static" ? "static-method"
+                                                 : "abstract-method";
                             l.remove(0);
                         }
                         if (l.size() == 0) {
@@ -1041,14 +1048,23 @@ interface YetiParser {
                         throw new CompileException(node,
                             "Expected '=' or argument list, found " + node);
                 }
-                Node expr = readSeq('e', null);
-                if (eofWas instanceof Eof)
+                Node expr;
+                if (meth == "abstract-method") {
+                    expr = null;
+                    eofWas = fetch();
+                } else {
+                    expr = readSeq('e', null);
+                }
+                if (eofWas.kind != "," && (!(eofWas instanceof Sym) ||
+                                           ((Sym) eofWas).sym != "end"))
                     throw new CompileException(eofWas, "Unexpected " + eofWas);
                 if (args == null) {
                     defs.add(new Bind(l, expr));
                 } else {
-                    defs.add(new XNode(meth, new Node[] { (Node) l.get(0),
-                                node, args, expr }).pos(node.line, node.col));
+                    Node[] m = expr != null
+                        ? new Node[] { (Node) l.get(0), node, args, expr }
+                        : new Node[] { (Node) l.get(0), node, args };
+                    defs.add(new XNode(meth, m).pos(node.line, node.col));
                 }
                 l.clear();
                 node = null;

@@ -205,15 +205,18 @@ final class MethodDesc extends YetiType {
         List methods = new ArrayList();
         for (int i = 3; i < cl.expr.length; ++i) {
             String kind = cl.expr[i].kind;
-            if (kind != "method" && kind != "static-method")
+            if (kind != "method" && kind != "static-method"
+                                 && kind != "abstract-method")
                 continue;
             Node[] m = ((XNode) cl.expr[i]).expr;
             Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
                                 JavaType.typeOfName(m[0], scope);
-            MethodDesc md = 
-                new MethodDesc(c.addMethod(m[1].sym(), returnType,
-                                           kind != "method", m[3].line),
-                               m[2], scope);
+            JavaClass.Meth meth =
+                c.addMethod(m[1].sym(), returnType, kind,
+                            m.length > 3 ? m[3].line : 0);
+            MethodDesc md = new MethodDesc(meth, m[2], scope);
+            if (kind == "abstract-method")
+                continue;
             md.m = m;
             md.isStatic = kind != "method";
             methods.add(md);

@@ -143,6 +143,10 @@ final class JavaClass extends CapturingClosure {
 
         void gen(Ctx ctx) {
             ctx = ctx.newMethod(access, name, descr(null));
+            if ((access & ACC_ABSTRACT) != 0) {
+                ctx.closeMethod();
+                return;
+            }
             convertArgs(ctx);
             closure.genClosureInit(ctx);
             JavaExpr.convertedArg(ctx, code, returnType, line);
@@ -265,12 +269,14 @@ final class JavaClass extends CapturingClosure {
     }
 
     Meth addMethod(String name, YetiType.Type returnType,
-                   boolean static_, int line) {
+                   String mod, int line) {
         Meth m = new Meth();
         m.name = name;
         m.returnType = returnType;
         m.className = className;
-        m.access = static_ ? ACC_PUBLIC | ACC_STATIC : ACC_PUBLIC;
+        m.access = mod == "static-method" ? ACC_PUBLIC + ACC_STATIC
+                 : mod == "abstract-method" ? ACC_PUBLIC + ACC_ABSTRACT
+                 : ACC_PUBLIC;
         m.line = line;
         methods.add(m);
         return m;
