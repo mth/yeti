@@ -123,7 +123,11 @@ plus a b = a + b;
     array, fold, find, index,
 
     wrapArray a is 'a[] -> array<'a> =
-        new MList(a) unsafely_as array<''>,
+        if nullptr? a then
+            new MList([])
+        else
+            new MList(a)
+        fi unsafely_as array<''>,
 
     list a is map<'','a> -> list<'a> =
         if empty? a then
