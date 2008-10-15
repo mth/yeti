@@ -149,12 +149,16 @@ final class MethodDesc extends YetiType {
         Scope scope = new Scope(scope_[0], null, null);
         String className = cl.expr[0].sym();
         String packageName = scope.ctx.packageName;
+        CompileCtx cctx = CompileCtx.current();
         if (!topLevel) {
-            className = CompileCtx.current().createClassName(
-                            scope.ctx.className, className);
+            className = cctx.createClassName(scope.ctx.className, className);
         } else if (packageName != null && packageName.length() != 0) {
             className = packageName + '/' + className;
+            if (cctx.classes.containsKey(className))
+                throw new CompileException(cl, "Duplicate class " +
+                                               className.replace('/', '.'));
         }
+        cctx.classes.put(className, null);
         JavaClass c = new JavaClass(className, topLevel);
         scope.closure = c; // to proxy super-class closures
 
