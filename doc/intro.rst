@@ -2344,7 +2344,7 @@ constructor argument values have to be copied into class fields::
     println point;
 
 The field bindings are quite like normal `value bindings`_ and are by default
-immutable. Therefore the var keyword is used to mark the ``x`` and ``y``
+immutable. Therefore the var keyword was used to mark the ``x`` and ``y``
 fields as mutable. Field definitions can see previous field bindings.
 
 Yeti code style
