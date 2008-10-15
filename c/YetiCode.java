@@ -528,9 +528,9 @@ abstract class Code implements Opcodes {
 
     // Not used currently. Should allow some custom behaviour
     // on binding (possibly useful for inline-optimisations).
-    BindRef bindRef() {
+    /*BindRef bindRef() {
         return null;
-    }
+    }*/
 
     // When the code is a lvalue, then this method returns code that
     // performs the lvalue assigment of the value given as argument.
@@ -627,6 +627,11 @@ abstract class BindRef extends Code {
 
     Code unref(boolean force) {
         return null;
+    }
+
+    // Some bindings can be forced into direct mode
+    void forceDirect() {
+        throw new UnsupportedOperationException();
     }
 }
 
@@ -2031,6 +2036,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     boolean used;
     int evalId = -1;
     private boolean directBind;
+    private String directField;
+    private String myClass;
 
     BindExpr(Code expr, boolean var) {
         super(expr);
@@ -2045,51 +2052,56 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
     public BindRef getRef(int line) {
         used = true;
-        BindRef res = st.bindRef();
-        if (res == null) {
-            res = new BindRef() {
-                void gen(Ctx ctx) {
-                    if (directBind) {
-                        st.gen(ctx);
-                    } else {
-                        genPreGet(ctx);
-                        genGet(ctx);
+        //BindRef res = st.bindRef();
+        //if (res == null)
+        BindRef res = new BindRef() {
+            void gen(Ctx ctx) {
+                if (directBind) {
+                    st.gen(ctx);
+                } else {
+                    genPreGet(ctx);
+                    genGet(ctx);
+                }
+            }
+
+            Code assign(final Code value) {
+                if (!var) {
+                    return null;
+                }
+                assigned = true;
+                return new Code() {
+                    void gen(Ctx ctx) {
+                        genLocalSet(ctx, value);
+                        ctx.visitInsn(ACONST_NULL);
                     }
-                }
+                };
+            }
 
-                Code assign(final Code value) {
-                    if (!var) {
-                        return null;
-                    }
-                    assigned = true;
-                    return new Code() {
-                        void gen(Ctx ctx) {
-                            genLocalSet(ctx, value);
-                            ctx.visitInsn(ACONST_NULL);
-                        }
-                    };
-                }
+            boolean flagop(int fl) {
+                if ((fl & ASSIGN) != 0)
+                    return var ? assigned = true : false;
+                if ((fl & CONST) != 0)
+                    return directBind;
+                if ((fl & DIRECT_BIND) != 0)
+                    return directBind || directField != null;
+                return (fl & PURE) != 0 && !var;
+            }
 
-                boolean flagop(int fl) {
-                    if ((fl & ASSIGN) != 0)
-                        return var ? assigned = true : false;
-                    if ((fl & (DIRECT_BIND | CONST)) != 0)
-                        return directBind;
-                    return (fl & PURE) != 0 && !var;
-                }
+            CaptureWrapper capture() {
+                captured = true;
+                return var ? BindExpr.this : null;
+            }
 
-                CaptureWrapper capture() {
-                    captured = true;
-                    return var ? BindExpr.this : null;
-                }
+            Code unref(boolean force) {
+                return force || directBind ? st : null;
+            }
 
-                Code unref(boolean force) {
-                    return force || directBind ? st : null;
-                }
-            };
-            res.binder = this;
-            res.type = st.type;
-        }
+            void forceDirect() {
+                directField = "";
+            }
+        };
+        res.binder = this;
+        res.type = st.type;
         res.polymorph = !var && st.polymorph;
         return res;
     }
@@ -2104,8 +2116,12 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
     public void genPreGet(Ctx ctx) {
         if (mvar == -1) {
-            ctx.visitVarInsn(ALOAD, id);
-            ctx.forceType(javaType);
+            if (directField == null) {
+                ctx.visitVarInsn(ALOAD, id);
+                ctx.forceType(javaType);
+            } else {
+                ctx.visitFieldInsn(GETSTATIC, myClass, directField, javaDescr);
+            }
         } else {
             ctx.visitVarInsn(ALOAD, mvar);
         }
@@ -2119,9 +2135,14 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     }
 
     public void genSet(Ctx ctx, Code value) {
-        ctx.intConst(id);
-        value.gen(ctx);
-        ctx.visitInsn(AASTORE);
+        if (directField == null) {
+            ctx.intConst(id);
+            value.gen(ctx);
+            ctx.visitInsn(AASTORE);
+        } else {
+            value.gen(ctx);
+            ctx.visitFieldInsn(PUTSTATIC, myClass, directField, javaDescr);
+        }
     }
 
     private void genLocalSet(Ctx ctx, Code value) {
@@ -2129,7 +2150,11 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             value.gen(ctx);
             if (!javaType.equals("java/lang/Object"))
                 ctx.visitTypeInsn(CHECKCAST, javaType);
-            ctx.visitVarInsn(ASTORE, id);
+            if (directField == null) {
+                ctx.visitVarInsn(ASTORE, id);
+            } else {
+                ctx.visitFieldInsn(PUTSTATIC, myClass, directField, javaDescr);
+            }
         } else {
             ctx.visitVarInsn(ALOAD, mvar);
             ctx.intConst(id);
@@ -2145,16 +2170,21 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             directBind = true;
             return;
         }
-        if (mvar == -1) {
+        if (directField == "") {
+            myClass = ctx.className;
+            directField =
+                "!".concat(Integer.toString(ctx.constants.ctx.fieldCounter++));
+            ctx.cw.visitField(ACC_STATIC, directField, javaDescr, null, null)
+                  .visitEnd();
+        } else if (mvar == -1) {
             id = ctx.localVarCount++;
         }
         genLocalSet(ctx, st);
         if (evalId != -1) {
             ctx.intConst(evalId);
             genPreGet(ctx);
-            if (mvar != -1) {
+            if (mvar != -1)
                 ctx.intConst(id);
-            }
             ctx.visitMethodInsn(INVOKESTATIC,
                 "yeti/lang/compiler/YetiEval", "setBind",
                 mvar == -1 ? "(ILjava/lang/Object;)V"

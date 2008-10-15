@@ -43,7 +43,8 @@ final class JavaClass extends CapturingClosure {
     private List methods = new ArrayList();
     private Map fieldNames = new HashMap();
     private JavaExpr superInit;
-    private boolean isPublic;
+    private final boolean isPublic;
+    private boolean usedForceDirect;
     private int captureCount;
     YetiType.Type classType;
     final Meth constr = new Meth();
@@ -287,6 +288,16 @@ final class JavaClass extends CapturingClosure {
         return field;
     }
 
+    public BindRef refProxy(BindRef code) {
+        if (code.flagop(DIRECT_BIND))
+            return code;
+        if (!isPublic)
+            return captureRef(code);
+        code.forceDirect();
+        usedForceDirect = true;
+        return code;
+    }
+
     void superInit(JavaType.Method init, Code[] args, int line) {
         superInit = new JavaExpr(null, init, args, line);
     }
@@ -329,10 +340,11 @@ final class JavaClass extends CapturingClosure {
     void gen(Ctx ctx) {
         constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
-        Ctx clc = ctx.newClass(ACC_STATIC | ACC_PUBLIC | ACC_SUPER, className,
-                            parentClass.type.javaType.className(), implement);
+        Ctx clc = ctx.newClass(isPublic ? ACC_PUBLIC + ACC_SUPER : ACC_SUPER,
+                        className, parentClass.type.javaType.className(),
+                        implement);
         clc.fieldCounter = captureCount;
-        Ctx init = clc.newMethod(ACC_PUBLIC, "<init>", constr.descr(null));
+        Ctx init = clc.newMethod(constr.access, "<init>", constr.descr(null));
         constr.convertArgs(init);
         genClosureInit(init);
         init.visitVarInsn(ALOAD, 0); // this.
@@ -352,5 +364,13 @@ final class JavaClass extends CapturingClosure {
         init.closeMethod();
         for (int i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
+        if (usedForceDirect) {
+            Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
+            clinit.visitMethodInsn(INVOKESTATIC, ctx.className,
+                                   "eval", "()Ljava/lang/Object;");
+            clinit.visitInsn(POP);
+            clinit.visitInsn(RETURN);
+            clinit.closeMethod();
+        }
     }
 }

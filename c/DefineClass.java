@@ -217,10 +217,10 @@ final class MethodDesc extends YetiType {
         }
 
         // constructor arguments
-        Scope consScope = new Scope(scope, null, null);
-        consScope.closure = c;
-        Scope[] localRef = { consScope };
-        consScope = consDesc.bindScope(consScope, c, localRef);
+        Scope staticScope = new Scope(scope, null, null);
+        staticScope.closure = c;
+        Scope[] localRef = { staticScope };
+        Scope consScope = consDesc.bindScope(staticScope, c, localRef);
         Scope local = localRef[0];
 
         if (superArgs == null)
@@ -273,7 +273,7 @@ final class MethodDesc extends YetiType {
         // analyze method bodies
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
             MethodDesc md = (MethodDesc) methods.get(i);
-            md.init(md.isStatic ? scope : local, depth);
+            md.init(md.isStatic ? staticScope : local, depth);
         }
 
         binding.init(c.getCaptures());

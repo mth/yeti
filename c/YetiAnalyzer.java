@@ -142,10 +142,6 @@ public final class YetiAnalyzer extends YetiType {
                                 resolveFullClass(cn, scope, false, x)
                                     .type.javaType.resolve(x));
             }
-            if (kind == "class") {
-                return MethodDesc.defineClass(x, false, new Scope[] { scope },
-                                              depth);
-            }
         } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             String opop = op.op;
@@ -872,7 +868,12 @@ public final class YetiAnalyzer extends YetiType {
                 addSeq(last, new SeqExpr(code));
             }
         }
-        Code code = analyze(nodes[nodes.length - 1], scope, depth);
+        Node expr = nodes[nodes.length - 1];
+        Code code = expr.kind == "class" && seq.seqKind instanceof TopLevel &&
+                    ((TopLevel) seq.seqKind).isModule
+            ? MethodDesc.defineClass((XNode) expr, true, new Scope[] { scope },
+                                     depth)
+            : analyze(expr, scope, depth);
         for (int i = bindings.length; --i >= 0;) {
             if (bindings[i] != null && !bindings[i].used &&
                 seq.seqKind != Seq.EVAL) {
