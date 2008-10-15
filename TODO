@@ -4,6 +4,7 @@
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * On method arguments and returns convert UNDEF_STR to null
+* Handle protected methods correctly when extending classes
 * Fix case A _: 1; _: 2 esac
 * Allow case A _: f (); g(); B: h() esac
 * Extendable structs?
