@@ -148,8 +148,13 @@ final class MethodDesc extends YetiType {
                                  Scope[] scope_, int depth) {
         Scope scope = new Scope(scope_[0], null, null);
         String className = cl.expr[0].sym();
-        if (scope.packageName != null && scope.packageName.length() != 0)
-            className = scope.packageName + '/' + className;
+        String packageName = scope.ctx.packageName;
+        if (!topLevel) {
+            className = CompileCtx.current().createClassName(
+                            scope.ctx.className, className);
+        } else if (packageName != null && packageName.length() != 0) {
+            className = packageName + '/' + className;
+        }
         JavaClass c = new JavaClass(className, topLevel);
         scope.closure = c; // to proxy super-class closures
 
@@ -164,7 +169,7 @@ final class MethodDesc extends YetiType {
             ClassBinding cb =
                 resolveFullClass(extend[i].sym(), scope, true, extend[i]);
             JavaType jt = cb.type.javaType.resolve(extend[i]);
-            jt.checkPackage(extend[i], scope.packageName);
+            jt.checkPackage(extend[i], packageName);
             Node[] args = ((XNode) extend[i + 1]).expr;
             if (jt.isInterface()) {
                 if (args != null)
@@ -229,7 +234,7 @@ final class MethodDesc extends YetiType {
         JavaType.Method superCons =
             JavaType.resolveConstructor(superNode, parentClass.type,
                                         initArgs, false)
-                    .check(superNode, scope.packageName);
+                    .check(superNode, packageName);
         c.superInit(superCons, initArgs, superNode.line);
 
         // field defs

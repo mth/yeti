@@ -119,8 +119,8 @@ public final class YetiAnalyzer extends YetiType {
                 Code[] args = mapArgs(1, x.expr, scope, depth);
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
                 return new NewExpr(
-                        JavaType.resolveConstructor(x, cb.type, args, true)
-                                .check(x, scope.packageName), args, cb, x.line);
+                    JavaType.resolveConstructor(x, cb.type, args, true)
+                            .check(x, scope.ctx.packageName), args, cb, x.line);
             }
             if (kind == "rsection") {
                 return rsection(x, scope, depth);
@@ -377,7 +377,7 @@ public final class YetiAnalyzer extends YetiType {
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
                 (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
-                t = JavaType.typeOfClass(scope.packageName, className);
+                t = JavaType.typeOfClass(scope.ctx.packageName, className);
         }
         if (t == null) {
             obj = analyze(ref.right, scope, depth);
@@ -385,13 +385,13 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (ref.arguments == null) {
             JavaType.Field f = JavaType.resolveField(ref, t, obj == null);
-            f.check(ref, scope.packageName);
+            f.check(ref, scope.ctx.packageName);
             return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(0, ref.arguments, scope, depth);
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null)
-                        .check(ref, scope.packageName), args, ref.line);
+                        .check(ref, scope.ctx.packageName), args, ref.line);
     }
 
     static Code tryCatch(XNode t, Scope scope, int depth) {
@@ -1400,23 +1400,23 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     public static RootClosure toCode(String sourceName, String className,
-                                     char[] src, int flags, Map classes,
+                                     char[] src, CompileCtx ctx,
                                      String[] preload) {
         TopLevel topLevel = new TopLevel();
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
-            Parser parser = new Parser(sourceName, src, flags);
+            Parser parser = new Parser(sourceName, src, ctx.flags);
             Node n = parser.parse(topLevel);
-            if ((flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
+            if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.str());
             }
             if (parser.moduleName != null) {
                 className = parser.moduleName;
             }
-            classes.put(className, null);
+            ctx.classes.put(className, null);
             RootClosure root = new RootClosure();
-            Scope scope = new Scope((flags & YetiC.CF_NO_IMPORT) == 0
+            Scope scope = new Scope((ctx.flags & YetiC.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
             LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
@@ -1430,7 +1430,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
-            if ((flags & YetiC.CF_EVAL_BIND) != 0) {
+            if ((ctx.flags & YetiC.CF_EVAL_BIND) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
@@ -1447,13 +1447,15 @@ public final class YetiAnalyzer extends YetiType {
             topLevel.isModule = parser.isModule;
             root.preload = preloadModules;
             scope.closure = root;
-            scope.packageName = JavaType.packageOfClass(className);
+            scope.ctx = new ScopeCtx();
+            scope.ctx.packageName = JavaType.packageOfClass(className);
+            scope.ctx.className = className;
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
             root.typeDefs = topLevel.typeDefs;
-            if ((flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
+            if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type, -1);
                 if (!deny.isEmpty() ||
@@ -1461,7 +1463,7 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(n,
                         "Module type is not fully defined");
                 }
-            } else if ((flags & YetiC.CF_EVAL) == 0) {
+            } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
                 try {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {

@@ -117,6 +117,14 @@ final class CompileCtx implements Opcodes {
         return this;
     }
 
+    String createClassName(String outerClass, String nameBase) {
+        String name = nameBase = outerClass + '$' + nameBase;
+        for (int i = 0; classes.containsKey(name); ++i) {
+            name = nameBase + i;
+        }
+        return name;
+    }
+
     public void enumWarns(Fun f) {
         for (int i = 0, cnt = warnings.size(); i < cnt; ++i) {
             f.apply(warnings.get(i));
@@ -185,8 +193,8 @@ final class CompileCtx implements Opcodes {
         currentSrc = sourceName;
         this.flags = flags;
         try {
-            codeTree = YetiAnalyzer.toCode(sourceName, name, code, flags,
-                                           classes, preload);
+            codeTree = YetiAnalyzer.toCode(sourceName, name, code,
+                                           this, preload);
         } finally {
             currentCompileCtx.set(oldCompileCtx);
         }
@@ -324,6 +332,12 @@ final class Ctx implements Opcodes {
         ctx.m = cw.visitMethod(flags, name, type, null, null);
         ctx.m.visitCode();
         return ctx;
+    }
+
+    void markInnerClass(Ctx outer, int access) {
+        String fn = className.substring(outer.className.length() + 1);
+        outer.cw.visitInnerClass(className, outer.className, fn, access);
+        cw.visitInnerClass(className, outer.className, fn, access);
     }
 
     void closeMethod() {
@@ -1517,14 +1531,10 @@ final class Function extends CapturingClosure implements Binder {
             name = inner.name;
             return;
         }
-        if (bindName == null) {
+
+        if (bindName == null)
             bindName = "";
-        }
-        String nameBase = name = ctx.className + '$' + mangle(bindName);
-        Map classes = ctx.compilation.classes;
-        for (int i = 0; classes.containsKey(name); ++i) {
-            name = nameBase + i;
-        }
+        name = ctx.compilation.createClassName(ctx.className, mangle(bindName));
 
         publish &= shared;
         String funClass =
@@ -1533,13 +1543,8 @@ final class Function extends CapturingClosure implements Binder {
                                        : ACC_SUPER + ACC_FINAL,
                                name, funClass, null);
 
-        if (publish) {
-            String fn = name.substring(ctx.className.length() + 1);
-            ctx.cw.visitInnerClass(name, ctx.className, fn,
-                                   ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
-            fun.cw.visitInnerClass(name, ctx.className, fn,
-                                   ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
-        }
+        if (publish)
+            fun.markInnerClass(ctx, ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
         mergeCaptures(fun);
         fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 

@@ -1060,7 +1060,7 @@ class JavaType {
         YetiType.Type t;
         if (descr == null) {
             t = YetiType.resolveFullClass(name, scope);
-            t.javaType.resolve(sym).checkPackage(sym, scope.packageName);
+            t.javaType.resolve(sym).checkPackage(sym, scope.ctx.packageName);
         } else {
             t = new YetiType.Type(descr);
         }

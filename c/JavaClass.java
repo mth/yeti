@@ -344,6 +344,8 @@ final class JavaClass extends CapturingClosure {
                         className, parentClass.type.javaType.className(),
                         implement);
         clc.fieldCounter = captureCount;
+        if (!isPublic)
+            clc.markInnerClass(ctx.constants.ctx, ACC_STATIC);
         Ctx init = clc.newMethod(constr.access, "<init>", constr.descr(null));
         constr.convertArgs(init);
         genClosureInit(init);

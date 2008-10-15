@@ -429,6 +429,11 @@ public class YetiType implements YetiParser {
         }
     }
 
+    static final class ScopeCtx {
+        String packageName;
+        String className;
+    }
+
     static final class Scope {
         Scope outer;
         String name;
@@ -438,13 +443,13 @@ public class YetiType implements YetiParser {
         ClassBinding importClass;
         Type[] typeDef;
 
-        String packageName;
+        ScopeCtx ctx;
 
         public Scope(Scope outer, String name, Binder binder) {
             this.outer = outer;
             this.name = name;
             this.binder = binder;
-            packageName = outer == null ? null : outer.packageName;
+            ctx = outer == null ? null : outer.ctx;
         }
     }
 
@@ -781,7 +786,7 @@ public class YetiType implements YetiParser {
 
     static ClassBinding resolveFullClass(String name, Scope scope,
                                          boolean refs, Node checkPerm) {
-        String packageName = scope.packageName;
+        String packageName = scope.ctx.packageName;
         Type t;
         if (name.indexOf('/') >= 0) {
             packageName = null;
@@ -804,7 +809,8 @@ public class YetiType implements YetiParser {
 
     static Type resolveFullClass(String name, Scope scope) {
         Type t = resolveClass(name, scope, false);
-        return t == null ? JavaType.typeOfClass(scope.packageName, name) : t;
+        return t == null ?
+                JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
     static void getFreeVar(List vars, List deny, Type type, int depth) {
