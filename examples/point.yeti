@@ -1,0 +1,43 @@
+import java.lang.Runnable;
+import java.lang.Thread;
+
+class Point(int x, int y)
+    var x = x,
+    var y = y,
+
+    int getX()
+        x,
+
+    int getY()
+        y,
+
+    void moveTo(int x', int y')
+        x := x';
+        y := y',
+
+    String toString()
+        "\(x):\(y)"
+end;
+
+point = new Point(2, 4);
+println point;
+point#moveTo(3, 5);
+println point;
+
+class SmartPoint(int x, int y) extends Point(x, y)
+    void moveBy(int dx, int dy)
+        this#moveTo(this#getX() + dx,
+                    this#getY() + dy)
+end;
+
+class RunningPoint(int x, int y) extends SmartPoint(x, y), Runnable
+    void run()
+        for [1 .. 10] do:
+            this#moveBy(1, 2);
+            println this;
+            sleep 1;
+        done
+end;
+
+new Thread(new RunningPoint(10, 10))#start();
+
