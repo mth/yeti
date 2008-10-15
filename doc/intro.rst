@@ -2317,7 +2317,7 @@ Method and field definitions are separated in the class using comma.
 The types used as argument and return types are Java types (Yeti
 list<number> or something similar couldn't be used there).
 
-All argument bindings are immutable, so to add ``move`` method the
+All argument bindings are immutable, so to add ``moveTo`` method the
 constructor argument values have to be copied into class fields::
 
     class Point(int x, int y)
@@ -2330,9 +2330,9 @@ constructor argument values have to be copied into class fields::
         int getY()
             y,
     
-        void move(int dx, int dy)
-            x := x + dx;
-            y := y + dy,
+        void moveTo(int x', int y')
+            x := x';
+            y := y',
 
         String toString()
             "\(x):\(y)"
@@ -2340,12 +2340,53 @@ constructor argument values have to be copied into class fields::
     
     point = new Point(2, 4);
     println point;
-    point#move(-3, 1);
+    point#moveTo(3, 5);
     println point;
 
 The field bindings are quite like normal `value bindings`_ and are by default
 immutable. Therefore the var keyword was used to mark the ``x`` and ``y``
 fields as mutable. Field definitions can see previous field bindings.
+
+Method definitions can access the instance they were called on using ``this``::
+
+    class SmartPoint(int x, int y) extends Point(x, y)
+        void moveBy(int dx, int dy)
+            this#moveTo(this#getX() + dx,
+                        this#getY() + dy)
+    end
+
+Here the super class ``moveTo`` method is invoked using ``this``.
+The ``getX()`` and ``getY()`` methods are used because the super class
+fields cannot be seen (all fields are private in Java sense) and
+constructor arguments won't be affected by the super class
+field modifications.
+
+Interfaces can be implemented in the same way as classes are extended::
+
+    import java.lang.Runnable;
+    import java.lang.Thread;
+    
+    class RunningPoint(int x, int y) extends SmartPoint(x, y), Runnable
+        void run()
+            for [1 .. 10] do:
+                this#moveBy(1, 2);
+                println this;
+                sleep 1;
+            done
+    end;
+
+    new Thread(new RunningPoint(10, 10))#start();
+
+The compiler detects automatically whether the class mentioned after
+``extends`` is a normal class or interface. Like in the Java language
+only one real super class is allowed, but many interfaces can be implemented.
+
+
+.. function fields
+.. abstract methods
+.. static methods
+.. class closures
+.. public/private/inner
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
