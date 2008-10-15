@@ -2266,6 +2266,82 @@ unsafe cast, because such casts allow circumventing the Yeti typesystem
             at code.apply(<>:1)
             ...
 
+Defining Java classes in Yeti code
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Java classes can be defined in Yeti code.
+::
+
+    class Hello
+        void msg()
+            println "Hello"
+    end;
+    h = new Hello();
+    h#msg();
+
+This defined a class ``Hello`` with one ``msg`` method,
+created a new instance of it and called the method. The method return and
+argument types must be specified explicitly (quite like in the Java code).
+
+Super class can be given using extends clause::
+
+    class MyException
+        extends Exception
+    end;
+    throw new MyException();
+
+Here the ``MyException`` just extends ``Exception`` without adding any methods.
+Sometimes an arguments have to be given to the super-class constructor::
+
+    class MyException(String msg, int code)
+        extends Exception("Error \(code): \(msg)")
+    end;
+    throw new MyException("Test", 666);
+
+Here the MyException class has two arguments (``msg`` and ``code``) and
+a constructed string is given as argument to the super-class constructor.
+Constructor arguments are put directly after class name in Yeti and are
+visible in the entire class definition scope.
+::
+
+    class Point(int x, int y)
+        int getX()
+            x,
+        int getY()
+            y
+    end;
+    point = new Point(2, 4);
+    println "\(point#getX()):\(point#getY())";
+
+Method and field definitions are separated in the class using comma.
+The types used as argument and return types are Java types (Yeti
+list<number> or something similar couldn't be used there).
+
+All argument bindings are immutable, so to add ``move`` method the
+argument values have to be copied into class fields::
+
+    class Point(int x, int y)
+        var x = x,
+        var y = y,
+
+        int getX()
+            x,
+        int getY()
+            y,
+        void move(int dx, int dy)
+            x := x + dx;
+            y := y + dy,
+        String toString()
+            "\(x):\(y)"
+    end;
+    point = new Point(2, 4);
+    println point;
+    point#move(-3, 1);
+    println point;
+
+defining
+multiple constructors 
+
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
 

@@ -992,11 +992,15 @@ class JavaType {
                                     t, YetiType.NO_TYPE, YetiType.LIST_TYPE });
                 }
             }
-            if (a.type == YetiType.UNIT && (b.type == YetiType.JAVA ||
-                                            b.type == YetiType.JAVA_ARRAY))
+            if (a.type == YetiType.UNIT &&
+                (b.type == YetiType.JAVA &&
+                    b.javaType.description.length() != 1 ||
+                 b.type == YetiType.JAVA_ARRAY))
                 return b;
-            if (b.type == YetiType.UNIT && (a.type == YetiType.JAVA ||
-                                            a.type == YetiType.JAVA_ARRAY))
+            if (b.type == YetiType.UNIT &&
+                (a.type == YetiType.JAVA &&
+                    a.javaType.description.length() != 1 ||
+                 a.type == YetiType.JAVA_ARRAY))
                 return a;
             return null;
         }

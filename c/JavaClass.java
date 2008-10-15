@@ -290,6 +290,7 @@ final class JavaClass extends CapturingClosure {
             fname = name + n++;
         }
         Field field = new Field(fname, value, var);
+        fieldNames.put(fname, null);
         fields.add(field);
         return field;
     }
