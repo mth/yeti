@@ -965,7 +965,7 @@ interface YetiParser {
                 Node name = fetch();
                 if (!(name instanceof Sym)) {
                     throw new CompileException(name,
-                        "Expected a argument name, found " + name);
+                        "Expected an argument name, found " + name);
                 }
                 args.add(name);
             }
