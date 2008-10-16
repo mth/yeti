@@ -201,10 +201,10 @@ withHandle h block =
 
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 
-    runThread options v f is list?<''> -> 'a -> ('a -> ()) -> ~Thread =
+    runThread options f is list?<''> -> (() -> ()) -> ~Thread =
         class FunThread extends Thread
             void run()
-                f v
+                f ()
         end;
         th = new FunThread();
         for options do i:
