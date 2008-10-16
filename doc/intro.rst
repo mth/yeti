@@ -2347,6 +2347,19 @@ The field bindings are quite like normal `value bindings`_ and are by default
 immutable. Therefore the var keyword was used to mark the ``x`` and ``y``
 fields as mutable. Field definitions can see previous field bindings.
 
+Special form of field binding may be used for having actions during the class
+construction (the class definitions don't have explicit constructors in Yeti).
+::
+
+    class Test
+        _ = println "Constructing Test."
+    end;
+    _ = new Test();
+
+The ``_`` symbol, when used as binding name, means evaluating
+the expression and ignoring the resulting value (similarly to
+`ignoring the argument`_ using ``_``).
+
 Method definitions can access the instance they were called on using ``this``::
 
     class SmartPoint(int x, int y) extends Point(x, y)
