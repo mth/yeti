@@ -2132,7 +2132,7 @@ implemented.
 
 Since accessing Yeti modules directly from Java code is cumbersome,
 it is best to avoid it. Better way is defining `public classes`_ in the
-module top-level scope, which can be easily accessed in from the Java code.
+module top-level scope, as these can be easily accessed from the Java code.
 
 
 Using Java classes from Yeti code
@@ -2261,8 +2261,8 @@ Java classes can be defined in the Yeti code.
     h#msg();
 
 This defined a class ``Hello`` with one ``msg`` method,
-created a new instance of it and called the method. The method return and
-argument types must be specified explicitly (quite like in the Java code).
+created a new instance of it, and then called the method. The method return
+and argument types must be specified explicitly (quite like in the Java code).
 
 Super class can be specified using extends clause::
 
@@ -2281,7 +2281,7 @@ Sometimes arguments have to be given to the super-class constructor::
 
 Here the MyException class has two arguments (``msg`` and ``code``) and
 a constructed string is given as argument to the super-class constructor.
-Constructor arguments are put directly after class name in Yeti and are
+Constructor arguments are put directly after the class name in Yeti and are
 visible in the entire class definition scope.
 ::
 
@@ -2296,9 +2296,9 @@ visible in the entire class definition scope.
 
 Method and field definitions are separated in the class using comma.
 The types used as argument and return types are Java types (Yeti
-list<number> or something similar couldn't be used there).
+*list<number>* or something similar couldn't be used there).
 
-All argument bindings are immutable, so to add ``moveTo`` method the
+All argument bindings are immutable, so to add a ``moveTo`` method the
 constructor argument values have to be copied into class fields::
 
     class Point(int x, int y)
@@ -2324,11 +2324,11 @@ constructor argument values have to be copied into class fields::
     point#moveTo(3, 5);
     println point;
 
-The field bindings are quite like normal `value bindings`_ and are by default
+The field bindings are quite like normal `value bindings`_, and are by default
 immutable. Therefore the var keyword was used to mark the ``x`` and ``y``
 fields as mutable. Field definitions can see previous field bindings.
 
-Special form of field binding may be used for having actions during the class
+Special form of field binding may be used to have actions during the class
 construction (the class definitions don't have explicit constructors in Yeti).
 ::
 
@@ -2352,7 +2352,7 @@ Method definitions can access the instance they were called on using ``this``::
 Here the super class ``moveTo`` method is invoked using ``this``.
 The ``getX()`` and ``getY()`` methods are used because the super class
 fields cannot be seen (all fields are private in Java sense) and
-constructor arguments won't be affected by the super class
+the constructor arguments won't be affected by the super class
 field modifications.
 
 Interfaces can be implemented in the same way as classes are extended::
@@ -2375,10 +2375,10 @@ The compiler detects automatically whether the class mentioned after
 ``extends`` is a normal class or interface. Like in the Java language
 only one real super class is allowed, but many interfaces can be implemented.
 
-You may have noticed that above method declarations did not have a ``public``
-modifier. This is because all methods are public in the classes defined
-in Yeti. When some private helper methods are needed, a function fields can
-be used::
+You may have noticed that the above method declarations did not have
+a ``public`` modifier. This is because all methods are public in the
+classes defined in Yeti. When some private helper methods are needed,
+a function fields can be used::
 
     class Point(int x, int y)
         var x = x,
@@ -2408,7 +2408,7 @@ While ``this`` is normally not available in the field value expressions,
 the fields where value is a function literal will have ``this`` bound in their
 expression scope. This is unsafe (another field could call that function too,
 which can then call some method before all fields have been initialised),
-but is allowed because this is sometimes useful.
+but is allowed because it is sometimes useful.
 
 All fields are private and can be seen only in the same class - they
 act like value bindings in the class scope. Class field definitions and
@@ -2430,12 +2430,12 @@ a binding from the outer scope.
 Here ``action`` argument is used inside the ``ActionThread`` class.
 The class acts as a closure, as the instance returned from the ``createThread``
 retains the reference to the given action and calls it when started.
-Main difference from using constructor argument here is, that the action
+Main difference from using a constructor argument is, that the action
 argument is typed according to the Yeti typeing rules, while constructor
 arguments can have only Java types.
 
 The threading in the ``RunningPoint`` example could have been done using
-``runThread`` from standard library::
+``runThread`` from the standard library::
 
     point = new SmartPoint(10, 10);
     _ = runThread [] do:
@@ -2469,25 +2469,25 @@ in the derived class::
     end;
     new ConsoleInfo()#sayTime();
 
-Class will be marked abstract also when it extends abstract class or
+Class will be also marked abstract when it extends abstract class or
 interface without implementing the abstract methods in the
 super class/interface.
 
 Public classes
 ++++++++++++++++++
 
-Class definitions in Yeti are not public be default. This is because
+Class definitions in Yeti are not public by default. This is because
 a class can access any bindings from the outer scope and classes are
 global entities in the JVM - so they couldn't be really instantiated
-from outside their normal scope (which would make their publicity useless).
+from outside of their normal scope (which would make their publicity useless).
 
-This restriction is lifted only when class is defined in modules top-level
+This restriction is lifted only when class is defined in the modules top-level
 scope - as modules are essentially global constants in Yeti, the module
 top-level scope can be considered to be also global. Therefore the Yeti
-compiler can (and will) make any classes defined in modules top-level scope
-automatically public.
+compiler can (and will) make any classes defined in the module top-level
+scope automatically public.
 
-Public classes also allow defining static methods (this is normally
+Public classes also allow defining static methods (which is normally
 prohibited).
 ::
 
@@ -2500,36 +2500,36 @@ prohibited).
             println (fac 5)
     end
 
-Compiling this causes a public class fac.Main to be generated.
-This could be tested in a following way::
+Compiling the source file causes a public class fac.Main to be generated.
+This could be tested in the following way::
 
     $ java -jar yeti.jar -d target test.yeti 
     $ java -classpath target:yeti.jar fac.Main
     120
 
 Public classes act like normal Java classes, and can be used from any
-Java code. Therefore the preferred way for calling Yeti code from Java
-code is using those classes. This is much easier, for example, than
-trying to access Yeti modules directly from Java code - the compiler can
-do most of the conversions between Yeti and Java types automatically when
-the Java class methods are defined.
+Java code. Therefore the preferred way for calling a Yeti code from the
+Java code is using those classes. This is much easier, for example, than
+trying to access Yeti modules directly from the Java code - the compiler
+can do most of the conversions between Yeti and Java types automatically
+when the Java class methods are defined.
 
 When to use Java class definitions
 ++++++++++++++++++++++++++++++++++++++
 
 The ability to define Java classes in Yeti code is mostly useful for
-interfaceing with Java code and declaring custom exception classes.
+interfaceing with a Java code and declaring custom exception classes.
 
 Yeti don't have any other exception handling mechanism than try-catch
-blocks which work with Java exception classes - so to define any
+blocks that work with Java exception classes - so to define any
 custom exception a Java class has to be defined.
 
-Using the Java classes for OO programming in Yeti is possible, but
-probably not a good idea, as the Yeti and Java typesystems are too
+Using the Java classes for object-oriented programming in Yeti is possible,
+but probably not a good idea, as the Yeti and Java typesystems are too
 different to work together nicely. The restriction of using Java types
 on method arguments and return types would probably cause problems.
 
-Instead an object-oriented code in Yeti should use structures with
+Instead an object-oriented code in Yeti should use `structures`_ with
 function fields for simulating objects. This way the type inference
 can work and there are no restrictions on the value types.
 
