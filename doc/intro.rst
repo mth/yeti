@@ -2440,10 +2440,6 @@ Main difference from using constructor argument here is, that the action
 argument is typed according to the Yeti typeing rules, while constructor
 arguments can have only Java types.
 
-.. abstract methods
-.. static methods
-.. public/private/inner
-
 The threading in the ``RunningPoint`` example could have been done using
 ``runThread`` from standard library::
 
@@ -2458,6 +2454,10 @@ The threading in the ``RunningPoint`` example could have been done using
 
 The ``createThread`` example could be simply
 ``runThread [] \(sleep 1; println "Test")``.
+
+.. abstract methods
+.. static methods
+.. public/private/inner
 
 
 Yeti code style

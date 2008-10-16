@@ -1058,7 +1058,6 @@ class JavaType {
             name == "double"  ? "D" :
             name == "float"   ? "F" :
             name == "short"   ? "S" :
-            name == "string"  ?  "Ljava/lang/String;" :
             name == "number"  ?  "Lyeti/lang/Num;" :
             null;
         YetiType.Type t;
