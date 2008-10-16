@@ -2468,7 +2468,31 @@ The threading in the ``RunningPoint`` example could have been done using
 The ``createThread`` example could be simply
 ``runThread [] \(sleep 1; println "Test")``.
 
-.. abstract methods
+Classes can have abstract methods, which don't have any implementation::
+
+    class Info
+        abstract void say(String s),
+
+        void sayTime()
+            this#say("\(new java.util.Date())")
+    end;
+
+Class containing abstract methods is automatically marked as being abstract
+by itself and cannot be instantiated - for example ``new Info()`` would give
+a compile error. Like in Java, the implementation can be provided in
+derived class::
+
+    class ConsoleInfo extends Info
+        void say(String s)
+            println s
+    end;
+    new ConsoleInfo()#sayTime();
+
+Class will be marked abstract also when it extends abstract class or
+interface without implementing the abstract methods in the
+super class/interface.
+
+
 .. static methods
 .. public/private/inner
 
