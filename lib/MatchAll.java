@@ -67,7 +67,10 @@ final class MatchAllFun extends Fun {
             skipFun.apply(s.substring(last, st));
         Object[] r = new Object[m.groupCount() + 1];
         for (int i = r.length; --i >= 0;) {
-            r[i] = m.group(i);
+            String g;
+            if ((g = m.group(i)) == null)
+                g = Core.UNDEF_STR;
+            r[i] = g;
         }
         Match l = new Match(matchFun.apply(new MList(r)));
         l.str = s;

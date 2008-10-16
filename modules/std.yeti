@@ -147,6 +147,9 @@ plus a b = a + b;
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> ''),
 
+    pair fst snd =
+        {fst, snd},
+
     string x =
         "\(x)",
     number x =

@@ -46,7 +46,10 @@ final class LikeMatcher extends Fun {
         }
         Object[] r = new Object[m.groupCount() + 1];
         for (int i = r.length; --i >= 0;) {
-            r[i] = m.group(i);
+            String s;
+            if ((s = m.group(i)) == null)
+                s = Core.UNDEF_STR;
+            r[i] = s;
         }
         return new MList(r);
     }

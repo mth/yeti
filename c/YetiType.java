@@ -194,11 +194,12 @@ public class YetiType implements YetiParser {
         bindImport("NoSuchKey", "yeti/lang/NoSuchKeyException",
         bindImport("Exception", "java/lang/Exception",
         bindImport("RuntimeException", "java/lang/RuntimeException",
+        bindImport("NumberFormatException", "java/lang/NumberFormatException",
         bindImport("Math", "java/lang/Math",
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
