@@ -2391,7 +2391,7 @@ The threading in the RunningPoint example could have been done using
 ``runThread`` from standard library::
 
     point = new SmartPoint(10, 10);
-    _ = runThread [] () do:
+    _ = runThread [] do:
         for [1 .. 10] do:
             point#moveBy(1, 2);
             println point;
