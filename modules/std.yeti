@@ -396,6 +396,15 @@ plus a b = a + b;
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v),
 
+    collect f a pred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
+       (l = new MList();
+        (v = f a; pred v and (l#add(v); true)) loop;
+        if l#isEmpty() then
+            []
+        else
+            l unsafely_as list<'a>
+        fi),
+
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
