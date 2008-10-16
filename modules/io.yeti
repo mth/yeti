@@ -201,13 +201,13 @@ withHandle h block =
 
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 
-    runThread init v f is list?<''> -> 'a -> ('a -> ()) -> ~Thread =
-        class FunThread(Fun f, Object v) extends Thread
+    runThread options v f is list?<''> -> 'a -> ('a -> ()) -> ~Thread =
+        class FunThread extends Thread
             void run()
-                _ = f#apply(v)
+                f v
         end;
-        th = new FunThread(f, v);
-        for init do i:
+        th = new FunThread();
+        for options do i:
             case i of
                 Daemon (): th#setDaemon(true);
                 ClassLoader cl: th#setContextClassLoader(cl);

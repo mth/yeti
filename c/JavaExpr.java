@@ -220,15 +220,17 @@ class JavaExpr extends Code {
         for (int i = 0; i < args.length; ++i) {
             convertedArg(ctx, args[i], method.arguments[i], line);
         }
-        if (extraArgs != null)
+        if (extraArgs != null) {
             for (int i = 0; i < extraArgs.length; ++i) {
                 CaptureWrapper cw = extraArgs[i].capture();
                 if (cw == null) {
                     extraArgs[i].gen(ctx);
+                    ctx.captureCast(javaType(extraArgs[i].type));
                 } else {
                     cw.genPreGet(ctx);
                 }
             }
+        }
         ctx.visitLine(line);
         ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
                             method.name, method.descr(null));
