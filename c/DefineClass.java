@@ -234,7 +234,10 @@ final class MethodDesc extends YetiType {
             if (kind == "abstract-method")
                 continue;
             md.m = m;
-            md.isStatic = kind != "method";
+            if ((md.isStatic = kind != "method") && !topLevel) {
+                throw new CompileException(cl.expr[i], "Static methods are " +
+                    "allowed only in classes defined in the module top-level");
+            }            
             methods.add(md);
         }
 

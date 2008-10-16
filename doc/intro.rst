@@ -2477,10 +2477,10 @@ Classes can have abstract methods, which don't have any implementation::
             this#say("\(new java.util.Date())")
     end;
 
-Class containing abstract methods is automatically marked as being abstract
-by itself and cannot be instantiated - for example ``new Info()`` would give
-a compile error. Like in Java, the implementation can be provided in
-derived class::
+Class containing abstract methods will be automatically marked as being
+abstract by itself and cannot be instantiated - for example ``new Info()``
+would give a compile error. Like in Java, the implementation can be provided
+in the derived class::
 
     class ConsoleInfo extends Info
         void say(String s)
