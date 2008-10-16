@@ -205,6 +205,8 @@ final class JavaClass extends CapturingClosure {
 
         public BindRef getRef(int line) {
             if (javaType == null) {
+                if (name == "_")
+                    throw new IllegalStateException("NO _ REF");
                 javaType = Code.javaType(value.type);
                 descr = 'L' + javaType + ';';
             }
@@ -283,14 +285,16 @@ final class JavaClass extends CapturingClosure {
     }
 
     Binder addField(String name, Code value, boolean var) {
-        name = mangle(name);
-        String fname = name;
-        int n = fieldNames.size();
-        while (fieldNames.containsKey(fname)) {
-            fname = name + n++;
+        if (name != "_") {
+            String mangled = mangle(name);
+            name = mangled;
+            int n = fieldNames.size();
+            while (fieldNames.containsKey(name)) {
+                name = mangled + n++;
+            }
         }
-        Field field = new Field(fname, value, var);
-        fieldNames.put(fname, null);
+        Field field = new Field(name, value, var);
+        fieldNames.put(name, null);
         fields.add(field);
         return field;
     }

@@ -254,7 +254,7 @@ final class MethodDesc extends YetiType {
                 }
                 Binder binder;
                 Code code;
-                if (bind.expr.kind == "lambda") {
+                if (bind.expr.kind == "lambda" && bind.name != "_") {
                     Function lambda = new Function(new Type(depth + 1));
                     lambda.selfBind = binder =
                         c.addField(bind.name, lambda, bind.var);
@@ -267,11 +267,11 @@ final class MethodDesc extends YetiType {
                 } else {
                     code = YetiAnalyzer.analyze(bind.expr, local, depth + 1);
                     binder = c.addField(bind.name, code, bind.var);
-                    if (bind.type != null) {
+                    if (bind.type != null)
                         YetiAnalyzer.isOp(bind, bind.type, code, scope, depth);
-                    }
                 }
-                if (code.polymorph && !bind.var) {
+                if (bind.name == "_") {
+                } else if (code.polymorph && !bind.var) {
                     local = bindPoly(bind.name, code.type, binder,
                                      depth, local);
                 } else {

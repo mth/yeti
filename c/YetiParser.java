@@ -114,8 +114,8 @@ interface YetiParser {
 
         String str() {
             if (expr == null)
-                return ":".concat(kind);
-            StringBuffer buf = new StringBuffer("(:");
+                return "@".concat(kind);
+            StringBuffer buf = new StringBuffer("(@");
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
                 buf.append(' ');
@@ -216,7 +216,18 @@ interface YetiParser {
         }
 
         String str() {
-            return name + " = " + expr.str();
+            StringBuffer s = new StringBuffer("(@let ");
+            if (noRec)
+                s.append("@norec ");
+            if (property)
+                s.append(var ? "@set " : "@get ");
+            else if (var)
+                s.append("@var ");
+            s.append(name);
+            s.append(' ');
+            s.append(expr.str());
+            s.append(')');
+            return s.toString();
         }
     }
 
