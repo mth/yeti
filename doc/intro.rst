@@ -2381,6 +2381,12 @@ The compiler detects automatically whether the class mentioned after
 ``extends`` is a normal class or interface. Like in the Java language
 only one real super class is allowed, but many interfaces can be implemented.
 
+.. function fields
+.. abstract methods
+.. static methods
+.. class closures
+.. public/private/inner
+
 The threading in the RunningPoint example could have been done using
 ``runThread`` from standard library::
 
@@ -2393,12 +2399,6 @@ The threading in the RunningPoint example could have been done using
         done
     done
 
-
-.. function fields
-.. abstract methods
-.. static methods
-.. class closures
-.. public/private/inner
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
