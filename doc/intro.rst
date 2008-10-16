@@ -2381,13 +2381,70 @@ The compiler detects automatically whether the class mentioned after
 ``extends`` is a normal class or interface. Like in the Java language
 only one real super class is allowed, but many interfaces can be implemented.
 
-.. function fields
+You may have noticed that above method declarations did not have a ``public``
+modifier. This is because all methods are public in the classes defined
+in Yeti. When some private helper methods are wanted, a function fields can
+be used::
+
+    class Point(int x, int y)
+        var x = x,
+        var y = y,
+    
+        log msg =
+            println "Point \(this): \(msg)",
+    
+        int getX()
+            log "getX called";
+            x,
+    
+        int getY()
+            log "getY called";
+            y,
+    
+        void moveTo(int x', int y')
+            log "moveTo(\(x'), \(y')) called"
+            x := x';
+            y := y',
+
+        String toString()
+            "\(x):\(y)"
+    end;
+
+While ``this`` is normally not available in field value expressions, the fields
+where value is a function literal will have this bound in their expression
+scope. This is unsafe (another field could call that function too, which can
+then call some method before all fields have been initialised), but allowed
+because this is sometimes useful.
+
+All fields are private and can be seen only in the same class - in fact
+they act just like value bindings in the class scope. Class field definitions
+and methods can also access all bindings from the outer scope, where the class
+was defined.
+In fact println is used just like that in the above example - it comes as
+a binding from the outer scope.
+::
+
+    createThread action =
+       (class ActionThread extends Thread
+            void run()
+                action ()
+        end;
+        new ActionThread());
+
+    (createThread \(sleep 1; println "Test"))#start();
+
+Here ``action`` argument is used inside the ``ActionThread`` class.
+The class acts as a closure, as the instance returned from the ``createThread``
+retains the reference to the given action and calls it when started.
+Main difference from using constructor argument here is, that the action
+argument is typed according to the Yeti typeing rules, while constructor
+arguments can have only Java types.
+
 .. abstract methods
 .. static methods
-.. class closures
 .. public/private/inner
 
-The threading in the RunningPoint example could have been done using
+The threading in the ``RunningPoint`` example could have been done using
 ``runThread`` from standard library::
 
     point = new SmartPoint(10, 10);
@@ -2398,6 +2455,9 @@ The threading in the RunningPoint example could have been done using
             sleep 1;
         done
     done
+
+The ``createThread`` example could be simply
+``runThread [] \(sleep 1; println "Test")``.
 
 
 Yeti code style
