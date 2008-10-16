@@ -537,8 +537,8 @@ interface YetiParser {
              "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
 
         private static final String[][] OPS = {
-            { "*", "/", "%", "&" },
-            { "+", "-", "|" },
+            { "*", "/", "%" },
+            { "+", "-" },
             { "::", ":." },
             { "<", ">", "<=", ">=", "==", "!=", "=~", "!~" },
             { null }, // and or
@@ -726,9 +726,9 @@ interface YetiParser {
                 res = readCase();
             } else if (s == "in") {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
-            } else if (s == "div" || s == "shr" || s == "shl") {
+            } else if (s == "div" || s == "shr" || s == "shl" || s == "b_and") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
-            } else if (s == "xor") {
+            } else if (s == "b_or" || s == "xor") {
                 res = new BinOp(s, FIRST_OP_LEVEL + 1, true);
             } else if (s == "is" || s == "unsafely_as" || s == "as") {
                 TypeNode t = readType(true);

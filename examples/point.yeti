@@ -5,13 +5,19 @@ class Point(int x, int y)
     var x = x,
     var y = y,
 
+    log msg =
+        println "Point \(this): \(msg)",
+
     int getX()
+        log "getX called";
         x,
 
     int getY()
+        log "getY called";
         y,
 
     void moveTo(int x', int y')
+        log "moveTo(\(x'), \(y')) called";
         x := x';
         y := y',
 
