@@ -2396,7 +2396,7 @@ only one real super class is allowed, but many interfaces can be implemented.
 
 You may have noticed that above method declarations did not have a ``public``
 modifier. This is because all methods are public in the classes defined
-in Yeti. When some private helper methods are wanted, a function fields can
+in Yeti. When some private helper methods are needed, a function fields can
 be used::
 
     class Point(int x, int y)
@@ -2423,15 +2423,15 @@ be used::
             "\(x):\(y)"
     end;
 
-While ``this`` is normally not available in field value expressions, the fields
-where value is a function literal will have this bound in their expression
-scope. This is unsafe (another field could call that function too, which can
-then call some method before all fields have been initialised), but allowed
-because this is sometimes useful.
+While ``this`` is normally not available in the field value expressions,
+the fields where value is a function literal will have ``this`` bound in their
+expression scope. This is unsafe (another field could call that function too,
+which can then call some method before all fields have been initialised),
+but is allowed because this is sometimes useful.
 
-All fields are private and can be seen only in the same class - in fact
-they act just like value bindings in the class scope. Class field definitions
-and methods can also access all bindings from the outer scope, where the class
+All fields are private and can be seen only in the same class - they
+act like value bindings in the class scope. Class field definitions and
+methods can also access all bindings from the outer scope, where the class
 was defined.
 In fact println is used just like that in the above example - it comes as
 a binding from the outer scope.

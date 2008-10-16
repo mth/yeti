@@ -8,6 +8,7 @@ var flags = 0;
 var exec = true;
 var printType = false;
 var src = "";
+var compileErrorTrace = false;
 
 srcs = array [];
 argv = array _argv;
@@ -77,6 +78,7 @@ options = [
     "-safe-eval":
         \(evaluator.sandbox := true; eval := true; src := shift argv),
     "-icast": \(evaluator.gcj := true),
+    "-compile-error-trace": \(compileErrorTrace := true),
 ];
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop
@@ -135,6 +137,9 @@ try
     compilation#enumWarns(printMessage)
 catch CompileException ex:
     compilation#enumWarns(printMessage);
+    if compileErrorTrace then
+        ex#printStackTrace()
+    fi;
     printMessage ex;
     sysExit 1;
 yrt;

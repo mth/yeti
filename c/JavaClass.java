@@ -327,7 +327,6 @@ final class JavaClass extends CapturingClosure {
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
         classType.javaType.resolve(t);
-        classType.javaType.checkAbstract();
     }
 
     // must be called after close
@@ -351,7 +350,7 @@ final class JavaClass extends CapturingClosure {
     void gen(Ctx ctx) {
         constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
-        Ctx clc = ctx.newClass(isPublic ? ACC_PUBLIC + ACC_SUPER : ACC_SUPER,
+        Ctx clc = ctx.newClass(classType.javaType.access | ACC_SUPER,
                         className, parentClass.type.javaType.className(),
                         implement);
         clc.fieldCounter = captureCount;

@@ -69,6 +69,22 @@ final class MethodDesc extends YetiType {
         return scope;
     }
 
+    private void check(YetiType.Type t, Node node, String packageName) {
+        while (t.type == YetiType.JAVA_ARRAY)
+            t = t.param[0];
+        if (t.type == YetiType.JAVA && t.javaType.description.charAt(0) == 'L')
+            t.javaType.resolve(node).checkPackage(node, packageName);
+    }
+
+    void check(Node argList, String packageName) {
+        Node[] args = ((XNode) argList).expr;
+        for (int i = 0; i < method.arguments.length; ++i) {
+            check(method.arguments[i], args[i], packageName);
+        }
+        if (m != null) // constructors don't have m
+            check(method.returnType, m[0], packageName);
+    }
+
     void init(Scope mscope, int depth) {
         Scope bodyScope = bindScope(mscope, null, null);
         if (bodyScope == mscope)
@@ -227,6 +243,12 @@ final class MethodDesc extends YetiType {
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(cl, ex);
         }
+        consDesc.check(cl.expr[1], scope.ctx.packageName);
+        for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
+            MethodDesc md = (MethodDesc) methods.get(i);
+            md.check(md.m[2], scope.ctx.packageName);
+        }
+        c.classType.javaType.checkAbstract();
 
         // constructor arguments
         Scope staticScope = new Scope(scope, null, null);

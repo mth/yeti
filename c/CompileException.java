@@ -44,10 +44,15 @@ public class CompileException extends RuntimeException {
 
     public CompileException(YetiParser.Node pos,
                             JavaClassNotFoundException ex) {
-        this(pos, "Class not found: " + ex.getMessage());
+        this(ex, pos, "Class not found: " + ex.getMessage());
     }
 
     public CompileException(YetiParser.Node pos, String what) {
+        this(null, pos, what);
+    }
+
+    private CompileException(Throwable ex, YetiParser.Node pos, String what) {
+        super(ex);
         if (pos != null) {
             line = pos.line;
             col = pos.col;
@@ -57,12 +62,7 @@ public class CompileException extends RuntimeException {
 
     public CompileException(YetiParser.Node pos, String what,
                             YetiType.TypeException ex) {
-        line = pos.line;
-        col = pos.col;
-        if (ex.special) {
-            what += " (" + ex.getMessage() + ")";
-        }
-        this.what = what;
+        this(ex, pos, ex.special ? what + " (" + ex.getMessage() + ")" : what);
     }
 
     public String getMessage() {

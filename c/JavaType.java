@@ -270,7 +270,10 @@ class JavaType {
         }
 
         public String toString() {
-            StringBuffer s = new StringBuffer(returnType + " ");
+            StringBuffer s =
+                new StringBuffer(returnType.type == YetiType.UNIT
+                                    ? "void" : returnType.toString());
+            s.append(' ');
             s.append(name);
             s.append('(');
             for (int i = 0; i < arguments.length; ++i) {
@@ -321,8 +324,8 @@ class JavaType {
     private Method[] constructors;
     private JavaType parent;
     private HashMap interfaces;
-    private int access;
     private static HashMap CACHE = new HashMap();
+    int access;
 
     static void checkPackage(YetiParser.Node where, String packageName,
                              String name, String what, String item) {
@@ -569,11 +572,12 @@ class JavaType {
     void checkAbstract() {
         if ((access & Opcodes.ACC_ABSTRACT) != 0)
             return;
-        for (int i = methods.length; --i >= 0;)
+        for (int i = methods.length; --i >= 0;) {
             if ((methods[i].access & Opcodes.ACC_ABSTRACT) != 0) {
                 access |= Opcodes.ACC_ABSTRACT;
                 return;
             }
+        }
     }
 
     static final String[] NUMBER_TYPES = {
@@ -1063,7 +1067,6 @@ class JavaType {
         YetiType.Type t;
         if (descr == null) {
             t = YetiType.resolveFullClass(name, scope);
-            t.javaType.resolve(sym).checkPackage(sym, scope.ctx.packageName);
         } else {
             t = new YetiType.Type(descr);
         }
