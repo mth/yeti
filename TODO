@@ -1,6 +1,7 @@
    Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* Fix runThread closure
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * On method arguments and returns convert UNDEF_STR to null

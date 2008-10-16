@@ -66,7 +66,7 @@ options = [
     "-type": \(printType := true; exec := false),
     "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
     "-no-import": \(flags := flags + YetiC#CF_NO_IMPORT),
-    "-guard": \(runDaemonThread (number (shift argv)) do time:
+    "-guard": \(_ = runThread [Daemon ()] (number (shift argv)) do time:
         sleep time;
         println "(terminated)";
         System#exit(13)

@@ -113,11 +113,6 @@ withHandle h block =
         h.close ()
     yrt;
 
-class FunThreadImpl(Fun f, Object v) extends Thread
-    void run()
-        _ = f#apply(v)
-end;
-
 {
     withHandle,
 
@@ -206,13 +201,20 @@ end;
 
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 
-    runThread v f is 'a -> ('a -> ()) -> () =
-        new FunThreadImpl(f, v)#start(),
-
-    runDaemonThread v f is 'a -> ('a -> ()) -> () =
-        th = new FunThreadImpl(f, v);
-        th#setDaemon(true);
-        th#start(),
+    runThread init v f is list?<''> -> 'a -> ('a -> ()) -> ~Thread =
+        class FunThread(Fun f, Object v) extends Thread
+            void run()
+                _ = f#apply(v)
+        end;
+        th = new FunThread(f, v);
+        for init do i:
+            case i of
+                Daemon (): th#setDaemon(true);
+                ClassLoader cl: th#setContextClassLoader(cl);
+            esac
+        done;
+        th#start();
+        th,
 
     sleep time = Thread#sleep(time * 1000),
 }
