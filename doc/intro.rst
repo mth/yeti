@@ -2106,36 +2106,16 @@ compiler also attempts to use its JVM classloader to find libraries.
 Using modules from Java code
 +++++++++++++++++++++++++++++++++
 
-Yeti modules can be accessed from normal Java code. For example, the
-``println`` function from the ``yeti.lang.io`` module could be called in
-the following way::
-
-    import yeti.lang.io;
-
-    public class CallYeti {
-        public static void main(String[] args) {
-            // use the static field
-            io.println._.apply("Yeti!");
-        }
-    }
-
-Functions published from structure-valued modules, which are not closures
-are compiled into public inner classes with _ field being an constant
-function instance.  It is not recommended to rely on this behavior as
-it depends on compiler optimisations that may change in the future.
-
-Modules with structure values will also have static fields generated for
-each of the constant structure fields that are not non-closure function.
-
-Compiler uses this to optimise the module imports.
-
-Alternative way would be to access the structure returned by the eval call::
+Yeti modules can be accessed from normal Java code - the modules are
+compiled into classes with a static eval method, that returns the modules
+value when invoked. For example, the ``println`` function from the
+``yeti.lang.io`` module could be called in the following way::
 
     import yeti.lang.Fun;
     import yeti.lang.Struct;
     import yeti.lang.io;
 
-    public class CallYeti2 {
+    public class CallYeti {
         public static void main(String[] args) {
             Struct module = (Struct) io.eval();
             Fun println = (Fun) module.get("println");
@@ -2150,8 +2130,9 @@ This works regardless of the actual implementation of f. Uncurring also
 3-argument functions is actually planned as an optimisation, but not yet
 implemented.
 
-Since accessing Yeti code from Java loses type information and is somewhat
-cumbersome, it is best to try to minimise such interfaces.
+Since accessing Yeti modules directly from Java code is cumbersome,
+it is best to avoid it. Better way is defining `public classes`_ in the
+module top-level scope, which can be easily accessed in from the Java code.
 
 
 Using Java classes from Yeti code
@@ -2492,9 +2473,65 @@ Class will be marked abstract also when it extends abstract class or
 interface without implementing the abstract methods in the
 super class/interface.
 
+Public classes
+++++++++++++++++++
 
-.. static methods
-.. public/private/inner
+Class definitions in Yeti are not public be default. This is because
+a class can access any bindings from the outer scope and classes are
+global entities in the JVM - so they couldn't be really instantiated
+from outside their normal scope (which would make their publicity useless).
+
+This restriction is lifted only when class is defined in modules top-level
+scope - as modules are essentially global constants in Yeti, the module
+top-level scope can be considered to be also global. Therefore the Yeti
+compiler can (and will) make any classes defined in modules top-level scope
+automatically public.
+
+Public classes also allow defining static methods (this is normally
+prohibited).
+::
+
+    module fac.test;
+
+    fac x = fold (*) 1 [1 .. x];
+
+    class Main
+        static void main(String[] argv)
+            println (fac 5)
+    end
+
+Compiling this causes a public class fac.Main to be generated.
+This could be tested in a following way::
+
+    $ java -jar yeti.jar -d target test.yeti 
+    $ java -classpath target:yeti.jar fac.Main
+    120
+
+Public classes act like normal Java classes, and can be used from any
+Java code. Therefore the preferred way for calling Yeti code from Java
+code is using those classes. This is much easier, for example, than
+trying to access Yeti modules directly from Java code - the compiler can
+do most of the conversions between Yeti and Java types automatically when
+the Java class methods are defined.
+
+When to use Java class definitions
+++++++++++++++++++++++++++++++++++++++
+
+The ability to define Java classes in Yeti code is mostly useful for
+interfaceing with Java code and declaring custom exception classes.
+
+Yeti don't have any other exception handling mechanism than try-catch
+blocks which work with Java exception classes - so to define any
+custom exception a Java class has to be defined.
+
+Using the Java classes for OO programming in Yeti is possible, but
+probably not a good idea, as the Yeti and Java typesystems are too
+different to work together nicely. The restriction of using Java types
+on method arguments and return types would probably cause problems.
+
+Instead an object-oriented code in Yeti should use structures with
+function fields for simulating objects. This way the type inference
+can work and there are no restrictions on the value types.
 
 
 Yeti code style
