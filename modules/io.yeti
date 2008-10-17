@@ -107,11 +107,62 @@ stdin () =
     esac;
 
 withHandle h block =
-    try
+   (try
         block h
     finally
         h.close ()
-    yrt;
+    yrt);
+
+// to keep close as only provided
+inputHandle stream encoding is ~InputStream -> string -> '' =
+   (var nok = true;
+    try
+        r = new BufferedReader(
+                    if encoding == "" then
+                        new InputStreamReader(stream)
+                    else
+                        new InputStreamReader(stream, encoding)
+                    fi, 8192);
+        nok := false;
+        readerHandle r
+    finally
+        if nok then
+            stream#close()
+        fi
+    yrt);
+
+writerHandle writer is ~BufferedWriter -> '' = {
+        write s is string -> () =
+            writer#write(s),
+        writeln s is string -> () =
+            writer#write(s);
+            writer#newLine(),
+        flush () = writer#flush(),
+        close () = writer#close(),
+    };
+
+outputHandle stream encoding is ~OutputStream -> string -> '' =
+   (var nok = true;
+    try
+        w = new BufferedWriter(
+                if encoding == "" then
+                    new OutputStreamWriter(stream)
+                else
+                    new OutputStreamWriter(stream, encoding)
+                fi);
+        nok := false;
+        writerHandle w
+    finally
+        if nok then
+            stream#close()
+        fi
+    yrt);
+
+openInFile name is string -> string -> '' =
+    inputHandle (new FileInputStream(name) as ~InputStream);
+
+openOutFile name is string -> string -> '' =
+    outputHandle (new FileOutputStream(name) as ~OutputStream);
 
 {
     withHandle,
@@ -132,61 +183,16 @@ withHandle h block =
         throw new ExitError(exitCode),
 
     readerHandle,
+    inputHandle,
+    openInFile,
+    writerHandle,
+    outputHandle,
+    openOutFile,
 
     get stdin = stdin,
 
-    inputHandle stream encoding is ~InputStream -> string -> '' =
-        var nok = true;
-        try
-            r = new BufferedReader(
-                        if encoding == "" then
-                            new InputStreamReader(stream)
-                        else
-                            new InputStreamReader(stream, encoding)
-                        fi, 8192);
-            nok := false;
-            readerHandle r
-        finally
-            if nok then
-                stream#close()
-            fi
-        yrt,
-
-    writerHandle writer is ~BufferedWriter -> '' = {
-        write s is string -> () =
-            writer#write(s),
-        writeln s is string -> () =
-            writer#write(s);
-            writer#newLine(),
-        flush () = writer#flush(),
-        close () = writer#close(),
-    },
-
-    outputHandle stream encoding is ~OutputStream -> string -> '' =
-        var nok = true;
-        try
-            w = new BufferedWriter(
-                    if encoding == "" then
-                        new OutputStreamWriter(stream)
-                    else
-                        new OutputStreamWriter(stream, encoding)
-                    fi);
-            nok := false;
-            writerHandle w
-        finally
-            if nok then
-                stream#close()
-            fi
-        yrt,
-
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
-
-    openInFile name is string -> string -> '' =
-        inputHandle (new FileInputStream(name) as ~InputStream),
-
-    openOutFile name is string -> string -> '' =
-        outputHandle (new FileOutputStream(name) as ~OutputStream),
 
     readFile name encoding =
         withHandle (openInFile name encoding),
