@@ -339,7 +339,7 @@ public class YetiType implements YetiParser {
             return v;
         }
 
-        void str(List to, String indent, Map vars, Map refs) {
+        void str(final List to, String indent, Map vars, Map refs) {
             if (type == VAR) {
                 if (ref != null) {
                     ref.str(to, indent, vars, refs);
@@ -352,18 +352,28 @@ public class YetiType implements YetiParser {
                 to.add(TYPE_NAMES[type]);
                 return;
             }
-            String[] recRef = (String[]) refs.get(this);
-            if (recRef == null) {
-                refs.put(this, recRef = new String[1]);
-            } else {
-                if (recRef[0] == null) {
-                    recRef[0] = getVarName(vars);
+            class Ref {
+                String ref;
+                int endIndex;
+
+                public String toString() {
+                    if (ref == null)
+                        return "";
+                    to.set(endIndex, " is " + ref + ')');
+                    return "(";
                 }
-                to.add(recRef[0]);
-                return;
             }
             int startIndex = to.size();
-            to.add("(");
+            Ref recRef = (Ref) refs.get(this);
+            if (recRef == null) {
+                refs.put(this, recRef = new Ref());
+                to.add(recRef);
+            } else {
+                if (recRef.ref == null)
+                    recRef.ref = getVarName(vars);
+                to.add(recRef.ref);
+                return;
+            }
             switch (type) {
                 case FUN:
                     if (param[0].deref().type == FUN) {
@@ -410,15 +420,8 @@ public class YetiType implements YetiParser {
                     to.set(startIndex, TYPE_NAMES[type]);
                     return;
             }
-            if (recRef[0] == null)
-                refs.remove(this);
-            if (recRef[0] == null) {
-                to.set(startIndex, "");
-            } else {
-                to.add(" is ");
-                to.add(recRef[0]);
-                to.add(")");
-            }
+            recRef.endIndex = to.size();
+            to.add("");
         }
 
         public String toString() {
