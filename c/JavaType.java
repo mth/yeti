@@ -34,6 +34,7 @@ import java.util.*;
 import org.objectweb.asm.*;
 import java.io.IOException;
 import java.io.InputStream;
+import yeti.lang.Core;
 
 class JavaClassNotFoundException extends Exception {
     public JavaClassNotFoundException(String what) {
@@ -804,31 +805,35 @@ class JavaType {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        StringBuffer err = new StringBuffer("No suitable method ");
+        List err = new ArrayList();
+        err.add("No suitable method ");
         HashMap vars = new HashMap();
         HashMap refs = new HashMap();
-        err.append(name);
-        err.append("(");
+        err.add(name);
+        err.add("(");
         for (int i = 0; i < args.length; ++i) {
             if (i != 0) {
-                err.append(", ");
+                err.add(", ");
             }
-            err.append(args[i].type.str("", vars, refs));
+            args[i].type.str(err, "", vars, refs);
         }
-        err.append(") found in ");
-        err.append(dottedName());
+        err.add(") found in ");
+        err.add(dottedName());
         boolean fst = true;
         for (int i = ma.length; --i >= 0;) {
             if (ma[i].name != name)
                 continue;
             if (fst) {
-                err.append("\nMethods named " + name + ':');
+                err.add("\nMethods named " + name + ':');
                 fst = false;
             }
-            err.append("\n    ");
-            err.append(ma[i]);
+            err.add("\n    ");
+            err.add(ma[i]);
         }
-        throw new CompileException(n, err.toString());
+        String[] a = new String[err.size()];
+        for (int i = 0; i < a.length; ++i)
+            a[i] = err.get(i).toString();
+        throw new CompileException(n, Core.concat(a));
     }
 
     JavaType resolve(YetiParser.Node where) {
@@ -929,7 +934,7 @@ class JavaType {
         return new YetiType.Type("L" + className + ';');
     }
 
-    public String str(Map vars, Map refs, YetiType.Type[] param) {
+    public String str() {
         switch (description.charAt(0)) {
             case 'Z': return "boolean";
             case 'B': return "byte";
@@ -940,23 +945,9 @@ class JavaType {
             case 'J': return "long";
             case 'S': return "short";
             case 'V': return "void";
-            case 'L': break;
-            default : return "~" + description;
+            case 'L': return "~".concat(dottedName());
         }
-        StringBuffer s = new StringBuffer("~");
-        s.append(dottedName());
-        if (param != null && param.length > 0) {
-            s.append('<');
-            for (int i = 0; i < param.length; ++i) {
-                if (i != 0) {
-                    s.append(", ");
-                }
-                String ps = param[i].str("", vars, refs);
-                s.append(ps.charAt(0) == '~' ? ps.substring(1) : ps);
-            }
-            s.append('>');
-        }
-        return s.toString();
+        return "~".concat(description);
     }
 
     static String packageOfClass(String className) {
