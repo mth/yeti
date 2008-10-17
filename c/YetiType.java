@@ -352,6 +352,10 @@ public class YetiType implements YetiParser {
                 to.add(TYPE_NAMES[type]);
                 return;
             }
+            if (type == JAVA) {
+                to.add(javaType.str());
+                return;
+            }
             class Ref {
                 String ref;
                 int endIndex;
@@ -363,7 +367,6 @@ public class YetiType implements YetiParser {
                     return "(";
                 }
             }
-            int startIndex = to.size();
             Ref recRef = (Ref) refs.get(this);
             if (recRef == null) {
                 refs.put(this, recRef = new Ref());
@@ -409,16 +412,13 @@ public class YetiType implements YetiParser {
                     param[0].str(to, indent, vars, refs);
                     to.add(">");
                     break;
-                case JAVA:
-                    to.add(javaType.str());
-                    break;
                 case JAVA_ARRAY:
                     param[0].str(to, indent, vars, refs);
                     to.add("[]");
                     break;
                 default:
-                    to.set(startIndex, TYPE_NAMES[type]);
-                    return;
+                    to.add("?" + type + "?");
+                    break;
             }
             recRef.endIndex = to.size();
             to.add("");
