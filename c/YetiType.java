@@ -287,8 +287,12 @@ public class YetiType implements YetiParser {
             if (finalMembers != null)
                 m.putAll(finalMembers);
             boolean useNL = m.size() >= 3;
-            if (useNL)
-                indent = indent.concat("   ");
+            String indent_ = indent, oldIndent = indent;
+            if (useNL) {
+                if (!variant)
+                    indent = indent.concat("   ");
+                indent_ = indent.concat("   ");
+            }
             String sep = variant
                 ? useNL ? "\n" + indent + "| " : " | "
                 : useNL ? ",\n".concat(indent) : ", ";
@@ -309,10 +313,10 @@ public class YetiType implements YetiParser {
                     res.append('.');
                 res.append(e.getKey());
                 res.append(variant ? " " : " is ");
-                res.append(t.str(indent, vars, refs));
+                res.append(t.str(indent_, vars, refs));
             }
             if (useNL && !variant)
-                res.append('\n' + indent.substring(3));
+                res.append('\n' + oldIndent);
             return res.toString();
         }
 
