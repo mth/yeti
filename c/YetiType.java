@@ -846,7 +846,7 @@ public class YetiType implements YetiParser {
     static BindRef resolve(String sym, Node where, Scope scope, int depth) {
         Scope[] r = new Scope[1];
         BindRef ref = resolveRef(sym, where, scope, r);
-        if (r[0].free != null && r[0].free.length != 0) {
+        if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
             Map vars = createFreeVars(r[0].free, depth);
             ref.type = copyType(ref.type, vars, new HashMap());
