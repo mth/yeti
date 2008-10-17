@@ -813,7 +813,7 @@ class JavaType {
             if (i != 0) {
                 err.append(", ");
             }
-            err.append(args[i].type.str(vars, refs));
+            err.append(args[i].type.str("", vars, refs));
         }
         err.append(") found in ");
         err.append(dottedName());
@@ -951,7 +951,7 @@ class JavaType {
                 if (i != 0) {
                     s.append(", ");
                 }
-                String ps = param[i].str(vars, refs);
+                String ps = param[i].str("", vars, refs);
                 s.append(ps.charAt(0) == '~' ? ps.substring(1) : ps);
             }
             s.append('>');

@@ -278,7 +278,7 @@ public class YetiType implements YetiParser {
             param = NO_PARAM;
         }
 
-        private String hstr(Map vars, Map refs) {
+        private String hstr(String indent, Map vars, Map refs) {
             StringBuffer res = new StringBuffer();
             boolean variant = type == VARIANT;
             Map m = new java.util.TreeMap();
@@ -286,13 +286,21 @@ public class YetiType implements YetiParser {
                 m.putAll(partialMembers);
             if (finalMembers != null)
                 m.putAll(finalMembers);
-            boolean useNL = m.size() >= 10;
-            String sep = variant ? " | " : useNL ? ",\n" : ", ";
+            boolean useNL = m.size() >= 3;
+            if (useNL)
+                indent = indent.concat("   ");
+            String sep = variant
+                ? useNL ? "\n" + indent + "| " : " | "
+                : useNL ? ",\n".concat(indent) : ", ";
             Iterator i = m.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
                 if (res.length() != 0)
                     res.append(sep);
+                else if (useNL && !variant) {
+                    res.append('\n');
+                    res.append(indent);
+                }
                 Type t = (Type) e.getValue();
                 if (!variant && t.field == FIELD_MUTABLE)
                     res.append("var ");
@@ -301,8 +309,10 @@ public class YetiType implements YetiParser {
                     res.append('.');
                 res.append(e.getKey());
                 res.append(variant ? " " : " is ");
-                res.append(t.str(vars, refs));
+                res.append(t.str(indent, vars, refs));
             }
+            if (useNL && !variant)
+                res.append('\n' + indent.substring(3));
             return res.toString();
         }
 
@@ -320,9 +330,9 @@ public class YetiType implements YetiParser {
             return v;
         }
 
-        String str(Map vars, Map refs) {
+        String str(String indent, Map vars, Map refs) {
             if (ref != null) {
-                return ref.str(vars, refs);
+                return ref.str(indent, vars, refs);
             }
             if (type == VAR) {
                 return getVarName(vars);
@@ -343,15 +353,15 @@ public class YetiType implements YetiParser {
             switch (type) {
                 case FUN:
                     res = (param[0].deref().type == FUN
-                        ? "(" + param[0].str(vars, refs) + ")"
-                        : param[0].str(vars, refs))
-                        + " -> " + param[1].str(vars, refs);
+                        ? "(" + param[0].str(indent, vars, refs) + ")"
+                        : param[0].str(indent, vars, refs))
+                        + " -> " + param[1].str(indent, vars, refs);
                     break;
                 case STRUCT:
-                    res = "{" + hstr(vars, refs) + "}";
+                    res = "{" + hstr(indent, vars, refs) + "}";
                     break;
                 case VARIANT:
-                    res = hstr(vars, refs);
+                    res = hstr(indent, vars, refs);
                     break;
                 case MAP:
                     Type p1 = param[1].deref();
@@ -359,19 +369,19 @@ public class YetiType implements YetiParser {
                     res = p2.type == LIST_MARKER
                         ? (p1.type == NONE ? "list<" : p1.type == NUM
                             ? "array<" : "list?<")
-                          + param[0].str(vars, refs) + ">"
+                          + param[0].str(indent, vars, refs) + ">"
                         : p2.type == MAP_MARKER ||
                           p1.type != NUM && p1.type != VAR
-                            ? "hash<" + p1.str(vars, refs) + ", "
-                                      + param[0].str(vars, refs) + ">"
-                            :  "map<" + p1.str(vars, refs) + ", "
-                                      + param[0].str(vars, refs) + ">";
+                            ? "hash<" + p1.str(indent, vars, refs) + ", "
+                                      + param[0].str(indent, vars, refs) + ">"
+                            :  "map<" + p1.str(indent, vars, refs) + ", "
+                                      + param[0].str(indent, vars, refs) + ">";
                     break;
                 case JAVA:
                     res = javaType.str(vars, refs, param);
                     break;
                 case JAVA_ARRAY:
-                    res = param[0].str(vars, refs) + "[]";
+                    res = param[0].str(indent, vars, refs) + "[]";
                     break;
                 default:
                     return TYPE_NAMES[type];
@@ -381,7 +391,7 @@ public class YetiType implements YetiParser {
         }
 
         public String toString() {
-            return str(new HashMap(), new HashMap());
+            return str("", new HashMap(), new HashMap());
         }
         
         Type deref() {
