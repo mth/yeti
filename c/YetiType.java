@@ -312,9 +312,15 @@ public class YetiType implements YetiParser {
                 Type t = (Type) e.getValue();
                 if (!variant && t.field == FIELD_MUTABLE)
                     to.add("var ");
-                if (!variant && (finalMembers == null ||
-                        !finalMembers.containsKey(e.getKey())))
-                    to.add(".");
+                if (!variant) {
+                    if (finalMembers == null ||
+                            !finalMembers.containsKey(e.getKey())) {
+                        to.add(".");
+                    } else if (partialMembers != null &&
+                               partialMembers.containsKey(e.getKey())) {
+                        to.add("`");
+                    }
+                }
                 to.add(e.getKey());
                 to.add(variant ? " " : " is ");
                 t.str(to, indent_, vars, refs);
