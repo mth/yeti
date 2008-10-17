@@ -478,14 +478,36 @@ public class YetiType implements YetiParser {
 
     static class TypeException extends Exception {
         boolean special;
+        private Type a, b;
+        String sep, ext;
 
         TypeException(String what) {
             super(what);
         }
+
+        TypeException(Type a_, Type b_) {
+            a = a_;
+            b = b_;
+            sep = " is not ";
+            ext = "";
+        }
+
+        TypeException(Type a_, String sep_, Type b_, String ext_) {
+            a = a_;
+            b = b_;
+            sep = sep_;
+            ext = ext_;
+        }
+
+        public String getMessage() {
+            if (a == null)
+                return super.getMessage();
+            return "Type mismatch: " + a + sep + b + ext;
+        }
     }
 
     static void mismatch(Type a, Type b) throws TypeException {
-        throw new TypeException("Type mismatch: " + a + " is not " + b);
+        throw new TypeException(a, b);
     }
 
     static void finalizeStruct(Type partial, Type src) throws TypeException {
@@ -498,8 +520,8 @@ public class YetiType implements YetiParser {
             Map.Entry entry = (Map.Entry) i.next();
             Type ff = (Type) src.finalMembers.get(entry.getKey());
             if (ff == null) {
-                throw new TypeException("Type mismatch: " + src + " => "
-                       + partial + " (member missing: " + entry.getKey() + ")");
+                throw new TypeException(src, " => ",
+                       partial, " (member missing: " + entry.getKey() + ")");
             }
             Type partField = (Type) entry.getValue();
             if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
@@ -511,75 +533,81 @@ public class YetiType implements YetiParser {
     }
 
     static void unifyMembers(Type a, Type b) throws TypeException {
-        b.ref = a; // just fake ref now to avoid cycles...
-        Map ff;
-        if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
-            // VARIANT types are sometimes ordered.
-            // when all their variant parameters are ordered types.
-            if ((a.flags & FL_ORDERED_REQUIRED) != 0) {
-                requireOrdered(b);
-            } else {
-                requireOrdered(a);
-            }
-        }
-        if (a.finalMembers == null) {
-            ff = b.finalMembers;
-        } else if (b.finalMembers == null) {
-            ff = a.finalMembers;
-        } else {
-            // unify final members
-            ff = new HashMap(a.finalMembers);
-            for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
-                Map.Entry entry = (Map.Entry) i.next();
-                Type f = (Type) b.finalMembers.get(entry.getKey());
-                if (f != null) {
-                    Type t = (Type) entry.getValue();
-                    unify(f, t);
-                    // constness spreads
-                    if (t.field != f.field) {
-                        if (t.field == 0) {
-                            entry.setValue(t = f);
-                        }
-                        t.field = FIELD_NON_POLYMORPHIC;
-                    }
+        Type oldRef = b.ref;
+        try {
+            b.ref = a; // just fake ref now to avoid cycles...
+            Map ff;
+            if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
+                // VARIANT types are sometimes ordered.
+                // when all their variant parameters are ordered types.
+                if ((a.flags & FL_ORDERED_REQUIRED) != 0) {
+                    requireOrdered(b);
                 } else {
-                    i.remove();
+                    requireOrdered(a);
                 }
             }
-            if (ff.isEmpty()) {
-                mismatch(a, b);
-            }
-        }
-        finalizeStruct(a, b);
-        finalizeStruct(b, a);
-        if (a.partialMembers == null) {
-            a.partialMembers = b.partialMembers;
-        } else if (b.partialMembers != null) {
-            // join partial members
-            Iterator i = a.partialMembers.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry entry = (Map.Entry) i.next();
-                Type f = (Type) b.partialMembers.get(entry.getKey());
-                if (f != null) {
-                    unify((Type) entry.getValue(), f);
-                    // mutability spreads
-                    if (f.field >= FIELD_NON_POLYMORPHIC) {
-                        entry.setValue(f);
+            if (a.finalMembers == null) {
+                ff = b.finalMembers;
+            } else if (b.finalMembers == null) {
+                ff = a.finalMembers;
+            } else {
+                // unify final members
+                ff = new HashMap(a.finalMembers);
+                for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
+                    Map.Entry entry = (Map.Entry) i.next();
+                    Type f = (Type) b.finalMembers.get(entry.getKey());
+                    if (f != null) {
+                        Type t = (Type) entry.getValue();
+                        unify(f, t);
+                        // constness spreads
+                        if (t.field != f.field) {
+                            if (t.field == 0) {
+                                entry.setValue(t = f);
+                            }
+                            t.field = FIELD_NON_POLYMORPHIC;
+                        }
+                    } else {
+                        i.remove();
                     }
                 }
+                if (ff.isEmpty()) {
+                    mismatch(a, b);
+                }
             }
-            a.partialMembers.putAll(b.partialMembers);
+            finalizeStruct(a, b);
+            finalizeStruct(b, a);
+            if (a.partialMembers == null) {
+                a.partialMembers = b.partialMembers;
+            } else if (b.partialMembers != null) {
+                // join partial members
+                Iterator i = a.partialMembers.entrySet().iterator();
+                while (i.hasNext()) {
+                    Map.Entry entry = (Map.Entry) i.next();
+                    Type f = (Type) b.partialMembers.get(entry.getKey());
+                    if (f != null) {
+                        unify((Type) entry.getValue(), f);
+                        // mutability spreads
+                        if (f.field >= FIELD_NON_POLYMORPHIC) {
+                            entry.setValue(f);
+                        }
+                    }
+                }
+                a.partialMembers.putAll(b.partialMembers);
+            }
+            a.finalMembers = ff;
+            if (ff == null) {
+                ff = a.partialMembers;
+            } else if (a.partialMembers != null) {
+                ff = new HashMap(ff);
+                ff.putAll(a.partialMembers);
+            }
+            a.param = (Type[]) ff.values().toArray(new Type[ff.size()]);
+            b.type = VAR;
+            b.ref = a;
+        } catch (TypeException ex) {
+            b.ref = oldRef;
+            throw ex;
         }
-        a.finalMembers = ff;
-        if (ff == null) {
-            ff = a.partialMembers;
-        } else if (a.partialMembers != null) {
-            ff = new HashMap(ff);
-            ff.putAll(a.partialMembers);
-        }
-        a.param = (Type[]) ff.values().toArray(new Type[ff.size()]);
-        b.type = VAR;
-        b.ref = a;
     }
 
     static void unifyJava(Type jt, Type t) throws TypeException {
