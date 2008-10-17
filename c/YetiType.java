@@ -335,10 +335,10 @@ public class YetiType implements YetiParser {
         }
 
         String str(String indent, Map vars, Map refs) {
-            if (ref != null) {
-                return ref.str(indent, vars, refs);
-            }
             if (type == VAR) {
+                if (ref != null) {
+                    return ref.str(indent, vars, refs);
+                }
                 return getVarName(vars);
             }
             if (type < PRIMITIVES.length) {
@@ -390,6 +390,8 @@ public class YetiType implements YetiParser {
                 default:
                     return TYPE_NAMES[type];
             }
+            if (recRef[0] == null)
+                refs.remove(this);
             return recRef[0] == null
                     ? res : "(" + res + " is " + recRef[0] + ")";
         }
