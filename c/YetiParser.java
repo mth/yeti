@@ -546,7 +546,6 @@ interface YetiParser {
             { "." },
             { ":=" },
             { "is" },
-            { ":" }
         };
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
@@ -674,8 +673,8 @@ interface YetiParser {
             if (i != p) {
                 String s = new String(src, p, i - p).intern();
                 p = i;
-                if (s == "=")
-                    return new XNode("=").pos(line, col);
+                if (s == "=" || s == ":")
+                    return new XNode(s).pos(line, col);
                 if (s == ".")
                     return new BinOp(FIELD_OP, 0, true).pos(line, col);
                 if (s == "#")
@@ -906,7 +905,9 @@ interface YetiParser {
             return new XNode("if", new Node[] { cond, expr, els });
         }
 
-        private void addCase(List cases, BinOp choice, List expr) {
+        private void addCase(List cases, XNode choice, List expr) {
+            if (expr.size() == 0)
+                throw new CompileException(choice, "Missing expression");
             Node code;
             if (expr.size() == 1) {
                 code = (Node) expr.get(0);
@@ -914,8 +915,8 @@ interface YetiParser {
                 code = new Seq((Node[]) expr.toArray(new Node[expr.size()]),
                                null).pos(choice.line, choice.col);
             }
-            cases.add(new XNode("case", new Node[] { choice.left, code })
-                            .pos(choice.line, choice.col));
+            choice.expr = new Node[] { choice.expr[0], code };
+            cases.add(choice);
         }
 
         private Node readCase() {
@@ -927,21 +928,15 @@ interface YetiParser {
             }
             List cases = new ArrayList(statements.length + 1);
             cases.add(val);
-            BinOp pattern = null;
+            XNode pattern = null;
             List expr = new ArrayList();
             for (int i = 0; i < statements.length; ++i) {
-                BinOp op;
-                if (statements[i] instanceof BinOp &&
-                    (op = (BinOp) statements[i]).op == ":") {
-                    if (op.left == null) {
-                        throw new CompileException(op, "Syntax error");
-                    }
+                if (statements[i].kind == ":") {
                     if (pattern != null) {
                         addCase(cases, pattern, expr);
                         expr.clear();
                     }
-                    pattern = op;
-                    expr.add(op.right);
+                    pattern = (XNode) statements[i];
                 } else if (pattern != null) {
                     expr.add(statements[i]);
                 } else {
@@ -973,7 +968,7 @@ interface YetiParser {
                     c.expr[1] = n;
                     n = fetch();
                 }
-                if (!(n instanceof BinOp) || ((BinOp) n).op != ":") {
+                if (n.kind != ":") {
                     throw new CompileException(n, "Expected ':'" +
                         (c.expr[1] == null ? " or identifier" : "") +
                         ", but found " + n);
@@ -1126,7 +1121,7 @@ interface YetiParser {
                 if (arg instanceof Eof) {
                     throw new CompileException(arg, "Unexpected " + arg);
                 }
-                if (arg instanceof BinOp && ((BinOp) arg).op == ":") {
+                if (arg.kind == ":") {
                     Node expr = readSeqTo("done");
                     if (args.isEmpty()) {
                         return XNode.lambda(new Sym("_").pos(arg.line, arg.col),
@@ -1182,6 +1177,12 @@ interface YetiParser {
                 // hack for class end - end is not reserved word
                 if (end == 'e' && sym instanceof Sym && sym.sym() == "end")
                     break;
+                if (sym.kind == ":" && args == null) {
+                    ((XNode) sym).expr = new Node[] { def(null, l, false) };
+                    l = new ArrayList();
+                    res.add(sym);
+                    continue;
+                }
                 if (sym.kind == "=") {
                     args = l;
                     if (end == '}') {

@@ -2539,13 +2539,13 @@ final class MapConstructor extends Code {
     void gen(Ctx ctx) {
         ctx.visitTypeInsn(NEW, "yeti/lang/Hash");
         ctx.visitInsn(DUP);
-        if (items.length > 16) {
-            ctx.intConst(items.length);
+        if (keyItems.length > 16) {
+            ctx.intConst(keyItems.length);
             ctx.visitInit("yeti/lang/Hash", "(I)V");
         } else {
             ctx.visitInit("yeti/lang/Hash", "()V");
         }
-        for (int i = 0; i < items.length; ++i) {
+        for (int i = 0; i < keyItems.length; ++i) {
             ctx.visitInsn(DUP);
             keyItems[i].gen(ctx);
             items[i].gen(ctx);
@@ -2557,7 +2557,7 @@ final class MapConstructor extends Code {
     }
 
     boolean flagop(int fl) {
-        return (fl & EMPTY_LIST) != 0 && items.length == 0;
+        return (fl & EMPTY_LIST) != 0 && keyItems.length == 0;
     }
 }
 

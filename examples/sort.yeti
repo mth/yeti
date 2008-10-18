@@ -118,8 +118,8 @@ splitList l fst snd =
 mergeSort less l =
     case l of
     _::_::_:
-       ({fst, snd} = splitList l [] [];
-        merge less [] (mergeSort less fst) (mergeSort less snd));
+        {fst, snd} = splitList l [] [];
+        merge less [] (mergeSort less fst) (mergeSort less snd);
     _: l
     esac;
 

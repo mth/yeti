@@ -1309,19 +1309,28 @@ public final class YetiAnalyzer extends YetiType {
         Type keyType = NO_TYPE;
         Type kind = null;
         BinOp bin;
-        for (int i = 0; i < items.length; ++i) {
-            if (items[i] instanceof BinOp &&
-                (bin = (BinOp) items[i]).op == ":") {
-                Code key = analyze(bin.left, scope, depth);
+        XNode keyNode = null;
+        int n = 0;
+        for (int i = 0; i < items.length; ++i, ++n) {
+            if (items[i].kind == ":") {
+                if (keyNode != null)
+                    throw new CompileException(items[i],
+                                               "Expecting , here, not :");
+                keyNode = (XNode) items[i];
+                if (kind == LIST_TYPE) {
+                    throw new CompileException(keyNode,
+                        "Unexpected : in list" + (i != 1 ? "" :
+                        " (or the key is missing on the first item?)"));
+                }
+                --n;
+                continue;
+            }
+            if (keyNode != null) {
+                Code key = analyze(keyNode.expr[0], scope, depth);
                 if (kind != MAP_TYPE) {
-                    if (kind != null) {
-                        throw new CompileException(bin,
-                            "Unexpected : in list" + (i != 1 ? "" :
-                            " (or the key is missing on the first item?)"));
-                    }
                     keyType = key.type;
                     kind = MAP_TYPE;
-                    keyItems = new Code[items.length];
+                    keyItems = new Code[items.length / 2];
                 } else {
                     try {
                         unify(keyType, key.type);
@@ -1331,8 +1340,9 @@ public final class YetiAnalyzer extends YetiType {
                             "key, but others have had " + keyType, ex);
                     }
                 }
-                keyItems[i] = key;
-                codeItems[i] = analyze(bin.right, scope, depth);
+                keyItems[n] = key;
+                codeItems[n] = analyze(items[i], scope, depth);
+                keyNode = null;
             } else {
                 if (kind == MAP_TYPE) {
                     throw new CompileException(items[i],
@@ -1343,35 +1353,35 @@ public final class YetiAnalyzer extends YetiType {
                     (bin = (BinOp) items[i]).op == "..") {
                     Code from = analyze(bin.left, scope, depth);
                     Code to = analyze(bin.right, scope, depth);
-                    Node n = null; Type t = null;
+                    Node rn = null; Type t = null;
                     try {
-                        n = bin.left;
+                        rn = bin.left;
                         unify(t = from.type, NUM_TYPE);
-                        n = bin.right;
+                        rn = bin.right;
                         unify(t = to.type, NUM_TYPE);
                     } catch (TypeException ex) {
-                        throw new CompileException(n, ".. range expects " +
+                        throw new CompileException(rn, ".. range expects " +
                                     "limit to be number, not a " + t, ex);
                     }
-                    codeItems[i] = new Range(from, to);
+                    codeItems[n] = new Range(from, to);
                 } else {
-                    codeItems[i] = analyze(items[i], scope, depth);
+                    codeItems[n] = analyze(items[i], scope, depth);
                 }
             }
             if (type == null) {
-                type = codeItems[i].type;
+                type = codeItems[n].type;
             } else {
-                Type t = JavaType.mergeTypes(type, codeItems[i].type);
+                Type t = JavaType.mergeTypes(type, codeItems[n].type);
                 if (t != null) {
                     type = t;
                     continue;
                 }
                 try {
-                    unify(type, codeItems[i].type);
+                    unify(type, codeItems[n].type);
                 } catch (TypeException ex) {
                     throw new CompileException(items[i], (kind == LIST_TYPE
                          ? "This list element is " : "This map element is ") +
-                         codeItems[i].type + ", but others have been " + type,
+                         codeItems[n].type + ", but others have been " + type,
                         ex);
                 }
             }
