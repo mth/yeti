@@ -1394,6 +1394,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (list.expr == null) {
             keyType = new Type(depth);
+            keyItems = new Code[0];
             kind = MAP_TYPE;
         }
         Code res = kind == LIST_TYPE ? (Code) new ListConstructor(codeItems)
