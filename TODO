@@ -13,3 +13,4 @@
 * Direct double optimisation, when it can be deduced,
   that there are always floats.
 * Direct struct-ref optimisation, when only known structs are accessed
+* Avoid upper/lowercase dups on generated classes

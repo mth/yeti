@@ -31,7 +31,7 @@ syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none
 syn keyword yetiType type var norec get set class extends end
 syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
-syn keyword yetiFunc any all find index const at setHashDefault flip sum
+syn keyword yetiFunc any all find index const at on setHashDefault flip sum
 syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift
 syn keyword yetiFunc defined? wrapArray concat concatMap negate splitBy
 syn keyword yetiFunc ln exp cos sin tan acos asin atan sqrt strReplace
