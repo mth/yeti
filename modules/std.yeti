@@ -63,6 +63,14 @@ index v l is 'a -> list?<'a> -> number =
         if nullptr? res then -1 else res fi
     fi;
 
+keys h is hash<'a, ''> -> list<'a> =
+    if empty? h then
+        []
+    else
+        new MList((h unsafely_as ~Hash)#keySet()#toArray())
+            unsafely_as list<''>
+    fi;
+
 plus a b = a + b;
 
 {
@@ -120,7 +128,7 @@ plus a b = a + b;
         fi,
 
     // damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index,
+    array, fold, find, index, keys,
 
     wrapArray a is 'a[] -> array<'a> =
         if nullptr? a then
@@ -257,6 +265,11 @@ plus a b = a + b;
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<''>,
 
+    nub l is list?<'a> -> list<'a> =
+        h = [:];
+        for l (_ i = h.[i] := ());
+        keys h,
+
     sort l is list?<^a> -> list<^a> =
         if empty? l then
             []
@@ -264,11 +277,11 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort() unsafely_as list<^a>
         fi,
 
-    sortBy f l is (^a -> ^a -> boolean) -> list?<^a> -> list<^a> =
+    sortBy f l is ('a -> 'a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
         else
-            (l unsafely_as ~AList)#sort(f) unsafely_as list<^a>
+            (l unsafely_as ~AList)#sort(f) unsafely_as list<'a>
         fi,
 
     // few math functions
@@ -361,14 +374,6 @@ plus a b = a + b;
 
     copyHash h is hash<'a, 'b> -> hash<'a, 'b> =
         new Hash(h) unsafely_as hash<'a, 'b>,
-
-    keys h is hash<'a, ''> -> list<'a> =
-        if empty? h then
-            []
-        else
-            new MList((h unsafely_as ~Hash)#keySet()#toArray())
-                unsafely_as list<''>
-        fi,
 
     failWith message =
         throw new FailureException(message),
