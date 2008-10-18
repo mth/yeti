@@ -418,14 +418,16 @@ public class MList extends AMList implements ByKey {
                 keys = keys.rest();
         }
         Object[] ka = kl.asort().array;
-        Object index = null;
+        Object last = null;
         for (int i = kl.size; --i >= 0;) {
-            if (ka[i].equals(index)) {
-                // don't remove same element twice
-            } else if ((index = ka[i]) instanceof ListRange) {
-                removeRange((ListRange) index);
+            if (ka[i] instanceof ListRange) {
+                removeRange((ListRange) ka[i]);
             } else {
-                remove(((AList) index).first());
+                Object index = ((AList) ka[i]).first();
+                if (!index.equals(last)) {
+                    remove(index);
+                    last = index;
+                }
             }
         }
     }
