@@ -175,13 +175,16 @@ abstract class AMList extends AList {
         return cnt < cnt_ ? -1 : cnt > cnt_ ? 1 : 0;
     }
 
-    // TODO ineffective
     public AList reverse() {
-        AList l = null;
-        for (AIter i = this; i != null; i = i.next()) {
-            l = new LList(i.first(), l);
-        }
-        return l;
+        Object[] array = array();
+        int end = _size();
+        if (end <= start)
+            return null;
+        Object[] r = new Object[end - start];
+        --end;
+        for (int i = 0; i < r.length; ++i)
+            r[i] = array[end - i];
+        return new MList(r);
     }
 }
 
@@ -339,10 +342,10 @@ public class MList extends AMList implements ByKey {
     public Object vget(Object index) {
         int i;
         if ((i = ((Number) index).intValue()) < 0) {
-            throw new NoSuchKeyException(i, size);
+            throw new NoSuchKeyException(i, size - start);
         }
         if ((i += start) >= size) {
-            throw new NoSuchKeyException(i - start, size);
+            throw new NoSuchKeyException(i - start, size - start);
         }
         return array[i];
     }
@@ -350,10 +353,10 @@ public class MList extends AMList implements ByKey {
     public Object put(Object index, Object value) {
         int i;
         if ((i = ((Number) index).intValue()) < 0) {
-            throw new NoSuchKeyException(i, size);
+            throw new NoSuchKeyException(i, size - start);
         }
         if ((i += start) >= size) {
-            throw new NoSuchKeyException(i - start, size);
+            throw new NoSuchKeyException(i - start, size - start);
         }
         array[i] = value;
         return null;
@@ -362,15 +365,83 @@ public class MList extends AMList implements ByKey {
     public Object remove(Object index) {
         int i, n;
         if ((i = ((Number) index).intValue()) < 0) {
-            throw new NoSuchKeyException(i, size);
+            throw new NoSuchKeyException(i, size - start);
         }
         if ((i += start) >= size) {
-            throw new NoSuchKeyException(i - start, size);
+            throw new NoSuchKeyException(i - start, size - start);
         }
         if ((n = --size - i) > 0) {
             System.arraycopy(array, i + 1, array, i, n);
         }
         return null;
+    }
+
+    private void removeRange(ListRange range) {
+        int from = range.first.intValue(),
+            to = range.last.intValue();
+        if (range.inc < 0) {
+            int tmp = from;
+            from = to;
+            to = tmp;
+        }
+        int n = size - start;
+        if (from <= to) {
+            if (from < 0 || from >= n)
+                throw new NoSuchKeyException(from, n);
+            if (to < 0 || to >= n)
+                throw new NoSuchKeyException(to, n);
+            if (++to < n)
+                System.arraycopy(array, to + start,
+                                 array, from + start, n - to);
+            size -= to - from;
+        }
+    }
+
+    public void removeAll(AList keys) {
+        // a common use case is removing a single range
+        if (keys instanceof ListRange) {
+            ListRange range = (ListRange) keys;
+            if (range.rest == null) {
+                removeRange(range);
+                return;
+            }
+        }
+        if (keys == null || keys.isEmpty())
+            return;
+        // latter elements must be removed first, so have to sort it
+        MList kl = new MList();
+        while (keys != null) {
+            kl.add(keys);
+            if (keys instanceof ListRange)
+                keys = ((ListRange) keys).rest;
+            else
+                keys = keys.rest();
+        }
+        Object[] ka = kl.asort().array;
+        Object index = null;
+        for (int i = kl.size; --i >= 0;) {
+            if (ka[i].equals(index)) {
+                // don't remove same element twice
+            } else if ((index = ka[i]) instanceof ListRange) {
+                removeRange((ListRange) index);
+            } else {
+                remove(((AList) index).first());
+            }
+        }
+    }
+
+    MList copy(int from, int to) {
+        int n = size - start;
+        if (from < 0 || from >= n)
+            throw new NoSuchKeyException(from, n);
+        if (to > n)
+            throw new NoSuchKeyException("Copy range " + from + " to " + to +
+                                         " exceeds array length " + n);
+        if (from >= to)
+            return new MList();
+        Object[] subArray = new Object[to - from];
+        System.arraycopy(array, start + from, subArray, 0, subArray.length);
+        return new MList(subArray);
     }
 
     public AList find(Fun pred) {

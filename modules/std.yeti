@@ -376,6 +376,9 @@ plus a b = a + b;
     delete h k is map<'a, ''> -> 'a -> () =
         _ = (h unsafely_as ~ByKey)#remove(k),
 
+    deleteAll h ks is map<'a, ''> -> list?<'a> -> () =
+        _ = (h unsafely_as ~ByKey)#removeAll(ks),
+
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
@@ -400,6 +403,9 @@ plus a b = a + b;
 
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v),
+
+    copyArray a from to is array<'a> -> number -> number -> array<'a> =
+        (a unsafely_as ~MList)#copy(from, to) unsafely_as array<'a>,
 
     collect f a pred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();

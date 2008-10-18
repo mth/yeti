@@ -44,7 +44,7 @@ syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
 syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunc delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunc failWith lazy int map' takeWhile collect pair
-syn keyword yetiFunc strLastIndexOf' copyHash
+syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
 syn keyword yetiExternal load import
 
 syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/

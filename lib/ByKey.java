@@ -46,4 +46,9 @@ public interface ByKey {
      * Remove object by key.
      */
     Object remove(Object key);
+
+    /**
+     * Remove object by key.
+     */
+    void removeAll(AList keys);
 }

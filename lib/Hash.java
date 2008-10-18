@@ -58,6 +58,12 @@ public class Hash extends java.util.HashMap implements ByKey, Coll {
         return x;
     }
 
+    public void removeAll(AList keys) {
+        if (keys != null && !keys.isEmpty())
+            for (AIter i = keys; i != null; i = i.next())
+                remove(i.first());
+    }
+
     public long length() {
         return size();
     }
