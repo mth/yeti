@@ -43,6 +43,10 @@ public class Hash extends java.util.HashMap implements ByKey, Coll {
         super(initialCapacity);
     }
 
+    public Hash(Map map) {
+        super(map);
+    }
+
     public Object vget(Object key) {
         Object x;
         if ((x = get(key)) == null && !containsKey(key)) {

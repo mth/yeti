@@ -359,6 +359,9 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<''>,
 
+    copyHash h is hash<'a, 'b> -> hash<'a, 'b> =
+        new Hash(h) unsafely_as hash<'a, 'b>,
+
     keys h is hash<'a, ''> -> list<'a> =
         if empty? h then
             []
