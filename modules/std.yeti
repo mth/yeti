@@ -295,8 +295,10 @@ plus a b = a + b;
     norec strRight s pos = strRight s pos,
     norec strStarts s start = strStarts s start,
     norec strEnds s end = strEnds s end,
-    norec strIndexOf haystack needle = strIndexOf haystack needle,
-    norec strLastIndexOf haystack needle = strLastIndexOf haystack needle,
+    norec strIndexOf haystack needle from = strIndexOf haystack needle from,
+    norec strLastIndexOf haystack needle from =
+            strLastIndexOf haystack needle from,
+    norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
     norec strSplit re = strSplit re,
     norec substAll re = substAll re,
     norec matchAll re = matchAll re,

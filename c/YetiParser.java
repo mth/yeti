@@ -906,17 +906,53 @@ interface YetiParser {
             return new XNode("if", new Node[] { cond, expr, els });
         }
 
+        private void addCase(List cases, BinOp choice, List expr) {
+            Node code;
+            if (expr.size() == 1) {
+                code = (Node) expr.get(0);
+            } else {
+                code = new Seq((Node[]) expr.toArray(new Node[expr.size()]),
+                               null).pos(choice.line, choice.col);
+            }
+            cases.add(new XNode("case", new Node[] { choice.left, code })
+                            .pos(choice.line, choice.col));
+        }
+
         private Node readCase() {
             Node val = readSeqTo("of");
-            Node[] choices = readMany(";", ' ');
+            Node[] statements = readMany(";", ' ');
             if (eofWas.kind != "esac") {
                 throw new CompileException(eofWas,
                     "Expected esac, found " + eofWas);
             }
-            Node[] expr = new Node[choices.length + 1];
-            expr[0] = val;
-            System.arraycopy(choices, 0, expr, 1, choices.length);
-            return new XNode("case", expr);
+            List cases = new ArrayList(statements.length + 1);
+            cases.add(val);
+            BinOp pattern = null;
+            List expr = new ArrayList();
+            for (int i = 0; i < statements.length; ++i) {
+                BinOp op;
+                if (statements[i] instanceof BinOp &&
+                    (op = (BinOp) statements[i]).op == ":") {
+                    if (op.left == null) {
+                        throw new CompileException(op, "Syntax error");
+                    }
+                    if (pattern != null) {
+                        addCase(cases, pattern, expr);
+                        expr.clear();
+                    }
+                    pattern = op;
+                    expr.add(op.right);
+                } else if (pattern != null) {
+                    expr.add(statements[i]);
+                } else {
+                    throw new CompileException(statements[i],
+                                "Expecting option, not a " + statements[i]);
+                }
+            }
+            if (pattern != null)
+                addCase(cases, pattern, expr);
+            return new XNode("case-of",
+                             (Node[]) cases.toArray(new Node[cases.size()]));
         }
 
         private Node readTry() {
@@ -1195,6 +1231,7 @@ interface YetiParser {
             if (list.length == 0) {
                 return new XNode("()").pos(line, p - lineStart);
             }
+            // find last element for line/col position
             Node w = list[list.length - 1];
             for (BinOp bo; w instanceof BinOp &&
                            (bo = (BinOp) w).left != null;) {

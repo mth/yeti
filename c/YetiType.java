@@ -181,6 +181,9 @@ public class YetiType implements YetiParser {
         bindStr("strLastIndexOf",
                 fun2Arg(STR_TYPE, STR_TYPE, fun(NUM_TYPE, NUM_TYPE)),
                 "lastIndexOf", "(Ljava/lang/String;I)I",
+        bindStr("strLastIndexOf'",
+                fun2Arg(STR_TYPE, STR_TYPE, NUM_TYPE),
+                "lastIndexOf", "(Ljava/lang/String;)I",
         bindRegex("strSplit", "yeti/lang/StrSplit",
                   fun2Arg(STR_TYPE, STR_TYPE, STRING_ARRAY), 
         bindRegex("like", "yeti/lang/Like",
@@ -200,7 +203,7 @@ public class YetiType implements YetiParser {
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);

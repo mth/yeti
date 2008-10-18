@@ -1012,7 +1012,7 @@ final class StrOp extends StaticRef implements Binder {
     }
 
     StrOp(String fun, String method, String sig, YetiType.Type type) {
-        super("yeti/lang/std$" + fun, "_", type, null, false, 0);
+        super("yeti/lang/std$" + mangle(fun), "_", type, null, false, 0);
         this.method = method;
         this.sig = sig;
         binder = this;

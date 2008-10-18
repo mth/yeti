@@ -111,7 +111,7 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "concat") {
                 return concatStr(x, scope, depth);
             }
-            if (kind == "case") {
+            if (kind == "case-of") {
                 return caseType(x, scope, depth);
             }
             if (kind == "new") {
@@ -1278,13 +1278,7 @@ public final class YetiAnalyzer extends YetiType {
         Type argType = new Type(depth);
         for (int i = 1; i < choices.length; ++i) {
             cc.scope = scope;
-            BinOp choice;
-            if (!(choices[i] instanceof BinOp) ||
-                (choice = (BinOp) choices[i]).op != ":") {
-                throw new CompileException(choices[i],
-                    "Expecting option, not a " + choices[i]);
-            }
-            pats[i] = cc.toPattern(choice.left, argType);
+            pats[i] = cc.toPattern(((XNode) choices[i]).expr[0], argType);
             scopes[i] = cc.scope;
             cc.exp.resetParams();
         }
@@ -1294,7 +1288,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         cc.finalizeVariants();
         for (int i = 1; i < choices.length; ++i) {
-            cc.mergeChoice(pats[i], ((BinOp) choices[i]).right, scopes[i]);
+            cc.mergeChoice(pats[i], ((XNode) choices[i]).expr[1], scopes[i]);
         }
         try {
             unify(val.type, argType);
