@@ -26,11 +26,6 @@ loadSrc fn =
 collectList f =
     map (`at` 1) (collect f () (not . empty?));
 
-hash l =
-   (h = [:];
-    for l (_ i = h.[i] := ());
-    h);
-
 ignoreTypes =
     hash ['public', 'private', 'protected', 'String', 'Math', 'System',
           'Thread', 'Character', 'Object', 'Integer', 'Long', 'Double',
