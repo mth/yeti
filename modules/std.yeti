@@ -72,6 +72,11 @@ keys h is hash<'a, 'b> -> list<'a> =
             unsafely_as list<'a>
     fi;
 
+hash l is list?<'a> -> hash<'a, ()> =
+   (h = [:];
+    for l (_ i = h.[i] := ());
+    h);
+
 plus a b = a + b;
 
 {
@@ -130,7 +135,7 @@ plus a b = a + b;
         fi,
 
     // damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index, keys,
+    array, fold, find, index, keys, hash,
 
     wrapArray a is 'a[] -> array<'a> =
         if nullptr? a then
@@ -267,10 +272,8 @@ plus a b = a + b;
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<'a>,
 
-    nub l is list?<'a> -> list<'a> =
-        h = [:];
-        for l (_ i = h.[i] := ());
-        keys h,
+    nub is list?<'a> -> list<'a> =
+        keys . hash,
 
     sort l is list?<^a> -> list<^a> =
         if empty? l then

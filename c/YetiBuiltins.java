@@ -294,6 +294,8 @@ final class Negate extends StaticRef {
 }
 
 abstract class Core2 extends StaticRef {
+    boolean derivePolymorph;
+
     Core2(String coreFun, YetiType.Type type, int line) {
         super("yeti/lang/std$" + coreFun, "_", type, null, true, line);
     }
@@ -303,7 +305,11 @@ abstract class Core2 extends StaticRef {
             Code apply(final Code arg2, final YetiType.Type res,
                        final int line2) {
                 return new Code() {
-                    { type = res; }
+                    {
+                        type = res;
+                        polymorph = derivePolymorph && arg1.polymorph
+                                                    && arg2.polymorph;
+                    }
 
                     void gen(Ctx ctx) {
                         genApply2(ctx, arg1, arg2, line2);
@@ -343,6 +349,7 @@ final class For extends Core2 {
 final class Compose extends Core2 {
     Compose(int line) {
         super("$d", YetiType.COMPOSE_TYPE, line);
+        derivePolymorph = true;
     }
 
     void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {
