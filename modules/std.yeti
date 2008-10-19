@@ -414,8 +414,8 @@ plus a b = a + b;
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v),
 
-    copyArray a from to is array<'a> -> number -> number -> array<'a> =
-        (a unsafely_as ~MList)#copy(from, to) unsafely_as array<'a>,
+    slice a start end is array<'a> -> number -> number -> array<'a> =
+        (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
     collect f a pred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();
