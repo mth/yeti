@@ -93,7 +93,7 @@ syn region yetiString start=+\<'+ skip=+''+ end=+'+
 " Numbers: supporting integers and floating point numbers
 syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
 
-syn match yetiMemberOp "\(\<\(\w\|\$\)\+\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
+syn match yetiMemberOp "\(\<\u\(\w\|\$\)*\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
 " Classes
 syn keyword yetiClass class nextgroup=yetiClassDef
