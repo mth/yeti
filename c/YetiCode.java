@@ -673,7 +673,7 @@ final class BindWrapper extends BindRef {
 }
 
 class StaticRef extends BindRef {
-    private String className;
+    String className;
     protected String funFieldName;
     int line;
    

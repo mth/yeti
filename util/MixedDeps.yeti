@@ -101,8 +101,10 @@ yetiFile fn =
         name = m.[2];
         src = strRight src (strLength m.[0]);
         imports = collectList (like '\W(?:import|load) ([\w.]+)[^\w.]' src);
-        classDefs = collect (like
-            '\Wclass (\w+)(?:\([^]*\)) (?:extends (\w+(?:\([^]*\))?(?: ?, ?\w+(?:\([^]*\)))*) )' src) () empty?;
+        classDefs = collect (like ('\Wclass (\w+)(?:\([^]*\)) ' ^
+                                   '(?:extends (\w+(?:\([^]*\))?' ^
+                                   '(?: ?, ?\w+(?:\([^]*\)))*) )') src)
+                            () empty?;
         classes = map (`at` 1) classDefs;
         extends = concat (map (strSplit ' ?, ?' . (`at` 2)) classDefs);
         if name == "std" then
