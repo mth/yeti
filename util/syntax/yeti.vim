@@ -77,7 +77,7 @@ syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
-syn keyword yetiOperator not and or in or div shl shr
+syn keyword yetiOperator not and or in or div shl shr b_and b_or xor
 syn keyword yetiOperator classOf instanceof
 syn match yetiOperator #[:;,=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
 
@@ -108,7 +108,8 @@ syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDe
 
 " Yeti type definition syntax
 syn region yetiTypeBind matchgroup=yetiTypeDef start="\<type\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=NOTHING
-syn keyword yetiType is as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
+syn keyword yetiType is skipempty skipwhite nextgroup=@yetiTypeDecls
+syn keyword yetiCast as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
 syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
 syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
@@ -157,6 +158,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiClassMod	yetiStorageClass
   HiLink yetiTypeDecl	yetiType
   HiLink yetiTypeOp	yetiType
+  HiLink yetiCast	yetiOperator
   HiLink yetiParenErr	yetiErr
 
   HiLink yetiErr	Error
