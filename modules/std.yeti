@@ -417,9 +417,9 @@ plus a b = a + b;
     slice a start end is array<'a> -> number -> number -> array<'a> =
         (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
-    collect f a pred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
+    collect f a endPred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();
-        (v = f a; pred v and (l#add(v); true)) loop;
+        (v = f a; not (endPred v) and (l#add(v); true)) loop;
         if l#isEmpty() then
             []
         else

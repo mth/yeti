@@ -24,7 +24,7 @@ loadSrc fn =
     readFile fn "ISO-8859-1" getContents;
 
 collectList f =
-    map (`at` 1) (collect f () (not . empty?));
+    map (`at` 1) (collect f () empty?);
 
 ignoreTypes =
     hash ['public', 'private', 'protected', 'String', 'Math', 'System',
@@ -63,12 +63,12 @@ typeFilter package importMap =
 javaFileMap = [:];
 
 javaFile classMap fileName =
-   (src = cleanJava (loadSrc fileName);
-    m = like '^(?: ?package ([\w.]+);)?((?: ?import [^;]+ ?;)*)' src ();
+   (src = ' ' ^ cleanJava (loadSrc fileName);
+    m = like '^(?: package ([\w.]+);)?((?: ?import [^;]+ ?;)*)' src ();
     if not (empty? m) then
         package = m.[1];
         imports =
-            filter (!= '') (matchAll 'import ([\w.]+) ?;' (`at` 1) \'' m.[2]);
+            filter (!= '') (matchAll '\Wimport ([\w.]+) ?;' (`at` 1) \'' m.[2]);
         importMap = mapImports imports;
         src = strRight src (strLength m.[0]);
         classes = map (package ^ "." ^)
@@ -100,6 +100,8 @@ yetiFile fn =
         package = m.[1];
         name = m.[2];
         src = strRight src (strLength m.[0]);
+        imports = collectList (like '\W(?:import|load) ([\w.]+)[^\w.]');
+        classDefs = collect (like
         println "YETI: \(package) \(name)";
     fi);
 
