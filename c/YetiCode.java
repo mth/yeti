@@ -803,9 +803,9 @@ final class StringConstant extends Code {
     }
 }
 
-final class UnitConstant extends Code {
-    UnitConstant() {
-        type = YetiType.UNIT_TYPE;
+final class UnitConstant extends BindRef {
+    UnitConstant(YetiType.Type type) {
+        this.type = type == null ? YetiType.UNIT_TYPE : type;
     }
 
     void gen(Ctx ctx) {

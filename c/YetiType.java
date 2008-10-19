@@ -155,9 +155,11 @@ public class YetiType implements YetiParser {
         bindScope("not", new BuiltIn(15),
         bindScope("and", new BoolOpFun(false),
         bindScope("or", new BoolOpFun(true),
+        bindScope("undef_bool", new BuiltIn(17),
         bindScope("false", new BuiltIn(18),
         bindScope("true", new BuiltIn(19),
         bindScope("negate", new BuiltIn(20),
+        bindScope("undef_str", new BuiltIn(23),
         bindScope("strChar", new BuiltIn(16),
         bindStr("strLength", fun(STR_TYPE, NUM_TYPE), "length", "()I",
         bindStr("strUpper", fun(STR_TYPE, STR_TYPE), "toUpperCase",
@@ -203,7 +205,7 @@ public class YetiType implements YetiParser {
         bindImport("Object", "java/lang/Object",
         bindImport("Integer", "java/lang/Integer",
         bindImport("String", "java/lang/String",
-        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+        null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);

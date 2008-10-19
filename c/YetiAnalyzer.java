@@ -90,7 +90,7 @@ public final class YetiAnalyzer extends YetiType {
         if (kind != null) {
             XNode x = (XNode) node;
             if (kind == "()") {
-                return new UnitConstant();
+                return new UnitConstant(null);
             }
             if (kind == "list") {
                 return list(x, scope, depth);
@@ -651,7 +651,7 @@ public final class YetiAnalyzer extends YetiType {
                 + cond.type + ")");
         }
         if (loop.left == null) {
-            return new LoopExpr(cond, new UnitConstant());
+            return new LoopExpr(cond, new UnitConstant(null));
         }
         Code body = analyze(loop.right, scope, depth);
         try {

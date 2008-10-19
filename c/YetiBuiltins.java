@@ -93,6 +93,9 @@ final class BuiltIn implements Binder {
         case 16:
             r = new StrChar(line);
             break;
+        case 17:
+            r = new UnitConstant(YetiType.BOOL_TYPE);
+            break;
         case 18:
             r = new BooleanConstant(false);
             break;
@@ -108,6 +111,10 @@ final class BuiltIn implements Binder {
         case 22:
             r = new StaticRef("yeti/lang/Core", "RANDINT",
                               YetiType.NUM_TO_NUM, this, true, line);
+            break;
+        case 23:
+            r = new StaticRef("yeti/lang/Core", "UNDEF_STR",
+                              YetiType.STR_TYPE, this, true, line);
             break;
         }
         r.binder = this;
@@ -372,7 +379,7 @@ final class Synchronized extends Core2 {
         ctx.visitInsn(MONITORENTER);
 
         ctx.visitLabel(startBlock);
-        new Apply(type, block, new UnitConstant(), line).gen(ctx);
+        new Apply(type, block, new UnitConstant(null), line).gen(ctx);
         ctx.visitLine(line);
         ctx.visitVarInsn(ALOAD, monitorVar);
         ctx.visitInsn(MONITOREXIT);

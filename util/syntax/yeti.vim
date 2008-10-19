@@ -58,7 +58,7 @@ syn keyword yetiKW module program synchronized
 syn keyword yetiStorageClass var norec get set
 
 syn keyword yetiAnyVar _
-syn keyword yetiBoolean false true none
+syn keyword yetiBoolean false true none undef_bool undef_str undef_num
 syn keyword yetiFunc array filter fold id mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at on setHashDefault flip sum
 syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift
