@@ -217,8 +217,8 @@ plus a b = a + b;
             (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
         fi,
 
-    splitBy pred list is (('a -> boolean) -> list<'a>
-                          -> { fst is list<'a>, snd is list<'a> }) = 
+    splitBy pred list is ('a -> boolean) -> list<'a>
+                          -> { fst is list<'a>, snd is list<'a> } = 
         a = new MList();
         var l = list; // over-optimized loop from hell. don't code like that.
         not (empty? l) and (h = head l; not (pred h) and (a#add(h); true)) loop
