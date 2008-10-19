@@ -32,7 +32,7 @@ syn match yetiParenErr ")"
 
 
 " Enclosing delimiters
-syn region yetiEncl start="(" end=")" contains=TOP,yetiParenErr
+syn region yetiParens start="(" end=")" contains=TOP,yetiParenErr
 syn region yetiEncl matchgroup=yetiKW start="{" matchgroup=yetiKW end="}" contains=TOP
 syn region yetiEncl matchgroup=yetiKW start="\[" matchgroup=yetiKW end="\]" contains=TOP
 
@@ -100,7 +100,7 @@ syn keyword yetiClass class skipempty skipwhite nextgroup=yetiClassDef
 syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
 syn keyword yetiClassType void boolean byte short int long float double number var contained
 syn keyword yetiExtends extends contained skipempty skipwhite nextgroup=yetiExtendClass
-syn match yetiExtendClass "[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
+syn match yetiExtendClass "[A-Za-z_$]\+" contained skipempty skipwhite nextgroup=yetiParens
 syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
 syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" contains=TOP contained
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
