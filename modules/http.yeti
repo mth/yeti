@@ -32,7 +32,7 @@ load yeti.lang.std;
 load yeti.lang.io;
 
 {
-    openTextUrl url is string -> '' =
+    openTextUrl url is string -> 'a =
         conn = new java.net.URL(url)#openConnection();
         stream = conn#getInputStream();
         contentType = conn#getContentType();

@@ -43,7 +43,7 @@ load yeti.lang.std;
 
 var stdin' = None ();
 
-readerHandle reader is ~BufferedReader -> '' =
+readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
     var used = false;
     {
@@ -114,7 +114,7 @@ withHandle h block =
     yrt);
 
 // to keep close as only provided
-inputHandle stream encoding is ~InputStream -> string -> '' =
+inputHandle stream encoding is ~InputStream -> string -> 'a =
    (var nok = true;
     try
         r = new BufferedReader(
@@ -131,7 +131,7 @@ inputHandle stream encoding is ~InputStream -> string -> '' =
         fi
     yrt);
 
-writerHandle writer is ~BufferedWriter -> '' = {
+writerHandle writer is ~BufferedWriter -> 'a = {
         write s is string -> () =
             writer#write(s),
         writeln s is string -> () =
@@ -141,7 +141,7 @@ writerHandle writer is ~BufferedWriter -> '' = {
         close () = writer#close(),
     };
 
-outputHandle stream encoding is ~OutputStream -> string -> '' =
+outputHandle stream encoding is ~OutputStream -> string -> 'a =
    (var nok = true;
     try
         w = new BufferedWriter(
@@ -158,10 +158,10 @@ outputHandle stream encoding is ~OutputStream -> string -> '' =
         fi
     yrt);
 
-openInFile name is string -> string -> '' =
+openInFile name is string -> string -> 'a =
     inputHandle (new FileInputStream(name) as ~InputStream);
 
-openOutFile name is string -> string -> '' =
+openOutFile name is string -> string -> 'a =
     outputHandle (new FileOutputStream(name) as ~OutputStream);
 
 {
@@ -207,7 +207,7 @@ openOutFile name is string -> string -> '' =
 
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 
-    runThread options f is list?<''> -> (() -> ()) -> ~Thread =
+    runThread options f is list?<'a> -> (() -> ()) -> ~Thread =
         class FunThread extends Thread
             void run()
                 f ()

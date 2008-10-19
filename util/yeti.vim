@@ -53,10 +53,12 @@ syn keyword yetiKW finally containedin=yetiTry contained
 
 " Classes
 syn keyword yetiType class nextgroup=yetiClassDef
-syn region yetiClassDef matchgroup=yetiType start="\_\s\+\w\+" matchgroup=yetiType end="\<end\>" keepend contains=yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
-syn keyword yetiClassType extends void boolean byte short int long float double var contained
-syn region yetiMethodArgs start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType
-syn region yetiMethodDef matchgroup=yetiClassDef start=")" matchgroup=Delimiter end=",\|\<end\>" contains=TOP contained
+syn region yetiClassDef matchgroup=yetiClassDef start="\_\s\+\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn keyword yetiClassType void boolean byte short int long float double number var contained
+syn keyword yetiExtends extends contained nextgroup=yetiExtendClass
+syn match yetiExtendClass "\_\s\+[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
+syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
+syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" contains=TOP contained
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 syn keyword yetiKW for forHash synchronized
@@ -173,6 +175,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiTypeDecl	Type
   HiLink yetiTypeOp	Type
   HiLink yetiClassType	Type
+  HiLink yetiExtends	Type
   HiLink yetiTypeDelim  Delimiter
 
   HiLink yetiTodo	Todo
