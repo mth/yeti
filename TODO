@@ -6,6 +6,7 @@
                 restructure holding properties
 * On method arguments and returns convert UNDEF_STR to null
 * undef_num
+* More string escapes than \n\r\t
 * Handle protected methods correctly when extending classes
 * Fix case A _: 1; _: 2 esac
 * Extendable structs?
