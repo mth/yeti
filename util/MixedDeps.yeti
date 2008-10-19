@@ -100,9 +100,17 @@ yetiFile fn =
         package = m.[1];
         name = m.[2];
         src = strRight src (strLength m.[0]);
-        imports = collectList (like '\W(?:import|load) ([\w.]+)[^\w.]');
+        imports = collectList (like '\W(?:import|load) ([\w.]+)[^\w.]' src);
         classDefs = collect (like
+            '\Wclass (\w+)(?:\([^]*\)) (?:extends (\w+(?:\([^]*\))?(?: ?, ?\w+(?:\([^]*\)))*) )' src) () empty?;
+        classes = map (`at` 1) classDefs;
+        extends = concat (map (strSplit ' ?, ?' . (`at` 2)) classDefs);
+        if name == "std" then
+            println src
+        fi;
         println "YETI: \(package) \(name)";
+        println "Classes: \(classes)";
+        println "Extends: \(extends)";
     fi);
 
 classMap = [:];
@@ -144,5 +152,5 @@ calculateDeps fileMap classMap =
     map (.fileName) order);
 
 order = calculateDeps javaFileMap classMap;
-for order println;
+()//for order println;
 

@@ -193,6 +193,16 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(op,
                     "Internal error (incomplete operator " + op.op + ")");
             }
+            if (opop == "^") {
+                Code left = analyze(op.left, scope, depth);
+                Code right = analyze(op.right, scope, depth);
+                if (left instanceof StringConstant &&
+                    right instanceof StringConstant) {
+                    return new StringConstant(((StringConstant) left).str +
+                                              ((StringConstant) right).str);
+                }
+                return new ConcatStrings(new Code[] { left, right });
+            }
             return apply(op.right,
                          apply(op, resolve(opop, op, scope, depth),
                                op.left, scope, depth),
