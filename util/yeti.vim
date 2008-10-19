@@ -36,25 +36,26 @@ syn region yetiEncl start="(" end=")" contains=TOP,yetiParenErr
 syn region yetiEncl matchgroup=yetiKW start="{" matchgroup=yetiKW end="}" contains=TOP
 syn region yetiEncl matchgroup=yetiKW start="\[" matchgroup=yetiKW end="\]" contains=TOP
 
-syn region yetiIf matchgroup=yetiKW start="\<if\>" matchgroup=yetiKW end="\<fi\>" matchgroup=yetiKW contains=TOP
+syn region yetiIf matchgroup=yetiCond start="\<if\>" matchgroup=yetiCond end="\<fi\>" contains=TOP
 
-syn keyword yetiKW then elif else containedin=yetiIf contained
+syn keyword yetiCond then elif else containedin=yetiIf contained
 
-syn region yetiDo matchgroup=yetiKW start="\<do\>" matchgroup=yetiKW end="\<done\>" matchgroup=yetiKW contains=TOP
+syn region yetiDo matchgroup=yetiKW start="\<do\>" matchgroup=yetiKW end="\<done\>" contains=TOP
 
-syn region yetiCase matchgroup=yetiKW start="\<case\>" matchgroup=yetiKW end="\<esac\>" matchgroup=yetiKW contains=TOP
+syn region yetiCase matchgroup=yetiCond start="\<case\>" matchgroup=yetiCond end="\<esac\>" contains=TOP
 
-syn keyword yetiKW of containedin=yetiCase contained
+syn keyword yetiCond of containedin=yetiCase contained
 
-syn region yetiTry matchgroup=yetiKW start="\<try\>" matchgroup=yetiKW end="\<yrt\>" matchgroup=yetiKW contains=TOP
+syn region yetiTry matchgroup=yetiException start="\<try\>" matchgroup=yetiException end="\<yrt\>" contains=TOP
 
-syn keyword yetiKW catch containedin=yetiTry contained skipwhite nextgroup=yetiClassName
-syn keyword yetiKW finally containedin=yetiTry contained
+syn keyword yetiException catch containedin=yetiTry contained skipwhite nextgroup=yetiClassName
+syn keyword yetiException finally containedin=yetiTry contained
+syn keyword yetiException throw
 
-syn keyword yetiKW for forHash synchronized
-syn keyword yetiKW module program throw
+syn keyword yetiRepeat for forHash loop
+syn keyword yetiKW module program synchronized
 
-syn keyword yetiType var norec get set
+syn keyword yetiStorageClass var norec get set
 
 syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none
@@ -76,7 +77,7 @@ syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite nextgroup=yetiClassName
 
-syn keyword yetiOperator not and or in or div loop shl shr
+syn keyword yetiOperator not and or in or div shl shr
 syn keyword yetiOperator classOf instanceof
 syn match yetiOperator #[:;,=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
 
@@ -92,10 +93,10 @@ syn region yetiString start=+\<'+ skip=+''+ end=+'+
 " Numbers: supporting integers and floating point numbers
 syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
 
-syn match yetiMemberOp "\(\<\w\+\)\?#\w\+\(()\)\?"
+syn match yetiMemberOp "\(\<\(\w\|\$\)\+\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
 " Classes
-syn keyword yetiType class nextgroup=yetiClassDef
+syn keyword yetiClass class nextgroup=yetiClassDef
 syn region yetiClassDef matchgroup=yetiClassDef start="\_\s\+\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
 syn keyword yetiClassType void boolean byte short int long float double number var contained
 syn keyword yetiExtends extends contained nextgroup=yetiExtendClass
@@ -105,7 +106,7 @@ syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" cont
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
-syn region yetiTypeDef matchgroup=yetiType start="\<type\>" end="=" nextgroup=yetiTypeDecl contains=NOTHING
+syn region yetiTypeBind matchgroup=yetiTypeDef start="\<type\>" end="=" nextgroup=@yetiTypeDecls contains=NOTHING
 syn keyword yetiType is as unsafely_as nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
 syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
@@ -170,12 +171,18 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiBoolean	Boolean
   HiLink yetiNumber	Number
   HiLink yetiString	String
+  HiLink yetiCond	Conditional
+  HiLink yetiException	Exception
+  HiLink yetiRepeat	Repeat
 
+  HiLink yetiStorageClass StorageClass
   HiLink yetiType	Type
   HiLink yetiTypeDecl	Type
   HiLink yetiTypeOp	Type
+  HiLink yetiTypeDef	TypeDef
   HiLink yetiClassType	Type
-  HiLink yetiExtends	Type
+  HiLink yetiClass	Structure
+  HiLink yetiExtends	Structure
   HiLink yetiTypeDelim  Delimiter
 
   HiLink yetiTodo	Todo
