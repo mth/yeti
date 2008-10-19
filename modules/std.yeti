@@ -198,7 +198,7 @@ plus a b = a + b;
     all f l =
         nullptr? (find (_ x = not (f x)) l),
 
-    prefer f l is ('a -> boolean) -> list?<'a> -> 'a =
+    avoid f l is ('a -> boolean) -> list?<'a> -> 'a =
         if empty? l then
             throw new java.lang.IllegalArgumentException("prefer: empty list")
         fi;
@@ -206,7 +206,7 @@ plus a b = a + b;
         var value = () as ~Object;
         (value := i#first();
          i := i#next();
-         not (nullptr? i or f (value unsafely_as 'a))) loop;
+         not (nullptr? i) and f (value unsafely_as 'a)) loop;
         value unsafely_as 'a,
 
     contains v l =
