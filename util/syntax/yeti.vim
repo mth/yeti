@@ -111,6 +111,7 @@ syn keyword yetiType is as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDe
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
 syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
 syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
+syn region yetiTypeDecl transparent start="{" end="}" contained contains=yetiType,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 syn match yetiTypeDecl "\~\(\w\|\.\|\$\)*\(\[\]\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
 syn match yetiTypeDecl "\l\(\w\|'\|?\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
 syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained skipwhite skipempty nextgroup=yetiTypeOp
