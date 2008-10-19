@@ -48,7 +48,7 @@ syn keyword yetiCond of containedin=yetiCase contained
 
 syn region yetiTry matchgroup=yetiException start="\<try\>" matchgroup=yetiException end="\<yrt\>" contains=TOP
 
-syn keyword yetiException catch containedin=yetiTry contained skipwhite nextgroup=yetiClassName
+syn keyword yetiException catch containedin=yetiTry contained skipempty skipwhite nextgroup=yetiClassName
 syn keyword yetiException finally containedin=yetiTry contained
 syn keyword yetiException throw
 
@@ -75,7 +75,7 @@ syn keyword yetiFunc delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunc failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
 syn keyword yetiExternal load
-syn keyword yetiExternal import skipwhite nextgroup=yetiClassName
+syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
 syn keyword yetiOperator not and or in or div shl shr
 syn keyword yetiOperator classOf instanceof
@@ -96,33 +96,31 @@ syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
 syn match yetiMemberOp "\(\<\u\(\w\|\$\)*\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
 " Classes
-syn keyword yetiClass class nextgroup=yetiClassDef
-syn region yetiClassDef matchgroup=yetiClassDef start="\_\s\+\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn keyword yetiClass class skipempty skipwhite nextgroup=yetiClassDef
+syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
 syn keyword yetiClassType void boolean byte short int long float double number var contained
-syn keyword yetiExtends extends contained nextgroup=yetiExtendClass
-syn match yetiExtendClass "\_\s\+[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
+syn keyword yetiExtends extends contained skipempty skipwhite nextgroup=yetiExtendClass
+syn match yetiExtendClass "[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
 syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
 syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" contains=TOP contained
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
-syn region yetiTypeBind matchgroup=yetiTypeDef start="\<type\>" end="=" nextgroup=@yetiTypeDecls contains=NOTHING
-syn keyword yetiType is as unsafely_as nextgroup=@yetiTypeDecls
+syn region yetiTypeBind matchgroup=yetiTypeDef start="\<type\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=NOTHING
+syn keyword yetiType is as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
 syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
-syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment nextgroup=yetiTypeOp
-syn match yetiTypeDecl "\~\(\w\|\.\|\$\)*\(\[\]\)*" contained nextgroup=yetiTypeOp
-syn match yetiTypeDecl "\l\(\w\|'\|?\)*" contained nextgroup=yetiTypeOp
-syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained nextgroup=yetiTypeOp
-syn match yetiTypeDecl "\<\u\(\w\|'\)*\>" contained nextgroup=@yetiTypeDecls
-syn match yetiTypeDecl "()" contained nextgroup=yetiTypeOp
-syn match yetiTypeOp "->\||" contained nextgroup=@yetiTypeDecls
-syn region yetiTypeOp matchgroup=YetiTypeDelim start="<" matchgroup=YetiTypeDelim end=">" contained contains=@yetiTypeDecls,yetiComment nextgroup=yetiTypeOp
-syn match yetiTypeOp "\_\s\+" contained nextgroup=yetiTypeOp
-syn match yetiTypeDecl "\_\s\+" contained nextgroup=@yetiTypeDecls
+syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\~\(\w\|\.\|\$\)*\(\[\]\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\l\(\w\|'\|?\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
+syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained skipwhite skipempty nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\<\u\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=@yetiTypeDecls
+syn match yetiTypeDecl "()" contained skipwhite skipempty nextgroup=yetiTypeOp
+syn match yetiTypeOp "->\||" contained skipwhite skipempty nextgroup=@yetiTypeDecls
+syn region yetiTypeOp matchgroup=YetiTypeDelim start="<" matchgroup=YetiTypeDelim end=">" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 
 syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
-syn keyword yetiKW new skipwhite nextgroup=yetiClassName
+syn keyword yetiKW new skipempty skipwhite nextgroup=yetiClassName
 
 " Synchronization
 syn sync minlines=50

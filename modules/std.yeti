@@ -36,7 +36,8 @@ class FailureException(String what)
 end;
 
 // struct inner bindings are non-polymorphic
-array l is list?<'a> -> array<'a> =
+array l is list?<'a>
+-> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
