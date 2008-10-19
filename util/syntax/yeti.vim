@@ -33,18 +33,18 @@ syn match yetiParenErr ")"
 
 " Enclosing delimiters
 syn region yetiParens start="(" end=")" contains=TOP,yetiParenErr
-syn region yetiEncl matchgroup=yetiKW start="{" matchgroup=yetiKW end="}" contains=TOP
-syn region yetiEncl matchgroup=yetiKW start="\[" matchgroup=yetiKW end="\]" contains=TOP
+syn region yetiEncl matchgroup=yetiKeyword start="{" matchgroup=yetiKeyword end="}" contains=TOP
+syn region yetiEncl matchgroup=yetiKeyword start="\[" matchgroup=yetiKeyword end="\]" contains=TOP
 
-syn region yetiIf matchgroup=yetiCond start="\<if\>" matchgroup=yetiCond end="\<fi\>" contains=TOP
+syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<fi\>" contains=TOP
 
-syn keyword yetiCond then elif else containedin=yetiIf contained
+syn keyword yetiConditional then elif else containedin=yetiIf contained
 
-syn region yetiDo matchgroup=yetiKW start="\<do\>" matchgroup=yetiKW end="\<done\>" contains=TOP
+syn region yetiDo matchgroup=yetiKeyword start="\<do\>" matchgroup=yetiKeyword end="\<done\>" contains=TOP
 
-syn region yetiCase matchgroup=yetiCond start="\<case\>" matchgroup=yetiCond end="\<esac\>" contains=TOP
+syn region yetiCase matchgroup=yetiConditional start="\<case\>" matchgroup=yetiConditional end="\<esac\>" contains=TOP
 
-syn keyword yetiCond of containedin=yetiCase contained
+syn keyword yetiConditional of containedin=yetiCase contained
 
 syn region yetiTry matchgroup=yetiException start="\<try\>" matchgroup=yetiException end="\<yrt\>" contains=TOP
 
@@ -53,27 +53,27 @@ syn keyword yetiException finally containedin=yetiTry contained
 syn keyword yetiException throw
 
 syn keyword yetiRepeat for forHash loop
-syn keyword yetiKW module program synchronized
+syn keyword yetiKeyword module program synchronized
 
 syn keyword yetiStorageClass var norec get set
 
 syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none undef_bool undef_str undef_num
-syn keyword yetiFunc array filter fold id mapHash number head reverse tail
-syn keyword yetiFunc any all find index const at on setHashDefault flip sum
-syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift
-syn keyword yetiFunc defined? wrapArray concat concatMap negate splitBy
-syn keyword yetiFunc ln exp cos sin tan acos asin atan sqrt strReplace
-syn keyword yetiFunc strSplit substAll strLength strUpper strLower strTrim
-syn keyword yetiFunc strSlice strRight strStarts strEnds strIndexOf
-syn keyword yetiFunc strLastIndexOf strLeft strLeftOf strRightOf length
-syn keyword yetiFunc drop sort sortBy same? revAppend list pop swapAt
-syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
-syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
-syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
-syn keyword yetiFunc delete keys matchAll string apply clearHash strChar
-syn keyword yetiFunc failWith lazy int map map' takeWhile collect pair nub
-syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
+syn keyword yetiFunction array filter fold id mapHash number head reverse tail
+syn keyword yetiFunction any all find index const at on setHashDefault flip sum
+syn keyword yetiFunction nullptr? empty? min max maybe abs push exit shift
+syn keyword yetiFunction defined? wrapArray concat concatMap negate splitBy
+syn keyword yetiFunction ln exp cos sin tan acos asin atan sqrt strReplace
+syn keyword yetiFunction strSplit substAll strLength strUpper strLower strTrim
+syn keyword yetiFunction strSlice strRight strStarts strEnds strIndexOf
+syn keyword yetiFunction strLastIndexOf strLeft strLeftOf strRightOf length
+syn keyword yetiFunction drop sort sortBy same? revAppend list pop swapAt
+syn keyword yetiFunction setArrayCapacity catSome map2 withHandle openInFile
+syn keyword yetiFunction openOutFile readFile writeFile getLines putLines
+syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
+syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
+syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
+syn keyword yetiFunction strLastIndexOf' copyHash copyArray deleteAll
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
@@ -81,10 +81,10 @@ syn keyword yetiOperator not and or in or div shl shr b_and b_or xor
 syn keyword yetiOperator classOf instanceof
 syn match yetiOperator #[:;,=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
 
-syn match yetiConst "(\s*)"
-syn match yetiConst "\[\s*\]"
-syn match yetiConst "\[:]"
-syn match yetiConst "\<\u\(\w\|'\)*\>"
+syn match yetiConstant "(\s*)"
+syn match yetiConstant "\[\s*\]"
+syn match yetiConstant "\[:]"
+syn match yetiConstant "\<\u\(\w\|'\)*\>"
 
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
 syn region yetiString start=+"+ skip=+\\\\\|\\`\|\\"+ end=+["\n]+ contains=yetiEmbedded
@@ -123,7 +123,7 @@ syn match yetiTypeOp "->\||" contained skipwhite skipempty nextgroup=@yetiTypeDe
 syn region yetiTypeOp matchgroup=YetiTypeDelim start="<" matchgroup=YetiTypeDelim end=">" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 
 syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
-syn keyword yetiKW new skipempty skipwhite nextgroup=yetiClassName
+syn keyword yetiKeyword new skipempty skipwhite nextgroup=yetiClassName
 
 " Synchronization
 syn sync minlines=50
@@ -166,10 +166,10 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiComment 	Comment
 
   HiLink yetiExternal	Include
-  HiLink yetiFunc       Function
-  HiLink yetiKW 	Keyword
+  HiLink yetiFunction	Function
+  HiLink yetiKeyword 	Keyword
 
-  HiLink yetiConst	Constant
+  HiLink yetiConstant	Constant
 
   HiLink yetiOperator	Operator
   HiLink yetiAnyVar	Keyword
@@ -177,17 +177,17 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiBoolean	Boolean
   HiLink yetiNumber	Number
   HiLink yetiString	String
-  HiLink yetiCond	Conditional
   HiLink yetiException	Exception
   HiLink yetiRepeat	Repeat
+  HiLink yetiConditional Conditional
 
   HiLink yetiStorageClass StorageClass
+  HiLink yetiTypeDelimiter Delimiter
   HiLink yetiType	Type
   HiLink yetiTypeDef	TypeDef
   HiLink yetiClassType	Type
   HiLink yetiClass	Structure
   HiLink yetiExtends	Structure
-  HiLink yetiTypeDelim  Delimiter
 
   HiLink yetiTodo	Todo
 
