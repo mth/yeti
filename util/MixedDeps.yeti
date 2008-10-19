@@ -4,7 +4,7 @@ import java.io.File;
 
 srcdir = shift _argv;
 
-findFiles path cb is ~File -> '' =
+findFiles path cb is ~File -> 'a =
     for (wrapArray path#listFiles()) do f:
         if f#isHidden() then // ignore hidden ones
         elif f#isFile() then

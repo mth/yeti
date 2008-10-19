@@ -51,16 +51,6 @@ syn region yetiTry matchgroup=yetiKW start="\<try\>" matchgroup=yetiKW end="\<yr
 syn keyword yetiKW catch containedin=yetiTry contained skipwhite nextgroup=yetiClassName
 syn keyword yetiKW finally containedin=yetiTry contained
 
-" Classes
-syn keyword yetiType class nextgroup=yetiClassDef
-syn region yetiClassDef matchgroup=yetiClassDef start="\_\s\+\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
-syn keyword yetiClassType void boolean byte short int long float double number var contained
-syn keyword yetiExtends extends contained nextgroup=yetiExtendClass
-syn match yetiExtendClass "\_\s\+[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
-syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
-syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" contains=TOP contained
-syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
-
 syn keyword yetiKW for forHash synchronized
 syn keyword yetiKW module program throw
 
@@ -88,7 +78,7 @@ syn keyword yetiExternal import skipwhite nextgroup=yetiClassName
 
 syn keyword yetiOperator not and or in or div loop shl shr
 syn keyword yetiOperator classOf instanceof
-syn match yetiOperator #[:;=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
+syn match yetiOperator #[:;,=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
 
 syn match yetiConst "(\s*)"
 syn match yetiConst "\[\s*\]"
@@ -103,6 +93,16 @@ syn region yetiString start=+\<'+ skip=+''+ end=+'+
 syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
 
 syn match yetiMemberOp "\(\<\w\+\)\?#\w\+\(()\)\?"
+
+" Classes
+syn keyword yetiType class nextgroup=yetiClassDef
+syn region yetiClassDef matchgroup=yetiClassDef start="\_\s\+\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn keyword yetiClassType void boolean byte short int long float double number var contained
+syn keyword yetiExtends extends contained nextgroup=yetiExtendClass
+syn match yetiExtendClass "\_\s\+[A-Za-z_$]\+\((\(\w\|\s\|\n\|,\))\)\?" contained
+syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
+syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" contains=TOP contained
+syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
 syn region yetiTypeDef matchgroup=yetiType start="\<type\>" end="=" nextgroup=yetiTypeDecl contains=NOTHING
