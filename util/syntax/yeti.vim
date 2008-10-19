@@ -73,7 +73,7 @@ syn keyword yetiFunction openOutFile readFile writeFile getLines putLines
 syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
-syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash
+syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash prefer
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
