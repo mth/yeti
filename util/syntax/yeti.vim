@@ -120,7 +120,7 @@ syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained skipwhite skipempty ne
 syn match yetiTypeDecl "\<\u\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=@yetiTypeDecls
 syn match yetiTypeDecl "()" contained skipwhite skipempty nextgroup=yetiTypeOp
 syn match yetiTypeOp "->\||" contained skipwhite skipempty nextgroup=@yetiTypeDecls
-syn region yetiTypeOp matchgroup=YetiTypeDelim start="<" matchgroup=YetiTypeDelim end=">" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
+syn region yetiTypeOp matchgroup=yetiTypeDelimiter start="<" matchgroup=yetiTypeDelimiter end=">" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 
 syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
 syn keyword yetiKeyword new skipempty skipwhite nextgroup=yetiClassName
