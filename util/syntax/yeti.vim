@@ -97,8 +97,9 @@ syn match yetiMemberOp "\(\<\u\(\w\|\$\)*\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
 " Classes
 syn keyword yetiClass class skipempty skipwhite nextgroup=yetiClassDef
-syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
-syn keyword yetiClassType void boolean byte short int long float double number var static abstract contained
+syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiClassMod,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn keyword yetiClassType void boolean byte short int long float double number contained
+syn keyword yetiClassMod var static abstract contained
 syn keyword yetiExtends extends contained skipempty skipwhite nextgroup=yetiExtendClass
 syn match yetiExtendClass "[A-Za-z_$]\+" contained skipempty skipwhite nextgroup=yetiParens
 syn region yetiMethodArgs matchgroup=yetiClassDef start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType contained
@@ -153,7 +154,11 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink yetiParenErr	Error
+  HiLink yetiClassMod	yetiStorageClass
+  HiLink yetiTypeDecl	yetiType
+  HiLink yetiTypeOp	yetiType
+  HiLink yetiParenErr	yetiErr
+
   HiLink yetiErr	Error
 
   HiLink yetiComment 	Comment
@@ -176,8 +181,6 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
 
   HiLink yetiStorageClass StorageClass
   HiLink yetiType	Type
-  HiLink yetiTypeDecl	Type
-  HiLink yetiTypeOp	Type
   HiLink yetiTypeDef	TypeDef
   HiLink yetiClassType	Type
   HiLink yetiClass	Structure
