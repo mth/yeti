@@ -1,6 +1,12 @@
 import java.lang.Runnable;
 import java.lang.Thread;
 
+class SmartPoint(int x, int y) extends Point(x, y)
+    void moveBy(int dx, int dy)
+        this#moveTo(this#getX() + dx,
+                    this#getY() + dy)
+end;
+
 class Point(int x, int y)
     var x = x,
     var y = y,

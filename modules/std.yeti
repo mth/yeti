@@ -37,14 +37,14 @@ end;
 
 // struct inner bindings are non-polymorphic
 array l is list?<'a> -> array<'a> =
-    new MList(l) unsafely_as array<''>;
+    new MList(l) unsafely_as array<'a>;
 
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
-   (f2 v l is 'a -> list?<''> -> 'a = // hack to get good code for gc
+   (f2 v l is 'a -> list?<'b> -> 'a = // hack to get good code for gc
         if nullptr? l then
             v
         else
-            (l unsafely_as ~AList)#fold(f, v) unsafely_as ''
+            (l unsafely_as ~AList)#fold(f, v) unsafely_as 'a
         fi;
     f2);
 
@@ -63,12 +63,12 @@ index v l is 'a -> list?<'a> -> number =
         if nullptr? res then -1 else res fi
     fi;
 
-keys h is hash<'a, ''> -> list<'a> =
+keys h is hash<'a, 'b> -> list<'a> =
     if empty? h then
         []
     else
         new MList((h unsafely_as ~Hash)#keySet()#toArray())
-            unsafely_as list<''>
+            unsafely_as list<'a>
     fi;
 
 plus a b = a + b;
@@ -136,13 +136,13 @@ plus a b = a + b;
             new MList([])
         else
             new MList(a)
-        fi unsafely_as array<''>,
+        fi unsafely_as array<'a>,
 
-    list a is map<'','a> -> list<'a> =
+    list a is map<'k, 'a> -> list<'a> =
         if empty? a then
             []
         else
-            (a unsafely_as ~Coll)#asList() unsafely_as list<''>
+            (a unsafely_as ~Coll)#asList() unsafely_as list<'a>
         fi,
 
     swapAt a i j =
@@ -154,7 +154,7 @@ plus a b = a + b;
         f y x,
 
     lazy f is (() -> 'a) -> (() -> 'a) =
-        new Lazy(f) unsafely_as (() -> ''),
+        new Lazy(f) unsafely_as (() -> 'a),
 
     pair fst snd =
         {fst, snd},
@@ -172,18 +172,18 @@ plus a b = a + b;
     sum l =
         fold plus 0 l,
 
-    concat l is list?<list?<''>> -> list<''> =
+    concat l is list?<list?<'a>> -> list<'a> =
         if empty? l then
             []
         else
-            ConcatLists#concat(l) unsafely_as list<''>
+            ConcatLists#concat(l) unsafely_as list<'a>
         fi,
 
     concatMap f l is ('a -> list<'b>) -> list?<'a> -> list<'b> =
         if empty? l then
             []
         else
-            concat ((l unsafely_as ~AList)#map(f) unsafely_as list<''>)
+            concat ((l unsafely_as ~AList)#map(f) unsafely_as list<'a>)
         fi,
 
     any f l =
@@ -205,7 +205,7 @@ plus a b = a + b;
         if empty? l then
             []
         else
-            (l unsafely_as ~AList)#map(f) unsafely_as list<''>
+            (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi,
 
     // strict map
@@ -213,7 +213,7 @@ plus a b = a + b;
         if empty? l then
             []
         else
-            (l unsafely_as ~AList)#smap(f) unsafely_as list<''>
+            (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
         fi,
 
     splitBy pred list is (('a -> boolean) -> list<'a>
@@ -222,11 +222,11 @@ plus a b = a + b;
         var l = list; // over-optimized loop from hell. don't code like that.
         not (empty? l) and (h = head l; not (pred h) and (a#add(h); true)) loop
             l := tail l;
-        { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi,
+        { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
-    splitAt n list is number -> list<''>
-                      -> { fst is list<''>, snd is list<''> } =
+    splitAt n list is number -> list<'a>
+                      -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
         var l = list;
         var n = n;
@@ -237,14 +237,14 @@ plus a b = a + b;
            (a#add(head l);
             l := tail l;
             n := n - 1);
-        { fst = if a#isEmpty() then [] else a unsafely_as list<''> fi,
+        { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l then
             []
         else
-            TakeList#take(l, n) unsafely_as list<''>
+            TakeList#take(l, n) unsafely_as list<'a>
         fi,
 
     drop n l =
@@ -256,15 +256,15 @@ plus a b = a + b;
             drop (n - 1) (tail l)
         fi,
 
-    takeWhile pred l is ('' -> boolean) -> list<''> -> list<''> =
+    takeWhile pred l is ('a -> boolean) -> list<'a> -> list<'a> =
         if empty? l then
             []
         else
-            TakeWhile#take(l, pred) unsafely_as list<''>
+            TakeWhile#take(l, pred) unsafely_as list<'a>
         fi,
 
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
-        new Iterate(x, f) unsafely_as list<''>,
+        new Iterate(x, f) unsafely_as list<'a>,
 
     nub l is list?<'a> -> list<'a> =
         h = [:];
@@ -329,7 +329,7 @@ plus a b = a + b;
         i = strLastIndexOf s subString 0;
         if i < 0 then '' else strRight s (i + strLength subString) fi,
 
-    strJoin sep list is string -> list?<''> -> string =
+    strJoin sep list is string -> list?<'a> -> string =
         if empty? list then
             ""
         else
@@ -371,7 +371,7 @@ plus a b = a + b;
            (e = i#next() unsafely_as ~java.util.Map$Entry;
             a#add(f (e#getKey() unsafely_as 'a)
                     (e#getValue() unsafely_as 'b)));
-        a unsafely_as list?<''>,
+        a unsafely_as list?<'c>,
 
     copyHash h is hash<'a, 'b> -> hash<'a, 'b> =
         new Hash(h) unsafely_as hash<'a, 'b>,
@@ -379,10 +379,10 @@ plus a b = a + b;
     failWith message =
         throw new FailureException(message),
 
-    delete h k is map<'a, ''> -> 'a -> () =
+    delete h k is map<'a, 'b> -> 'a -> () =
         _ = (h unsafely_as ~ByKey)#remove(k),
 
-    deleteAll h ks is map<'a, ''> -> list?<'a> -> () =
+    deleteAll h ks is map<'a, 'b> -> list?<'a> -> () =
         _ = (h unsafely_as ~ByKey)#removeAll(ks),
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
@@ -443,14 +443,14 @@ plus a b = a + b;
             new Map2List(f, a, b) unsafely_as list<'c>
         fi,
 
-    revAppend a b is list?<''> -> list<''> -> list<''> =
+    revAppend a b is list?<'a> -> list<'a> -> list<'a> =
         if empty? a then
             b
         else
             var a = a unsafely_as ~AIter;
             var res = b;
             not (nullptr? a) loop
-               (res := (a#first() unsafely_as '') :: res;
+               (res := (a#first() unsafely_as 'a) :: res;
                 a := a#next());
             res
         fi,

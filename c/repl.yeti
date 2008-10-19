@@ -25,7 +25,7 @@ do argv: {
         c = Class#forName(strReplace '/' '.' mainClass, true, writer);
         try
             if eval then
-                f = c#newInstance() unsafely_as () -> '';
+                f = c#newInstance() unsafely_as () -> 'a;
                 if sandbox then
                     var sandboxed = \();
                     class Sandbox extends java.lang.SecurityManager

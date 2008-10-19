@@ -1,11 +1,11 @@
 " Vim syntax file
-" Language:    Templater
+" Language: Yeti
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
 if version < 600
   syntax clear
-elseif exists("b:current_syntax")
+elseif exists("b:current_syntax") && b:current_syntax == "yeti"
   finish
 endif
 
@@ -15,22 +15,58 @@ else
  set iskeyword=39,48-57,A-Z,a-z,_,?
 endif
 
-syn cluster yetiExp contains=yetiOperator,yetiStat,yetiFunc,yetiGroup,yetiKW,yetiList,yetiString,yetiChar,yetiNumber,yetiLineComment,yetiComment
-syn region yetiGroup contained start="(" end=")" contains=@yetiExp
-syn match yetiOperator ?[,:;={}\[\]~!+\-*/%<>]\+\|`[a-zA-Z_?]\+`?
-syn match yetiConst /\[\s*\]/
-syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=@yetiExp
+" Yeti is case sensitive.
+syn case match
 
-" Standard Rattrap Keywords
-syn keyword yetiOperator not and or in is unsafely_as as or div loop shl shr
-syn keyword yetiOperator classOf instanceof
-syn keyword yetiStat if then elif else fi for forHash synchronized
-syn keyword yetiStat ignore module program try catch finally yrt new throw
-syn keyword yetiStat do done case of esac
+syn match yetiExternal "^#!/[/a-yz]\+/yeti$"
+syn case ignore
+syn keyword yetiTodo contained TODO FIXME XXX NOTE
+syn case match
+syn match yetiComment "//.*$" contains=yetiTodo
+syn region yetiComment start="/\*" end="\*/" contains=yetiTodo,yetiComment
+
+" Errors
+syn match yetiErr "}\|\]\|\*/"
+syn match yetiErr "\<\(done\|esac\|yrt\|then\|elif\|fi\|else\|of\|catch\|finally\)\>"
+syn match yetiParenErr ")"
+
+
+" Enclosing delimiters
+syn region yetiEncl start="(" end=")" contains=TOP,yetiParenErr
+syn region yetiEncl matchgroup=yetiKW start="{" matchgroup=yetiKW end="}" contains=TOP
+syn region yetiEncl matchgroup=yetiKW start="\[" matchgroup=yetiKW end="\]" contains=TOP
+
+syn region yetiIf matchgroup=yetiKW start="\<if\>" matchgroup=yetiKW end="\<fi\>" matchgroup=yetiKW contains=TOP
+
+syn keyword yetiKW then elif else containedin=yetiIf contained
+
+syn region yetiDo matchgroup=yetiKW start="\<do\>" matchgroup=yetiKW end="\<done\>" matchgroup=yetiKW contains=TOP
+
+syn region yetiCase matchgroup=yetiKW start="\<case\>" matchgroup=yetiKW end="\<esac\>" matchgroup=yetiKW contains=TOP
+
+syn keyword yetiKW of containedin=yetiCase contained
+
+syn region yetiTry matchgroup=yetiKW start="\<try\>" matchgroup=yetiKW end="\<yrt\>" matchgroup=yetiKW contains=TOP
+
+syn keyword yetiKW catch containedin=yetiTry contained skipwhite nextgroup=yetiClassName
+syn keyword yetiKW finally containedin=yetiTry contained
+
+" Classes
+syn keyword yetiType class nextgroup=yetiClassDef
+syn region yetiClassDef matchgroup=yetiType start="\_\s\+\w\+" matchgroup=yetiType end="\<end\>" keepend contains=yetiClassType,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn keyword yetiClassType extends void boolean byte short int long float double var contained
+syn region yetiMethodArgs start="\w\+\s*(" end=")\@=" nextgroup=yetiMethodDef contains=yetiComment,yetiClassType
+syn region yetiMethodDef matchgroup=yetiClassDef start=")" matchgroup=Delimiter end=",\|\<end\>" contains=TOP contained
+syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
+
+syn keyword yetiKW for forHash synchronized
+syn keyword yetiKW module program throw
+
+syn keyword yetiType var norec get set
+
 syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none
-syn keyword yetiType type var norec get set class extends end
-syn keyword yetiFunc array filter fold id map mapHash number head reverse tail
+syn keyword yetiFunc array filter fold id mapHash number head reverse tail
 syn keyword yetiFunc any all find index const at on setHashDefault flip sum
 syn keyword yetiFunc nullptr? empty? min max maybe abs push exit shift
 syn keyword yetiFunc defined? wrapArray concat concatMap negate splitBy
@@ -43,37 +79,66 @@ syn keyword yetiFunc setArrayCapacity catSome map2 withHandle openInFile
 syn keyword yetiFunc openOutFile readFile writeFile getLines putLines
 syn keyword yetiFunc getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunc delete keys matchAll string apply clearHash strChar
-syn keyword yetiFunc failWith lazy int map' takeWhile collect pair nub
+syn keyword yetiFunc failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunc strLastIndexOf' copyHash copyArray deleteAll
-syn keyword yetiExternal load import
+syn keyword yetiExternal load
+syn keyword yetiExternal import skipwhite nextgroup=yetiClassName
 
-syn match yetiId /\<\(\l\|_\)\(\w\|'\)*\>/
-syn match yetiConst /\u\(\w\|'\)*\>/
-syn match yetiExternal "^#!/[/a-yz]\+/yeti$"
+syn keyword yetiOperator not and or in or div loop shl shr
+syn keyword yetiOperator classOf instanceof
+syn match yetiOperator #[:;=~!+\-*%<>]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
 
-"syn keyword yetiErr done esac of
+syn match yetiConst "(\s*)"
+syn match yetiConst "\[\s*\]"
+syn match yetiConst "\[:]"
+syn match yetiConst "\<\u\(\w\|'\)*\>"
 
-"syn region yetiGroup matchgroup=yetiStat start="\<do\>" matchgroup=yetiStat end="\<done\>" contains=@yetiExp
-"syn region yetiGroup matchgroup=yetiStat start="\<case\>" matchgroup=yetiStat end="\<esac\>" contains=@yetiExp,yetiOf
-"syn keyword yetiOf contained of
-
-syn case ignore
-syn keyword yetiTodo contained TODO XXX FIXME
-syn case match
-
-" Strings
+syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
 syn region yetiString start=+"+ skip=+\\\\\|\\`\|\\"+ end=+["\n]+ contains=yetiEmbedded
-syn region yetiString start=+'+ end=+'+
+syn region yetiString start=+\<'+ end=+'+
 
 " Numbers: supporting integers and floating point numbers
 syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
 
-" Comments
-syn match yetiLineComment "//.*$" contains=yetiTodo
-syn region yetiComment start="/\*" end="\*/" contains=yetiTodo,yetiComment
+syn match yetiMemberOp "\(\<\w\+\)\?#\w\+\(()\)\?"
 
-" synchronization
-syn sync lines=100
+" Yeti type definition syntax
+syn region yetiTypeDef matchgroup=yetiType start="\<type\>" end="=" nextgroup=yetiTypeDecl contains=NOTHING
+syn keyword yetiType is as unsafely_as nextgroup=@yetiTypeDecls
+"syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
+syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
+syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\~\(\w\|\.\|\$\)*\(\[\]\)*" contained nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\l\(\w\|'\|?\)*" contained nextgroup=yetiTypeOp
+syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\<\u\(\w\|'\)*\>" contained nextgroup=@yetiTypeDecls
+syn match yetiTypeDecl "()" contained nextgroup=yetiTypeOp
+syn match yetiTypeOp "->\||" contained nextgroup=@yetiTypeDecls
+syn region yetiTypeOp matchgroup=YetiTypeDelim start="<" matchgroup=YetiTypeDelim end=">" contained contains=@yetiTypeDecls,yetiComment nextgroup=yetiTypeOp
+syn match yetiTypeOp "\_\s\+" contained nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\_\s\+" contained nextgroup=@yetiTypeDecls
+
+syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
+syn keyword yetiKW new skipwhite nextgroup=yetiClassName
+
+" Synchronization
+syn sync minlines=50
+syn sync maxlines=500
+
+syn sync match yetiDoSync grouphere  yetiDo "\<do\>"
+syn sync match yetiDoSync groupthere yetiDo "\<done\>"
+
+syn sync match yetiIfSync grouphere  yetiIf "\<if\>"
+syn sync match yetiIfSync groupthere yetiIf "\<fi\>"
+
+syn sync match yetiCaseSync grouphere  yetiCase "\<case\>"
+syn sync match yetiCaseSync groupthere yetiCase "\<esac\>"
+
+syn sync match yetiTrySync grouphere  yetiTry "\<try\>"
+syn sync match yetiTrySync groupthere yetiTry "\<yrt\>"
+
+syn sync match yetiClassDef grouphere  yetiTry "\<class\>"
+syn sync match yetiClassDef groupthere yetiTry "\<end\>"
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
@@ -86,31 +151,35 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
     command -nargs=+ HiLink hi def link <args>
   endif
 
-  HiLink yetiLineComment	Comment
-  HiLink yetiComment		Comment
-  HiLink yetiNumber		Number
-  HiLink yetiString		String
-  HiLink yetiChar		Character
-  HiLink yetiTodo		Todo
-  HiLink yetiOperator		Operator
-  HiLink yetiStat		Statement
-  HiLink yetiOf			Statement
-  HiLink yetiAccess		Statement
-  HiLink yetiExceptions		Exception
-  HiLink yetiFunc		Function
-  HiLink yetiConst		Constant
-  HiLink yetiBoolean		Boolean
-  HiLink yetiRepeat		Repeat
-  HiLink yetiStruct		Structure
-  HiLink yetiStorageClass	StorageClass
-  HiLink yetiType		Type
-  HiLink yetiExternal		Include
-  HiLink yetiAnyVar             Keyword
-  HiLink yetiErr                Error
+  HiLink yetiParenErr	Error
+  HiLink yetiErr	Error
+
+  HiLink yetiComment 	Comment
+
+  HiLink yetiExternal	Include
+  HiLink yetiFunc       Function
+  HiLink yetiKW 	Keyword
+
+  HiLink yetiConst	Constant
+
+  HiLink yetiOperator	Operator
+  HiLink yetiAnyVar	Keyword
+
+  HiLink yetiBoolean	Boolean
+  HiLink yetiNumber	Number
+  HiLink yetiString	String
+
+  HiLink yetiType	Type
+  HiLink yetiTypeDecl	Type
+  HiLink yetiTypeOp	Type
+  HiLink yetiClassType	Type
+  HiLink yetiTypeDelim  Delimiter
+
+  HiLink yetiTodo	Todo
 
   delcommand HiLink
 endif
 
 let b:current_syntax = "yeti"
 
-" vim: ts=8 nowrap
+" vim: ts=8
