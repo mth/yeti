@@ -185,7 +185,7 @@ plus a b = a + b;
             ConcatLists#concat(l) unsafely_as list<'a>
         fi,
 
-    concatMap f l is ('a -> list<'b>) -> list?<'a> -> list<'b> =
+    concatMap f l is ('a -> list?<'b>) -> list?<'a> -> list<'b> =
         if empty? l then
             []
         else

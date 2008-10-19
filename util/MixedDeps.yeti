@@ -93,7 +93,8 @@ javaFile classMap fileName =
         println src;
     fi);
 
-remove 
+removeArgs name =
+    (like '^(\w+)' name ()).[1];
 
 yetiFile fn =
    (src = cleanYeti (loadSrc fn);
@@ -107,11 +108,12 @@ yetiFile fn =
                                    '(?:extends (\w+(?:\([^(]*\))?' ^
                                    '(?: ?, ?\w+(?:\([^(]*\)))*) )') src)
                             () empty?;
-        classes = map (`at` 1) classDefs;
-        extends = concat (map (strSplit ' ?, ?' . (`at` 2)) classDefs);
-        if name == "std" then
+        classes = map (removeArgs . (`at` 1)) classDefs;
+        extends = map removeArgs
+                      (concatMap (strSplit ' ?, ?' . (`at` 2)) classDefs);
+/*        if name == "std" then
             println src
-        fi;
+        fi;*/
         println "YETI: \(package) \(name)";
         println "Classes: \(classes)";
         println "Extends: \(extends)";
