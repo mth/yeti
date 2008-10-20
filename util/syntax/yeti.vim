@@ -35,6 +35,7 @@ syn match yetiParenErr ")"
 syn region yetiParens start="(" end=")" contains=TOP,yetiParenErr
 syn region yetiEncl matchgroup=yetiKeyword start="{" matchgroup=yetiKeyword end="}" contains=TOP
 syn region yetiEncl matchgroup=yetiKeyword start="\[" matchgroup=yetiKeyword end="\]" contains=TOP
+syn match yetiKeyword "\[:]"
 
 syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<fi\>" contains=TOP
 
@@ -85,7 +86,6 @@ syn match yetiOperator #/[^/*]\@=#
 
 syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"
-syn match yetiConstant "\[:]"
 syn match yetiConstant "\<\u\(\w\|'\)*\>"
 
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
