@@ -154,7 +154,11 @@ if exec then
             println v
         fi
     catch java.lang.StackOverflowError ex:
-        out#println("Stack overflow");
+        if evaluator.sandbox then
+            out#println("Stack overflow")
+        else
+            ex#printStackTrace()
+        fi
     catch java.lang.OutOfMemoryError ex:
         out#println("Out of memory");
     catch Exception ex:

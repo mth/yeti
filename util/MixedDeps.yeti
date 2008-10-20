@@ -15,13 +15,13 @@ findFiles path cb is ~File -> 'a =
     done;
 
 cleanJava = substAll
-    '(?://[^\n]*(?:\n|$)|/\*.*?\*/|"(?:[^"\\]|\\.")"|\s+)+' ' ';
+    '(?://[^\n]*+(?:\n|$)|/\*.*?\*/|"(?:[^"\\]|\\.)*+"|\s++)++' ' ';
 
 cleanYeti = substAll
-   ('(?://[^\n]*(?:\n|$)|/\*.*?\*/' ^
-    '|"(?:[^"\\]|\\\S|\\\s+")"' ^
-    '|\W(?:is|as|unsafely_as)\s+[\w\s_<>^~($)?'',-]*' ^
-    '|''[^'']*.|\s+)+') ' ';
+   ('(?://[^\n]*+(?:\n|$)|/\*.*?\*/' ^
+    '|"(?:[^"\\\n]|\\\S|\\\s++")*+"' ^
+    '|\W(?:is|as|unsafely_as)\s++[\w <>^~($)?'',-]*+' ^
+    '|\W(?:''[^''\n]*+'')++|\s+)++') ' ';
 
 loadSrc fn =
     readFile fn "ISO-8859-1" getContents;
@@ -47,7 +47,7 @@ mapImports imports =
     importMap);
 
 normalize package importMap t =
-   (m = like '^(([a-z_.]+\.)?[A-Z]\w*)' t ();
+   (m = like '^(([a-z_.]+\.)?[A-Z]\w*+)' t ();
     if empty? m or m.[2] == "java.lang." then
         ''
     elif defined? m.[2] then
@@ -72,11 +72,11 @@ addDeps classMap fileName classes deps =
 
 javaFile classMap fileName =
    (src = cleanJava (loadSrc fileName);
-    m = like '^(?: *package ([\w.]+);)?((?: *import [^;]+ ?;)*)' src ();
+    m = like '^(?: *package ([\w.]++);)?((?: *import [^;]++ ?;)*)' src ();
     if not (empty? m) then
         package = m.[1];
-        imports =
-            filter (!= '') (matchAll '\Wimport ([\w.]+) ?;' (`at` 1) \'' m.[2]);
+        imports = filter (!= '')
+                         (matchAll '\Wimport ([\w.]++) ?;' (`at` 1) \'' m.[2]);
         importMap = mapImports imports;
         src = strRight src (strLength m.[0]);
         classes = map (package ^ '.' ^)
@@ -129,11 +129,13 @@ yetiFile classMap fn =
 classMap = [:];
 
 atFile name =
+//   (t = System#currentTimeMillis();
     if name =~ '\.java$' then
         javaFile classMap name
     elif name =~ '\.yeti$' then
         yetiFile classMap name
     fi;
+  //  println "\(name): \(System#currentTimeMillis() - t)");
 
 findFiles new File(srcdir) atFile;
 
