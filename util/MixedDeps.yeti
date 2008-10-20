@@ -138,7 +138,7 @@ calculateDeps {fileMap, classMap} =
         res = [:];
         recurse res deps;
         delete res filename;
-        order := { filename, level = length res } :: order;
+        order := {filename, level = length res} :: order;
     done;
     order = sortBy (_ a b = if a.level == b.level then
                                 a.filename < b.filename
