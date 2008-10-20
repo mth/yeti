@@ -200,7 +200,7 @@ plus a b = a + b;
 
     avoid f l is ('a -> boolean) -> list?<'a> -> 'a =
         if empty? l then
-            throw new java.lang.IllegalArgumentException("prefer: empty list")
+            throw new IllegalArgumentException("prefer: empty list")
         fi;
         var i = l unsafely_as ~AIter;
         var value = () as ~Object;
