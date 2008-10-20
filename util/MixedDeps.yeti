@@ -91,7 +91,7 @@ yetiFile addDeps filename =
    (src = cleanYeti (loadSource filename);
     m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w++);' src ();
     if not (empty? m) then
-        fullName = m.[1];
+        name = m.[1];
         package = m.[2];
         src = strRight src (strLength m.[0]);
         imports = collectList (like '\W(?:import|load) ([\w.]++)' src);
@@ -109,7 +109,7 @@ yetiFile addDeps filename =
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
-        addDeps {filename, classes = (fullName :: classes), deps}
+        addDeps {filename, classes = (name :: classes), deps}
     fi);
 
 atFile ctx name =
