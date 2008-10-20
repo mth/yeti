@@ -4,7 +4,7 @@ import java.io.File;
 
 srcdir = shift _argv;
 
-findFiles path cb is ~File -> 'a =
+findFiles path cb is ~File -> (string -> ()) -> () =
     for (wrapArray path#listFiles()) do f:
         if f#isHidden() then // ignore hidden ones
         elif f#isFile() then
@@ -61,16 +61,13 @@ normalize package importMap t =
 typeFilter package importMap =
     filter (!= '') . map (normalize package importMap) . nub;
 
-javaFileMap = [:];
-
-addDeps classMap fileName classes deps =
-   (javaFileMap.[fileName] := nub deps;
-    //println "\(fileName) uses: \(deps)";
+addDeps {fileMap, classMap} fileName classes deps =
+   (fileMap.[fileName] := nub deps;
     for classes do className:
         classMap.[className] := fileName
     done);
 
-javaFile classMap fileName =
+javaFile ctx fileName =
    (src = cleanJava (loadSrc fileName);
     m = like '^(?: *package ([\w.]++);)?((?: *import [^;]++ ?;)*)' src ();
     if not (empty? m) then
@@ -88,18 +85,15 @@ javaFile classMap fileName =
                    [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
-        //println "JAVA \(fileName)";
-        //println "Package: \(package)";
-        //println "Classes: \(classes)";
-        addDeps classMap fileName classes (imports ++ types);
+        addDeps ctx fileName classes (imports ++ types)
     else
-        println "|\(src)|";
+        println "|\(src)|"
     fi);
 
 removeArgs name =
     (like '^(\w+)' name ()).[1];
 
-yetiFile classMap fn =
+yetiFile ctx fn =
    (src = cleanYeti (loadSrc fn);
     m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w++);' src ();
     if not (empty? m) then
@@ -121,25 +115,17 @@ yetiFile classMap fn =
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
-        //println "YETI: \(package) \(name)";
-        //println "classes: \(classes)";
-        addDeps classMap fn (fullName :: classes) deps;
+        addDeps ctx fn (fullName :: classes) deps;
     fi);
 
-classMap = [:];
-
-atFile name =
-//   (t = System#currentTimeMillis();
+atFile ctx name =
     if name =~ '\.java$' then
-        javaFile classMap name
+        javaFile ctx name
     elif name =~ '\.yeti$' then
-        yetiFile classMap name
+        yetiFile ctx name
     fi;
-  //  println "\(name): \(System#currentTimeMillis() - t)");
 
-findFiles new File(srcdir) atFile;
-
-calculateDeps fileMap classMap =
+calculateDeps {fileMap, classMap} =
    (depMap = [:];
     setHashDefault classMap \'';
     forHash fileMap do fileName deps:
@@ -167,6 +153,10 @@ calculateDeps fileMap classMap =
                             fi) order;
     map (.fileName) order);
 
-order = calculateDeps javaFileMap classMap;
+ctx = {fileMap = [:], classMap = [:]};
+println "Scanning sources...";
+findFiles new File(srcdir) (atFile ctx);
+
+order = calculateDeps ctx;
 for order println;
 
