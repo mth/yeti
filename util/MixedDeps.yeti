@@ -158,11 +158,14 @@ srcdir = shift _argv;
 
 startTime = System#currentTimeMillis();
 println "Scanning sources...";
+
 sources = array [];
-ctx = {fileMap = [:], classMap = [:]};
 findFiles new File(srcdir) (push sources);
+
+ctx = {fileMap = [:], classMap = [:]};
 for sources (atFile (addDeps ctx));
 
 order = calculateDeps ctx;
 for order println;
+
 println "Time elapsed: \((System#currentTimeMillis() - startTime) / 1000)s";
