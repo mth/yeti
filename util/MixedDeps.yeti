@@ -159,7 +159,7 @@ srcdir = shift _argv;
 println "Scanning sources...";
 sources = array [];
 ctx = {fileMap = [:], classMap = [:]};
-findFiles new File(srcdir) (atFile (addDeps ctx));
+findFiles new File(srcdir) (push sources);
 for sources (atFile (addDeps ctx));
 
 order = calculateDeps ctx;
