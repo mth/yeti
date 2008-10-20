@@ -136,12 +136,15 @@ calculateDeps {fileMap, classMap} =
         res = [:];
         recurse res deps;
         delete res filename;
-        order := {filename, level = length res} :: order;
+        yeti = filename =~ '\.yeti$';
+        order := {filename, level = length res, yeti} :: order;
     done;
-    order = sortBy (_ a b = if a.level == b.level then
-                                a.filename < b.filename
-                            else
+    order = sortBy (_ a b = if a.level != b.level then
                                 a.level < b.level
+                            elif a.yeti != b.yeti then
+                                b.yeti
+                            else
+                                a.filename < b.filename
                             fi) order;
     map (.filename) order);
 
