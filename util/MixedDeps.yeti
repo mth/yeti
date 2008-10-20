@@ -108,9 +108,9 @@ yetiFile classMap fn =
         src = strRight src (strLength m.[0]);
         imports = collectList (like '\W(?:import|load) ([\w.]++)' src);
         importMap = mapImports imports;
-        classDefs = collect (like ('\Wclass (\w++)(?:\([^(]*+\))? ' ^
-                                   '(?:extends (\w++(?:\([^(]*+\))?' ^
-                                   '(?: ?+, ?+\w++(?:\([^(]*+\))?)*+) )') src)
+        classDefs = collect (like ('\Wclass (\w++)(?:\([^(]*+\))?+ ' ^
+                                   '(?:extends (\w++(?:\([^(]*+\))?+' ^
+                                   '(?: ?+, ?+\w++(?:\([^(]*+\))?+)*+) )') src)
                             () empty?;
         classes = map ((package ^ '.' ^) . removeArgs . (`at` 1)) classDefs;
         extends = map removeArgs
