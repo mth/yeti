@@ -107,7 +107,7 @@ yetiFile addDeps filename =
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
-        addDeps {filename, classes = (name :: classes), deps}
+        addDeps {filename, classes = name :: classes, deps}
     fi);
 
 atFile ctx name =
