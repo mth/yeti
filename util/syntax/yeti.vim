@@ -79,7 +79,9 @@ syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
 syn keyword yetiOperator not and or in or div shl shr b_and b_or xor
 syn keyword yetiOperator classOf instanceof skipempty skipwhite nextgroup=yetiClassName
-syn match yetiOperator #[:;,=~!+\-*%<>^]\+\|`[a-zA-Z_?]\+`\|/[^/*]\@=#
+syn match yetiOperator #[:;,=~!+\\\-*%<>^]\+#
+syn match yetiOperator #`[a-zA-Z_?]\+`#
+syn match yetiOperator #/[^/*]\@=#
 
 syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"
