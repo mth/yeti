@@ -2,8 +2,6 @@ program MixedDeps;
 
 import java.io.File;
 
-srcdir = shift _argv;
-
 findFiles path cb is ~File -> (string -> ()) -> () =
     for (wrapArray path#listFiles()) do f:
         if f#isHidden() then // ignore hidden ones
@@ -152,6 +150,8 @@ addDeps {fileMap, classMap} {filename, classes, deps} =
     for classes do className:
         classMap.[className] := filename
     done);
+
+srcdir = shift _argv;
 
 println "Scanning sources...";
 ctx = {fileMap = [:], classMap = [:]};
