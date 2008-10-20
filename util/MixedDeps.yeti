@@ -157,8 +157,10 @@ addDeps {fileMap, classMap} {filename, classes, deps} =
 srcdir = shift _argv;
 
 println "Scanning sources...";
+sources = array [];
 ctx = {fileMap = [:], classMap = [:]};
 findFiles new File(srcdir) (atFile (addDeps ctx));
+for sources (atFile (addDeps ctx));
 
 order = calculateDeps ctx;
 for order println;
