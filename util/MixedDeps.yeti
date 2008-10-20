@@ -23,7 +23,7 @@ cleanYeti = substAll
     '|\W(?:is|as|unsafely_as)\s++[\w <>^~($)?'',-]*+' ^
     '|\W(?:''[^''\n]*+'')++|\s+)++') ' ';
 
-loadSrc fn =
+loadSource fn =
     readFile fn "ISO-8859-1" getContents;
 
 collectList f =
@@ -61,14 +61,8 @@ normalize package importMap t =
 typeFilter package importMap =
     filter (!= '') . map (normalize package importMap) . nub;
 
-addDeps {fileMap, classMap} fileName classes deps =
-   (fileMap.[fileName] := nub deps;
-    for classes do className:
-        classMap.[className] := fileName
-    done);
-
-javaFile ctx fileName =
-   (src = cleanJava (loadSrc fileName);
+javaFile addDeps filename =
+   (src = cleanJava (loadSource filename);
     m = like '^(?: *package ([\w.]++);)?((?: *import [^;]++ ?;)*)' src ();
     if not (empty? m) then
         package = m.[1];
@@ -85,7 +79,7 @@ javaFile ctx fileName =
                    [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
-        addDeps ctx fileName classes (imports ++ types)
+        addDeps {filename, classes, deps = imports ++ types}
     else
         println "|\(src)|"
     fi);
@@ -93,8 +87,8 @@ javaFile ctx fileName =
 removeArgs name =
     (like '^(\w+)' name ()).[1];
 
-yetiFile ctx fn =
-   (src = cleanYeti (loadSrc fn);
+yetiFile addDeps filename =
+   (src = cleanYeti (loadSource filename);
     m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w++);' src ();
     if not (empty? m) then
         fullName = m.[1];
@@ -115,7 +109,7 @@ yetiFile ctx fn =
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
-        addDeps ctx fn (fullName :: classes) deps;
+        addDeps {filename, classes = (fullName :: classes), deps}
     fi);
 
 atFile ctx name =
@@ -128,8 +122,8 @@ atFile ctx name =
 calculateDeps {fileMap, classMap} =
    (depMap = [:];
     setHashDefault classMap \'';
-    forHash fileMap do fileName deps:
-        depMap.[fileName] := filter (_ dep = dep != '' and dep != fileName)
+    forHash fileMap do filename deps:
+        depMap.[filename] := filter (_ dep = dep != '' and dep != filename)
                                     (nub (map (at classMap) deps))
     done;
     recurse to deps =
@@ -140,22 +134,28 @@ calculateDeps {fileMap, classMap} =
             fi
         done;
     var order = [];
-    forHash depMap do fileName deps:
+    forHash depMap do filename deps:
         res = [:];
         recurse res deps;
-        delete res fileName;
-        order := { fileName, level = length res } :: order;
+        delete res filename;
+        order := { filename, level = length res } :: order;
     done;
     order = sortBy (_ a b = if a.level == b.level then
-                                a.fileName < b.fileName
+                                a.filename < b.filename
                             else
                                 a.level < b.level
                             fi) order;
-    map (.fileName) order);
+    map (.filename) order);
+
+addDeps {fileMap, classMap} {filename, classes, deps} =
+   (fileMap.[filename] := nub deps;
+    for classes do className:
+        classMap.[className] := filename
+    done);
 
 ctx = {fileMap = [:], classMap = [:]};
 println "Scanning sources...";
-findFiles new File(srcdir) (atFile ctx);
+findFiles new File(srcdir) (atFile (addDeps ctx));
 
 order = calculateDeps ctx;
 for order println;
