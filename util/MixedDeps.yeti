@@ -153,8 +153,8 @@ addDeps {fileMap, classMap} {filename, classes, deps} =
         classMap.[className] := filename
     done);
 
-ctx = {fileMap = [:], classMap = [:]};
 println "Scanning sources...";
+ctx = {fileMap = [:], classMap = [:]};
 findFiles new File(srcdir) (atFile (addDeps ctx));
 
 order = calculateDeps ctx;
