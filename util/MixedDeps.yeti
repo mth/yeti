@@ -85,9 +85,9 @@ javaFile classMap fileName =
             importMap.[className] := ()
         done;
         types = (typeFilter package importMap . concatMap collectList)
-                    [like '[(,;] ?(?:final |static )?([\w.]+) \w+ ?[,;=(]' src,
-                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*)\.\w' src,
-                     like '\W(?:new|extends|implements|throws) ([\w.]+)' src];
+                   [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
+                    like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
+                    like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
         //println "JAVA \(fileName)";
         //println "Package: \(package)";
         //println "Classes: \(classes)";
@@ -101,16 +101,16 @@ removeArgs name =
 
 yetiFile classMap fn =
    (src = cleanYeti (loadSrc fn);
-    m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w+);' src ();
+    m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w++);' src ();
     if not (empty? m) then
         fullName = m.[1];
         package = m.[2];
         src = strRight src (strLength m.[0]);
-        imports = collectList (like '\W(?:import|load) ([\w.]+)' src);
+        imports = collectList (like '\W(?:import|load) ([\w.]++)' src);
         importMap = mapImports imports;
-        classDefs = collect (like ('\Wclass (\w+)(?:\([^(]*\))? ' ^
-                                   '(?:extends (\w+(?:\([^(]*\))?' ^
-                                   '(?: ?, ?\w+(?:\([^(]*\))?)*) )') src)
+        classDefs = collect (like ('\Wclass (\w++)(?:\([^(]*+\))? ' ^
+                                   '(?:extends (\w++(?:\([^(]*+\))?' ^
+                                   '(?: ?+, ?+\w++(?:\([^(]*+\))?)*+) )') src)
                             () empty?;
         classes = map ((package ^ '.' ^) . removeArgs . (`at` 1)) classDefs;
         extends = map removeArgs
@@ -118,8 +118,8 @@ yetiFile classMap fn =
         for classes do className:
             importMap.[className] := ()
         done;
-        uses = concatMap collectList [like '([A-Z]\w*)#' src,
-                                      like '\W(?:new|catch) ([\w.]+)' src];
+        uses = concatMap collectList [like '([A-Z]\w*+)#' src,
+                                      like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
         //println "YETI: \(package) \(name)";
         //println "classes: \(classes)";
