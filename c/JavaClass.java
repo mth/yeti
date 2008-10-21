@@ -263,7 +263,7 @@ final class JavaClass extends CapturingClosure {
                 case 'F': ins = FLOAD; break;
                 case 'J': ins = LLOAD; break;
                 case 'L': break;
-                default : ins = IRETURN;
+                default : ins = ILOAD;
             }
         }
         ctx.visitVarInsn(ins, n);
