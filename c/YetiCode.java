@@ -510,7 +510,7 @@ abstract class Code implements Opcodes {
     static final int STD_CONST = CONST | PURE | DIRECT_BIND;
     
     // this which is not captured
-    static final int DIRECT_THIS = 32;
+    static final int DIRECT_THIS = 64;
 
     YetiType.Type type;
     boolean polymorph;

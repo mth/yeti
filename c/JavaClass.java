@@ -76,6 +76,10 @@ final class JavaClass extends CapturingClosure {
             if (javaType.javaType.description.charAt(0) == 'L')
                 ctx.forceType(javaType.javaType.className());
         }
+
+        boolean flagop(int flag) {
+            return (flag & DIRECT_THIS) != 0 && argn == 0;
+        }
     }
 
     static class Meth extends JavaType.Method implements Closure {
@@ -273,7 +277,7 @@ final class JavaClass extends CapturingClosure {
                 case 'F': ins = FRETURN; break;
                 case 'J': ins = LRETURN; break;
                 case 'L': break;
-                case 'V': insn = RETURN;
+                case 'V': ins = RETURN; break;
                 default : ins = IRETURN;
             }
         }
