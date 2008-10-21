@@ -216,6 +216,12 @@ class JavaExpr extends Code {
                             method, "()" + descr);
     }
 
+    // MethodCall overrides it
+    void visitInvoke(Ctx ctx, int invokeInsn) {
+        ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
+                            method.name, method.descr(null));
+    }
+
     void genCall(Ctx ctx, BindRef[] extraArgs, int invokeInsn) {
         for (int i = 0; i < args.length; ++i) {
             convertedArg(ctx, args[i], method.arguments[i], line);
@@ -232,8 +238,7 @@ class JavaExpr extends Code {
             }
         }
         ctx.visitLine(line);
-        ctx.visitMethodInsn(invokeInsn, method.classType.javaType.className(),
-                            method.name, method.descr(null));
+        visitInvoke(ctx, invokeInsn);
         JavaType jt = method.returnType.javaType;
         if (jt != null && jt.description.charAt(0) == 'L')
             ctx.forceType(jt.className());

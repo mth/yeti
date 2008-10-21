@@ -508,6 +508,9 @@ abstract class Code implements Opcodes {
 
     // normal constant is also pure and don't need capturing
     static final int STD_CONST = CONST | PURE | DIRECT_BIND;
+    
+    // this which is not captured
+    static final int DIRECT_THIS = 32;
 
     YetiType.Type type;
     boolean polymorph;
@@ -897,20 +900,38 @@ final class NewExpr extends JavaExpr {
 }
 
 final class MethodCall extends JavaExpr {
+    private JavaType classType;
+
     MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
         super(object, method, args, line);
         type = method.convertedReturnType();
     }
 
+    void visitInvoke(Ctx ctx, int invokeInsn) {
+        String className = classType.className();
+        String descr = method.descr(null);
+        String name = method.name;
+        if ((method.access & ACC_PROTECTED) != 0 &&
+                !object.flagop(DIRECT_THIS)) {
+            if (invokeInsn != INVOKESTATIC) {
+                descr = '(' + classType.description + descr.substring(1);
+                invokeInsn = INVOKESTATIC;
+            }
+            name = classType.implementation.getAccessor(method, descr);
+        }
+        ctx.visitMethodInsn(invokeInsn, className, name, descr);
+    }
+
     void gen(Ctx ctx) {
-        int ins = object == null ? INVOKESTATIC :
-                    method.classType.javaType.isInterface()
-                        ? INVOKEINTERFACE : INVOKEVIRTUAL;
+        classType = method.classType.javaType;
+        int ins = object == null ? INVOKESTATIC : classType.isInterface()
+                                 ? INVOKEINTERFACE : INVOKEVIRTUAL;
         if (object != null) {
             object.gen(ctx);
+            if (ins != INVOKEINTERFACE)
+                classType = object.type.deref().javaType;
             if (ctx.compilation.isGCJ || ins != INVOKEINTERFACE) {
-                ctx.visitTypeInsn(CHECKCAST,
-                    method.classType.javaType.className());
+                ctx.visitTypeInsn(CHECKCAST, classType.className());
             }
         }
         genCall(ctx, null, ins);

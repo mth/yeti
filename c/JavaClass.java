@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 final class JavaClass extends CapturingClosure {
     private String className;
@@ -46,6 +47,7 @@ final class JavaClass extends CapturingClosure {
     private final boolean isPublic;
     private boolean usedForceDirect;
     private int captureCount;
+    private Map accessors;
     YetiType.Type classType;
     final Meth constr = new Meth();
     final Binder self;
@@ -127,15 +129,7 @@ final class JavaClass extends CapturingClosure {
                 String descr = arguments[i].javaType.description;
                 if (descr != "Ljava/lang/String;" && descr.charAt(0) == 'L')
                     continue;
-                int ins = ILOAD;
-                switch (descr.charAt(0)) {
-                    case 'D': ins = DLOAD; break;
-                    case 'F': ins = FLOAD; break;
-                    case 'J': ins = LLOAD; break;
-                    case 'C':
-                    case 'L': ins = ALOAD; break;
-                }
-                ctx.visitVarInsn(ins, i + n);
+                loadArg(ctx, arguments[i], i + n);
                 JavaExpr.convertValue(ctx, arguments[i]);
                 ctx.visitVarInsn(ASTORE, i + n);
             }
@@ -154,15 +148,7 @@ final class JavaClass extends CapturingClosure {
                 ctx.visitInsn(POP);
                 ctx.visitInsn(RETURN);
             } else {
-                int ins = IRETURN;
-                switch (returnType.javaType.description.charAt(0)) {
-                    case 'D': ins = DRETURN; break;
-                    case 'F': ins = FRETURN; break;
-                    case 'J': ins = LRETURN; break;
-                    case '[':
-                    case 'L': ins = ARETURN; break;
-                }
-                ctx.visitInsn(ins);
+                genRet(ctx, returnType);
             }
             ctx.closeMethod();
         }
@@ -256,13 +242,41 @@ final class JavaClass extends CapturingClosure {
         type = YetiType.UNIT_TYPE;
         this.className = className;
         classType = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
-        classType.javaType = JavaType.createNewClass(className);
+        classType.javaType = JavaType.createNewClass(className, this);
         self = new Arg(this);
         constr.name = "<init>";
         constr.returnType = YetiType.UNIT_TYPE;
         constr.className = className;
         constr.access = isPublic ? ACC_PUBLIC : 0;
         this.isPublic = isPublic;
+    }
+
+    static void loadArg(Ctx ctx, YetiType.Type argType, int n) {
+        int ins = ALOAD;
+        if (argType.type == YetiType.JAVA) {
+            switch (argType.javaType.description.charAt(0)) {
+                case 'D': ins = DLOAD; break;
+                case 'F': ins = FLOAD; break;
+                case 'J': ins = LLOAD; break;
+                case 'L': break;
+                default : ins = IRETURN;
+            }
+        }
+        ctx.visitVarInsn(ins, n);
+    }
+
+    static void genRet(Ctx ctx, YetiType.Type returnType) {
+        int ins = ARETURN;
+        if (returnType.type == YetiType.JAVA) {
+            switch (returnType.javaType.description.charAt(0)) {
+                case 'D': ins = DRETURN; break;
+                case 'F': ins = FRETURN; break;
+                case 'J': ins = LRETURN; break;
+                case 'L': break;
+                default : ins = IRETURN;
+            }
+        }
+        ctx.visitInsn(ins);
     }
 
     void init(YetiType.ClassBinding parentClass, String[] interfaces) {
@@ -348,6 +362,20 @@ final class JavaClass extends CapturingClosure {
         c.localVar = n + constr.args.size() + 1;
     }
 
+    String getAccessor(JavaType.Method method, String descr) {
+        if (accessors == null)
+            accessors = new HashMap();
+        Object[] accessor = (Object[]) accessors.get(method.sig);
+        if (accessor == null) {
+            String id = Integer.toString(accessors.size());
+            while (id.length() < 3)
+                id = "0".concat(id);
+            accessor = new Object[] { "access$" + id, method, descr };
+            accessors.put(method.sig, accessor);
+        }
+        return (String) accessor[0];
+    }
+
     void gen(Ctx ctx) {
         constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
@@ -385,5 +413,25 @@ final class JavaClass extends CapturingClosure {
             clinit.visitInsn(RETURN);
             clinit.closeMethod();
         }
+        if (accessors != null)
+            for (Iterator i = accessors.values().iterator(); i.hasNext(); ) {
+                Object[] accessor = (Object[]) i.next();
+                JavaType.Method m = (JavaType.Method) accessor[1];
+                Ctx mc = clc.newMethod(ACC_STATIC | ACC_SYNTHETIC,
+                                       (String) accessor[0],
+                                       (String) accessor[2]);
+                int start = 0;
+                int insn = INVOKESTATIC;
+                if ((m.access & ACC_STATIC) == 0) {
+                    start = 1;
+                    insn = INVOKEVIRTUAL;
+                    mc.visitVarInsn(ALOAD, 0);
+                }
+                for (int j = 0; j < m.arguments.length; ++j)
+                    loadArg(mc, m.arguments[j], j + start);
+                mc.visitMethodInsn(insn, className, m.name, m.descr(null));
+                genRet(mc, m.returnType);
+                mc.closeMethod();
+            }
     }
 }

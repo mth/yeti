@@ -328,6 +328,7 @@ class JavaType {
     private static HashMap CACHE = new HashMap();
     int publicMask = Opcodes.ACC_PUBLIC;
     int access;
+    JavaClass implementation;
 
     static void checkPackage(YetiParser.Node where, String packageName,
                              String name, String what, String item) {
@@ -468,8 +469,10 @@ class JavaType {
         this.description = description.intern();
     }
 
-    static JavaType createNewClass(String className) {
-        return new JavaType('L' + className + ';');
+    static JavaType createNewClass(String className, JavaClass impl) {
+        JavaType t = new JavaType('L' + className + ';');
+        t.implementation = impl;
+        return t;
     }
 
     boolean isCollection() {
