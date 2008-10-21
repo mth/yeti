@@ -326,6 +326,7 @@ final class JavaClass extends CapturingClosure {
         t.className = className;
         t.interfaces = implement;
         t.access = isPublic ? ACC_PUBLIC : 0;
+        classType.javaType.publicMask = ACC_PUBLIC | ACC_PROTECTED;
         classType.javaType.resolve(t);
     }
 

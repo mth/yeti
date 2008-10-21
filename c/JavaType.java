@@ -229,7 +229,7 @@ class JavaType {
 
         void check(YetiParser.Node where, String packageName) {
             classType.javaType.checkPackage(where, packageName);
-            if ((access & Opcodes.ACC_PUBLIC) == 0)
+            if ((access & classType.javaType.publicMask) == 0)
                 checkPackage(where, packageName, className, "field", name);
         }
     }
@@ -265,7 +265,7 @@ class JavaType {
 
         Method check(YetiParser.Node where, String packageName) {
             classType.javaType.checkPackage(where, packageName);
-            if ((access & Opcodes.ACC_PUBLIC) == 0)
+            if ((access & classType.javaType.publicMask) == 0)
                 checkPackage(where, packageName, className, "method", name);
             return this;
         }
@@ -326,6 +326,7 @@ class JavaType {
     private JavaType parent;
     private HashMap interfaces;
     private static HashMap CACHE = new HashMap();
+    int publicMask = Opcodes.ACC_PUBLIC;
     int access;
 
     static void checkPackage(YetiParser.Node where, String packageName,

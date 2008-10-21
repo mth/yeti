@@ -72,7 +72,7 @@
     </yetic>
 </target>
 
-<target name="jar" depends="compiler,modules,yeti">
+<target name="jar" depends="compiler,modules,yeti" unless="no.jar.build">
     <condition property="jar-name" value="yeti.jar">
         <not><isset property="jar-name"/></not>
     </condition>
@@ -104,5 +104,20 @@
 </target>
 
 <target name="rebuild" depends="clean,jar"/>
+
+<target name="checkjar">
+    <available property="no.jar.build" file="${basedir}/yeti.jar"/>
+</target>
+
+<target name="require-jar" unless="no.jar.build">
+    <antcall target="jar" inheritRefs="true"/>
+</target>
+
+<target name="mixed" depends="prepare-build,checkjar,require-jar">
+    <taskdef name="yetic_" classname="yeti.lang.compiler.YetiTask"
+             classpath="yeti.jar"/>
+    <yetic_ srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
+            icast="${icast}" includes="MixedDeps.yeti"/>
+</target>
 
 </project>

@@ -1,6 +1,8 @@
-program MixedDeps;
+module MixedDeps;
 
 import java.io.File;
+import org.apache.tools.ant.taskdefs.Javac;
+import org.apache.tools.ant.BuildException;
 
 findFiles path cb is ~File -> (string -> ()) -> () =
     for (wrapArray path#listFiles()) do f:
@@ -154,6 +156,7 @@ addDeps {fileMap, classMap} {filename, classes, deps} =
         classMap.[className] := filename
     done);
 
+/*
 srcdir = shift _argv;
 
 startTime = System#currentTimeMillis();
@@ -161,11 +164,30 @@ println "Scanning sources...";
 
 sources = array [];
 findFiles new File(srcdir) (push sources);
+*/
 
-ctx = {fileMap = [:], classMap = [:]};
-for sources (atFile (addDeps ctx));
+scanSources sources = 
+   (ctx = {fileMap = [:], classMap = [:]};
+    for sources (atFile (addDeps ctx));
+    calculateDeps ctx);
 
-order = calculateDeps ctx;
-for order println;
+class MixedCompileTask extends Javac
+    void execute()
+        this#checkParameters();
+        this#resetFileLists();
 
-println "Time elapsed: \((System#currentTimeMillis() - startTime) / 1000)s";
+        srcdir = this#getSrcdir();
+        destdir = this#getDestdir();
+        sources = array [];
+        for (wrapArray srcdir#list()) do src:
+            dir = this#getProject()#resolveFile(src);
+            if not dir#exists() then
+                throw new BuildException("No srcdir=\"\(dir)\"",
+                                         this#getLocation())
+            fi;
+            files = this#getDirectoryScanner(dir)#getIncludedFiles();
+            for (wrapArray files) (push sources);
+        done;
+        ordered = scanSources sources;
+        for ordered println
+end
