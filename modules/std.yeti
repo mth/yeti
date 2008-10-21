@@ -286,6 +286,27 @@ plus a b = a + b;
     nub is list?<'a> -> list<'a> =
         keys . hash,
 
+    groupBy eq l is ('a -> 'a -> boolean) -> list?<'a> -> list<list<'a>> =
+        if empty? l then
+            []
+        else // this is an example of over-optimisation ;)
+            var result = new MList();
+            var collector = new MList();
+            var i = l unsafely_as ~AIter;
+            var prev = i#first();
+            collector#add(prev);
+            (i := i#next(); not (nullptr? i)) loop
+               (val = i#first();
+                if not ((val unsafely_as 'a) `eq` (prev unsafely_as 'a)) then
+                    result#add(collector);
+                    collector := new MList()
+                fi;
+                prev := val;
+                collector#add(val));
+            result#add(collector);
+            result unsafely_as 'l
+        fi,
+
     sort l is list?<^a> -> list<^a> =
         if empty? l then
             []

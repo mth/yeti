@@ -75,6 +75,7 @@ syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash avoid
+syn keyword yetiFunction groupBy
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
