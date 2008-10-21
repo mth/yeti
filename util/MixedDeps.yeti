@@ -1,4 +1,4 @@
-module MixedDeps;
+module yeti.lang.compiler.MixedDeps;
 
 import java.io.File;
 import org.apache.tools.ant.taskdefs.Javac;
@@ -188,6 +188,6 @@ class MixedCompileTask extends Javac
             files = this#getDirectoryScanner(dir)#getIncludedFiles();
             for (wrapArray files) (push sources);
         done;
-        ordered = scanSources sources;
+        ordered = scanSources (list sources);
         for ordered println
 end
