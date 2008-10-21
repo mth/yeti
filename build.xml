@@ -123,6 +123,7 @@
 <target name="scan" depends="mixed">
     <taskdef name="mixedc" className="yeti.lang.compiler.MixedCompileTask"
              classpath="yeti.jar:${basedir}/.build/mixedtask"/>
+    <mkdir dir="${basedir}/.build/mtt"/>
     <mixedc destdir="${basedir}/.build/mtt" srcdir="${basedir}/c" debug="on"
             encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
             classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"/>

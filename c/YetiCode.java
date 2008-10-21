@@ -2177,7 +2177,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         }
         if (directField == "") {
             myClass = ctx.className;
-            directField = Integer.toString(ctx.constants.ctx.fieldCounter++);
+            directField =
+                "$".concat(Integer.toString(ctx.constants.ctx.fieldCounter++));
             ctx.cw.visitField(ACC_STATIC, directField, javaDescr, null, null)
                   .visitEnd();
         } else if (mvar == -1) {
