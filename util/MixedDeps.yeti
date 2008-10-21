@@ -186,8 +186,10 @@ class MixedCompileTask extends Javac
                                          this#getLocation())
             fi;
             files = this#getDirectoryScanner(dir)#getIncludedFiles();
-            for (wrapArray files) (push sources);
+            for (wrapArray files) do name:
+                push sources "\(new File(dir, name))"
+            done
         done;
-        ordered = scanSources (list sources);
+        ordered = scanSources sources;
         for ordered println
 end
