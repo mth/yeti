@@ -148,7 +148,7 @@ calculateDeps {fileMap, classMap} =
                             else
                                 a.filename < b.filename
                             fi) order;
-    map (.filename) order);
+    map (map (.filename)) (groupBy (on (==) (.yeti)) order));
 
 addDeps {fileMap, classMap} {filename, classes, deps} =
    (fileMap.[filename] := nub deps;
