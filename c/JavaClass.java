@@ -273,6 +273,7 @@ final class JavaClass extends CapturingClosure {
                 case 'F': ins = FRETURN; break;
                 case 'J': ins = LRETURN; break;
                 case 'L': break;
+                case 'V': insn = RETURN;
                 default : ins = IRETURN;
             }
         }
