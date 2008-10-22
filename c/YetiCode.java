@@ -86,6 +86,7 @@ final class CompileCtx implements Opcodes {
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
     private String currentSrc;
+    List postGen = new ArrayList();
     boolean isGCJ;
     ClassFinder classPath;
     Map classes = new HashMap();
@@ -284,6 +285,9 @@ final class CompileCtx implements Opcodes {
     }
 
     void write() throws Exception {
+        for (int i = 0, cnt = postGen.size(); i < cnt; ++i) {
+            ((Runnable) postGen.get(i)).run();
+        }
         Iterator i = classes.values().iterator();
         while (i.hasNext()) {
             Ctx c = (Ctx) i.next();

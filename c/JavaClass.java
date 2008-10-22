@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-final class JavaClass extends CapturingClosure {
+final class JavaClass extends CapturingClosure implements Runnable {
     private String className;
     private String[] implement;
     private YetiType.ClassBinding parentClass;
@@ -48,6 +48,7 @@ final class JavaClass extends CapturingClosure {
     private boolean usedForceDirect;
     private int captureCount;
     private Map accessors;
+    private Ctx classCtx;
     YetiType.Type classType;
     final Meth constr = new Meth();
     final Binder self;
@@ -429,45 +430,52 @@ final class JavaClass extends CapturingClosure {
             clinit.visitInsn(RETURN);
             clinit.closeMethod();
         }
-        if (accessors != null)
-            for (Iterator i = accessors.values().iterator(); i.hasNext(); ) {
-                Object[] accessor = (Object[]) i.next();
-                Ctx mc = clc.newMethod(ACC_STATIC | ACC_SYNTHETIC,
+        classCtx = clc;
+        ctx.compilation.postGen.add(this);
+    }
+
+    // postGen hook. accessors can be added later than the class gen is called
+    public void run() {
+        if (accessors == null)
+            return;
+        for (Iterator i = accessors.values().iterator(); i.hasNext(); ) {
+            Object[] accessor = (Object[]) i.next();
+            Ctx mc = classCtx.newMethod(ACC_STATIC | ACC_SYNTHETIC,
                                        (String) accessor[0],
                                        (String) accessor[2]);
-                if (accessor.length == 3) { // method
-                    JavaType.Method m = (JavaType.Method) accessor[1];
-                    int start = 0;
-                    int insn = INVOKESTATIC;
-                    if ((m.access & ACC_STATIC) == 0) {
-                        start = 1;
-                        insn = INVOKEVIRTUAL;
-                        mc.visitVarInsn(ALOAD, 0);
-                    }
-                    for (int j = 0; j < m.arguments.length; ++j)
-                        loadArg(mc, m.arguments[j], j + start);
-                    mc.visitMethodInsn(insn, className, m.name, m.descr(null));
-                    genRet(mc, m.returnType);
-                } else { // field
-                    JavaType.Field f = (JavaType.Field) accessor[1];
-                    int insn = GETSTATIC, reg = 0;
-                    if ((f.access & ACC_STATIC) == 0) {
-                        mc.visitVarInsn(ALOAD, reg++);
-                        insn = GETFIELD;
-                    }
-                    if (accessor[3] != null) {
-                        mc.visitVarInsn(ALOAD, reg);
-                        insn = insn == GETFIELD ? PUTFIELD : PUTSTATIC;
-                    }
-                    mc.visitFieldInsn(insn, className, f.name,
-                                      JavaType.descriptionOf(f.type));
-                    if (accessor[3] != null) {
-                        mc.visitInsn(RETURN);
-                    } else {
-                        genRet(mc, f.type);
-                    }
+            if (accessor.length == 3) { // method
+                JavaType.Method m = (JavaType.Method) accessor[1];
+                int start = 0;
+                int insn = INVOKESTATIC;
+                if ((m.access & ACC_STATIC) == 0) {
+                    start = 1;
+                    insn = INVOKEVIRTUAL;
+                    mc.visitVarInsn(ALOAD, 0);
                 }
-                mc.closeMethod();
+                for (int j = 0; j < m.arguments.length; ++j)
+                    loadArg(mc, m.arguments[j], j + start);
+                mc.visitMethodInsn(insn, className, m.name, m.descr(null));
+                genRet(mc, m.returnType);
+            } else { // field
+                JavaType.Field f = (JavaType.Field) accessor[1];
+                int insn = GETSTATIC, reg = 0;
+                if ((f.access & ACC_STATIC) == 0) {
+                    mc.visitVarInsn(ALOAD, reg++);
+                    insn = GETFIELD;
+                }
+                if (accessor[3] != null) {
+                    mc.visitVarInsn(ALOAD, reg);
+                    insn = insn == GETFIELD ? PUTFIELD : PUTSTATIC;
+                }
+                mc.visitFieldInsn(insn, className, f.name,
+                                  JavaType.descriptionOf(f.type));
+                if (accessor[3] != null) {
+                    mc.visitInsn(RETURN);
+                } else {
+                    genRet(mc, f.type);
+                }
             }
+            mc.closeMethod();
+        }
     }
 }
