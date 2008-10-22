@@ -122,7 +122,7 @@ atFile ctx name =
 calculateDeps {fileMap, classMap} =
    (depMap = [:];
     setHashDefault classMap \'';
-    forHash fileMap do filename deps:
+    forHash fileMap do filename {deps}:
         depMap.[filename] := filter (_ dep = dep != '' and dep != filename)
                                     (nub (map (at classMap) deps))
     done;
@@ -150,8 +150,9 @@ calculateDeps {fileMap, classMap} =
                             fi) order;
     map (map (.filename)) (groupBy (on (==) (.yeti)) order));
 
-addDeps {fileMap, classMap} {filename, classes, deps} =
-   (fileMap.[filename] := nub deps;
+addDeps {fileMap, classMap} {filename is string, classes, deps} =
+   (modified = new File(filename)#lastModified();
+    fileMap.[filename] := {deps = nub deps, modified};
     for classes do className:
         classMap.[className] := filename
     done);

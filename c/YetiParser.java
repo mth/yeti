@@ -127,14 +127,24 @@ interface YetiParser {
 
         static XNode struct(Node[] fields) {
             for (int i = 0; i < fields.length; ++i) {
+                IsOp op = null;
+                Sym s = null;
                 if (fields[i] instanceof Sym) {
-                    Sym s = (Sym) fields[i];
+                    s = (Sym) fields[i];
+                } else if (fields[i] instanceof IsOp) {
+                    op = (IsOp) fields[i];
+                    op.right.sym();
+                    s = (Sym) op.right;
+                }
+                if (s != null) {
                     Bind bind = new Bind();
                     bind.name = s.sym;
                     bind.expr = s;
                     bind.col = s.col;
                     bind.line = s.line;
                     bind.noRec = true;
+                    if (op != null)
+                        bind.type = op.type;
                     fields[i] = bind;
                 }
             }
