@@ -337,7 +337,7 @@ class JavaType {
                 "Non-public " + what + ' ' + name.replace('/', '.')
                 + (item == null ? "" : "#".concat(item))
                 + " cannot be accessed from different package ("
-                + packageName + ")");
+                + packageName.replace('/', '.') + ")");
     }
 
     void checkPackage(YetiParser.Node where, String packageName) {

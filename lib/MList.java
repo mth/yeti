@@ -301,7 +301,7 @@ public class MList extends AMList implements ByKey {
 
     public void add(Object o) {
         if (size >= array.length) {
-            Object[] tmp = new Object[size == 0 ? 10 : size * 3 / 2];
+            Object[] tmp = new Object[size == 0 ? 10 : size * 3 / 2 + 1];
             System.arraycopy(array, 0, tmp, 0, array.length);
             array = tmp;
         }
