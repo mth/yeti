@@ -372,11 +372,22 @@ final class JavaClass extends CapturingClosure {
             accessors = new HashMap();
         Object[] accessor = (Object[]) accessors.get(method.sig);
         if (accessor == null) {
-            String id = Integer.toString(accessors.size());
-            while (id.length() < 3)
-                id = "0".concat(id);
-            accessor = new Object[] { "access$" + id, method, descr };
+            accessor = new Object[] { "access$" + accessors.size(),
+                                      method, descr };
             accessors.put(method.sig, accessor);
+        }
+        return (String) accessor[0];
+    }
+
+    String getAccessor(JavaType.Field field, String descr, boolean write) {
+        String key = (write ? "{" : "}").concat(field.name);
+        if (accessors == null)
+            accessors = new HashMap();
+        Object[] accessor = (Object[]) accessors.get(key);
+        if (accessor == null) {
+            accessor = new Object[] { "access$" + accessors.size(), field,
+                                      descr, write ? "" : null };
+            accessors.put(key, accessor);
         }
         return (String) accessor[0];
     }
@@ -421,21 +432,38 @@ final class JavaClass extends CapturingClosure {
         if (accessors != null)
             for (Iterator i = accessors.values().iterator(); i.hasNext(); ) {
                 Object[] accessor = (Object[]) i.next();
-                JavaType.Method m = (JavaType.Method) accessor[1];
                 Ctx mc = clc.newMethod(ACC_STATIC | ACC_SYNTHETIC,
                                        (String) accessor[0],
                                        (String) accessor[2]);
-                int start = 0;
-                int insn = INVOKESTATIC;
-                if ((m.access & ACC_STATIC) == 0) {
-                    start = 1;
-                    insn = INVOKEVIRTUAL;
+                if (accessor.length == 3) { // method
+                    JavaType.Method m = (JavaType.Method) accessor[1];
+                    int start = 0;
+                    int insn = INVOKESTATIC;
+                    if ((m.access & ACC_STATIC) == 0) {
+                        start = 1;
+                        insn = INVOKEVIRTUAL;
+                        mc.visitVarInsn(ALOAD, 0);
+                    }
+                    for (int j = 0; j < m.arguments.length; ++j)
+                        loadArg(mc, m.arguments[j], j + start);
+                    mc.visitMethodInsn(insn, className, m.name, m.descr(null));
+                    genRet(mc, m.returnType);
+                } else { // field
+                    JavaType.Field f = (JavaType.Field) accessor[1];
                     mc.visitVarInsn(ALOAD, 0);
+                    int insn = GETFIELD;
+                    if (accessor[3] != null) {
+                        mc.visitVarInsn(ALOAD, 1);
+                        insn = PUTFIELD;
+                    }
+                    mc.visitFieldInsn(insn, className, f.name,
+                                      JavaType.descriptionOf(f.type));
+                    if (insn == PUTFIELD) {
+                        mc.visitInsn(RETURN);
+                    } else {
+                        genRet(mc, f.type);
+                    }
                 }
-                for (int j = 0; j < m.arguments.length; ++j)
-                    loadArg(mc, m.arguments[j], j + start);
-                mc.visitMethodInsn(insn, className, m.name, m.descr(null));
-                genRet(mc, m.returnType);
                 mc.closeMethod();
             }
     }

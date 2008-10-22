@@ -171,6 +171,9 @@ scanSources sources =
     for sources (atFile (addDeps ctx));
     calculateDeps ctx);
 
+plurals l =
+    if length l == 1 then "" else "s" fi;
+
 class MixedCompileTask extends Javac
     void execute()
         this#checkParameters();
@@ -190,6 +193,17 @@ class MixedCompileTask extends Javac
                 push sources "\(new File(dir, name))"
             done
         done;
+        this#log("Scanning \(length sources) source file" ^ plurals sources);
         ordered = scanSources sources;
-        for ordered println
+        toFile name = new File(name is string);
+        var doneSomething = false;
+        for ordered do files:
+            if head files =~ '\.yeti$' then
+                this#log("Compiling \(length files) yeti source file" ^
+                         plurals files);
+            else
+                this#compileList := map toFile files as ~File[];
+                this#compile()
+            fi
+        done
 end

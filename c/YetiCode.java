@@ -911,7 +911,9 @@ final class MethodCall extends JavaExpr {
         String className = classType.className();
         String descr = method.descr(null);
         String name = method.name;
+        // XXX: not checking for package access. shouldn't matter.
         if ((method.access & ACC_PROTECTED) != 0 &&
+                classType.implementation != null &&
                 !object.flagop(DIRECT_THIS)) {
             if (invokeInsn != INVOKESTATIC) {
                 descr = '(' + classType.description + descr.substring(1);
@@ -967,17 +969,28 @@ final class ClassField extends JavaExpr {
     }
 
     void gen(Ctx ctx) {
+        JavaType classType = field.classType.javaType;
         if (object != null) {
             object.gen(ctx);
+            classType = object.type.deref().javaType;
         }
         ctx.visitLine(line);
-        String className = field.classType.javaType.className();
-        if (object != null) {
+        String descr = JavaType.descriptionOf(field.type);
+        String className = classType.className();
+        if (object != null)
             ctx.visitTypeInsn(CHECKCAST, className);
+        // XXX: not checking for package access. shouldn't matter.
+        if ((field.access & (ACC_PROTECTED | ACC_STATIC)) == ACC_PROTECTED
+                && classType.implementation != null
+                && !object.flagop(DIRECT_THIS)) {
+            descr = '(' + classType.description + ')' + descr;
+            String name = classType.implementation
+                                   .getAccessor(field, descr, false);
+            ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
+        } else {
+            ctx.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
+                                 className, field.name, descr);
         }
-        ctx.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
-                             className, field.name,
-                             JavaType.descriptionOf(field.type));
         convertValue(ctx, field.type);
     }
 
@@ -987,18 +1000,30 @@ final class ClassField extends JavaExpr {
         }
         return new Code() {
             void gen(Ctx ctx) {
-                String className = field.classType.javaType.className();
+                JavaType classType = field.classType.javaType;
+                String className = classType.className();
                 if (object != null) {
                     object.gen(ctx);
                     ctx.visitTypeInsn(CHECKCAST, className);
+                    classType = object.type.deref().javaType;
                 }
                 genValue(ctx, setValue, field.type, line);
                 String descr = JavaType.descriptionOf(field.type);
                 ctx.visitTypeInsn(CHECKCAST,
                     field.type.type == YetiType.JAVA
                         ? field.type.javaType.className() : descr);
-                ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
-                                     className, field.name, descr);
+                
+                if ((field.access & (ACC_PROTECTED | ACC_STATIC))
+                        == ACC_PROTECTED && classType.implementation != null
+                                         && !object.flagop(DIRECT_THIS)) {
+                    descr = '(' + classType.description + descr + ")V";
+                    String name = classType.implementation
+                                           .getAccessor(field, descr, true);
+                    ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
+                } else {
+                    ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
+                                         className, field.name, descr);
+                }
                 ctx.visitInsn(ACONST_NULL);
             }
         };

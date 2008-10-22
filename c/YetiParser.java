@@ -544,8 +544,9 @@ interface YetiParser {
             { null }, // and or
             { null }, // non-standard operators
             { "." },
-            { ":=" },
             { "is" },
+            { ":=" },
+            { null },
         };
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
@@ -744,7 +745,7 @@ interface YetiParser {
             } else if (s == "throw") {
                 res = new BinOp("throw", 1, false);
             } else if (s == "loop") {
-                res = new BinOp(s, IS_OP_LEVEL, false);
+                res = new BinOp(s, IS_OP_LEVEL + 2, false);
             } else if (s == "load" || s == "import" || s == "classOf") {
                 res = new XNode(s, readDotted(false,
                     s == "load" ? "Expected module name after 'load', not a " :
