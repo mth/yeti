@@ -980,10 +980,11 @@ final class ClassField extends JavaExpr {
         if (object != null)
             ctx.visitTypeInsn(CHECKCAST, className);
         // XXX: not checking for package access. shouldn't matter.
-        if ((field.access & (ACC_PROTECTED | ACC_STATIC)) == ACC_PROTECTED
+        if ((field.access & ACC_PROTECTED) != 0
                 && classType.implementation != null
                 && !object.flagop(DIRECT_THIS)) {
-            descr = '(' + classType.description + ')' + descr;
+            descr = (object == null ? "()" : '(' + classType.description + ')')
+                    + descr;
             String name = classType.implementation
                                    .getAccessor(field, descr, false);
             ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
@@ -1013,10 +1014,11 @@ final class ClassField extends JavaExpr {
                     field.type.type == YetiType.JAVA
                         ? field.type.javaType.className() : descr);
                 
-                if ((field.access & (ACC_PROTECTED | ACC_STATIC))
-                        == ACC_PROTECTED && classType.implementation != null
-                                         && !object.flagop(DIRECT_THIS)) {
-                    descr = '(' + classType.description + descr + ")V";
+                if ((field.access & ACC_PROTECTED) != 0
+                        && classType.implementation != null
+                        && !object.flagop(DIRECT_THIS)) {
+                    descr = (object != null ? "(".concat(classType.description)
+                                            : "(") + descr + ")V";
                     String name = classType.implementation
                                            .getAccessor(field, descr, true);
                     ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);

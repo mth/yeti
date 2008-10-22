@@ -450,15 +450,18 @@ final class JavaClass extends CapturingClosure {
                     genRet(mc, m.returnType);
                 } else { // field
                     JavaType.Field f = (JavaType.Field) accessor[1];
-                    mc.visitVarInsn(ALOAD, 0);
-                    int insn = GETFIELD;
+                    int insn = GETSTATIC, reg = 0;
+                    if ((f.access & ACC_STATIC) == 0) {
+                        mc.visitVarInsn(ALOAD, reg++);
+                        insn = GETFIELD;
+                    }
                     if (accessor[3] != null) {
-                        mc.visitVarInsn(ALOAD, 1);
-                        insn = PUTFIELD;
+                        mc.visitVarInsn(ALOAD, reg);
+                        insn = insn == GETFIELD ? PUTFIELD : PUTSTATIC;
                     }
                     mc.visitFieldInsn(insn, className, f.name,
                                       JavaType.descriptionOf(f.type));
-                    if (insn == PUTFIELD) {
+                    if (accessor[3] != null) {
                         mc.visitInsn(RETURN);
                     } else {
                         genRet(mc, f.type);

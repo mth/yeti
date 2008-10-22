@@ -196,7 +196,6 @@ class MixedCompileTask extends Javac
         this#log("Scanning \(length sources) source file" ^ plurals sources);
         ordered = scanSources sources;
         toFile name = new File(name is string);
-        var doneSomething = false;
         for ordered do files:
             if head files =~ '\.yeti$' then
                 this#log("Compiling \(length files) yeti source file" ^
