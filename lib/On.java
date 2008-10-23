@@ -31,7 +31,8 @@
 package yeti.lang;
 
 final class On extends Fun {
-    private Fun f, g;
+    private final Fun f;
+    private final Fun g;
 
     On(Fun _f, Fun _g) {
         f = _f;

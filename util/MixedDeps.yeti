@@ -69,8 +69,6 @@ javaFile addDeps filename =
                    [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
-        hasClass name =
-            any ((== strLower name) . strLower) classes;
         name = like '(?i)(\w+)\.java$' filename ();
         name = if empty? name then
                    ""
@@ -79,7 +77,8 @@ javaFile addDeps filename =
                else
                    name.[1]
                fi;
-        target = if name != "" and (empty? classes or hasClass name) then
+        target = if name != "" and (empty? classes or
+                                    any (on (==) strLower name) classes) then
                      name
                  elif not (empty? classes) then
                      head classes

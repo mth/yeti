@@ -88,7 +88,7 @@ plus a b = a + b;
     at h k = h.[k],
 
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
-        new On(f, g) as ~Fun, 
+        new On(f, g) unsafely_as 'a, 
 
     // functions for standard operators
     norec not v = not v,
