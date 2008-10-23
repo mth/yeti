@@ -45,7 +45,7 @@ normalize package importMap t =
     elif m.[1] in importMap or m.[1] in ignoreTypes then
         ''
     else
-        "\(package).\(m.[1])"
+        package ^ m.[1]
     fi);
 
 typeFilter package importMap =
@@ -55,12 +55,16 @@ javaFile addDeps filename =
    (src = cleanJava (loadSource filename);
     m = like '^(?: *package ([\w.]++);)?((?: *import [^;]++ ?;)*)' src ();
     if not (empty? m) then
-        package = m.[1];
+        package = if m.[1] == '' then
+                      ''
+                  else
+                      m.[1] ^ '.'
+                  fi;
         imports = filter (!= '')
                          (matchAll '\Wimport ([\w.]++) ?;' (`at` 1) \'' m.[2]);
         importMap = mapImports imports;
         src = strRight src (strLength m.[0]);
-        classes = map (package ^ '.' ^)
+        classes = map (package ^)
                       (collectList (like '\W(?:class|interface) (\w+)' src));
         for classes do className:
             importMap.[className] := ()
@@ -72,10 +76,8 @@ javaFile addDeps filename =
         name = like '(?i)(\w+)\.java$' filename ();
         name = if empty? name then
                    ''
-               elif package != '' then
-                   "\(package).\(name.[1])"
                else
-                   name.[1]
+                   package ^ name.[1]
                fi;
         target = if name != '' and (empty? classes or
                                     any (on (==) strLower name) classes) then
@@ -93,7 +95,7 @@ removeArgs name =
 
 yetiFile addDeps filename =
    (src = cleanYeti (loadSource filename);
-    m = like '^ *(?:module|program) ((?:([\w\.]+)\.)?\w++);' src ();
+    m = like '^ *(?:module|program) (([\w\.]+\.)?\w++);' src ();
     if not (empty? m) then
         name = m.[1];
         package = m.[2];
@@ -104,7 +106,7 @@ yetiFile addDeps filename =
                                    '(?:extends (\w++(?:\([^(]*+\))?+' ^
                                    '(?: ?+, ?+\w++(?:\([^(]*+\))?+)*+) )') src)
                             () empty?;
-        classes = map ((package ^ '.' ^) . removeArgs . (`at` 1)) classDefs;
+        classes = map ((package ^ ) . removeArgs . (`at` 1)) classDefs;
         extends = map removeArgs
                       (concatMap (strSplit ' ?, ?' . (`at` 2)) classDefs);
         for classes do className:
