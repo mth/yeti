@@ -536,8 +536,15 @@ public final class YetiAnalyzer extends YetiType {
         try {
             unify(arg, src.type);
         } catch (TypeException ex) {
+            if (src.type.deref().type == JAVA) {
+                throw new CompileException(member,
+                    "Cannot use class " + src.type + " as a structure with ." +
+                    field + " field\n    " +
+                    "(use # instead of . to reference object fields/methods)",
+                    ex);
+            }
             throw new CompileException(member,
-                src.type + " do not have ." + field + " field\n", ex);
+                src.type + " do not have ." + field + " field", ex);
         }
         boolean poly = src.polymorph && src.type.finalMembers != null &&
             ((Type) src.type.finalMembers.get(field)).field == 0;
