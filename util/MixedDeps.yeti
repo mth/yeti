@@ -206,7 +206,9 @@ class MixedCompileTask extends Javac
             fi;
             files = this#getDirectoryScanner(dir)#getIncludedFiles();
             for (wrapArray files) do name:
-                push sources "\(new File(dir, name))"
+                if name =~ '\.java$|\.yeti$' then
+                    push sources "\(new File(dir, name))"
+                fi
             done
         done;
         this#log("Scanning \(length sources) source file" ^ plurals sources);
