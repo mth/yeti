@@ -61,7 +61,7 @@ options = [
     done,
     "-e": \(eval := true; src := shift argv),
     "-h": help,
-    "-cp": \(evaluator.classPath := shift argv),
+    "-cp": \(evaluator.classPath := list (strSplit ':' (shift argv))),
     "-help": help,
     "-preload": \(evaluator.preload := list (strSplit ':' (shift argv))),
     "-type": \(printType := true; exec := false),

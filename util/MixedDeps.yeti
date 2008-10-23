@@ -180,6 +180,9 @@ scanSources targetDir sources =
 plurals l =
     if length l == 1 then "" else "s" fi;
 
+antError =
+    "Compile failed; see the compiler error output for details.";
+
 class MixedCompileTask extends Javac
     void execute()
         this#checkParameters();
@@ -202,10 +205,26 @@ class MixedCompileTask extends Javac
         this#log("Scanning \(length sources) source file" ^ plurals sources);
         order = scanSources destdir sources;
         toFile name = new File(name is string);
+        // lazy to avoid unnecessary initialisation of yeti compiler
+        compileYeti = lazy do:
+            yetic = load yeti.lang.compiler.repl (array []);
+            yetic.gcj := true; // extra casts for safety
+            yetic.classPath :=
+                map string (wrapArray this#getClasspath()#list());
+            do files:
+                yetic.compileToFiles files "\(destdir)" do err:
+                    this#log(err#getMessage())
+                done
+            done
+        done;
+        this#setFailonerror(true);
         for order do files:
             if head files =~ '\.yeti$' then
                 this#log("Compiling \(length files) yeti source file" ^
                          plurals files);
+                if not (compileYeti () files) then
+                    throw new BuildException(antError, this#getLocation())
+                fi
             else
                 this#compileList := map toFile files as ~File[];
                 this#compile()

@@ -4,17 +4,18 @@ import java.lang.Class;
 import java.lang.ClassLoader;
 import yeti.lang.Core;
 import java.security.Permission;
+import java.io.File;
 
 do argv: {
     var preload = ["yeti/lang/std", "yeti/lang/io"],
     var mainClass = "code",
-    var classPath = "",
+    var classPath = [],
     var sandbox = false,
     var gcj = false,
 
     compilationOf writer =
         new CompileCtx(new YetiC(()), writer, preload,
-                       new ClassFinder(classPath))#setGCJ(gcj),
+                       new ClassFinder(classPath as ~String[]))#setGCJ(gcj),
 
     getTrace ex is ~java.lang.Throwable -> string =
         sw = new java.io.StringWriter();
@@ -88,5 +89,22 @@ do argv: {
         catch CompileException ex:
             push res ex#getMessage()
         yrt;
-        strJoin '' (map (^ "\n") res)
+        strJoin '' (map (^ "\n") res),
+
+    compileToFiles sources target printMessage
+            is list?<string> -> string -> (~CompileException -> ()) -> boolean =
+        target = if target == "" then "" else target ^ File#separator fi;
+        compilation = compilationOf new ToFile(target);
+        try
+            for sources do src:
+                mainClass := compilation#compile(src, 0)
+            done;
+            compilation#write();
+            compilation#enumWarns(printMessage);
+            true
+        catch CompileException ex:
+            compilation#enumWarns(printMessage);
+            printMessage ex;
+            false
+        yrt
 } done
