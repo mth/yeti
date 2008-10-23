@@ -122,6 +122,19 @@
          basedir="${basedir}/.build/mixedtask"/>
 </target>
 
+<target name="all-jar" depends="clean,jar,mixed-task">
+    <jar jarfile="${basedir}/yeti-all.jar">
+        <manifest>
+            <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
+        </manifest>
+        <fileset dir="${basedir}/.build/lib"/>
+        <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
+        <fileset dir="${basedir}/.build/modules"/>
+        <fileset dir="${basedir}/.build/mixedtask"/>
+        <zipfileset src="${asm}"/>
+    </jar>
+</target>
+
 <target name="scan" depends="mixed-task">
     <taskdef name="mixedc" className="yeti.ant.MixedCompileTask"
              classpath="yeti.jar:yeti-ant.jar"/>
