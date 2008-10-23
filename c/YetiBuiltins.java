@@ -1012,7 +1012,12 @@ final class StrOp extends StaticRef implements Binder {
             ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
             for (int i = 0, last = argv.size() - 2; i <= last; ++i) {
                 StrApply a = (StrApply) argv.get(last - i);
-                JavaExpr.convertedArg(ctx, a.arg, argTypes[i], a.line);
+                if (a.arg.type.deref().type == YetiType.STR) {
+                    a.arg.gen(ctx);
+                    ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+                } else {
+                    JavaExpr.convertedArg(ctx, a.arg, argTypes[i], a.line);
+                }
             }
             ctx.visitLine(line);
             ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",

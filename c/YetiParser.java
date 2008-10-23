@@ -1281,6 +1281,15 @@ interface YetiParser {
                         case '\\':
                         case '"':
                             continue;
+                        case 'a':
+                            res.append('\u0007');
+                            break;
+                        case 'b':
+                            res.append('\b');
+                            break;
+                        case 'f':
+                            res.append('\f');
+                            break;
                         case 'n':
                             res.append('\n');
                             break;
@@ -1289,6 +1298,12 @@ interface YetiParser {
                             break;
                         case 't':
                             res.append('\t');
+                            break;
+                        case 'e':
+                            res.append('\u001b');
+                            break;
+                        case '0':
+                            res.append('\000');
                             break;
                         case '(':
                             ++p;
@@ -1302,6 +1317,22 @@ interface YetiParser {
                             res.setLength(0);
                             st = --p;
                             break;
+                        case 'u': {
+                            st += 4;
+                            if (st > src.length)
+                                st = src.length;
+                            int n = st - p;
+                            String s = new String(src, p + 1, n);
+                            if (n == 4) {
+                                try {
+                                    res.append((char) Integer.parseInt(s, 16));
+                                    break;
+                                } catch (NumberFormatException ex) {
+                                }
+                            }
+                            throw new CompileException(line, p - lineStart,
+                                "Invalid unicode escape code \\u" + s);
+                        }
                         default:
                             if (src[p] > ' ') {
                                 throw new CompileException(line, p - lineStart,

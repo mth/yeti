@@ -167,12 +167,24 @@ class JavaExpr extends Code {
             return; // A - primitive array
         }
 
+        if (given.type == YetiType.STR) {
+            ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+            ctx.visitInsn(DUP);
+            ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core", "UNDEF_STR",
+                               "Ljava/lang/String;");
+            Label defined = new Label();
+            ctx.visitJumpInsn(IF_ACMPNE, defined);
+            ctx.visitInsn(POP);
+            ctx.visitInsn(ACONST_NULL);
+            ctx.visitLabel(defined);
+            return;
+        }
+
         if (given.type != YetiType.NUM ||
             descr == "Ljava/lang/Object;" ||
             descr == "Ljava/lang/Number;") {
-            if (descr != "Ljava/lang/Object;") {
+            if (descr != "Ljava/lang/Object;")
                 ctx.visitTypeInsn(CHECKCAST, argType.javaType.className());
-            }
             return;
         }
         // Convert numbers...
@@ -299,6 +311,8 @@ class JavaExpr extends Code {
                 "java/lang/String", "toCharArray", "()[C");
             return false;
         }
+        if (arg instanceof StringConstant)
+            return false;
         return true;
     }
 

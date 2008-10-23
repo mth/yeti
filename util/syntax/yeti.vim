@@ -26,8 +26,8 @@ syn match yetiComment "//.*$" contains=yetiTodo
 syn region yetiComment start="/\*" end="\*/" contains=yetiTodo,yetiComment
 
 " Errors
-syn match yetiErr "}\|\]\|\*/"
-syn match yetiErr "\<\(done\|esac\|yrt\|then\|elif\|fi\|else\|of\|catch\|finally\)\>"
+syn match yetiError "}\|\]\|\*/"
+syn match yetiError "\<\(done\|esac\|yrt\|then\|elif\|fi\|else\|of\|catch\|finally\)\>"
 syn match yetiParenErr ")"
 
 
@@ -89,8 +89,10 @@ syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"
 syn match yetiConstant "\<\u\(\w\|'\)*\>"
 
+syn match yetiStringErr "\\."
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
-syn region yetiString start=+"+ skip=+\\\\\|\\`\|\\"+ end=+["\n]+ contains=yetiEmbedded
+syn match yetiSpecial "\\\([abefnrt0\'"]\|u\x\{4}\)" contained
+syn region yetiString start=+"+ end=+["\n]+ contains=yetiEmbedded,yetiSpecial,yetiStringErr
 syn region yetiString start=+\<'+ skip=+''+ end=+'+
 
 " Numbers: supporting integers and floating point numbers
@@ -162,9 +164,10 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiTypeDecl	yetiType
   HiLink yetiTypeOp	yetiType
   HiLink yetiCast	yetiOperator
-  HiLink yetiParenErr	yetiErr
+  HiLink yetiParenErr	yetiError
+  HiLink yetiStringErr	yetiError
 
-  HiLink yetiErr	Error
+  HiLink yetiError	Error
 
   HiLink yetiComment 	Comment
 
@@ -193,6 +196,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiExtends	Structure
 
   HiLink yetiTodo	Todo
+  HiLink yetiSpecial	SpecialChar
 
   delcommand HiLink
 endif
