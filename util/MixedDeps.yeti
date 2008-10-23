@@ -1,4 +1,4 @@
-module yeti.lang.compiler.MixedDeps;
+module yeti.ant.MixedDeps;
 
 import java.io.File;
 import org.apache.tools.ant.taskdefs.Javac;
