@@ -105,8 +105,8 @@ class ClassFinder {
             } catch (IOException ex) {
             }
         }
-        in = Thread.currentThread().getContextClassLoader()
-                           .getResourceAsStream(name);
+        ClassLoader clc = Thread.currentThread().getContextClassLoader();
+        in = clc != null ? clc.getResourceAsStream(name) : null;
         return in != null ? in :
                 getClass().getClassLoader().getResourceAsStream(name);
     }
