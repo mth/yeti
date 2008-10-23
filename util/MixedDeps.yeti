@@ -125,7 +125,7 @@ atFile ctx name =
         yetiFile ctx name
     fi;
 
-calculateDeps {fileMap, classMap} =
+calculateDeps targetDir {fileMap, classMap} =
    (depMap = [:];
     setHashDefault classMap \'';
     forHash fileMap do filename {deps}:
@@ -154,25 +154,27 @@ calculateDeps {fileMap, classMap} =
                             else
                                 a.filename < b.filename
                             fi) order;
-    groupBy (on (==) (.yeti)) order);
+    dirty {filename} =
+       ({modified, target} = fileMap.[filename];
+        classFile = new File(targetDir is ~File,
+                             strReplace '.' File#separator target ^ ".class");
+        classFile#lastModified() <= modified);
+    // everything starting from dirty file needs to be built
+    map (map (.filename))
+        (groupBy (on (==) (.yeti))
+                 (find dirty order)));
 
-checkFresh {fileMap, classMap} buildList =
-   (checkTime {filename} =
-       (checkDest
-        all 
-
-addDeps {fileMap, classMap} {filename is string, classes, deps, destination} =
+addDeps {fileMap, classMap} {filename is string, classes, deps, target} =
    (modified = new File(filename)#lastModified();
-    fileMap.[filename] := {deps = nub deps, modified, destination};
+    fileMap.[filename] := {deps = nub deps, modified, target};
     for classes do className:
         classMap.[className] := filename
     done);
 
-scanSources sources = 
+scanSources targetDir sources = 
    (ctx = {fileMap = [:], classMap = [:]};
     for sources (atFile (addDeps ctx));
-    buildList = calculateDeps ctx;
-    map (map (.filename)) buildList);
+    calculateDeps targetDir ctx);
 
 plurals l =
     if length l == 1 then "" else "s" fi;
@@ -197,9 +199,9 @@ class MixedCompileTask extends Javac
             done
         done;
         this#log("Scanning \(length sources) source file" ^ plurals sources);
-        ordered = scanSources sources;
+        order = scanSources destdir sources;
         toFile name = new File(name is string);
-        for ordered do files:
+        for order do files:
             if head files =~ '\.yeti$' then
                 this#log("Compiling \(length files) yeti source file" ^
                          plurals files);
