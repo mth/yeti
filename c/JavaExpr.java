@@ -203,7 +203,8 @@ class JavaExpr extends Code {
         if (descr.startsWith("Ljava/lang/")) {
             newInstr = argType.javaType.className();
             ctx.visitTypeInsn(NEW, newInstr);
-            ctx.visitInsn(DUP);
+            ctx.visitInsn(DUP_X1);
+            ctx.visitInsn(SWAP);
             descr = descr.substring(11, 12);
         }
         convertNum(ctx, descr);
