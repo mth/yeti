@@ -226,8 +226,8 @@ class MixedCompileTask extends Javac
         this#setFailonerror(true);
         for order do files:
             if head files =~ '\.yeti$' then
-                this#log("Compiling \(length files) yeti source file" ^
-                         plurals files);
+                this#log("Compiling \(length files) yeti source" ^
+                         plurals files ^ " to " ^ destdir);
                 if not (compileYeti () files) then
                     throw new BuildException(antError, this#getLocation())
                 fi
