@@ -4,16 +4,6 @@ import java.io.File;
 import org.apache.tools.ant.taskdefs.Javac;
 import org.apache.tools.ant.BuildException;
 
-findFiles path cb is ~File -> (string -> ()) -> () =
-    for (wrapArray path#listFiles()) do f:
-        if f#isHidden() then // ignore hidden ones
-        elif f#isFile() then
-            cb f#getPath()
-        elif f#isDirectory() and f#getName() !~ '^\.' then
-            findFiles f cb
-        fi
-    done;
-
 cleanJava = substAll
     '(?://[^\n]*+(?:\n|$)|/\*.*?\*/|"(?:[^"\\]|\\.)*+"|\s++)++' ' ';
 
@@ -79,7 +69,24 @@ javaFile addDeps filename =
                    [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
-        addDeps {filename, classes, deps = imports ++ types}
+        hasClass name =
+            any ((== strLower name) . strLower) classes;
+        name = like '(?i)(\w+)\.java$' filename ();
+        name = if empty? name then
+                   ""
+               elif package != "" then
+                   "\(package).\(name.[1])"
+               else
+                   name.[1]
+               fi;
+        target = if name != "" and (empty? classes or hasClass name) then
+                     name
+                 elif not (empty? classes) then
+                     head classes
+                 else
+                     ''
+                 fi;
+        addDeps {filename, classes, deps = imports ++ types, target}
     else
         println "|\(src)|"
     fi);
@@ -109,7 +116,7 @@ yetiFile addDeps filename =
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
-        addDeps {filename, classes = name :: classes, deps}
+        addDeps {filename, classes = name :: classes, deps, target = name}
     fi);
 
 atFile ctx name =
@@ -148,29 +155,25 @@ calculateDeps {fileMap, classMap} =
                             else
                                 a.filename < b.filename
                             fi) order;
-    map (map (.filename)) (groupBy (on (==) (.yeti)) order));
+    groupBy (on (==) (.yeti)) order);
 
-addDeps {fileMap, classMap} {filename is string, classes, deps} =
+checkFresh {fileMap, classMap} buildList =
+   (checkTime {filename} =
+       (checkDest
+        all 
+
+addDeps {fileMap, classMap} {filename is string, classes, deps, destination} =
    (modified = new File(filename)#lastModified();
-    fileMap.[filename] := {deps = nub deps, modified};
+    fileMap.[filename] := {deps = nub deps, modified, destination};
     for classes do className:
         classMap.[className] := filename
     done);
 
-/*
-srcdir = shift _argv;
-
-startTime = System#currentTimeMillis();
-println "Scanning sources...";
-
-sources = array [];
-findFiles new File(srcdir) (push sources);
-*/
-
 scanSources sources = 
    (ctx = {fileMap = [:], classMap = [:]};
     for sources (atFile (addDeps ctx));
-    calculateDeps ctx);
+    buildList = calculateDeps ctx;
+    map (map (.filename)) buildList);
 
 plurals l =
     if length l == 1 then "" else "s" fi;

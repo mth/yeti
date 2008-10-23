@@ -86,7 +86,9 @@ plus a b = a + b;
     const x _ = x,
     apply arg f = f arg,
     at h k = h.[k],
-    on f g a b = f (g a) (g b),
+
+    on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
+        new On(f, g) as ~Fun, 
 
     // functions for standard operators
     norec not v = not v,
