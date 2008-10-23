@@ -154,14 +154,11 @@ calculateDeps classPathModified targetDir {fileMap, classMap} =
                             else
                                 a.filename < b.filename
                             fi) order;
-    var freshLimit = classPathModified;
     dirty {filename} =
        ({modified, target} = fileMap.[filename];
         classFile = new File(targetDir is ~File,
                              strReplace '.' File#separator target ^ ".class");
-        classModified = classFile#lastModified();
-        classModified < freshLimit or (freshLimit := classModified;
-                                       classModified <= modified));
+        classFile#lastModified() <= max modified classPathModified);
     // everything starting from dirty same-level group needs to be built
     byLevel = groupBy (on (==) (.level)) order;
     build   = concat  (find (any dirty) byLevel);
