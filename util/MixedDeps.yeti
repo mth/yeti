@@ -159,10 +159,11 @@ calculateDeps targetDir {fileMap, classMap} =
         classFile = new File(targetDir is ~File,
                              strReplace '.' File#separator target ^ ".class");
         classFile#lastModified() <= modified);
-    // everything starting from dirty file needs to be built
-    map (map (.filename))
-        (groupBy (on (==) (.yeti))
-                 (find dirty order)));
+    // everything starting from dirty same-level group needs to be built
+    byLevel = groupBy (on (==) (.level)) order;
+    build   = concat  (find (any dirty) byLevel);
+    byLang  = groupBy (on (==) (.yeti)) build;
+    map (map (.filename)) byLang);
 
 addDeps {fileMap, classMap} {filename is string, classes, deps, target} =
    (modified = new File(filename)#lastModified();
