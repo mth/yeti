@@ -71,13 +71,13 @@ javaFile addDeps filename =
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
         name = like '(?i)(\w+)\.java$' filename ();
         name = if empty? name then
-                   ""
-               elif package != "" then
+                   ''
+               elif package != '' then
                    "\(package).\(name.[1])"
                else
                    name.[1]
                fi;
-        target = if name != "" and (empty? classes or
+        target = if name != '' and (empty? classes or
                                     any (on (==) strLower name) classes) then
                      name
                  elif not (empty? classes) then
@@ -86,8 +86,6 @@ javaFile addDeps filename =
                      ''
                  fi;
         addDeps {filename, classes, deps = imports ++ types, target}
-    else
-        println "|\(src)|"
     fi);
 
 removeArgs name =
