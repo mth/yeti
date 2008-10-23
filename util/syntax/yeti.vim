@@ -89,7 +89,7 @@ syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"
 syn match yetiConstant "\<\u\(\w\|'\)*\>"
 
-syn match yetiStringErr "\\."
+syn match yetiStringErr "\\." contained
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
 syn match yetiSpecial "\\\([abefnrt0\'"]\|u\x\{4}\)" contained
 syn region yetiString start=+"+ end=+["\n]+ contains=yetiEmbedded,yetiSpecial,yetiStringErr

@@ -125,7 +125,7 @@ atFile ctx name =
         yetiFile ctx name
     fi;
 
-calculateDeps targetDir {fileMap, classMap} =
+calculateDeps classPathModified targetDir {fileMap, classMap} =
    (depMap = [:];
     setHashDefault classMap \'';
     forHash fileMap do filename {deps}:
@@ -154,28 +154,35 @@ calculateDeps targetDir {fileMap, classMap} =
                             else
                                 a.filename < b.filename
                             fi) order;
+    var freshLimit = classPathModified;
     dirty {filename} =
        ({modified, target} = fileMap.[filename];
         classFile = new File(targetDir is ~File,
                              strReplace '.' File#separator target ^ ".class");
-        classFile#lastModified() <= modified);
+        classModified = classFile#lastModified();
+        classModified < freshLimit or (freshLimit := classModified;
+                                       classModified <= modified));
     // everything starting from dirty same-level group needs to be built
     byLevel = groupBy (on (==) (.level)) order;
     build   = concat  (find (any dirty) byLevel);
     byLang  = groupBy (on (==) (.yeti)) build;
     map (map (.filename)) byLang);
 
+lastModified filename is string -> number =
+    new File(filename)#lastModified();
+
 addDeps {fileMap, classMap} {filename is string, classes, deps, target} =
-   (modified = new File(filename)#lastModified();
+   (modified = lastModified filename;
     fileMap.[filename] := {deps = nub deps, modified, target};
     for classes do className:
         classMap.[className] := filename
     done);
 
-scanSources targetDir sources = 
-   (ctx = {fileMap = [:], classMap = [:]};
+scanSources classPath targetDir sources = 
+   (classPathModified = fold max 0 (map lastModified classPath);
+    ctx = {fileMap = [:], classMap = [:]};
     for sources (atFile (addDeps ctx));
-    calculateDeps targetDir ctx);
+    calculateDeps classPathModified targetDir ctx);
 
 plurals l =
     if length l == 1 then "" else "s" fi;
@@ -203,14 +210,14 @@ class MixedCompileTask extends Javac
             done
         done;
         this#log("Scanning \(length sources) source file" ^ plurals sources);
-        order = scanSources destdir sources;
+        classPath = map string (wrapArray this#getClasspath()#list());
+        order = scanSources classPath destdir sources;
         toFile name = new File(name is string);
         // lazy to avoid unnecessary initialisation of yeti compiler
         compileYeti = lazy do:
             yetic = load yeti.lang.compiler.repl (array []);
             yetic.gcj := true; // extra casts for safety
-            yetic.classPath :=
-                map string (wrapArray this#getClasspath()#list());
+            yetic.classPath := classPath;
             do files:
                 yetic.compileToFiles files "\(destdir)" do err:
                     this#log(err#getMessage())
