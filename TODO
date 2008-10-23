@@ -3,7 +3,6 @@
 
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
-* undef_num
 * Fix case A _: 1; _: 2 esac
 * Extendable structs?
 * Foreign structs
