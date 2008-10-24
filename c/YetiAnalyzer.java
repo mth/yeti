@@ -134,6 +134,8 @@ public final class YetiAnalyzer extends YetiType {
                 String nam = x.expr[0].sym();
                 return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
             }
+            if (kind == "new-array")
+                return newArray(x, scope, depth);
             if (kind == "classOf") {
                 String cn = x.expr[0].sym();
                 Type t = cn != "module" ? null :
@@ -402,6 +404,18 @@ public final class YetiAnalyzer extends YetiType {
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null)
                         .check(ref, scope.ctx.packageName), args, ref.line);
+    }
+
+    static Code newArray(XNode op, Scope scope, int depth) {
+        Code cnt = analyze(op.expr[1], scope, depth);
+        try {
+            unify(NUM_TYPE, cnt.type);
+        } catch (TypeException ex) {
+            throw new CompileException(op.expr[1],
+                "array size must be a number (but here was " + cnt.type + ")");
+        }
+        return new NewArrayExpr(JavaType.typeOfName(op.expr[0], scope),
+                                cnt, op.line);
     }
 
     static Code tryCatch(XNode t, Scope scope, int depth) {

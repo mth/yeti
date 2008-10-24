@@ -856,6 +856,7 @@ interface YetiParser {
         private Node readNew() {
             Node[] args = null;
             String name = "";
+            int dimensions = 0;
             while (args == null) {
                 int nline = line, ncol = p - lineStart + 1;
                 Node sym = fetch();
@@ -866,8 +867,19 @@ interface YetiParser {
                 name += ((Sym) sym).sym;
                 args = readArgs();
                 if (args == null) {
-                    char c;
-                    if (p >= src.length || (c = src[p]) != '.' && c != '$') {
+                    char c = p >= src.length ? '\000' : src[p];
+                    if (c == '[') {
+                        ++p;
+                        args = new Node[] { readSeq(']', null) };
+                        while (p + 1 < src.length &&
+                               src[p] == '[' && src[p + 1] == ']') {
+                            p += 2;
+                            ++dimensions;
+                        }
+                        ++dimensions;
+                        break;
+                    }
+                    if (c != '.' && c != '$') {
                         throw new CompileException(line, p - lineStart + 1,
                                     "Expecting constructor argument list");
                     }
@@ -876,9 +888,11 @@ interface YetiParser {
                 }
             }
             Node[] ex = new Node[args.length + 1];
+            for (int i = 0; i < dimensions; ++i)
+                name += "[]";
             ex[0] = new Sym(name.intern());
             System.arraycopy(args, 0, ex, 1, args.length);
-            return new XNode("new", ex);
+            return new XNode(dimensions == 0 ? "new" : "new-array", ex);
         }
 
         // #something or #something(...)

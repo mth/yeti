@@ -501,32 +501,23 @@ final class ArithOpFun extends BinOpRef {
         arg1.gen(ctx);
         ctx.visitLine(line);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-        boolean ii = method == "intDiv" || method == "rem" ||
-                     method == "shl" || method == "shr";
-        if (arg2 instanceof NumericConstant &&
-            ((NumericConstant) arg2).genInt(ctx, ii)) {
-            ctx.visitLine(line);
-            if (method == "shr") {
-                method = "shl";
+        boolean ii = method == "intDiv" || method == "rem";
+        if (method == "shl" || method == "shr") {
+            ctx.genInt(arg2, line);
+            if (method == "shr")
                 ctx.visitInsn(INEG);
-            }
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                                "shl", "(I)Lyeti/lang/Num;");
+        } else if (arg2 instanceof NumericConstant &&
+                 ((NumericConstant) arg2).genInt(ctx, ii)) {
+            ctx.visitLine(line);
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                 method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
             ctx.forceType("yeti/lang/Num");
-            return;
-        }
-        arg2.gen(ctx);
-        ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-        if (method == "shl" || method == "shr") {
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                "intValue", "()I");
-            if (method == "shr") {
-                ctx.visitInsn(INEG);
-            }
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                "shl", "(I)Lyeti/lang/Num;");
         } else {
+            arg2.gen(ctx);
+            ctx.visitLine(line);
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                     method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
         }
@@ -1063,10 +1054,7 @@ final class StrChar extends BinOpRef {
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         arg1.gen(ctx);
         ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
-        arg2.gen(ctx);
-        ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
+        ctx.genInt(arg2, line);
         ctx.visitInsn(DUP);
         ctx.intConst(1);
         ctx.visitInsn(IADD);

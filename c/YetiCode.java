@@ -364,7 +364,22 @@ final class Ctx implements Opcodes {
             visitInsn(n + 3);
         } else {
             visitInsn(-1);
-            m.visitLdcInsn(new Integer(n));
+            if (n >= -32768 && n <= 32767) {
+                m.visitIntInsn(n >= -128 && n <= 127 ? BIPUSH : SIPUSH, n);
+            } else {
+                m.visitLdcInsn(new Integer(n));
+            }
+        }
+    }
+
+    void genInt(Code arg, int line) {
+        if (arg instanceof NumericConstant) {
+            intConst(((NumericConstant) arg).num.intValue());
+        } else {
+            arg.gen(this);
+            visitLine(line);
+            visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+            visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
         }
     }
 
@@ -402,6 +417,11 @@ final class Ctx implements Opcodes {
     void visitVarInsn(int opcode, int var) {
         visitInsn(-1);
         m.visitVarInsn(opcode, var);
+    }
+
+    void visitIntInsn(int opcode, int param) {
+        visitInsn(-1);
+        m.visitIntInsn(opcode, param);
     }
 
     void visitTypeInsn(int opcode, String type) {
@@ -900,6 +920,44 @@ final class NewExpr extends JavaExpr {
         ctx.visitInsn(DUP);
         genCall(ctx, extraArgs.getCaptures(), INVOKESPECIAL);
         ctx.forceType(name);
+    }
+}
+
+final class NewArrayExpr extends Code {
+    private Code count;
+    private int line;
+
+    NewArrayExpr(YetiType.Type type, Code count, int line) {
+        this.type = type;
+        this.count = count;
+        this.line = line;
+    }
+
+    void gen(Ctx ctx) {
+        ctx.genInt(count, line);
+        ctx.visitLine(line);
+        if (type.param[0].type != YetiType.JAVA) { // array of arrays
+            ctx.visitTypeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));
+            return;
+        }
+        JavaType jt = type.param[0].javaType;
+        int t;
+        switch (jt.description.charAt(0)) {
+        case 'B': t = T_BYTE; break;
+        case 'C': t = T_CHAR; break;
+        case 'D': t = T_DOUBLE; break;
+        case 'F': t = T_FLOAT; break;
+        case 'I': t = T_INT; break;
+        case 'J': t = T_LONG; break;
+        case 'S': t = T_SHORT; break;
+        case 'Z': t = T_BOOLEAN; break;
+        case 'L':
+            ctx.visitTypeInsn(ANEWARRAY, jt.className());
+            return;
+        default:
+            throw new IllegalStateException("ARRAY<" + jt.description + '>');
+        }
+        ctx.visitIntInsn(NEWARRAY, t);
     }
 }
 
