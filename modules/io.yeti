@@ -31,15 +31,13 @@ module yeti.lang.io;
 import java.io.Reader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.BufferedReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.Thread;
-
-load yeti.lang.std;
 
 var stdin' = None ();
 
@@ -89,19 +87,26 @@ readerHandle reader is ~BufferedReader -> 'a =
                 synchronized reader do:
                     if used then
                         _ = length l
-                    fi
+                    fi;
+                    used := true
                 done
             finally
                 reader#close()
             yrt,
+
+        rawClose () =
+            synchronized reader do:
+                used := true;
+                reader#close()
+            done
     });
 
 stdin () =
     case stdin' of
     Some rh: rh;
     None _:
-       (rh = readerHandle new BufferedReader(
-                            new InputStreamReader(System#in), 8192);
+       (rh = readerHandle new SafeBufferedReader(
+                            new InputStreamReader(System#in));
         stdin' := Some rh;
         rh);
     esac;
@@ -117,12 +122,12 @@ withHandle h block =
 inputHandle stream encoding is ~InputStream -> string -> 'a =
    (var nok = true;
     try
-        r = new BufferedReader(
+        r = new SafeBufferedReader(
                     if encoding == "" then
                         new InputStreamReader(stream)
                     else
                         new InputStreamReader(stream, encoding)
-                    fi, 8192);
+                    fi);
         nok := false;
         readerHandle r
     finally
