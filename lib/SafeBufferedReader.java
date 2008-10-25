@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - function interface.
+ * Yeti core library - safe wrapper for buffered reader.
  *
  * Copyright (c) 2008 Madis Janson
  * All rights reserved.
@@ -30,43 +30,21 @@
  */
 package yeti.lang;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.io.IOException;
 
-final class LikeMatcher extends Fun {
-    private Matcher m;
+final class SafeBufferedReader extends java.io.BufferedReader {
+    private boolean closed;
 
-    LikeMatcher(Matcher m) {
-        this.m = m;
+    SafeBufferedReader(java.io.Reader in) {
+        super(in, 8192);
     }
 
-    public Object apply(Object _) {
-        if (!m.find()) {
-            return new MList();
-        }
-        Object[] r = new Object[m.groupCount() + 1];
-        for (int i = r.length; --i >= 0;) {
-            String s;
-            if ((s = m.group(i)) == null)
-                s = Core.UNDEF_STR;
-            r[i] = s;
-        }
-        return new MList(r);
-    }
-}
-
-public final class Like extends Fun {
-    private Pattern p;
-
-    public Like(Object pattern) {
-        p = Pattern.compile((String) pattern, Pattern.DOTALL);
+    public String readLine() throws IOException {
+        return closed ? null : super.readLine();
     }
 
-    public Object apply(Object v) {
-        return new LikeMatcher(p.matcher((CharSequence) v));
-    }
-
-    public String toString() {
-        return "<like " + Core.show(p.pattern()) + ">";
+    public void close() throws IOException {
+        closed = true;
+        super.close();
     }
 }

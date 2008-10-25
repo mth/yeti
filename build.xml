@@ -60,7 +60,7 @@
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           preload="" icast="${icast}"/>
+           preload="yeti/lang/std" icast="${icast}"/>
 </target>
 
 <target name="yeti" depends="compiler,checkmod,modules">
