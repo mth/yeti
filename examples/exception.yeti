@@ -1,0 +1,11 @@
+try
+    print "Give me a number: ";
+    half = number (readln ()) / 2;
+    writeFile "test/half.out" "" (`putLines` [string half])
+catch NumberFormatException:
+    println "Bad number it is"
+catch java.io.IOException ex:
+    println "IO error happened: \(ex)"
+finally
+    println "The hard staff has been finally done."
+yrt

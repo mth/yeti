@@ -2249,6 +2249,7 @@ unsafe cast, because such casts allow circumventing the Yeti typesystem
 
 Defining Java classes in Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _defining a new Java class:
 
 Java classes can be defined in the Yeti code.
 ::
@@ -2536,13 +2537,54 @@ can work and there are no restrictions on the value types.
 
 Exceptions
 ~~~~~~~~~~~~~
+Throwing exceptions in the Yeti code works exactly in the same way as
+in the Java, using a **throw**::
 
+    > throw new Exception("test")
+    java.lang.Exception: test
+            at code.apply(<>:1)
+            ...
 
+The argument of the **throw** operator must be a subclass of
+*java.lang.Throwable* and the type of the **throw** expression as a whole
+is *'a* - a polymorphic any type, as it actually never returns a
+value.
 
+Yeti do not have checked exceptions - any exception can be thrown from
+any function.
+
+Catching exceptions is done using **try** expression::
+
+    try
+        print "Give me a number: ";
+        half = number (readln ()) / 2;
+        writeFile "test/half.out" "" (`putLines` [string half])
+    catch NumberFormatException:
+        println "Bad number it is"
+    catch java.io.IOException ex:
+        println "IO error happened: \(ex)"
+    finally
+        println "The hard staff has been finally done."
+    yrt
+
+As it can be seen, the catch exception argument is optional (the exception
+type is required). The **catch** and **finally** blocks are both optional,
+but a try expression must have at least one **catch** or **finally** block.
+The **catch** block expressions must have same type as the main **try** body
+expression (which will be also the whole **try** expressions resulting type).
+The **finally** expressions value must have an *unit* type - it will be
+always executed as a last thing, before control leaves from the whole
+**try** expression. When **finally** is called with pending exception thrown
+from **try**'s body or **catch** block, and another exception is thrown from
+the finally, then the original exception will be discarded (and only the one
+thrown from the **finally** block will be thrown from the whole
+*try* expression).
+
+New exception types can be defined by `defining a new Java class`_,
+as the exceptions are normal Java objects.
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
-
 Lines should be shorter than 80 characters.
 
 Four spaces should be used as an unit of indention. Using tabs is possible,

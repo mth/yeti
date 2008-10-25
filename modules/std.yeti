@@ -170,7 +170,7 @@ plus a b = a + b;
     string x =
         "\(x)",
     number x =
-        Core#parseNum(x is string),
+        Core#parseNum(x is string unsafely_as ~String),
     min a b =
         if a < b then a else b fi,
     max a b =
