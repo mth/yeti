@@ -28,7 +28,6 @@
  */
 module yeti.http;
 
-load yeti.lang.std;
 load yeti.lang.io;
 
 {
