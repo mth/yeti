@@ -264,13 +264,14 @@ final class CompileCtx implements Opcodes {
             ctx.visitVarInsn(ALOAD, 0);
             ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
                                 "setArgv", "([Ljava/lang/String;)V");
-            Label codeStart = new Label(), exitStart = new Label();
-            ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
-                                   "yeti/lang/ExitError");
+            Label codeStart = new Label();
             ctx.visitLabel(codeStart);
             codeTree.gen(ctx);
             ctx.visitInsn(POP);
             ctx.visitInsn(RETURN);
+            Label exitStart = new Label();
+            ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
+                                   "yeti/lang/ExitError");
             ctx.visitLabel(exitStart);
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
                                 "getExitCode", "()I");
@@ -425,8 +426,9 @@ final class Ctx implements Opcodes {
     }
 
     void visitTypeInsn(int opcode, String type) {
-        if (lastInsn == -2 && opcode == CHECKCAST &&
-            type.equals(lastType)) {
+        if (opcode == CHECKCAST &&
+            (lastInsn == -2 && type.equals(lastType) ||
+             lastInsn == ACONST_NULL)) {
             return; // no cast necessary
         }
         visitInsn(-1);
@@ -1124,8 +1126,6 @@ final class TryCatch extends CapturingClosure {
 
     final class Catch extends BindRef implements Binder {
         Code handler;
-        Label start = new Label();
-        Label end;
 
         public BindRef getRef(int line) {
             return this;
@@ -1175,21 +1175,10 @@ final class TryCatch extends CapturingClosure {
         Label codeStart = new Label(), codeEnd = new Label();
         Label cleanupStart = cleanup == null ? null : new Label();
         Label cleanupEntry = cleanup == null ? null : new Label();
-        int catchCount = catches.size();
-        for (int i = 0; i < catchCount; ++i) {
-            Catch c = (Catch) catches.get(i);
-            mc.visitTryCatchBlock(codeStart, codeEnd, c.start,
-                                 c.type.javaType.className());
-            if (cleanupStart != null) {
-                c.end = new Label();
-                mc.visitTryCatchBlock(c.start, c.end, cleanupStart, null);
-            }
-        }
         genClosureInit(mc);
         int retVar = -1;
         if (cleanupStart != null) {
             retVar = mc.localVarCount++;
-            mc.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
             mc.visitInsn(ACONST_NULL);
             mc.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
         }
@@ -1216,18 +1205,28 @@ final class TryCatch extends CapturingClosure {
         } else {
             mc.visitInsn(ARETURN);
         }
-        for (int i = 0; i < catchCount; ++i) {
+        for (int i = 0, cnt = catches.size(); i < cnt; ++i) {
             Catch c = (Catch) catches.get(i);
-            mc.visitLabel(c.start);
+            Label catchStart = new Label();
+            mc.visitTryCatchBlock(codeStart, codeEnd, catchStart,
+                                  c.type.javaType.className());
+            Label catchEnd = null;
+            if (cleanupStart != null) {
+                catchEnd = new Label();
+                mc.visitTryCatchBlock(catchStart, catchEnd, cleanupStart, null);
+            }
+            mc.visitLabel(catchStart);
             mc.visitVarInsn(ASTORE, exVar);
             c.handler.gen(mc);
-            if (c.end != null) {
-                mc.visitLabel(c.end);
+            if (catchEnd != null) {
+                mc.visitLabel(catchEnd);
                 mc.visitJumpInsn(GOTO, cleanupEntry);
             } else {
                 mc.visitInsn(ARETURN);
             }
         }
+        if (cleanupStart != null)
+            mc.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
         mc.closeMethod();
     }
 }

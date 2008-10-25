@@ -369,15 +369,6 @@ final class Synchronized extends Core2 {
     }
 
     void genApply2(Ctx ctx, Code monitor, Code block, int line) {
-        Label startBlock = new Label(), endBlock = new Label();
-        Label startCleanup = new Label(), endCleanup = new Label();
-        Label end = new Label();
-        ctx.visitTryCatchBlock(startBlock, endBlock, startCleanup, null);
-        // I have no fucking idea, what this second catch is supposed
-        // to be doing. javac generates it, so it has to be good.
-        // yeah, sure...
-        ctx.visitTryCatchBlock(startCleanup, endCleanup,
-                                 startCleanup, null);
         monitor.gen(ctx);
         int monitorVar = ctx.localVarCount++;
         ctx.visitLine(line);
@@ -385,13 +376,22 @@ final class Synchronized extends Core2 {
         ctx.visitVarInsn(ASTORE, monitorVar);
         ctx.visitInsn(MONITORENTER);
 
+        Label startBlock = new Label(), endBlock = new Label();
         ctx.visitLabel(startBlock);
         new Apply(type, block, new UnitConstant(null), line).gen(ctx);
         ctx.visitLine(line);
         ctx.visitVarInsn(ALOAD, monitorVar);
         ctx.visitInsn(MONITOREXIT);
         ctx.visitLabel(endBlock);
+        Label end = new Label();
         ctx.visitJumpInsn(GOTO, end);
+
+        Label startCleanup = new Label(), endCleanup = new Label();
+        ctx.visitTryCatchBlock(startBlock, endBlock, startCleanup, null);
+        // I have no fucking idea, what this second catch is supposed
+        // to be doing. javac generates it, so it has to be good.
+        // yeah, sure...
+        ctx.visitTryCatchBlock(startCleanup, endCleanup, startCleanup, null);
 
         int exceptionVar = ctx.localVarCount++;
         ctx.visitLabel(startCleanup);
