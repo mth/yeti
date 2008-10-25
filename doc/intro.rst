@@ -2534,6 +2534,12 @@ function fields for simulating objects. This way the type inference
 can work and there are no restrictions on the value types.
 
 
+Exceptions
+~~~~~~~~~~~~~
+
+
+
+
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
 
