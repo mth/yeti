@@ -99,6 +99,8 @@
 <target name="libjar" depends="compiler,modules,yeti">
     <jar jarfile="${basedir}/yeti-lib.jar">
         <fileset dir="${basedir}/.build/lib"/>
+        <fileset dir="${basedir}/.build/std"/>
+        <fileset dir="${basedir}/.build/modules"/>
     </jar>
 </target>
 
