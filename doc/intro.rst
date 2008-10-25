@@ -2249,7 +2249,6 @@ unsafe cast, because such casts allow circumventing the Yeti typesystem
 
 Defining Java classes in Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. _defining a new Java class:
 
 Java classes can be defined in the Yeti code.
 ::
@@ -2264,6 +2263,8 @@ Java classes can be defined in the Yeti code.
 This defined a class ``Hello`` with one ``msg`` method,
 created a new instance of it, and then called the method. The method return
 and argument types must be specified explicitly (quite like in the Java code).
+
+.. _Defining a new java class:
 
 Super class can be specified using extends clause::
 
@@ -2578,7 +2579,7 @@ always executed as a last thing, before control leaves from the whole
 from **try**'s body or **catch** block, and another exception is thrown from
 the finally, then the original exception will be discarded (and only the one
 thrown from the **finally** block will be thrown from the whole
-*try* expression).
+**try** expression).
 
 New exception types can be defined by `defining a new Java class`_,
 as the exceptions are normal Java objects.
