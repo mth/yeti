@@ -52,6 +52,7 @@
 <target name="test1" depends="prepare-build,taskdef">
     <yetic srcdir="." destdir="." includes="test.yeti">
         <classpath>
+            <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>
         </classpath>
     </yetic>
@@ -59,14 +60,21 @@
 
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
+    <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
+           includes="std.yeti" preload="" icast="${icast}"/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           preload="yeti/lang/std" icast="${icast}"/>
+           excludes="std.yeti" preload="yeti/lang/std" icast="${icast}">
+        <classpath>
+            <path location="${basedir}/.build/std"/>
+        </classpath>
+    </yetic>
 </target>
 
 <target name="yeti" depends="compiler,checkmod,modules">
     <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
            icast="${icast}">
         <classpath>
+            <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>
         </classpath>
     </yetic>
@@ -82,6 +90,7 @@
         </manifest>
         <fileset dir="${basedir}/.build/lib"/>
         <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
+        <fileset dir="${basedir}/.build/std"/>
         <fileset dir="${basedir}/.build/modules"/>
         <zipfileset src="${asm}"/>
     </jar>
@@ -90,7 +99,6 @@
 <target name="libjar" depends="compiler,modules,yeti">
     <jar jarfile="${basedir}/yeti-lib.jar">
         <fileset dir="${basedir}/.build/lib"/>
-        <fileset dir="${basedir}/.build/modules"/>
     </jar>
 </target>
 
@@ -129,6 +137,7 @@
         </manifest>
         <fileset dir="${basedir}/.build/lib"/>
         <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
+        <fileset dir="${basedir}/.build/std"/>
         <fileset dir="${basedir}/.build/modules"/>
         <fileset dir="${basedir}/.build/mixedtask"/>
         <zipfileset src="${asm}"/>
