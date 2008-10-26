@@ -53,7 +53,7 @@ syn keyword yetiException catch containedin=yetiTry contained skipempty skipwhit
 syn keyword yetiException finally containedin=yetiTry contained
 syn keyword yetiException throw
 
-syn keyword yetiRepeat for forHash loop
+syn keyword yetiRepeat for forHash loop escape
 syn keyword yetiKeyword module program synchronized
 
 syn keyword yetiStorageClass var norec get set
@@ -75,7 +75,7 @@ syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash avoid
-syn keyword yetiFunction groupBy escape
+syn keyword yetiFunction groupBy
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
