@@ -53,7 +53,7 @@ syn keyword yetiException catch containedin=yetiTry contained skipempty skipwhit
 syn keyword yetiException finally containedin=yetiTry contained
 syn keyword yetiException throw
 
-syn keyword yetiRepeat for forHash loop escape
+syn keyword yetiRepeat for forHash loop withExit
 syn keyword yetiKeyword module program synchronized
 
 syn keyword yetiStorageClass var norec get set

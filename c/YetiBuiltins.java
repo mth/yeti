@@ -276,7 +276,7 @@ final class Tail extends IsNullPtr {
 
 final class Escape extends IsNullPtr {
     Escape(int line) {
-        super(YetiType.WITH_ESCAPE_TYPE, "escape", line);
+        super(YetiType.WITH_EXIT_TYPE, "withExit", line);
         normalIf = true;
     }
 

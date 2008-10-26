@@ -40,7 +40,7 @@ public final class EscapeFun extends Fun {
 
     public Object apply(Object arg) {
         if (used)
-            throw new IllegalStateException("escape out of context");
+            throw new IllegalStateException("exit out of context");
         value = arg;
         throw (escape = new EscapeError());
     }

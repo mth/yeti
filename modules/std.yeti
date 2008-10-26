@@ -500,6 +500,6 @@ plus a b = a + b;
             (l unsafely_as ~AList)#reverse() unsafely_as list<'a>
         fi,
 
-    escape f is (('a -> 'b) -> 'a) -> 'a =
+    withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
 }
