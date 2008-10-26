@@ -33,6 +33,7 @@ package yeti.lang;
 public final class EscapeFun extends Fun {
     private EscapeError escape;
     private boolean used;
+    private Object value;
 
     private EscapeFun() {
     }
@@ -40,7 +41,8 @@ public final class EscapeFun extends Fun {
     public Object apply(Object arg) {
         if (used)
             throw new IllegalStateException("escape out of context");
-        escape = new EscapeError(arg);
+        value = arg;
+        escape = new EscapeError();
         throw escape;
     }
 
@@ -50,7 +52,7 @@ public final class EscapeFun extends Fun {
             return f.apply(ef);
         } catch (EscapeError e) {
             if (e == ef.escape)
-                return e.value;
+                return ef.value;
             throw e;
         } finally {
             ef.used = true;
