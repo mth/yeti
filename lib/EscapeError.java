@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - exit exception.
+ * Yeti core library - escape exception.
  *
  * Copyright (c) 2008 Madis Janson
  * All rights reserved.
@@ -30,15 +30,5 @@
  */
 package yeti.lang;
 
-public class ExitError extends Error {
-    private int exitCode;
-
-    public ExitError(int exitCode) {
-        super("sysExit " + exitCode);
-    	this.exitCode = exitCode;
-    }
-
-    public int getExitCode() {
-    	return exitCode;
-    }
+public class EscapeError extends Error {
 }

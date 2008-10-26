@@ -63,7 +63,8 @@
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
            includes="std.yeti" preload="" icast="${icast}"/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           excludes="std.yeti" preload="yeti/lang/std" icast="${icast}">
+           includes="*.yeti" excludes="std.yeti"
+           preload="yeti/lang/std" icast="${icast}">
         <classpath>
             <path location="${basedir}/.build/std"/>
         </classpath>

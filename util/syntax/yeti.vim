@@ -62,7 +62,7 @@ syn keyword yetiAnyVar _
 syn keyword yetiBoolean false true none undef_bool undef_str
 syn keyword yetiFunction array filter fold id mapHash number head reverse tail
 syn keyword yetiFunction any all find index const at on setHashDefault flip sum
-syn keyword yetiFunction nullptr? empty? min max maybe abs push exit shift
+syn keyword yetiFunction nullptr? empty? min max maybe abs push sysExit shift
 syn keyword yetiFunction defined? wrapArray concat concatMap negate splitBy
 syn keyword yetiFunction ln exp cos sin tan acos asin atan sqrt strReplace
 syn keyword yetiFunction strSplit substAll strLength strUpper strLower strTrim
@@ -75,7 +75,7 @@ syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash avoid
-syn keyword yetiFunction groupBy
+syn keyword yetiFunction groupBy escape
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 

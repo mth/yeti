@@ -52,21 +52,28 @@ final class Constants implements Opcodes {
     Ctx ctx;
 
     void registerConstant(Object key, final Code code, Ctx ctx_) {
-        final String descr = 'L' + Code.javaType(code.type) + ';';
+        String descr = 'L' + Code.javaType(code.type) + ';';
         String name = (String) constants.get(key);
         if (name == null) {
-            if (sb == null) {
-                sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
-            }
-            name = "_".concat(Integer.toString(ctx.fieldCounter++));
-            ctx.cw.visitField(ACC_STATIC | ACC_FINAL, name, descr,
-                              null, null).visitEnd();
-            code.gen(sb);
-            sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
-            constants.put(key, name);
+            code.gen(initCtx());
+            constants.put(key, name = genField(descr));
         }
-        final String fieldName = name;
-        ctx_.visitFieldInsn(GETSTATIC, ctx.className, fieldName, descr);
+        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name, descr);
+    }
+
+    Ctx initCtx() {
+        if (sb == null) {
+            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
+        }
+        return sb;
+    }
+
+    String genField(String descr) {
+        String name = "_".concat(Integer.toString(ctx.fieldCounter++));
+        sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
+        ctx.cw.visitField(ACC_STATIC | ACC_FINAL, name, descr,
+                          null, null).visitEnd();
+        return name;
     }
 
     void close() {

@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - exit exception.
+ * Yeti core library - escape function.
  *
  * Copyright (c) 2008 Madis Janson
  * All rights reserved.
@@ -30,15 +30,32 @@
  */
 package yeti.lang;
 
-public class ExitError extends Error {
-    private int exitCode;
+public final class EscapeFun extends Fun {
+    private Object value;
+    private EscapeError escape;
 
-    public ExitError(int exitCode) {
-        super("sysExit " + exitCode);
-    	this.exitCode = exitCode;
+    private EscapeFun(EscapeError _escape) {
+        escape = _escape;
     }
 
-    public int getExitCode() {
-    	return exitCode;
+    public Object apply(Object arg) {
+        if (escape == null)
+            throw new IllegalStateException("escape out of context");
+        value = arg;
+        throw escape;
+    }
+
+    public static Object with(Fun f, EscapeError escape) {
+        EscapeFun ef = new EscapeFun(escape);
+        try {
+            return f.apply(ef);
+        } catch (EscapeError e) {
+            if (e != escape) {
+                throw e;
+            }
+            return ef.value;
+        } finally {
+            ef.escape = null;
+        }
     }
 }

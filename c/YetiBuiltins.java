@@ -116,6 +116,9 @@ final class BuiltIn implements Binder {
             r = new StaticRef("yeti/lang/Core", "UNDEF_STR",
                               YetiType.STR_TYPE, this, true, line);
             break;
+        case 24:
+            r = new Escape(line);
+            break;
         }
         r.binder = this;
         return r;
@@ -152,6 +155,7 @@ final class Argv extends BindRef {
 
 class IsNullPtr extends StaticRef {
     private String libName;
+    boolean normalIf;
 
     IsNullPtr(YetiType.Type type, String fun, int line) {
         super("yeti/lang/std$" + fun, "_", type, null, true, line);
@@ -167,7 +171,11 @@ class IsNullPtr extends StaticRef {
             }
 
             void genIf(Ctx ctx, Label to, boolean ifTrue) {
-                IsNullPtr.this.genIf(ctx, arg, to, ifTrue, line);
+                if (normalIf) {
+                    super.genIf(ctx, to, ifTrue);
+                } else {
+                    IsNullPtr.this.genIf(ctx, arg, to, ifTrue, line);
+                }
             }
         };
     }
@@ -263,6 +271,27 @@ final class Tail extends IsNullPtr {
                             "rest", "()Lyeti/lang/AList;");
         ctx.visitLabel(end);
         ctx.forceType("yeti/lang/AList");
+    }
+}
+
+final class Escape extends IsNullPtr {
+    Escape(int line) {
+        super(YetiType.WITH_ESCAPE_TYPE, "escape", line);
+        normalIf = true;
+    }
+
+    void gen(Ctx ctx, Code block, int line) {
+        Ctx init = ctx.constants.initCtx();
+        init.visitTypeInsn(NEW, "yeti/lang/EscapeError");
+        init.visitInsn(DUP);
+        init.visitInit("yeti/lang/EscapeError", "()V");
+        String exName = ctx.constants.genField("Lyeti/lang/EscapeError;");
+
+        block.gen(ctx);
+        ctx.visitFieldInsn(GETSTATIC, ctx.constants.ctx.className,
+                           exName, "Lyeti/lang/EscapeError;");
+        ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/EscapeFun", "with",
+            "(Lyeti/lang/Fun;Lyeti/lang/EscapeError;)Ljava/lang/Object;");
     }
 }
 
@@ -1063,3 +1092,4 @@ final class StrChar extends BinOpRef {
         ctx.forceType("java/lang/String");
     }
 }
+
