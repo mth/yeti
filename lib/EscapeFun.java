@@ -31,31 +31,29 @@
 package yeti.lang;
 
 public final class EscapeFun extends Fun {
-    private Object value;
     private EscapeError escape;
+    private boolean used;
 
-    private EscapeFun(EscapeError _escape) {
-        escape = _escape;
+    private EscapeFun() {
     }
 
     public Object apply(Object arg) {
-        if (escape == null)
+        if (used)
             throw new IllegalStateException("escape out of context");
-        value = arg;
+        escape = new EscapeError(arg);
         throw escape;
     }
 
-    public static Object with(Fun f, EscapeError escape) {
-        EscapeFun ef = new EscapeFun(escape);
+    public static Object with(Fun f) {
+        EscapeFun ef = new EscapeFun();
         try {
             return f.apply(ef);
         } catch (EscapeError e) {
-            if (e != escape) {
-                throw e;
-            }
-            return ef.value;
+            if (e == ef.escape)
+                return e.value;
+            throw e;
         } finally {
-            ef.escape = null;
+            ef.used = true;
         }
     }
 }

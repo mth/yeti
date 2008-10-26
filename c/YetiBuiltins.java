@@ -281,18 +281,10 @@ final class Escape extends IsNullPtr {
     }
 
     void gen(Ctx ctx, Code block, int line) {
-        Ctx init = ctx.constants.initCtx();
-        init.visitTypeInsn(NEW, "yeti/lang/EscapeError");
-        init.visitInsn(DUP);
-        init.visitInit("yeti/lang/EscapeError", "()V");
-        String exName = ctx.constants.genField("Lyeti/lang/EscapeError;");
-
         block.gen(ctx);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-        ctx.visitFieldInsn(GETSTATIC, ctx.constants.ctx.className,
-                           exName, "Lyeti/lang/EscapeError;");
         ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/EscapeFun", "with",
-            "(Lyeti/lang/Fun;Lyeti/lang/EscapeError;)Ljava/lang/Object;");
+                            "(Lyeti/lang/Fun;)Ljava/lang/Object;");
     }
 }
 
@@ -1093,4 +1085,3 @@ final class StrChar extends BinOpRef {
         ctx.forceType("java/lang/String");
     }
 }
-

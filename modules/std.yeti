@@ -501,5 +501,5 @@ plus a b = a + b;
         fi,
 
     escape f is (('a -> 'b) -> 'a) -> 'a =
-        EscapeFun#with(f, new EscapeError()) unsafely_as 'a,
+        EscapeFun#with(f) unsafely_as 'a,
 }

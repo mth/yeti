@@ -30,5 +30,14 @@
  */
 package yeti.lang;
 
-public class EscapeError extends Error {
+final class EscapeError extends Error {
+    final Object value;
+
+    EscapeError(Object _value) {
+        value = _value;
+    }
+
+    public Throwable fillInStackTrace() {
+        return this;
+    }
 }
