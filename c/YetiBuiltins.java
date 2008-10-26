@@ -288,6 +288,7 @@ final class Escape extends IsNullPtr {
         String exName = ctx.constants.genField("Lyeti/lang/EscapeError;");
 
         block.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
         ctx.visitFieldInsn(GETSTATIC, ctx.constants.ctx.className,
                            exName, "Lyeti/lang/EscapeError;");
         ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/EscapeFun", "with",
