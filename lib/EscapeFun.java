@@ -42,8 +42,7 @@ public final class EscapeFun extends Fun {
         if (used)
             throw new IllegalStateException("escape out of context");
         value = arg;
-        escape = new EscapeError();
-        throw escape;
+        throw (escape = new EscapeError());
     }
 
     public static Object with(Fun f) {
