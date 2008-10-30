@@ -3,6 +3,8 @@ module yeti.ant.MixedDeps;
 import java.io.File;
 import org.apache.tools.ant.taskdefs.Javac;
 import org.apache.tools.ant.BuildException;
+import java.lang.Class;
+import java.lang.Number;
 
 cleanJava = substAll
     '(?://[^\n]*+(?:\n|$)|/\*.*?\*/|"(?:[^"\\]|\\.)*+"|\s++)++' ' ';
@@ -70,8 +72,10 @@ javaFile addDeps filename =
             importMap.[className] := ()
         done;
         types = (typeFilter package importMap . concatMap collectList)
-                   [like '[(,;] ?(?:final |static )?([\w.]++) \w++ ?[,;=(]' src,
+                   [like ('[{(,;] ?(?:final |static )?' ^
+                          '([\w.]++) \w++(?= ?[,;=()])') src,
                     like '\W((?:[\w.]+\.)?[A-Z][a-zA-Z]*+)\.\w' src,
+                    like '\( ?([A-Z][a-zA-Z]*+) ?\)' src,
                     like '\W(?:new|extends|implements|throws) ([\w.]++)' src];
         name = like '(?i)(\w+)\.java$' filename ();
         name = if empty? name then
@@ -87,6 +91,7 @@ javaFile addDeps filename =
                  else
                      ''
                  fi;
+        //println "\(filename): \(imports)";
         addDeps {filename, classes, deps = imports ++ types, target}
     fi);
 
@@ -102,19 +107,22 @@ yetiFile addDeps filename =
         src = strRight src (strLength m.[0]);
         imports = collectList (like '\W(?:import|load) ([\w.]++)' src);
         importMap = mapImports imports;
-        classDefs = collect (like ('\Wclass (\w++)(?:\([^(]*+\))?+ ' ^
-                                   '(?:extends (\w++(?:\([^(]*+\))?+' ^
-                                   '(?: ?+, ?+\w++(?:\([^(]*+\))?+)*+) )') src)
+        classDefs = collect (like ('\Wclass (\w++)(?:\([^)]*+\))?+ ' ^
+                                   '(?:extends (\w++(?:\([^)]*+\))?+' ^
+                                   '(?: ?+, ?+\w++)*+) )?+') src)
                             () empty?;
         classes = map ((package ^ ) . removeArgs . (`at` 1)) classDefs;
-        extends = map removeArgs
-                      (concatMap (strSplit ' ?, ?' . (`at` 2)) classDefs);
+        extends =
+            map removeArgs
+                (filter (!= '')
+                        (concatMap (strSplit ' ?, ?' . (`at` 2)) classDefs));
         for classes do className:
             importMap.[className] := ()
         done;
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
         deps = imports ++ typeFilter package importMap (extends ++ uses);
+        //println "\(filename): \(classes)";
         addDeps {filename, classes = name :: classes, deps, target = name}
     fi);
 
@@ -163,6 +171,7 @@ calculateDeps classPathModified targetDir {fileMap, classMap} =
     byLevel = groupBy (on (==) (.level)) order;
     build   = concat  (find (any dirty) byLevel);
     byLang  = groupBy (on (==) (.yeti)) build;
+    //for byLang println;
     map (map (.filename)) byLang);
 
 lastModified filename is string -> number =
@@ -212,6 +221,7 @@ class MixedCompileTask extends Javac
         classPath = map string (wrapArray this#getClasspath()#list());
         order = scanSources classPath destdir sources;
         toFile name = new File(name is string);
+        classPath = classPath ++ ["\(destdir)"];
         // lazy to avoid unnecessary initialisation of yeti compiler
         compileYeti = lazy do:
             yetic = load yeti.lang.compiler.repl (array []);
@@ -232,8 +242,51 @@ class MixedCompileTask extends Javac
                     throw new BuildException(antError, this#getLocation())
                 fi
             else
-                this#compileList := map toFile files as ~File[];
-                this#compile()
+                this#log("Compiling \(length files) java source" ^
+                         plurals files ^ " to " ^ destdir);
+                args = array [];
+                if this#getDeprecation() then
+                    push args "-deprecation"
+                fi;
+                if not (empty? classPath) then
+                    push args "-classpath";
+                    push args (strJoin File#pathSeparator classPath);
+                fi;
+                push args "-d";
+                push args "\(destdir)";
+                if this#getDebug() then
+                    push args "-g"
+                fi;
+                if defined? this#getEncoding() then
+                    push args "-encoding";
+                    push args this#getEncoding()
+                fi;
+                if defined? this#getSource() then
+                    push args "-source";
+                    push args this#getSource()
+                fi;
+                if defined? this#getTarget() then
+                    push args "-target";
+                    push args this#getTarget()
+                fi;
+                if this#getVerbose() then
+                    push args "-verbose"
+                fi;
+                for files (push args);
+                result =
+                    try
+                        c = Class#forName("com.sun.tools.javac.Main");
+                        compiler = c#newInstance();
+                        compile = c#getMethod("compile",
+                                        [Class#forName('[Ljava.lang.String;')]);
+                        compile#invoke(compiler, [args as ~String[]])
+                    catch Exception ex:
+                        throw new BuildException("Error starting compiler",
+                                                 ex, this#getLocation())
+                    yrt;
+                if (result unsafely_as ~Number)#intValue() != 0 then
+                    throw new BuildException(antError, this#getLocation())
+                fi
             fi
         done
 end

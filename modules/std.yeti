@@ -429,6 +429,9 @@ plus a b = a + b;
     clearHash h is hash<'a, 'b> -> () =
         (h unsafely_as ~Hash)#clear(),
 
+    insertHash h h' is hash<'a, 'b> -> hash<'a, 'b> -> () =
+        _ = (h unsafely_as ~Hash)#putAll(h' unsafely_as ~Hash),
+
     length l is map<'a, 'b> -> number =
         if nullptr? l then
             0
