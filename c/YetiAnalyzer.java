@@ -457,15 +457,6 @@ public final class YetiAnalyzer extends YetiType {
         // try cast java types on apply
         Type funt = fun.type.deref(),
              funarg = funt.type == FUN ? funt.param[0].deref() : null;
-        if (funt.type == UNIT) {
-            throw new CompileException(where,
-                        "Missing ; (Cannot apply ())");
-        }
-        if (funt.type != FUN && funt.type != VAR) {
-            throw new CompileException(where, "Too many arguments applied " +
-                            "to a function, maybe a missing `;'?" +
-                            "\n    (cannot apply " + funt + " to an argument)");
-        }
         XNode lambdaArg = asLambda(arg);
         Code argCode = lambdaArg != null // prespecifing the lambda type
                 ? lambda(new Function(funarg), lambdaArg, scope, depth)
@@ -479,9 +470,29 @@ public final class YetiAnalyzer extends YetiType {
         try {
             unify(fun.type, new Type(FUN, applyFun));
         } catch (TypeException ex) {
-            throw new CompileException(where,
-                "Cannot apply " + fun.type + " to " + argCode.type +
-                " argument\n    " + ex.getMessage());
+            if (funt.type == UNIT) {
+                throw new CompileException(where,
+                            "Missing ; (Cannot apply ())");
+            }
+            if (funt.type != FUN && funt.type != VAR) {
+                throw new CompileException(where,
+                            "Too many arguments applied " +
+                            "to a function, maybe a missing `;'?" +
+                            "\n    (cannot apply " + funt + " to an argument)");
+            }
+            Type argt = argCode.type.deref();
+            String s = "Cannot apply " + fun.type + " to " + argCode.type +
+                       " argument\n    " + ex.getMessage();
+            if (funarg != null && funarg.type != FUN && argt.type == FUN) {
+                if (argCode instanceof Apply) {
+                    s += "\n    Maybe you should apply the function given" +
+                              " as an argument to more arguments.";
+                } else {
+                    s += "\n    Maybe you should apply the function given" +
+                              " as an argument to some arguments?";
+                }
+            }
+            throw new CompileException(where, s);
         }
         return fun.apply(argCode, applyFun[1], where.line);
     }
