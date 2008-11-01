@@ -559,12 +559,24 @@ public final class YetiAnalyzer extends YetiType {
         try {
             unify(arg, src.type);
         } catch (TypeException ex) {
-            if (src.type.deref().type == JAVA) {
+            int t = src.type.deref().type;
+            if (t == JAVA) {
                 throw new CompileException(member,
                     "Cannot use class " + src.type + " as a structure with ." +
                     field + " field\n    " +
                     "(use # instead of . to reference object fields/methods)",
                     ex);
+            }
+            if (src instanceof VariantConstructor) {
+                throw new CompileException(member,
+                    "Cannot use variant constructor " +
+                    ((VariantConstructor) src).name +
+                    " as a structure with ." + field + " field\n    " +
+                    "(use # instead of . to reference class fields/methods)");
+            }
+            if (t != STRUCT && t != VAR) {
+                throw new CompileException(member, "Cannot use " + src.type +
+                                " as a structure with ." + field + " field");
             }
             throw new CompileException(member,
                 src.type + " do not have ." + field + " field", ex);
