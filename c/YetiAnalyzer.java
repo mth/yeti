@@ -458,6 +458,15 @@ public final class YetiAnalyzer extends YetiType {
         // try cast java types on apply
         Type funt = fun.type.deref(),
              funarg = funt.type == FUN ? funt.param[0].deref() : null;
+        if (funt.type == UNIT) {
+            throw new CompileException(where,
+                        "Missing ; (Cannot apply ())");
+        }
+        if (funt.type != FUN && funt.type != VAR) {
+            throw new CompileException(where, "Too many arguments applied " +
+                            "to a function, maybe a missing `;'?" +
+                            "\n    (cannot apply " + funt + " to an argument)");
+        }
         XNode lambdaArg = asLambda(arg);
         Code argCode = lambdaArg != null // prespecifing the lambda type
                 ? lambda(new Function(funarg), lambdaArg, scope, depth)
@@ -472,8 +481,8 @@ public final class YetiAnalyzer extends YetiType {
             unify(fun.type, new Type(FUN, applyFun));
         } catch (TypeException ex) {
             throw new CompileException(where,
-                "Cannot apply " + argCode.type + " to " + fun.type +
-                "\n    " + ex.getMessage());
+                "Cannot apply " + fun.type + " to " + argCode.type +
+                " argument\n    " + ex.getMessage());
         }
         return fun.apply(argCode, applyFun[1], where.line);
     }
