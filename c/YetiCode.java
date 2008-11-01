@@ -1416,16 +1416,16 @@ final class Capture extends CaptureRef implements CaptureWrapper {
 }
 
 abstract class AClosure extends Code implements Closure {
-    private List vars = new ArrayList();
+    List closureVars = new ArrayList();
 
     public void addVar(BindExpr binder) {
-        vars.add(binder);
+        closureVars.add(binder);
     }
 
     public void genClosureInit(Ctx ctx) {
         int id = -1, mvarcount = 0;
-        for (int i = vars.size(); --i >= 0;) {
-            BindExpr bind = (BindExpr) vars.get(i);
+        for (int i = closureVars.size(); --i >= 0;) {
+            BindExpr bind = (BindExpr) closureVars.get(i);
             if (bind.assigned && bind.captured) {
                 if (id == -1) {
                     id = ctx.localVarCount++;
@@ -1547,7 +1547,7 @@ final class Function extends CapturingClosure implements Binder {
     // uncaptures captured variables if possible
     // useful for function inlineing, don't work with self-refs
     boolean uncapture(Code arg) {
-        if (selfRef != null)
+        if (selfRef != null || closureVars.size() != 0)
             return false;
         for (Capture c = captures; c != null; c = c.next) {
             c.uncaptured = true;
