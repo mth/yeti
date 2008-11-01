@@ -1370,7 +1370,7 @@ final class Capture extends CaptureRef implements CaptureWrapper {
     }
 
     public void genPreGet(Ctx ctx) {
-        if (uncaptured && wrapper != null) {
+        if (uncaptured) {
             wrapper.genPreGet(ctx);
         } else if (localVar == -1) {
             ctx.visitVarInsn(ALOAD, 0);
