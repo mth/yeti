@@ -429,9 +429,8 @@ public final class YetiAnalyzer extends YetiType {
             try {
                 unify(tc.cleanup.type, UNIT_TYPE);
             } catch (TypeException ex) {
-                throw new CompileException(t.expr[lastCatch],
-                                "finally block must have a unit type, not "
-                                + tc.cleanup.type, ex);
+                unitError(t.expr[lastCatch], tc.cleanup,
+                          "finally block must have a unit type", ex);
             }
             --lastCatch;
         }
@@ -709,8 +708,7 @@ public final class YetiAnalyzer extends YetiType {
         try {
             unify(body.type, UNIT_TYPE);
         } catch (TypeException ex) {
-            throw new CompileException(loop.right,
-                "Loop body must have a unit type, not " + body.type, ex);
+            unitError(loop.right, body, "Loop body must have a unit type", ex);
         }
         return new LoopExpr(cond, body);
     }
@@ -850,6 +848,19 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
+    static void unitError(Node where, Code value, String what,
+                          TypeException ex) {
+        String s = what + ", not a " + value.type;
+        Type t = value.type.deref();
+        int tt;
+        if (t.type == FUN &&
+            ((tt = t.param[1].deref().type) == VAR || tt == UNIT || tt == FUN)
+            && !(value instanceof BindRef) && !(value instanceof Function)) {
+            s += "\n    Maybe you should give more arguments to the function?";
+        }
+        throw new CompileException(where, s, ex);
+    }
+
     static Code analSeq(Seq seq, Scope scope, int depth) {
         Node[] nodes = seq.st;
         BindExpr[] bindings = new BindExpr[nodes.length];
@@ -916,8 +927,7 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     unify(UNIT_TYPE, code.type);
                 } catch (TypeException ex) {
-                    throw new CompileException(nodes[i],
-                        "Unit type expected here, not a " + code.type);
+                    unitError(nodes[i], code, "Unit type expected here", ex);
                 }
                 //code.ignoreValue();
                 addSeq(last, new SeqExpr(code));
@@ -1527,9 +1537,8 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     unify(root.type, UNIT_TYPE);
                 } catch (TypeException ex) {
-                    throw new CompileException(n,
-                        "Program body must have a unit type, not "
-                        + root.type, ex);
+                    unitError(n, root,
+                              "Program body must have a unit type", ex);
                 }
             }
             return root;
