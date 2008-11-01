@@ -44,7 +44,7 @@ public class CompileException extends RuntimeException {
 
     public CompileException(YetiParser.Node pos,
                             JavaClassNotFoundException ex) {
-        this(ex, pos, "Class not found: " + ex.getMessage());
+        this(ex, pos, "Unknown class: " + ex.getMessage());
     }
 
     public CompileException(YetiParser.Node pos, String what) {

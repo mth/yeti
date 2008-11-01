@@ -212,6 +212,9 @@ public class YetiType implements YetiParser {
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System", ROOT_SCOPE);
 
+    static final JavaType COMPARABLE =
+        JavaType.fromDescription("Ljava/lang/Comparable;");
+
     static Scope bindScope(String name, Binder binder, Scope scope) {
         return new Scope(scope, name, binder);
     }
@@ -719,6 +722,14 @@ public class YetiType implements YetiParser {
             case UNIT:
             case LIST_MARKER:
                 return;
+            case JAVA:
+                try {
+                    if (COMPARABLE.isAssignable(type.javaType) >= 0)
+                        return;
+                } catch (JavaClassNotFoundException ex) {
+                    throw new TypeException("Unknown class: " +
+                                                ex.getMessage());
+                }
         }
         TypeException ex = new TypeException(type + " is not an ordered type");
         ex.special = true;
