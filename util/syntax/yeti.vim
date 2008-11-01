@@ -102,7 +102,7 @@ syn match yetiMemberOp "\(\<\u\(\w\|\$\)*\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
 " Classes
 syn keyword yetiClass class skipempty skipwhite nextgroup=yetiClassDef
-syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiClassMod,yetiMethodArgs,yetiFieldDef,yetiComment contained
+syn region yetiClassDef matchgroup=yetiClassDef start="\w\+\>" matchgroup=yetiType end="\<end\>" keepend contains=yetiExtends,yetiClassType,yetiClassMod,yetiMethodArgs,yetiFieldDef,yetiComment extend contained
 syn keyword yetiClassType void boolean byte short int long float double number contained
 syn keyword yetiClassMod var static abstract contained
 syn keyword yetiExtends extends contained skipempty skipwhite nextgroup=yetiExtendClass
