@@ -745,25 +745,26 @@ class JavaType {
         to = to.deref();
         from = from.deref();
         boolean smart = true;
-        while (to.type == YetiType.MAP && from.type == YetiType.MAP &&
-               to.param[2].type == YetiType.LIST_MARKER &&
-               to.param[1].type != YetiType.NUM &&
+        while (from.type == YetiType.MAP &&
                from.param[2].type == YetiType.LIST_MARKER &&
-               from.param[1].type == YetiType.NONE) {
-            to = to.param[0].deref();
+               (to.type == YetiType.MAP &&
+                from.param[1].type == YetiType.NONE &&
+                to.param[2].type == YetiType.LIST_MARKER &&
+                to.param[1].type != YetiType.NUM ||
+                to.type == YetiType.JAVA_ARRAY)) {
             from = from.param[0].deref();
+            to = to.param[0].deref();
             smart = false;
         }
-        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA &&
-            to.type != YetiType.JAVA_ARRAY)
+        if (from.type != YetiType.JAVA)
             return false;
         if (to.type == YetiType.STR &&
                 from.javaType.description == "Ljava/lang/String;") {
             return true;
         }
         try {
-            return (to.type == YetiType.JAVA && to.javaType != from.javaType ||
-                    smart && to.type == YetiType.JAVA_ARRAY) &&
+            return to.type == YetiType.JAVA &&
+                    (to.javaType != from.javaType || !smart) &&
                    (smart ? isAssignable(where, to, from, true)
                           : to.javaType.isAssignable(from.javaType)) >= 0;
         } catch (JavaClassNotFoundException ex) {
