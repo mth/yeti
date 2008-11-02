@@ -753,15 +753,15 @@ class JavaType {
                 to.param[2].type == YetiType.LIST_MARKER &&
                 to.param[1].type != YetiType.NUM ||
                 to.type == YetiType.JAVA_ARRAY)) {
+            if (to.type == YetiType.JAVA_ARRAY)
+                mayExact = true;
             from = from.param[0].deref();
             to = to.param[0].deref();
             smart = false;
-            if (to.type == YetiType.JAVA_ARRAY)
-                mayExact = true;
         }
         if (from.type != YetiType.JAVA)
             return false;
-        if (to.type == YetiType.STR &&
+        if (to.type == YetiType.STR && smart &&
                 from.javaType.description == "Ljava/lang/String;") {
             return true;
         }

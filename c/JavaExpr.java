@@ -183,8 +183,10 @@ class JavaExpr extends Code {
         if (given.type != YetiType.NUM ||
             descr == "Ljava/lang/Object;" ||
             descr == "Ljava/lang/Number;") {
-            if (descr != "Ljava/lang/Object;")
+            if (descr != "Ljava/lang/Object;") {
+                System.err.println(argType);
                 ctx.visitTypeInsn(CHECKCAST, argType.javaType.className());
+            }
             return;
         }
         // Convert numbers...
