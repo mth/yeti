@@ -754,14 +754,16 @@ class JavaType {
             from = from.param[0].deref();
             smart = false;
         }
-        if (from.type != YetiType.JAVA)
+        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA &&
+            to.type != YetiType.JAVA_ARRAY)
             return false;
         if (to.type == YetiType.STR &&
                 from.javaType.description == "Ljava/lang/String;") {
             return true;
         }
         try {
-            return to.type == YetiType.JAVA && to.javaType != from.javaType &&
+            return (to.type == YetiType.JAVA && to.javaType != from.javaType ||
+                    smart && to.type == YetiType.JAVA_ARRAY) &&
                    (smart ? isAssignable(where, to, from, true)
                           : to.javaType.isAssignable(from.javaType)) >= 0;
         } catch (JavaClassNotFoundException ex) {
