@@ -745,6 +745,7 @@ class JavaType {
         to = to.deref();
         from = from.deref();
         boolean smart = true;
+        boolean mayExact = false;
         while (from.type == YetiType.MAP &&
                from.param[2].type == YetiType.LIST_MARKER &&
                (to.type == YetiType.MAP &&
@@ -755,6 +756,8 @@ class JavaType {
             from = from.param[0].deref();
             to = to.param[0].deref();
             smart = false;
+            if (to.type == YetiType.JAVA_ARRAY)
+                mayExact = true;
         }
         if (from.type != YetiType.JAVA)
             return false;
@@ -764,7 +767,7 @@ class JavaType {
         }
         try {
             return to.type == YetiType.JAVA &&
-                    (to.javaType != from.javaType || !smart) &&
+                    (to.javaType != from.javaType || mayExact) &&
                    (smart ? isAssignable(where, to, from, true)
                           : to.javaType.isAssignable(from.javaType)) >= 0;
         } catch (JavaClassNotFoundException ex) {
