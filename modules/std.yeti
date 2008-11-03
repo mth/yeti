@@ -36,8 +36,7 @@ class FailureException(String what)
 end;
 
 // struct inner bindings are non-polymorphic
-array l is list?<'a>
--> array<'a> =
+array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
@@ -139,12 +138,7 @@ plus a b = a + b;
     // damn struct polymorphism restriction. is it really needed?
     array, fold, find, index, keys, hash,
 
-    wrapArray a is 'a[] -> array<'a> =
-        if nullptr? a then
-            new MList([])
-        else
-            new MList(a)
-        fi unsafely_as array<'a>,
+    wrapArray a is 'a[] -> array<'a> = a,
 
     list a is map<'k, 'a> -> list<'a> =
         if empty? a then

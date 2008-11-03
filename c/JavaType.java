@@ -749,13 +749,15 @@ class JavaType {
         if (from.type == YetiType.JAVA_ARRAY && to.type == YetiType.MAP &&
             ((mapKind = to.param[2].deref()).type == YetiType.LIST_MARKER ||
              mapKind.type == YetiType.VAR)) {
-            YetiType.Type fp = from.param[0].deref(),
-                          tp = to.param[0].deref();
+            YetiType.Type tp = to.param[0].deref();
             if (tp.type == YetiType.VAR) {
-                try {
-                    YetiType.unifyToVar(tp, from.param[0].deref());
-                } catch (YetiType.TypeException ex) {
-                    return false;
+                YetiType.Type fp = from.param[0].deref();
+                if (fp != tp) {
+                    try {
+                        YetiType.unifyToVar(tp, fp);
+                    } catch (YetiType.TypeException ex) {
+                        return false;
+                    }
                 }
             } else if (isAssignable(where, tp, from.param[0], false) < 0) {
                 return false;
