@@ -204,21 +204,21 @@ class MixedCompileTask extends Javac
         srcdir = this#getSrcdir();
         destdir = this#getDestdir();
         sources = array [];
-        for (wrapArray srcdir#list()) do src:
+        for srcdir#list() do src:
             dir = this#getProject()#resolveFile(src);
             if not dir#exists() then
                 throw new BuildException("No srcdir=\"\(dir)\"",
                                          this#getLocation())
             fi;
             files = this#getDirectoryScanner(dir)#getIncludedFiles();
-            for (wrapArray files) do name:
+            for files do name:
                 if name =~ '\.java$|\.yeti$' then
                     push sources "\(new File(dir, name))"
                 fi
             done
         done;
         this#log("Scanning \(length sources) source file" ^ plurals sources);
-        classPath = map string (wrapArray this#getClasspath()#list());
+        classPath = map string this#getClasspath()#list();
         order = scanSources classPath destdir sources;
         toFile name = new File(name is string);
         classPath = classPath ++ ["\(destdir)"];

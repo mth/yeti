@@ -1107,7 +1107,7 @@ final class Cast extends JavaExpr {
 
     void gen(Ctx ctx) {
         if (convert) {
-            convertedArg(ctx, object, type, line);
+            convertedArg(ctx, object, type.deref(), line);
         } else {
             object.gen(ctx);
         }

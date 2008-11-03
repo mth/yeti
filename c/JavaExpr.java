@@ -184,7 +184,6 @@ class JavaExpr extends Code {
             descr == "Ljava/lang/Object;" ||
             descr == "Ljava/lang/Number;") {
             if (descr != "Ljava/lang/Object;") {
-                System.err.println(argType);
                 ctx.visitTypeInsn(CHECKCAST, argType.javaType.className());
             }
             return;
@@ -316,6 +315,34 @@ class JavaExpr extends Code {
         }
         if (arg instanceof StringConstant)
             return false;
+        // conversion from array to list
+        if (argType.type == YetiType.MAP && given.type == YetiType.JAVA_ARRAY) {
+            Label isNull = new Label(), end = new Label();
+            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
+            ctx.visitInsn(DUP);
+            ctx.visitJumpInsn(IFNULL, isNull);
+            if (argType.param[1].deref().type == YetiType.NONE) {
+                ctx.visitInsn(DUP);
+                ctx.visitInsn(ARRAYLENGTH);
+                ctx.visitJumpInsn(IFEQ, isNull);
+            }
+            ctx.visitTypeInsn(NEW, "yeti/lang/MList");
+            ctx.visitInsn(DUP_X1);
+            ctx.visitInsn(SWAP);
+            ctx.visitInit("yeti/lang/MList", "([Ljava/lang/Object;)V");
+            ctx.visitJumpInsn(GOTO, end);
+            ctx.visitLabel(isNull);
+            ctx.visitInsn(POP);
+            if (argType.param[1].deref().type == YetiType.NONE) {
+                ctx.visitInsn(ACONST_NULL);
+            } else {
+                ctx.visitTypeInsn(NEW, "yeti/lang/MList");
+                ctx.visitInsn(DUP);
+                ctx.visitInit("yeti/lang/MList", "()V");
+            }
+            ctx.visitLabel(end);
+            return false;
+        }
         return true;
     }
 
