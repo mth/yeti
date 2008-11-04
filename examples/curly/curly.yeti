@@ -22,6 +22,11 @@
  *
  * Function application is simply:
  *  identifier { arguments... }
+ *
+ * As it can be seen, the language uses _only_ curly braces. Should be good?
+ * For a good measure it also uses an infix function call syntax,
+ * as C's fubar(a, b) will become fubar{a b} in the curly language.
+ * What else curly-brace lovers could want?
  */
 
 compile tokens topLevel result =
