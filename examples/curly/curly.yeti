@@ -65,7 +65,7 @@ compile tokens topLevel result =
                 _: failWith "if {condition true-expression false-expression}";
                 esac;
             'list':
-                "[\(strJoin "," code))";
+                "[\(strJoin "," code)]";
             _:
                 "(\(strJoin " " ("(\(fun))" :: code)))";
             esac :: result);
