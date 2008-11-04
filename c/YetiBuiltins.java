@@ -194,7 +194,7 @@ class IsNullPtr extends StaticRef {
 
 final class IsDefined extends IsNullPtr {
     IsDefined(int line) {
-        super(YetiType.A_TO_BOOL, "defined?", line);
+        super(YetiType.A_TO_BOOL, "defined$q", line);
     }
 
     void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {

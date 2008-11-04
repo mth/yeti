@@ -1,0 +1,91 @@
+/*
+ * There is a legend, that some programmers prefer languages with a lot
+ * of curly braces.
+ * So this is a simple compiler that compiles `curly' language into Yeti.
+ * 
+ * Syntax is following:
+ *
+ *  begin { expressions... }
+ *      Sequencing expression, same as `;' operator in Yeti.
+ *
+ *  let { identifier value expression }
+ *      Bind expression, same as `=' operator in Yeti.
+ *
+ *  do { arguments... expression }
+ *      Lambda expression.
+ *
+ *  if { condition true-expression false-expression }
+ *      Conditional expression.
+ *
+ *  list { elements... }
+ *      List literal, same as [ element, elements... ] in Yeti.
+ *
+ * Function application is simply:
+ *  identifier { arguments... }
+ */
+
+compile tokens topLevel result =
+    case tokens of
+    '{' :: _:
+        failWith "Unexpected {";
+    '}' :: rest:
+        if topLevel then
+            failWith "Unexpected }"
+        fi;
+        {code = reverse result, rest};
+    '' :: rest:
+        compile rest topLevel result;
+    fun :: '{' :: t:
+        {code, rest} = compile t false [];
+        compile rest topLevel
+           (case fun of
+            'begin':
+                "(\(strJoin ";" code))";
+            'let':
+                case code of
+                [name, value, expr]:
+                    "(\(name) = \(value); \(expr))";
+                _: failWith "let {name value expr}";
+                esac;
+            'do':
+                case reverse code of
+                expr :: args:
+                    "do \(strJoin ' ' (reverse args)): \(expr) done";
+                _: '\()';
+                esac;
+            'if':
+                case code of
+                [condition, yes, no]:
+                    "if \(condition) then \(yes) else \(no) fi";
+                _: failWith "if {condition true-expression false-expression}";
+                esac;
+            'list':
+                "[\(strJoin "," code))";
+            _:
+                "(\(strJoin " " ("(\(fun))" :: code)))";
+            esac :: result);
+    a :: '' :: rest:
+        compile (a :: rest) topLevel result;
+    a :: rest:
+        compile rest topLevel
+                (if a =~ '^[\w"]' then a else "\(a)" fi :: result);
+    _:
+        if not topLevel then
+            failWith "expected }"
+        fi;
+        {code = reverse result, rest = []}
+    esac;
+
+srcName = _argv.[0];
+baseName = like '^(.*)\.[^\\/.]+$' srcName ();
+baseName = if empty? baseName then srcName else baseName.[1] fi;
+src = readFile srcName '' getContents;
+
+tokens = matchAll ('/\*.*?\*/|\s+|([{}])|(\w[\w''$?~]*+)|' ^
+                   '("(?:[^\\"]|\\.)*+")|([!#%&*+/<=>@^|-]++)')
+                  (avoid (not . defined?) . (++ ['']) . tail)
+                  (failWith . ('Unexpected token: ' ^)) src;
+
+{code} = compile tokens true [];
+
+writeFile "\(baseName).yeti" '' (flip (.write) (strJoin ';' code))

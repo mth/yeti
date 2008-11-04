@@ -1,0 +1,18 @@
+/*
+ * Simple factorial function in the curly language.
+ */
+let { factorial
+    do { x
+        if { == { x 0 }
+            1
+            * { x factorial { - { x 1 } } }
+        }
+    }
+    let { print_factorial
+        do { x
+            println { ^ { ^ { "factorial " x }
+                          ^ { " = " factorial { 5 } } } }
+        }
+        print_factorial { 5 }
+    }
+}
