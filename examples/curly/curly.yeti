@@ -73,7 +73,7 @@ compile tokens topLevel result =
         compile (a :: rest) topLevel result;
     a :: rest:
         compile rest topLevel
-                (if a =~ '^[\w"]' then a else "\(a)" fi :: result);
+                (if a =~ '^[\w"]' then a else "(\(a))" fi :: result);
     _:
         if not topLevel then
             failWith "expected }"
