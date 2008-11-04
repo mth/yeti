@@ -18,7 +18,7 @@
  *      Conditional expression.
  *
  *  list { elements... }
- *      List literal, same as [ element, elements... ] in Yeti.
+ *      List literal, same as [ element, ... ] in Yeti.
  *
  * Function application is simply:
  *  identifier { arguments... }
