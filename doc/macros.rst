@@ -4,6 +4,7 @@ Yeti Macros
 
 Macro is a compile time code template function.
 ::
+
         foo = syntax (2: 3)
                      (`...`: syntax x: x / 2)
                      ((x; y): x + y)
@@ -14,7 +15,7 @@ Macro is a compile time code template function.
         foo (2; 3)  // 2 + 3
         foo (1 + 2) // (1 + 2) * (1 + 2)
         
-        bar = syntax (x: syntax y: x * y);
+        bar = syntax (x: syntax (y: x * y));
 
         bar 3 4    // 3 * 4
 
@@ -22,7 +23,7 @@ Macros are first-class values at compile time. That means for example, that
 it is possible to pass syntax definition as an argument to another syntax
 definition or not bind syntax definition to a name::
 
-        (syntax x: x * x) 3
+        (syntax (x: x * x)) 3
 
 Recursive use of macros can be quite powerful, but syntax elements
 with iterated content will create problems. This can be solved by having
