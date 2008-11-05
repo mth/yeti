@@ -30,7 +30,7 @@ with iterated content will create problems. This can be solved by having
 a way to convert that iteration into recursive representation.
 
 For example, it is hard to construct variable length list (like [1, 2, 4])
-using macros, but it will be easy to construct 1 \:: 2 \:: 4.
+using macros, but it will be easy to construct 1 \:: 2 \:: 4 \:: [].
 
 Such recursive representations have to be given to other language constructs
 also. For example classes could have concatenation::
