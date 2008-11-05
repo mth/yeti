@@ -32,8 +32,8 @@ a way to convert that iteration into recursive representation.
 For example, it is hard to construct variable length list (like [1, 2, 4])
 using macros, but it will be easy to construct 1 \:: 2 \:: 4 \:: [].
 
-Such recursive representations have to be given to other language constructs
-also. For example classes could have concatenation::
+Such concatenative representations have to be given to other syntax elements
+also. For example classes::
 
         class Foo
                 void print(String s)
@@ -43,5 +43,5 @@ also. For example classes could have concatenation::
                         "kala"
         end
 
-Another problematic constructs will be structures, hashes and case.
+Another problematic syntax elements will be structures, hashes and case.
 
