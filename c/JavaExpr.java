@@ -46,6 +46,7 @@ class JavaExpr extends Code {
         this.line = line;
     }
 
+    // convert to java
     private static void convert(Ctx ctx, YetiType.Type given,
                          YetiType.Type argType) {
         given = given.deref();
@@ -295,9 +296,6 @@ class JavaExpr extends Code {
             }
             return false;
         }
-        if (given.type == YetiType.JAVA) {
-            return true;
-        }
         ctx.visitLine(line);
         if (descr == "C") {
             ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
@@ -343,7 +341,8 @@ class JavaExpr extends Code {
             ctx.visitLabel(end);
             return false;
         }
-        return true;
+        return argType.type == YetiType.JAVA ||
+               argType.type == YetiType.JAVA_ARRAY;
     }
 
     static void genValue(Ctx ctx, Code arg, YetiType.Type argType, int line) {

@@ -463,8 +463,7 @@ public final class YetiAnalyzer extends YetiType {
                 : analyze(arg, scope, depth);
         if (funarg != null &&
             JavaType.isSafeCast(where, funarg, argCode.type)) {
-            argCode = new Cast(argCode, funarg, funarg.javaType != null,
-                               where.line);
+            argCode = new Cast(argCode, funarg, true, where.line);
         }
         Type[] applyFun = { argCode.type, new Type(depth) };
         try {
