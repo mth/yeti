@@ -1223,7 +1223,8 @@ public final class YetiAnalyzer extends YetiType {
                         throw new CompileException(pat.left, variant +
                             ": Variant constructor must start with upper case");
                     }
-                    if ((t.type != VAR || t.ref != null) && t.type != VARIANT) {
+                    t = t.deref();
+                    if (t.type != VAR && t.type != VARIANT) {
                         throw new CompileException(node,
                             "Variant " + variant + " ... is not " + t);
                     }
