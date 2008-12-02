@@ -45,7 +45,7 @@ also. For example classes::
 
 Another problematic syntax elements will be structures, hashes and case.
 
- Implementation.
+Implementation.
 ~~~~~~~~~~~~~~~~~
 
 Implementation should be quite easy.
