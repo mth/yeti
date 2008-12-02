@@ -45,3 +45,27 @@ also. For example classes::
 
 Another problematic syntax elements will be structures, hashes and case.
 
+ Implementation.
+~~~~~~~~~~~~~~~~~
+
+Implementation should be quite easy.
+
+ 1. Parser has to parse the syntax definitions.
+ 2. Analyser has to recognize and analyze the syntax definitions.
+ 3. Bind expression must support binding syntax definitions.
+ 4. Modules have to store top-level syntax definitions
+    (similar to type definitions).
+
+Note: Syntax definition can be used only where application/operator is expected.
+
+Application of syntax definition has 2 stages.
+
+ 1. Pattern matching against the syntax argument pattern.
+    Pattern variables will be bound (the identifiers have to be made unique).
+ 2. The pattern body will be analyzed like any other AST subtree,
+    but the scope has the captured pattern variables.
+
+There is a special case with appling syntax definition in a
+sequence - if the pattern body is a sequence, the bindings from
+it have to be bound into the outer sequence.
+
