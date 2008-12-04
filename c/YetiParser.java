@@ -1014,6 +1014,16 @@ interface YetiParser {
             return new XNode("try", expr);
         }
 
+        private Sym readDottedType(String what) {
+            Sym t = readDotted(false, what);
+            int s = p;
+            while (src.length > p + 1 && src[p] == '[' && src[p + 1] == ']')
+                p += 2;
+            if (s != p)
+                t.sym = t.sym.concat(new String(src, s, p - s)).intern();
+            return t;
+        }
+
         private Node readArgDefs() {
             int line_ = line, col_ = p++ - lineStart + 1;
             List args = new ArrayList();
@@ -1022,13 +1032,7 @@ interface YetiParser {
                     throw new CompileException(line, p - lineStart,
                                                "Expecting , or )");
                 }
-                Sym t = readDotted(false, "Expected argument type, found ");
-                int s = p;
-                while (src.length > p + 1 && src[p] == '[' && src[p + 1] == ']')
-                    p += 2;
-                if (s != p)
-                    t.sym = t.sym.concat(new String(src, s, p - s)).intern();
-                args.add(t);
+                args.add(readDottedType("Expected argument type, found "));
                 Node name = fetch();
                 if (!(name instanceof Sym)) {
                     throw new CompileException(name,
@@ -1041,6 +1045,9 @@ interface YetiParser {
                                 new Node[args.size()])).pos(line_, col_);
         }
 
+        private static final String EXPECT_DEF =
+                "Expected field or method definition, found";
+
         private Node readClassDef() {
             List defs = new ArrayList();
             Node node = fetch();
@@ -1052,8 +1059,8 @@ interface YetiParser {
             defs.add(p < src.length && src[p] == '(' ? readArgDefs()
                         : new XNode("argument-list", new Node[0]));
             List l = new ArrayList();
-            node = readDotted(false, "Expected extends, field or "
-                                     + "method definition, found ");
+            node = readDottedType("Expected extends, field or "
+                                  + "method definition, found ");
             Node epos = node;
             if (node.sym() == "extends") {
                 do {
@@ -1062,9 +1069,7 @@ interface YetiParser {
                     l.add(new XNode("arguments", readArgs()).pos(line_, col_));
                 } while ((p = skipSpace()) < src.length && src[p++] == ',');
                 --p;
-                node = fetch();
-            } else if (node.sym() == "var") {
-                node = new XNode("var").pos(node.line, node.col);
+                node = readDottedType(EXPECT_DEF);
             }
             defs.add(new XNode("extends", (Node[]) l.toArray(
                             new Node[l.size()])).pos(epos.line, epos.col));
@@ -1072,9 +1077,10 @@ interface YetiParser {
             eofWas = node;
             while (!(eofWas instanceof Sym) || ((Sym) eofWas).sym != "end") {
                 if (node == null)
-                    node = fetch();
-                if (node.kind == "var" || node.kind == "norec") {
-                    l.add(node);
+                    node = readDottedType(EXPECT_DEF);
+                String vsym = node.sym();
+                if (vsym == "var" || vsym == "norec") {
+                    l.add(new XNode(vsym).pos(node.line, node.col));
                     node = fetch();
                 }
                 String meth = "method";
