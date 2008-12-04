@@ -74,8 +74,11 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
         void gen(Ctx ctx) {
             ctx.visitVarInsn(ALOAD, argn);
-            if (javaType.javaType.description.charAt(0) == 'L')
+            if (javaType.type == YetiType.JAVA_ARRAY) {
+                ctx.forceType(JavaType.descriptionOf(javaType));
+            } else if (javaType.javaType.description.charAt(0) == 'L') {
                 ctx.forceType(javaType.javaType.className());
+            }
         }
 
         boolean flagop(int flag) {
