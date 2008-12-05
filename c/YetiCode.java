@@ -987,7 +987,7 @@ final class MethodCall extends JavaExpr {
         ctx.visitMethodInsn(invokeInsn, className, name, descr);
     }
 
-    void gen(Ctx ctx) {
+    private void _gen(Ctx ctx) {
         classType = method.classType.javaType;
         int ins = object == null ? INVOKESTATIC : classType.isInterface()
                                  ? INVOKEINTERFACE : INVOKEVIRTUAL;
@@ -1000,10 +1000,24 @@ final class MethodCall extends JavaExpr {
             }
         }
         genCall(ctx, null, ins);
+    }
+
+    void gen(Ctx ctx) {
+        _gen(ctx);
         if (method.returnType == YetiType.UNIT_TYPE) {
             ctx.visitInsn(ACONST_NULL);
         } else {
             convertValue(ctx, method.returnType);
+        }
+    }
+
+    void genIf(Ctx ctx, Label to, boolean ifTrue) {
+        if (method.returnType.javaType != null &&
+                method.returnType.javaType.description == "Z") {
+            _gen(ctx);
+            ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+        } else {
+            super.genIf(ctx, to, ifTrue);
         }
     }
 }
