@@ -205,12 +205,16 @@ public class YetiType implements YetiParser {
         bindImport("NumberFormatException", "java/lang/NumberFormatException",
         bindImport("Math", "java/lang/Math",
         bindImport("Object", "java/lang/Object",
+        bindImport("Boolean", "java/lang/Boolean",
         bindImport("Integer", "java/lang/Integer",
+        bindImport("Long", "java/lang/Long",
+        bindImport("Double", "java/lang/Double",
         bindImport("String", "java/lang/String",
-    null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+    null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
-        bindImport("System", "java/lang/System", ROOT_SCOPE);
+        bindImport("System", "java/lang/System",
+        bindImport("Class", "java/lang/Class", ROOT_SCOPE));
 
     static final JavaType COMPARABLE =
         JavaType.fromDescription("Ljava/lang/Comparable;");

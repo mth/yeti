@@ -220,7 +220,6 @@ class MixedCompileTask extends Javac
         this#log("Scanning \(length sources) source file" ^ plurals sources);
         classPath = map string this#getClasspath()#list();
         order = scanSources classPath destdir sources;
-        toFile name = new File(name is string);
         classPath = classPath ++ ["\(destdir)"];
         // lazy to avoid unnecessary initialisation of yeti compiler
         compileYeti = lazy do:
