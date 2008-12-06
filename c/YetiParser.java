@@ -1075,6 +1075,7 @@ interface YetiParser {
                             new Node[l.size()])).pos(epos.line, epos.col));
             l.clear();
             eofWas = node;
+        collect:
             while (!(eofWas instanceof Sym) || ((Sym) eofWas).sym != "end") {
                 if (node == null)
                     node = readDottedType(EXPECT_DEF);
@@ -1109,6 +1110,8 @@ interface YetiParser {
                         }
                         break;
                     }
+                    if (((Sym) node).sym == "end" && l.size() == 0)
+                        break collect;
                     l.add(node);
                     node = fetch();
                 }
