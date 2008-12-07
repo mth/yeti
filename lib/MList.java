@@ -38,7 +38,7 @@ abstract class AMList extends AList {
     abstract int _size();
     abstract Object[] array();
 
-    public long length() {
+    public final long length() {
         int l = _size() - start;
         return l > 0 ? l : 0;
     }
@@ -291,7 +291,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    public void reserve(int n) {
+    public final void reserve(int n) {
         if (n > array.length) {
             Object[] tmp = new Object[n];
             System.arraycopy(array, 0, tmp, 0, size);
@@ -299,7 +299,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    public void add(Object o) {
+    public final void add(Object o) {
         if (size >= array.length) {
             Object[] tmp = new Object[size == 0 ? 10 : size * 3 / 2 + 1];
             System.arraycopy(array, 0, tmp, 0, array.length);
@@ -308,38 +308,38 @@ public class MList extends AMList implements ByKey {
         array[size++] = o;
     }
 
-    public Object shift() {
+    public final Object shift() {
         if (start >= size) {
             throw new EmptyArrayException("No first element in empty array");
         }
         return array[start++];
     }
 
-    public Object pop() {
+    public final Object pop() {
         if (start >= size) {
             throw new EmptyArrayException("Cannot pop from an empty array");
         }
         return array[--size];
     }
 
-    public Object first() {
+    public final Object first() {
         if (start >= size) {
             throw new EmptyArrayException("No first element in empty array");
         }
         return array[start];
     }
 
-    public AList rest() {
+    public final AList rest() {
         int p;
         return (p = start + 1) < size ? new SubList(p) : null;
     }
 
-    public AIter next() {
+    public final AIter next() {
         int p;
         return (p = start + 1) < size ? new Iter(p) : null;
     }
 
-    public Object vget(Object index) {
+    public final Object vget(Object index) {
         int i;
         if ((i = ((Number) index).intValue()) < 0) {
             throw new NoSuchKeyException(i, size - start);
@@ -350,7 +350,7 @@ public class MList extends AMList implements ByKey {
         return array[i];
     }
 
-    public Object put(Object index, Object value) {
+    public final Object put(Object index, Object value) {
         int i;
         if ((i = ((Number) index).intValue()) < 0) {
             throw new NoSuchKeyException(i, size - start);
@@ -362,7 +362,7 @@ public class MList extends AMList implements ByKey {
         return null;
     }
 
-    public Object remove(Object index) {
+    public final Object remove(Object index) {
         int i, n;
         if ((i = ((Number) index).intValue()) < 0) {
             throw new NoSuchKeyException(i, size - start);
@@ -432,7 +432,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    MList copy(int from, int to) {
+    protected MList copy(int from, int to) {
         int n = size - start;
         if (from < 0 || from >= n)
             throw new NoSuchKeyException(from, n);
@@ -455,19 +455,19 @@ public class MList extends AMList implements ByKey {
         return null;
     }
 
-    public boolean isEmpty() {
+    public final boolean isEmpty() {
         return start >= size;
     }
 
-    int _size() {
+    final int _size() {
         return size;
     }
 
-    Object[] array() {
+    final Object[] array() {
         return array;
     }
 
-    MList asort() {
+    final MList asort() {
         Arrays.sort(array, start, size);
         return this;
     }
