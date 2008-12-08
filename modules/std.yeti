@@ -81,51 +81,104 @@ plus a b = a + b;
 {
     none = None (),
 
+    // identity function (I combinator)
     id x = x,
+
+    // constant function (K combinator)
     const x _ = x,
+
     apply arg f = f arg,
     at h k = h.[k],
 
+    // f g x y = f (g x) (g y)
+    // for example sort (on (<) (.name)) list
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
         new On(f, g) unsafely_as 'a, 
 
     // functions for standard operators
+
+    // boolean logic
     norec not v = not v,
     norec (and) a b = a and b,
     norec (or) a b = a or b,
+
+    // element a in hash b
     norec (in) a b = a in b,
+
+    // comparision operators
     norec (==) a b = a == b,
     norec (!=) a b = a != b,
     norec (<)  a b = a <  b,
     norec (<=) a b = a <= b,
     norec (>)  a b = a >  b,
     norec (>=) a b = a >= b,
+
+    // arithmetic operators
     norec (+)      = plus,
     norec (-)  a b = a - b,
     norec (*)  a b = a * b,
     norec (/)  a b = a / b,
     norec (%)  a b = a % b,
+
+    // function composition - (f . g) x is same as f (g x)
     norec (.)  a b = a . b,
+
+    // list constructor a :: [b, c] is same as [a, b, c]
     norec (::) v l = v :: l,
+
+    // lazy list constructor a :. \[b] is same as [a, b], but the second
+    // lambda is invoked only when the tail is accessed for the first time.
     norec (:.) v l = v :. l,
+
+    // regex match, like s =~ '\d' to check whether string s contains number
     norec (=~) s p = s =~ p,
+
+    // negated regex match: s !~ p is same as not (s =~ p)
     norec (!~) s p = s !~ p,
+
+    // integer operations (when arguments are rational or floating numbers,
+    // then only the integer part of argument is used))
     norec (div) a b = a div b,
     norec (shl) a b = a shl b,
     norec (shr) a b = a shr b,
     norec (xor) a b = a xor b,
     norec (b_or) a b = a b_or b,
     norec (b_and) a b = a b_and b,
+
+    // negate a = -a
     norec negate a = negate a,
-    norec nullptr? a = nullptr? a, // use defined? instead!
-    norec defined? a = defined? a, // checks whether value is defined
+
+    // Low-level nullpointer check.
+    // Use defined? instead, as nullptr? may behive unexpectedly together
+    // with some conversions done by yeti.
+    norec nullptr? a = nullptr? a,
+
+    // checks whether value is defined
+    norec defined? a = defined? a,
+
+    // Check whether a collection is empty one.
     norec empty? a = empty? a,
+
+    // First element of list or array.
     norec head a = head a,
+
+    // Rest of the list or array.
     norec tail a = tail a,
+
+    // Identity check - whether a and b are reference to same object.
     norec same? a b = same? a b,
+
+    // For every element of l call f with given element as argument.
     norec for l f = for l f,
+
+    // Acquires a mutual-exclusion lock on behalf of the executing thread,
+    // applies block to (), then releases the lock.
     norec synchronized monitor block = synchronized monitor block,
+
+    // String concatenation
     (^) a b = "\(a)\(b)",
+
+    // List/array concatenation
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
             b
@@ -138,8 +191,10 @@ plus a b = a + b;
     // damn struct polymorphism restriction. is it really needed?
     array, fold, find, index, keys, hash,
 
+    // Wraps Java array object into Yeti array type.
     wrapArray a is 'a[] -> array<'a> = a,
 
+    // Gives values from collection a as a list.
     list a is map<'k, 'a> -> list<'a> =
         if empty? a then
             []
@@ -147,24 +202,34 @@ plus a b = a + b;
             (a unsafely_as ~Coll)#asList() unsafely_as list<'a>
         fi,
 
+    // Swaps elements with keys i and j in mapping a
     swapAt a i j =
         x = a.[i];
         a.[i] := a.[j];
         a.[j] := x,
 
+    // Applies function to two arguments in reversed order.
+    // Useful for swapping binary functions arguments.
     flip f x y =
         f y x,
 
+    // Make function f to be memoizing.
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> 'a),
 
+    // Construct a pair structure.
     pair fst snd =
         {fst, snd},
 
+    // Convert any value into string representation
     string x =
         "\(x)",
+
+    // Convert string into number
     number x =
         Core#parseNum(x is string unsafely_as ~String),
+
+    // Numeric functions
     min a b =
         if a < b then a else b fi,
     max a b =
@@ -174,6 +239,7 @@ plus a b = a + b;
     sum l =
         fold plus 0 l,
 
+    // Flatten a list of lists.
     concat l is list?<list?<'a>> -> list<'a> =
         if empty? l then
             []
@@ -181,6 +247,7 @@ plus a b = a + b;
             ConcatLists#concat(l) unsafely_as list<'a>
         fi,
 
+    // Basically concat . map, but more effective.
     concatMap f l is ('a -> list?<'b>) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -188,12 +255,16 @@ plus a b = a + b;
             concat ((l unsafely_as ~AList)#map(f) unsafely_as list<'a>)
         fi,
 
+    // Is predicate f true for any element of list l?
     any f l =
         not (nullptr? (find f l)),
 
+    // Is predicate f true for all elements of list l?
     all f l =
         nullptr? (find (_ x = not (f x)) l),
 
+    // Returns first element of l for which predicate f is false
+    // or last element, when f returns false for all elements of l.
     avoid f l is ('a -> boolean) -> list?<'a> -> 'a =
         if empty? l then
             throw new IllegalArgumentException("prefer: empty list")
@@ -205,15 +276,20 @@ plus a b = a + b;
          not (nullptr? i) and f (value unsafely_as 'a)) loop;
         value unsafely_as 'a,
 
+    // Whether l contains element equal (as defined by (==)) to v
     contains v l =
         index v l != -1,
 
+    // Returns default when opt == None () and f x when opt == Some x
     maybe default f opt =
         case opt of
         Some v: f v;
         None _: default;
         esac,
 
+    // Returns [f(a), f(b), ...] for list l [a, b, ...]
+    // This map function returns lazy list when used on normal lists.
+    // Arrays and lists backed by arrays are mapped strictly.
     map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -221,7 +297,9 @@ plus a b = a + b;
             (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi,
 
-    // strict map
+    // Strict mapping of list. map' is usually faster than map on lists,
+    // unless huge streams are processed or most of the resulting list is
+    // not used. They work identically on arrays.
     map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -229,6 +307,9 @@ plus a b = a + b;
             (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
         fi,
 
+    // Splits given list into two parts, putting elements from the start of the
+    // list into fst as long as predicate function pred is false for the given
+    // element. The rest of the list is returned as snd.
     splitBy pred list is ('a -> boolean) -> list<'a>
                           -> { fst is list<'a>, snd is list<'a> } = 
         a = new MList();
@@ -238,6 +319,8 @@ plus a b = a + b;
         { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
+    // Splits given list into two parts, returning first n elements as fst
+    // and the rest as snd.
     splitAt n list is number -> list<'a>
                       -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
@@ -253,6 +336,7 @@ plus a b = a + b;
         { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
+    // Take first n elements from list l
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l then
             []
@@ -260,6 +344,7 @@ plus a b = a + b;
             TakeList#take(l, n) unsafely_as list<'a>
         fi,
 
+    // Drop first n elements from list l. Won't copy the returned tail.
     drop n l =
         if n <= 0 then
             l
@@ -269,6 +354,8 @@ plus a b = a + b;
             drop (n - 1) (tail l)
         fi,
 
+    // Take elements from the start of list l while predicate pred
+    // is true on the element.
     takeWhile pred l is ('a -> boolean) -> list<'a> -> list<'a> =
         if empty? l then
             []
@@ -276,9 +363,12 @@ plus a b = a + b;
             TakeWhile#take(l, pred) unsafely_as list<'a>
         fi,
 
+    // Returns infinite list [x, f(x), f(f(x)), f(f(f(x))), ...]
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<'a>,
 
+    // Removes duplicate elements from the list.
+    // The ordering of list is not preserved.
     nub is list?<'a> -> list<'a> =
         keys . hash,
 
