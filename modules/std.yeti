@@ -427,21 +427,46 @@ plus a b = a + b;
     sqrt a = Math#sqrt(a),
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
+    // Replaces occurences of needle in the haystack with replacement
     strReplace needle replacement haystack =
         Core#replace(needle, replacement, haystack),
 
+    // String length
     norec strLength s = strLength s,
+
+    // String to upper case
     norec strUpper s = strUpper s,
+
+    // String to lower case
     norec strLower s = strLower s,
+
+    // Remove whitespace from start and end of the string
     norec strTrim s = strTrim s,
+
+    // Slice of the string
     norec strSlice s start end = strSlice s start end,
+
+    // Same as strSlice s pos (strLength s)
     norec strRight s pos = strRight s pos,
+
+    // Does the string s starts with string start?
     norec strStarts s start = strStarts s start,
+
+    // Does the string s ends with string end?
     norec strEnds s end = strEnds s end,
+
+    // Get an index of the needle substring in the haystack.
+    // Starts searching from index from
     norec strIndexOf haystack needle from = strIndexOf haystack needle from,
+
+    // Get an index of the needle substring in the haystack.
+    // Starts searching backwards from index from
     norec strLastIndexOf haystack needle from =
             strLastIndexOf haystack needle from,
+
+    // Same as strLastIndexOf haystack needle (strLength haystack)
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
+
     norec strSplit re = strSplit re,
     norec substAll re = substAll re,
     norec matchAll re = matchAll re,
