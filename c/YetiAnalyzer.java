@@ -1171,6 +1171,10 @@ public final class YetiAnalyzer extends YetiType {
         }
 
         CasePattern toPattern(Node node, Type t) {
+            if ((t.flags & FL_ANY_PATTERN) != 0) {
+                throw new CompileException(node,
+                    "Useless case " + node + " (any value already matched)");
+            }
             if (node instanceof Sym) {
                 t.flags |= FL_ANY_PATTERN;
                 String name = node.sym();
@@ -1178,6 +1182,10 @@ public final class YetiAnalyzer extends YetiType {
                     return CasePattern.ANY_PATTERN;
                 BindPattern binding = new BindPattern(exp, t);
                 scope = new Scope(scope, name, binding);
+                t = t.deref();
+                if (t.type == VARIANT) {
+                    t.flags |= FL_ANY_PATTERN;
+                }
                 return binding;
             }
             if (node.kind == "()") {
@@ -1285,7 +1293,8 @@ public final class YetiAnalyzer extends YetiType {
         void finalizeVariants() {
             for (int i = variants.size(); --i >= 0;) {
                 Type t = (Type) variants.get(i);
-                if (t.type == VARIANT && t.finalMembers == null) {
+                if (t.type == VARIANT && t.finalMembers == null &&
+                    (t.flags & FL_ANY_PATTERN) == 0) {
                     t.finalMembers = t.partialMembers;
                     t.partialMembers = null;
                 }
