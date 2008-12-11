@@ -201,12 +201,16 @@ public final class Core {
 
     static String capitalize(String s) {
         char[] tmp = s.toCharArray();
+        if (tmp.length == 0)
+            return s;
         tmp[0] = Character.toUpperCase(tmp[0]);
         return new String(tmp);
     }
 
     static String uncapitalize(String s) {
         char[] tmp = s.toCharArray();
+        if (tmp.length == 0)
+            return s;
         tmp[0] = Character.toLowerCase(tmp[0]);
         return new String(tmp);
     }

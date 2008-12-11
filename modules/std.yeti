@@ -512,10 +512,10 @@ plus a b = a + b;
         fi,
 
     strCapitalize str is string -> string =
-        Core#capitalize(str),
+        Core#capitalize(str unsafely_as ~String),
 
     strUncapitalize str is string -> string =
-        Core#uncapitalize(str),
+        Core#uncapitalize(str unsafely_as ~String),
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
         i = (h unsafely_as ~Hash)#entrySet()#iterator();
