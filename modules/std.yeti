@@ -450,10 +450,10 @@ plus a b = a + b;
     norec strRight s pos = strRight s pos,
 
     // Does the string s starts with string start?
-    norec strStarts s start = strStarts s start,
+    norec strStarts? s start = strStarts? s start,
 
     // Does the string s ends with string end?
-    norec strEnds s end = strEnds s end,
+    norec strEnds? s end = strEnds? s end,
 
     // Get an index of the needle substring in the haystack.
     // Starts searching from index from
@@ -510,6 +510,12 @@ plus a b = a + b;
             buf#length() < n loop (_ = buf#append(pad));
             buf#toString()
         fi,
+
+    strCapitalize str is string -> string =
+        Core#capitalize(str),
+
+    strUncapitalize str is string -> string =
+        Core#uncapitalize(str),
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
         i = (h unsafely_as ~Hash)#entrySet()#iterator();

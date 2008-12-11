@@ -66,7 +66,7 @@ syn keyword yetiFunction nullptr? empty? min max maybe abs push sysExit shift
 syn keyword yetiFunction defined? wrapArray concat concatMap negate splitBy
 syn keyword yetiFunction ln exp cos sin tan acos asin atan sqrt strReplace
 syn keyword yetiFunction strSplit substAll strLength strUpper strLower strTrim
-syn keyword yetiFunction strSlice strRight strStarts strEnds strIndexOf
+syn keyword yetiFunction strSlice strRight strStarts? strEnds? strIndexOf
 syn keyword yetiFunction strLastIndexOf strLeft strLeftOf strRightOf length
 syn keyword yetiFunction drop sort sortBy same? revAppend list pop swapAt
 syn keyword yetiFunction setArrayCapacity catSome map2 withHandle openInFile
@@ -75,7 +75,7 @@ syn keyword yetiFunction getContents iterate take splitAt strJoin strPad like
 syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunction strLastIndexOf' copyHash slice deleteAll hash avoid
-syn keyword yetiFunction groupBy insertHash
+syn keyword yetiFunction groupBy insertHash strCapitalize strUncaptilize
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 

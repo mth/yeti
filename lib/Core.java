@@ -199,6 +199,18 @@ public final class Core {
         throw new IllegalArgumentException("bad match");
     }
 
+    static String capitalize(String s) {
+        char[] tmp = s.toCharArray();
+        tmp[0] = Character.toUpperCase(tmp[0]);
+        return new String(tmp);
+    }
+
+    static String uncapitalize(String s) {
+        char[] tmp = s.toCharArray();
+        tmp[0] = Character.toLowerCase(tmp[0]);
+        return new String(tmp);
+    }
+
 /*
     public static Object convertList(Object value, String type) {
         if (type == "") {
