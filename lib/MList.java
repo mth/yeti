@@ -434,7 +434,7 @@ public class MList extends AMList implements ByKey {
 
     protected MList copy(int from, int to) {
         int n = size - start;
-        if (from < 0 || from >= n)
+        if (from < 0 || from > n)
             throw new NoSuchKeyException(from, n);
         if (to > n)
             throw new NoSuchKeyException("Copy range " + from + " to " + to +
