@@ -756,11 +756,13 @@ interface YetiParser {
                 res = new BinOp("throw", 1, false);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL + 2, false);
-            } else if (s == "load" || s == "import" || s == "classOf") {
+            } else if (s == "load" || s == "import") {
                 res = new XNode(s, readDotted(false,
                     s == "load" ? "Expected module name after 'load', not a " :
-                    s == "import" ? "Expected class path after 'import', not a "
-                    : "Expected class name, not a "));
+                    "Expected class path after 'import', not a "));
+            } else if (s == "classOf") {
+                res = new XNode(s,
+                            readDottedType("Expected class name, not a "));
             } else if (s == "type") {
                 res = readTypeDef();
             } else if (s == "try") {

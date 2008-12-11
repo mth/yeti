@@ -138,11 +138,18 @@ public final class YetiAnalyzer extends YetiType {
                 return newArray(x, scope, depth);
             if (kind == "classOf") {
                 String cn = x.expr[0].sym();
+                int arr = 0;
+                while (cn.endsWith("[]")) {
+                    ++arr;
+                    cn = cn.substring(0, cn.length() - 2);
+                }
+                if (arr != 0)
+                    cn = cn.intern();
                 Type t = cn != "module" ? null :
-                            resolveClass("module", scope, false);
+                    resolveClass("module", scope, false);
                 return new ClassOfExpr(t != null ? t.javaType :
                                 resolveFullClass(cn, scope, false, x)
-                                    .type.javaType.resolve(x));
+                                    .type.javaType.resolve(x), arr);
             }
         } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;

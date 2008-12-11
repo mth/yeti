@@ -937,9 +937,16 @@ final class Regex implements Binder {
 final class ClassOfExpr extends Code {
     String className;
 
-    ClassOfExpr(JavaType what) {
+    ClassOfExpr(JavaType what, int array) {
         type = YetiType.CLASS_TYPE;
-        className = what.dottedName();
+        String cn = what.dottedName();
+        if (array != 0) {
+            cn = 'L' + cn + ';';
+            do {
+                cn = "[".concat(cn);
+            } while (--array > 0);
+        }
+        className = cn;
     }
 
     void gen(Ctx ctx) {

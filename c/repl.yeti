@@ -44,7 +44,7 @@ do argv: {
                 fi;
                 f ()
             else
-                c#getMethod("main", [Class#forName('[Ljava.lang.String;')])
+                c#getMethod("main", [classOf String[]])
                  #invoke((), [argv is array<string> as ~java.lang.String[]]
                                 as ~java.lang.String[][])
             fi
