@@ -990,6 +990,59 @@ final class InstanceOfExpr extends Code {
     }
 }
 
+final class JavaArrayRef extends Code {
+    Code value, index;
+    YetiType.Type elementType;
+    int line;
+
+    JavaArrayRef(YetiType.Type _type, Code _value, Code _index, int _line) {
+        type = JavaType.convertValueType(elementType = _type);
+        value = _value;
+        index = _index;
+        line = _line;
+    }
+
+    void gen(Ctx ctx) {
+        value.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
+        ctx.genInt(index, line);
+        String resDescr = elementType.javaType == null
+                            ? JavaType.descriptionOf(elementType)
+                            : elementType.javaType.description;
+        int insn = BALOAD;
+        switch (resDescr.charAt(0)) {
+        case 'C':
+            insn = CALOAD;
+            break;
+        case 'D':
+            insn = DALOAD;
+            break;
+        case 'F':
+            insn = FALOAD;
+            break;
+        case 'I':
+            insn = IALOAD;
+            break;
+        case 'J':
+            insn = LALOAD;
+            break;
+        case 'S':
+            insn = SALOAD;
+            break;
+        case 'L':
+            resDescr = resDescr.substring(1, resDescr.length() - 1);
+        case '[':
+            insn = AALOAD;
+            break;
+        }
+        ctx.visitInsn(insn);
+        if (insn == AALOAD) {
+            ctx.forceType(resDescr);
+        }
+        JavaExpr.convertValue(ctx, type);
+    }
+}
+
 final class StrOp extends StaticRef implements Binder {
     final static Code NOP_CODE = new Code() {
         void gen(Ctx ctx) {
