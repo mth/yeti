@@ -1002,7 +1002,7 @@ final class JavaArrayRef extends Code {
         line = _line;
     }
 
-    void gen(Ctx ctx) {
+    private void _gen(Ctx ctx, Code store) {
         value.gen(ctx);
         ctx.visitTypeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
         ctx.genInt(index, line);
@@ -1035,11 +1035,30 @@ final class JavaArrayRef extends Code {
             insn = AALOAD;
             break;
         }
+        if (store != null) {
+            insn += 33;
+            JavaExpr.genValue(ctx, store, elementType, line);
+            if (insn == AASTORE)
+                ctx.visitTypeInsn(CHECKCAST, resDescr);
+        }
         ctx.visitInsn(insn);
         if (insn == AALOAD) {
             ctx.forceType(resDescr);
         }
-        JavaExpr.convertValue(ctx, type);
+    }
+
+    void gen(Ctx ctx) {
+        _gen(ctx, null);
+        JavaExpr.convertValue(ctx, elementType);
+    }
+
+    Code assign(final Code setValue) {
+        return new Code() {
+            void gen(Ctx ctx) {
+                _gen(ctx, setValue);
+                ctx.visitInsn(ACONST_NULL);
+            }
+        };
     }
 }
 

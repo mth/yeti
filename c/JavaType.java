@@ -374,7 +374,7 @@ class JavaType {
             return t;
         }
         String descr = t.javaType.description;
-        if (descr == "Ljava/lang/String;") {
+        if (descr == "Ljava/lang/String;" || descr == "C") {
             return YetiType.STR_TYPE;
         }
         if (descr == "Ljava/lang/Boolean;" || descr == "Z") {
@@ -601,6 +601,9 @@ class JavaType {
         from.resolve();
         if (this == from) {
             return 0;
+        }
+        if (from.description.length() == 1) {
+            return -1;
         }
         if (from.interfaces.containsKey(description)) {
             return 1; // I'm an interface implemented by from
