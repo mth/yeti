@@ -909,7 +909,7 @@ called ``fold``::
     20 is number
 
 The ``fold`` is a more functional visitor-type iteration function than
-``for``, which can be defined very easyle using ``fold``::
+``for``, which can be defined very easily using ``fold``::
 
     > for' l f = fold \f () l
     for' is list?<'a> -> ('a -> ()) -> () = <code$for$z>
