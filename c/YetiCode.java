@@ -1980,26 +1980,20 @@ final class SelectMemberFun extends Code {
         ctx.constant(buf.toString(), new Code() {
             { type = SelectMemberFun.this.type; }
             void gen(Ctx ctx) {
-                if (names.length == 1) {
+                for (int i = 1; i < names.length; ++i) {
+                    ctx.visitTypeInsn(NEW, "yeti/lang/Compose");
+                    ctx.visitInsn(DUP);
+                }
+                for (int i = names.length; --i >= 0;) {
                     ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
                     ctx.visitInsn(DUP);
-                    ctx.visitLdcInsn(names[0]);
+                    ctx.visitLdcInsn(names[i]);
                     ctx.visitInit("yeti/lang/Selector",
                                   "(Ljava/lang/String;)V");
-                    return;
+                    if (i + 1 != names.length)
+                        ctx.visitInit("yeti/lang/Compose",
+                                "(Ljava/lang/Object;Ljava/lang/Object;)V");
                 }
-                ctx.visitTypeInsn(NEW, "yeti/lang/Selectors");
-                ctx.visitInsn(DUP);
-                ctx.intConst(names.length);
-                ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
-                for (int i = 0; i < names.length; ++i) {
-                    ctx.visitInsn(DUP);
-                    ctx.intConst(i);
-                    ctx.visitLdcInsn(names[i]);
-                    ctx.visitInsn(AASTORE);
-                }
-                ctx.visitInit("yeti/lang/Selectors",
-                              "([Ljava/lang/String;)V");
             }
         });
     }
