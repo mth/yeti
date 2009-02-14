@@ -1464,17 +1464,27 @@ interface YetiParser {
                 String expect = "Expecting field name or '}' here, not ";
                 for (;;) {
                     boolean isVar = (field = fetch()).kind == "var";
-                    if (isVar && !((field = fetch()) instanceof Sym))
-                        throw new CompileException(field,
-                            "Exepcting field name after var");
-                    if (!(field instanceof Sym))
+                    if (isVar)
+                        field = fetch();
+                    String fieldName;
+                    if (field instanceof BinOp &&
+                        ((BinOp) field).op == FIELD_OP &&
+                        (field = fetch()) instanceof Sym) {
+                        fieldName = ".".concat(field.sym()).intern();
+                    } else if (!(field instanceof Sym)) {
+                        if (isVar)
+                            throw new CompileException(field,
+                                "Exepcting field name after var");
                         break;
+                    } else {
+                        fieldName = field.sym();
+                    }
                     if (!((t = fetch()) instanceof IsOp) ||
                             ((BinOp) t).right != null) {
                         throw new CompileException(t,
                             "Expecting 'is' after field name");
                     }
-                    TypeNode f = new TypeNode(((Sym) field).sym,
+                    TypeNode f = new TypeNode(fieldName,
                                     new TypeNode[] { ((IsOp) t).type });
                     f.var = isVar;
                     param.add(f);
