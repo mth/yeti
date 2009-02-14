@@ -224,11 +224,17 @@ public final class YetiAnalyzer extends YetiType {
     static Type nodeToMembers(int type, TypeNode[] param, Map free,
                               Scope scope, int depth) {
         Map members = new HashMap();
+        Map members_ = new HashMap();
         Type[] tp = new Type[param.length];
         for (int i = 0; i < param.length; ++i) {
             tp[i] = nodeToType(param[i].param[0], free, scope, depth);
             if (param[i].var) {
                 tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
+            }
+            String name = param[i].name;
+            Map m = members;
+            if (name.charAt(0) == '.') {
+                m = members_;
             }
             if (members.put(param[i].name, tp[i]) != null) {
                 throw new CompileException(param[i], "Duplicate field name "
@@ -236,8 +242,17 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
         Type result = new Type(type, tp);
-        result.partialMembers = members;
-//        result.finalMembers = new HashMap(members);
+        if (type == STRUCT) {
+            if (members.isEmpty()) {
+                members = null;
+            } else if (members_.isEmpty()) {
+                members_ = null;
+            }
+            result.finalMembers = members;
+            result.partialMembers = members_;
+        } else {
+            result.partialMembers = members;
+        }
         return result;
     }
 
