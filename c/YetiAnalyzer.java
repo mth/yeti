@@ -234,11 +234,12 @@ public final class YetiAnalyzer extends YetiType {
             String name = param[i].name;
             Map m = members;
             if (name.charAt(0) == '.') {
+                name = name.substring(1);
                 m = members_;
             }
-            if (members.put(param[i].name, tp[i]) != null) {
+            if (members.put(name, tp[i]) != null) {
                 throw new CompileException(param[i], "Duplicate field name "
-                                    + param[i].name + " in structure type");
+                                    + name + " in structure type");
             }
         }
         Type result = new Type(type, tp);
