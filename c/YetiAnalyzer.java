@@ -1239,9 +1239,13 @@ public final class YetiAnalyzer extends YetiType {
                     return AListPattern.EMPTY_PATTERN;
                 }
                 CasePattern[] items = new CasePattern[list.expr.length];
+                int anyitem = FL_ANY_PATTERN;
                 for (int i = 0; i < items.length; ++i) {
+                    itemt.flags &= ~FL_ANY_PATTERN;
                     items[i] = toPattern(list.expr[i], itemt);
+                    anyitem &= itemt.flags;
                 }
+                itemt.flags &= anyitem;
                 patUnify(node, t, lt);
                 return new ListPattern(items);
             }
