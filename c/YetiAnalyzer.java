@@ -237,7 +237,7 @@ public final class YetiAnalyzer extends YetiType {
                 name = name.substring(1);
                 m = members_;
             }
-            if (members.put(name, tp[i]) != null) {
+            if (m.put(name, tp[i]) != null) {
                 throw new CompileException(param[i], "Duplicate field name "
                                     + name + " in structure type");
             }
