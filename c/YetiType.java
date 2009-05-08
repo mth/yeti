@@ -649,9 +649,9 @@ public class YetiType implements YetiParser {
                 a.partialMembers = b.partialMembers;
             } else if (b.partialMembers != null) {
                 // join partial members
-                Iterator i = a.partialMembers.entrySet().iterator();
-                while (i.hasNext()) {
-                    Map.Entry entry = (Map.Entry) i.next();
+                Object[] aa = a.partialMembers.entrySet().toArray();
+                for (int i = 0; i < aa.length; ++i) {
+                    Map.Entry entry = (Map.Entry) aa[i];
                     Type f = (Type) b.partialMembers.get(entry.getKey());
                     if (f != null) {
                         unify((Type) entry.getValue(), f);

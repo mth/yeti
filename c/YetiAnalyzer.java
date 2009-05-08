@@ -860,9 +860,11 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Scope bindTypeDef(TypeDef typeDef, Object seqKind, Scope scope) {
-        Scope defScope = scope;
+        Type self = new Type(-1);
+        Scope defScope = new Scope(scope, typeDef.name, null);
+        defScope.free = NO_PARAM;
+        defScope.typeDef = new Type[] { self };
         Type[] def = new Type[typeDef.param.length + 1];
-
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
             Type arg = new Type(-1);
@@ -874,6 +876,13 @@ public final class YetiAnalyzer extends YetiType {
         Type type =
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
         def[def.length - 1] = type;
+        try {
+            unify(self, type);
+        } catch (TypeException ex) {
+            throw new CompileException(typeDef,
+                        "Type " + type + " is not " + self
+                        + " (type self-binding)\n    " + ex.getMessage());
+        }
         scope = bindPoly(typeDef.name, type, null, 0, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
