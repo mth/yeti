@@ -63,6 +63,7 @@ options = [
     "-h": help,
     "-cp": \(evaluator.classPath := list (strSplit ':' (shift argv))),
     "-help": help,
+    "--help": help,
     "-preload": \(evaluator.preload := list (strSplit ':' (shift argv))),
     "-type": \(printType := true; exec := false),
     "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
