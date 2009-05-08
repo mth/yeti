@@ -2584,6 +2584,71 @@ thrown from the **finally** block will be thrown from the whole
 New exception types can be defined by `defining a new Java class`_,
 as the exceptions are normal Java objects.
 
+Type declarations
+~~~~~~~~~~~~~~~~~~~~
+Although Yeti can usually infer types automatically, it doesn't work always
+(for example, it cannot deduce Java objects class from method call).
+Additionally, type declarations can make code easier to understand.
+
+Expressions type can be declared using **is** operator::
+
+    > 3 is number
+    3 is number
+    > 'a' is number
+    1:5: Type mismatch: string is not number (when checking string is number)
+
+Type declaration isn't a cast - expression type not matching the declared
+one is a compile error. It can be also seen, that the REPL tells value types
+actually in the form of a type declaration.
+
+However, declaring a type can specialize a polymorphic type::
+
+    > id
+    <yeti.lang.std$id> is 'a -> 'a
+    > id is number -> number
+    <yeti.lang.std$id> is number -> number
+    > id
+    <yeti.lang.std$id> is 'a -> 'a
+
+Specializing a polymorphic binding (like id) won't change the type of binding.
+Variable (and argument) bindings are not polymorphic (it would make typesystem
+unsound), and therefore their type changes::
+
+    > var f = id
+    var f is 'a -> 'a = <yeti.lang.std$id>
+    > f is string -> string
+    <yeti.lang.std$id> is string -> string
+    > f
+    <yeti.lang.std$id> is string -> string
+
+This happens actually whenever anything specialises non-polymorphic binding's
+type::
+
+    > var g = id
+    var g is 'a -> 'a = <yeti.lang.std$id>
+    > g "test"
+    "test" is string
+    > g
+    <yeti.lang.std$id> is string -> string
+
+Alternative form of type declaration is in the binding::
+
+    > x is list<string> = []
+    x is list<string> = []
+
+This is equivalent to ``x = [] is list<string>``, but often easier to read
+and works also with function bindings::
+
+    > inc v is number -> number = v + 1
+    inc is number -> number = <code$inc>
+
+As mentioned before, declaring types can be necessary when using Java objects.
+::
+
+    > size l is ~java.util.Collection -> number = l#size()
+    size is ~java.util.Collection -> number = <code$size>
+
+
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
 Lines should be shorter than 80 characters.
