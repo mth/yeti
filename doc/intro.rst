@@ -2685,12 +2685,13 @@ Type syntax in ABNF
 | *Tag1 type1*                      | `Variant type`_.                        |
 | \*(``"|"`` *Tagn typen*)          |                                         |
 +-----------------------------------+-----------------------------------------+
-| ``"{"`` field                     | `Structure type`_. Prefixing*field-name*|
-| \*(``","`` field) ``"}"``         | with dot means, that the field is       |
-|                                   | expected, instead of being provided (for|
-| field = [``"var"``] [``"."``]     | example - the structure type is a type  |
-| *field-name* ``"is"``             | of function argument). The ``var``      |
-| *field-type*                      | keyword means that the field is mutable.|
+| ``"{"`` field                     | `Structure type`_. Prefixing            |
+| \*(``","`` field) ``"}"``         | *field-name* with dot means, that the   |
+|                                   | field is expected, instead of being     |
+| field = [``"var"``] [``"."``]     | provided (for example - the structure   |
+| *field-name* ``"is"``             | type is a typeof function argument).    |
+| *field-type*                      | The ``var`` keyword means that the      |
+|                                   | field is mutable.                       |
 +-----------------------------------+-----------------------------------------+
 | ``"map" "<"`` *key-type* ``","``  | Mapping from key to value. Map can be a |
 | *element-type* ``">"``            | ``list``, ``array`` or ``hash`` (see    |
