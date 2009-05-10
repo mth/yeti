@@ -2676,7 +2676,7 @@ Type syntax in ABNF
 | ``"~"`` *class-name*              | Java class (see `using Java classes     |
 |                                   | from Yeti code`_).                      |
 +-----------------------------------+-----------------------------------------+
-| ``"("`` *type* ``")"``            | Just a type. Parenthesis only group,    |
+| ``"("`` *type* ``")"``            | Just a *type*. Parenthesis only group,  |
 |                                   | for example ``(a -> b) -> c``.          |
 +-----------------------------------+-----------------------------------------+
 | *argument-type* ``"->"``          | `Function`_.                            |
