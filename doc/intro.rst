@@ -147,6 +147,8 @@ by default immutable.
 
 Attempt to use an unbound name will result in error.
 
+.. _function:
+
 Functions
 ~~~~~~~~~~~~~
 Functions are values and can be defined using function literal syntax
@@ -765,9 +767,10 @@ rarely in the Yeti code, as the common cases of it can be abstracted away
 into generic functions (some standard library functions like ``for``,
 ``map`` and ``fold`` are discussed later).
 
+.. _singly-linked list:
+
 Lists
 ~~~~~~~~
-
 List literals can be written by enclosing comma-separated values between
 square brackets::
 
@@ -1079,9 +1082,10 @@ the factorial function can be written as a ``fold`` over range::
     > fac 5
     120 is number
 
+.. _mutable array:
+
 Arrays
 +++++++++
-
 Arrays are a bit like lists, but with random access by index and mutable.
 An array can be created from list using an ``array`` function::
 
@@ -1209,6 +1213,8 @@ There are sort functions (using merge sort algorithm) in the standard library::
     > sortBy (<) [2,9,8,5,14,8,3]
     [2,3,5,8,8,9,14] is list<number>
 
+
+.. _Hashtable:
 
 Hash maps
 ~~~~~~~~~~~~~
@@ -1416,6 +1422,8 @@ earlier - it has a free type variable as the index type (and
 a *list marker* as the *map<>* kind). Therefore the *list?<>* type
 can be unified both with the *array<>* and the *list<>* type.
 
+
+.. _structure type:
 
 Structures
 ~~~~~~~~~~~~~~
@@ -1691,10 +1699,10 @@ The ``splitAt`` is a standard function which returns structure containing
 first n elements from list as ``fst`` field and the rest as the ``snd``
 field.
 
+.. _variant type:
 
 Variant types
 ~~~~~~~~~~~~~~~~
-
 Values can be wrapped into tags::
 
     > Color "yellow"
@@ -2648,6 +2656,61 @@ As mentioned before, declaring types can be necessary when using Java objects.
     > size l is ~java.util.Collection -> number = l#size()
     size is ~java.util.Collection -> number = <code$size>
 
+Type syntax in ABNF
+++++++++++++++++++++++
+
++-----------------------------------+-----------------------------------------+
+| Type                              | Description                             |
++===================================+=========================================+
+| ``"()"``                          | Type of the unit value ``()``.          |
++-----------------------------------+-----------------------------------------+
+| ``"number"``                      | Number (integer/rational/floating-point |
+|                                   | distinction is only at runtime).        |
++-----------------------------------+-----------------------------------------+
+| ``"string"``                      | String (implemented as                  |
+|                                   | java.lang.String).                      |
+|                                   | Basically some unicode text.            |
++-----------------------------------+-----------------------------------------+
+| ``"boolean"``                     | Boolean value (true or false).          |
++-----------------------------------+-----------------------------------------+
+| ``"~"`` *class-name*              | Java class (see `using Java classes     |
+|                                   | from Yeti code`_).                      |
++-----------------------------------+-----------------------------------------+
+| ``"("`` *type* ``")"``            | Just a type. Parenthesis only group,    |
+|                                   | for example ``(a -> b) -> c``.          |
++-----------------------------------+-----------------------------------------+
+| *argument-type* ``"->"``          | `Function`_.                            |
+| *result-type*                     |                                         |
++-----------------------------------+-----------------------------------------+
+| *Tag1 type1*                      | `Variant type`_.                        |
+| \*(``"|"`` *Tagn typen*)          |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"{"`` field                     | `Structure type`_. Prefixing*field-name*|
+| \*(``","`` field) ``"}"``         | with dot means, that the field is       |
+|                                   | expected, instead of being provided (for|
+| field = [``"var"``] [``"."``]     | example - the structure type is a type  |
+| *field-name* ``"is"``             | of function argument). The ``var``      |
+| *field-type*                      | keyword means that the field is mutable.|
++-----------------------------------+-----------------------------------------+
+| ``"map" "<"`` *key-type* ``","``  | Mapping from key to value. Map can be a |
+| *element-type* ``">"``            | ``list``, ``array`` or ``hash`` (see    |
+|                                   | `connection between list, array and     |
+|                                   | hash types`_).                          |
++-----------------------------------+-----------------------------------------+
+| ``"list" "<"`` *element-type*     | `Singly-linked list`_.                  |
+| ``">"``                           |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"array" "<"`` *element-type*    | `Mutable array`_.                       |
+| ``">"``                           |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"hash" "<"`` *key-type* ``","`` | `Hashtable`_ mapping keys to values.    |
+| *element-type* ``">"``            |                                         |
++-----------------------------------+-----------------------------------------+
+| *type-name*                       | User-defined type with given name.      |
++-----------------------------------+-----------------------------------------+
+| *type-name* ``"<"`` *type*        | User-defined parametric type with given |
+| \*(``","`` *type*) ``">"``        | name and type parameters.               |
++-----------------------------------+-----------------------------------------+
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
