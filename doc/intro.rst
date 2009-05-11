@@ -193,7 +193,7 @@ after the binding name. The last code example is similar to the following
 Java code::
 
     int dec(int x) {
-        return x;
+        return x - 1;
     }
     
     ...
