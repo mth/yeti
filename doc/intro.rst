@@ -1957,6 +1957,8 @@ and works also with function bindings::
 As mentioned before, declaring types can be necessary when using Java objects.
 ::
 
+    > size l = l#size()
+    1:11: Cannot call method on 'a, java object expected
     > size l is ~java.util.Collection -> number = l#size()
     size is ~java.util.Collection -> number = <code$size>
 

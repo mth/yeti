@@ -933,7 +933,7 @@ class JavaType {
                                 YetiType.Type objType, Code[] args,
                                 boolean isStatic) {
         objType = objType.deref();
-        JavaType jt = javaTypeOf(ref, objType, "Cannot call method on");
+        JavaType jt = javaTypeOf(ref, objType, "Cannot call method on ");
         return jt.resolveByArgs(ref, isStatic ? jt.staticMethods : jt.methods,
                                 ref.name, args, objType);
     }
