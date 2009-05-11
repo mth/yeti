@@ -2656,11 +2656,11 @@ As mentioned before, declaring types can be necessary when using Java objects.
     > size l is ~java.util.Collection -> number = l#size()
     size is ~java.util.Collection -> number = <code$size>
 
-Type syntax in ABNF
-++++++++++++++++++++++
+Type description syntax in ABNF
+++++++++++++++++++++++++++++++++++
 
 +-----------------------------------+-----------------------------------------+
-| Type                              | Description                             |
+| Type syntax (ABNF)                | Description                             |
 +===================================+=========================================+
 | ``"()"``                          | Type of the unit value ``()``.          |
 +-----------------------------------+-----------------------------------------+
@@ -2677,10 +2677,17 @@ Type syntax in ABNF
 |                                   | from Yeti code`_).                      |
 +-----------------------------------+-----------------------------------------+
 | ``"("`` *type* ``")"``            | Just a *type*. Parenthesis only group,  |
-|                                   | for example ``(a -> b) -> c``.          |
+|                                   | for example ``(a -> b) -> c`` is        |
+|                                   | a function with *argument-type*         |
+|                                   | ``a -> b``.                             |
 +-----------------------------------+-----------------------------------------+
 | *argument-type* ``"->"``          | `Function`_.                            |
 | *result-type*                     |                                         |
++-----------------------------------+-----------------------------------------+
+| *argument-type1* ``"->"``         | A function that returns another         |
+| *argument-type2* ``"->"``         | function, same as *argument-type1*      |
+| *result-type*                     | ``->`` (*argument-type2* ``->``         |
+|                                   | *result-type*).                         |
 +-----------------------------------+-----------------------------------------+
 | *Tag1 type1*                      | `Variant type`_.                        |
 | \*(``"|"`` *Tagn typen*)          |                                         |
@@ -2689,7 +2696,7 @@ Type syntax in ABNF
 | \*(``","`` field) ``"}"``         | *field-name* with dot means, that the   |
 |                                   | field is expected, instead of being     |
 | field = [``"var"``] [``"."``]     | provided (for example - the structure   |
-| *field-name* ``"is"``             | type is a typeof function argument).    |
+| *field-name* ``"is"``             | type is a type of function argument).   |
 | *field-type*                      | The ``var`` keyword means that the      |
 |                                   | field is mutable.                       |
 +-----------------------------------+-----------------------------------------+
