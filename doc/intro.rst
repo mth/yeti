@@ -160,8 +160,8 @@ Functions are values and can be defined using function literal syntax
 
 The function value is printed as <classname>, where classname is the name
 of the Java class generated for implementing the function. Function type
-is written down as argument-type -> result-type. Here compiler inferred
-that both argument and result types are numbers, because the function
+is written down as *argument-type* ``->`` *result-type*. Here compiler
+inferred that both argument and result types are numbers, because the function
 adds number 1 to the argument value. Using the function is called application
 (or a function call).
 ::
@@ -1900,7 +1900,17 @@ Type declarations
 ~~~~~~~~~~~~~~~~~~~~
 Although Yeti can usually infer types automatically, it doesn't work always
 (for example, it cannot deduce Java objects class from method call).
-Additionally, type declarations can make code easier to understand.
+Type declarations can also make code easier to understand and help the
+compiler to produce better error messages (by telling it, what types you
+expected to be somewhere).
+
+The type-checker essentially performs a kind of
+program consistency check - but without type declarations it isn't always
+clear what part of the code is actually wrong. Therefore the error
+message can point to some other part, where the compiler happened to detect
+a type mismatch caused by an earlier erroneous code. As an error message
+involving complex structure types can become quite cryptic by itself,
+it is recommended to declare types of functions manipulating with those.
 
 Expressions type can be declared using **is** operator::
 
@@ -1912,7 +1922,6 @@ Expressions type can be declared using **is** operator::
 Type declaration isn't a cast - expression type not matching the declared
 one is a compile error. It can be also seen, that the REPL tells value types
 actually in the form of a type declaration.
-
 However, declaring a type can specialize a polymorphic type::
 
     > id
@@ -1954,16 +1963,15 @@ and works also with function bindings::
     > inc v is number -> number = v + 1
     inc is number -> number = <code$inc>
 
-As mentioned before, declaring types can be necessary when using Java objects.
-::
+As mentioned before, declaring types can be necessary when using Java objects::
 
     > size l = l#size()
     1:11: Cannot call method on 'a, java object expected
     > size l is ~java.util.Collection -> number = l#size()
     size is ~java.util.Collection -> number = <code$size>
 
-Type description syntax in ABNF
-++++++++++++++++++++++++++++++++++
+Type description syntax
+++++++++++++++++++++++++++
 
 +-----------------------------------+-----------------------------------------+
 | Type syntax (ABNF)                | Description                             |
