@@ -1896,6 +1896,134 @@ Partial matches are not allowed::
 Here the compiler deduces, that no meaningful result value have been given
 for a case, when the ``n != 1``.
 
+Type declarations
+~~~~~~~~~~~~~~~~~~~~
+Although Yeti can usually infer types automatically, it doesn't work always
+(for example, it cannot deduce Java objects class from method call).
+Additionally, type declarations can make code easier to understand.
+
+Expressions type can be declared using **is** operator::
+
+    > 3 is number
+    3 is number
+    > 'a' is number
+    1:5: Type mismatch: string is not number (when checking string is number)
+
+Type declaration isn't a cast - expression type not matching the declared
+one is a compile error. It can be also seen, that the REPL tells value types
+actually in the form of a type declaration.
+
+However, declaring a type can specialize a polymorphic type::
+
+    > id
+    <yeti.lang.std$id> is 'a -> 'a
+    > id is number -> number
+    <yeti.lang.std$id> is number -> number
+    > id
+    <yeti.lang.std$id> is 'a -> 'a
+
+Specializing a polymorphic binding (like id) won't change the type of binding.
+Variable (and argument) bindings are not polymorphic (it would make typesystem
+unsound), and therefore their type changes::
+
+    > var f = id
+    var f is 'a -> 'a = <yeti.lang.std$id>
+    > f is string -> string
+    <yeti.lang.std$id> is string -> string
+    > f
+    <yeti.lang.std$id> is string -> string
+
+This happens actually whenever anything specialises non-polymorphic binding's
+type::
+
+    > var g = id
+    var g is 'a -> 'a = <yeti.lang.std$id>
+    > g "test"
+    "test" is string
+    > g
+    <yeti.lang.std$id> is string -> string
+
+Alternative form of type declaration is in the binding::
+
+    > x is list<string> = []
+    x is list<string> = []
+
+This is equivalent to ``x = [] is list<string>``, but often easier to read
+and works also with function bindings::
+
+    > inc v is number -> number = v + 1
+    inc is number -> number = <code$inc>
+
+As mentioned before, declaring types can be necessary when using Java objects.
+::
+
+    > size l is ~java.util.Collection -> number = l#size()
+    size is ~java.util.Collection -> number = <code$size>
+
+Type description syntax in ABNF
+++++++++++++++++++++++++++++++++++
+
++-----------------------------------+-----------------------------------------+
+| Type syntax (ABNF)                | Description                             |
++===================================+=========================================+
+| ``"()"``                          | Type of the unit value ``()``.          |
++-----------------------------------+-----------------------------------------+
+| ``"number"``                      | Number (integer/rational/floating-point |
+|                                   | distinction is only at runtime).        |
++-----------------------------------+-----------------------------------------+
+| ``"string"``                      | String (implemented as                  |
+|                                   | java.lang.String).                      |
+|                                   | Basically some unicode text.            |
++-----------------------------------+-----------------------------------------+
+| ``"boolean"``                     | Boolean value (true or false).          |
++-----------------------------------+-----------------------------------------+
+| ``"~"`` *class-name*              | Java class (see `using Java classes     |
+|                                   | from Yeti code`_).                      |
++-----------------------------------+-----------------------------------------+
+| ``"("`` *type* ``")"``            | Just a *type*. Parenthesis only group,  |
+|                                   | for example ``(a -> b) -> c`` is        |
+|                                   | a function with *argument-type*         |
+|                                   | ``a -> b``.                             |
++-----------------------------------+-----------------------------------------+
+| *argument-type* ``"->"``          | `Function`_.                            |
+| *result-type*                     |                                         |
++-----------------------------------+-----------------------------------------+
+| *argument-type1* ``"->"``         | A function that returns another         |
+| *argument-type2* ``"->"``         | function, same as *argument-type1*      |
+| *result-type*                     | ``->`` (*argument-type2* ``->``         |
+|                                   | *result-type*).                         |
++-----------------------------------+-----------------------------------------+
+| *Tag1 type1*                      | `Variant type`_.                        |
+| \*(``"|"`` *Tagn typen*)          |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"{"`` field                     | `Structure type`_. Prefixing            |
+| \*(``","`` field) ``"}"``         | *field-name* with dot means, that the   |
+|                                   | field is expected, instead of being     |
+| field = [``"var"``] [``"."``]     | provided (for example - the structure   |
+| *field-name* ``"is"``             | type is a type of function argument).   |
+| *field-type*                      | The ``var`` keyword means that the      |
+|                                   | field is mutable.                       |
++-----------------------------------+-----------------------------------------+
+| ``"map" "<"`` *key-type* ``","``  | Mapping from key to value. Map can be a |
+| *element-type* ``">"``            | ``list``, ``array`` or ``hash`` (see    |
+|                                   | `connection between list, array and     |
+|                                   | hash types`_).                          |
++-----------------------------------+-----------------------------------------+
+| ``"list" "<"`` *element-type*     | `Singly-linked list`_.                  |
+| ``">"``                           |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"array" "<"`` *element-type*    | `Mutable array`_.                       |
+| ``">"``                           |                                         |
++-----------------------------------+-----------------------------------------+
+| ``"hash" "<"`` *key-type* ``","`` | `Hashtable`_ mapping keys to values.    |
+| *element-type* ``">"``            |                                         |
++-----------------------------------+-----------------------------------------+
+| *type-name*                       | User-defined type with given name.      |
++-----------------------------------+-----------------------------------------+
+| *type-name* ``"<"`` *type*        | User-defined parametric type with given |
+| \*(``","`` *type*) ``">"``        | name and type parameters.               |
++-----------------------------------+-----------------------------------------+
+
 
 Running and compiling source files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2591,134 +2719,6 @@ thrown from the **finally** block will be thrown from the whole
 
 New exception types can be defined by `defining a new Java class`_,
 as the exceptions are normal Java objects.
-
-Type declarations
-~~~~~~~~~~~~~~~~~~~~
-Although Yeti can usually infer types automatically, it doesn't work always
-(for example, it cannot deduce Java objects class from method call).
-Additionally, type declarations can make code easier to understand.
-
-Expressions type can be declared using **is** operator::
-
-    > 3 is number
-    3 is number
-    > 'a' is number
-    1:5: Type mismatch: string is not number (when checking string is number)
-
-Type declaration isn't a cast - expression type not matching the declared
-one is a compile error. It can be also seen, that the REPL tells value types
-actually in the form of a type declaration.
-
-However, declaring a type can specialize a polymorphic type::
-
-    > id
-    <yeti.lang.std$id> is 'a -> 'a
-    > id is number -> number
-    <yeti.lang.std$id> is number -> number
-    > id
-    <yeti.lang.std$id> is 'a -> 'a
-
-Specializing a polymorphic binding (like id) won't change the type of binding.
-Variable (and argument) bindings are not polymorphic (it would make typesystem
-unsound), and therefore their type changes::
-
-    > var f = id
-    var f is 'a -> 'a = <yeti.lang.std$id>
-    > f is string -> string
-    <yeti.lang.std$id> is string -> string
-    > f
-    <yeti.lang.std$id> is string -> string
-
-This happens actually whenever anything specialises non-polymorphic binding's
-type::
-
-    > var g = id
-    var g is 'a -> 'a = <yeti.lang.std$id>
-    > g "test"
-    "test" is string
-    > g
-    <yeti.lang.std$id> is string -> string
-
-Alternative form of type declaration is in the binding::
-
-    > x is list<string> = []
-    x is list<string> = []
-
-This is equivalent to ``x = [] is list<string>``, but often easier to read
-and works also with function bindings::
-
-    > inc v is number -> number = v + 1
-    inc is number -> number = <code$inc>
-
-As mentioned before, declaring types can be necessary when using Java objects.
-::
-
-    > size l is ~java.util.Collection -> number = l#size()
-    size is ~java.util.Collection -> number = <code$size>
-
-Type description syntax in ABNF
-++++++++++++++++++++++++++++++++++
-
-+-----------------------------------+-----------------------------------------+
-| Type syntax (ABNF)                | Description                             |
-+===================================+=========================================+
-| ``"()"``                          | Type of the unit value ``()``.          |
-+-----------------------------------+-----------------------------------------+
-| ``"number"``                      | Number (integer/rational/floating-point |
-|                                   | distinction is only at runtime).        |
-+-----------------------------------+-----------------------------------------+
-| ``"string"``                      | String (implemented as                  |
-|                                   | java.lang.String).                      |
-|                                   | Basically some unicode text.            |
-+-----------------------------------+-----------------------------------------+
-| ``"boolean"``                     | Boolean value (true or false).          |
-+-----------------------------------+-----------------------------------------+
-| ``"~"`` *class-name*              | Java class (see `using Java classes     |
-|                                   | from Yeti code`_).                      |
-+-----------------------------------+-----------------------------------------+
-| ``"("`` *type* ``")"``            | Just a *type*. Parenthesis only group,  |
-|                                   | for example ``(a -> b) -> c`` is        |
-|                                   | a function with *argument-type*         |
-|                                   | ``a -> b``.                             |
-+-----------------------------------+-----------------------------------------+
-| *argument-type* ``"->"``          | `Function`_.                            |
-| *result-type*                     |                                         |
-+-----------------------------------+-----------------------------------------+
-| *argument-type1* ``"->"``         | A function that returns another         |
-| *argument-type2* ``"->"``         | function, same as *argument-type1*      |
-| *result-type*                     | ``->`` (*argument-type2* ``->``         |
-|                                   | *result-type*).                         |
-+-----------------------------------+-----------------------------------------+
-| *Tag1 type1*                      | `Variant type`_.                        |
-| \*(``"|"`` *Tagn typen*)          |                                         |
-+-----------------------------------+-----------------------------------------+
-| ``"{"`` field                     | `Structure type`_. Prefixing            |
-| \*(``","`` field) ``"}"``         | *field-name* with dot means, that the   |
-|                                   | field is expected, instead of being     |
-| field = [``"var"``] [``"."``]     | provided (for example - the structure   |
-| *field-name* ``"is"``             | type is a type of function argument).   |
-| *field-type*                      | The ``var`` keyword means that the      |
-|                                   | field is mutable.                       |
-+-----------------------------------+-----------------------------------------+
-| ``"map" "<"`` *key-type* ``","``  | Mapping from key to value. Map can be a |
-| *element-type* ``">"``            | ``list``, ``array`` or ``hash`` (see    |
-|                                   | `connection between list, array and     |
-|                                   | hash types`_).                          |
-+-----------------------------------+-----------------------------------------+
-| ``"list" "<"`` *element-type*     | `Singly-linked list`_.                  |
-| ``">"``                           |                                         |
-+-----------------------------------+-----------------------------------------+
-| ``"array" "<"`` *element-type*    | `Mutable array`_.                       |
-| ``">"``                           |                                         |
-+-----------------------------------+-----------------------------------------+
-| ``"hash" "<"`` *key-type* ``","`` | `Hashtable`_ mapping keys to values.    |
-| *element-type* ``">"``            |                                         |
-+-----------------------------------+-----------------------------------------+
-| *type-name*                       | User-defined type with given name.      |
-+-----------------------------------+-----------------------------------------+
-| *type-name* ``"<"`` *type*        | User-defined parametric type with given |
-| \*(``","`` *type*) ``">"``        | name and type parameters.               |
-+-----------------------------------+-----------------------------------------+
 
 Yeti code style
 ~~~~~~~~~~~~~~~~~~
