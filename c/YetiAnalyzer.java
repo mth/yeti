@@ -877,7 +877,7 @@ public final class YetiAnalyzer extends YetiType {
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
         def[def.length - 1] = type;
         try {
-            unify(self, type);
+            unify(self, type); // XXX the order of unify arguments matters!
         } catch (TypeException ex) {
             throw new CompileException(typeDef,
                         "Type " + type + " is not " + self
