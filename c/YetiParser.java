@@ -171,7 +171,7 @@ interface YetiParser {
         Bind() {
         }
 
-        Bind(List args, Node expr) {
+        Bind(List args, Node expr, boolean inStruct) {
             int first = 0;
             Node nameNode = null;
             while (first < args.size()) {
@@ -187,13 +187,15 @@ interface YetiParser {
             }
             if (!var && nameNode instanceof Sym) {
                 String s = ((Sym) nameNode).sym;
-                if (s == "get") {
-                    property = true;
-                    nameNode = (Node) args.get(first++);
-                } else if (s == "set") {
-                    property = true;
-                    var = true;
-                    nameNode = (Node) args.get(first++);
+                if (inStruct && args.size() > first) {
+                    if (s == "get") {
+                        property = true;
+                        nameNode = (Node) args.get(first++);
+                    } else if (s == "set") {
+                        property = true;
+                        var = true;
+                        nameNode = (Node) args.get(first++);
+                    }
                 }
             }
             if (first == 0 || first > args.size()) {
@@ -841,7 +843,7 @@ interface YetiParser {
                    args.size() == 1 && ((Node) args.get(0)).kind == "struct"
                    ? (Node) new XNode("struct-bind",
                         new Node[] { (XNode) args.get(0), e })
-                   : (bind = new Bind(args, e)).name != "_" ? bind
+                   : (bind = new Bind(args, e, structDef)).name != "_" ? bind
                    : bind.expr.kind == "lambda"
                         ? bind.expr : new XNode("_", bind.expr);
         }
@@ -1137,7 +1139,7 @@ interface YetiParser {
                                            ((Sym) eofWas).sym != "end"))
                     throw new CompileException(eofWas, "Unexpected " + eofWas);
                 if (args == null) {
-                    defs.add(new Bind(l, expr));
+                    defs.add(new Bind(l, expr, false));
                 } else {
                     Node[] m = expr != null
                         ? new Node[] { (Node) l.get(0), node, args, expr }
