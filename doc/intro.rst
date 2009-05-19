@@ -2544,7 +2544,7 @@ a function fields can be used::
             y,
     
         void moveTo(int x', int y')
-            log "moveTo(\(x'), \(y')) called"
+            log "moveTo(\(x'), \(y')) called";
             x := x';
             y := y',
 
