@@ -30,7 +30,9 @@
  */
 package yeti.lang;
 
-public final class Tag implements Comparable {
+import java.io.Serializable;
+
+public final class Tag implements Comparable, Serializable {
     public final String name;
     public final Object value;
 

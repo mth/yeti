@@ -30,8 +30,10 @@
  */
 package yeti.lang;
 
+import java.io.Serializable;
+
 /** Yeti core library - List. */
-public class LList extends AList {
+public class LList extends AList implements Serializable {
     Object first;
     AList rest;
 

@@ -30,7 +30,9 @@
  */
 package yeti.lang;
 
-public class Struct {
+import java.io.Serializable;
+
+public class Struct implements Serializable {
     final protected Object[] values;
 
     // expecting interleaved array field1, value1, field2, value2, ...

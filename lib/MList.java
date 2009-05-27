@@ -31,8 +31,9 @@
 package yeti.lang;
 
 import java.util.Arrays;
+import java.io.Serializable;
 
-abstract class AMList extends AList {
+abstract class AMList extends AList implements Serializable {
     int start;
 
     abstract int _size();
@@ -246,7 +247,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    private class Iter extends AIter {
+    private class Iter extends AIter implements Serializable {
         private int i;
 
         private Iter(int start) {

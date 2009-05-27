@@ -30,7 +30,9 @@
  */
 package yeti.lang;
 
-final class RangeIter extends AIter {
+import java.io.Serializable;
+
+final class RangeIter extends AIter implements Serializable {
     Num n;
     Num last;
     AList rest;
@@ -46,7 +48,7 @@ final class RangeIter extends AIter {
 }
 
 /** Yeti core library - List. */
-public final class ListRange extends AList {
+public final class ListRange extends AList implements Serializable {
     Num first;
     Num last;
     AList rest;
