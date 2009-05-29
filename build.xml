@@ -128,7 +128,7 @@
     <taskdef name="yeticj" classname="yeti.lang.compiler.YetiTask"
              classpath="yeti.jar"/>
     <yeticj srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
-            icast="${icast}" includes="MixedDeps.yeti"/>
+            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"/>
     <jar jarfile="${basedir}/yeti-ant.jar"
          basedir="${basedir}/.build/mixedtask"/>
 </target>

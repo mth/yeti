@@ -1,0 +1,5 @@
+program yeti.lang.compiler.Compile;
+
+load yeti.ant.MixedDeps;
+
+mixedCompile _argv

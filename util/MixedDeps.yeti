@@ -196,6 +196,55 @@ plurals l =
 antError =
     "Compile failed; see the compiler error output for details.";
 
+doCompile {classPath, destdir, sources, javaArgs, log, error, exception} =
+   (log "Scanning \(length sources) source file\(plurals sources)";
+    order = scanSources classPath destdir sources;
+    classPath = classPath ++ ["\(destdir)"];
+    // lazy to avoid unnecessary initialisation of yeti compiler
+    compileYeti = lazy do:
+        yetic = load yeti.lang.compiler.repl (array []);
+        yetic.gcj := true; // extra casts for safety
+        yetic.classPath := classPath;
+        do files:
+            yetic.compileToFiles files "\(destdir)" do err:
+                log err#getMessage()
+            done
+        done
+    done;
+    for order do files:
+        if head files =~ '\.yeti$' then
+            log "Compiling \(length files) yeti \
+                "source\(plurals files) to \(destdir)";
+            if not (compileYeti () files) then
+                error antError
+            fi
+        else
+            log "Compiling \(length files) java \
+                "source\(plurals files) to \(destdir)";
+            args = array javaArgs;
+            if not (empty? classPath) then
+                push args "-classpath";
+                push args (strJoin File#pathSeparator classPath);
+            fi;
+            push args "-d";
+            push args "\(destdir)";
+            for files (push args);
+            result =
+                try
+                    c = Class#forName("com.sun.tools.javac.Main");
+                    compiler = c#newInstance();
+                    compile = c#getMethod("compile",
+                                    [Class#forName('[Ljava.lang.String;')]);
+                    compile#invoke(compiler, [args as ~String[]])
+                catch Exception ex:
+                    exception "Error starting compiler" ex
+                yrt;
+            if (result unsafely_as ~Number)#intValue() != 0 then
+                error antError
+            fi
+        fi
+    done);
+
 class MixedCompileTask extends Javac
     void execute()
         this#checkParameters();
@@ -217,75 +266,88 @@ class MixedCompileTask extends Javac
                 fi
             done
         done;
-        this#log("Scanning \(length sources) source file" ^ plurals sources);
         classPath = map string this#getClasspath()#list();
-        order = scanSources classPath destdir sources;
-        classPath = classPath ++ ["\(destdir)"];
-        // lazy to avoid unnecessary initialisation of yeti compiler
-        compileYeti = lazy do:
-            yetic = load yeti.lang.compiler.repl (array []);
-            yetic.gcj := true; // extra casts for safety
-            yetic.classPath := classPath;
-            do files:
-                yetic.compileToFiles files "\(destdir)" do err:
-                    this#log(err#getMessage())
-                done
-            done
-        done;
+        javaArgs = array [];
+        if this#getDeprecation() then
+            push javaArgs "-deprecation"
+        fi;
+        if this#getDebug() then
+            push javaArgs "-g"
+        fi;
+        if defined? this#getEncoding() then
+            push javaArgs "-encoding";
+            push javaArgs this#getEncoding()
+        fi;
+        if defined? this#getSource() then
+            push javaArgs "-source";
+            push javaArgs this#getSource()
+        fi;
+        if defined? this#getTarget() then
+            push javaArgs "-target";
+            push javaArgs this#getTarget()
+        fi;
+        if this#getVerbose() then
+            push javaArgs "-verbose"
+        fi;
         this#setFailonerror(true);
-        for order do files:
-            if head files =~ '\.yeti$' then
-                this#log("Compiling \(length files) yeti source" ^
-                         plurals files ^ " to " ^ destdir);
-                if not (compileYeti () files) then
-                    throw new BuildException(antError, this#getLocation())
-                fi
+        doCompile {
+            classPath, destdir, sources, javaArgs,
+
+            log msg =
+                this#log(msg),
+            error msg is string -> () =
+                throw new BuildException(msg, this#getLocation()),
+            exception msg ex =
+                throw new BuildException(msg, ex is ~Exception, this#getLocation())
+        }
+end;
+
+{
+    mixedCompile args =
+        sourceDirs = array [];
+        classPath = array [];
+        javaArgs = array [];
+        var destdir = '.';
+        var op = push sourceDirs;
+        for args do arg:
+            if arg == '-cp' then
+                op := (`for` push classPath) . strSplit File#pathSeparator
+            elif arg == '-d' then
+                op := do dir: destdir := dir done
+            elif arg == '-encoding' or arg == '-source' or arg == '-target' then
+                push javaArgs arg;
+                op := push javaArgs
+            elif arg == '-g' or arg == '-deprecation' or arg == '-verbose' then
+                push javaArgs arg
             else
-                this#log("Compiling \(length files) java source" ^
-                         plurals files ^ " to " ^ destdir);
-                args = array [];
-                if this#getDeprecation() then
-                    push args "-deprecation"
-                fi;
-                if not (empty? classPath) then
-                    push args "-classpath";
-                    push args (strJoin File#pathSeparator classPath);
-                fi;
-                push args "-d";
-                push args "\(destdir)";
-                if this#getDebug() then
-                    push args "-g"
-                fi;
-                if defined? this#getEncoding() then
-                    push args "-encoding";
-                    push args this#getEncoding()
-                fi;
-                if defined? this#getSource() then
-                    push args "-source";
-                    push args this#getSource()
-                fi;
-                if defined? this#getTarget() then
-                    push args "-target";
-                    push args this#getTarget()
-                fi;
-                if this#getVerbose() then
-                    push args "-verbose"
-                fi;
-                for files (push args);
-                result =
-                    try
-                        c = Class#forName("com.sun.tools.javac.Main");
-                        compiler = c#newInstance();
-                        compile = c#getMethod("compile",
-                                        [Class#forName('[Ljava.lang.String;')]);
-                        compile#invoke(compiler, [args as ~String[]])
-                    catch Exception ex:
-                        throw new BuildException("Error starting compiler",
-                                                 ex, this#getLocation())
-                    yrt;
-                if (result unsafely_as ~Number)#intValue() != 0 then
-                    throw new BuildException(antError, this#getLocation())
-                fi
+                op arg;
+                op := push sourceDirs
             fi
-        done
-end
+        done;
+        sources = array [];
+        scanDir dir is ~File -> () =
+            for dir#listFiles() do f:
+                if f#isDirectory() then
+                    scanDir f
+                else
+                    name = f#getPath();
+                    if name =~ '\.java$|\.yeti$' then
+                        push sources name
+                    fi
+                fi
+            done;
+        for sourceDirs do sourceDir:
+            scanDir new File(sourceDir)
+        done;
+        doCompile {
+            sources, javaArgs,
+            classPath = list classPath,
+            destdir = new File(destdir),
+            log = println,
+            exception msg ex =
+                throw new RuntimeException(msg, ex is ~Exception),
+            error msg = 
+                System#err#println(msg);
+                sysExit 1
+        }
+}
