@@ -1196,6 +1196,7 @@ public final class YetiAnalyzer extends YetiType {
         Scope scope;
         int depth;
         List variants = new ArrayList();
+        int submatch; // hack for variants
   
         CaseCompiler(Code val, int depth) {
             exp = new CaseExpr(val);
@@ -1250,11 +1251,13 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 CasePattern[] items = new CasePattern[list.expr.length];
                 int anyitem = FL_ANY_PATTERN;
+                ++submatch;
                 for (int i = 0; i < items.length; ++i) {
                     itemt.flags &= ~FL_ANY_PATTERN;
                     items[i] = toPattern(list.expr[i], itemt);
                     anyitem &= itemt.flags;
                 }
+                --submatch;
                 itemt.flags &= anyitem;
                 patUnify(node, t, lt);
                 return new ListPattern(items);
@@ -1275,7 +1278,9 @@ public final class YetiAnalyzer extends YetiType {
                     t.type = VARIANT;
                     if (t.partialMembers == null) {
                         t.partialMembers = new HashMap();
-                        variants.add(t);
+                        if (submatch == 0) { // XXX hack!!!
+                            variants.add(t);
+                        }
                     }
                     Type argt = new Type(depth);
                     CasePattern arg = toPattern(pat.right, argt);
@@ -1294,8 +1299,10 @@ public final class YetiAnalyzer extends YetiType {
                                 new Type[] { itemt, NO_TYPE, LIST_TYPE });
                     int flags = t.flags; 
                     patUnify(node, t, lt);
+                    ++submatch;
                     CasePattern hd = toPattern(pat.left, itemt);
                     CasePattern tl = toPattern(pat.right, t);
+                    --submatch;
                     lt.flags = FL_PARTIAL_PATTERN;
                     t.flags = flags;
                     return new ConsPattern(hd, tl);
@@ -1308,6 +1315,7 @@ public final class YetiAnalyzer extends YetiType {
                 String[] names = new String[fields.length];
                 CasePattern[] patterns = new CasePattern[fields.length];
                 HashMap uniq = new HashMap();
+                ++submatch;
                 for (int i = 0; i < fields.length; ++i) {
                     Bind field = getField(fields[i], uniq);
                     if (uniq.containsKey(field.name))
@@ -1322,6 +1330,7 @@ public final class YetiAnalyzer extends YetiType {
                     names[i] = field.name;
                     patterns[i] = toPattern(field.expr, ft);
                 }
+                --submatch;
                 return new StructPattern(names, patterns);
             }
             throw new CompileException(node, "Bad case pattern: " + node);
