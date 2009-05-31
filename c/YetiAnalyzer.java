@@ -1212,7 +1212,7 @@ public final class YetiAnalyzer extends YetiType {
             if (node instanceof Sym) {
                 t.flags |= FL_ANY_PATTERN;
                 String name = node.sym();
-                if (name == "_")
+                if (name == "_" || name == "...")
                     return CasePattern.ANY_PATTERN;
                 BindPattern binding = new BindPattern(exp, t);
                 scope = new Scope(scope, name, binding);

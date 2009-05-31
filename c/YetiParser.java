@@ -817,7 +817,7 @@ interface YetiParser {
                 }
             }
             if (s != null && i >= cnt) {
-                return new Sym(s);
+                return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
             while (i < cnt) {
@@ -969,14 +969,12 @@ interface YetiParser {
                 } else if (statements[i] instanceof Sym
                             && statements[i].sym() == "...") {
                     if (i == 0 || i != statements.length - 1) {
-                        throw new CompileException(statements[i], "Unexpected ...");
+                        throw new CompileException(statements[i],
+                                    "Unexpected ...");
                     }
                     addCase(cases, pattern, expr);
                     pattern = null;
-                    Sym any = new Sym("_");
-                    any.line = statements[i].line;
-                    any.col = statements[i].col;
-                    cases.add(new XNode("...", any));
+                    cases.add(new XNode("...", statements[i]));
                 } else if (pattern != null) {
                     expr.add(statements[i]);
                 } else {
