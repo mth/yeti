@@ -195,8 +195,8 @@ public final class Core {
         }
     }
 
-    public static Object badMatch() {
-        throw new IllegalArgumentException("bad match");
+    public static Object badMatch(Object match) {
+        throw new IllegalArgumentException("bad match (" + match + ')');
     }
 
     static String capitalize(String s) {

@@ -1419,7 +1419,9 @@ public final class YetiAnalyzer extends YetiType {
         }
         cc.finalizeVariants();
         for (int i = 1; i < choices.length; ++i) {
-            cc.mergeChoice(pats[i], ((XNode) choices[i]).expr[1], scopes[i]);
+            if (choices[i].kind != "...") {
+                cc.mergeChoice(pats[i], ((XNode) choices[i]).expr[1], scopes[i]);
+            }
         }
         try {
             unify(val.type, argType);

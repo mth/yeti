@@ -966,6 +966,17 @@ interface YetiParser {
                         expr.clear();
                     }
                     pattern = (XNode) statements[i];
+                } else if (statements[i] instanceof Sym
+                            && statements[i].sym() == "...") {
+                    if (i == 0 || i != statements.length - 1) {
+                        throw new CompileException(statements[i], "Unexpected ...");
+                    }
+                    addCase(cases, pattern, expr);
+                    pattern = null;
+                    Sym any = new Sym("_");
+                    any.line = statements[i].line;
+                    any.col = statements[i].col;
+                    cases.add(new XNode("...", any));
                 } else if (pattern != null) {
                     expr.add(statements[i]);
                 } else {

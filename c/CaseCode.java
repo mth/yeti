@@ -362,9 +362,9 @@ final class CaseExpr extends Code {
             ctx.visitLabel(next);
         }
         ctx.visitLabel(next);
-        ctx.popn(patternStack);
+        ctx.popn(patternStack - 1);
         ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
-                            "badMatch", "()Ljava/lang/Object;");
+                            "badMatch", "(Ljava/lang/Object;)Ljava/lang/Object;");
         ctx.visitLabel(end);
     }
 
