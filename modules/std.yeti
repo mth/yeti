@@ -30,6 +30,7 @@ module yeti.lang.std;
 
 import java.lang.IllegalArgumentException;
 import java.util.regex.Pattern;
+import java.util.Map;
 
 class FailureException(String what)
     extends RuntimeException(what)
@@ -67,7 +68,7 @@ keys h is hash<'a, 'b> -> list<'a> =
     if empty? h then
         []
     else
-        new MList((h unsafely_as ~Hash)#keySet()#toArray())
+        new MList((h unsafely_as ~Map)#keySet()#toArray())
             unsafely_as list<'a>
     fi;
 
@@ -518,15 +519,15 @@ plus a b = a + b;
         Core#uncapitalize(str unsafely_as ~String),
 
     forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
-        i = (h unsafely_as ~Hash)#entrySet()#iterator();
+        i = (h unsafely_as ~Map)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
             f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)),
 
     mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c> =
         a = new MList();
-        a#reserve((h unsafely_as ~Hash)#size());
-        i = (h unsafely_as ~Hash)#entrySet()#iterator();
+        a#reserve((h unsafely_as ~Map)#size());
+        i = (h unsafely_as ~Map)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
             a#add(f (e#getKey() unsafely_as 'a)
@@ -549,10 +550,10 @@ plus a b = a + b;
         (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
 
     clearHash h is hash<'a, 'b> -> () =
-        (h unsafely_as ~Hash)#clear(),
+        (h unsafely_as ~Map)#clear(),
 
     insertHash h h' is hash<'a, 'b> -> hash<'a, 'b> -> () =
-        _ = (h unsafely_as ~Hash)#putAll(h' unsafely_as ~Hash),
+        _ = (h unsafely_as ~Map)#putAll(h' unsafely_as ~Map),
 
     length l is map<'a, 'b> -> number =
         if nullptr? l then
