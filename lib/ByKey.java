@@ -51,4 +51,9 @@ public interface ByKey {
      * Remove object by key.
      */
     void removeAll(AList keys);
+
+    /**
+     * Has a given key.
+     */
+    boolean containsKey(Object key);
 }

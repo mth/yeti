@@ -340,6 +340,11 @@ public class MList extends AMList implements ByKey {
         return (p = start + 1) < size ? new Iter(p) : null;
     }
 
+    public boolean containsKey(Object index) {
+        int i;
+        return  (i = ((Number) index).intValue()) >= 0 && i + start < size;
+    }
+
     public final Object vget(Object index) {
         int i;
         if ((i = ((Number) index).intValue()) < 0) {

@@ -101,7 +101,7 @@ public class YetiType implements YetiParser {
     static final Type LIST_TO_A = fun(A_B_LIST_TYPE, A);
     static final Type MAP_TO_BOOL = fun(A_B_C_MAP_TYPE, BOOL_TYPE);
     static final Type LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
-    static final Type IN_TYPE = fun2Arg(A, A_B_MAP_TYPE, BOOL_TYPE);
+    static final Type IN_TYPE = fun2Arg(A, A_B_C_MAP_TYPE, BOOL_TYPE);
     static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
     static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
     static final Type NUM_TO_NUM = fun(NUM_TYPE, NUM_TYPE);

@@ -703,10 +703,12 @@ final class InOpFun extends BoolBinOp {
     void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
         arg2.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Hash");
+        if (ctx.compilation.isGCJ) {
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+        }
         arg1.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash",
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                             "containsKey", "(Ljava/lang/Object;)Z");
         ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
     }
