@@ -534,8 +534,12 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<'c>,
 
-    copyHash h is hash<'a, 'b> -> hash<'a, 'b> =
-        new Hash(h) unsafely_as hash<'a, 'b>,
+    copy h is 'a -> 'a =
+        if nullptr? h then
+            () as ~Object unsafely_as 'a
+        else
+            (h is map<'a, 'b> unsafely_as ~Coll)#copy() unsafely_as map<'a, 'b>
+        fi,
 
     failWith message =
         throw new FailureException(message),
@@ -547,7 +551,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~ByKey)#removeAll(ks),
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
-        (h unsafely_as ~Hash)#defaultFun := (f unsafely_as ~Fun),
+        (h unsafely_as ~ByKey)#setDefault(f),
 
     clearHash h is hash<'a, 'b> -> () =
         (h unsafely_as ~Map)#clear(),

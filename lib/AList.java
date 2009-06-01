@@ -67,4 +67,8 @@ public abstract class AList extends AIter implements Comparable, Coll {
     public AList asList() {
         return this;
     }
+    
+    public Object copy() {
+        return new MList(this);
+    }
 }

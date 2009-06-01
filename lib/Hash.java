@@ -34,7 +34,7 @@ import java.util.Map;
 
 /** Yeti core library - Hash. */
 public class Hash extends java.util.HashMap implements ByKey, Coll {
-    Fun defaultFun;
+    private Fun defaultFun;
 
     public Hash() {
     }
@@ -70,6 +70,16 @@ public class Hash extends java.util.HashMap implements ByKey, Coll {
 
     public AList asList() {
         return new MList(values().toArray());
+    }
+
+    public void setDefault(Fun fun) {
+        defaultFun = fun;
+    }
+    
+    public Object copy() {
+        Hash result = new Hash(this);
+        result.defaultFun = defaultFun;
+        return result;
     }
 
     public String toString() {

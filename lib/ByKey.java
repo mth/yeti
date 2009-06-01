@@ -56,4 +56,9 @@ public interface ByKey {
      * Has a given key.
      */
     boolean containsKey(Object key);
+
+    /**
+     * Set a default function.
+     */
+    void setDefault(Fun fun);
 }

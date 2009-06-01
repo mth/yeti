@@ -452,6 +452,12 @@ public class MList extends AMList implements ByKey {
         return new MList(subArray);
     }
 
+    public Object copy() {
+        Object[] a = new Object[size];
+        System.arraycopy(array, start, a, 0, size);
+        return new MList(a);
+    }
+
     public AList find(Fun pred) {
         for (int cnt = size, i = start; i < cnt; ++i) {
             if (pred.apply(array[i]) == Boolean.TRUE) {
@@ -516,6 +522,10 @@ public class MList extends AMList implements ByKey {
             sort(array, tmp, start, size, isLess);
         }
         return this;
+    }
+
+    public void setDefault(Fun fun) {
+        throw new UnsupportedOperationException();
     }
 
     public AList sort(Fun isLess) {

@@ -35,4 +35,5 @@ public interface Coll {
     AList asList();
     long length();
     boolean isEmpty();
+    Object copy();
 }

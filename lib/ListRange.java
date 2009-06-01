@@ -283,4 +283,8 @@ public final class ListRange extends AList implements Serializable {
         return rest == null ? inc > 0 ? this : reverse()
                             : new MList(this).asort();
     }
+
+    public Object copy() {
+        return this;
+    }
 }
