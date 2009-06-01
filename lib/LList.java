@@ -153,4 +153,8 @@ public class LList extends AList implements Serializable {
     public AList smap(Fun f) {
         return null;
     }
+    
+    public Object copy() {
+        return null;
+    }
 }

@@ -44,6 +44,12 @@ abstract class AMList extends AList implements Serializable {
         return l > 0 ? l : 0;
     }
 
+    public Object copy() {
+        Object[] a = new Object[_size()];
+        System.arraycopy(array(), start, a, 0, a.length);
+        return new MList(a);
+    }
+
     public int hashCode() {
         int hashCode = 1;
         Object[] array = array();
@@ -450,12 +456,6 @@ public class MList extends AMList implements ByKey {
         Object[] subArray = new Object[to - from];
         System.arraycopy(array, start + from, subArray, 0, subArray.length);
         return new MList(subArray);
-    }
-
-    public Object copy() {
-        Object[] a = new Object[size];
-        System.arraycopy(array, start, a, 0, size);
-        return new MList(a);
     }
 
     public AList find(Fun pred) {
