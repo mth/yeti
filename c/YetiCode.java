@@ -614,8 +614,6 @@ abstract class Code implements Opcodes {
             case YetiType.VARIANT: return "yeti/lang/Tag";
             case YetiType.MAP: {
                 int k = t.param[2].deref().type;
-                if (k == YetiType.MAP_MARKER)
-                    return "yeti/lang/Hash";
                 if (k != YetiType.LIST_MARKER)
                     return "java/lang/Object";
                 if (t.param[1].deref().type == YetiType.NUM)
@@ -2672,7 +2670,6 @@ final class MapConstructor extends Code {
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
             ctx.visitInsn(POP);
         }
-        ctx.forceType("yeti/lang/Hash");
     }
 
     boolean flagop(int fl) {

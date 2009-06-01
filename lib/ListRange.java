@@ -285,6 +285,8 @@ public final class ListRange extends AList implements Serializable {
     }
 
     public Object copy() {
-        return this;
+        ListRange r = new ListRange(first, last, rest);
+        r.inc = inc;
+        return r;
     }
 }

@@ -406,7 +406,7 @@ class JavaType {
                 return fromDescription(t.param[1].type == YetiType.NUM
                             ? "Lyeti/lang/MList;" : "Lyeti/lang/AList;");
             case YetiType.MAP_MARKER:
-                return fromDescription("Lyeti/lang/Hash;");
+                return fromDescription("Ljava/util/Map;");
             }
             return fromDescription("Lyeti/lang/ByKey;");
         case YetiType.FUN:

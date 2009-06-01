@@ -534,6 +534,9 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<'c>,
 
+    identityHash () is () -> hash<'a, 'b> =
+        new IdentityHash() unsafely_as hash<'a, 'b>,
+
     copy h is 'a -> 'a =
         if nullptr? h then
             () as ~Object unsafely_as 'a

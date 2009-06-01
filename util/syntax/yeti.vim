@@ -76,6 +76,7 @@ syn keyword yetiFunction delete keys matchAll string apply clearHash strChar
 syn keyword yetiFunction failWith lazy int map map' takeWhile collect pair nub
 syn keyword yetiFunction strLastIndexOf' copy slice deleteAll hash avoid
 syn keyword yetiFunction groupBy insertHash strCapitalize strUncapitalize
+syn keyword yetiFunction identityHash
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
 
