@@ -89,7 +89,7 @@ syn match yetiOperator #\.\.\.#
 
 syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"
-syn match yetiConstant "\<\u\(\w\|'\)*\>"
+syn match yetiConstructor "\<\u\(\w\|'\)*\>"
 
 syn match yetiStringErr "\\." contained
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
@@ -178,6 +178,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiKeyword 	Keyword
 
   HiLink yetiConstant	Constant
+  HiLink yetiConstructor Identifier
 
   HiLink yetiOperator	Operator
   HiLink yetiAnyVar	Keyword
