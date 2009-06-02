@@ -337,7 +337,12 @@ end;
                 fi
             done;
         for sourceDirs do sourceDir:
-            scanDir new File(sourceDir)
+            f = new File(sourceDir);
+            if f#isFile() then
+                push sources sourceDir
+            else
+                scanDir f
+            fi
         done;
         doCompile {
             sources, javaArgs,
