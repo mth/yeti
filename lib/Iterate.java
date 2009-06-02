@@ -61,4 +61,8 @@ final class Iterate extends LList {
         buf.append(']');
         return buf.toString();
     }
+
+    public Object copy() {
+        return new Iterate(first, f);
+    }
 }
