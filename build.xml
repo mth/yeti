@@ -9,8 +9,6 @@
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
     <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
-    <get src="http://linux.ee/~mzz/jarjar-1.0.jar"
-         dest="${jarjar}" verbose="true"/>
 </target>
 
 <target name="lib" depends="fetch" unless="no.lib.build">
@@ -137,9 +135,9 @@
 </target>
 
 <target name="all-jar" depends="clean,jar,mixed-task">
-    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
-             classpath="jarjar-1.0.jar"/>
-    <jarjar jarfile="${basedir}/yeti-all.jar">
+    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
+           includes="Rename.java" encoding="UTF-8" classpath="${asm}"/>
+    <jar jarfile="${basedir}/yeti-all.jar.tmp">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
@@ -149,8 +147,13 @@
         <fileset dir="${basedir}/.build/modules"/>
         <fileset dir="${basedir}/.build/mixedtask"/>
         <zipfileset src="${asm}"/>
-        <rule pattern="org.objectweb.asm.**" result="org.objectweb.asm31.@1"/>
-    </jarjar>
+    </jar>
+    <java classname="yeti.lang.Rename" failonerror="true"
+          classpath="${basedir}/.build/util">
+        <arg value="${basedir}/yeti-all.jar.tmp"/>
+        <arg value="${basedir}/yeti-all.jar"/>
+    </java>
+    <delete file="${basedir}/yeti-all.jar.tmp"/>
 </target>
 
 <target name="scan" depends="mixed-task">
