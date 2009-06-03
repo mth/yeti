@@ -3,11 +3,14 @@
 
 <target name="prepare-build">
     <property name="asm" value="${basedir}/asm-3.1.jar"/>
+    <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
     <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
+    <get src="http://linux.ee/~mzz/jarjar-1.0.jar"
+         dest="${jarjar}" verbose="true"/>
 </target>
 
 <target name="lib" depends="fetch" unless="no.lib.build">
@@ -134,7 +137,9 @@
 </target>
 
 <target name="all-jar" depends="clean,jar,mixed-task">
-    <jar jarfile="${basedir}/yeti-all.jar">
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"
+             classpath="jarjar-1.0.jar"/>
+    <jarjar jarfile="${basedir}/yeti-all.jar">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
@@ -144,7 +149,8 @@
         <fileset dir="${basedir}/.build/modules"/>
         <fileset dir="${basedir}/.build/mixedtask"/>
         <zipfileset src="${asm}"/>
-    </jar>
+        <rule pattern="org.objectweb.asm.**" result="org.objectweb.asm31.@1"/>
+    </jarjar>
 </target>
 
 <target name="scan" depends="mixed-task">
