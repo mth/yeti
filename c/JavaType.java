@@ -725,6 +725,10 @@ class JavaType {
                 return isAssignable(to.param[0], from.param[0], smart);
             }
         }
+        if (to.type == YetiType.STR &&
+            from.type == YetiType.JAVA &&
+            from.javaType.description == "Ljava/lang/String;")
+            return 0;
         return -1;
     }
 
