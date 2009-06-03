@@ -537,6 +537,9 @@ abstract class Code implements Opcodes {
     // this which is not captured
     static final int DIRECT_THIS = 64;
 
+    // capture that requires bounding function to initialize its module
+    static final int MODULE_REQUIRED = 128;
+
     YetiType.Type type;
     boolean polymorph;
 
@@ -1528,6 +1531,7 @@ final class Function extends CapturingClosure implements Binder {
     private int argUsed;
     private boolean shared;
     boolean publish;
+    private boolean moduleInit;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -1588,6 +1592,9 @@ final class Function extends CapturingClosure implements Binder {
     // transforming the BindRef.
     public BindRef refProxy(BindRef code) {
         if (code.flagop(DIRECT_BIND)) {
+            if (code.flagop(MODULE_REQUIRED)) {
+                moduleInit = true;
+            }
             return code;
         }
         if (selfBind == code.binder && !code.flagop(ASSIGN)) {
@@ -1689,6 +1696,11 @@ final class Function extends CapturingClosure implements Binder {
                     apply.visitVarInsn(ASTORE, apply.localVarCount++);
                 }
             }
+        }
+        if (moduleInit && publish) {
+            apply.visitMethodInsn(INVOKESTATIC, ctx.className,
+                                  "eval", "()Ljava/lang/Object;");
+            apply.visitInsn(POP);
         }
         genClosureInit(apply);
         apply.visitLabel(restart = new Label());
@@ -2205,6 +2217,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                     return directBind;
                 if ((fl & DIRECT_BIND) != 0)
                     return directBind || directField != null;
+                if ((fl & MODULE_REQUIRED) != 0)
+                    return directField != null;
                 return (fl & PURE) != 0 && !var;
             }
 
