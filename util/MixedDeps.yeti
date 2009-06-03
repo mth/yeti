@@ -184,6 +184,7 @@ lastModified filename is string -> number =
 
 addDeps {fileMap, classMap} {filename is string, classes, deps, target} =
    (modified = lastModified filename;
+    //println "\(filename): \(deps)";
     fileMap.[filename] := {deps = nub deps, modified, target};
     for classes do className:
         classMap.[className] := filename

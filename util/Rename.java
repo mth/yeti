@@ -23,11 +23,11 @@ public class Rename {
 
     public static void main(String[] args) throws Exception {
         String find1S = "org/objectweb/asm/";
-        String repl1S = "org/objectweb/a31/";
+        String repl1S = "org/objectweb/as3/";
         byte[] find1 = find1S.getBytes("UTF-8");
         byte[] repl1 = repl1S.getBytes("UTF-8");
         byte[] find2 = "org.objectweb.asm.".getBytes("UTF-8");
-        byte[] repl2 = "org.objectweb.a31.".getBytes("UTF-8");
+        byte[] repl2 = "org.objectweb.as3.".getBytes("UTF-8");
         JarFile in = new JarFile(args[0]);
         JarOutputStream out =
             new JarOutputStream(new FileOutputStream(args[1]));
