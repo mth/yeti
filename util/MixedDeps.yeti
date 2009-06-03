@@ -96,7 +96,10 @@ javaFile addDeps filename =
     fi);
 
 removeArgs name =
-    (like '^(\w+)' name ()).[1];
+    (like '^[.\w]+' name ()).[0];
+
+argPattern = like
+    '\w\(((?:\w++\.)*+[A-Z]\w*+ ++\w++(?:,\s*+(?:\w++\.)*+[A-Z]\w*+ ++\w++)*+)\)';
 
 yetiFile addDeps filename =
    (src = cleanYeti (loadSource filename);
@@ -109,7 +112,7 @@ yetiFile addDeps filename =
         importMap = mapImports imports;
         classDefs = collect (like ('\Wclass (\w++)(?:\([^)]*+\))?+ ' ^
                                    '(?:extends (\w++(?:\([^)]*+\))?+' ^
-                                   '(?: ?+, ?+\w++)*+) )?+') src)
+                                   '(?: ?+, ?+\w++)*+) )?+(.*?)end') src)
                             () empty?;
         classes = map ((package ^ ) . removeArgs . (`at` 1)) classDefs;
         extends =
@@ -121,7 +124,9 @@ yetiFile addDeps filename =
         done;
         uses = concatMap collectList [like '([A-Z]\w*+)#' src,
                                       like '\W(?:new|catch) ([\w.]++)' src];
-        deps = imports ++ typeFilter package importMap (extends ++ uses);
+        args = concatMap (collectList . argPattern . (`at` 3)) classDefs;
+        args = map removeArgs (concatMap (strSplit ' *, *') args);
+        deps = imports ++ typeFilter package importMap (extends ++ uses ++ args);
         //println "\(filename): \(classes)";
         addDeps {filename, classes = name :: classes, deps, target = name}
     fi);
