@@ -551,14 +551,14 @@ interface YetiParser {
         private static final String[][] OPS = {
             { "*", "/", "%" },
             { "+", "-" },
-            { "::", ":." },
             { "<", ">", "<=", ">=", "==", "!=", "=~", "!~" },
             { null }, // and or
             { null }, // non-standard operators
             { "." },
+            { "::", ":." },
             { "is" },
             { ":=" },
-            { null },
+            { null }, // loop
         };
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
