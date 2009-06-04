@@ -911,7 +911,7 @@ interface YetiParser {
             }
             p = i;
             return new ObjectRefOp(new String(src, st, i - st).intern(),
-                                   readArgs());
+                                   src[i] == '(' ? readArgs() : null);
         }
 
         private Node readIf() {
