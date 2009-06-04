@@ -555,7 +555,7 @@ interface YetiParser {
             { null }, // and or
             { null }, // non-standard operators
             { "." },
-            { "::", ":." },
+            { "::", ":.", "++" },
             { "is" },
             { ":=" },
             { null }, // loop
