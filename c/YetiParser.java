@@ -765,7 +765,7 @@ interface YetiParser {
             } else if (s == "classOf") {
                 res = new XNode(s,
                             readDottedType("Expected class name, not a "));
-            } else if (s == "type") {
+            } else if (s == "typedef") {
                 res = readTypeDef();
             } else if (s == "try") {
                 res = readTry();

@@ -114,7 +114,7 @@ syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" cont
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
-syn region yetiTypeBind matchgroup=yetiTypeDef start="\<type\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=NOTHING
+syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=NOTHING
 syn keyword yetiType is skipempty skipwhite nextgroup=@yetiTypeDecls
 syn keyword yetiCast as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
