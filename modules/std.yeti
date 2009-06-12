@@ -99,7 +99,7 @@ plus a b = a + b;
     // functions for standard operators
 
     // boolean logic
-    norec not v = not v,
+    norec (not) v = not v,
     norec (and) a b = a and b,
     norec (or) a b = a or b,
 
@@ -182,9 +182,9 @@ plus a b = a + b;
     // List/array concatenation
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
-            b
+            b unsafely_as ~Object unsafely_as 'a
         elif empty? b then
-            a
+            a unsafely_as ~Object unsafely_as 'a
         else
             new ConcatList(a, b) unsafely_as list<'a>
         fi,
@@ -258,11 +258,11 @@ plus a b = a + b;
 
     // Is predicate f true for any element of list l?
     any f l =
-        not (nullptr? (find f l)),
+        not nullptr? (find f l),
 
     // Is predicate f true for all elements of list l?
     all f l =
-        nullptr? (find (_ x = not (f x)) l),
+        nullptr? (find (_ x = not f x) l),
 
     // Returns first element of l for which predicate f is false
     // or last element, when f returns false for all elements of l.
@@ -274,7 +274,7 @@ plus a b = a + b;
         var value = () as ~Object;
         (value := i#first();
          i := i#next();
-         not (nullptr? i) and f (value unsafely_as 'a)) loop;
+         not nullptr? i and f (value unsafely_as 'a)) loop;
         value unsafely_as 'a,
 
     // Whether l contains element equal (as defined by (==)) to v
@@ -315,7 +315,7 @@ plus a b = a + b;
                           -> { fst is list<'a>, snd is list<'a> } = 
         a = new MList();
         var l = list; // over-optimized loop from hell. don't code like that.
-        not (empty? l) and (h = head l; not (pred h) and (a#add(h); true)) loop
+        not empty? l and (h = head l; not pred h and (a#add(h); true)) loop
             l := tail l;
         { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
@@ -330,7 +330,7 @@ plus a b = a + b;
         if n < 256 then
             a#reserve(n)
         fi;
-        n > 0 and not (empty? l) loop
+        n > 0 and not empty? l loop
            (a#add(head l);
             l := tail l;
             n := n - 1);
@@ -386,7 +386,7 @@ plus a b = a + b;
             var i = l unsafely_as ~AIter;
             var prev = i#first();
             collector#add(prev);
-            (i := i#next(); not (nullptr? i)) loop
+            (i := i#next(); not nullptr? i) loop
                (val = i#first();
                 if not ((val unsafely_as 'a) `eq` (prev unsafely_as 'a)) then
                     result#add(collector);
@@ -491,11 +491,11 @@ plus a b = a + b;
             buf = new java.lang.StringBuffer("\(head list)");
             var l = tail list;
             if strLength sep == 0 then
-                not (nullptr? l) loop
+                not nullptr? l loop
                    (_ = buf#append("\(head l)");
                     l := tail l)
             else
-                not (nullptr? l) loop
+                not nullptr? l loop
                    (_ = buf#append(sep);
                     _ = buf#append("\(head l)");
                     l := tail l)
@@ -586,7 +586,7 @@ plus a b = a + b;
 
     collect f a endPred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();
-        (v = f a; not (endPred v) and (l#add(v); true)) loop;
+        (v = f a; not endPred v and (l#add(v); true)) loop;
         if l#isEmpty() then
             []
         else
@@ -620,7 +620,7 @@ plus a b = a + b;
         else
             var a = a unsafely_as ~AIter;
             var res = b;
-            not (nullptr? a) loop
+            not nullptr? a loop
                (res := (a#first() unsafely_as 'a) :: res;
                 a := a#next());
             res

@@ -56,7 +56,7 @@ typeFilter package importMap =
 javaFile addDeps filename =
    (src = cleanJava (loadSource filename);
     m = like '^(?: *package ([\w.]++);)?((?: *import [^;]++ ?;)*)' src ();
-    if not (empty? m) then
+    if not empty? m then
         package = if m.[1] == '' then
                       ''
                   else
@@ -86,7 +86,7 @@ javaFile addDeps filename =
         target = if name != '' and (empty? classes or
                                     any (on (==) strLower name) classes) then
                      name
-                 elif not (empty? classes) then
+                 elif not empty? classes then
                      head classes
                  else
                      ''
@@ -104,7 +104,7 @@ argPattern = like
 yetiFile addDeps filename =
    (src = cleanYeti (loadSource filename);
     m = like '^ *(?:module|program) (([\w\.]+\.)?\w++);' src ();
-    if not (empty? m) then
+    if not empty? m then
         name = m.[1];
         package = m.[2];
         src = strRight src (strLength m.[0]);
@@ -147,7 +147,7 @@ calculateDeps classPathModified targetDir {fileMap, classMap} =
     done;
     recurse to deps =
         for deps do dep:
-            if not (dep in to) then
+            if not dep in to then
                 to.[dep] := ();
                 recurse to depMap.[dep]
             fi
@@ -221,14 +221,14 @@ doCompile {classPath, destdir, sources, javaArgs, log, error, exception} =
         if head files =~ '\.yeti$' then
             log "Compiling \(length files) yeti \
                 "source\(plurals files) to \(destdir)";
-            if not (compileYeti () files) then
+            if not compileYeti () files then
                 error antError
             fi
         else
             log "Compiling \(length files) java \
                 "source\(plurals files) to \(destdir)";
             args = array javaArgs;
-            if not (empty? classPath) then
+            if not empty? classPath then
                 push args "-classpath";
                 push args (strJoin File#pathSeparator classPath);
             fi;

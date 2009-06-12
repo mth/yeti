@@ -188,6 +188,10 @@ public final class YetiAnalyzer extends YetiType {
                 return apply(op, resolve("negate", op, scope, depth),
                                  op.right, scope, depth);
             }
+            if (opop == "not") {
+                return apply(op, resolve(opop, op, scope, depth),
+                                 op.right, scope, depth);
+            }
             if (opop == "throw") {
                 Code throwable = analyze(op.right, scope, depth);
                 JavaType.checkThrowable(op, throwable.type);

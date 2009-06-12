@@ -497,12 +497,15 @@ interface YetiParser {
 
         private void addOp(BinOp op) {
             BinOp to = cur;
-            if (op.op == "-" && lastOp || op.op == "\\" || op.op == "throw") {
+            if (op.op == "-" && lastOp || op.op == "\\"
+                    || op.op == "throw" || op.op == "not") {
                 if (!lastOp) {
                     apply(op);
                     to = cur;
                 }
-                op.prio = 1;
+                if (op.op == "-") {
+                    op.prio = 1;
+                }
                 to.left = to.right;
             } else if (lastOp) {
                 throw new CompileException(op, "Do not stack operators");
@@ -534,6 +537,7 @@ interface YetiParser {
 
         Node result() {
             if (cur.left == null && cur.prio != -1 && cur.prio != 1 &&
+                    cur.prio != Parser.NOT_OP_LEVEL &&
                     !cur.postfix || cur.right == null) {
                 throw new CompileException(cur, "Expecting some value");
             }
@@ -552,6 +556,7 @@ interface YetiParser {
             { "*", "/", "%" },
             { "+", "-" },
             { "<", ">", "<=", ">=", "==", "!=", "=~", "!~" },
+            { null }, // not
             { null }, // and or
             { null }, // non-standard operators
             { "." },
@@ -562,6 +567,7 @@ interface YetiParser {
         };
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
+        static final int NOT_OP_LEVEL = COMP_OP_LEVEL + 1;
         private static final int DOT_OP_LEVEL = opLevel(".");
         static final int IS_OP_LEVEL = opLevel("is");
         private static final Eof EOF = new Eof("EOF");
@@ -729,7 +735,9 @@ interface YetiParser {
             } else if (s == "do") {
                 res = readDo();
             } else if (s == "and" || s == "or") {
-                res = new BinOp(s, COMP_OP_LEVEL + 1, true);
+                res = new BinOp(s, NOT_OP_LEVEL + 1, true);
+            } else if (s == "not") {
+                res = new BinOp(s, NOT_OP_LEVEL, true);
             } else if (s == "then" || s == "elif" || s == "else" ||
                        s == "fi" || s == "of" || s == "esac" || s == "done" ||
                        s == "catch" || s == "finally" || s == "yrt") {
@@ -797,7 +805,7 @@ interface YetiParser {
                 if (o instanceof BinOp
                     && (partial = (BinOp) o).parent == null
                     && partial.op != "\\" && partial.op != "-"
-                    && partial.op != "throw") {
+                    && partial.op != "throw" && partial.op != "not") {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
