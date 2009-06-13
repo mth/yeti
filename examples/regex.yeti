@@ -10,7 +10,7 @@ matcher = like 'pattern.*!' str;
 (
     match = matcher ();
     println match;
-    not (empty? match);
+    not empty? match
 ) loop;
 
 for [

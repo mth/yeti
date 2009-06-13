@@ -93,7 +93,8 @@ qsort2 less =
    (qsort l =
         case l of
         x :: xs: // could do with half of the compares
-            qsort (filter (not . less x) xs) ++ x :: qsort (filter (less x) xs);
+            qsort (filter ((not) . less x) xs)
+                ++ x :: qsort (filter (less x) xs);
         _: [];
         esac);
 
@@ -125,7 +126,7 @@ mergeSort less l =
 
 insertionSort less l =
     fold do l e:
-        {fst, snd} = splitBy (not . (`less` e)) l;
+        {fst, snd} = splitBy ((not) . (`less` e)) l;
         fst ++ e :: snd
     done [] l;
 

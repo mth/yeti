@@ -888,10 +888,12 @@ final class MatchOpFun extends BinOpRef {
 
 final class RegexFun extends StaticRef {
     private String impl;
+    private String funName;
 
     RegexFun(String fun, String impl, YetiType.Type type,
              Binder binder, int line) {
         super("yeti/lang/std$" + fun, "_", type, null, false, line);
+        this.funName = fun;
         this.binder = binder;
         this.impl = impl;
     }
@@ -914,7 +916,7 @@ final class RegexFun extends StaticRef {
             { type = t; }
 
             void gen(Ctx ctx) {
-                ctx.constant(funFieldName + ':' +
+                ctx.constant(funName + ":regex:" +
                     ((StringConstant) arg).str, f);
             }
         };
