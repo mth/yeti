@@ -555,11 +555,12 @@ interface YetiParser {
         private static final String[][] OPS = {
             { "*", "/", "%" },
             { "+", "-" },
+            { null }, // non-standard operators
+            { "." },
             { "<", ">", "<=", ">=", "==", "!=", "=~", "!~" },
             { null }, // not
             { null }, // and or
-            { null }, // non-standard operators
-            { "." },
+            { "^" },
             { "::", ":.", "++" },
             { "is" },
             { ":=" },
