@@ -569,7 +569,6 @@ interface YetiParser {
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
         static final int NOT_OP_LEVEL = COMP_OP_LEVEL + 1;
-        private static final int DOT_OP_LEVEL = opLevel(".");
         static final int IS_OP_LEVEL = opLevel("is");
         private static final Eof EOF = new Eof("EOF");
         private char[] src;
@@ -651,7 +650,7 @@ interface YetiParser {
                     if ((i <= 0 || (c = src[i - 1]) < '~' && CHS[c] == ' ' &&
                                 (i >= src.length ||
                                  (c = src[i + 1]) < '~' && CHS[c] == ' ')))
-                        return new BinOp(".", DOT_OP_LEVEL, true)
+                        return new BinOp(".", COMP_OP_LEVEL - 1, true)
                             .pos(line, col);
                     break;
                 case ';':
@@ -707,7 +706,7 @@ interface YetiParser {
                         }
                     }
                 }
-                return new BinOp(s, DOT_OP_LEVEL - 1, true).pos(line, col);
+                return new BinOp(s, FIRST_OP_LEVEL + 2, true).pos(line, col);
             }
             if ((c = src[i]) >= '0' && c <= '9') {
                 while (++i < src.length && ((c = src[i]) <= 'z' &&
@@ -789,7 +788,7 @@ interface YetiParser {
                 } else if (s.length() > 1 && p < src.length && src[p] == '`') {
                     ++p;
                     res = new BinOp(s.substring(1).intern(),
-                                    DOT_OP_LEVEL - 1, true);
+                                    FIRST_OP_LEVEL + 2, true);
                 } else {
                     throw new CompileException(line, col, "Syntax error");
                 }
