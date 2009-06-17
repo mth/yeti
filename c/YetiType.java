@@ -748,7 +748,7 @@ public class YetiType implements YetiParser {
             ex.special = true;
             throw ex;
         }
-        if (type.param != null && type.type != VARIANT) {
+        if (type.param != null && type.type != VARIANT && type.type != STRUCT) {
             for (int i = type.param.length; --i >= 0;) {
                 occursCheck(type.param[i], var);
             }
