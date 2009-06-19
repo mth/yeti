@@ -356,6 +356,7 @@ final class For extends Core2 {
                 (f = (Function) fun).uncapture(arg)) {
             Label retry = new Label(), end = new Label();
             list.gen(ctx);
+            ctx.visitLine(line);
             ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
             ctx.visitInsn(DUP);
             ctx.visitJumpInsn(IFNULL, end);
@@ -371,6 +372,7 @@ final class For extends Core2 {
             // invoke body block
             ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
             f.body.gen(ctx);
+            ctx.visitLine(line);
             ctx.visitInsn(POP); // ignore return value
             // next
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
