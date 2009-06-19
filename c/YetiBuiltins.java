@@ -350,21 +350,51 @@ final class For extends Core2 {
     }
 
     void genApply2(Ctx ctx, Code list, Code fun, int line) {
-        Label nop = new Label(), end = new Label();
-        list.gen(ctx);
-        fun.gen(ctx);
-        ctx.visitLine(line);
-        ctx.visitInsn(SWAP);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-        ctx.visitInsn(DUP_X1);
-        ctx.visitJumpInsn(IFNULL, nop);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                            "forEach", "(Ljava/lang/Object;)V");
-        ctx.visitJumpInsn(GOTO, end);
-        ctx.visitLabel(nop);
-        ctx.visitInsn(POP2);
-        ctx.visitLabel(end);
-        ctx.visitInsn(ACONST_NULL);
+        Function f;
+        LoadVar arg = new LoadVar();
+        if (fun instanceof Function &&
+                (f = (Function) fun).uncapture(arg)) {
+            Label retry = new Label(), end = new Label();
+            list.gen(ctx);
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.visitInsn(DUP);
+            ctx.visitJumpInsn(IFNULL, end);
+            ctx.visitInsn(DUP);
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                "isEmpty", "()Z");
+            ctx.visitJumpInsn(IFNE, end);
+            // start of loop
+            ctx.visitLabel(retry);
+            ctx.visitInsn(DUP);
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                "first", "()Ljava/lang/Object;");
+            // invoke body block
+            ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
+            f.body.gen(ctx);
+            ctx.visitInsn(POP); // ignore return value
+            // next
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                "next", "()Lyeti/lang/AIter;");
+            ctx.visitInsn(DUP);
+            ctx.visitJumpInsn(IFNONNULL, retry);
+            ctx.visitLabel(end);
+        } else {
+            Label nop = new Label(), end = new Label();
+            list.gen(ctx);
+            fun.gen(ctx);
+            ctx.visitLine(line);
+            ctx.visitInsn(SWAP);
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.visitInsn(DUP_X1);
+            ctx.visitJumpInsn(IFNULL, nop);
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                "forEach", "(Ljava/lang/Object;)V");
+            ctx.visitJumpInsn(GOTO, end);
+            ctx.visitLabel(nop);
+            ctx.visitInsn(POP2);
+            ctx.visitLabel(end);
+            ctx.visitInsn(ACONST_NULL);
+        }
     }
 }
 
