@@ -371,7 +371,9 @@ final class For extends Core2 {
                                 "first", "()Ljava/lang/Object;");
             // invoke body block
             ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
+            ++ctx.tainted; // disable argument-nulling - we're in cycle
             f.body.gen(ctx);
+            --ctx.tainted;
             ctx.visitLine(line);
             ctx.visitInsn(POP); // ignore return value
             // next
