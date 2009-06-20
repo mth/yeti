@@ -296,6 +296,26 @@ final class CompileCtx implements Opcodes {
     }
 }
 
+final class YClassWriter extends ClassWriter {
+    YClassWriter() {
+        super(COMPUTE_MAXS | COMPUTE_FRAMES);
+    }
+
+    // Overload to avoid using reflection on non-standard-library classes
+    protected String getCommonSuperClass(String type1, String type2) {
+        if (type1.equals(type2)) {
+            return type1;
+        }
+        if ((type1.startsWith("java/lang/") ||
+                type1.startsWith("yeti/lang/")) &&
+            (type2.startsWith("java/lang/") ||
+                type2.startsWith("yeti/lang/"))) {
+            return super.getCommonSuperClass(type1, type2);
+        }
+        return "java/lang/Object";
+    }
+}
+
 final class Ctx implements Opcodes {
     CompileCtx compilation;
     String className;
@@ -320,8 +340,7 @@ final class Ctx implements Opcodes {
 
     Ctx newClass(int flags, String name, String extend, String[] interfaces) {
         Ctx ctx = new Ctx(compilation, constants,
-                new ClassWriter(ClassWriter.COMPUTE_MAXS |
-                                ClassWriter.COMPUTE_FRAMES), name);
+                new YClassWriter(), name);
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
