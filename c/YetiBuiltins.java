@@ -380,7 +380,7 @@ final class For extends Core2 {
                 f.body.gen(ctx);
                 --ctx.tainted;
                 ctx.visitInsn(POP);
-                ctx.visitIincInsn(i, 1);
+                ctx.visitVarInsn(IINC, i);
                 ctx.visitJumpInsn(GOTO, retry);
                 ctx.visitLabel(end);
                 ctx.visitInsn(ACONST_NULL);

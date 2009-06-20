@@ -433,12 +433,10 @@ final class Ctx implements Opcodes {
 
     void visitVarInsn(int opcode, int var) {
         visitInsn(-1);
-        m.visitVarInsn(opcode, var);
-    }
-
-    void visitIincInsn(int var, int inc) {
-        visitInsn(-1);
-        m.visitIincInsn(var, inc);
+        if (opcode != IINC)
+            m.visitVarInsn(opcode, var);
+        else
+            m.visitIincInsn(var, 1);
     }
 
     void visitIntInsn(int opcode, int param) {
