@@ -306,10 +306,8 @@ final class YClassWriter extends ClassWriter {
         if (type1.equals(type2)) {
             return type1;
         }
-        if ((type1.startsWith("java/lang/") ||
-                type1.startsWith("yeti/lang/")) &&
-            (type2.startsWith("java/lang/") ||
-                type2.startsWith("yeti/lang/"))) {
+        if (type1.startsWith("java/lang/") && type2.startsWith("java/lang/") ||
+            type1.startsWith("yeti/lang/") && type2.startsWith("yeti/lang/")) {
             return super.getCommonSuperClass(type1, type2);
         }
         return "java/lang/Object";
