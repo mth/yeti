@@ -355,33 +355,64 @@ final class For extends Core2 {
         if (fun instanceof Function &&
                 (f = (Function) fun).uncapture(arg)) {
             Label retry = new Label(), end = new Label();
-            list.gen(ctx);
-            ctx.visitLine(line);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-            ctx.visitInsn(DUP);
-            ctx.visitJumpInsn(IFNULL, end);
-            ctx.visitInsn(DUP);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                                "isEmpty", "()Z");
-            ctx.visitJumpInsn(IFNE, end);
-            // start of loop
-            ctx.visitLabel(retry);
-            ctx.visitInsn(DUP);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
-                                "first", "()Ljava/lang/Object;");
-            // invoke body block
-            ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
-            ++ctx.tainted; // disable argument-nulling - we're in cycle
-            f.body.gen(ctx);
-            --ctx.tainted;
-            ctx.visitLine(line);
-            ctx.visitInsn(POP); // ignore return value
-            // next
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
-                                "next", "()Lyeti/lang/AIter;");
-            ctx.visitInsn(DUP);
-            ctx.visitJumpInsn(IFNONNULL, retry);
-            ctx.visitLabel(end);
+            Range range = null;
+            if (list instanceof ListConstructor) {
+                range = ((ListConstructor) list).range();
+            }
+            if (range != null) {
+                int i = ctx.localVarCount++;
+                int to = ctx.localVarCount++;
+                ctx.genInt(range.from, line);
+                ctx.visitVarInsn(ISTORE, i);
+                ctx.genInt(range.to, line);
+                ctx.visitVarInsn(ISTORE, to);
+                ctx.visitLabel(retry);
+                ctx.visitVarInsn(ILOAD, i);
+                ctx.visitVarInsn(ILOAD, to);
+                ctx.visitJumpInsn(IF_ICMPGT, end);
+                ctx.visitTypeInsn(NEW, "yeti/lang/IntNum");
+                ctx.visitInsn(DUP);
+                ctx.visitVarInsn(ILOAD, i);
+                ctx.visitInit("yeti/lang/IntNum", "(I)V");
+                // invoke body block
+                ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
+                ++ctx.tainted; // disable argument-nulling - we're in cycle
+                f.body.gen(ctx);
+                --ctx.tainted;
+                ctx.visitInsn(POP);
+                ctx.visitIincInsn(i, 1);
+                ctx.visitJumpInsn(GOTO, retry);
+                ctx.visitLabel(end);
+                ctx.visitInsn(ACONST_NULL);
+            } else {
+                list.gen(ctx);
+                ctx.visitLine(line);
+                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+                ctx.visitInsn(DUP);
+                ctx.visitJumpInsn(IFNULL, end);
+                ctx.visitInsn(DUP);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                                    "isEmpty", "()Z");
+                ctx.visitJumpInsn(IFNE, end);
+                // start of loop
+                ctx.visitLabel(retry);
+                ctx.visitInsn(DUP);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                    "first", "()Ljava/lang/Object;");
+                // invoke body block
+                ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
+                ++ctx.tainted; // disable argument-nulling - we're in cycle
+                f.body.gen(ctx);
+                --ctx.tainted;
+                ctx.visitLine(line);
+                ctx.visitInsn(POP); // ignore return value
+                // next
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                                    "next", "()Lyeti/lang/AIter;");
+                ctx.visitInsn(DUP);
+                ctx.visitJumpInsn(IFNONNULL, retry);
+                ctx.visitLabel(end);
+            }
         } else {
             Label nop = new Label(), end = new Label();
             list.gen(ctx);

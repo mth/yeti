@@ -436,6 +436,11 @@ final class Ctx implements Opcodes {
         m.visitVarInsn(opcode, var);
     }
 
+    void visitIincInsn(int var, int inc) {
+        visitInsn(-1);
+        m.visitIincInsn(var, inc);
+    }
+
     void visitIntInsn(int opcode, int param) {
         visitInsn(-1);
         m.visitIntInsn(opcode, param);
@@ -2621,8 +2626,8 @@ final class StructConstructor extends Code {
 }
 
 final class Range extends Code {
-    private Code from;
-    private Code to;
+    final Code from;
+    final Code to;
 
     Range(Code from, Code to) {
         type = YetiType.NUM_TYPE;
@@ -2641,6 +2646,11 @@ final class ListConstructor extends Code {
 
     ListConstructor(Code[] items) {
         this.items = items;
+    }
+
+    Range range() {
+        return items.length == 1 && items[0] instanceof Range
+                ? (Range) items[0] : null;
     }
 
     void gen(Ctx ctx) {
