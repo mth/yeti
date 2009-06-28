@@ -429,10 +429,7 @@ final class Ctx implements Opcodes {
 
     void visitVarInsn(int opcode, int var) {
         visitInsn(-1);
-        if (opcode != IINC)
-            m.visitVarInsn(opcode, var);
-        else
-            m.visitIincInsn(var, 1);
+        m.visitVarInsn(opcode, var);
     }
 
     void visitIntInsn(int opcode, int param) {
@@ -542,19 +539,22 @@ abstract class Code implements Opcodes {
     static final int INT_NUM    = 8;
 
     // Comparision operators use this for some optimisation.
-    static final int EMPTY_LIST = 16;
+    static final int EMPTY_LIST = 0x10;
 
     // no capturing
-    static final int DIRECT_BIND = 32;
+    static final int DIRECT_BIND = 0x20;
 
     // normal constant is also pure and don't need capturing
     static final int STD_CONST = CONST | PURE | DIRECT_BIND;
     
     // this which is not captured
-    static final int DIRECT_THIS = 64;
+    static final int DIRECT_THIS = 0x40;
 
     // capture that requires bounding function to initialize its module
-    static final int MODULE_REQUIRED = 128;
+    static final int MODULE_REQUIRED = 0x80;
+
+    // code object is a list range
+    static final int LIST_RANGE = 0x100;
 
     YetiType.Type type;
     boolean polymorph;
@@ -2644,11 +2644,6 @@ final class ListConstructor extends Code {
         this.items = items;
     }
 
-    Range range() {
-        return items.length == 1 && items[0] instanceof Range
-                ? (Range) items[0] : null;
-    }
-
     void gen(Ctx ctx) {
         if (items.length == 0) {
             ctx.visitInsn(ACONST_NULL);
@@ -2677,7 +2672,9 @@ final class ListConstructor extends Code {
 
     boolean flagop(int fl) {
         return //(fl & (CONST | PURE)) != 0 ||
-               (fl & EMPTY_LIST) != 0 && items.length == 0;
+               (fl & EMPTY_LIST) != 0 && items.length == 0 ||
+               (fl & LIST_RANGE) != 0 && items.length != 0
+                    && items[0] instanceof Range;
     }
 }
 
