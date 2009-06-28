@@ -245,7 +245,11 @@ final class StructPattern extends CasePattern {
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
                       "get", "(Ljava/lang/String;)Ljava/lang/Object;");
             patterns[i].preparePattern(ctx);
-            patterns[i].tryMatch(ctx, failed, false);
+            if (i < names.length - 1) {
+                patterns[i].tryMatch(ctx, failed, false);
+            } else {
+                patterns[i].tryMatch(ctx, onFail, preserve);
+            }
         }
         if (!preserve) {
             Label ok = new Label();
@@ -273,7 +277,7 @@ final class VariantPattern extends CasePattern {
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Tag");
         ctx.visitInsn(DUP);
         ctx.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "name",
-                             "Ljava/lang/String;");
+                           "Ljava/lang/String;");
         return 2; // TN
     }
 

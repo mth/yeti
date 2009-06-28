@@ -10,6 +10,7 @@
 	esac
 	or
 	f x = case x of {a = C _} :: _: 1; ... esac
+	do x: case x of {a = 2} :: _: 1; ... esac done
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * Extendable structs?
