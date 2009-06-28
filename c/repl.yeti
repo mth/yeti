@@ -12,10 +12,18 @@ do argv: {
     var classPath = [],
     var sandbox = false,
     var gcj = false,
+    var noframes = false,
 
     compilationOf writer =
-        new CompileCtx(new YetiC(()), writer, preload,
-                       new ClassFinder(classPath as ~String[]))#setGCJ(gcj),
+        ctx = new CompileCtx(new YetiC(()), writer, preload,
+                             new ClassFinder(classPath as ~String[]));
+        if gcj then
+            ctx#isGCJ := true
+        fi;
+        if noframes then
+            ctx#classWriterFlags := 0
+        fi;
+        ctx,
 
     getTrace ex is ~java.lang.Throwable -> string =
         sw = new java.io.StringWriter();

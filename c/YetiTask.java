@@ -86,7 +86,7 @@ public class YetiTask extends MatchingTask {
         CompileCtx compilation =
             new CompileCtx(new YetiC(dir.getPath()), writer, preload,
                                     new ClassFinder(classPath));
-        compilation.setGCJ(gcj);
+        compilation.isGCJ |= gcj;
         log("Compiling " + files.length + " files.");
         try {
             for (int i = 0; i < files.length; ++i) {

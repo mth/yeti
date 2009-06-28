@@ -90,6 +90,7 @@ final class CompileCtx implements Opcodes {
     ClassFinder classPath;
     Map classes = new HashMap();
     Map types = new HashMap();
+    int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
 
     CompileCtx(SourceReader reader, CodeWriter writer,
@@ -110,11 +111,6 @@ final class CompileCtx implements Opcodes {
     void warn(CompileException ex) {
         ex.fn = currentSrc;
         warnings.add(ex);
-    }
-
-    CompileCtx setGCJ(boolean gcj) {
-        isGCJ |= gcj;
-        return this;
     }
 
     String createClassName(String outerClass, String nameBase) {
@@ -297,8 +293,8 @@ final class CompileCtx implements Opcodes {
 }
 
 final class YClassWriter extends ClassWriter {
-    YClassWriter() {
-        super(COMPUTE_MAXS | COMPUTE_FRAMES);
+    YClassWriter(int flags) {
+        super(COMPUTE_MAXS | flags);
     }
 
     // Overload to avoid using reflection on non-standard-library classes
@@ -338,7 +334,7 @@ final class Ctx implements Opcodes {
 
     Ctx newClass(int flags, String name, String extend, String[] interfaces) {
         Ctx ctx = new Ctx(compilation, constants,
-                new YClassWriter(), name);
+                new YClassWriter(compilation.classWriterFlags), name);
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
@@ -1108,9 +1104,11 @@ final class ClassField extends JavaExpr {
                 }
                 genValue(ctx, setValue, field.type, line);
                 String descr = JavaType.descriptionOf(field.type);
-                ctx.visitTypeInsn(CHECKCAST,
-                    field.type.type == YetiType.JAVA
-                        ? field.type.javaType.className() : descr);
+                if (field.type.javaType.description.length() > 1) {
+                    ctx.visitTypeInsn(CHECKCAST,
+                        field.type.type == YetiType.JAVA
+                            ? field.type.javaType.className() : descr);
+                }
                 
                 if ((field.access & ACC_PROTECTED) != 0
                         && classType.implementation != null

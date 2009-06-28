@@ -50,53 +50,54 @@ help () =
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
-options = [
-    "-C": \(exec := false),
-    "-d": do:
+not (eval or empty? argv) and (not exec or empty? srcs) loop
+    case shift argv of
+    "-C":
+        exec := false;
+    "-d":
         target := shift argv;
         if target != "" then
             target := "\(target)/"
         fi;
-        exec := false
-    done,
-    "-e": \(eval := true; src := shift argv),
-    "-h": help,
-    "-cp": \(evaluator.classPath := list (strSplit ':' (shift argv))),
-    "-help": help,
-    "--help": help,
-    "-preload": \(evaluator.preload := list (strSplit ':' (shift argv))),
-    "-type": \(printType := true; exec := false),
-    "-parse-tree": \(flags := flags + YetiC#CF_PRINT_PARSE_TREE),
-    "-no-import": \(flags := flags + YetiC#CF_NO_IMPORT),
-    "-guard": do:
+        exec := false;
+    "-e":
+        eval := true;
+        src := shift argv;
+    "-h": help ();
+    "-cp": evaluator.classPath := list (strSplit ':' (shift argv));
+    "-help": help ();
+    "--help": help ();
+    "-preload":
+        evaluator.preload := list (strSplit ':' (shift argv));
+    "-type":
+        printType := true;
+        exec := false;
+    "-parse-tree": flags := flags + YetiC#CF_PRINT_PARSE_TREE;
+    "-no-import" : flags := flags + YetiC#CF_NO_IMPORT;
+    "-no-frames" : evaluator.noframes := true;
+    "-guard":
         time = number (shift argv);
         _ = runThread [Daemon ()] do:
             sleep time;
             println "(terminated)";
             System#exit(13)
-        done
-    done,
+        done;
     "-safe-eval":
-        \(evaluator.sandbox := true; eval := true; src := shift argv),
-    "-icast": \(evaluator.gcj := true),
-    "-compile-error-trace": \(compileErrorTrace := true),
-];
-
-not (eval or empty? argv) and (not exec or empty? srcs) loop
-   (arg = shift argv;
-    if arg in options then
-        try 
-            options.[arg] ()
-        catch EmptyArray:
-            println "Parameter expected after \(arg)";
-            sysExit 1
-        yrt
-    elif arg =~ '^-' then
-        println "Unexpected option: \(arg)";
-        sysExit 1;
-    else
-        push srcs arg
-    fi);
+        evaluator.sandbox := true;
+        eval := true;
+        src := shift argv;
+    "-icast":
+        evaluator.gcj := true;
+    "-compile-error-trace":
+        compileErrorTrace := true;
+    arg:
+        if arg =~ '^-' then
+            println "Unexpected option: \(arg)";
+            sysExit 1;
+        else
+            push srcs arg
+        fi
+    esac;
 
 if empty? srcs and not eval then
     if exec and empty? argv then
