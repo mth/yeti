@@ -33,8 +33,8 @@ syn match yetiParenErr ")"
 
 " Enclosing delimiters
 syn region yetiParens start="(" end=")" contains=TOP,yetiParenErr
-syn region yetiEncl matchgroup=yetiKeyword start="{" matchgroup=yetiKeyword end="}" contains=TOP
-syn region yetiEncl matchgroup=yetiKeyword start="\[" matchgroup=yetiKeyword end="\]" contains=TOP
+syn region yetiEncl matchgroup=yetiOperator start="{" matchgroup=yetiOperator end="}" contains=TOP
+syn region yetiEncl matchgroup=yetiOperator start="\[" matchgroup=yetiOperator end="\]" contains=TOP
 syn match yetiKeyword "\[:]"
 
 syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<fi\>" contains=TOP

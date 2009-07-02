@@ -1,4 +1,4 @@
-// ex: set sts=4 sw=4 expandtab:
+// ex: set sts=7 sw=4 expandtab:
 
 /**
  * Yeti type analyzer.
@@ -584,9 +584,9 @@ public class YetiType implements YetiParser {
                 partial.finalMembers != null*/) {
             return; // nothing to check
         }
-        Iterator i = partial.partialMembers.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry entry = (Map.Entry) i.next();
+        Object[] members = partial.partialMembers.entrySet().toArray();
+        for (int i = 0; i < members.length; ++i) {
+            Map.Entry entry = (Map.Entry) members[i];
             Type ff = (Type) src.finalMembers.get(entry.getKey());
             if (ff == null) {
                 throw new TypeException(src, " => ",
