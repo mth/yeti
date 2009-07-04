@@ -5,20 +5,20 @@ newGame size = {
     full? () = not contains ' ' board,
     hasWon player =
         m = size - 1;
-        chk from by = all (_ p = board.[p * by + from] == player) [0 .. m];
-        line i = chk i size or chk (i * size) 1;
-        chk 0 (m + 2) or chk m m or any line [0 .. m],
+        check from by = all (_ p = board.[p * by + from] == player) [0 .. m];
+        line i = check i size or check (i * size) 1;
+        check 0 (m + 2) or check m m or any line [0 .. m],
     get show () =
         cell n =
             " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
         strJoin "" (map cell [0 .. maxPos]),
     check me op =
         if hasWon me then
-            { score = 1, pos = -1 }
+            {score = 1, pos = -1}
         elif hasWon op then
-            { score = -1, pos = -1 }
+            {score = -1, pos = -1}
         elif full? () then
-            { score = 0, pos = -1 }
+            {score = 0, pos = -1}
         else
             (tryPos best pos =
                 if pos > maxPos or best.score > 0 then
@@ -30,11 +30,11 @@ newGame size = {
                     res = -(check op me).score;
                     board.[pos] := ' ';
                     if res > best.score then
-                        tryPos { score = res, pos } (pos + 1)
+                        tryPos {score = res, pos} (pos + 1)
                     else
                         tryPos best (pos + 1)
                     fi
-                fi) { score = -2, pos = -1 } 0
+                fi) {score = -2, pos = -1} 0
         fi,
     putBest me =
         board.[(check me if me == 'O' then 'X' else 'O' fi).pos] := me,

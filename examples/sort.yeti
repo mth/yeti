@@ -103,7 +103,7 @@ merge less l a b =
         revAppend l b
     elif empty? b then
         revAppend l a
-    elif less (head a) (head b) then
+    elif head a `less` head b then
         merge less (head a :: l) (tail a) b
     else
         merge less (head b :: l) a (tail b)
