@@ -148,14 +148,17 @@ abstract class AListPattern extends CasePattern {
         if (preserve) {
             ctx.visitInsn(DUP);
             dropFail = new Label();
+            ctx.hasJumped = dropFail;
         }
         listMatch(ctx, onFail, dropFail);
-        Label cont = new Label();
-        ctx.visitJumpInsn(GOTO, cont);
-        ctx.visitLabel(dropFail);
-        ctx.visitInsn(POP);
-        ctx.visitJumpInsn(GOTO, onFail);
-        ctx.visitLabel(cont);
+        if (!preserve || ctx.hasJumped != dropFail) {
+            Label cont = new Label();
+            ctx.visitJumpInsn(GOTO, cont);
+            ctx.visitLabel(dropFail);
+            ctx.visitInsn(POP);
+            ctx.visitJumpInsn(GOTO, onFail);
+            ctx.visitLabel(cont);
+        }
     }
 }
 
