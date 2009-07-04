@@ -134,7 +134,7 @@ abstract class AListPattern extends CasePattern {
         }
     };
 
-    abstract void listMatch(Ctx ctx, Label onFail, Label dropFail);
+    abstract boolean listMatch(Ctx ctx, Label onFail, Label dropFail);
 
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         Label dropFail = preserve ? onFail : new Label();
@@ -148,10 +148,8 @@ abstract class AListPattern extends CasePattern {
         if (preserve) {
             ctx.visitInsn(DUP);
             dropFail = new Label();
-            ctx.hasJumped = dropFail;
         }
-        listMatch(ctx, onFail, dropFail);
-        if (!preserve || ctx.hasJumped != dropFail) {
+        if (listMatch(ctx, onFail, dropFail) || !preserve) {
             Label cont = new Label();
             ctx.visitJumpInsn(GOTO, cont);
             ctx.visitLabel(dropFail);
@@ -171,7 +169,7 @@ final class ConsPattern extends AListPattern {
         this.tl = tl;
     }
 
-    void listMatch(Ctx ctx, Label onFail, Label dropFail) {
+    boolean listMatch(Ctx ctx, Label onFail, Label dropFail) {
         if (hd != ANY_PATTERN) {
             if (tl != ANY_PATTERN) {
                 ctx.visitInsn(DUP);
@@ -191,6 +189,7 @@ final class ConsPattern extends AListPattern {
         } else if (hd == ANY_PATTERN) {
             ctx.visitInsn(POP);
         }
+        return !hd.irrefutable();
     }
 }
 
@@ -201,7 +200,8 @@ final class ListPattern extends AListPattern {
         this.items = items;
     }
 
-    void listMatch(Ctx ctx, Label onFail, Label dropFail) {
+    boolean listMatch(Ctx ctx, Label onFail, Label dropFail) {
+        boolean dropUsed = false;
         for (int i = 0; i < items.length; ++i) {
             if (i != 0) {
                 ctx.visitInsn(DUP);
@@ -213,11 +213,13 @@ final class ListPattern extends AListPattern {
                                     "first", "()Ljava/lang/Object;");
                 items[i].preparePattern(ctx);
                 items[i].tryMatch(ctx, dropFail, false);
+                dropUsed |= !items[i].irrefutable();
             }
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "next", "()Lyeti/lang/AIter;");
         }
         ctx.visitJumpInsn(IFNONNULL, onFail);
+        return dropUsed;
     }
 }
 

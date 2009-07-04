@@ -323,7 +323,6 @@ final class Ctx implements Opcodes {
     int methodCounter;
     int lastLine;
     int tainted; // you are inside loop, natural laws a broken
-    Label hasJumped; // unreliable check about whether label has used for jump
 
     Ctx(CompileCtx compilation, Constants constants,
             ClassWriter writer, String className) {
@@ -494,9 +493,6 @@ final class Ctx implements Opcodes {
     void visitJumpInsn(int opcode, Label label) {
         visitInsn(-1);
         m.visitJumpInsn(opcode, label);
-        if (hasJumped == label) {
-            hasJumped = null;
-        }
     }
 
     void visitLabel(Label label) {
