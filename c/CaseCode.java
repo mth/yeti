@@ -189,7 +189,7 @@ final class ConsPattern extends AListPattern {
         } else if (hd == ANY_PATTERN) {
             ctx.visitInsn(POP);
         }
-        return !hd.irrefutable();
+        return dropFail != onFail && !hd.irrefutable();
     }
 }
 
@@ -206,6 +206,7 @@ final class ListPattern extends AListPattern {
             if (i != 0) {
                 ctx.visitInsn(DUP);
                 ctx.visitJumpInsn(IFNULL, dropFail);
+                dropUsed = true;
             }
             if (items[i] != ANY_PATTERN) {
                 ctx.visitInsn(DUP);
