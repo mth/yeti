@@ -53,11 +53,9 @@ compile tokens topLevel result =
                 _: failWith "let {name value expr}";
                 esac;
             'do':
-                case reverse code of
-                expr :: args:
-                    "do \(strJoin ' ' (reverse args)): \(expr) done";
-                _: '\()';
-                esac;
+                args = array code;
+                expr = pop args;
+                "do \(strJoin ' ' args): \(expr) done";
             'if':
                 case code of
                 [condition, yes, no]:
@@ -88,7 +86,7 @@ src = readFile srcName '' getContents;
 
 tokens = matchAll ('/\*.*?\*/|\s+|([{}])|(\w[\w''$?~]*+)|' ^
                    '("(?:[^\\"]|\\.)*+")|([!#%&*+/<=>@^|-]++)')
-                  (avoid (not . defined?) . (++ ['']) . tail)
+                  (avoid ((not) . defined?) . (++ ['']) . tail)
                   (failWith . ('Unexpected token: ' ^)) src;
 
 {code} = compile tokens true [];
