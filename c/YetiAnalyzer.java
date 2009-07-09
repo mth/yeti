@@ -884,7 +884,7 @@ public final class YetiAnalyzer extends YetiType {
             unify(self, type); // XXX the order of unify arguments matters!
         } catch (TypeException ex) {
             throw new CompileException(typeDef,
-                        "Type " + isnot(type, self)
+                        "Type " + isnot(type, self, ex)
                         + " (type self-binding)\n    " + ex.getMessage());
         }
         scope = bindPoly(typeDef.name, type, null, 0, scope);
@@ -1066,7 +1066,7 @@ public final class YetiAnalyzer extends YetiType {
                 unify(fun, to.type);
             } catch (TypeException ex) {
                 throw new CompileException(lambda,
-                        "Function type " + isnot(fun, to.type)
+                        "Function type " + isnot(fun, to.type, ex)
                         + " (self-binding)\n    " + ex.getMessage());
             }
         }
@@ -1137,7 +1137,7 @@ public final class YetiAnalyzer extends YetiType {
                 } catch (TypeException ex) {
                     throw new CompileException(nodes[i],
                         (field.var ? "Setter " : "Getter ") + field.name +
-                        " type " + isnot(code.type, f));
+                        " type " + isnot(code.type, f, ex));
                 }
                 if (field.var) {
                     sf.setter = code;
@@ -1239,7 +1239,7 @@ public final class YetiAnalyzer extends YetiType {
                     t.flags = FL_PARTIAL_PATTERN;
                 } else if (t.type != c.type.type) {
                     throw new CompileException(node,
-                        "Pattern type mismatch: " + isnot(c.type, t));
+                        "Pattern type mismatch: " + isnot(c.type, t, null));
                 }
                 return new ConstPattern(c);
             }

@@ -981,7 +981,7 @@ public class YetiType implements YetiParser {
         throw new CompileException(where, "Unknown type: " + name);
     }
 
-    static String isnot(Type a, Type b) {
+    static String isnot(Type a, Type b, TypeException ex) {
        return a + " is not " + b;
     }
 }
