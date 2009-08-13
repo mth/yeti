@@ -332,21 +332,12 @@ public final class YetiAnalyzer extends YetiType {
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth);
         }
-        int arrays = 0;
-        while (name.endsWith("[]")) {
-            ++arrays;
-            name = name.substring(0, name.length() - 2);
-        }
         Type t;
         char c = name.charAt(0);
         if (c == '~') {
             expectsParam(node, 0);
-            String cn = name.substring(1).replace('.', '/').intern();
-//            Type[] tp = new Type[node.param.length];
-//            for (int i = tp.length; --i >= 0;)
-//                tp[i] = nodeToType(node.param[i], free, scope, depth);
-            t = resolveFullClass(cn, scope);
-//            t.param = tp;
+            t = JavaType.typeOfName(
+                name.substring(1).replace('.', '/').intern(), scope);
         } else if (c == '\'') {
             t = (Type) free.get(name);
             if (t == null)
@@ -362,9 +353,6 @@ public final class YetiAnalyzer extends YetiType {
             for (int i = 0; i < tp.length; ++i)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
             t = resolveTypeDef(scope, name, tp, depth, node);
-        }
-        while (--arrays >= 0) {
-            t = new Type(JAVA_ARRAY, new Type[] { t });
         }
         return t;
     }
@@ -446,7 +434,7 @@ public final class YetiAnalyzer extends YetiType {
         Code cnt = analyze(op.expr[1], scope, depth);
         requireType(cnt.type, NUM_TYPE, op.expr[1],
                     "array size must be a number");
-        return new NewArrayExpr(JavaType.typeOfName(op.expr[0], scope),
+        return new NewArrayExpr(JavaType.typeOfName(op.expr[0].sym(), scope),
                                 cnt, op.line);
     }
 

@@ -1084,9 +1084,8 @@ class JavaType {
         return t;
     }
 
-    static YetiType.Type typeOfName(YetiParser.Node sym, YetiType.Scope scope) {
+    static YetiType.Type typeOfName(String name, YetiType.Scope scope) {
         int arrays = 0;
-        String name = sym.sym();
         while (name.endsWith("[]")) {
             ++arrays;
             name = name.substring(0, name.length() - 2);

@@ -215,6 +215,11 @@ public final class Core {
         return new String(tmp);
     }
 
+    // TODO fix fucking length on arrays
+    static int byteArrayLen(byte[] a) {
+        return a.length;
+    }
+
 /*
     public static Object convertList(Object value, String type) {
         if (type == "") {

@@ -164,10 +164,28 @@ outputHandle stream encoding is ~OutputStream -> string -> 'a =
     yrt);
 
 openInFile name is string -> string -> 'a =
-    inputHandle (new FileInputStream(name) as ~InputStream);
+    inputHandle new FileInputStream(name);
 
 openOutFile name is string -> string -> 'a =
-    outputHandle (new FileOutputStream(name) as ~OutputStream);
+    outputHandle new FileOutputStream(name);
+
+typedef bin_input_handle = {
+    .read is ~byte[] -> number -> number,
+    .close is () -> ()
+}
+
+binInputHandle istream is ~InputStream -> 'a = {
+        read buf from is ~byte[] -> number -> number =
+            istream#read(buf, from, Core#byteArrayLen(buf) - from),
+        close () = istream#close()
+    };
+
+binOutputHandle ostream is ~OutputStream -> 'a = {
+        write buf len is ~byte[] -> number -> () =
+            ostream#write(buf, 0, len),
+        close () = ostream#close(),
+        flush () = ostream#flush()
+    };
 
 {
     withHandle,
@@ -193,6 +211,8 @@ openOutFile name is string -> string -> 'a =
     writerHandle,
     outputHandle,
     openOutFile,
+    binInputHandle,
+    binOutputHandle,
 
     get stdin = stdin,
 
@@ -209,6 +229,21 @@ openOutFile name is string -> string -> 'a =
     putLines h lines = for lines h.writeln,
 
     getContents h = h.contents (),
+
+    binReadFile name =
+        withHandle (binInputHandle new FileInputStream(name is string)),
+
+    binWriteFile name writer
+            is string -> ((~byte[] -> number -> ()) -> 'a) -> 'a =
+        withHandle (binOutputHandle new FileOutputStream(name is string))
+                   (writer . (.write)),
+
+    // Example
+    // data = binReadFile "test" (binReadAll 0);
+    // binWriteFile "test2" data;
+    binReadAll limit handle
+            is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
+        BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
 
     trace msg a = (System#err#print(msg); System#err#println(a); a),
 

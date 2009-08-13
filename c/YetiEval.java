@@ -37,7 +37,7 @@ public class YetiEval {
     List bindings = new ArrayList();
 
     static class Binding {
-        private Object[] value;
+        Object[] value;
         int index;
         int bindId;
         String name;

@@ -53,7 +53,7 @@ final class MethodDesc extends YetiType {
                                 "Duplicate argument name (" + name + ")");
                 }
             names[i] = name;
-            arguments[i] = method.addArg(JavaType.typeOfName(args[j], scope));
+            arguments[i] = method.addArg(JavaType.typeOfName(args[j].sym(), scope));
         }
     }
 
@@ -226,7 +226,7 @@ final class MethodDesc extends YetiType {
                 continue;
             Node[] m = ((XNode) cl.expr[i]).expr;
             Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
-                                JavaType.typeOfName(m[0], scope);
+                                JavaType.typeOfName(m[0].sym(), scope);
             JavaClass.Meth meth =
                 c.addMethod(m[1].sym(), returnType, kind,
                             m.length > 3 ? m[3].line : 0);

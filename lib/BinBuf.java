@@ -14,7 +14,7 @@ class BinBuf extends Fun {
     }
 
     static Fun readAll(int limit, Fun read, Fun close) {
-        byte[] buf = new byte[limit > 0 && 8192 > limit ? limit : 8192];
+        byte[] buf = new byte[0 < limit && limit <= 65536 ? limit : 8192];
         int l = 0, n;
         try {
             while ((n = ((Number) read.apply(buf, new IntNum(l)))
