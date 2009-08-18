@@ -446,12 +446,8 @@ public final class YetiAnalyzer extends YetiType {
         int lastCatch = t.expr.length - 1;
         if (t.expr[lastCatch].kind != "catch") {
             tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
-            try {
-                unify(tc.cleanup.type, UNIT_TYPE);
-            } catch (TypeException ex) {
-                unitError(t.expr[lastCatch], tc.cleanup,
-                          "finally block must have a unit type", ex);
-            }
+            expectUnit(tc.cleanup, t.expr[lastCatch],
+                      "finally block must have a unit type");
             --lastCatch;
         }
         for (int i = 1; i <= lastCatch; ++i) {
@@ -731,11 +727,7 @@ public final class YetiAnalyzer extends YetiType {
             return new LoopExpr(cond, new UnitConstant(null));
         }
         Code body = analyze(loop.right, scope, depth);
-        try {
-            unify(body.type, UNIT_TYPE);
-        } catch (TypeException ex) {
-            unitError(loop.right, body, "Loop body must have a unit type", ex);
-        }
+        expectUnit(body, loop.right, "Loop body must have a unit type");
         return new LoopExpr(cond, body);
     }
 
@@ -883,17 +875,25 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static void unitError(Node where, Code value, String what,
-                          TypeException ex) {
-        String s = what + ", not a " + value.type;
-        Type t = value.type.deref();
-        int tt;
-        if (t.type == FUN &&
-            ((tt = t.param[1].deref().type) == VAR || tt == UNIT || tt == FUN)
-            && !(value instanceof BindRef) && !(value instanceof Function)) {
-            s += "\n    Maybe you should give more arguments to the function?";
+    static void expectUnit(Code value, Node where, String what) {
+        if (value.type.type == JAVA || value.type.type == JAVA_ARRAY)
+            return; // java is messy, don't try to be strict with it
+        try {
+            unify(value.type, UNIT_TYPE);
+        } catch (TypeException ex) {
+            String s = what + ", not a " + value.type;
+            Type t = value.type.deref();
+            int tt;
+            if (t.type == FUN &&
+                ((tt = t.param[1].deref().type) == VAR
+                    || tt == UNIT || tt == FUN)
+                && !(value instanceof BindRef)
+                && !(value instanceof Function)) {
+                s += "\n    Maybe you should give more arguments"
+                   + " to the function?";
+            }
+            throw new CompileException(where, s, ex);
         }
-        throw new CompileException(where, s, ex);
     }
 
     static Code analSeq(Seq seq, Scope scope, int depth) {
@@ -959,11 +959,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = scope_[0];
             } else {
                 Code code = analyze(nodes[i], scope, depth);
-                try {
-                    unify(UNIT_TYPE, code.type);
-                } catch (TypeException ex) {
-                    unitError(nodes[i], code, "Unit type expected here", ex);
-                }
+                expectUnit(code, nodes[i], "Unit type expected here");
                 //code.ignoreValue();
                 addSeq(last, new SeqExpr(code));
             }
@@ -1594,12 +1590,7 @@ public final class YetiAnalyzer extends YetiType {
                         "Module type is not fully defined");
                 }
             } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
-                try {
-                    unify(root.type, UNIT_TYPE);
-                } catch (TypeException ex) {
-                    unitError(n, root,
-                              "Program body must have a unit type", ex);
-                }
+                expectUnit(root, n, "Program body must have a unit type");
             }
             return root;
         } catch (CompileException ex) {
