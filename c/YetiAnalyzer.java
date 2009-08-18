@@ -677,18 +677,13 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Type mergeIfType(Node where, Type result, Type val) {
-        Type t = JavaType.mergeTypes(result, val);
-        if (t != null) {
-            return t;
-        }
         try {
-            unify(result, val);
+            return mergeOrUnify(result, val);
         } catch (TypeException ex) {
             throw new CompileException(where,
                 "This if branch has a " + val +
                 " type, while another was a " + result, ex);
         }
-        return result;
     }
 
     static Code cond(XNode condition, Scope scope, int depth) {
@@ -1342,7 +1337,7 @@ public final class YetiAnalyzer extends YetiType {
                 exp.type = opt.type;
             } else {
                 try {
-                    unify(exp.type, opt.type);
+                    exp.type = mergeOrUnify(exp.type, opt.type);
                 } catch (TypeException e) {
                     throw new CompileException(node, "This choice has a " +
                         opt.type + " type, while another was a " + exp.type, e);
@@ -1492,13 +1487,8 @@ public final class YetiAnalyzer extends YetiType {
             if (type == null) {
                 type = codeItems[n].type;
             } else {
-                Type t = JavaType.mergeTypes(type, codeItems[n].type);
-                if (t != null) {
-                    type = t;
-                    continue;
-                }
                 try {
-                    unify(type, codeItems[n].type);
+                    type = mergeOrUnify(type, codeItems[n].type);
                 } catch (TypeException ex) {
                     throw new CompileException(items[i], (kind == LIST_TYPE
                          ? "This list element is " : "This map element is ") +
