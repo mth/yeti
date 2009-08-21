@@ -189,95 +189,102 @@ final class CompileCtx implements Opcodes {
         currentSrc = sourceName;
         this.flags = flags;
         try {
-            codeTree = YetiAnalyzer.toCode(sourceName, name, code,
-                                           this, preload);
-        } finally {
-            currentCompileCtx.set(oldCompileCtx);
-        }
-        if (codeTree.moduleName != null) {
-            name = codeTree.moduleName;
-        }
-        module = module || codeTree.isModule;
-        Constants constants = new Constants();
-        constants.sourceName = sourceName == null ? "<>" : sourceName;
-        Ctx ctx = new Ctx(this, constants, null, null)
-            .newClass(ACC_PUBLIC | ACC_SUPER, name,
-                      (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null,
-                      null);
-        constants.ctx = ctx;
-        if (module) {
-            ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
-                              "Ljava/lang/Object;", null, null).visitEnd();
-            ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
-                              null, Boolean.FALSE);
-            ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
-                                "eval", "()Ljava/lang/Object;");
-            ctx.visitFieldInsn(GETSTATIC, name, "_$", "Z");
-            Label eval = new Label();
-            ctx.visitJumpInsn(IFEQ, eval);
-            ctx.visitFieldInsn(GETSTATIC, name, "$",
-                                 "Ljava/lang/Object;");
-            ctx.visitInsn(ARETURN);
-            ctx.visitLabel(eval);
-            Code codeTail = codeTree.code;
-            while (codeTail instanceof SeqExpr) {
-                codeTail = ((SeqExpr) codeTail).result;
+            try {
+                codeTree = YetiAnalyzer.toCode(sourceName, name, code,
+                                               this, preload);
+            } finally {
+                currentCompileCtx.set(oldCompileCtx);
             }
-            Map directFields = java.util.Collections.EMPTY_MAP;
-            if (codeTail instanceof StructConstructor) {
-                ((StructConstructor) codeTail).publish();
+            if (codeTree.moduleName != null) {
+                name = codeTree.moduleName;
+            }
+            module = module || codeTree.isModule;
+            Constants constants = new Constants();
+            constants.sourceName = sourceName == null ? "<>" : sourceName;
+            Ctx ctx = new Ctx(this, constants, null, null)
+                .newClass(ACC_PUBLIC | ACC_SUPER, name,
+                          (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null,
+                          null);
+            constants.ctx = ctx;
+            if (module) {
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
+                                  "Ljava/lang/Object;", null, null).visitEnd();
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
+                                  null, Boolean.FALSE);
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
+                                    "eval", "()Ljava/lang/Object;");
+                ctx.visitFieldInsn(GETSTATIC, name, "_$", "Z");
+                Label eval = new Label();
+                ctx.visitJumpInsn(IFEQ, eval);
+                ctx.visitFieldInsn(GETSTATIC, name, "$",
+                                     "Ljava/lang/Object;");
+                ctx.visitInsn(ARETURN);
+                ctx.visitLabel(eval);
+                Code codeTail = codeTree.code;
+                while (codeTail instanceof SeqExpr) {
+                    codeTail = ((SeqExpr) codeTail).result;
+                }
+                Map directFields = java.util.Collections.EMPTY_MAP;
+                if (codeTail instanceof StructConstructor) {
+                    ((StructConstructor) codeTail).publish();
+                    codeTree.gen(ctx);
+                    directFields = ((StructConstructor) codeTail).getDirect();
+                } else {
+                    codeTree.gen(ctx);
+                }
+                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
+                                            codeTree.typeDefs, directFields));
+                if (codeTree.type.type == YetiType.STRUCT) {
+                    generateModuleFields(codeTree.type.finalMembers, ctx,
+                                         directFields);
+                }
+                ctx.visitInsn(DUP);
+                ctx.visitFieldInsn(PUTSTATIC, name, "$",
+                                     "Ljava/lang/Object;");
+                ctx.intConst(1);
+                ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
+                ctx.visitInsn(ARETURN);
+                types.put(name, new ModuleType(codeTree.type,
+                                               codeTree.typeDefs,
+                                               directFields));
+            } else if ((flags & YetiC.CF_EVAL) != 0) {
+                ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
+                ctx = ctx.newMethod(ACC_PUBLIC, "apply",
+                                    "(Ljava/lang/Object;)Ljava/lang/Object;");
                 codeTree.gen(ctx);
-                directFields = ((StructConstructor) codeTail).getDirect();
+                ctx.visitInsn(ARETURN);
             } else {
+                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
+                                    "([Ljava/lang/String;)V");
+                ctx.localVarCount++;
+                ctx.visitVarInsn(ALOAD, 0);
+                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                    "setArgv", "([Ljava/lang/String;)V");
+                Label codeStart = new Label();
+                ctx.visitLabel(codeStart);
                 codeTree.gen(ctx);
+                ctx.visitInsn(POP);
+                ctx.visitInsn(RETURN);
+                Label exitStart = new Label();
+                ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
+                                       "yeti/lang/ExitError");
+                ctx.visitLabel(exitStart);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
+                                    "getExitCode", "()I");
+                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/System",
+                                    "exit", "(I)V");
+                ctx.visitInsn(RETURN);
             }
-            ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
-                                        codeTree.typeDefs, directFields));
-            if (codeTree.type.type == YetiType.STRUCT) {
-                generateModuleFields(codeTree.type.finalMembers, ctx,
-                                     directFields);
+            ctx.closeMethod();
+            constants.close();
+            compiled.put(sourceName, name);
+            return codeTree.type;
+        } catch (CompileException ex) {
+            if (ex.fn == null) {
+                ex.fn = sourceName;
             }
-            ctx.visitInsn(DUP);
-            ctx.visitFieldInsn(PUTSTATIC, name, "$",
-                                 "Ljava/lang/Object;");
-            ctx.intConst(1);
-            ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
-            ctx.visitInsn(ARETURN);
-            types.put(name, new ModuleType(codeTree.type,
-                                           codeTree.typeDefs,
-                                           directFields));
-        } else if ((flags & YetiC.CF_EVAL) != 0) {
-            ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
-            ctx = ctx.newMethod(ACC_PUBLIC, "apply",
-                                "(Ljava/lang/Object;)Ljava/lang/Object;");
-            codeTree.gen(ctx);
-            ctx.visitInsn(ARETURN);
-        } else {
-            ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
-                                "([Ljava/lang/String;)V");
-            ctx.localVarCount++;
-            ctx.visitVarInsn(ALOAD, 0);
-            ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
-                                "setArgv", "([Ljava/lang/String;)V");
-            Label codeStart = new Label();
-            ctx.visitLabel(codeStart);
-            codeTree.gen(ctx);
-            ctx.visitInsn(POP);
-            ctx.visitInsn(RETURN);
-            Label exitStart = new Label();
-            ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
-                                   "yeti/lang/ExitError");
-            ctx.visitLabel(exitStart);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
-                                "getExitCode", "()I");
-            ctx.visitMethodInsn(INVOKESTATIC, "java/lang/System",
-                                "exit", "(I)V");
-            ctx.visitInsn(RETURN);
+            throw ex;
         }
-        ctx.closeMethod();
-        constants.close();
-        compiled.put(sourceName, name);
-        return codeTree.type;
     }
 
     void write() throws Exception {

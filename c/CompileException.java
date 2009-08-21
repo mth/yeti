@@ -67,7 +67,7 @@ public class CompileException extends RuntimeException {
 
     public String getMessage() {
         return (fn == null ? "" : fn + ":") +
-               (line == 0 ? "" : line + ":" + col + ": ") +
+               (line == 0 ? "" : line + (col > 0 ? ":" + col + ": " : ": ")) +
                what;
     }
 }

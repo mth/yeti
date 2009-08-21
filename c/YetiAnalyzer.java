@@ -1583,11 +1583,6 @@ public final class YetiAnalyzer extends YetiType {
                 expectUnit(root, n, "Program body must have a unit type");
             }
             return root;
-        } catch (CompileException ex) {
-            if (ex.fn == null) {
-                ex.fn = sourceName;
-            }
-            throw ex;
         } finally {
             currentSrc.set(oldSrc);
         }

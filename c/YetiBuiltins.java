@@ -33,6 +33,8 @@ package yeti.lang.compiler;
 
 import org.objectweb.asm.*;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 final class BuiltIn implements Binder {
     int op;
@@ -902,6 +904,12 @@ final class MatchOpFun extends BinOpRef {
         };
         if (!(arg2 instanceof StringConstant))
             return matcher;
+        try {
+            Pattern.compile(((StringConstant) arg2).str, Pattern.DOTALL);
+        } catch (PatternSyntaxException ex) {
+            throw new CompileException(line, 0,
+                        "Bad pattern syntax: " + ex.getMessage());
+        }
         return new Code() {
             { type = t; }
 
@@ -946,6 +954,12 @@ final class RegexFun extends StaticRef {
         };
         if (!(arg instanceof StringConstant))
             return f;
+        try {
+            Pattern.compile(((StringConstant) arg).str, Pattern.DOTALL);
+        } catch (PatternSyntaxException ex) {
+            throw new CompileException(line, 0,
+                        "Bad pattern syntax: " + ex.getMessage());
+        }
         return new Code() {
             { type = t; }
 
