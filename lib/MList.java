@@ -193,6 +193,25 @@ abstract class AMList extends AList implements Serializable {
             r[i] = array[end - i];
         return new MList(r);
     }
+
+    public AList sort() {
+        int len;
+        if ((len = _size() - start) <= 0)
+            return null;
+        Object[] a;
+        System.arraycopy(array(), start, a = new Object[len], 0, len);
+        Arrays.sort(a);
+        return new MList(a);
+    }
+
+    public AList sort(Fun isLess) {
+        int len;
+        if ((len = _size() - start) <= 0)
+            return null;
+        Object[] a;
+        System.arraycopy(array(), start, a = new Object[len], 0, len);
+        return new MList(a).asort(isLess);
+    }
 }
 
 /** Yeti core library - List. */
@@ -242,14 +261,6 @@ public class MList extends AMList implements ByKey {
                 }
             }
             return null;
-        }
-
-        public AList sort() {
-            if (start >= size)
-                return null;
-            Object[] tmp = new Object[size - start];
-            System.arraycopy(array, start, tmp, 0, tmp.length);
-            return new MList(tmp);
         }
     }
 
@@ -484,15 +495,6 @@ public class MList extends AMList implements ByKey {
         return this;
     }
 
-    public AList sort() {
-        if (start >= size)
-            return null;
-        Object[] tmp = new Object[size - start];
-        System.arraycopy(array, start, tmp, 0, tmp.length);
-        Arrays.sort(tmp);
-        return new MList(tmp);
-    }
-
     // java sort don't know wtf the Fun is
     private static void sort(Object[] a, Object[] tmp,
                              int from, int to, Fun isLess) {
@@ -526,15 +528,5 @@ public class MList extends AMList implements ByKey {
 
     public void setDefault(Fun fun) {
         throw new UnsupportedOperationException();
-    }
-
-    public AList sort(Fun isLess) {
-        int len;
-        if ((len = size - start) <= 0)
-            return null;
-        MList l = new MList();
-        System.arraycopy(array, start, l.array = new Object[len], 0, len);
-        l.size = len;
-        return l.asort(isLess);
     }
 }

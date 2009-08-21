@@ -332,21 +332,12 @@ public final class YetiAnalyzer extends YetiType {
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth);
         }
-        int arrays = 0;
-        while (name.endsWith("[]")) {
-            ++arrays;
-            name = name.substring(0, name.length() - 2);
-        }
         Type t;
         char c = name.charAt(0);
         if (c == '~') {
             expectsParam(node, 0);
-            String cn = name.substring(1).replace('.', '/').intern();
-//            Type[] tp = new Type[node.param.length];
-//            for (int i = tp.length; --i >= 0;)
-//                tp[i] = nodeToType(node.param[i], free, scope, depth);
-            t = resolveFullClass(cn, scope);
-//            t.param = tp;
+            t = JavaType.typeOfName(
+                name.substring(1).replace('.', '/').intern(), scope);
         } else if (c == '\'') {
             t = (Type) free.get(name);
             if (t == null)
@@ -362,9 +353,6 @@ public final class YetiAnalyzer extends YetiType {
             for (int i = 0; i < tp.length; ++i)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
             t = resolveTypeDef(scope, name, tp, depth, node);
-        }
-        while (--arrays >= 0) {
-            t = new Type(JAVA_ARRAY, new Type[] { t });
         }
         return t;
     }
@@ -446,7 +434,7 @@ public final class YetiAnalyzer extends YetiType {
         Code cnt = analyze(op.expr[1], scope, depth);
         requireType(cnt.type, NUM_TYPE, op.expr[1],
                     "array size must be a number");
-        return new NewArrayExpr(JavaType.typeOfName(op.expr[0], scope),
+        return new NewArrayExpr(JavaType.typeOfName(op.expr[0].sym(), scope),
                                 cnt, op.line);
     }
 
@@ -458,12 +446,8 @@ public final class YetiAnalyzer extends YetiType {
         int lastCatch = t.expr.length - 1;
         if (t.expr[lastCatch].kind != "catch") {
             tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
-            try {
-                unify(tc.cleanup.type, UNIT_TYPE);
-            } catch (TypeException ex) {
-                unitError(t.expr[lastCatch], tc.cleanup,
-                          "finally block must have a unit type", ex);
-            }
+            expectUnit(tc.cleanup, t.expr[lastCatch],
+                      "finally block must have a unit type");
             --lastCatch;
         }
         for (int i = 1; i <= lastCatch; ++i) {
@@ -693,18 +677,13 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Type mergeIfType(Node where, Type result, Type val) {
-        Type t = JavaType.mergeTypes(result, val);
-        if (t != null) {
-            return t;
-        }
         try {
-            unify(result, val);
+            return mergeOrUnify(result, val);
         } catch (TypeException ex) {
             throw new CompileException(where,
                 "This if branch has a " + val +
                 " type, while another was a " + result, ex);
         }
-        return result;
     }
 
     static Code cond(XNode condition, Scope scope, int depth) {
@@ -743,11 +722,7 @@ public final class YetiAnalyzer extends YetiType {
             return new LoopExpr(cond, new UnitConstant(null));
         }
         Code body = analyze(loop.right, scope, depth);
-        try {
-            unify(body.type, UNIT_TYPE);
-        } catch (TypeException ex) {
-            unitError(loop.right, body, "Loop body must have a unit type", ex);
-        }
+        expectUnit(body, loop.right, "Loop body must have a unit type");
         return new LoopExpr(cond, body);
     }
 
@@ -884,7 +859,7 @@ public final class YetiAnalyzer extends YetiType {
             unify(self, type); // XXX the order of unify arguments matters!
         } catch (TypeException ex) {
             throw new CompileException(typeDef,
-                        "Type " + type + " is not " + self
+                        "Type " + isnot(type, self, ex)
                         + " (type self-binding)\n    " + ex.getMessage());
         }
         scope = bindPoly(typeDef.name, type, null, 0, scope);
@@ -895,17 +870,25 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static void unitError(Node where, Code value, String what,
-                          TypeException ex) {
-        String s = what + ", not a " + value.type;
-        Type t = value.type.deref();
-        int tt;
-        if (t.type == FUN &&
-            ((tt = t.param[1].deref().type) == VAR || tt == UNIT || tt == FUN)
-            && !(value instanceof BindRef) && !(value instanceof Function)) {
-            s += "\n    Maybe you should give more arguments to the function?";
+    static void expectUnit(Code value, Node where, String what) {
+        if (value.type.type == JAVA || value.type.type == JAVA_ARRAY)
+            return; // java is messy, don't try to be strict with it
+        try {
+            unify(value.type, UNIT_TYPE);
+        } catch (TypeException ex) {
+            String s = what + ", not a " + value.type;
+            Type t = value.type.deref();
+            int tt;
+            if (t.type == FUN &&
+                ((tt = t.param[1].deref().type) == VAR
+                    || tt == UNIT || tt == FUN)
+                && !(value instanceof BindRef)
+                && !(value instanceof Function)) {
+                s += "\n    Maybe you should give more arguments"
+                   + " to the function?";
+            }
+            throw new CompileException(where, s, ex);
         }
-        throw new CompileException(where, s, ex);
     }
 
     static Code analSeq(Seq seq, Scope scope, int depth) {
@@ -971,11 +954,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = scope_[0];
             } else {
                 Code code = analyze(nodes[i], scope, depth);
-                try {
-                    unify(UNIT_TYPE, code.type);
-                } catch (TypeException ex) {
-                    unitError(nodes[i], code, "Unit type expected here", ex);
-                }
+                expectUnit(code, nodes[i], "Unit type expected here");
                 //code.ignoreValue();
                 addSeq(last, new SeqExpr(code));
             }
@@ -1066,7 +1045,7 @@ public final class YetiAnalyzer extends YetiType {
                 unify(fun, to.type);
             } catch (TypeException ex) {
                 throw new CompileException(lambda,
-                        "Function type " + fun + " is not " + to.type
+                        "Function type " + isnot(fun, to.type, ex)
                         + " (self-binding)\n    " + ex.getMessage());
             }
         }
@@ -1137,7 +1116,7 @@ public final class YetiAnalyzer extends YetiType {
                 } catch (TypeException ex) {
                     throw new CompileException(nodes[i],
                         (field.var ? "Setter " : "Getter ") + field.name +
-                        " type " + code.type + " is not " + f);
+                        " type " + isnot(code.type, f, ex));
                 }
                 if (field.var) {
                     sf.setter = code;
@@ -1239,7 +1218,7 @@ public final class YetiAnalyzer extends YetiType {
                     t.flags = FL_PARTIAL_PATTERN;
                 } else if (t.type != c.type.type) {
                     throw new CompileException(node,
-                        "Pattern type mismatch: " + c.type + " is not " + t);
+                        "Pattern type mismatch: " + isnot(c.type, t, null));
                 }
                 return new ConstPattern(c);
             }
@@ -1358,7 +1337,7 @@ public final class YetiAnalyzer extends YetiType {
                 exp.type = opt.type;
             } else {
                 try {
-                    unify(exp.type, opt.type);
+                    exp.type = mergeOrUnify(exp.type, opt.type);
                 } catch (TypeException e) {
                     throw new CompileException(node, "This choice has a " +
                         opt.type + " type, while another was a " + exp.type, e);
@@ -1508,13 +1487,8 @@ public final class YetiAnalyzer extends YetiType {
             if (type == null) {
                 type = codeItems[n].type;
             } else {
-                Type t = JavaType.mergeTypes(type, codeItems[n].type);
-                if (t != null) {
-                    type = t;
-                    continue;
-                }
                 try {
-                    unify(type, codeItems[n].type);
+                    type = mergeOrUnify(type, codeItems[n].type);
                 } catch (TypeException ex) {
                     throw new CompileException(items[i], (kind == LIST_TYPE
                          ? "This list element is " : "This map element is ") +
@@ -1606,12 +1580,7 @@ public final class YetiAnalyzer extends YetiType {
                         "Module type is not fully defined");
                 }
             } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
-                try {
-                    unify(root.type, UNIT_TYPE);
-                } catch (TypeException ex) {
-                    unitError(n, root,
-                              "Program body must have a unit type", ex);
-                }
+                expectUnit(root, n, "Program body must have a unit type");
             }
             return root;
         } catch (CompileException ex) {

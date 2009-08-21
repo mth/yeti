@@ -89,6 +89,8 @@ do argv: {
                              "\(binding#name) is \(t) = \
                              "\(if t#deref()#type == YetiType#UNIT then
                                     "()"
+                                elif nullptr? binding#value then
+                                    "<undef>"
                                 else
                                     Core#show(binding#val())
                                 fi)"

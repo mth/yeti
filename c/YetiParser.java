@@ -578,6 +578,7 @@ interface YetiParser {
         private String sourceName;
         private int line = 1;
         private int lineStart;
+        private String yetiDocStr;
         String moduleName;
         boolean isModule;
 
@@ -596,7 +597,7 @@ interface YetiParser {
 
         private int skipSpace() {
             char[] src = this.src;
-            int i = p;
+            int i = p, sp;
             char c;
             for (;;) {
                 while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
@@ -608,13 +609,16 @@ interface YetiParser {
                 }
                 if (i + 1 < src.length && src[i] == '/') {
                     if (src[i + 1] == '/') {
+                        sp = i += 2;
                         while (i < src.length && src[i] != '\n'
                                 && src[i] != '\r') ++i;
+                        if (i > sp && src[sp] == '/')
+                            yetiDocStr = new String(src, sp, i - sp);
                         continue;
                     }
                     if (src[i + 1] == '*') {
                         int l = line, col = i - lineStart + 1;
-                        i += 2;
+                        sp = i += 2;
                         for (int level = 1; level > 0;) {
                             if (++i >= src.length) {
                                 throw new CompileException(l, col,
@@ -629,6 +633,8 @@ interface YetiParser {
                                 ++i; ++level;
                             }
                         }
+                        if (i - 1 > sp && src[sp] == '*')
+                            yetiDocStr = new String(src, sp, i - 1 - sp);
                         continue;
                     }
                 }

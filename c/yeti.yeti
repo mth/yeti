@@ -35,7 +35,7 @@ startRepl () =
     try
         repl ()
     finally
-        _ = YetiEval#set(oldEval)
+        YetiEval#set(oldEval)
     yrt);
 
 help () =

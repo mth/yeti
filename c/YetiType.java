@@ -1,4 +1,4 @@
-// ex: set sts=7 sw=4 expandtab:
+// ex: set sts=4 sw=4 expandtab:
 
 /**
  * Yeti type analyzer.
@@ -760,6 +760,7 @@ public class YetiType implements YetiParser {
         if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
             requireOrdered(from);
         }
+        
         limitDepth(from, var.depth);
         var.ref = from;
     }
@@ -785,6 +786,16 @@ public class YetiType implements YetiParser {
                 unify(a.param[i], b.param[i]);
             }
         }
+    }
+
+
+    static Type mergeOrUnify(Type to, Type val) throws TypeException {
+        Type t = JavaType.mergeTypes(to, val);
+        if (t != null) {
+            return t;
+        }
+        unify(to, val);
+        return to;
     }
 
     static Map copyTypeMap(Map types, Map free, Map known) {
@@ -979,5 +990,9 @@ public class YetiType implements YetiParser {
             }
         }
         throw new CompileException(where, "Unknown type: " + name);
+    }
+
+    static String isnot(Type a, Type b, TypeException ex) {
+       return a + " is not " + b;
     }
 }
