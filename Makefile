@@ -25,4 +25,4 @@ pub:
 	rm -rf /tmp/yeti
 
 wc:
-	wc */*.java c/*.yeti modules/*.yeti util/*.yeti
+	wc lib/*.java c/*.java c/*.yeti modules/*.yeti util/*.java util/*.yeti
