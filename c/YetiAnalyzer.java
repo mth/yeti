@@ -2,7 +2,7 @@
 
 /**
  * Yeti code analyzer.
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2007,2008,2009 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

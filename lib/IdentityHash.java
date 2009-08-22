@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2009 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
