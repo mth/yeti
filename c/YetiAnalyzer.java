@@ -1278,6 +1278,11 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (pat.op == "::") {
                     Type itemt = new Type(depth);
+                    // It must must have the NO_TYPE constraint,
+                    // because tail has the same type as the matched
+                    // (this could be probably solved by giving tail
+                    //  and pattern separate list types, but then
+                    //  correct use of pattern flags must be considered)
                     Type lt = new Type(MAP,
                                 new Type[] { itemt, NO_TYPE, LIST_TYPE });
                     int flags = t.flags; 
