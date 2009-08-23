@@ -5,6 +5,8 @@
 * Fix f x = {x}; - type system copies to much and gets wrong type sig
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
+* super reference in Java classes
+  (requires generating accessor methods to proxy them)
 * Extendable structs?
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
@@ -13,6 +15,7 @@
 * Optimise lambdas into simple methods when all their references
   are fully applied
 * Allow cons pattern match (::) on arrays?
+* Optional Java generics support?
 * Direct double optimisation, when it can be deduced,
   that there are always floats
 * Direct struct-ref optimisation, when only known structs are accessed
