@@ -1,0 +1,25 @@
+zero = {x = 0, y = 0, z = 0};
+norm {x, y, z} = sqrt (x * x + y * y + z * z);
+(/^) p d = {x = p.x / d, y = p.y / d, z = p.z / d};
+normalize p = p /^ norm p;
+max' a b = {x = max a.x b.x, y = max a.y b.y, z = max a.z b.z};
+
+curvePoint n =
+   (x = sin n;
+    cn = cos n;
+    {x, y = cn * 3, z = (x * x) / 2});
+
+curvePointArray len =
+    map (normalize . curvePoint) [0 .. len - 1];
+
+arrayMax = fold max' zero;
+
+benchmark len = println (arrayMax (curvePointArray len));
+
+for [0 .. 7] do i:
+    println "Run #\(i)";
+    start = System#currentTimeMillis();
+    benchmark 5000000;
+    end = System#currentTimeMillis();
+    println "Time: \(end - start)"
+done
