@@ -194,7 +194,7 @@ public class SpecialLib implements Opcodes {
 
     void fun2_() throws Exception {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_2, 0, "yeti/lang/Fun2_", null, "yeti/lang/Fun", null);
+        cw.visit(V1_4, 0, "yeti/lang/Fun2_", null, "yeti/lang/Fun", null);
         cw.visitField(0, "fun", "Lyeti/lang/Fun2;", null, null).visitEnd();
         cw.visitField(0, "arg", "Ljava/lang/Object;", null, null).visitEnd();
         MethodVisitor mv = cw.visitMethod(0, "<init>", "()V", null, null);
@@ -226,9 +226,58 @@ public class SpecialLib implements Opcodes {
         storeClass("yeti/lang/Fun2_.class");
     }
 
+    void compose() throws Exception {
+        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw.visit(V1_4, ACC_PUBLIC | ACC_FINAL,
+                 "yeti/lang/Compose", null, "yeti/lang/Fun", null);
+        cw.visitField(ACC_FINAL | ACC_PRIVATE,
+                      "f", "Lyeti/lang/Fun;", null, null).visitEnd();
+        cw.visitField(ACC_FINAL | ACC_PRIVATE,
+                      "g", "Lyeti/lang/Fun;", null, null).visitEnd();
+        MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>",
+            "(Ljava/lang/Object;Ljava/lang/Object;)V", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun", "<init>", "()V");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        mv.visitFieldInsn(PUTFIELD, "yeti/lang/Compose",
+                          "f", "Lyeti/lang/Fun;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        mv.visitFieldInsn(PUTFIELD, "yeti/lang/Compose",
+                          "g", "Lyeti/lang/Fun;");
+        mv.visitInsn(RETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+
+        mv = cw.visitMethod(ACC_PUBLIC, "apply",
+                    "(Ljava/lang/Object;)Ljava/lang/Object;", null, null);
+        mv.visitCode();
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, "yeti/lang/Compose",
+                          "f", "Lyeti/lang/Fun;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitFieldInsn(GETFIELD, "yeti/lang/Compose",
+                          "g", "Lyeti/lang/Fun;");
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitVarInsn(ASTORE, 1);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
+            "(Ljava/lang/Object;)Ljava/lang/Object;");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
+            "(Ljava/lang/Object;)Ljava/lang/Object;");
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+        storeClass("yeti/lang/Compose.class");
+    }
+
     void unsafe() throws Exception {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_2, 0, "yeti/lang/Unsafe", null, "java/lang/Object", null);
+        cw.visit(V1_4, 0, "yeti/lang/Unsafe", null, "java/lang/Object", null);
         MethodVisitor mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC,
                 "unsafeThrow", "(Ljava/lang/Throwable;)V", null, null);
         mv.visitCode();
@@ -246,6 +295,7 @@ public class SpecialLib implements Opcodes {
             l.transformLList();
         } else if (args[0].equals("pre")) {
             l.fun2_();
+            l.compose();
             l.unsafe();
         } else {
             System.err.println(args[0] + ": WTF?");

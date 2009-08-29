@@ -14,7 +14,7 @@ curvePointArray len =
 
 arrayMax = fold max' zero;
 
-benchmark len = println (arrayMax (curvePointArray len));
+benchmark = println . arrayMax . curvePointArray;
 
 for [0 .. 7] do i:
     println "Run #\(i)";
