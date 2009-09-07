@@ -12,6 +12,7 @@
 * Ensure that unit values really are null pointers
   when casted into Java object
 * Better error messages
+  + filter out noise from deep struct-mismatch error messages
 * Optimise lambdas into simple methods when all their references
   are fully applied
 * Allow cons pattern match (::) on arrays?
