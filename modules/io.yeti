@@ -245,7 +245,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
 
-    trace msg a = (System#err#print(msg); System#err#println(a); a),
+    trace msg a = (System#err#println(msg); a),
 
     runThread options f is list?<'a> -> (() -> ()) -> ~Thread =
         class FunThread extends Thread
