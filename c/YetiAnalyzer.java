@@ -496,8 +496,16 @@ public final class YetiAnalyzer extends YetiType {
                             "\n    (cannot apply " + funt + " to an argument)");
             }
             Type argt = argCode.type.deref();
-            String s = "Cannot apply " + fun.type + " to " + argCode.type +
-                       " argument\n    " + ex.getMessage();
+            String s = "Cannot apply " + fun.type + " function";
+            if (where != arg && where instanceof BinOp) {
+                BinOp op = (BinOp) where;
+                String name = op.op != "" ? op.op : op.left.sym();
+                if (name == null) {
+                    name = op.left.str().concat(" ...");
+                }
+                s += " `" + name + '\'';
+            }
+            s += " to " + argCode.type + " argument\n    " + ex.getMessage();
             if (funarg != null && funarg.type != FUN && argt.type == FUN) {
                 if (argCode instanceof Apply) {
                     s += "\n    Maybe you should apply the function given" +
