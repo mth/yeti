@@ -499,11 +499,10 @@ public final class YetiAnalyzer extends YetiType {
             String s = "Cannot apply " + fun.type + " function";
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;
-                String name = op.op != "" ? op.op : op.left.sym();
-                if (name == null) {
-                    name = op.left.str().concat(" ...");
-                }
-                s += " `" + name + '\'';
+                String name;
+                if ((name = op.op) != "" || op.left instanceof Sym
+                        && (name = op.left.sym()) != null)
+                    s += " `" + name + '\'';
             }
             s += " to " + argCode.type + " argument\n    " + ex.getMessage();
             if (funarg != null && funarg.type != FUN && argt.type == FUN) {

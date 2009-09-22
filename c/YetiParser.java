@@ -84,7 +84,7 @@ interface YetiParser {
             while (++e < s.length && ((c = s[e]) > ' ' && c != ':' &&
                      c != ';' && c != '.' && c != ',' && c != '(' && c != ')' &&
                      c != '[' && c != ']' && c != '{' && c != '}'));
-            return '\'' + new String(s, p, Math.min(e, s.length) - p) + '\''; 
+            return '`' + new String(s, p, Math.min(e, s.length) - p) + '\''; 
         }
 
         String sym() {
