@@ -69,7 +69,7 @@ final class BuiltIn implements Binder {
             r = new Synchronized(line);
             break;
         case 8:
-            r = new IsNullPtr(YetiType.A_TO_BOOL, "nullptr?", line);
+            r = new IsNullPtr(YetiType.A_TO_BOOL, "nullptr$q", line);
             break;
         case 9:
             r = new IsDefined(line);
