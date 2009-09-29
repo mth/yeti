@@ -767,7 +767,7 @@ class JavaType {
                     if (fp != tp) {
                         YetiType.unifyToVar(tp, fp);
                     }
-                } else if (isAssignable(where, tp, from.param[0], false) < 0) {
+                } else if (isAssignable(where, tp, fp, false) < 0) {
                     return false;
                 }
             } catch (YetiType.TypeException ex) {
