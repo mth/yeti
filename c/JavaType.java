@@ -760,13 +760,11 @@ class JavaType {
             YetiType.Type tp = to.param[0].deref();
             try {
                 if (fp.javaType.description == "B") {
-                    fp = YetiType.NUM_TYPE;
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
-                }
-                if (tp.type == YetiType.VAR) {
-                    if (fp != tp) {
+                    YetiType.unify(to.param[0], YetiType.NUM_TYPE);
+                } else if (tp.type == YetiType.VAR) {
+                    if (fp != tp)
                         YetiType.unifyToVar(tp, fp);
-                    }
                 } else if (isAssignable(where, tp, fp, false) < 0) {
                     return false;
                 }
