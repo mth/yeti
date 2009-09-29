@@ -176,7 +176,7 @@ typedef bin_input_handle = {
 
 binInputHandle istream is ~InputStream -> 'a = {
         read buf from is ~byte[] -> number -> number =
-            istream#read(buf, from, Core#byteArrayLen(buf) - from),
+            istream#read(buf, from, length buf - from),
         close () = istream#close()
     };
 

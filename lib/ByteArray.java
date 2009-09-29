@@ -3,7 +3,7 @@
 /*
  * Yeti core library.
  *
- * Copyright (c) 2007,2008,2009 Madis Janson
+ * Copyright (c) 2009 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,53 +30,43 @@
  */
 package yeti.lang;
 
-/** Yeti core library - List. */
-public abstract class AList extends AIter implements Comparable, Coll {
-    public abstract Object first();
+public class ByteArray extends LList {
+    private int start;
+    private byte[] array;
+    private boolean iter;
 
-    /**
-     * Return next iterator or null.
-     * May well modify itself and return this.
-     */
-    public abstract AIter next();
-
-    public boolean isEmpty() {
-        return false;
+    ByteArray(int start, byte[] array) {
+        super(null, null);
+        this.start = start;
+        this.array = array;
     }
 
-    /**
-     * Return rest of the list. Must not modify the current list.
-     */
-    public abstract AList rest();
-
-    public abstract void forEach(Object f);
-
-    public abstract Object fold(Fun f, Object v);
-
-    public abstract AList reverse();
-
-    public abstract Num index(Object v);
-
-    public abstract AList sort();
-    
-    public abstract AList smap(Fun f);
-
-    public AList map(Fun f) {
-        return new MapList(this, f);
+    public Object first() {
+        return new IntNum(array[start]);
     }
 
-    public AList find(Fun pred) {
-        AList l = this;
-        while (l != null && pred.apply(l.first()) != Boolean.TRUE)
-            l = l.rest();
-        return l;
+    public AIter next() {
+        if (start >= array.length)
+            return null;
+        if (iter) {
+            ++start;
+            return this;
+        }
+        ByteArray rest = new ByteArray(start + 1, array);
+        rest.iter = true;
+        return rest;
     }
 
-    public AList sort(Fun isLess) {
-        return new MList(this).asort(isLess);
+    public AList rest() {
+        return start >= array.length ? null : new ByteArray(start + 1, array);
     }
 
-    public AList asList() {
-        return this;
+    public long length() {
+        return array.length;
+    }
+
+    public static AList wrap(byte[] array) {
+        return array == null || array.length == 0
+            ? null : new ByteArray(0, array);
     }
 }
