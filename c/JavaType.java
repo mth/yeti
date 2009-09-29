@@ -756,17 +756,21 @@ class JavaType {
         if (from.type == YetiType.JAVA_ARRAY && to.type == YetiType.MAP &&
             ((mapKind = to.param[2].deref()).type == YetiType.LIST_MARKER ||
              mapKind.type == YetiType.VAR)) {
+            YetiType.Type fp = from.param[0].deref();
             YetiType.Type tp = to.param[0].deref();
-            if (tp.type == YetiType.VAR) {
-                YetiType.Type fp = from.param[0].deref();
-                if (fp != tp) {
-                    try {
-                        YetiType.unifyToVar(tp, fp);
-                    } catch (YetiType.TypeException ex) {
-                        return false;
-                    }
+            try {
+                if (fp.javaType.description == "B") {
+                    fp = YetiType.NUM_TYPE;
+                    YetiType.unify(to.param[1], YetiType.NO_TYPE);
                 }
-            } else if (isAssignable(where, tp, from.param[0], false) < 0) {
+                if (tp.type == YetiType.VAR) {
+                    if (fp != tp) {
+                        YetiType.unifyToVar(tp, fp);
+                    }
+                } else if (isAssignable(where, tp, from.param[0], false) < 0) {
+                    return false;
+                }
+            } catch (YetiType.TypeException ex) {
                 return false;
             }
             mapKind.type = YetiType.LIST_MARKER;

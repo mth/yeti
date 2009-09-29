@@ -46,19 +46,21 @@ public class ByteArray extends LList {
     }
 
     public AIter next() {
-        if (start >= array.length)
+        int n;
+        if ((n = start + 1) >= array.length)
             return null;
         if (iter) {
-            ++start;
+            start = n;
             return this;
         }
-        ByteArray rest = new ByteArray(start + 1, array);
+        ByteArray rest = new ByteArray(n, array);
         rest.iter = true;
         return rest;
     }
 
     public AList rest() {
-        return start >= array.length ? null : new ByteArray(start + 1, array);
+        int n;
+        return (n = start + 1) >= array.length ? null : new ByteArray(n, array);
     }
 
     public long length() {
