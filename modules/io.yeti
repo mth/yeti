@@ -265,5 +265,5 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     sleep time = Thread#sleep(time * 1000),
 
-    deleteFile fn is string -> () = _ = new File(fn)#delete(),
+    deleteFile fn is string -> boolean = new File(fn)#delete(),
 }
