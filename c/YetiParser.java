@@ -1633,6 +1633,9 @@ interface YetiParser {
                 }
             } else {
                 res = readSeq(' ', topLevel);
+                if (res.kind == "class")
+                    res = new Seq(new Node[] { res }, topLevel)
+                                .pos(res.line, res.col);
             }
             if (eofWas != EOF) {
                 throw new CompileException(eofWas, "Unexpected " + eofWas);
