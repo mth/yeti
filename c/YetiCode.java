@@ -86,7 +86,7 @@ final class CompileCtx implements Opcodes {
     private List warnings = new ArrayList();
     private String currentSrc;
     private Map definedClasses = new HashMap();
-    private List unstoredClasses = new ArrayList();
+    private List unstoredClasses;
     List postGen = new ArrayList();
     boolean isGCJ;
     ClassFinder classPath;
@@ -189,6 +189,8 @@ final class CompileCtx implements Opcodes {
         currentCompileCtx.set(this);
         currentSrc = sourceName;
         this.flags = flags;
+        List oldUnstoredClasses = unstoredClasses;
+        unstoredClasses = new ArrayList();
         try {
             try {
                 codeTree = YetiAnalyzer.toCode(sourceName, name, code,
@@ -280,6 +282,7 @@ final class CompileCtx implements Opcodes {
             constants.close();
             compiled.put(sourceName, name);
             write();
+            unstoredClasses = oldUnstoredClasses;
             return codeTree.type;
         } catch (CompileException ex) {
             if (ex.fn == null) {
@@ -315,7 +318,7 @@ final class CompileCtx implements Opcodes {
             writer.writeClass(name, content);
             classPath.define(name, content);
         }
-        unstoredClasses.clear();
+        unstoredClasses = null;
     }
 }
 
