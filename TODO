@@ -7,6 +7,7 @@
                 restructure holding properties
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
+* Primitive arrays other than byte[] as list<number>
 * Extendable structs?
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
