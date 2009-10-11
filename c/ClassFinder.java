@@ -32,6 +32,7 @@ package yeti.lang.compiler;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.Map;
@@ -83,6 +84,7 @@ class ClassJar extends ClassPathItem {
 
 class ClassFinder {
     private ClassPathItem[] classPath;
+    private Map defined = new HashMap();
 
     ClassFinder(String cp) {
         this(cp.split(":"));
@@ -97,6 +99,10 @@ class ClassFinder {
     }
 
     public InputStream findClass(String name) {
+        Object x = defined.get(name);
+        if (x != null) {
+            return new ByteArrayInputStream((byte[]) x);
+        }
         InputStream in;
         for (int i = 0; i < classPath.length; ++i) {
             try {
@@ -109,6 +115,10 @@ class ClassFinder {
         in = clc != null ? clc.getResourceAsStream(name) : null;
         return in != null ? in :
                 getClass().getClassLoader().getResourceAsStream(name);
+    }
+
+    public void define(String name, byte[] content) {
+        defined.put(name, content);
     }
 
     static InputStream find(String name) {

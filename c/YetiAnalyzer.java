@@ -1542,7 +1542,7 @@ public final class YetiAnalyzer extends YetiType {
             if (parser.moduleName != null) {
                 className = parser.moduleName;
             }
-            ctx.classes.put(className, null);
+            ctx.addClass(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & YetiC.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);

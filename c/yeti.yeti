@@ -135,7 +135,9 @@ if empty? srcs and not eval then
 fi;
 
 writer =
-    if exec then
+    if printType then
+        ()
+    elif exec then
         new Loader()
     else
         new ToFile(target)
@@ -150,8 +152,6 @@ try
         resultType := compilation#compile((), evaluator.mainClass, src, flags);
         if printType then
             println resultType
-        else
-            compilation#write()
         fi
     elif printType then
         CompileCtx#currentCompileCtx#set(compilation);
@@ -161,8 +161,7 @@ try
     else
         for srcs do src:
             evaluator.mainClass := compilation#compile(src, flags)
-        done;
-        compilation#write()
+        done
     fi;
     compilation#enumWarns(printMessage)
 catch CompileException ex:

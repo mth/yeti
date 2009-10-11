@@ -85,10 +85,11 @@ final class CompileCtx implements Opcodes {
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
     private String currentSrc;
+    private Map definedClasses = new HashMap();
+    private List unstoredClasses = new ArrayList();
     List postGen = new ArrayList();
     boolean isGCJ;
     ClassFinder classPath;
-    Map classes = new HashMap();
     Map types = new HashMap();
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
@@ -115,7 +116,7 @@ final class CompileCtx implements Opcodes {
 
     String createClassName(String outerClass, String nameBase) {
         String name = nameBase = outerClass + '$' + nameBase;
-        for (int i = 0; classes.containsKey(name); ++i) {
+        for (int i = 0; definedClasses.containsKey(name); ++i) {
             name = nameBase + i;
         }
         return name;
@@ -176,9 +177,9 @@ final class CompileCtx implements Opcodes {
     }
 
     YetiType.Type compile(String sourceName, String name,
-                          char[] code, int flags) {
-        if (classes.containsKey(name)) {
-            throw new RuntimeException(classes.get(name) == null
+                          char[] code, int flags) throws Exception {
+        if (definedClasses.containsKey(name)) {
+            throw new RuntimeException(definedClasses.get(name) == null
                 ? "Circular module dependency: " + name
                 : "Duplicate module name: " + name);
         }
@@ -278,6 +279,7 @@ final class CompileCtx implements Opcodes {
             ctx.closeMethod();
             constants.close();
             compiled.put(sourceName, name);
+            write();
             return codeTree.type;
         } catch (CompileException ex) {
             if (ex.fn == null) {
@@ -287,15 +289,33 @@ final class CompileCtx implements Opcodes {
         }
     }
 
-    void write() throws Exception {
-        for (int i = 0, cnt = postGen.size(); i < cnt; ++i) {
+    void addClass(String name, Ctx ctx) {
+        if (definedClasses.put(name, ctx) != null) {
+            throw new IllegalStateException("Duplicate class: "
+                                            + name.replace('/', '.'));
+        }
+        if (ctx != null) {
+            unstoredClasses.add(ctx);
+        }
+    }
+
+    private void write() throws Exception {
+        if (writer == null)
+            return;
+        int i, cnt = postGen.size();
+        for (i = 0; i < cnt; ++i)
             ((Runnable) postGen.get(i)).run();
+        postGen.clear();
+        cnt = unstoredClasses.size();
+        for (i = 0; i < cnt; ++i) {
+            Ctx c = (Ctx) unstoredClasses.get(i);
+            definedClasses.put(c.className, "");
+            String name = c.className + ".class";
+            byte[] content = c.cw.toByteArray();
+            writer.writeClass(name, content);
+            classPath.define(name, content);
         }
-        Iterator i = classes.values().iterator();
-        while (i.hasNext()) {
-            Ctx c = (Ctx) i.next();
-            writer.writeClass(c.className + ".class", c.cw.toByteArray());
-        }
+        unstoredClasses.clear();
     }
 }
 
@@ -345,9 +365,7 @@ final class Ctx implements Opcodes {
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
-        if (compilation.classes.put(name, ctx) != null) {
-            throw new IllegalStateException("Duplicate class: " + name);
-        }
+        compilation.addClass(name, ctx);
         return ctx;
     }
 

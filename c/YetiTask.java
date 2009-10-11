@@ -92,7 +92,6 @@ public class YetiTask extends MatchingTask {
             for (int i = 0; i < files.length; ++i) {
                 compilation.compile(files[i], 0);
             }
-            compilation.write();
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());
         } catch (BuildException ex) {

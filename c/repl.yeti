@@ -97,7 +97,6 @@ do argv: {
             compilation = compilationOf writer;
             type_ = compilation#compile((), mainClass, line is string, flags +
                                             YetiC#CF_EVAL + YetiC#CF_EVAL_BIND);
-            compilation#write();
             try
                 val = execClass true writer;
                 if type_#deref()#type != YetiType#UNIT then
@@ -136,7 +135,6 @@ do argv: {
             for sources do src:
                 mainClass := compilation#compile(src, 0)
             done;
-            compilation#write();
             compilation#enumWarns(printMessage);
             true
         catch CompileException ex:
