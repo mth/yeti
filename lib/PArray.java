@@ -33,9 +33,9 @@ package yeti.lang;
 import java.lang.reflect.Array;
 
 public class PArray extends LList {
-    protected int start;
-    protected final int length;
-    protected final Object array;
+    int start;
+    final int length;
+    final Object array;
     private boolean iter;
 
     PArray(int start, int length, Object array) {
