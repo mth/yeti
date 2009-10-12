@@ -759,7 +759,8 @@ class JavaType {
             YetiType.Type fp = from.param[0].deref();
             YetiType.Type tp = to.param[0].deref();
             try {
-                if (fp.javaType.description == "B") {
+                // XXX should [C -> string be checked???
+                if (fp.javaType.description.length() == 1) {
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
                     YetiType.unify(to.param[0], YetiType.NUM_TYPE);
                 } else if (tp.type == YetiType.VAR) {

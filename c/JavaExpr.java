@@ -316,10 +316,11 @@ class JavaExpr extends Code {
         // conversion from array to list
         if (argType.type == YetiType.MAP && given.type == YetiType.JAVA_ARRAY) {
             String javaItem = given.param[0].javaType.description;
-            if (javaItem == "B") {
-                ctx.visitTypeInsn(CHECKCAST, "[B");
-                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/ByteArray",
-                                    "wrap", "([B)Lyeti/lang/AList;");
+            if (javaItem.length() == 1) {
+                String arrayType = "[".concat(javaItem);
+                ctx.visitTypeInsn(CHECKCAST, arrayType);
+                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/PArray",
+                                    "wrap", "(" + arrayType + ")Lyeti/lang/AList;");
                 return false;
             }
             Label isNull = new Label(), end = new Label();
