@@ -32,18 +32,6 @@ package yeti.lang;
 
 /** Yeti core library - List. */
 public abstract class AList extends AIter implements Comparable, Coll {
-    public abstract Object first();
-
-    /**
-     * Return next iterator or null.
-     * May well modify itself and return this.
-     */
-    public abstract AIter next();
-
-    public boolean isEmpty() {
-        return false;
-    }
-
     /**
      * Return rest of the list. Must not modify the current list.
      */
