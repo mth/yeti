@@ -757,10 +757,12 @@ class JavaType {
             ((mapKind = to.param[2].deref()).type == YetiType.LIST_MARKER ||
              mapKind.type == YetiType.VAR)) {
             YetiType.Type fp = from.param[0].deref();
+            String fromDesc = fp.javaType.description;
+            if (fromDesc == "C")
+                return false;
             YetiType.Type tp = to.param[0].deref();
             try {
-                // XXX should [C -> string be checked???
-                if (fp.javaType.description.length() == 1) {
+                if (fromDesc.length() == 1) {
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
                     YetiType.unify(to.param[0], YetiType.NUM_TYPE);
                 } else if (tp.type == YetiType.VAR) {
@@ -796,12 +798,14 @@ class JavaType {
             to = to.param[0].deref();
             smart = false;
         }
+        if (to.type == YetiType.STR && smart &&
+                (from.type == YetiType.JAVA &&
+                    from.javaType.description == "Ljava/lang/String;"/* ||
+                 from.type == YetiType.JAVA_ARRAY &&
+                    from.param[0].deref().javaType.description == "C"*/))
+            return true;
         if (from.type != YetiType.JAVA)
             return false;
-        if (to.type == YetiType.STR && smart &&
-                from.javaType.description == "Ljava/lang/String;") {
-            return true;
-        }
         try {
             return to.type == YetiType.JAVA &&
                     (to.javaType != from.javaType || mayExact) &&
