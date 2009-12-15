@@ -1,0 +1,24 @@
+module demo.hello;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+simpleRequest {path, write} =
+    write "<html><body><h1>Hello World</h1>\
+          "Path: '\(path)'</body></html>";
+
+executeRequest request response
+        is ~HttpServletRequest -> ~HttpServletResponse -> () =
+    simpleRequest {
+        path = request#getServletPath(),
+        write msg = response#getWriter()#print(msg is string)
+    };
+
+class Demo extends HttpServlet
+    void doGet(HttpServletRequest request, HttpServletResponse response)
+        executeRequest request response,
+
+    void doPost(HttpServletRequest request, HttpServletResponse response)
+        executeRequest request response,
+end

@@ -1,0 +1,21 @@
+<!-- ex: se sts=4 sw=4 expandtab: -->
+<!-- ant -Dj2ee=j2ee.jar -->
+<project name="yeti" default="build" basedir=".">
+    <target name="build">
+        <property name="yeti" value="${basedir}/../../yeti.jar"/>
+        <property name="j2ee" value="j2ee.jar"/>
+        <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
+                 classpath="${yeti}"/>
+        <yetic srcdir="${basedir}" destdir="${basedir}/target/WEB-INF/classes">
+            <classpath><path location="${j2ee}"/></classpath>
+        </yetic>
+        <echo file="${basedir}/target/index.do" message="dummy"/>
+        <war destfile="demo.war" webxml="web.xml" basedir="${basedir}/target">
+            <lib file="${yeti}"/>
+        </war>
+    </target>
+
+    <target name="clean">
+        <delete dir="target"/>
+    </target>
+</project>
