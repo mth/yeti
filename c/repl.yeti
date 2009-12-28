@@ -40,6 +40,7 @@ do argv: {
     var sandbox = false,
     var gcj = false,
     var noframes = false,
+    var evalContext = () as ~YetiEval,
 
     compilationOf writer =
         ctx = new CompileCtx(new YetiC(()), writer, preload,
@@ -91,6 +92,13 @@ do argv: {
     evaluate line flags =
         writer = new Loader();
         res = array [];
+        oldContext = YetiEval#get();
+        if defined? evalContext or not defined? oldContext then
+            if not defined? evalContext then
+                evalContext := new YetiEval()
+            fi;
+            YetiEval#set(evalContext)
+        fi;
         try
             bindings = YetiEval#get()#bindings;
             bindBarrier = bindings#size();
@@ -124,6 +132,8 @@ do argv: {
             done
         catch CompileException ex:
             push res ex#getMessage()
+        finally
+            YetiEval#set(oldContext)
         yrt;
         strJoin '' (map (^ "\n") res),
 
