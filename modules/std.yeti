@@ -635,4 +635,14 @@ plus a b = a + b;
 
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
+
+    threadLocal initialValue is ('a -> {var value is 'a}) =
+        class Local extends java.lang.ThreadLocal
+            Object initialValue() initialValue
+        end;
+        tl = new Local();
+        {
+            get value () = tl#get() unsafely_as 'a,
+            set value v  = tl#set(v)
+        }
 }
