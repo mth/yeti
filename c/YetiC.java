@@ -83,6 +83,17 @@ class Loader extends ClassLoader implements CodeWriter {
         }
         return loaded;
     }
+
+    public InputStream getResourceAsStream(String path) {
+        if (path.endsWith(".class")) {
+            String name =
+                path.substring(0, path.length() - 6).replace('.', '/');
+            byte[] code = (byte[]) classes.get(name);
+            if (code != null)
+                return new ByteArrayInputStream(code);
+        }
+        return super.getResourceAsStream(path);
+    }
 }
 
 public class YetiC implements SourceReader {

@@ -28,6 +28,7 @@
 program yeti.lang.compiler.yeti;
 
 import java.lang.ClassLoader;
+import java.lang.Thread;
 
 var target = "";
 var eval = false;
@@ -177,8 +178,10 @@ out = if evaluator.sandbox then System#out else System#err fi;
 
 if exec then
     try
-        v = evaluator.execClass eval
-                                (writer as ~Object unsafely_as ~ClassLoader);
+        classLoader = writer as ~Object unsafely_as ~ClassLoader;
+        // make compiled classes visible in the thread classloader
+        Thread#currentThread()#setContextClassLoader(classLoader);
+        v = evaluator.execClass eval classLoader;
         if resultType#deref()#type != YetiType#UNIT then
             println v
         fi

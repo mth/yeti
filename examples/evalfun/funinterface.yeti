@@ -1,0 +1,8 @@
+module funinterface;
+
+{
+    function = threadLocal (const 'N/A'),
+
+    init f is (number -> string) -> () =
+        function.value := f
+}

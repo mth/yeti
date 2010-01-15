@@ -1,0 +1,8 @@
+load funinterface;
+
+repl = load yeti.lang.compiler.repl (array []);
+evalMsg = repl.evaluate "load funinterface; init do x: '[' ^ x * 2 ^ ']' done" 0;
+print evalMsg;
+f = function.value;
+
+println (f 21);
