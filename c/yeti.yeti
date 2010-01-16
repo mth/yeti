@@ -29,6 +29,7 @@ program yeti.lang.compiler.yeti;
 
 import java.lang.ClassLoader;
 import java.lang.Thread;
+import java.io.File;
 
 var target = "";
 var eval = false;
@@ -78,6 +79,8 @@ help () =
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
+splitPath = strSplit File#pathSeparator;
+
 not (eval or empty? argv) and (not exec or empty? srcs) loop
    (arg = shift argv;
     if strStarts? arg '-' then
@@ -94,11 +97,10 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             eval := true;
             src := shift argv;
         "-h": help ();
-        "-cp": evaluator.classPath := list (strSplit ':' (shift argv));
+        "-cp": evaluator.classPath := list (splitPath (shift argv));
         "-help": help ();
         "--help": help ();
-        "-preload":
-            evaluator.preload := list (strSplit ':' (shift argv));
+        "-preload": evaluator.preload := list (splitPath (shift argv));
         "-type":
             printType := true;
             exec := false;

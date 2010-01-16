@@ -30,6 +30,7 @@
  */
 package yeti.lang.compiler;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -49,7 +50,7 @@ class ClassDir extends ClassPathItem {
     String path;
 
     ClassDir(String path) {
-        this.path = path.length() > 0 ? path.concat("/") : "";
+        this.path = path.length() > 0 ? path.concat(File.separator) : "";
     }
 
     InputStream getStream(String name) throws IOException {
@@ -87,7 +88,7 @@ class ClassFinder {
     private Map defined = new HashMap();
 
     ClassFinder(String cp) {
-        this(cp.split(":"));
+        this(cp.split(File.pathSeparator));
     }
 
     ClassFinder(String[] cp) {
