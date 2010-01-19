@@ -410,7 +410,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         genClosureInit(init);
         init.visitVarInsn(ALOAD, 0); // this.
         superInit.genCall(init, parentClass.getCaptures(), INVOKESPECIAL);
-        // extra arguments are used for smugling in captured bindings
+        // extra arguments are used for smuggling in captured bindings
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {
             c.localVar = -1; // reset to using this

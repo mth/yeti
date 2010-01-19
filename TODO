@@ -3,10 +3,12 @@
 
 * YetiDoc to automatically generate html documentation
 * Fix f x = {x}; - type system copies to much and gets wrong type sig
+* Some kind of reflection
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
+* turn constant class fields into private static final
 * Extendable structs?
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
