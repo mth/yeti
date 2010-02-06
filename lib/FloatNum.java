@@ -240,6 +240,7 @@ public final class FloatNum extends Num {
     }
 
     public boolean equals(Object num) {
-        return num instanceof Num && v == ((Num) num).doubleValue();
+        double x;
+        return num instanceof Num && !(v < (x = ((Num) num).doubleValue()) || v > x);
     }
 }
