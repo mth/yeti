@@ -82,31 +82,31 @@ plus a b = a + b;
 {
     none = None (),
 
-    // identity function (I combinator)
+    /// identity function (I combinator)
     id x = x,
 
-    // constant function (K combinator)
+    /// constant function (K combinator)
     const x _ = x,
 
     apply arg f = f arg,
     at h k = h.[k],
 
-    // f g x y = f (g x) (g y)
-    // for example sort (on (<) (.name)) list
+    /// f g x y = f (g x) (g y)
+    /// for example sort (on (<) (.name)) list
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
         new On(f, g) unsafely_as 'a, 
 
-    // functions for standard operators
+    /// functions for standard operators
 
-    // boolean logic
+    /// boolean logic
     norec (not) v = not v,
     norec (and) a b = a and b,
     norec (or) a b = a or b,
 
-    // element a in hash b
+    /// element a in hash b
     norec (in) a b = a in b,
 
-    // comparision operators
+    /// comparision operators
     norec (==) a b = a == b,
     norec (!=) a b = a != b,
     norec (<)  a b = a <  b,
@@ -114,31 +114,31 @@ plus a b = a + b;
     norec (>)  a b = a >  b,
     norec (>=) a b = a >= b,
 
-    // arithmetic operators
+    /// arithmetic operators
     norec (+)      = plus,
     norec (-)  a b = a - b,
     norec (*)  a b = a * b,
     norec (/)  a b = a / b,
     norec (%)  a b = a % b,
 
-    // function composition - (f . g) x is same as f (g x)
+    /// function composition - (f . g) x is same as f (g x)
     norec (.)  a b = a . b,
 
-    // list constructor a :: [b, c] is same as [a, b, c]
+    /// list constructor a :: [b, c] is same as [a, b, c]
     norec (::) v l = v :: l,
 
-    // lazy list constructor a :. \[b] is same as [a, b], but the second
-    // lambda is invoked only when the tail is accessed for the first time.
+    /// lazy list constructor a :. \[b] is same as [a, b], but the second
+    /// lambda is invoked only when the tail is accessed for the first time.
     norec (:.) v l = v :. l,
 
-    // regex match, like s =~ '\d' to check whether string s contains number
+    /// regex match, like s =~ '\d' to check whether string s contains number
     norec (=~) s p = s =~ p,
 
-    // negated regex match: s !~ p is same as not (s =~ p)
+    /// negated regex match: s !~ p is same as not (s =~ p)
     norec (!~) s p = s !~ p,
 
-    // integer operations (when arguments are rational or floating numbers,
-    // then only the integer part of argument is used))
+    /// integer operations (when arguments are rational or floating numbers,
+    /// then only the integer part of argument is used))
     norec (div) a b = a div b,
     norec (shl) a b = a shl b,
     norec (shr) a b = a shr b,
@@ -146,40 +146,40 @@ plus a b = a + b;
     norec (b_or) a b = a b_or b,
     norec (b_and) a b = a b_and b,
 
-    // negate a = -a
+    /// negate a = -a
     norec negate a = negate a,
 
-    // Low-level nullpointer check.
-    // Use defined? instead, as nullptr? may behive unexpectedly together
-    // with some conversions done by yeti.
+    /// Low-level nullpointer check.
+    /// Use defined? instead, as nullptr? may behive unexpectedly together
+    /// with some conversions done by yeti.
     norec nullptr? a = nullptr? a,
 
-    // checks whether value is defined
+    /// checks whether value is defined
     norec defined? a = defined? a,
 
-    // Check whether a collection is empty one.
+    /// Check whether a collection is empty one.
     norec empty? a = empty? a,
 
-    // First element of list or array.
+    /// First element of list or array.
     norec head a = head a,
 
-    // Rest of the list or array.
+    /// Rest of the list or array.
     norec tail a = tail a,
 
-    // Identity check - whether a and b are reference to same object.
+    /// Identity check - whether a and b are reference to same object.
     norec same? a b = same? a b,
 
-    // For every element of l call f with given element as argument.
+    /// For every element of l call f with given element as argument.
     norec for l f = for l f,
 
-    // Acquires a mutual-exclusion lock on behalf of the executing thread,
-    // applies block to (), then releases the lock.
+    /// Acquires a mutual-exclusion lock on behalf of the executing thread,
+    /// applies block to (), then releases the lock.
     norec synchronized monitor block = synchronized monitor block,
 
-    // String concatenation
+    /// String concatenation
     (^) a b = "\(a)\(b)",
 
-    // List/array concatenation
+    /// List/array concatenation
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
             b unsafely_as ~Object unsafely_as 'a
@@ -189,13 +189,13 @@ plus a b = a + b;
             new ConcatList(a, b) unsafely_as list<'a>
         fi,
 
-    // damn struct polymorphism restriction. is it really needed?
+    /// damn struct polymorphism restriction. is it really needed?
     array, fold, find, index, keys, hash,
 
-    // Wraps Java array object into Yeti array type.
+    /// Wraps Java array object into Yeti array type.
     wrapArray a is 'a[] -> array<'a> = a,
 
-    // Gives values from collection a as a list.
+    /// Gives values from collection a as a list.
     list a is map<'k, 'a> -> list<'a> =
         if empty? a then
             []
@@ -203,34 +203,34 @@ plus a b = a + b;
             (a unsafely_as ~Coll)#asList() unsafely_as list<'a>
         fi,
 
-    // Swaps elements with keys i and j in mapping a
+    /// Swaps elements with keys i and j in mapping a
     swapAt a i j =
         x = a.[i];
         a.[i] := a.[j];
         a.[j] := x,
 
-    // Applies function to two arguments in reversed order.
-    // Useful for swapping binary functions arguments.
+    /// Applies function to two arguments in reversed order.
+    /// Useful for swapping binary functions arguments.
     flip f x y =
         f y x,
 
-    // Make function f to be memoizing.
+    /// Make function f to be memoizing.
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> 'a),
 
-    // Construct a pair structure.
+    /// Construct a pair structure.
     pair fst snd =
         {fst, snd},
 
-    // Convert any value into string representation
+    /// Convert any value into string representation
     string x =
         "\(x)",
 
-    // Convert string into number
+    /// Convert string into number
     number x =
         Core#parseNum(x is string unsafely_as ~String),
 
-    // Numeric functions
+    /// Numeric functions
     min a b =
         if a < b then a else b fi,
     max a b =
@@ -240,7 +240,7 @@ plus a b = a + b;
     sum l =
         fold plus 0 l,
 
-    // Flatten a list of lists.
+    /// Flatten a list of lists.
     concat l is list?<list?<'a>> -> list<'a> =
         if empty? l then
             []
@@ -248,7 +248,7 @@ plus a b = a + b;
             ConcatLists#concat(l) unsafely_as list<'a>
         fi,
 
-    // Basically concat . map, but more effective.
+    /// Basically concat . map, but more effective.
     concatMap f l is ('a -> list?<'b>) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -256,16 +256,16 @@ plus a b = a + b;
             concat ((l unsafely_as ~AList)#map(f) unsafely_as list<'a>)
         fi,
 
-    // Is predicate f true for any element of list l?
+    /// Is predicate f true for any element of list l?
     any f l =
         not nullptr? (find f l),
 
-    // Is predicate f true for all elements of list l?
+    /// Is predicate f true for all elements of list l?
     all f l =
         nullptr? (find (_ x = not f x) l),
 
-    // Returns first element of l for which predicate f is false
-    // or last element, when f returns false for all elements of l.
+    /// Returns first element of l for which predicate f is false
+    /// or last element, when f returns false for all elements of l.
     avoid f l is ('a -> boolean) -> list?<'a> -> 'a =
         if empty? l then
             throw new IllegalArgumentException("prefer: empty list")
@@ -277,20 +277,20 @@ plus a b = a + b;
          not nullptr? i and f (value unsafely_as 'a)) loop;
         value unsafely_as 'a,
 
-    // Whether l contains element equal (as defined by (==)) to v
+    /// Whether l contains element equal (as defined by (==)) to v
     contains v l =
         index v l != -1,
 
-    // Returns default when opt == None () and f x when opt == Some x
+    /// Returns default when opt == None () and f x when opt == Some x
     maybe default f opt =
         case opt of
         Some v: f v;
         None _: default;
         esac,
 
-    // Returns [f(a), f(b), ...] for list l [a, b, ...]
-    // This map function returns lazy list when used on normal lists.
-    // Arrays and lists backed by arrays are mapped strictly.
+    /// Returns [f(a), f(b), ...] for list l [a, b, ...]
+    /// This map function returns lazy list when used on normal lists.
+    /// Arrays and lists backed by arrays are mapped strictly.
     map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -298,9 +298,9 @@ plus a b = a + b;
             (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
         fi,
 
-    // Strict mapping of list. map' is usually faster than map on lists,
-    // unless huge streams are processed or most of the resulting list is
-    // not used. They work identically on arrays.
+    /// Strict mapping of list. map' is usually faster than map on lists,
+    /// unless huge streams are processed or most of the resulting list is
+    /// not used. They work identically on arrays.
     map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         if empty? l then
             []
@@ -308,9 +308,9 @@ plus a b = a + b;
             (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
         fi,
 
-    // Splits given list into two parts, putting elements from the start of the
-    // list into fst as long as predicate function pred is false for the given
-    // element. The rest of the list is returned as snd.
+    /// Splits given list into two parts, putting elements from the start of the
+    /// list into fst as long as predicate function pred is false for the given
+    /// element. The rest of the list is returned as snd.
     splitBy pred list is ('a -> boolean) -> list<'a>
                           -> { fst is list<'a>, snd is list<'a> } = 
         a = new MList();
@@ -320,8 +320,8 @@ plus a b = a + b;
         { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
-    // Splits given list into two parts, returning first n elements as fst
-    // and the rest as snd.
+    /// Splits given list into two parts, returning first n elements as fst
+    /// and the rest as snd.
     splitAt n list is number -> list<'a>
                       -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
@@ -337,7 +337,7 @@ plus a b = a + b;
         { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
           snd = l },
 
-    // Take first n elements from list l
+    /// Take first n elements from list l
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l then
             []
@@ -345,7 +345,7 @@ plus a b = a + b;
             TakeList#take(l, n) unsafely_as list<'a>
         fi,
 
-    // Drop first n elements from list l. Won't copy the returned tail.
+    /// Drop first n elements from list l. Won't copy the returned tail.
     drop n l =
         if n <= 0 then
             l
@@ -355,8 +355,8 @@ plus a b = a + b;
             drop (n - 1) (tail l)
         fi,
 
-    // Take elements from the start of list l while predicate pred
-    // is true on the element.
+    /// Take elements from the start of list l while predicate pred
+    /// is true on the element.
     takeWhile pred l is ('a -> boolean) -> list<'a> -> list<'a> =
         if empty? l then
             []
@@ -364,19 +364,19 @@ plus a b = a + b;
             TakeWhile#take(l, pred) unsafely_as list<'a>
         fi,
 
-    // Returns infinite list [x, f(x), f(f(x)), f(f(f(x))), ...]
+    /// Returns infinite list [x, f(x), f(f(x)), f(f(f(x))), ...]
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<'a>,
 
-    // Removes duplicate elements from the list.
-    // The ordering of list is not preserved.
+    /// Removes duplicate elements from the list.
+    /// The ordering of list is not preserved.
     nub is list?<'a> -> list<'a> =
         keys . hash,
     
-    // Returns a list of lists, where each sublist contains only equal elements
-    // and the concatenation of the result is equal to the original list l.
-    // Elements are considered equal when the given predicate function
-    // eq is true for them.
+    /// Returns a list of lists, where each sublist contains only equal elements
+    /// and the concatenation of the result is equal to the original list l.
+    /// Elements are considered equal when the given predicate function
+    /// eq is true for them.
     groupBy eq l is ('a -> 'a -> boolean) -> list?<'a> -> list<list<'a>> =
         if empty? l then
             []
@@ -398,7 +398,7 @@ plus a b = a + b;
             result unsafely_as 'l
         fi,
 
-    // Sorts list. Same as sortBy (<) l
+    /// Sorts list. Same as sortBy (<) l
     sort l is list?<^a> -> list<^a> =
         if empty? l then
             []
@@ -406,8 +406,8 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort() unsafely_as list<^a>
         fi,
 
-    // Sorts list using given less? predicate function to determine the order.
-    // Merge sort algorithm is used.
+    /// Sorts list using given less? predicate function to determine the order.
+    /// Merge sort algorithm is used.
     sortBy less? l is ('a -> 'a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
@@ -428,44 +428,44 @@ plus a b = a + b;
     sqrt a = Math#sqrt(a),
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
-    // Replaces occurences of needle in the haystack with replacement
+    /// Replaces occurences of needle in the haystack with replacement
     strReplace needle replacement haystack =
         Core#replace(needle, replacement, haystack),
 
-    // String length
+    /// String length
     norec strLength s = strLength s,
 
-    // String to upper case
+    /// String to upper case
     norec strUpper s = strUpper s,
 
-    // String to lower case
+    /// String to lower case
     norec strLower s = strLower s,
 
-    // Remove whitespace from start and end of the string
+    /// Remove whitespace from start and end of the string
     norec strTrim s = strTrim s,
 
-    // Slice of the string
+    /// Slice of the string
     norec strSlice s start end = strSlice s start end,
 
-    // Same as strSlice s pos (strLength s)
+    /// Same as strSlice s pos (strLength s)
     norec strRight s pos = strRight s pos,
 
-    // Does the string s starts with string start?
+    /// Does the string s starts with string start?
     norec strStarts? s start = strStarts? s start,
 
-    // Does the string s ends with string end?
+    /// Does the string s ends with string end?
     norec strEnds? s end = strEnds? s end,
 
-    // Get an index of the needle substring in the haystack.
-    // Starts searching from index from
+    /// Get an index of the needle substring in the haystack.
+    /// Starts searching from index from
     norec strIndexOf haystack needle from = strIndexOf haystack needle from,
 
-    // Get an index of the needle substring in the haystack.
-    // Starts searching backwards from index from
+    /// Get an index of the needle substring in the haystack.
+    /// Starts searching backwards from index from
     norec strLastIndexOf haystack needle from =
             strLastIndexOf haystack needle from,
 
-    // Same as strLastIndexOf haystack needle (strLength haystack)
+    /// Same as strLastIndexOf haystack needle (strLength haystack)
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     norec strSplit re = strSplit re,

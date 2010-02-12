@@ -167,11 +167,13 @@ interface YetiParser {
         boolean var;
         boolean property;
         boolean noRec;
+        String doc;
 
         Bind() {
         }
 
-        Bind(List args, Node expr, boolean inStruct) {
+        Bind(List args, Node expr, boolean inStruct, String doc) {
+            this.doc = doc;
             int first = 0;
             Node nameNode = null;
             while (first < args.size()) {
@@ -229,6 +231,11 @@ interface YetiParser {
 
         String str() {
             StringBuffer s = new StringBuffer("(@let ");
+            if (doc != null) {
+                s.append("/**");
+                s.append(doc);
+                s.append(" */ ");
+            }
             if (noRec)
                 s.append("@norec ");
             if (property)
@@ -613,7 +620,7 @@ interface YetiParser {
                         while (i < src.length && src[i] != '\n'
                                 && src[i] != '\r') ++i;
                         if (i > sp && src[sp] == '/')
-                            yetiDocStr = new String(src, sp, i - sp);
+                            yetiDocStr = new String(src, sp + 1, i - sp);
                         continue;
                     }
                     if (src[i + 1] == '*') {
@@ -802,7 +809,7 @@ interface YetiParser {
             return res.pos(line, col);
         }
 
-        private Node def(List args, List expr, boolean structDef) {
+        private Node def(List args, List expr, boolean structDef, String doc) {
             BinOp partial = null;
             String s = null;
             int i = 0, cnt = expr.size();
@@ -857,7 +864,7 @@ interface YetiParser {
                    args.size() == 1 && ((Node) args.get(0)).kind == "struct"
                    ? (Node) new XNode("struct-bind",
                         new Node[] { (XNode) args.get(0), e })
-                   : (bind = new Bind(args, e, structDef)).name != "_" ? bind
+                   : (bind = new Bind(args, e, structDef, doc)).name != "_" ? bind
                    : bind.expr.kind == "lambda"
                         ? bind.expr : new XNode("_", bind.expr);
         }
@@ -1086,6 +1093,7 @@ interface YetiParser {
             defs.add(node);
             defs.add(p < src.length && src[p] == '(' ? readArgDefs()
                         : new XNode("argument-list", new Node[0]));
+            yetiDocStr = null;
             List l = new ArrayList();
             node = readDottedType("Expected extends, field or "
                                   + "method definition, found ");
@@ -1112,6 +1120,7 @@ interface YetiParser {
                     l.add(new XNode(vsym).pos(node.line, node.col));
                     node = fetch();
                 }
+                String doc = yetiDocStr;
                 String meth = "method";
                 Node args = null;
                 while (node instanceof Sym) {
@@ -1163,7 +1172,7 @@ interface YetiParser {
                                            ((Sym) eofWas).sym != "end"))
                     throw new CompileException(eofWas, "Unexpected " + eofWas);
                 if (args == null) {
-                    defs.add(new Bind(l, expr, false));
+                    defs.add(new Bind(l, expr, false, doc));
                 } else {
                     Node[] m = expr != null
                         ? new Node[] { (Node) l.get(0), node, args, expr }
@@ -1172,6 +1181,7 @@ interface YetiParser {
                 }
                 l.clear();
                 node = null;
+                yetiDocStr = null;
             }
             return new XNode("class",
                              (Node[]) defs.toArray(new Node[defs.size()]));
@@ -1233,14 +1243,18 @@ interface YetiParser {
             List res = new ArrayList();
             List args = null;
             List l = new ArrayList();
+            String doc = null;
             // TODO check for (blaah=) error
             Node sym;
+            yetiDocStr = null;
             while (!((sym = fetch()) instanceof Eof)) {
+                if (doc == null)
+                    doc = yetiDocStr;
                 // hack for class end - end is not reserved word
                 if (end == 'e' && sym instanceof Sym && sym.sym() == "end")
                     break;
                 if (sym.kind == ":" && args == null) {
-                    ((XNode) sym).expr = new Node[] { def(null, l, false) };
+                    ((XNode) sym).expr = new Node[] { def(null, l, false, null) };
                     l = new ArrayList();
                     res.add(sym);
                     continue;
@@ -1257,22 +1271,20 @@ interface YetiParser {
                     }
                 }
                 if (sym.kind == ";" || sym.kind == ",") {
-                    if (sym.kind != sep) {
+                    if (sym.kind != sep)
                         break;
-                    }
-                    if (args != null || sep != ";" || l.size() != 0) {
-                        res.add(def(args, l, end == '}'));
-                        args = null;
-                        l = new ArrayList();
-                    }
-                    continue;
+                    if (args == null && sep == ";" && l.size() == 0)
+                        continue;
+                } else {
+                    l.add(sym);
+                    if (sep != ";" || !(sym instanceof TypeDef))
+                        continue; // look for next in line
                 }
-                l.add(sym);
-                if (sep == ";" && sym instanceof TypeDef) {
-                    res.add(def(args, l, false));
-                    args = null;
-                    l = new ArrayList();
-                }
+                res.add(def(args, l, end == '}', doc));
+                args = null;
+                l = new ArrayList();
+                yetiDocStr = null;
+                doc = null;
             }
             eofWas = sym;
             if (end != ' ' && end != 'e' &&
@@ -1281,7 +1293,7 @@ interface YetiParser {
                                            "Expecting " + end);
             }
             if (l.size() != 0) {
-                res.add(def(args, l, end == '}'));
+                res.add(def(args, l, end == '}', doc));
             }
             return (Node[]) res.toArray(new Node[res.size()]);
         }
