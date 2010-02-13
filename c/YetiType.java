@@ -309,7 +309,6 @@ public class YetiType implements YetiParser {
             }
             return res;
         }
-
     }
 
     static Type mutableFieldRef(Type src) {
