@@ -861,8 +861,8 @@ class JavaType {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        TypePrettyPrinter tpt = new TypePrettyPrinter();
-        List err = tpt.to;
+        TypePrettyPrinter tpp = new TypePrettyPrinter();
+        List err = tpp.to;
         err.add("No suitable method ");
         err.add(name);
         err.add("(");
@@ -870,7 +870,7 @@ class JavaType {
             if (i != 0) {
                 err.add(", ");
             }
-            tpt.str(args[i].type, "");
+            tpp.str(args[i].type, "");
         }
         err.add(") found in ");
         err.add(dottedName());
@@ -885,7 +885,7 @@ class JavaType {
             err.add("\n    ");
             err.add(ma[i]);
         }
-        throw new CompileException(n, tpt.toString());
+        throw new CompileException(n, tpp.toString());
     }
 
     JavaType resolve(YetiParser.Node where) {

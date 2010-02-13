@@ -293,9 +293,9 @@ public class YetiType implements YetiParser {
         }
 
         public String toString() {
-            TypePrettyPrinter tpt = new TypePrettyPrinter();
-            tpt.str(this, "");
-            return tpt.toString();
+            TypePrettyPrinter tpp = new TypePrettyPrinter();
+            tpp.str(this, "");
+            return tpp.toString();
         }
 
         Type deref() {
