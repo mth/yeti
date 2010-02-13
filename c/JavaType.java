@@ -861,17 +861,16 @@ class JavaType {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        List err = new ArrayList();
+        TypePrettyPrinter tpt = new TypePrettyPrinter();
+        List err = tpt.to;
         err.add("No suitable method ");
-        HashMap vars = new HashMap();
-        HashMap refs = new HashMap();
         err.add(name);
         err.add("(");
         for (int i = 0; i < args.length; ++i) {
             if (i != 0) {
                 err.add(", ");
             }
-            args[i].type.str(err, "", vars, refs);
+            tpt.str(args[i].type, "");
         }
         err.add(") found in ");
         err.add(dottedName());
@@ -886,10 +885,7 @@ class JavaType {
             err.add("\n    ");
             err.add(ma[i]);
         }
-        String[] a = new String[err.size()];
-        for (int i = 0; i < a.length; ++i)
-            a[i] = err.get(i).toString();
-        throw new CompileException(n, Core.concat(a));
+        throw new CompileException(n, tpt.toString());
     }
 
     JavaType resolve(YetiParser.Node where) {

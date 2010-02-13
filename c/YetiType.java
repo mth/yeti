@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import yeti.lang.Core;
 
 public class YetiType implements YetiParser {
     static final int VAR  = 0;
@@ -293,164 +292,10 @@ public class YetiType implements YetiParser {
             param = NO_PARAM;
         }
 
-        private void hstr(List to, String indent, Map vars, Map refs) {
-            boolean variant = type == VARIANT;
-            Map m = new java.util.TreeMap();
-            if (partialMembers != null)
-                m.putAll(partialMembers);
-            if (finalMembers != null)
-                m.putAll(finalMembers);
-            boolean useNL = m.size() >= 3;
-            String indent_ = indent, oldIndent = indent;
-            if (useNL) {
-                if (!variant)
-                    indent = indent.concat("   ");
-                indent_ = indent.concat("   ");
-            }
-            String sep = variant
-                ? useNL ? "\n" + indent + "| " : " | "
-                : useNL ? ",\n".concat(indent) : ", ";
-            Iterator i = m.entrySet().iterator();
-            boolean first = true;
-            while (i.hasNext()) {
-                Map.Entry e = (Map.Entry) i.next();
-                if (first) {
-                    if (useNL && !variant) {
-                        to.add("\n");
-                        to.add(indent);
-                    }
-                    first = false;
-                } else {
-                    to.add(sep);
-                } 
-                Type t = (Type) e.getValue();
-                if (!variant && t.field == FIELD_MUTABLE)
-                    to.add("var ");
-                if (!variant) {
-                    if (finalMembers == null ||
-                            !finalMembers.containsKey(e.getKey())) {
-                        to.add(".");
-                    } else if (partialMembers != null &&
-                               partialMembers.containsKey(e.getKey())) {
-                        to.add("`");
-                    }
-                }
-                to.add(e.getKey());
-                to.add(variant ? " " : " is ");
-                t.str(to, indent_, vars, refs);
-            }
-            if (useNL && !variant) {
-                to.add("\n");
-                to.add(oldIndent);
-            }
-        }
-
-        private String getVarName(Map vars) {
-            String v = (String) vars.get(this);
-            if (v == null) {
-                v = (flags & FL_ORDERED_REQUIRED) == 0 ? "'" : "^";
-                int n = vars.size();
-                do {
-                    v += (char) ('a' + n % 26);
-                    n /= 26;
-                } while (n > 0);
-                vars.put(this, v);
-            }
-            return v;
-        }
-
-        void str(final List to, String indent, Map vars, Map refs) {
-            if (type == VAR) {
-                if (ref != null) {
-                    ref.str(to, indent, vars, refs);
-                } else {
-                    to.add(getVarName(vars));
-                }
-                return;
-            }
-            if (type < PRIMITIVES.length) {
-                to.add(TYPE_NAMES[type]);
-                return;
-            }
-            if (type == JAVA) {
-                to.add(javaType.str());
-                return;
-            }
-            class Ref {
-                String ref;
-                int endIndex;
-
-                public String toString() {
-                    if (ref == null)
-                        return "";
-                    to.set(endIndex, " is " + ref + ')');
-                    return "(";
-                }
-            }
-            Ref recRef = (Ref) refs.get(this);
-            if (recRef == null) {
-                refs.put(this, recRef = new Ref());
-                to.add(recRef);
-            } else {
-                if (recRef.ref == null)
-                    recRef.ref = getVarName(vars);
-                to.add(recRef.ref);
-                return;
-            }
-            switch (type) {
-                case FUN:
-                    if (param[0].deref().type == FUN) {
-                        to.add("(");
-                        param[0].str(to, indent, vars, refs);
-                        to.add(")");
-                    } else {
-                        param[0].str(to, indent, vars, refs);
-                    }
-                    to.add(" -> ");
-                    param[1].str(to, indent, vars, refs);
-                    break;
-                case STRUCT:
-                    to.add("{");
-                    hstr(to, indent, vars, refs);
-                    to.add("}");
-                    break;
-                case VARIANT:
-                    hstr(to, indent, vars, refs);
-                    break;
-                case MAP:
-                    Type p1 = param[1].deref();
-                    Type p2 = param[2].deref();
-                    if (p2.type == LIST_MARKER) {
-                        to.add(p1.type == NONE ? "list<" : p1.type == NUM
-                                    ? "array<" : "list?<");
-                    } else {
-                        to.add(p2.type == MAP_MARKER || p1.type != NUM
-                                    && p1.type != VAR ? "hash<" : "map<");
-                        p1.str(to, indent, vars, refs);
-                        to.add(", ");
-                    }
-                    param[0].str(to, indent, vars, refs);
-                    to.add(">");
-                    break;
-                case JAVA_ARRAY:
-                    param[0].str(to, indent, vars, refs);
-                    to.add("[]");
-                    break;
-                default:
-                    to.add("?" + type + "?");
-                    break;
-            }
-            recRef.endIndex = to.size();
-            to.add("");
-        }
-
         public String toString() {
-            List res = new ArrayList();
-            str(res, "", new HashMap(), new HashMap());
-            String[] a = new String[res.size()];
-            for (int i = 0; i < a.length; ++i)
-                a[i] = res.get(i).toString();
-            return Core.concat(a);
+            TypePrettyPrinter tpt = new TypePrettyPrinter();
+            tpt.str(this, "");
+            return tpt.toString();
         }
 
         Type deref() {
