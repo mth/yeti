@@ -87,8 +87,8 @@ class TypePrettyPrinter extends YetiType {
                 to.add(sep);
             } 
             Type t = (Type) e.getValue();
-            String doc = docOf(t);
-            if (useNL && doc != null) {
+            String doc = useNL ? docOf(t) : null;
+            if (doc != null) {
                 to.add("// ");
                 to.add(Core.replace("\n", "\n" + indent + "//", doc));
                 to.add("\n");
