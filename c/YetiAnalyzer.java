@@ -132,7 +132,8 @@ public final class YetiAnalyzer extends YetiType {
                 if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
-                return new LoadModule(nam, YetiTypeVisitor.getType(node, nam));
+                return new LoadModule(nam,
+                            YetiTypeVisitor.getType(node, nam, false));
             }
             if (kind == "new-array")
                 return newArray(x, scope, depth);
@@ -745,6 +746,7 @@ public final class YetiAnalyzer extends YetiType {
         if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
         lambdaBind(lambda, bind, scope, depth + 1);
+        lambda.type.doc = bind.doc;
         return lambda;
     }
 
@@ -914,6 +916,7 @@ public final class YetiAnalyzer extends YetiType {
                     if (bind.type != null) {
                         isOp(bind, bind.type, binder.st, scope, depth);
                     }
+                    code.type.doc = bind.doc;
                 }
                 scope = genericBind(bind, binder, seq.seqKind == Seq.EVAL,
                                     scope, depth);
@@ -1062,18 +1065,18 @@ public final class YetiAnalyzer extends YetiType {
         return to;
     }
 
-    private static Bind getField(Node node, Map fields) {
+    private static Bind getField(Node node) {
         if (!(node instanceof Bind)) {
             throw new CompileException(node,
-                "Unexpected beast in the structure (" + node +
-                "), please give me some field binding.");
+                    "Unexpected beast in the structure (" + node +
+                    "), please give me some field binding.");
         }
         return (Bind) node;
     }
 
     private static void duplicateField(Bind field) {
         throw new CompileException(field,
-                    "Duplicate field " + field.name + " in the structure");
+                "Duplicate field " + field.name + " in the structure");
     }
 
     static Code structType(XNode st, Scope scope, int depth) {
@@ -1090,11 +1093,12 @@ public final class YetiAnalyzer extends YetiType {
         result.polymorph = true;
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
-            Bind field = getField(nodes[i], fields);
+            Bind field = getField(nodes[i]);
             Function lambda = !field.noRec && field.expr.kind == "lambda"
                             ? funs[i] = new Function(new Type(depth)) : null;
             Code code =
                 lambda != null ? lambda : analyze(field.expr, scope, depth);
+            code.type.doc = field.doc;
             StructField sf = (StructField) codeMap.get(field.name);
             if (field.property) {
                 if (sf == null) {
@@ -1116,6 +1120,9 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (field.var)
                     t.field = FIELD_MUTABLE;
+                if (field.doc != null)
+                    t.doc = t.doc == null
+                        ? field.doc : field.doc + '\n' + t.doc;
                 Type f = new Type(FUN, field.var ? new Type[] { t, UNIT_TYPE }
                                                  : new Type[] { UNIT_TYPE, t });
                 try {
@@ -1312,7 +1319,7 @@ public final class YetiAnalyzer extends YetiType {
                 HashMap uniq = new HashMap();
                 ++submatch;
                 for (int i = 0; i < fields.length; ++i) {
-                    Bind field = getField(fields[i], uniq);
+                    Bind field = getField(fields[i]);
                     if (uniq.containsKey(field.name))
                         duplicateField(field);
                     uniq.put(field.name, null);
@@ -1551,7 +1558,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (!preload[i].equals(className)) {
                     preloadModules[i] =
                         new LoadModule(preload[i],
-                                YetiTypeVisitor.getType(null, preload[i]));
+                              YetiTypeVisitor.getType(null, preload[i], false));
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
                 }

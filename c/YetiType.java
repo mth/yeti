@@ -275,6 +275,7 @@ public class YetiType implements YetiParser {
         int field;
         boolean seen;
 
+        String doc;
         JavaType javaType;
 
         Type(int depth) {
@@ -309,7 +310,6 @@ public class YetiType implements YetiParser {
             }
             return res;
         }
-
     }
 
     static Type mutableFieldRef(Type src) {

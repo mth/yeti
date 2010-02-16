@@ -436,20 +436,25 @@ class YetiTypeVisitor implements ClassVisitor {
                              visitor.typeAttr.directFields);
     }
 
-    static ModuleType getType(YetiParser.Node node, String name) {
+    static ModuleType getType(YetiParser.Node node, String name,
+                              boolean bySourcePath) {
         CompileCtx ctx = CompileCtx.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null) {
             return t;
         }
-        InputStream in = ClassFinder.find(name + ".class");
+        String source = name;
+        InputStream in = null;
+        if (!bySourcePath) {
+            source += ".yeti";
+            in = ClassFinder.find(name + ".class");
+        }
         try {
             if (in == null) {
-                ctx.compile(name + ".yeti", 0);
-                t = (ModuleType) ctx.types.get(name);
+                t = (ModuleType) ctx.types.get(ctx.compile(source, 0));
                 if (t == null) {
-                    throw new Exception("Could compile to `" + name
-                                      + "' module");
+                    throw new Exception("Could not compile `" + name
+                                      + "' to a module");
                 }
             } else {
                 t = readType(new ClassReader(in));

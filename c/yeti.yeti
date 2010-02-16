@@ -159,7 +159,7 @@ try
     elif printType then
         CompileCtx#currentCompileCtx#set(compilation);
         for srcs do src:
-            println YetiTypeVisitor#getType((), src)
+            println YetiTypeVisitor#getType((), src, true)#type
         done
     else
         for srcs do src:
