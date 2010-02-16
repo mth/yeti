@@ -90,7 +90,7 @@ class TypePrettyPrinter extends YetiType {
             String doc = docOf(t);
             if (useNL && doc != null) {
                 to.add("/** ");
-                to.add(doc);
+                to.add(Core.replace("\n", "\n".concat(indent), doc));
                 to.add(" */\n");
                 to.add(indent);
             }

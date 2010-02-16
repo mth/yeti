@@ -586,6 +586,7 @@ interface YetiParser {
         private int line = 1;
         private int lineStart;
         private String yetiDocStr;
+        private boolean yetiDocReset;
         String moduleName;
         boolean isModule;
 
@@ -602,10 +603,19 @@ interface YetiParser {
             this.flags = flags;
         }
 
+        private void addDoc(int from, int to) {
+            ++from;
+            String str = new String(src, from, to - from);
+            yetiDocStr = yetiDocStr == null || yetiDocReset
+                            ? str : yetiDocStr + '\n' + str;
+            yetiDocReset = false;
+        }
+
         private int skipSpace() {
             char[] src = this.src;
             int i = p, sp;
             char c;
+            yetiDocReset = true;
             for (;;) {
                 while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
                     ++i;
@@ -620,7 +630,7 @@ interface YetiParser {
                         while (i < src.length && src[i] != '\n'
                                 && src[i] != '\r') ++i;
                         if (i > sp && src[sp] == '/')
-                            yetiDocStr = new String(src, sp + 1, i - sp);
+                            addDoc(sp, i);
                         continue;
                     }
                     if (src[i + 1] == '*') {
@@ -641,7 +651,7 @@ interface YetiParser {
                             }
                         }
                         if (i - 1 > sp && src[sp] == '*')
-                            yetiDocStr = new String(src, sp, i - 1 - sp);
+                            addDoc(sp, i);
                         continue;
                     }
                 }
