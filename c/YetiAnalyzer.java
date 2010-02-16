@@ -233,6 +233,7 @@ public final class YetiAnalyzer extends YetiType {
         Type[] tp = new Type[param.length];
         for (int i = 0; i < param.length; ++i) {
             tp[i] = nodeToType(param[i].param[0], free, scope, depth);
+            tp[i].doc = param[i].doc;
             if (param[i].var) {
                 tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
             }
@@ -916,8 +917,9 @@ public final class YetiAnalyzer extends YetiType {
                     if (bind.type != null) {
                         isOp(bind, bind.type, binder.st, scope, depth);
                     }
-                    code.type.doc = bind.doc;
                 }
+                if (bind.doc != null)
+                    binder.st.type.doc = bind.doc;
                 scope = genericBind(bind, binder, seq.seqKind == Seq.EVAL,
                                     scope, depth);
                 bindings[i] = binder;
@@ -1098,7 +1100,8 @@ public final class YetiAnalyzer extends YetiType {
                             ? funs[i] = new Function(new Type(depth)) : null;
             Code code =
                 lambda != null ? lambda : analyze(field.expr, scope, depth);
-            code.type.doc = field.doc;
+            if (field.doc != null)
+                code.type.doc = field.doc;
             StructField sf = (StructField) codeMap.get(field.name);
             if (field.property) {
                 if (sf == null) {

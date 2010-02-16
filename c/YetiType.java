@@ -310,6 +310,17 @@ public class YetiType implements YetiParser {
             }
             return res;
         }
+
+        String doc() {
+            for (Type t = this; t != null; t = t.ref)
+                if (t.doc != null) {
+                    t.doc = t.doc.trim();
+                    if (doc.length() != 0)
+                        return doc;
+                    t.doc = null;
+                }
+            return null;
+        }
     }
 
     static Type mutableFieldRef(Type src) {
@@ -730,7 +741,9 @@ public class YetiType implements YetiParser {
         if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
             Map vars = createFreeVars(r[0].free, depth);
+            String doc = ref.type.doc();
             ref.type = copyType(ref.type, vars, new HashMap());
+            ref.type.doc = doc;
         }
         return ref;
     }

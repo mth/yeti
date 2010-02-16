@@ -442,6 +442,7 @@ interface YetiParser {
         String name;
         TypeNode[] param;
         boolean var;
+        String doc;
 
         TypeNode(String name, TypeNode[] param) {
             this.name = name;
@@ -1511,6 +1512,7 @@ interface YetiParser {
                 ArrayList param = new ArrayList();
                 String expect = "Expecting field name or '}' here, not ";
                 for (;;) {
+                    yetiDocStr = null;
                     boolean isVar = (field = fetch()).kind == "var";
                     if (isVar)
                         field = fetch();
@@ -1527,14 +1529,15 @@ interface YetiParser {
                     } else {
                         fieldName = field.sym();
                     }
+                    TypeNode f = new TypeNode(fieldName, new TypeNode[1]);
+                    f.var = isVar;
+                    f.doc = yetiDocStr;
                     if (!((t = fetch()) instanceof IsOp) ||
                             ((BinOp) t).right != null) {
                         throw new CompileException(t,
                             "Expecting 'is' after field name");
                     }
-                    TypeNode f = new TypeNode(fieldName,
-                                    new TypeNode[] { ((IsOp) t).type });
-                    f.var = isVar;
+                    f.param[0] = ((IsOp) t).type;
                     param.add(f);
                     if ((field = fetch()).kind != ",") {
                         expect = "Expecting ',' or '}' here, not ";

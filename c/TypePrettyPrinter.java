@@ -46,16 +46,6 @@ class TypePrettyPrinter extends YetiType {
         return Core.concat(a);
     }
 
-    private String docOf(Type t) {
-        for (; t != null; t = t.ref)
-            if (t.doc != null) {
-                String doc = t.doc.trim();
-                if (doc.length() != 0)
-                    return doc;
-            }
-        return null;
-    }
-
     private void hstr(Type tt, String indent) {
         boolean variant = tt.type == VARIANT;
         Map m = new java.util.TreeMap();
@@ -87,7 +77,7 @@ class TypePrettyPrinter extends YetiType {
                 to.add(sep);
             } 
             Type t = (Type) e.getValue();
-            String doc = useNL ? docOf(t) : null;
+            String doc = useNL ? t.doc() : null;
             if (doc != null) {
                 to.add("// ");
                 to.add(Core.replace("\n", "\n" + indent + "//", doc));
