@@ -89,9 +89,9 @@ class TypePrettyPrinter extends YetiType {
             Type t = (Type) e.getValue();
             String doc = docOf(t);
             if (useNL && doc != null) {
-                to.add("/** ");
-                to.add(Core.replace("\n", "\n".concat(indent), doc));
-                to.add(" */\n");
+                to.add("// ");
+                to.add(Core.replace("\n", "\n" + indent + "//", doc));
+                to.add("\n");
                 to.add(indent);
             }
             if (!variant && t.field == FIELD_MUTABLE)
