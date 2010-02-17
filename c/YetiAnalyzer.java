@@ -418,19 +418,10 @@ public final class YetiAnalyzer extends YetiType {
                         .check(ref, scope.ctx.packageName), args, ref.line);
     }
 
-    static void requireType(Type t, Type required, Node where, String msg) {
-        try {
-            unify(required, t);
-        } catch (TypeException ex) {
-            throw new CompileException(where,
-                        msg + " (but here was " + t + ')');
-        }
-    }
-
     static Code newArray(XNode op, Scope scope, int depth) {
         Code cnt = analyze(op.expr[1], scope, depth);
-        requireType(cnt.type, NUM_TYPE, op.expr[1],
-                    "array size must be a number");
+        unify(cnt.type, NUM_TYPE, op.expr[1],
+              "array size must be a number (but here was #1)");
         return new NewArrayExpr(JavaType.typeOfName(op.expr[0].sym(), scope),
                                 cnt, op.line);
     }
@@ -631,8 +622,8 @@ public final class YetiAnalyzer extends YetiType {
         Code key = analyze(keyList.expr[0], scope, depth);
         Type t = val.type.deref();
         if (t.type == JAVA_ARRAY) {
-            requireType(key.type, NUM_TYPE, keyList.expr[0],
-                        "Array index must be a number");
+            unify(key.type, NUM_TYPE, keyList.expr[0],
+                  "Array index must be a number (but here was #1)");
             return new JavaArrayRef(t.param[0], val, key, keyList.expr[0].line);
         }
         Type[] param = { new Type(depth), key.type, new Type(depth) };
@@ -677,8 +668,8 @@ public final class YetiAnalyzer extends YetiType {
         boolean poly = true;
         for (;;) {
             Code cond = analyze(condition.expr[0], scope, depth);
-            requireType(cond.type, BOOL_TYPE, condition.expr[0],
-                        "if condition must have a boolean type");
+            unify(cond.type, BOOL_TYPE, condition.expr[0],
+                  "if condition must have a boolean type (but here was #1)");
             Code val = analyze(condition.expr[1], scope, depth);
             conds.add(new Code[] { val, cond });
             poly &= val.polymorph;
@@ -701,8 +692,8 @@ public final class YetiAnalyzer extends YetiType {
     static Code loop(BinOp loop, Scope scope, int depth) {
         Node condNode = loop.left != null ? loop.left : loop.right;
         Code cond = analyze(condNode, scope, depth);
-        requireType(cond.type, BOOL_TYPE, condNode,
-                    "Loop condition must have a boolean type");
+        unify(cond.type, BOOL_TYPE, condNode,
+              "Loop condition must have a boolean type (but here was #1)");
         if (loop.left == null) {
             return new LoopExpr(cond, new UnitConstant(null));
         }
