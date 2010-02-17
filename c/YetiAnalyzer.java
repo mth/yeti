@@ -1430,16 +1430,10 @@ public final class YetiAnalyzer extends YetiType {
                     (bin = (BinOp) items[i]).op == "..") {
                     Code from = analyze(bin.left, scope, depth);
                     Code to = analyze(bin.right, scope, depth);
-                    Node rn = null; Type t = null;
-                    try {
-                        rn = bin.left;
-                        unify(t = from.type, NUM_TYPE);
-                        rn = bin.right;
-                        unify(t = to.type, NUM_TYPE);
-                    } catch (TypeException ex) {
-                        throw new CompileException(rn, t, null,
-                           ".. range expects limit to be number, not a #1", ex);
-                    }
+                    unify(from.type, NUM_TYPE, bin.left,
+                          ".. range expects limit to be number, not a #1");
+                    unify(to.type, NUM_TYPE, bin.right,
+                          ".. range expects limit to be number, not a #1");
                     codeItems[n] = new Range(from, to);
                 } else {
                     codeItems[n] = analyze(items[i], scope, depth);
