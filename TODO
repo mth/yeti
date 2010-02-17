@@ -9,6 +9,10 @@
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
 * turn constant class fields into private static final
+* Rename ASM in standard Yeti jar
+* Use typedef's in type pretty-printing (including error messages)
+* Rebuild modified dependencies when compiling
+  + Something better than current MixedTask for java/yeti mixed code?
 * Extendable structs?
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
