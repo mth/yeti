@@ -78,6 +78,10 @@ class YetiTypeAttr extends Attribute {
         this.directFields = directFields;
     }
 
+    YetiTypeAttr(ModuleType mt) {
+        this(mt.type, mt.typeDefs, mt.directFields);
+    }
+
     private static final class EncodeType {
         ClassWriter cw;
         ByteVector buf = new ByteVector();
@@ -373,6 +377,7 @@ class ModuleType {
     YetiType.Type type;
     Map typeDefs;
     Map directFields;
+    String topDoc;
 
     ModuleType(YetiType.Type type, Map typeDefs, Map directFields) {
         this.type = type;

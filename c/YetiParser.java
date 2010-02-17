@@ -589,6 +589,7 @@ interface YetiParser {
         private String yetiDocStr;
         private boolean yetiDocReset;
         String moduleName;
+        String topDoc;
         boolean isModule;
 
         private static int opLevel(String op) {
@@ -1630,6 +1631,7 @@ interface YetiParser {
             if (src.length > 2 && src[0] == '#' && src[1] == '!')
                 for (p = 2; p < src.length && src[p] != '\n'; ++p);
             int i = p = skipSpace();
+            topDoc = yetiDocStr;
             while (i < src.length && src[i] < '~' && CHS[src[i]] == 'x')
                 ++i;
             String s = new String(src, p, i - p);

@@ -1590,9 +1590,11 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx.className = className;
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
+            root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
+                                             java.util.Collections.EMPTY_MAP);
+            root.moduleType.topDoc = parser.topDoc;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
-            root.typeDefs = topLevel.typeDefs;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type, -1);
