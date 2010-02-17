@@ -240,13 +240,13 @@ public final class FloatNum extends Num {
     }
 
     public boolean equals(Object num) {
-        // It returns false when comparing two NaNs, however this should
-        // still follow the hashCode/equals contract as it is allowed have
-        // same hashCode for values not equal. A bit weirdness can happen,
-        // like not founding NaN from hash containing it, but fixing it
-        // isn't probably worth the performance overhead of making equals
-        // more complicated. Just avoid NaN's, they are fucked up in
-        // IEEE (and therefore JVM) floats.
+        // It returns false when comparing two NaNs, however this should still
+        // follow the hashCode/equals contract as it is allowed to have same
+        // hashCode for values not equal. A bit weirdness can happen, like not
+        // founding NaN from hash containing it, but fixing it isn't probably
+        // worth the performance overhead of making equals more complicated.
+        // Just avoid using NaN's, they are fucked up in IEEE (and therefore
+        // JVM) floats.
         return num instanceof Num && v == ((Num) num).doubleValue();
     }
 }
