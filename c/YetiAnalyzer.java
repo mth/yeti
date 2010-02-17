@@ -834,7 +834,7 @@ public final class YetiAnalyzer extends YetiType {
         def[def.length - 1] = type;
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, type, self,
-              "Type %~ (type self-binding)\n    #0");
+              "Type #~ (type self-binding)\n    #0");
         scope = bindPoly(typeDef.name, type, null, 0, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
@@ -1017,7 +1017,7 @@ public final class YetiAnalyzer extends YetiType {
         Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
         if (to.type != null) {
             unify(fun, to.type, lambda,
-                  "Function type %~ (self-binding)\n    #0");
+                  "Function type #~ (self-binding)\n    #0");
         }
         to.type = fun;
         to.bindName = lambda.expr.length > 2 ? lambda.expr[2].sym() : null;
@@ -1091,7 +1091,7 @@ public final class YetiAnalyzer extends YetiType {
                 } catch (TypeException ex) {
                     throw new CompileException(nodes[i], code.type, f,
                                 (field.var ? "Setter " : "Getter ")
-                                + field.name + " type %~", ex);
+                                + field.name + " type #~", ex);
                 }
                 if (field.var) {
                     sf.setter = code;
