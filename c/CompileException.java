@@ -30,11 +30,46 @@
  */
 package yeti.lang.compiler;
 
+import yeti.lang.Core;
+
 public class CompileException extends RuntimeException {
     String fn;
     int line;
     int col;
     String what;
+
+    static String format(YetiType.Type param1, YetiType.Type param2,
+                         String s, YetiType.TypeException ex) {
+        StringBuffer result = new StringBuffer();
+        int p = 0, i;
+        boolean msg = false;
+        while ((i = s.indexOf('%', p)) >= 0 && i < s.length() - 1) {
+            result.append(s.substring(p, i));
+            p = i;
+            switch (s.charAt(i)) {
+                case '0':
+                    result.append(ex.getMessage());
+                    msg = true;
+                    break;
+                case '1': result.append(param1); break;
+                case '2': result.append(param2); break;
+                case '~':
+                    result.append(param1);
+                    result.append(" is not ");
+                    result.append(param2);
+                    break;
+                default: continue;
+            }
+            p += 2;
+        }
+        result.append(s.substring(p));
+        if (!msg && ex.special) {
+            result.append(" (");
+            result.append(ex.getMessage());
+            result.append(")");
+        }
+        return result.toString();
+    }
 
     public CompileException(int line, int col, String what) {
         this.line = line;
@@ -60,9 +95,10 @@ public class CompileException extends RuntimeException {
         this.what = what;
     }
 
-    public CompileException(YetiParser.Node pos, String what,
-                            YetiType.TypeException ex) {
-        this(ex, pos, ex.special ? what + " (" + ex.getMessage() + ")" : what);
+    public CompileException(YetiParser.Node pos,
+                            YetiType.Type param1, YetiType.Type param2,
+                            String what, YetiType.TypeException ex) {
+        this(ex, pos, format(param1, param2, what, ex));
     }
 
     public String getMessage() {

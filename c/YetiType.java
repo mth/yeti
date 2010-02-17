@@ -644,6 +644,18 @@ public class YetiType implements YetiParser {
         }
     }
 
+    static void unify(Type a, Type b, Node where,
+                      Type param1, Type param2, String error) {
+        try {
+            unify(a, b);
+        } catch (TypeException ex) {
+            throw new CompileException(where, param1, param2, error, ex);
+        }
+    }
+
+    static void unify(Type a, Type b, Node where, String error) {
+        unify(a, b, where, a, b, error);
+    }
 
     static Type mergeOrUnify(Type to, Type val) throws TypeException {
         Type t = JavaType.mergeTypes(to, val);
@@ -848,9 +860,5 @@ public class YetiType implements YetiParser {
             }
         }
         throw new CompileException(where, "Unknown type: " + name);
-    }
-
-    static String isnot(Type a, Type b, TypeException ex) {
-       return a + " is not " + b;
     }
 }
