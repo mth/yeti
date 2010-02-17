@@ -77,6 +77,13 @@ class TypePrettyPrinter extends YetiType {
                 to.add(sep);
             } 
             Type t = (Type) e.getValue();
+            String doc = useNL ? t.doc() : null;
+            if (doc != null) {
+                to.add("// ");
+                to.add(Core.replace("\n", "\n" + indent + "//", doc));
+                to.add("\n");
+                to.add(indent);
+            }
             if (!variant && t.field == FIELD_MUTABLE)
                 to.add("var ");
             if (!variant) {

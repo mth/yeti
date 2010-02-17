@@ -227,19 +227,18 @@ final class CompileCtx implements Opcodes {
                 while (codeTail instanceof SeqExpr) {
                     codeTail = ((SeqExpr) codeTail).result;
                 }
-                Map directFields = java.util.Collections.EMPTY_MAP;
                 if (codeTail instanceof StructConstructor) {
                     ((StructConstructor) codeTail).publish();
                     codeTree.gen(ctx);
-                    directFields = ((StructConstructor) codeTail).getDirect();
+                    codeTree.moduleType.directFields =
+                        ((StructConstructor) codeTail).getDirect();
                 } else {
                     codeTree.gen(ctx);
                 }
-                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.type,
-                                            codeTree.typeDefs, directFields));
+                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.moduleType));
                 if (codeTree.type.type == YetiType.STRUCT) {
                     generateModuleFields(codeTree.type.finalMembers, ctx,
-                                         directFields);
+                                         codeTree.moduleType.directFields);
                 }
                 ctx.visitInsn(DUP);
                 ctx.visitFieldInsn(PUTSTATIC, name, "$",
@@ -247,9 +246,7 @@ final class CompileCtx implements Opcodes {
                 ctx.intConst(1);
                 ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.visitInsn(ARETURN);
-                types.put(name, new ModuleType(codeTree.type,
-                                               codeTree.typeDefs,
-                                               directFields));
+                types.put(name, codeTree.moduleType);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
@@ -1855,7 +1852,7 @@ final class RootClosure extends AClosure {
     LoadModule[] preload;
     String moduleName;
     boolean isModule;
-    Map typeDefs;
+    ModuleType moduleType;
 
     public BindRef refProxy(BindRef code) {
         return code;

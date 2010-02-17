@@ -159,7 +159,11 @@ try
     elif printType then
         CompileCtx#currentCompileCtx#set(compilation);
         for srcs do src:
-            println YetiTypeVisitor#getType((), src)
+            mt = YetiTypeVisitor#getType((), src, true);
+            if mt#topDoc != "" then
+                println "/*\n\(mt#topDoc)\n*/"
+            fi;
+            println mt#type
         done
     else
         for srcs do src:

@@ -442,6 +442,7 @@ interface YetiParser {
         String name;
         TypeNode[] param;
         boolean var;
+        String doc;
 
         TypeNode(String name, TypeNode[] param) {
             this.name = name;
@@ -586,7 +587,9 @@ interface YetiParser {
         private int line = 1;
         private int lineStart;
         private String yetiDocStr;
+        private boolean yetiDocReset;
         String moduleName;
+        String topDoc;
         boolean isModule;
 
         private static int opLevel(String op) {
@@ -602,10 +605,19 @@ interface YetiParser {
             this.flags = flags;
         }
 
+        private void addDoc(int from, int to) {
+            ++from;
+            String str = new String(src, from, to - from);
+            yetiDocStr = yetiDocStr == null || yetiDocReset
+                            ? str : yetiDocStr + '\n' + str;
+            yetiDocReset = false;
+        }
+
         private int skipSpace() {
             char[] src = this.src;
             int i = p, sp;
             char c;
+            yetiDocReset = true;
             for (;;) {
                 while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
                     ++i;
@@ -620,7 +632,7 @@ interface YetiParser {
                         while (i < src.length && src[i] != '\n'
                                 && src[i] != '\r') ++i;
                         if (i > sp && src[sp] == '/')
-                            yetiDocStr = new String(src, sp + 1, i - sp);
+                            addDoc(sp, i);
                         continue;
                     }
                     if (src[i + 1] == '*') {
@@ -641,7 +653,7 @@ interface YetiParser {
                             }
                         }
                         if (i - 1 > sp && src[sp] == '*')
-                            yetiDocStr = new String(src, sp, i - 1 - sp);
+                            addDoc(sp, i);
                         continue;
                     }
                 }
@@ -1501,6 +1513,7 @@ interface YetiParser {
                 ArrayList param = new ArrayList();
                 String expect = "Expecting field name or '}' here, not ";
                 for (;;) {
+                    yetiDocStr = null;
                     boolean isVar = (field = fetch()).kind == "var";
                     if (isVar)
                         field = fetch();
@@ -1517,14 +1530,15 @@ interface YetiParser {
                     } else {
                         fieldName = field.sym();
                     }
+                    TypeNode f = new TypeNode(fieldName, new TypeNode[1]);
+                    f.var = isVar;
+                    f.doc = yetiDocStr;
                     if (!((t = fetch()) instanceof IsOp) ||
                             ((BinOp) t).right != null) {
                         throw new CompileException(t,
                             "Expecting 'is' after field name");
                     }
-                    TypeNode f = new TypeNode(fieldName,
-                                    new TypeNode[] { ((IsOp) t).type });
-                    f.var = isVar;
+                    f.param[0] = ((IsOp) t).type;
                     param.add(f);
                     if ((field = fetch()).kind != ",") {
                         expect = "Expecting ',' or '}' here, not ";
@@ -1617,6 +1631,7 @@ interface YetiParser {
             if (src.length > 2 && src[0] == '#' && src[1] == '!')
                 for (p = 2; p < src.length && src[p] != '\n'; ++p);
             int i = p = skipSpace();
+            topDoc = yetiDocStr;
             while (i < src.length && src[i] < '~' && CHS[src[i]] == 'x')
                 ++i;
             String s = new String(src, p, i - p);
