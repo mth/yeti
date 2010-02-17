@@ -2,6 +2,7 @@
 ~~~~~~~~~~~~~~~~~
 
 * YetiDoc to automatically generate html documentation
+  + Don't store yetidoc's in parsetree, when not generating docs
 * Fix f x = {x}; - type system copies to much and gets wrong type sig
 * Some kind of reflection
 * Fix structs - better comparision (with sorting) and
