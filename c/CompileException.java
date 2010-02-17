@@ -43,10 +43,10 @@ public class CompileException extends RuntimeException {
         StringBuffer result = new StringBuffer();
         int p = 0, i;
         boolean msg = false;
-        while ((i = s.indexOf('%', p)) >= 0 && i < s.length() - 1) {
+        while ((i = s.indexOf('#', p)) >= 0 && i < s.length() - 1) {
             result.append(s.substring(p, i));
-            p = i;
-            switch (s.charAt(i)) {
+            p = i + 2;
+            switch (s.charAt(i + 1)) {
                 case '0':
                     result.append(ex.getMessage());
                     msg = true;
@@ -58,9 +58,10 @@ public class CompileException extends RuntimeException {
                     result.append(" is not ");
                     result.append(param2);
                     break;
-                default: continue;
+                default:
+                    result.append('#');
+                    --p;
             }
-            p += 2;
         }
         result.append(s.substring(p));
         if (!msg && ex.special) {
