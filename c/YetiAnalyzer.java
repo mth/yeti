@@ -1141,14 +1141,6 @@ public final class YetiAnalyzer extends YetiType {
         return result;
     }
 
-    static void patUnify(Node node, Type a, Type b) {
-        try {
-            unify(a, b);
-        } catch (TypeException e) {
-            throw new CompileException(node, e.getMessage());
-        }
-    }
-
     static final class CaseCompiler {
         CaseExpr exp;
         Scope scope;
@@ -1181,7 +1173,7 @@ public final class YetiAnalyzer extends YetiType {
                 return binding;
             }
             if (node.kind == "()") {
-                patUnify(node, t, UNIT_TYPE);
+                unify(t, UNIT_TYPE, node, "#0");
                 return CasePattern.ANY_PATTERN;
             }
             if (node instanceof NumLit || node instanceof Str) {
@@ -1204,7 +1196,7 @@ public final class YetiAnalyzer extends YetiType {
                         new Type[] { itemt, new Type(depth), LIST_TYPE });
                 lt.flags |= FL_PARTIAL_PATTERN;
                 if (list.expr == null || list.expr.length == 0) {
-                    patUnify(node, t, lt);
+                    unify(t, lt, node, "#0");
                     return AListPattern.EMPTY_PATTERN;
                 }
                 CasePattern[] items = new CasePattern[list.expr.length];
@@ -1217,7 +1209,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 --submatch;
                 itemt.flags &= anyitem;
-                patUnify(node, t, lt);
+                unify(t, lt, node, "#0");
                 return new ListPattern(items);
             }
             if (node instanceof BinOp) {
@@ -1245,7 +1237,7 @@ public final class YetiAnalyzer extends YetiType {
                     Type old = (Type) t.partialMembers.put(variant, argt);
                     if (old != null) {
                         // same constructor already. shall be same type.
-                        patUnify(pat.right, old, argt);
+                        unify(old, argt, pat.right, "#0");
                     }
                     t.param = (Type[]) t.partialMembers.values().toArray(
                                 new Type[t.partialMembers.size()]);
@@ -1261,7 +1253,7 @@ public final class YetiAnalyzer extends YetiType {
                     Type lt = new Type(MAP,
                                 new Type[] { itemt, NO_TYPE, LIST_TYPE });
                     int flags = t.flags; 
-                    patUnify(node, t, lt);
+                    unify(t, lt, node, "#0");
                     ++submatch;
                     CasePattern hd = toPattern(pat.left, itemt);
                     CasePattern tl = toPattern(pat.right, t);
@@ -1289,7 +1281,7 @@ public final class YetiAnalyzer extends YetiType {
                     HashMap tm = new HashMap();
                     tm.put(field.name, ft);
                     part.partialMembers = tm;
-                    patUnify(field, t, part);
+                    unify(t, part, field, "#0");
                     names[i] = field.name;
                     patterns[i] = toPattern(field.expr, ft);
                 }
