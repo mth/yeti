@@ -1,5 +1,9 @@
 package yeti.lang.compiler;
 
+import org.objectweb.asm.Opcodes;
+import java.util.List;
+import java.util.ArrayList;
+
 /*
 XXX .* imports mean we can't put classes in map, but have to try all packages
 instead, when class name is referenced. Which (in turn) means, that we have to
@@ -18,7 +22,7 @@ In conclusion - we shouldn't try to resolve class-names at all in the first
 parse stage, and just add import lists with classes. When class is required
 at later stage the names can be resolved (as all classes are known then).
 
-In-class mode has basically easy life.
+In-class st has basically easy life.
 
 Modifiers:
 abstract public protected package private static
@@ -26,11 +30,11 @@ final synchronized transient volatile strictfp native
 
 modifier sets flag
 class at cl1 -> expect name
-id at cl1 -> type = id; mode = cl2
+id at cl1 -> type = id; st = cl2
 < at cl2  -> skip until matching >, ;{ stops
-id at cl2 -> name = id; mode = cl3
-= at cl3  -> mode = cl4
-( at cl3  -> mode = cl5, read arglist
+id at cl2 -> name = id; st = cl3
+= at cl3  -> st = cl4
+( at cl3  -> st = cl5, read arglist
 
 classes are only true nested shit for us - but we can cheat
 using linked-list by having outer field in our class
@@ -42,7 +46,7 @@ XXX in fields , separated lists must create multiple class fields
 */
 
 class JavaNode {
-    int modifiers;
+    int modifier;
     String type; // extends for classes
     String name; // full name for classes
     String[][] classInfo; // imports, implements
@@ -52,21 +56,30 @@ class JavaNode {
     JavaNode outer;
 }
 
-class ParseJava {
+class ParseJava implements Opcodes {
     private static final int TOPLEVEL = 0;
     private static final int PACKAGE  = 1;
     private static final int IMPORT   = 2;
+    private static final int MODIFIER = 3;
+    private static final int TYPE     = 4;
+
+    private static final String[] MOD_NAMES = { "public", "protected",
+        "private", "static", "final", "abstract", "synchronized",
+        "transient", "volatile", "strictfp", "native", "package" };
+    private static final int[] MOD_FLAGS = { ACC_PUBLIC, ACC_PROTECTED,
+        ACC_PRIVATE, ACC_STATIC, ACC_FINAL, ACC_ABSTRACT, ACC_SYNCHRONIZED,
+        ACC_TRANSIENT, ACC_VOLATILE, ACC_STRICT, ACC_NATIVE, 0 };
 
     void parse(String src, int p, int e) {
         String packageName, id = null;
         // String prevId;
         ArrayList imports = new ArrayList();
         char[] s = src.toCharArray();
-        int mode = TOPLEVEL, lineno = 1;
-        char c;
+        int i, st = TOPLEVEL, st2 = 0, lineno = 1;
+        char c = 0;
         StringBuffer buf = new StringBuffer();
         List collector = new ArrayList();
-        JavaNode current;
+        JavaNode current = null;
     next:
         for (--p;;) {
             // skip whitespace and comments
@@ -86,33 +99,44 @@ class ParseJava {
                 break;
             int f = p;
             // get token
-            while (p < e && (c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
-                   c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~') ++p;
+            while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
+                  c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
             //prevId = id;
-            id = f == p ? null : src.substring(f, p);
+            id = f == p ? null : src.substring(f, p).intern();
             if (id == null)
                 c = s[p++];
-            switch (mode) {
+        action:
+            switch (st) {
             case TOPLEVEL:
-                if (s == "package")
-                    mode = PACKAGE;
-                else if (s == "import")
-                    mode = IMPORT;
+                if (id == "package")
+                    st = PACKAGE;
+                else if (id == "import")
+                    st = IMPORT;
                 break;
             case PACKAGE:
             case IMPORT:
                 if (id != null)
-                    buf.add(id);
+                    buf.append(id);
                 else if (c == '.')
-                    buf.add(c);
+                    buf.append(c);
                 else if (c == ';') {
-                    if (mode == PACKAGE)
+                    if (st == PACKAGE)
                         packageName = buf.toString();
                     else
                         imports.add(buf.toString());
-                    buf.clear();
-                    mode = TOPLEVEL;
+                    buf.setLength(0);
+                    st = TOPLEVEL;
                 }
+                break;
+            case MODIFIER:
+                for (i = 0; i < MOD_NAMES.length; ++i)
+                    if (MOD_NAMES[i] == id) {
+                        current.modifier |= MOD_FLAGS[i];
+                        break action;
+                    }
+                st = TYPE;
+            case TYPE:
+                
             }
         }
     }
