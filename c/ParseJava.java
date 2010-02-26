@@ -57,11 +57,12 @@ class JavaNode {
 }
 
 class ParseJava implements Opcodes {
-    private static final int TOPLEVEL = 0;
+    private static final int DEFAULT = 0;
     private static final int PACKAGE  = 1;
     private static final int IMPORT   = 2;
     private static final int MODIFIER = 3;
     private static final int TYPE     = 4;
+    private static final int NAME     = 5;
 
     private static final String[] MOD_NAMES = { "public", "protected",
         "private", "static", "final", "abstract", "synchronized",
@@ -75,7 +76,7 @@ class ParseJava implements Opcodes {
         // String prevId;
         ArrayList imports = new ArrayList();
         char[] s = src.toCharArray();
-        int i, st = TOPLEVEL, st2 = 0, lineno = 1;
+        int i, l, st = DEFAULT, st2 = 0, lineno = 1, nesting = 0;
         char c = 0;
         StringBuffer buf = new StringBuffer();
         List collector = new ArrayList();
@@ -102,41 +103,57 @@ class ParseJava implements Opcodes {
             while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
                   c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
             //prevId = id;
-            id = f == p ? null : src.substring(f, p).intern();
+            id = f == p ? null : src.substring(f, p);
             if (id == null)
                 c = s[p++];
         action:
             switch (st) {
-            case TOPLEVEL:
-                if (id == "package")
+            case DEFAULT:
+                if ("package".equals(id))
                     st = PACKAGE;
-                else if (id == "import")
+                else if ("import".equals(id))
                     st = IMPORT;
-                break;
-            case PACKAGE:
-            case IMPORT:
-                if (id != null)
-                    buf.append(id);
-                else if (c == '.')
-                    buf.append(c);
-                else if (c == ';') {
-                    if (st == PACKAGE)
-                        packageName = buf.toString();
-                    else
-                        imports.add(buf.toString());
-                    buf.setLength(0);
-                    st = TOPLEVEL;
-                }
-                break;
             case MODIFIER:
+                if (id == null)
+                    break next;
+                id = id.intern();
                 for (i = 0; i < MOD_NAMES.length; ++i)
                     if (MOD_NAMES[i] == id) {
                         current.modifier |= MOD_FLAGS[i];
                         break action;
                     }
                 st = TYPE;
+            case PACKAGE:
+            case IMPORT:
             case TYPE:
-                
+                if (nesting > 0)
+                    if (c == '>' && --nesting <= 0 || c == ';' || c == '{')
+                        nesting = 0;
+                    else
+                        break;
+                if (id != null) {
+                    if ((l = buf.length()) == 0 || buf.charAt(l - 1) == '.') {
+                        buf.append(id);
+                    } else if (st == TYPE) {
+                        current.type = buf.toString();
+                        current.name = id;
+                        buf.setLength(0);
+                        st = st2;
+                    }
+                } else if (c == ';') {
+                    if (st == PACKAGE)
+                        packageName = buf.toString();
+                    else if (st == IMPORT)
+                        imports.add(buf.toString());
+                    buf.setLength(0);
+                    st = DEFAULT;
+                } else if (c == '<') {
+                    ++nesting;
+                } else if (c == '.' || c == '[' || c == ']') {
+                    buf.append(c);
+                }
+                break;
+            case NAME: ;
             }
         }
     }
