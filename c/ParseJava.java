@@ -1,6 +1,6 @@
 package yeti.lang.compiler;
 
-import org.objectweb.asm.Opcodes;
+import yeti.renamed.asm3.Opcodes;
 import java.util.List;
 import java.util.ArrayList;
 
