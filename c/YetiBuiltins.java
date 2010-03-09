@@ -31,7 +31,7 @@
 
 package yeti.lang.compiler;
 
-import org.objectweb.asm.*;
+import yeti.renamed.asm3.*;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

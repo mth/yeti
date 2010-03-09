@@ -31,7 +31,7 @@
 package yeti.lang;
 
 import java.io.*;
-import org.objectweb.asm.*;
+import yeti.renamed.asm3.*;
 
 class LListAdapter extends ClassAdapter implements Opcodes {
     LListAdapter(ClassVisitor cv) {

@@ -2,13 +2,22 @@
 <project name="yeti" default="yeti" basedir=".">
 
 <target name="prepare-build">
-    <property name="asm" value="${basedir}/asm-3.1.jar"/>
+    <property name="asm" value="${basedir}/asm-3.1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asm}" verbose="true"/>
+    <property name="asmt" value="${basedir}/.build/asm-3.1.jar"/>
+    <mkdir dir="${basedir}/.build/util"/>
+    <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asmt}" verbose="true"/>
+    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
+           includes="Rename.java" encoding="UTF-8"/>
+    <java classname="yeti.lang.Rename" failonerror="true"
+          classpath="${basedir}/.build/util">
+        <arg value="${asmt}"/>
+        <arg value="${asm}"/>
+    </java>
 </target>
 
 <target name="lib" depends="fetch" unless="no.lib.build">
@@ -130,14 +139,10 @@
              classpath="yeti.jar"/>
     <yeticj srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
             icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"/>
-    <jar jarfile="${basedir}/yeti-ant.jar"
-         basedir="${basedir}/.build/mixedtask"/>
 </target>
 
 <target name="all-jar" depends="clean,jar,mixed-task">
-    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
-           includes="Rename.java" encoding="UTF-8" classpath="${asm}"/>
-    <jar jarfile="${basedir}/yeti-all.jar.tmp">
+    <jar jarfile="${basedir}/yeti-all.jar">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
@@ -148,12 +153,6 @@
         <fileset dir="${basedir}/.build/mixedtask"/>
         <zipfileset src="${asm}"/>
     </jar>
-    <java classname="yeti.lang.Rename" failonerror="true"
-          classpath="${basedir}/.build/util">
-        <arg value="${basedir}/yeti-all.jar.tmp"/>
-        <arg value="${basedir}/yeti-all.jar"/>
-    </java>
-    <delete file="${basedir}/yeti-all.jar.tmp"/>
 </target>
 
 <target name="scan" depends="mixed-task">

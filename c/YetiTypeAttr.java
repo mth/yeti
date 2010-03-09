@@ -31,7 +31,7 @@
 package yeti.lang.compiler;
 
 import java.util.*;
-import org.objectweb.asm.*;
+import yeti.renamed.asm3.*;
 import java.io.IOException;
 import java.io.InputStream;
 

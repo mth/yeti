@@ -52,68 +52,78 @@ class JavaNode {
     JavaNode outer;
 }
 
-class ParseJava {
-    private static final int TOPLEVEL = 0;
-    private static final int PACKAGE  = 1;
-    private static final int IMPORT   = 2;
+/*class ParseJava {
+    private static final HashMap MODS = new HashMap();
+    private final String src;
+    private final char[] s;
+    private int p, lineno = 1;
+    private String packageName;
+    private ArrayList imports = new ArrayList();
 
-    void parse(String src, int p, int e) {
-        String packageName, id = null;
-        // String prevId;
-        ArrayList imports = new ArrayList();
-        char[] s = src.toCharArray();
-        int mode = TOPLEVEL, lineno = 1;
+    ParseJava(String src) {
+        this.src = src;
+        s = src.toCharArray();
+    }
+
+    private String get() {
         char c;
-        StringBuffer buf = new StringBuffer();
-        List collector = new ArrayList();
-        JavaNode current;
-    next:
-        for (--p;;) {
+        for (int p = this.p - 1;;) {
             // skip whitespace and comments
             while (++p < e && (c = s[p]) >= '\000' && c <= ' ');
             if (p + 1 < e && s[p] == '/') {
                 if ((c = s[++p]) == '/') {
                     while (++p < e && (c = s[p]) != '\r' && c != '\n');
-                    continue next;
+                    continue;
                 }
                 if (c == '*') {
                     for (++p; ++p < e && s[p - 1] != '*' || s[p] != '/';)
-                    continue next;
+                    continue;
                 }
                 --p;
             }
             if (p >= e)
-                break;
+                return null;
             int f = p;
-            // get token
             while (p < e && (c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
                    c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~') ++p;
-            //prevId = id;
-            id = f == p ? null : src.substring(f, p);
-            if (id == null)
-                c = s[p++];
-            switch (mode) {
-            case TOPLEVEL:
-                if (s == "package")
-                    mode = PACKAGE;
-                else if (s == "import")
-                    mode = IMPORT;
-                break;
-            case PACKAGE:
-            case IMPORT:
-                if (id != null)
-                    buf.add(id);
-                else if (c == '.')
-                    buf.add(c);
-                else if (c == ';') {
-                    if (mode == PACKAGE)
-                        packageName = buf.toString();
-                    else
-                        imports.add(buf.toString());
-                    buf.clear();
-                    mode = TOPLEVEL;
-                }
+            if (f == p)
+                ++p; // TODO "", ''
+            this.p = p;
+            return src.substring(f, p);
+        }
+    }
+
+    private String type() {
+        int level = 0;
+        String s;
+        StringBuffer tmp = new StringBuffer();
+    get:
+        for (char c = '.'; c == '.' && (s = get()) != null;) {
+            c = s.charAt(0);
+            switch (c) {
+                case '<': ++level; continue;
+                case '>': if (--level <= 0) break get;
             }
+            if (level == 0)
+                tmp.append(s);
+        }
+        return tmp.toString();
+    }
+
+    private String mod(boolean type) {
+        for (Object m;;) {
+            String id = type ? type() : id;
+            if ((m = MODS.get(id)) == null)
+                return id;
+            modifier |= ((Number) m).intValue();
+        }
+    }
+
+    void parse() {
+        for (;;) {
+            String id = mod(false);
+            if (id == 
         }
     }
 }
+*/
