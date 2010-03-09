@@ -907,17 +907,19 @@ public final class YetiAnalyzer extends YetiType {
                     scope.typeDef = typeDef;
                 }
             } else if (nodes[i].kind == "import") {
-                if ((CompileCtx.current().flags
-                        & YetiC.CF_NO_IMPORT) != 0)
+                if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
-                String name = ((XNode) nodes[i]).expr[0].sym();
-                int lastSlash = name.lastIndexOf('/');
-                scope = new Scope(scope, (lastSlash < 0 ? name
-                              : name.substring(lastSlash + 1)).intern(), null);
-                Type classType = new Type("L" + name + ';');
-                scope.importClass = new ClassBinding(classType);
-                if (seq.seqKind == Seq.EVAL)
-                    YetiEval.registerImport(scope.name, classType);
+                Node[] imports = ((XNode) nodes[i]).expr;
+                for (int j = 0; j < imports.length; ++j) {
+                    String name = imports[j].sym();
+                    int lastSlash = name.lastIndexOf('/');
+                    scope = new Scope(scope, (lastSlash < 0 ? name :
+                                 name.substring(lastSlash + 1)).intern(), null);
+                    Type classType = new Type("L" + name + ';');
+                    scope.importClass = new ClassBinding(classType);
+                    if (seq.seqKind == Seq.EVAL)
+                        YetiEval.registerImport(scope.name, classType);
+                }
             } else if (nodes[i] instanceof TypeDef) {
                 scope = bindTypeDef((TypeDef) nodes[i], seq.seqKind, scope);
             } else if (nodes[i].kind == "class") {

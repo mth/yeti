@@ -79,7 +79,7 @@ syn keyword yetiFunction groupBy insertHash strCapitalize strUncapitalize
 syn keyword yetiFunction identityHash deleteFile binReadFile binWriteFile
 syn keyword yetiFunction binReadAll trace runThread threadLocal
 syn keyword yetiExternal load
-syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiClassName
+syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains\>"
 
 syn keyword yetiOperator not and or in or div shl shr b_and b_or xor
@@ -132,6 +132,8 @@ syn match yetiTypeOp "->\||" contained skipwhite skipempty nextgroup=@yetiTypeDe
 syn region yetiTypeOp matchgroup=yetiTypeDelimiter start="<" matchgroup=yetiTypeDelimiter end=">" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 
 syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
+syn match yetiImport "[A-Za-z]\(\w\|\.\|\$\)*" contained skipwhite skipempty nextgroup=yetiImportMany
+syn region yetiImportMany matchgroup=yetiOperator start=":" matchgroup=yetiOperator end=";" contained
 syn keyword yetiKeyword new skipempty skipwhite nextgroup=yetiClassName
 
 " Synchronization

@@ -27,8 +27,7 @@
  */
 program yeti.lang.compiler.yeti;
 
-import java.lang.ClassLoader;
-import java.lang.Thread;
+import java.lang: ClassLoader, Thread;
 import java.io.File;
 
 var target = "";

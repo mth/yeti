@@ -791,10 +791,11 @@ interface YetiParser {
                 res = new BinOp("throw", 1, false);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL + 2, false);
-            } else if (s == "load" || s == "import") {
+            } else if (s == "import") {
+                res = readImport();
+            } else if (s == "load") {
                 res = new XNode(s, readDotted(false,
-                    s == "load" ? "Expected module name after 'load', not a " :
-                    "Expected class path after 'import', not a "));
+                    "Expected module name after 'load', not a "));
             } else if (s == "classOf") {
                 res = new XNode(s,
                             readDottedType("Expected class name, not a "));
@@ -1249,6 +1250,22 @@ interface YetiParser {
             Sym sym = new Sym(result.intern());
             sym.pos(first.line, first.col);
             return sym;
+        }
+
+        private XNode readImport() {
+            Sym s = readDotted(false,
+                        "Expected class path after 'import', not a ");
+            ArrayList imports = null;
+            for (char c = ':'; ((p = skipSpace()) < src.length &&
+                                src[p] == c); c = ',') {
+                ++p;
+                if (imports == null)
+                    imports = new ArrayList();
+                imports.add(new Sym(s.sym + '/' + fetch().sym()));
+            }
+            return imports == null ? new XNode("import", s) :
+                        new XNode("import", (Node[])
+                                    imports.toArray(new Node[imports.size()]));
         }
 
         private Node[] readMany(String sep, char end) {

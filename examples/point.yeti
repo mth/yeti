@@ -1,5 +1,4 @@
-import java.lang.Runnable;
-import java.lang.Thread;
+import java.lang: Runnable, Thread;
 
 class Point(int x, int y)
     var x = x,

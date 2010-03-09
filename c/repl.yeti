@@ -27,8 +27,7 @@
  */
 module yeti.lang.compiler.repl;
 
-import java.lang.Class;
-import java.lang.ClassLoader;
+import java.lang: Class, ClassLoader;
 import yeti.lang.Core;
 import java.security.Permission;
 import java.io.File;
