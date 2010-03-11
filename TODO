@@ -12,6 +12,7 @@
 * turn constant class fields into private static final
 * Rename ASM in standard Yeti jar
 * Use typedef's in type pretty-printing (including error messages)
+* Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
   + Something better than current MixedTask for java/yeti mixed code?
 * Extendable structs?
