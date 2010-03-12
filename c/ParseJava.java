@@ -1,8 +1,7 @@
 package yeti.lang.compiler;
 
 import yeti.renamed.asm3.Opcodes;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 /*
 XXX .* imports mean we can't put classes in map, but have to try all packages
@@ -53,108 +52,144 @@ class JavaNode {
     int fieldCount;
     JavaNode field;  // field list
     JavaNode method; // method list for classes
-    JavaNode outer;
+    JavaSource source;
 }
 
-class ParseJava implements Opcodes {
-    private static final int DEFAULT = 0;
-    private static final int PACKAGE  = 1;
-    private static final int IMPORT   = 2;
-    private static final int MODIFIER = 3;
-    private static final int TYPE     = 4;
-    private static final int NAME     = 5;
+class JavaSource implements Opcodes {
+    private static final String[] CHAR_SPOOL = new String[128];
+    private static final Map MODS = new HashMap();
+    private int p, e;
+    private char[] s;
+    private String lookahead;
+    String packageName = "";
+    final List imports = new ArrayList();
 
-    private static final String[] MOD_NAMES = { "public", "protected",
-        "private", "static", "final", "abstract", "synchronized",
-        "transient", "volatile", "strictfp", "native", "package" };
-    private static final int[] MOD_FLAGS = { ACC_PUBLIC, ACC_PROTECTED,
-        ACC_PRIVATE, ACC_STATIC, ACC_FINAL, ACC_ABSTRACT, ACC_SYNCHRONIZED,
-        ACC_TRANSIENT, ACC_VOLATILE, ACC_STRICT, ACC_NATIVE, 0 };
-
-    void parse(String src, int p, int e) {
-        String packageName, id = null;
-        // String prevId;
-        ArrayList imports = new ArrayList();
-        char[] s = src.toCharArray();
-        int i, l, st = DEFAULT, st2 = 0, lineno = 1, nesting = 0;
-        char c = 0;
-        StringBuffer buf = new StringBuffer();
-        List collector = new ArrayList();
-        JavaNode current = null;
-    next:
-        for (--p;;) {
+    private String get(boolean skip) {
+        if (lookahead != null) {
+            String id = lookahead;
+            lookahead = null;
+            return id;
+        }
+        char c, s[] = this.s;
+        int p = this.p - 1, e = this.e;
+    skip:
+        for (;;) {
             // skip whitespace and comments
             while (++p < e && (c = s[p]) >= '\000' && c <= ' ');
             if (p + 1 < e && s[p] == '/') {
                 if ((c = s[++p]) == '/') {
                     while (++p < e && (c = s[p]) != '\r' && c != '\n');
-                    continue next;
+                    continue skip;
                 }
                 if (c == '*') {
                     for (++p; ++p < e && s[p - 1] != '*' || s[p] != '/';)
-                    continue next;
+                    continue skip;
                 }
                 --p;
             }
-            if (p >= e)
-                break;
-            int f = p;
-            // get token
-            while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
-                  c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
-            //prevId = id;
-            id = f == p ? null : src.substring(f, p);
-            if (id == null)
-                c = s[p++];
-        action:
-            switch (st) {
-            case DEFAULT:
-                if ("package".equals(id))
-                    st = PACKAGE;
-                else if ("import".equals(id))
-                    st = IMPORT;
-            case MODIFIER:
-                if (id == null)
-                    break next;
-                id = id.intern();
-                for (i = 0; i < MOD_NAMES.length; ++i)
-                    if (MOD_NAMES[i] == id) {
-                        current.modifier |= MOD_FLAGS[i];
-                        break action;
-                    }
-                st = TYPE;
-            case PACKAGE:
-            case IMPORT:
-            case TYPE:
-                if (nesting > 0)
-                    if (c == '>' && --nesting <= 0 || c == ';' || c == '{')
-                        nesting = 0;
-                    else
-                        break;
-                if (id != null) {
-                    if ((l = buf.length()) == 0 || buf.charAt(l - 1) == '.') {
-                        buf.append(id);
-                    } else if (st == TYPE) {
-                        current.type = buf.toString();
-                        current.name = id;
-                        buf.setLength(0);
-                        st = st2;
-                    }
-                } else if (c == ';') {
-                    if (st == PACKAGE)
-                        packageName = buf.toString();
-                    else if (st == IMPORT)
-                        imports.add(buf.toString());
-                    buf.setLength(0);
-                    st = DEFAULT;
-                } else if (c == '<') {
-                    ++nesting;
-                } else if (c == '.' || c == '[' || c == ']') {
-                    buf.append(c);
-                }
-                break;
-            case NAME: ;
-            }
+            break;
         }
+        if (p >= e) {
+            this.p = p;
+            return null;
+        }
+        int f = p;
+        // get token
+        while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
+              c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
+        this.p = f == p ? ++p : p;
+        int l;
+        // faster and ensures all operators to be interned
+        if ((l = p - f) == 1 && (c = s[f]) >= '\000' && c < CHAR_SPOOL.length)
+            return CHAR_SPOOL[c];
+        return skip ? "" : new String(s, f, p - f);
+    }
+
+    private String cname() {
+        StringBuffer result = null;
+        String id = get(true), sep = null;
+        while (id != null && (sep = get(true)) == ".") {
+            if (result == null)
+                result = new StringBuffer(id);
+            result.append('/');
+            if ((id = get(true)) != null)
+                result.append(id);
+        }
+        lookahead = sep;
+        return result == null ? id : result.toString();
+    }
+
+    int modifiers() {
+        String id;
+        Object mod;
+        int result = 0;
+        while ((mod = MODS.get(id = get(true))) != null) {
+            result |= ((Integer) mod).intValue();
+        }
+        lookahead = id;
+        return result;
+    }
+
+    private String readClass(int modifiers) {
+        String id = get(true);
+        if ("interface".equals(id))
+            modifiers |= ACC_INTERFACE;
+        else if (!"class".equals(id))
+            return id;
+        JavaNode cl = new JavaNode();
+        cl.source = this;
+        cl.modifier = modifiers;
+        cl.name = get(true);
+        List extend = new ArrayList();
+        // TODO read extends/implements
+        while (p < e) {
+            id = readClass(modifiers = modifiers());
+            //if 
+        }
+        return "";
+    }
+
+    JavaSource(char[] source) {
+        s = source;
+        e = source.length;
+        String id = get(true);
+        if ("package".equals(id)) {
+            packageName = get(true);
+            id = get(true);
+        }
+        for (; id != null; id = get(true)) {
+            if (id == ";")
+                continue; // skip toplevel ;
+            if (!"import".equals(id))
+                break;
+            if ((id = cname()) != null)
+                imports.add(id);
+        }
+        while (p < e)
+            readClass(modifiers());
+        s = null;
+    }
+
+    private static void mod(String name, int value) {
+        MODS.put(name, new Integer(value));
+    }
+
+    static {
+        char[] x = { ' ' };
+        for (short i = 0; i < CHAR_SPOOL.length; ++i) {
+            x[0] = (char) i;
+            CHAR_SPOOL[i] = new String(x).intern();
+        }
+        mod("abstract", ACC_ABSTRACT);
+        mod("final", ACC_FINAL);
+        mod("native", ACC_NATIVE);
+        mod("private", ACC_PRIVATE);
+        mod("protected", ACC_PROTECTED);
+        mod("public", ACC_PUBLIC);
+        mod("static", ACC_STATIC);
+        mod("strictfp", ACC_STRICT);
+        mod("synchronized", ACC_SYNCHRONIZED);
+        mod("transient", ACC_TRANSIENT);
+        mod("volatile", ACC_VOLATILE);
     }
 }
