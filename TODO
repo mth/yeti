@@ -10,7 +10,6 @@
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
 * turn constant class fields into private static final
-* Rename ASM in standard Yeti jar
 * Use typedef's in type pretty-printing (including error messages)
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
