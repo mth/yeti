@@ -113,55 +113,41 @@ class JavaSource implements Opcodes {
                         "Expected `" + id + "', got `" + id + '\'');
     }
 
-    private String cname() {
+    // mode 0 - classname (dotted identifier)
+    // mode 1 - variable name (identifier with [])
+    // mode 2 - parametric classname (dotted identifier, <>)
+    // mode 3 - full type (dotted identifier <> [])
+    private String type(int mode) {
         StringBuffer result = null;
         String id = get(false), sep = null;
-        while (id != null && (sep = get(false)) == ".") {
-            if (result == null)
-                result = new StringBuffer(id);
-            result.append('/');
-            if ((id = get(false)) != null)
-                result.append(id);
-        }
-        lookahead = sep;
-        return result == null ? id : result.toString();
-    }
-
-    String type(boolean dotted) {
-        String type = dotted ? cname() : get(false);
-        String id;
-        if ((id = get(false)) == "<") {
+        if (mode != 1)
+            while (id != null && (sep = get(false)) == ".") {
+                if (result == null)
+                    result = new StringBuffer(id);
+                result.append('/');
+                if ((id = get(false)) != null)
+                    result.append(id);
+            }
+        String type = result == null ? id : result.toString();
+        if (mode == 0)
+            return type;
+        if (sep == "<") {
             int level = 1;
             while ((id = get(true)) != null && (id != ">" || --level > 0))
                 if (id == "<")
                     ++level;
-            id = get(false);
+            sep = get(false);
         }
-        while (id == "[") {
+        while (sep == "[" && mode != 2) {
             expect("]", get(false));
             type += "[]";
-            id = get(false);
+            sep = get(false);
         }
-        lookahead = id;
+        lookahead = sep;
         return type;
     }
 
-    String skip(boolean meth) {
-        String id;
-        while ((id = get(true)) != null && id != ";" && (meth || id != ",")) {
-            if (id == "{") {
-                int level = 1;
-                while ((id = get(true)) != null && (id != "}" || --level > 0))
-                    if (id == "{")
-                        ++level;
-                if (meth)
-                    return ";";
-            }
-        }
-        return id;
-    }
-
-    int modifiers() {
+    private int modifiers() {
         String id;
         Object mod;
         int result = 0;
@@ -175,28 +161,41 @@ class JavaSource implements Opcodes {
     private String param(int modifiers, String type, JavaNode target) {
         JavaNode n = new JavaNode();
         n.modifier = modifiers;
-        n.type = type == null ? type(true) : type;
-        String id = type(false);
+        n.type = type == null ? type(3) : type;
+        String id = type(1);
         while (id.endsWith("[]")) {
             n.type += "[]";
             id = id.substring(0, id.length() - 2);
         }
         id = get(false);
-        if (id != "(" || type == null) {
+        boolean meth = id == "(" && type != null;
+        if (meth) {
+            while ((id = param(modifiers(), null, n)) == ",");
+            expect(")", id);
+            n.method = target.method;
+            target.method = n;
+        } else {
             n.field = target.field;
             target.field = n;
             ++target.fieldCount;
-            return id != "=" ? id : skip(false);
+            if (id != "=")
+                return id;
         }
-        while ((id = param(modifiers(), null, n)) == ",");
-        expect(")", id);
-        n.method = target.method;
-        target.method = n;
-        return skip(true);
+        while ((id = get(true)) != null && id != ";" && (meth || id != ",")) {
+            if (id == "{") {
+                int level = 1;
+                while ((id = get(true)) != null && (id != "}" || --level > 0))
+                    if (id == "{")
+                        ++level;
+                if (meth)
+                    return ";";
+            }
+        }
+        return id;
     }
 
     private String readClass(String outer, int modifiers) {
-        String id = type(true);
+        String id = type(3);
         if ("interface".equals(id))
             modifiers |= ACC_INTERFACE;
         else if (!"class".equals(id))
@@ -204,18 +203,18 @@ class JavaSource implements Opcodes {
         JavaNode cl = new JavaNode();
         cl.source = this;
         cl.modifier = modifiers;
-        cl.name = type(false);
+        cl.name = type(2);
         if (outer != null)
             cl.name = outer + '$' + cl.name;
         id = get(false);
         if ("extends".equals(id)) {
-            cl.type = cname();
+            cl.type = type(2);
             id = get(false);
         }
         if ("implements".equals(id)) {
             List impl = new ArrayList();
             do {
-                impl.add(cname());
+                impl.add(type(2));
             } while ((id = get(true)) == ",");
             cl.implement = (String[]) impl.toArray(new String[impl.size()]);
         }
@@ -246,7 +245,7 @@ class JavaSource implements Opcodes {
                 continue; // skip toplevel ;
             if (!"import".equals(id))
                 break;
-            if ((id = cname()) != null)
+            if ((id = type(0)) != null)
                 imports.add(id);
         }
         lookahead = id;
