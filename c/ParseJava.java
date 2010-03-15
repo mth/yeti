@@ -156,7 +156,7 @@ class JavaSource implements Opcodes {
             n.field = target.field;
             target.field = n;
             ++target.fieldCount;
-            if (id != "=")
+            if (type == null || id != "=")
                 return id;
         }
         while ((id = get(true)) != null && id != ";" && (meth || id != ",")) {
