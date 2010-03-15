@@ -44,7 +44,7 @@ class JavaSource implements Opcodes {
     final String packageName;
     final List imports = new ArrayList();
 
-    private String get(boolean ignore) {
+    private String get(int level) {
         if (lookahead != null) {
             String id = lookahead;
             lookahead = null;
@@ -52,22 +52,24 @@ class JavaSource implements Opcodes {
         }
         char c, s[] = this.s;
         int p = this.p - 1, e = this.e;
-    skip:
         for (;;) {
             // skip whitespace and comments
             while (++p < e && (c = s[p]) >= '\000' && c <= ' ');
             if (p + 1 < e && s[p] == '/') {
                 if ((c = s[++p]) == '/') {
                     while (++p < e && (c = s[p]) != '\r' && c != '\n');
-                    continue skip;
+                    continue;
                 }
                 if (c == '*') {
                     for (++p; ++p < e && s[p - 1] != '*' || s[p] != '/';)
-                    continue skip;
+                    continue;
                 }
                 --p;
             }
-            break;
+            if (level <= 0 || p >= e || s[p] == '}' && --level <= 0)
+                break;
+            if (s[p++] == '}')
+                ++level;
         }
         if (p >= e) {
             this.p = p;
@@ -82,7 +84,7 @@ class JavaSource implements Opcodes {
         // faster and ensures all operators to be interned
         if ((l = p - f) == 1 && (c = s[f]) >= '\000' && c < CHAR_SPOOL.length)
             return CHAR_SPOOL[c];
-        return ignore ? "" : new String(s, f, p - f);
+        return new String(s, f, p - f);
     }
 
     void expect(String expect, String id) {
@@ -95,7 +97,7 @@ class JavaSource implements Opcodes {
         String id;
         Object mod;
         int result = 0;
-        while ((mod = MODS.get(id = get(false))) != null) {
+        while ((mod = MODS.get(id = get(0))) != null) {
             result |= ((Integer) mod).intValue();
         }
         lookahead = id;
@@ -108,13 +110,13 @@ class JavaSource implements Opcodes {
     // mode 3 - full type (dotted identifier <> [])
     private String type(int mode) {
         StringBuffer result = null;
-        String id = get(false), sep = null;
+        String id = get(0), sep = null;
         if (mode != 1)
-            while (id != null && (sep = get(false)) == ".") {
+            while (id != null && (sep = get(0)) == ".") {
                 if (result == null)
                     result = new StringBuffer(id);
                 result.append('/');
-                if ((id = get(false)) != null)
+                if ((id = get(0)) != null)
                     result.append(id);
             }
         String type = result == null ? id : result.toString();
@@ -122,15 +124,15 @@ class JavaSource implements Opcodes {
             return type;
         if (sep == "<") {
             int level = 1;
-            while ((id = get(true)) != null && (id != ">" || --level > 0))
+            while ((id = get(0)) != null && (id != ">" || --level > 0))
                 if (id == "<")
                     ++level;
-            sep = get(false);
+            sep = get(0);
         }
         while (sep == "[" && mode != 2) {
-            expect("]", get(false));
+            expect("]", get(0));
             type += "[]";
-            sep = get(false);
+            sep = get(0);
         }
         lookahead = sep;
         return type;
@@ -145,7 +147,7 @@ class JavaSource implements Opcodes {
             n.type += "[]";
             id = id.substring(0, id.length() - 2);
         }
-        id = get(false);
+        id = get(0);
         boolean meth = id == "(" && type != null;
         if (meth) {
             while ((id = param(modifiers(), null, n)) == ",");
@@ -159,12 +161,9 @@ class JavaSource implements Opcodes {
             if (type == null || id != "=")
                 return id;
         }
-        while ((id = get(true)) != null && id != ";" && (meth || id != ",")) {
+        while ((id = get(0)) != null && id != ";" && (meth || id != ",")) {
             if (id == "{") {
-                int level = 1;
-                while ((id = get(true)) != null && (id != "}" || --level > 0))
-                    if (id == "{")
-                        ++level;
+                get(1);
                 if (meth)
                     return ";";
             }
@@ -184,16 +183,16 @@ class JavaSource implements Opcodes {
         cl.name = type(2);
         if (outer != null)
             cl.name = outer + '$' + cl.name;
-        id = get(false);
+        id = get(0);
         if ("extends".equals(id)) {
             cl.type = type(2);
-            id = get(false);
+            id = get(0);
         }
         if ("implements".equals(id)) {
             List impl = new ArrayList();
             do {
                 impl.add(type(2));
-            } while ((id = get(true)) == ",");
+            } while ((id = get(0)) == ",");
             cl.implement = (String[]) impl.toArray(new String[impl.size()]);
         }
         expect("{", id);
@@ -211,14 +210,14 @@ class JavaSource implements Opcodes {
         s = source;
         e = source.length;
         this.classes = classes;
-        String id = get(false);
+        String id = get(0);
         if ("package".equals(id)) {
-            packageName = get(false);
-            id = get(false);
+            packageName = get(0);
+            id = get(0);
         } else {
             packageName = "";
         }
-        for (; id != null; id = get(false)) {
+        for (; id != null; id = get(0)) {
             if (id == ";")
                 continue; // skip toplevel ;
             if (!"import".equals(id))
