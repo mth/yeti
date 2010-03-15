@@ -20,28 +20,6 @@ could be done here).
 In conclusion - we shouldn't try to resolve class-names at all in the first
 parse stage, and just add import lists with classes. When class is required
 at later stage the names can be resolved (as all classes are known then).
-
-In-class st has basically easy life.
-
-Modifiers:
-abstract public protected package private static
-final synchronized transient volatile strictfp native
-
-modifier sets flag
-class at cl1 -> expect name
-id at cl1 -> type = id; st = cl2
-< at cl2  -> skip until matching >, ;{ stops
-id at cl2 -> name = id; st = cl3
-= at cl3  -> st = cl4
-( at cl3  -> st = cl5, read arglist
-
-classes are only true nested shit for us - but we can cheat
-using linked-list by having outer field in our class
-structure and storing current class ptr.
-
-XXX we can exploit MOD TYPE NAME pattern in java syntax to use same
-code to parse fields, methods and method arguments.
-XXX in fields , separated lists must create multiple class fields
 */
 
 class JavaNode {
