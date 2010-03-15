@@ -82,7 +82,7 @@ splitPath = strSplit File#pathSeparator;
 
 not (eval or empty? argv) and (not exec or empty? srcs) loop
    (arg = shift argv;
-    if strStarts? arg '-' then
+    if arg `strStarts?` '-' then
         case arg of
         "-C":
             exec := false;
