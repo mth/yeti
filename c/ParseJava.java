@@ -48,10 +48,10 @@ class JavaNode {
     int modifier;
     String type; // extends for classes
     String name; // full name for classes
-    String[] implement; // implements list
     int fieldCount;
-    JavaNode field;  // field list
+    JavaNode field;  // field or argument list
     JavaNode method; // method list for classes
+    String[] implement; // implements for classes
     JavaSource source;
 }
 
@@ -162,6 +162,7 @@ class JavaSource implements Opcodes {
         if (id != "(" || type == null) {
             n.field = target.field;
             target.field = n;
+            ++target.fieldCount;
             return id != "=" ? id : skipExpr(true);
         }
         while ((id = param(modifiers(), null, n)) == ",");
