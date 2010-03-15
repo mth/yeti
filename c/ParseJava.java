@@ -71,14 +71,33 @@ class JavaSource implements Opcodes {
                 }
                 --p;
             }
-            if (level <= 0 || p >= e || s[p] == '}' && --level <= 0)
-                break;
-            if (s[p] == '}')
+            if (p >= e) {
+                this.p = p;
+                return null;
+            }
+            // string, we really don't care about it's contents
+            if ((c = s[p]) == '"' || c == '\'') {
+                while (++p < e && s[p] != c && s[p] != '\n')
+                    if (s[p] == '\\')
+                        ++p;
+            }
+            // skipping block
+            if (level > 0 && (c != '}' || --level > 0)) {
+                if (c == '{')
+                    ++level;
+                continue;
+            }
+            if (level == 0) {
+                if (c != '@')
+                    break;
+                while (++p < e && s[p] >= '0'); // skip name
+            }
+            if (c == '(')
+                --level;
+            else if (c == ')')
                 ++level;
-        }
-        if (p >= e) {
-            this.p = p;
-            return null;
+            else if (c == '{')
+                level = 1;
         }
         int f = p;
         // get token
