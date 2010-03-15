@@ -39,6 +39,7 @@ class JavaSource implements Opcodes {
     private int p, e;
     private char[] s;
     private String lookahead;
+    private String fn;
     private Map classes;
     private int line;
     final String packageName;
@@ -54,21 +55,25 @@ class JavaSource implements Opcodes {
         int p = this.p - 1, e = this.e;
         for (;;) {
             // skip whitespace and comments
-            while (++p < e && (c = s[p]) >= '\000' && c <= ' ');
+            while (++p < e && (c = s[p]) >= '\000' && c <= ' ')
+                if (c == '\n' || c == '\r' && p + 1 < e && s[p + 1] != '\n')
+                    ++line;
             if (p + 1 < e && s[p] == '/') {
                 if ((c = s[++p]) == '/') {
                     while (++p < e && (c = s[p]) != '\r' && c != '\n');
                     continue;
                 }
                 if (c == '*') {
-                    for (++p; ++p < e && s[p - 1] != '*' || s[p] != '/';)
+                    for (++p; ++p < e && ((c = s[p-1]) != '*' || s[p] != '/');)
+                        if (c == '\n' || c == '\r' && s[p] != '\n')
+                            ++line;
                     continue;
                 }
                 --p;
             }
             if (level <= 0 || p >= e || s[p] == '}' && --level <= 0)
                 break;
-            if (s[p++] == '}')
+            if (s[p] == '}')
                 ++level;
         }
         if (p >= e) {
@@ -88,9 +93,12 @@ class JavaSource implements Opcodes {
     }
 
     void expect(String expect, String id) {
-        if (!expect.equals(id))
-            throw new CompileException(line, 0,
+        if (!expect.equals(id)) {
+            CompileException e = new CompileException(line, 0,
                         "Expected `" + id + "', got `" + id + '\'');
+            e.fn = fn;
+            throw e;
+        }
     }
 
     private int modifiers() {
@@ -206,7 +214,8 @@ class JavaSource implements Opcodes {
         return "";
     }
 
-    JavaSource(char[] source, Map classes) {
+    JavaSource(String sourceName, char[] source, Map classes) {
+        fn = sourceName;
         s = source;
         e = source.length;
         this.classes = classes;
@@ -228,6 +237,8 @@ class JavaSource implements Opcodes {
         lookahead = id;
         while (readClass(null, modifiers()) != null);
         s = null;
+        classes = null;
+        fn = null;
     }
 
     private static void mod(String name, int value) {
