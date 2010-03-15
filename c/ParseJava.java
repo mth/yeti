@@ -128,14 +128,37 @@ class JavaSource implements Opcodes {
     }
 
     String type(boolean dotted) {
-        String type = cname();
-        //
+        String type = dotted ? cname() : get(false);
+        String id;
+        if ((id = get(false)) == "<") {
+            int level = 1;
+            while ((id = get(true)) != null && (id != ">" || --level > 0))
+                if (id == "<")
+                    ++level;
+            id = get(false);
+        }
+        while (id == "[") {
+            expect("]", get(false));
+            type += "[]";
+            id = get(false);
+        }
+        lookahead = id;
         return type;
     }
 
-    String skipExpr(boolean method) {
-        //
-        return null;
+    String skip(boolean meth) {
+        String id;
+        while ((id = get(true)) != null && id != ";" && (meth || id != ",")) {
+            if (id == "{") {
+                int level = 1;
+                while ((id = get(true)) != null && (id != "}" || --level > 0))
+                    if (id == "{")
+                        ++level;
+                if (meth)
+                    return ";";
+            }
+        }
+        return id;
     }
 
     int modifiers() {
@@ -163,13 +186,13 @@ class JavaSource implements Opcodes {
             n.field = target.field;
             target.field = n;
             ++target.fieldCount;
-            return id != "=" ? id : skipExpr(true);
+            return id != "=" ? id : skip(false);
         }
         while ((id = param(modifiers(), null, n)) == ",");
         expect(")", id);
         n.method = target.method;
         target.method = n;
-        return skipExpr(false);
+        return skip(true);
     }
 
     private String readClass(String outer, int modifiers) {
@@ -181,7 +204,7 @@ class JavaSource implements Opcodes {
         JavaNode cl = new JavaNode();
         cl.source = this;
         cl.modifier = modifiers;
-        cl.name = get(false);
+        cl.name = type(false);
         if (outer != null)
             cl.name = outer + '$' + cl.name;
         id = get(false);
@@ -197,7 +220,9 @@ class JavaSource implements Opcodes {
             cl.implement = (String[]) impl.toArray(new String[impl.size()]);
         }
         expect("{", id);
-        while ((id = readClass(cl.name, modifiers = modifiers())) != null) {
+        while ((id = readClass(cl.name, modifiers = modifiers())) != "}") {
+            if (id == null)
+                return null;
             while (id != "" && param(modifiers, id, cl) == ",");
         }
         classes.put(packageName.length() == 0 ? cl.name :
