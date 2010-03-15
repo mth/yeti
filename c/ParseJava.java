@@ -48,7 +48,7 @@ class JavaNode {
     int modifier;
     String type; // extends for classes
     String name; // full name for classes
-    String[][] classInfo; // imports, implements
+    String[] implement; // implements list
     int fieldCount;
     JavaNode field;  // field list
     JavaNode method; // method list for classes
@@ -61,10 +61,12 @@ class JavaSource implements Opcodes {
     private int p, e;
     private char[] s;
     private String lookahead;
-    String packageName = "";
+    private Map classes;
+    private int line;
+    final String packageName;
     final List imports = new ArrayList();
 
-    private String get(boolean skip) {
+    private String get(boolean ignore) {
         if (lookahead != null) {
             String id = lookahead;
             lookahead = null;
@@ -102,36 +104,75 @@ class JavaSource implements Opcodes {
         // faster and ensures all operators to be interned
         if ((l = p - f) == 1 && (c = s[f]) >= '\000' && c < CHAR_SPOOL.length)
             return CHAR_SPOOL[c];
-        return skip ? "" : new String(s, f, p - f);
+        return ignore ? "" : new String(s, f, p - f);
+    }
+
+    void expect(String expect, String id) {
+        if (!expect.equals(id))
+            throw new CompileException(line, 0,
+                        "Expected `" + id + "', got `" + id + '\'');
     }
 
     private String cname() {
         StringBuffer result = null;
-        String id = get(true), sep = null;
-        while (id != null && (sep = get(true)) == ".") {
+        String id = get(false), sep = null;
+        while (id != null && (sep = get(false)) == ".") {
             if (result == null)
                 result = new StringBuffer(id);
             result.append('/');
-            if ((id = get(true)) != null)
+            if ((id = get(false)) != null)
                 result.append(id);
         }
         lookahead = sep;
         return result == null ? id : result.toString();
     }
 
+    String type(boolean dotted) {
+        String type = cname();
+        //
+        return type;
+    }
+
+    String skipExpr(boolean method) {
+        //
+        return null;
+    }
+
     int modifiers() {
         String id;
         Object mod;
         int result = 0;
-        while ((mod = MODS.get(id = get(true))) != null) {
+        while ((mod = MODS.get(id = get(false))) != null) {
             result |= ((Integer) mod).intValue();
         }
         lookahead = id;
         return result;
     }
 
-    private String readClass(int modifiers) {
-        String id = get(true);
+    private String param(int modifiers, String type, JavaNode target) {
+        JavaNode n = new JavaNode();
+        n.modifier = modifiers;
+        n.type = type == null ? type(true) : type;
+        String id = type(false);
+        while (id.endsWith("[]")) {
+            n.type += "[]";
+            id = id.substring(0, id.length() - 2);
+        }
+        id = get(false);
+        if (id != "(" || type == null) {
+            n.field = target.field;
+            target.field = n;
+            return id != "=" ? id : skipExpr(true);
+        }
+        while ((id = param(modifiers(), null, n)) == ",");
+        expect(")", id);
+        n.method = target.method;
+        target.method = n;
+        return skipExpr(false);
+    }
+
+    private String readClass(String outer, int modifiers) {
+        String id = type(true);
         if ("interface".equals(id))
             modifiers |= ACC_INTERFACE;
         else if (!"class".equals(id))
@@ -139,25 +180,42 @@ class JavaSource implements Opcodes {
         JavaNode cl = new JavaNode();
         cl.source = this;
         cl.modifier = modifiers;
-        cl.name = get(true);
-        List extend = new ArrayList();
-        // TODO read extends/implements
-        while (p < e) {
-            id = readClass(modifiers = modifiers());
-            //if 
+        cl.name = get(false);
+        if (outer != null)
+            cl.name = outer + '$' + cl.name;
+        id = get(false);
+        if ("extends".equals(id)) {
+            cl.type = cname();
+            id = get(false);
         }
+        if ("implements".equals(id)) {
+            List impl = new ArrayList();
+            do {
+                impl.add(cname());
+            } while ((id = get(true)) == ",");
+            cl.implement = (String[]) impl.toArray(new String[impl.size()]);
+        }
+        expect("{", id);
+        while ((id = readClass(cl.name, modifiers = modifiers())) != null) {
+            while (id != "" && param(modifiers, id, cl) == ",");
+        }
+        classes.put(packageName.length() == 0 ? cl.name :
+                        packageName + '/' + cl.name, cl);
         return "";
     }
 
-    JavaSource(char[] source) {
+    JavaSource(char[] source, Map classes) {
         s = source;
         e = source.length;
-        String id = get(true);
+        this.classes = classes;
+        String id = get(false);
         if ("package".equals(id)) {
-            packageName = get(true);
-            id = get(true);
+            packageName = get(false);
+            id = get(false);
+        } else {
+            packageName = "";
         }
-        for (; id != null; id = get(true)) {
+        for (; id != null; id = get(false)) {
             if (id == ";")
                 continue; // skip toplevel ;
             if (!"import".equals(id))
@@ -165,8 +223,8 @@ class JavaSource implements Opcodes {
             if ((id = cname()) != null)
                 imports.add(id);
         }
-        while (p < e)
-            readClass(modifiers());
+        lookahead = id;
+        while (readClass(null, modifiers()) != null);
         s = null;
     }
 

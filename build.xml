@@ -12,7 +12,8 @@
     <mkdir dir="${basedir}/.build/util"/>
     <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asmt}" verbose="true"/>
     <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
-           includes="Rename.java" encoding="UTF-8"/>
+           includes="Rename.java" encoding="UTF-8"
+           includeantruntime="false"/>
     <java classname="yeti.lang.Rename" failonerror="true"
           classpath="${basedir}/.build/util">
         <arg value="${asmt}"/>
@@ -23,14 +24,16 @@
 <target name="lib" depends="fetch" unless="no.lib.build">
     <mkdir dir="${basedir}/.build/util"/>
     <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
-           includes="SpecialLib.java" encoding="UTF-8" classpath="${asm}"/>
+           includes="SpecialLib.java" encoding="UTF-8" classpath="${asm}"
+           includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${basedir}/.build/util">
         <arg value="pre"/>
         <arg value="${basedir}/.build/lib"/>
     </java>
     <javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib" debug="on"
-        encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"/>
+        encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
+        includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${basedir}/.build/util">
         <arg value="tr"/>
@@ -51,7 +54,8 @@
     <mkdir dir="${basedir}/.build/compiler"/>
     <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
-           classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"/>
+           classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"
+           includeantruntime="true"/>
 </target>
 
 <target name="taskdef">
