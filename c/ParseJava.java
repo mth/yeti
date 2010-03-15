@@ -113,6 +113,17 @@ class JavaSource implements Opcodes {
                         "Expected `" + id + "', got `" + id + '\'');
     }
 
+    private int modifiers() {
+        String id;
+        Object mod;
+        int result = 0;
+        while ((mod = MODS.get(id = get(false))) != null) {
+            result |= ((Integer) mod).intValue();
+        }
+        lookahead = id;
+        return result;
+    }
+
     // mode 0 - classname (dotted identifier)
     // mode 1 - variable name (identifier with [])
     // mode 2 - parametric classname (dotted identifier, <>)
@@ -145,17 +156,6 @@ class JavaSource implements Opcodes {
         }
         lookahead = sep;
         return type;
-    }
-
-    private int modifiers() {
-        String id;
-        Object mod;
-        int result = 0;
-        while ((mod = MODS.get(id = get(false))) != null) {
-            result |= ((Integer) mod).intValue();
-        }
-        lookahead = id;
-        return result;
     }
 
     private String param(int modifiers, String type, JavaNode target) {
