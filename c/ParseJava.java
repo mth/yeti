@@ -165,14 +165,15 @@ class JavaSource implements Opcodes {
     private String field(int modifiers, String type, JavaNode target) {
         JavaNode n = null;
         String id = type(1);
-        if ((modifiers & ACC_PRIVATE) == 0) {
+        if (id != null && (modifiers & ACC_PRIVATE) == 0) {
             n = new JavaNode();
             n.modifier = modifiers;
-            n.type = type;
             while (id.endsWith("[]")) {
-                n.type += "[]";
+                type += "[]";
                 id = id.substring(0, id.length() - 2);
             }
+            n.type = type.intern();
+            n.name = id.intern();
             n.field = target.field;
             target.field = n;
         }
@@ -181,9 +182,9 @@ class JavaSource implements Opcodes {
             List l = new ArrayList();
             do {
                 modifiers();
-                type(3);
-                l.add(type(1));
-            } while ((id = get(0)) == ",");
+                id = type(3);
+                type(1);
+            } while (id != null && l.add(id.intern()) && (id = get(0)) == ",");
             expect(")", id);
             if (n != null)
                 n.args = (String[]) l.toArray(new String[l.size()]);
