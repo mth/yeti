@@ -137,14 +137,13 @@ public class JavaSource implements Opcodes {
     private String type(int mode) {
         StringBuffer result = null;
         String id = get(0), sep = null;
-        if (mode != 1)
-            while (id != null && (sep = get(0)) == ".") {
-                if (result == null)
-                    result = new StringBuffer(id);
-                result.append('/');
-                if ((id = get(0)) != null)
-                    result.append(id);
-            }
+        while (id != null && (sep = get(0)) == "." && mode != 1) {
+            if (result == null)
+                result = new StringBuffer(id);
+            result.append('/');
+            if ((id = get(0)) != null)
+                result.append(id);
+        }
         String type = result == null ? id : result.toString();
         if (mode != 0) {
             if (sep == "<") {
@@ -168,6 +167,7 @@ public class JavaSource implements Opcodes {
         JavaNode n = null;
         String id = type(1);
         if (id != null && (modifiers & ACC_PRIVATE) == 0) {
+            System.err.println(id);
             while (id.endsWith("[]")) {
                 type = type.concat("[]");
                 id = id.substring(0, id.length() - 2);
