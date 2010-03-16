@@ -96,12 +96,13 @@ class JavaSource implements Opcodes {
                 ++level;
             }
         }
-        int f = p;
+        int f = p, l;
         // get token
         while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
               c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
-        this.p = f == p ? ++p : p;
-        int l;
+        if (f == p)
+            for (c = s[p]; ++p < e && c != ';' && s[p] == c;);
+        this.p = p;
         // faster and ensures all operators to be interned
         if ((l = p - f) == 1 && (c = s[f]) >= '\000' && c < CHAR_SPOOL.length)
             return CHAR_SPOOL[c];
@@ -185,9 +186,12 @@ class JavaSource implements Opcodes {
             List l = new ArrayList();
             do {
                 modifiers();
-                if ((id = field(0, type(3), null)) != null)
-                    l.add(id);
-            } while ((id = get(0)) == ",");
+                type = field(0, type(3), null);
+                if ("...".equals(id = get(0)))
+                    type = type.concat("[]");
+                if (id != null)
+                    l.add(type);
+            } while (id == ",");
             expect(")", id);
             if (n != null)
                 n.args = (String[]) l.toArray(new String[l.size()]);
