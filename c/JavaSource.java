@@ -181,9 +181,8 @@ public class JavaSource implements Opcodes {
             n.field = target.field;
             target.field = n;
         }
-        int level = 0;
-        boolean meth = id == "(" || (id = get(0)) == "(";
-        if (meth) {
+        int method = 0;
+        if (id == "(" || (id = get(0)) == "(") {
             List l = new ArrayList();
             do {
                 modifiers();
@@ -198,14 +197,15 @@ public class JavaSource implements Opcodes {
             expect(")", id);
             if (n != null)
                 n.argv = (String[]) l.toArray(new String[l.size()]);
-            ++level;
+            ++method;
         } else if (id != "=") {
             return id;
         }
+        int level = method;
         while ((id = get(0)) != null && id != ";" && (level > 0 || id != ","))
             if (id == "{") {
                 get(1);
-                if (meth)
+                if (method != 0)
                     return ";";
             } else if (id == "(") {
                 ++level;
@@ -257,7 +257,7 @@ public class JavaSource implements Opcodes {
         this.classes = classes;
         String id = get(0);
         if ("package".equals(id)) {
-            packageName = get(0);
+            packageName = type(0);
             id = get(0);
         } else {
             packageName = "";
