@@ -102,7 +102,7 @@ public class JavaSource implements Opcodes {
         while (p < e && ((c = s[p]) == '_' || c >= 'a' && c <= 'z' ||
               c >= 'A' && c <= 'Z' || c >= '0' && c <= '9' || c > '~')) ++p;
         if (f == p)
-            for (c = s[p]; ++p < e && c != ';' && s[p] == c;);
+            for (c = s[p]; ++p < e && c == '.' && s[p] == c;);
         this.p = p;
         // faster and ensures all operators to be interned
         if ((l = p - f) == 1 && (c = s[f]) >= '\000' && c < CHAR_SPOOL.length)
