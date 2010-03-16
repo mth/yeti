@@ -167,7 +167,6 @@ public class JavaSource implements Opcodes {
         JavaNode n = null;
         String id = type(1);
         if (id != null && (modifiers & ACC_PRIVATE) == 0) {
-            System.err.println(id);
             while (id.endsWith("[]")) {
                 type = type.concat("[]");
                 id = id.substring(0, id.length() - 2);
@@ -182,6 +181,7 @@ public class JavaSource implements Opcodes {
             n.field = target.field;
             target.field = n;
         }
+        int level = 0;
         boolean meth = id == "(" || (id = get(0)) == "(";
         if (meth) {
             List l = new ArrayList();
@@ -198,16 +198,20 @@ public class JavaSource implements Opcodes {
             expect(")", id);
             if (n != null)
                 n.argv = (String[]) l.toArray(new String[l.size()]);
+            ++level;
         } else if (id != "=") {
             return id;
         }
-        while ((id = get(0)) != null && id != ";" && (meth || id != ",")) {
+        while ((id = get(0)) != null && id != ";" && (level > 0 || id != ","))
             if (id == "{") {
                 get(1);
                 if (meth)
                     return ";";
+            } else if (id == "(") {
+                ++level;
+            } else if (id == ")") {
+                --level;
             }
-        }
         return id;
     }
 
