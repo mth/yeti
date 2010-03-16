@@ -87,17 +87,16 @@ class JavaSource implements Opcodes {
                     ++level;
                 continue;
             }
-            if (level == 0) {
+            if (level == 0 || level == -1 && c != '(') {
                 if (c != '@')
                     break;
                 while (++p < e && s[p] >= '0'); // skip name
-            }
-            if (c == '(')
+                level = -1;
+            } else if (c == '(') {
                 --level;
-            else if (c == ')')
+            } else if (c == ')') {
                 ++level;
-            else if (c == '{')
-                level = 1;
+            }
         }
         int f = p;
         // get token
