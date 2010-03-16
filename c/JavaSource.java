@@ -27,11 +27,11 @@ class JavaNode {
     String type; // extends for classes
     String name; // full name for classes
     JavaNode field;  // field/method list
-    String[] args;   // implements for classes
+    String[] argv;   // implements for classes
     JavaSource source;
 }
 
-class JavaSource implements Opcodes {
+public class JavaSource implements Opcodes {
     private static final String[] CHAR_SPOOL = new String[128];
     private static final Map MODS = new HashMap();
     private int p, e;
@@ -39,7 +39,7 @@ class JavaSource implements Opcodes {
     private String lookahead;
     private String fn;
     private Map classes;
-    private int line;
+    private int line = 1;
     final String packageName;
     final List imports = new ArrayList();
 
@@ -59,6 +59,7 @@ class JavaSource implements Opcodes {
             if (p + 1 < e && s[p] == '/') {
                 if ((c = s[++p]) == '/') {
                     while (++p < e && (c = s[p]) != '\r' && c != '\n');
+                    --p;
                     continue;
                 }
                 if (c == '*') {
@@ -111,8 +112,8 @@ class JavaSource implements Opcodes {
 
     void expect(String expect, String id) {
         if (!expect.equals(id)) {
-            CompileException e = new CompileException(line, 0,
-                        "Expected `" + id + "', got `" + id + '\'');
+            CompileException e = new CompileException(line, 0, "Expected `" +
+                    expect + (id == null ? "EOF" : "', not `" + id + '\''));
             e.fn = fn;
             throw e;
         }
@@ -145,19 +146,19 @@ class JavaSource implements Opcodes {
                     result.append(id);
             }
         String type = result == null ? id : result.toString();
-        if (mode == 0)
-            return type;
-        if (sep == "<") {
-            int level = 1;
-            while ((id = get(0)) != null && (id != ">" || --level > 0))
-                if (id == "<")
-                    ++level;
-            sep = get(0);
-        }
-        while (sep == "[" && mode != 2) {
-            expect("]", get(0));
-            type += "[]";
-            sep = get(0);
+        if (mode != 0) {
+            if (sep == "<") {
+                int level = 1;
+                while ((id = get(0)) != null && (id != ">" || --level > 0))
+                    if (id == "<")
+                        ++level;
+                sep = get(0);
+            }
+            while (sep == "[" && mode != 2) {
+                expect("]", get(0));
+                type = type.concat("[]");
+                sep = get(0);
+            }
         }
         lookahead = sep;
         return type;
@@ -168,7 +169,7 @@ class JavaSource implements Opcodes {
         String id = type(1);
         if (id != null && (modifiers & ACC_PRIVATE) == 0) {
             while (id.endsWith("[]")) {
-                type += "[]";
+                type = type.concat("[]");
                 id = id.substring(0, id.length() - 2);
             }
             type = type.intern();
@@ -177,16 +178,18 @@ class JavaSource implements Opcodes {
             n = new JavaNode();
             n.modifier = modifiers;
             n.type = type;
-            n.name = id.intern();
+            n.name = id != "(" ? id.intern() : "<init>";
             n.field = target.field;
             target.field = n;
         }
-        boolean meth = (id = get(0)) == "(";
+        boolean meth = id == "(" || (id = get(0)) == "(";
         if (meth) {
             List l = new ArrayList();
             do {
                 modifiers();
-                type = field(0, type(3), null);
+                if ((id = type(3)) == ")")
+                    break;
+                type = field(0, id, null);
                 if ("...".equals(id = get(0)))
                     type = type.concat("[]");
                 if (id != null)
@@ -194,7 +197,7 @@ class JavaSource implements Opcodes {
             } while (id == ",");
             expect(")", id);
             if (n != null)
-                n.args = (String[]) l.toArray(new String[l.size()]);
+                n.argv = (String[]) l.toArray(new String[l.size()]);
         } else if (id != "=") {
             return id;
         }
@@ -230,7 +233,7 @@ class JavaSource implements Opcodes {
             do {
                 impl.add(type(2));
             } while ((id = get(0)) == ",");
-            cl.args = (String[]) impl.toArray(new String[impl.size()]);
+            cl.argv = (String[]) impl.toArray(new String[impl.size()]);
         }
         expect("{", id);
         while ((id = readClass(cl.name, modifiers = modifiers())) != "}") {
@@ -291,5 +294,37 @@ class JavaSource implements Opcodes {
         mod("synchronized", ACC_SYNCHRONIZED);
         mod("transient", ACC_TRANSIENT);
         mod("volatile", ACC_VOLATILE);
+    }
+
+    // testing
+    private static String join(String[] v) {
+        String res = "";
+        for (int i = 0; i < v.length; ++i) {
+            if (i != 0)
+                res += ", ";
+            res += v[i];
+        }
+        return res;
+    }
+
+    public static void main(String[] argv) throws Exception {
+        HashMap m = new HashMap();
+        for (int i = 0; i < argv.length; ++i) {
+            String[] fn = { argv[i] };
+            char[] s = new YetiC(null).getSource(fn);
+            new JavaSource(fn[0], s, m);
+        }
+        for (Iterator i = m.keySet().iterator(); i.hasNext();) {
+            String name = (String) i.next();
+            JavaNode c = (JavaNode) m.get(name);
+            System.out.println("class " + name + " extends " +
+                    (c.type == null ? "Object" : c.type) +
+                    (c.argv == null ? "" : " implements " + join(c.argv)) + " {");
+            while ((c = c.field) != null) {
+                System.out.println("   " + c.type + ' ' + c.name +
+                    (c.argv == null ? "" : '(' + join(c.argv) + ')') + ';');
+            }
+            System.out.println("}\n");
+        }
     }
 }
