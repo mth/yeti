@@ -26,10 +26,8 @@ class JavaNode {
     int modifier;
     String type; // extends for classes
     String name; // full name for classes
-    int fieldCount;
-    JavaNode field;  // field or argument list
-    JavaNode method; // method list for classes
-    String[] implement; // implements for classes
+    JavaNode field;  // field/method list
+    String[] args;   // implements for classes
     JavaSource source;
 }
 
@@ -164,28 +162,33 @@ class JavaSource implements Opcodes {
         return type;
     }
 
-    private String param(int modifiers, String type, JavaNode target) {
-        JavaNode n = new JavaNode();
-        n.modifier = modifiers;
-        n.type = type == null ? type(3) : type;
+    private String field(int modifiers, String type, JavaNode target) {
+        JavaNode n = null;
         String id = type(1);
-        while (id.endsWith("[]")) {
-            n.type += "[]";
-            id = id.substring(0, id.length() - 2);
-        }
-        id = get(0);
-        boolean meth = id == "(" && type != null;
-        if (meth) {
-            while ((id = param(modifiers(), null, n)) == ",");
-            expect(")", id);
-            n.method = target.method;
-            target.method = n;
-        } else {
+        if ((modifiers & ACC_PRIVATE) == 0) {
+            n = new JavaNode();
+            n.modifier = modifiers;
+            n.type = type;
+            while (id.endsWith("[]")) {
+                n.type += "[]";
+                id = id.substring(0, id.length() - 2);
+            }
             n.field = target.field;
             target.field = n;
-            ++target.fieldCount;
-            if (type == null || id != "=")
-                return id;
+        }
+        boolean meth = (id = get(0)) == "(";
+        if (meth) {
+            List l = new ArrayList();
+            do {
+                modifiers();
+                type(3);
+                l.add(type(1));
+            } while ((id = get(0)) == ",");
+            expect(")", id);
+            if (n != null)
+                n.args = (String[]) l.toArray(new String[l.size()]);
+        } else if (id != "=") {
+            return id;
         }
         while ((id = get(0)) != null && id != ";" && (meth || id != ",")) {
             if (id == "{") {
@@ -219,13 +222,13 @@ class JavaSource implements Opcodes {
             do {
                 impl.add(type(2));
             } while ((id = get(0)) == ",");
-            cl.implement = (String[]) impl.toArray(new String[impl.size()]);
+            cl.args = (String[]) impl.toArray(new String[impl.size()]);
         }
         expect("{", id);
         while ((id = readClass(cl.name, modifiers = modifiers())) != "}") {
             if (id == null)
                 return null;
-            while (id != "" && param(modifiers, id, cl) == ",");
+            while (id != "" && field(modifiers, id, cl) == ",");
         }
         classes.put(packageName.length() == 0 ? cl.name :
                         packageName + '/' + cl.name, cl);
