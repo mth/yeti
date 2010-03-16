@@ -166,13 +166,16 @@ class JavaSource implements Opcodes {
         JavaNode n = null;
         String id = type(1);
         if (id != null && (modifiers & ACC_PRIVATE) == 0) {
-            n = new JavaNode();
-            n.modifier = modifiers;
             while (id.endsWith("[]")) {
                 type += "[]";
                 id = id.substring(0, id.length() - 2);
             }
-            n.type = type.intern();
+            type = type.intern();
+            if (target == null)
+                return type;
+            n = new JavaNode();
+            n.modifier = modifiers;
+            n.type = type;
             n.name = id.intern();
             n.field = target.field;
             target.field = n;
@@ -182,9 +185,9 @@ class JavaSource implements Opcodes {
             List l = new ArrayList();
             do {
                 modifiers();
-                id = type(3);
-                type(1);
-            } while (id != null && l.add(id.intern()) && (id = get(0)) == ",");
+                if ((id = field(0, type(3), null)) != null)
+                    l.add(id);
+            } while ((id = get(0)) == ",");
             expect(")", id);
             if (n != null)
                 n.args = (String[]) l.toArray(new String[l.size()]);
