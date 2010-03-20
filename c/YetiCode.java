@@ -1883,8 +1883,10 @@ final class LoadVar extends Code {
 }
 
 class Apply extends Code {
-    Code fun, arg;
-    int line;
+    final Code fun, arg;
+    final int line;
+    private int arity;
+    BindExpr.Ref ref;
 
     Apply(YetiType.Type res, Code fun, Code arg, int line) {
         type = res;
@@ -1919,8 +1921,20 @@ class Apply extends Code {
                final int line2) {
         if (fun instanceof Function) // hopefully will be inlined.
             return super.apply(arg2, res, line2);
+        if (ref != null)
+            ref.arity = arity;
         return new Code() {
             { type = res; }
+
+            Code apply(final Code arg, final YetiType.Type t, final int line) {
+                Apply res = new Apply(t, this, arg, line);
+                if (ref != null) {
+                    ref.arity = arity + 1;
+                    res.arity = arity + 2;
+                    res.ref = ref;
+                }
+                return res;
+            }
 
             void gen(Ctx ctx) {
                 fun.gen(ctx);
@@ -2220,6 +2234,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private String myClass;
 
     class Ref extends BindRef {
+        int arity;
+
         void gen(Ctx ctx) {
             if (directBind) {
                 st.gen(ctx);
@@ -2240,6 +2256,10 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                     ctx.visitInsn(ACONST_NULL);
                 }
             };
+        }
+
+        Code apply(Code arg, YetiType.Type res, int line) {
+            return new Apply(res, this, arg, line);
         }
 
         boolean flagop(int fl) {
