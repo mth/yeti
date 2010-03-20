@@ -81,7 +81,7 @@ public final class YetiAnalyzer extends YetiType {
         if (node instanceof Bind) {
             Bind bind = (Bind) node;
             Function r = singleBind(bind, scope, depth);
-            if (!((BindExpr) r.selfBind).used) {
+            if (((BindExpr) r.selfBind).refs == null) {
                 unusedBinding(bind);
             }
             return r;
@@ -943,7 +943,7 @@ public final class YetiAnalyzer extends YetiType {
                                      depth)
             : analyze(expr, scope, depth);
         for (int i = bindings.length; --i >= 0;) {
-            if (bindings[i] != null && !bindings[i].used &&
+            if (bindings[i] != null && bindings[i].refs == null &&
                 seq.seqKind != Seq.EVAL) {
                 unusedBinding((Bind) nodes[i]);
             }

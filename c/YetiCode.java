@@ -1921,8 +1921,6 @@ class Apply extends Code {
                final int line2) {
         if (fun instanceof Function) // hopefully will be inlined.
             return super.apply(arg2, res, line2);
-        if (ref != null)
-            ref.arity = arity;
         return new Code() {
             { type = res; }
 
@@ -2227,14 +2225,15 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private Closure closure;
     boolean assigned;
     boolean captured;
-    boolean used;
+    Ref refs;
     int evalId = -1;
     private boolean directBind;
     private String directField;
     private String myClass;
 
     class Ref extends BindRef {
-        int arity;
+        int arity = -1;
+        Ref next;
 
         void gen(Ctx ctx) {
             if (directBind) {
@@ -2259,7 +2258,9 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         }
 
         Code apply(Code arg, YetiType.Type res, int line) {
-            return new Apply(res, this, arg, line);
+            Apply a = new Apply(res, this, arg, line);
+            a.ref = this;
+            return a;
         }
 
         boolean flagop(int fl) {
@@ -2300,14 +2301,14 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     }
 
     public BindRef getRef(int line) {
-        used = true;
         //BindRef res = st.bindRef();
         //if (res == null)
         Ref res = new Ref();
         res.binder = this;
         res.type = st.type;
         res.polymorph = !var && st.polymorph;
-        return res;
+        res.next = refs;
+        return refs = res;
     }
 
     public Object captureIdentity() {
