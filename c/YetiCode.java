@@ -1441,6 +1441,10 @@ final class Capture extends CaptureRef implements CaptureWrapper {
 
     public void genGet(Ctx ctx) {
         if (wrapper != null && !ignoreGet) {
+            // The object got from capture might not be the final value.
+            // for example captured mutable variables are wrapped into array
+            // by the binding, so the wrapper must get correct array index
+            // out of the array in that case.
             wrapper.genGet(ctx);
         }
     }
@@ -2215,6 +2219,55 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private String directField;
     private String myClass;
 
+    class Ref extends BindRef {
+        void gen(Ctx ctx) {
+            if (directBind) {
+                st.gen(ctx);
+            } else {
+                genPreGet(ctx);
+                genGet(ctx);
+            }
+        }
+
+        Code assign(final Code value) {
+            if (!var) {
+                return null;
+            }
+            assigned = true;
+            return new Code() {
+                void gen(Ctx ctx) {
+                    genLocalSet(ctx, value);
+                    ctx.visitInsn(ACONST_NULL);
+                }
+            };
+        }
+
+        boolean flagop(int fl) {
+            if ((fl & ASSIGN) != 0)
+                return var ? assigned = true : false;
+            if ((fl & CONST) != 0)
+                return directBind;
+            if ((fl & DIRECT_BIND) != 0)
+                return directBind || directField != null;
+            if ((fl & MODULE_REQUIRED) != 0)
+                return directField != null;
+            return (fl & PURE) != 0 && !var;
+        }
+
+        CaptureWrapper capture() {
+            captured = true;
+            return var ? BindExpr.this : null;
+        }
+
+        Code unref(boolean force) {
+            return force || directBind ? st : null;
+        }
+
+        void forceDirect() {
+            directField = "";
+        }
+    }
+
     BindExpr(Code expr, boolean var) {
         super(expr);
         this.var = var;
@@ -2230,54 +2283,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         used = true;
         //BindRef res = st.bindRef();
         //if (res == null)
-        BindRef res = new BindRef() {
-            void gen(Ctx ctx) {
-                if (directBind) {
-                    st.gen(ctx);
-                } else {
-                    genPreGet(ctx);
-                    genGet(ctx);
-                }
-            }
-
-            Code assign(final Code value) {
-                if (!var) {
-                    return null;
-                }
-                assigned = true;
-                return new Code() {
-                    void gen(Ctx ctx) {
-                        genLocalSet(ctx, value);
-                        ctx.visitInsn(ACONST_NULL);
-                    }
-                };
-            }
-
-            boolean flagop(int fl) {
-                if ((fl & ASSIGN) != 0)
-                    return var ? assigned = true : false;
-                if ((fl & CONST) != 0)
-                    return directBind;
-                if ((fl & DIRECT_BIND) != 0)
-                    return directBind || directField != null;
-                if ((fl & MODULE_REQUIRED) != 0)
-                    return directField != null;
-                return (fl & PURE) != 0 && !var;
-            }
-
-            CaptureWrapper capture() {
-                captured = true;
-                return var ? BindExpr.this : null;
-            }
-
-            Code unref(boolean force) {
-                return force || directBind ? st : null;
-            }
-
-            void forceDirect() {
-                directField = "";
-            }
-        };
+        Ref res = new Ref();
         res.binder = this;
         res.type = st.type;
         res.polymorph = !var && st.polymorph;
