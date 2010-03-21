@@ -1430,10 +1430,15 @@ final class Capture extends CaptureRef implements CaptureWrapper {
     public void genPreGet(Ctx ctx) {
         if (uncaptured) {
             wrapper.genPreGet(ctx);
-        } else if (localVar == -1) {
+        } else if (localVar < 0) {
             ctx.visitVarInsn(ALOAD, 0);
-            ctx.visitFieldInsn(GETFIELD, ctx.className, id,
-                               captureType());
+            if (localVar < -1) {
+                ctx.intConst(-1 - localVar);
+                ctx.visitInsn(AALOAD);
+            } else {
+                ctx.visitFieldInsn(GETFIELD, ctx.className, id,
+                                   captureType());
+            }
         } else {
             ctx.visitVarInsn(ALOAD, localVar);
         }
