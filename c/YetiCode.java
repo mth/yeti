@@ -1698,6 +1698,7 @@ final class Function extends CapturingClosure implements Binder {
                           null, null).visitEnd();
     }
 
+    // for functions, it generates the function class
     void prepareGen(Ctx ctx) {
         if (merged) {
             // 2 nested lambdas have been optimised into 1
@@ -1799,6 +1800,27 @@ final class Function extends CapturingClosure implements Binder {
     boolean prepareConst(Ctx ctx) {
         if (shared)
             return true;
+
+        // first try determine if we can reduce into method
+        // don't allow selfRef because recursion optimisation is fucking mess
+        // the size win won't be worth the trouble
+        if (selfRef == null && selfBind instanceof BindExpr) {
+            int arityLimit = 99999999;
+            for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
+                 i != null; i = i.next)
+                if (arityLimit > i.arity)
+                    arityLimit = i.arity;
+            int arity = 1;
+            Function i = this;
+            while (arity < arityLimit && i.body instanceof Function) {
+                i = (Function) i.body;
+                ++arity;
+            }
+            if (arity > 0 && arityLimit > 0) {
+                // TODO mark function arity-merge
+            }
+        }
+
         if (merged) {
             Function inner = (Function) body;
             inner.bindName = bindName;
