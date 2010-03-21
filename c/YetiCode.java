@@ -1822,6 +1822,7 @@ final class Function extends CapturingClosure implements Binder {
                 ++arity;
             }
             if (arity > 0 && arityLimit > 0) {
+                merged = false; // merge is pointless in this case
                 // TODO mark function arity-merge
             }
         }
