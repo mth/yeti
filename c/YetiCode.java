@@ -1379,17 +1379,20 @@ abstract class CaptureRef extends BindRef {
         if (args != null) {
             return new SelfApply(res, this, arg, line, args.length);
         }
-        int n = 0;
+
         // We have application with arg x like ((f x) y) z
         // Now we take the inner function of our scope and travel
         // through its outer functions until there is one.
+        //
         // If function that recognizes f as itself is met,
         // we know that this is self-application and how many
         // arguments are needed to do tail-call optimisation.
         // SelfApply with arguments count is given in that case.
+        //
         // SelfApply.apply reduces the argument count until final
         // call is reached, in which case tail-call can be done,
         // if the application happens to be in tail position.
+        int n = 0;
         for (Function f = capturer; f != null; ++n, f = f.outer) {
             if (f.selfBind == ref.binder) {
                 args = new Binder[n];
