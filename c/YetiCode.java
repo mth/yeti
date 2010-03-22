@@ -1310,6 +1310,7 @@ abstract class CaptureRef extends BindRef {
             this.depth = depth;
         }
 
+        // evaluate call arguments and pushes values into stack
         void genArg(Ctx ctx, int i) {
             if (i > 0) {
                 ((SelfApply) fun).genArg(ctx, i - 1);
@@ -1321,16 +1322,21 @@ abstract class CaptureRef extends BindRef {
             if (!tail || depth != 0 ||
                 capturer.argCaptures != argCaptures ||
                 capturer.restart == null) {
+                // regular apply, if tail call optimisation can't be done
                 super.gen(ctx);
                 return;
             }
+            // push all argument values into stack - they must be evaluated
+            // BEFORE modifying any of the arguments for tail-"call"-jump.
             genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
             ctx.visitVarInsn(ASTORE, capturer.argCount);
+            // Now assign the call argument values into argument registers.
             if (argCaptures != null) {
                 for (int i = argCaptures.length; --i >= 0;) {
                     ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
                 }
             }
+            // And just jump into the start of the function...
             ctx.visitJumpInsn(GOTO, capturer.restart);
         }
 
@@ -1343,6 +1349,14 @@ abstract class CaptureRef extends BindRef {
                 return new Apply(res, this, arg, line);
             }
             if (depth == 1) {
+                // All arguments have been applied, now we have to search
+                // their captures in the inner function (by looking for
+                // captures matching the function arguments).
+                // Resulting list will be also given to the inner function,
+                // so it could copy those captures into local registers
+                // to allow tail call.
+                // NB. To understand this, remember that this is self-apply,
+                // so current scope is also the scope of applied function.
                 if (capturer.argCaptures == null) {
                     argCaptures = new Capture[args.length];
                     for (Capture c = capturer.captures; c != null;
@@ -1366,6 +1380,16 @@ abstract class CaptureRef extends BindRef {
             return new SelfApply(res, this, arg, line, args.length);
         }
         int n = 0;
+        // We have application with arg x like ((f x) y) z
+        // Now we take the inner function of our scope and travel
+        // through its outer functions until there is one.
+        // If function that recognizes f as itself is met,
+        // we know that this is self-application and how many
+        // arguments are needed to do tail-call optimisation.
+        // SelfApply with arguments count is given in that case.
+        // SelfApply.apply reduces the argument count until final
+        // call is reached, in which case tail-call can be done,
+        // if the application happens to be in tail position.
         for (Function f = capturer; f != null; ++n, f = f.outer) {
             if (f.selfBind == ref.binder) {
                 args = new Binder[n];
