@@ -1294,6 +1294,8 @@ interface Closure {
     void addVar(BindExpr binder);
 }
 
+// Bind reference that is actually some wrapper created by closure (capturer).
+// This class is mostly useful as a place where tail call optimization happens.
 abstract class CaptureRef extends BindRef {
     Function capturer;
     BindRef ref;
