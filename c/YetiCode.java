@@ -1598,20 +1598,35 @@ final class Function extends CapturingClosure implements Binder {
         }
     };
 
-    String name;
+    String name; // name of the generated function class
     Binder selfBind;
     Code body;
-    String bindName;
+    String bindName; // function (self)binding name, if there is any
+
+    // function body has asked self reference (and it is not mutable)
     private CaptureRef selfRef;
-    Label restart;
+    Label restart; // used by tail-call optimizer
     Function outer;
+    // outer arguments to be saved in local registers (used for tail-call)
     Capture[] argCaptures;
+    // argument value for inlined function
     private Code uncaptureArg;
     int argCount = 1; // Used by CaptureRef
+    // Function has merged with its inner function.
     private boolean merged;
+    // How many times the argument has been used.
+    // This counter is also used by argument nulling to determine
+    // when it safe to assume that argument value is no more needed.
     private int argUsed;
+    // Function is constant that can be statically shared.
+    // Stores function instance in static final _ field and allows
+    // direct-ref no-capture optimisations for function binding.
     private boolean shared;
+    // Module has asked function to be a public (inner) class.
+    // Useful for making Java code happy, if it wants to call the function.
     boolean publish;
+    // Function uses local bindings from its module. Published function
+    // should ensure module initialisation in this case, when called.
     private boolean moduleInit;
 
     final BindRef arg = new BindRef() {
