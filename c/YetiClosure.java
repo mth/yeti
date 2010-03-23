@@ -709,39 +709,48 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     private void prepareMethod(Ctx ctx) {
-        // Removes duplicate captures and calls captureInit
-        // (which sets captures localVar for our case).
-        mergeCaptures(ctx);
-
         // The make-a-method trick is actually damn easy I think.
         // The captures of the innermost joined lambda must be set
         // to refer to the method arguments and closure array instead.
         // This is done by mapping our arguments and outer capture set
         // into good vars. After that the inner captures can be scanned
         // and made to point to those values.
- 
+
+        // Map captures using binder as identity
+        Map captureMapping = null;
+        
         // NOP for 1-arg functions - they don't have argument captures and
         // the outer captures localVar's are already set by mergeCaptures.
+        // This has to be done before mergeCaptures to have all binders.
         if (methodImpl != this) {
-            // Map captures using binder as identity
-            Map captureMapping = new IdentityHashMap();
+            captureMapping = new IdentityHashMap();
 
             // Function is binder for it's argument
             int argCounter = 0;
-            for (Function i = this; i != methodImpl; i = (Function) i.body)
-                captureMapping.put(i, new Integer(++argCounter));
+            for (Function i = this; i != methodImpl; i = (Function) i.body) {
+                // just to hold localVar
+                Capture tmp = new Capture();
+                tmp.localVar = ++argCounter;
+                captureMapping.put(i, tmp);
+            }
             methodImpl.argVar = ++argCounter;
 
             for (Capture c = captures; c != null; c = c.next)
-                captureMapping.put(c.binder, new Integer(c.localVar));
+                captureMapping.put(c.binder, c);
+        }
+        
 
-            // Hijack the inner functions capture mapping...
+        // Removes duplicate captures and calls captureInit
+        // (which sets captures localVar for our case).
+        mergeCaptures(ctx);
+
+        // Hijack the inner functions capture mapping...
+        if (captureMapping != null)
             for (Capture c = methodImpl.captures; c != null; c = c.next) {
                 Object mapped = captureMapping.get(c.binder);
                 if (mapped != null)
-                    c.localVar = ((Integer) mapped).intValue();
+                    c.localVar = ((Capture) mapped).localVar;
             }
-        }
 
         // TODO generate the damned method.
     }
