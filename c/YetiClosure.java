@@ -526,11 +526,6 @@ abstract class CapturingClosure extends AClosure {
 }
 
 final class Function extends CapturingClosure implements Binder {
-    // impl - Function has merged with its inner function.
-    private static final int MERGED = 1;
-    // impl - Function has optimised into 
-    static final int METHOD = 2;
-
     private static final Code NEVER = new Code() {
         void gen(Ctx ctx) {
             throw new UnsupportedOperationException();
@@ -545,7 +540,9 @@ final class Function extends CapturingClosure implements Binder {
     // function body has asked self reference (and the ref is not mutable)
     private CaptureRef selfRef;
     Label restart; // used by tail-call optimizer
-    Function outer;
+    Function outer; // outer function of directly-nested function
+    // Marks function optimised as method and points to it's inner-most lambda
+    Function methodImpl;
     // outer arguments to be saved in local registers (used for tail-call)
     Capture[] argCaptures;
     // argument value for inlined function
@@ -803,19 +800,24 @@ final class Function extends CapturingClosure implements Binder {
                 if (arityLimit > i.arity)
                     arityLimit = i.arity;
             int arity = 1;
-            Function i = this;
-            while (arity < arityLimit && i.body instanceof Function) {
-                i = (Function) i.body;
+            Function impl = this;
+            while (arity < arityLimit && impl.body instanceof Function) {
+                impl = (Function) impl.body;
                 ++arity;
             }
             if (arity > 0 && arityLimit > 0) {
+                this.methodImpl = impl;
                 // Merged ones are a bit tricky - they're capture set is
                 // merged into their inner one, where is also their own
                 // argument. Also their inner ones arg is messed up.
                 // Although optimising them would be good for speed,
                 // maybe it would be simpler to avoid those.
-                //
-                // TODO mark function arity-merge
+                // XXX methodImpl should clear merge flag at some point to avoid mess
+                // XXX BindExpr's arity should be set to the arity used here?
+            }
+
+            //this shoul move into prepareGen to not capture unneeded shit
+            if (methodImpl != null) {
                 // XXX
                 // The make-a-method trick is actually damn easy I think.
                 // We have to convince the captures of the innermost
@@ -837,16 +839,17 @@ final class Function extends CapturingClosure implements Binder {
                 // Create capture mapping
                 int argCounter = 0, captureCounter = -1;
 
-                // map captures using binder as identify
+                // map captures using binder as identity
                 Map captureMapping = new IdentityHashMap();
-                for (Function f = this; i != f; i = (Function) i.body)
-                    captureMapping.put(f, new Integer(++argCounter));
-                i.argVar = ++argCounter;
+                // Function is binder for it's argument
+                for (Function i = this; i != methodImpl; i = (Function) i.body)
+                    captureMapping.put(i, new Integer(++argCounter));
+                methodImpl.argVar = ++argCounter;
                 for (Capture c = captures; c != null; c = c.next)
                     captureMapping.put(c.binder, new Integer(0));
 
                 // Hijack the inner functions capture mapping...
-                for (Capture c = i.captures; c != null; c = c.next) {
+                for (Capture c = methodImpl.captures; c != null; c = c.next) {
                     Object mapped = captureMapping.get(c.binder);
                     if (mapped != null) {
                         int v = ((Integer) mapped).intValue();
