@@ -48,9 +48,7 @@ do argv: {
         if gcj then
             ctx#isGCJ := true
         fi;
-        if broken then
-            ctx#broken := true
-        fi;
+        ctx#broken := broken;
         if noframes then
             ctx#classWriterFlags := 0
         fi;
