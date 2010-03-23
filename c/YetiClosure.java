@@ -88,7 +88,7 @@ class Apply extends Code {
         ctx.visitLine(to.line);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
         if (to == this) {
-            ctx.visitApply(to.arg, line);
+            ctx.visitApply(arg, line);
         } else {
             to.arg.gen(ctx);
             arg.gen(ctx);
