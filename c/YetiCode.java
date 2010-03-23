@@ -1456,7 +1456,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private String myClass;
 
     class Ref extends BindRef {
-        int arity = -1;
+        int arity;
         Ref next;
 
         void gen(Ctx ctx) {
@@ -1483,7 +1483,9 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
         Code apply(Code arg, YetiType.Type res, int line) {
             Apply a = new Apply(res, this, arg, line);
-            a.ref = this;
+            if (st instanceof Function) {
+                a.ref = this;
+            }
             return a;
         }
 

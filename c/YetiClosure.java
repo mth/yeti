@@ -34,7 +34,7 @@ import yeti.renamed.asm3.Label;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 interface Closure {
     // Closures "wrap" references to the outside world.
@@ -64,6 +64,14 @@ class Apply extends Code {
     }
 
     void gen(Ctx ctx) {
+        // TODO here we should check whether fun is BindRef or Apply to
+        // function optimised into method. in this case such method call
+        // should be generated. This means that the inner function should be
+        // marked! (Apply) fun has to be dissected then to extract all args.
+        if (ref != null) {
+            Function f = (Function) ((BindExpr) ref.binder).st;
+        }
+
         if (fun instanceof Function) {
             Function f = (Function) fun;
             LoadVar arg_ = new LoadVar();
@@ -77,11 +85,6 @@ class Apply extends Code {
                 return;
             }
         }
-
-        // TODO here we should check whether fun is BindRef or Apply to
-        // function optimised into method. in this case such method call
-        // should be generated. This means that the inner function should be
-        // marked! (Apply) fun has to be dissected then to extract all args.
 
         Apply to = (arity & 1) != 0 ? (Apply) fun : this;
         to.fun.gen(ctx);
@@ -345,7 +348,7 @@ final class Capture extends CaptureRef implements CaptureWrapper {
     Capture next;
     CaptureWrapper wrapper;
     Object identity;
-    int localVar = -1; // -1 - use this
+    int localVar = -1; // -1 - use this (TryCatch captures use 0 localVar)
     boolean uncaptured;
     boolean ignoreGet;
     private String refType;
@@ -829,40 +832,25 @@ final class Function extends CapturingClosure implements Binder {
                 // to point to those values;
                 //
                 // XXX we should really do this after uncapture of direct refs!
+                // Infact, probably in prepareGen after mergeCaptures.
 
                 // Create capture mapping
                 int argCounter = 0, captureCounter = -1;
-                Integer undef = new Integer(0);
-                Map captureMapping = new HashMap();
-                for (Function f = this; i != f; i = (Function) i.body) {
-                    // don't allocate yet - some might be direct refs
-                    captureMapping.put(f.arg, new Integer(++argCounter));
-                }
-                Capture c;
-                for (c = captures; c != null; c = c.next) {
-                    captureMapping.put(c, undef);
-                }
+
+                // map captures using binder as identify
+                Map captureMapping = new IdentityHashMap();
+                for (Function f = this; i != f; i = (Function) i.body)
+                    captureMapping.put(f, new Integer(++argCounter));
                 i.argVar = ++argCounter;
+                for (Capture c = captures; c != null; c = c.next)
+                    captureMapping.put(c.binder, new Integer(0));
 
                 // Hijack the inner functions capture mapping...
-                c = i.captures;
-                captures = null; // rebuild the capture list
-                for (Capture next; c != null; c = next) {
-                    next = c.next;
-                    for (Capture r = c;; r = (Capture) r.ref) {
-                        Integer mapped = (Integer) captureMapping.get(r);
-                        if (mapped == undef) {
-                            mapped = new Integer(--captureCounter);
-                            captureMapping.put(r, mapped);
-                            r.next = captures;
-                            captures = r;
-                        }
-                        if (mapped != null) {
-                            r.localVar = mapped.intValue();
-                            break;
-                        }
-                        if (!(r.ref instanceof Capture))
-                            break;
+                for (Capture c = i.captures; c != null; c = c.next) {
+                    Object mapped = captureMapping.get(c.binder);
+                    if (mapped != null) {
+                        int v = ((Integer) mapped).intValue();
+                        c.localVar = v == 0 ? --captureCounter : v;
                     }
                 }
             }
