@@ -726,11 +726,11 @@ final class Function extends CapturingClosure implements Binder {
 
             // Function is binder for it's argument
             int argCounter = 0;
-            for (Function i = this; i != methodImpl; i = (Function) i.body) {
+            for (Function f = this; f != methodImpl; f = (Function) f.body) {
                 // just to hold localVar
                 Capture tmp = new Capture();
                 tmp.localVar = ++argCounter;
-                captureMapping.put(i, tmp);
+                captureMapping.put(f, tmp);
             }
             methodImpl.argVar = ++argCounter;
 
