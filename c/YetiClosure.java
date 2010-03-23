@@ -790,10 +790,8 @@ final class Function extends CapturingClosure implements Binder {
         if (shared) // already optimised into static constant value
             return true;
 
-        // first try determine if we can reduce into method
-        // don't allow selfRef because recursion optimisation is fucking mess
-        // the size win won't be worth the trouble
-        if (selfRef == null && selfBind instanceof BindExpr) {
+        // First try determine if we can reduce into method.
+        if (selfBind instanceof BindExpr) {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
                  i != null; i = i.next)
@@ -894,5 +892,3 @@ final class RootClosure extends AClosure {
         code.gen(ctx);
     }
 }
-
-
