@@ -75,9 +75,9 @@
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
-           includes="std.yeti" preload="" icast="${icast}"/>
+           includes="std.yeti" preload="" icast="${icast}" experimental="true"/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           includes="*.yeti" excludes="std.yeti"
+           includes="*.yeti" excludes="std.yeti" experimental="true"
            preload="yeti/lang/std" icast="${icast}">
         <classpath>
             <path location="${basedir}/.build/std"/>

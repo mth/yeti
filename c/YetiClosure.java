@@ -738,6 +738,7 @@ final class Function extends CapturingClosure implements Binder {
             for (Capture c = captures; c != null; c = c.next)
                 captureMapping.put(c.binder, c);
         }
+        //System.err.println("argVar = " + methodImpl.argVar);
         
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
@@ -767,16 +768,14 @@ final class Function extends CapturingClosure implements Binder {
 
         Ctx m = ctx.newMethod(ACC_STATIC, bindName, sig.toString());
         m.localVarCount = methodImpl.argVar + 1; // capturearray, args
-        genClosureInit(m);
-        m.visitLabel(restart = new Label());
-        body.gen(m);
-        restart = null;
+        methodImpl.genClosureInit(m);
+        m.visitLabel(methodImpl.restart = new Label());
+        methodImpl.body.gen(m);
+        methodImpl.restart = null;
         m.visitInsn(ARETURN);
         m.closeMethod();
 
-        if (captureCount == 0) {
-            ctx.visitInsn(ACONST_NULL);
-        } else {
+        if (!shared) {
             ctx.intConst(captureCount);
             ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
         }
@@ -913,7 +912,7 @@ final class Function extends CapturingClosure implements Binder {
             Function impl = this;
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
-            System.err.println("XX " + arity + " <= " + arityLimit);
+            //System.err.println("XX " + arity + " <= " + arityLimit);
             // Merged ones are a bit tricky - they're capture set is
             // merged into their inner one, where is also their own
             // argument. Also their inner ones arg is messed up.
@@ -924,7 +923,7 @@ final class Function extends CapturingClosure implements Binder {
                     merged = false;
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
-                System.err.println("METH! " + methodImpl);
+                //System.err.println("METH! " + methodImpl);
             }
         }
 
