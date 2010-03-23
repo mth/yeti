@@ -719,9 +719,9 @@ final class Function extends CapturingClosure implements Binder {
         // Map captures using binder as identity
         Map captureMapping = null;
         
-        // NOP for 1-arg functions - they don't have argument captures and
-        // the outer captures localVar's are already set by mergeCaptures.
         // This has to be done before mergeCaptures to have all binders.
+        // NOP for 1-arg functions - they don't have argument captures and
+        // the outer captures localVar's will be set by mergeCaptures.
         if (methodImpl != this) {
             captureMapping = new IdentityHashMap();
 
@@ -739,7 +739,6 @@ final class Function extends CapturingClosure implements Binder {
                 captureMapping.put(c.binder, c);
         }
         
-
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
         mergeCaptures(ctx);
