@@ -1848,8 +1848,10 @@ final class Function extends CapturingClosure implements Binder {
                 (fl & (PURE | CONST)) != 0 && (shared || captures == null);
     }
 
+    // Check whether all captures are actually static constants.
+    // If so, the function value should also be optimised into shared constant.
     boolean prepareConst(Ctx ctx) {
-        if (shared)
+        if (shared) // already optimised into static constant value
             return true;
 
         // first try determine if we can reduce into method
@@ -1874,6 +1876,7 @@ final class Function extends CapturingClosure implements Binder {
         }
 
         if (merged) {
+            // merged functions are hollow, their juice is in the inner function
             Function inner = (Function) body;
             inner.bindName = bindName;
             inner.publish = publish;
@@ -1883,8 +1886,12 @@ final class Function extends CapturingClosure implements Binder {
             }
             return false;
         }
+
+        // this can be optimised into "const x", so don't touch.
         if (argUsed == 0 && argCount == 1 && body.flagop(PURE))
             return false; //captures == null;
+
+        // Uncapture the direct bindings.
         Capture prev = null;
         boolean isConst = true;
         for (Capture c = captures; c != null; c = c.next)
@@ -1899,6 +1906,9 @@ final class Function extends CapturingClosure implements Binder {
                     isConst = false;
                 prev = c;
             }
+        
+        // If all captures were uncaptured, then the function can
+        // (and will) be optimised into shared static constant.
         if (isConst) {
             shared = true;
             prepareGen(ctx);
@@ -1911,6 +1921,7 @@ final class Function extends CapturingClosure implements Binder {
             ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         } else if (!merged && argUsed == 0 && body.flagop(PURE) &&
                    uncapture(NEVER)) {
+            // This lambda can be optimised into "const x", so do it.
             ctx.visitTypeInsn(NEW, "yeti/lang/Const");
             ctx.visitInsn(DUP);
             body.gen(ctx);
