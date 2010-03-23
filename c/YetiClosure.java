@@ -64,16 +64,15 @@ class Apply extends Code {
     }
 
     void gen(Ctx ctx) {
-        // TODO here we should check whether fun is BindRef or Apply to
-        // function optimised into method. in this case such method call
-        // should be generated. This means that the inner function should be
-        // marked! (Apply) fun has to be dissected then to extract all args.
-        if (ref != null) {
-            Function f = (Function) ((BindExpr) ref.binder).st;
+        Function f;
+
+        if (ref != null &&
+            (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null) {
+            // XXX we've been pretrified! generate method call here
         }
 
         if (fun instanceof Function) {
-            Function f = (Function) fun;
+            f = (Function) fun;
             LoadVar arg_ = new LoadVar();
             // inline direct calls
             // TODO: constants don't need a temp variable
