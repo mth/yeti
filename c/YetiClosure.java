@@ -740,17 +740,44 @@ final class Function extends CapturingClosure implements Binder {
         
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
-        mergeCaptures(ctx);
+        int captureCount = mergeCaptures(ctx);
 
         // Hijack the inner functions capture mapping...
         if (captureMapping != null)
             for (Capture c = methodImpl.captures; c != null; c = c.next) {
                 Object mapped = captureMapping.get(c.binder);
-                if (mapped != null)
+                if (mapped != null) {
                     c.localVar = ((Capture) mapped).localVar;
+                    c.ignoreGet = c.localVar > 0;
+                }
             }
 
-        // TODO generate the damned method.
+        if ((bindName = mangle(bindName)).startsWith("_") ||
+                bindName.equals("apply"))
+            bindName += ctx.methodCounter++;
+
+        name = ctx.className;
+        StringBuffer sig = new StringBuffer("(");
+        for (int i = methodImpl.argVar + 2; --i >= 0;) {
+            if (i == 0)
+                sig.append(')');
+            sig.append("Ljava/lang/Object;");
+        }
+
+        Ctx m = ctx.newMethod(ACC_STATIC, bindName, sig.toString());
+        genClosureInit(m);
+        m.visitLabel(restart = new Label());
+        body.gen(m);
+        restart = null;
+        m.visitInsn(ARETURN);
+        m.closeMethod();
+
+        if (captureCount == 0) {
+            ctx.visitInsn(ACONST_NULL);
+        } else {
+            ctx.intConst(captureCount);
+            ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+        }
     }
 
     // For functions, this generates the function class
