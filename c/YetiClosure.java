@@ -900,7 +900,7 @@ final class Function extends CapturingClosure implements Binder {
             return true;
 
         // First try determine if we can reduce into method.
-        if (false && selfBind instanceof BindExpr) {
+        if (selfBind instanceof BindExpr) {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
                  i != null; i = i.next)
