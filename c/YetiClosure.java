@@ -560,16 +560,15 @@ final class Function extends CapturingClosure implements Binder {
     private CaptureRef selfRef;
     Label restart; // used by tail-call optimizer
     Function outer; // outer function of directly-nested function
-    // Marks function optimised as method and points to it's inner-most lambda
-    Function methodImpl;
     // outer arguments to be saved in local registers (used for tail-call)
     Capture[] argCaptures;
     // argument value for inlined function
     private Code uncaptureArg;
     // register used by argument (2 for merged inner function)
     int argVar = 1;
-    private int impl; // impl mode
-    // impl - Function has been merged with its inner function.
+    // Marks function optimised as method and points to it's inner-most lambda
+    Function methodImpl;
+    // Function has been merged with its inner function.
     private boolean merged; 
     // How many times the argument has been used.
     // This counter is also used by argument nulling to determine
