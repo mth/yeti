@@ -1603,7 +1603,7 @@ final class Function extends CapturingClosure implements Binder {
     Code body;
     String bindName; // function (self)binding name, if there is any
 
-    // function body has asked self reference (and it is not mutable)
+    // function body has asked self reference (and the ref is not mutable)
     private CaptureRef selfRef;
     Label restart; // used by tail-call optimizer
     Function outer;
