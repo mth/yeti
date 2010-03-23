@@ -77,6 +77,10 @@ class Apply extends Code {
                 return;
             }
         }
+        // TODO here we should check whether fun is BindRef or Apply to
+        // function optimised into method. in this case such method call
+        // should be generated. This means that the inner function should be
+        // marked! (Apply) fun has to be dissected then to extract all args.
         fun.gen(ctx);
         // XXX this cast could be optimised away sometimes
         //  - when the fun really is Fun by java types
