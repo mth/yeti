@@ -267,7 +267,7 @@ abstract class CaptureRef extends BindRef {
             // push all argument values into stack - they must be evaluated
             // BEFORE modifying any of the arguments for tail-"call"-jump.
             genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
-            ctx.visitVarInsn(ASTORE, capturer.argCount);
+            ctx.visitVarInsn(ASTORE, capturer.argVar);
             // Now assign the call argument values into argument registers.
             if (argCaptures != null) {
                 for (int i = argCaptures.length; --i >= 0;) {
@@ -547,7 +547,8 @@ final class Function extends CapturingClosure implements Binder {
     Capture[] argCaptures;
     // argument value for inlined function
     private Code uncaptureArg;
-    int argCount = 1; // Used by CaptureRef
+    // register used by argument (2 for merged inner function)
+    int argVar = 1;
     // Function has merged with its inner function.
     private boolean merged;
     // How many times the argument has been used.
@@ -570,11 +571,11 @@ final class Function extends CapturingClosure implements Binder {
             if (uncaptureArg != null) {
                 uncaptureArg.gen(ctx);
             } else {
-                ctx.visitVarInsn(ALOAD, argCount);
+                ctx.visitVarInsn(ALOAD, argVar);
                 // inexact nulling...
                 if (--argUsed == 0 && ctx.tainted == 0) {
                     ctx.visitInsn(ACONST_NULL);
-                    ctx.visitVarInsn(ASTORE, argCount);
+                    ctx.visitVarInsn(ASTORE, argVar);
                 }
             }
         }
@@ -611,9 +612,9 @@ final class Function extends CapturingClosure implements Binder {
         if (body instanceof Function) {
             Function bodyFun = (Function) body;
             bodyFun.outer = this;
-            if (argCount == 1 && !bodyFun.merged && bodyFun.selfRef == null) {
+            if (argVar == 1 && !bodyFun.merged && bodyFun.selfRef == null) {
                 merged = true;
-                ++bodyFun.argCount;
+                ++bodyFun.argVar;
             }
         }
     }
@@ -702,7 +703,7 @@ final class Function extends CapturingClosure implements Binder {
 
         publish &= shared;
         String funClass =
-            argCount == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
+            argVar == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
         Ctx fun = ctx.newClass(publish ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
                                        : ACC_SUPER + ACC_FINAL,
                                name, funClass, null);
@@ -712,12 +713,12 @@ final class Function extends CapturingClosure implements Binder {
         mergeCaptures(fun);
         fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 
-        Ctx apply = argCount == 2
+        Ctx apply = argVar == 2
             ? fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")
             : fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
                 "(Ljava/lang/Object;)Ljava/lang/Object;");
-        apply.localVarCount = argCount + 1; // this, arg
+        apply.localVarCount = argVar + 1; // this, arg
         
         if (argCaptures != null) {
             // Tail recursion needs all args to be in local registers
@@ -822,7 +823,7 @@ final class Function extends CapturingClosure implements Binder {
         }
 
         // this can be optimised into "const x", so don't touch.
-        if (argUsed == 0 && argCount == 1 && body.flagop(PURE))
+        if (argUsed == 0 && argVar == 1 && body.flagop(PURE))
             return false; //captures == null;
 
         // Uncapture the direct bindings.
