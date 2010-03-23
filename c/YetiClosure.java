@@ -699,17 +699,63 @@ final class Function extends CapturingClosure implements Binder {
 
     // called by mergeCaptures
     void captureInit(Ctx fun, Capture c, int n) {
-        // c.getId() initialises the captures id as a side effect
-        fun.cw.visitField(0, c.getId(fun), c.captureType(),
-                          null, null).visitEnd();
+        if (methodImpl == null) {
+            // c.getId() initialises the captures id as a side effect
+            fun.cw.visitField(0, c.getId(fun), c.captureType(),
+                              null, null).visitEnd();
+        } else {
+            c.localVar = -2 - n;
+        }
+    }
+
+    private void prepareMethod(Ctx ctx) {
+        // Removes duplicate captures and calls captureInit
+        // (which sets captures localVar for our case).
+        mergeCaptures(ctx);
+
+        // The make-a-method trick is actually damn easy I think.
+        // The captures of the innermost joined lambda must be set
+        // to refer to the method arguments and closure array instead.
+        // This is done by mapping our arguments and outer capture set
+        // into good vars. After that the inner captures can be scanned
+        // and made to point to those values.
+ 
+        // NOP for 1-arg functions - they don't have argument captures and
+        // the outer captures localVar's are already set by mergeCaptures.
+        if (methodImpl != this) {
+            // Map captures using binder as identity
+            Map captureMapping = new IdentityHashMap();
+
+            // Function is binder for it's argument
+            int argCounter = 0;
+            for (Function i = this; i != methodImpl; i = (Function) i.body)
+                captureMapping.put(i, new Integer(++argCounter));
+            methodImpl.argVar = ++argCounter;
+
+            for (Capture c = captures; c != null; c = c.next)
+                captureMapping.put(c.binder, new Integer(c.localVar));
+
+            // Hijack the inner functions capture mapping...
+            for (Capture c = methodImpl.captures; c != null; c = c.next) {
+                Object mapped = captureMapping.get(c.binder);
+                if (mapped != null)
+                    c.localVar = ((Integer) mapped).intValue();
+            }
+        }
+
+        // TODO generate the damned method.
     }
 
     // For functions, this generates the function class
     // An instance is also given, but capture fields are not initialised
     // (the captures are set later in the finishGen).
     void prepareGen(Ctx ctx) {
-        if (merged) {
-            // 2 nested lambdas have been optimised into 1
+        if (methodImpl != null) {
+            prepareMethod(ctx);
+            return;
+        }
+
+        if (merged) { // 2 nested lambdas have been optimised into 1
             Function inner = (Function) body;
             inner.bindName = bindName;
             inner.prepareGen(ctx);
@@ -818,62 +864,19 @@ final class Function extends CapturingClosure implements Binder {
                  i != null; i = i.next)
                 if (arityLimit > i.arity)
                     arityLimit = i.arity;
-            int arity = 1;
+            int arity = 0;
             Function impl = this;
-            while (arity < arityLimit && impl.body instanceof Function) {
+            while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
-                ++arity;
-            }
+            // Merged ones are a bit tricky - they're capture set is
+            // merged into their inner one, where is also their own
+            // argument. Also their inner ones arg is messed up.
+            // Easier to not touch them, although it would be good for speed.
             if (arity > 0 && arityLimit > 0) {
-                this.methodImpl = impl;
-                // Merged ones are a bit tricky - they're capture set is
-                // merged into their inner one, where is also their own
-                // argument. Also their inner ones arg is messed up.
-                // Although optimising them would be good for speed,
-                // maybe it would be simpler to avoid those.
-                // XXX methodImpl should clear merge flag at some point to avoid mess
-                // XXX BindExpr's arity should be set to the arity used here?
-            }
-
-            //this shoul move into prepareGen to not capture unneeded shit
-            if (methodImpl != null) {
-                // XXX
-                // The make-a-method trick is actually damn easy I think.
-                // We have to convince the captures of the innermost
-                // joined lambda to refer to the method arguments and
-                // closure array instead.
-                // A little problem is, that that we have to somehow
-                // tell them where to get the shit...
-                //
-                // Now to make them know this, we have to first find them out.
-                // (or alternatively they have to find out us?)
-                // Probably easiest thing is to map our arguments and
-                // outer capture set into good vars.
-                // After that the inner captures can be scanned and made
-                // to point to those values;
-                //
-                // XXX we should really do this after uncapture of direct refs!
-                // Infact, probably in prepareGen after mergeCaptures.
-
-                // Create capture mapping
-                int argCounter = 0, captureCounter = -1;
-
-                // map captures using binder as identity
-                Map captureMapping = new IdentityHashMap();
-                // Function is binder for it's argument
-                for (Function i = this; i != methodImpl; i = (Function) i.body)
-                    captureMapping.put(i, new Integer(++argCounter));
-                methodImpl.argVar = ++argCounter;
-                for (Capture c = captures; c != null; c = c.next)
-                    captureMapping.put(c.binder, new Integer(0));
-
-                // Hijack the inner functions capture mapping...
-                for (Capture c = methodImpl.captures; c != null; c = c.next) {
-                    Object mapped = captureMapping.get(c.binder);
-                    if (mapped != null) {
-                        int v = ((Integer) mapped).intValue();
-                        c.localVar = v == 0 ? --captureCounter : v;
-                    }
+                methodImpl = impl.merged ? impl.outer : impl;
+                if (merged) { // steal captures and unmerge :)
+                    captures = ((Function) body).captures;
+                    merged = false;
                 }
             }
         }
