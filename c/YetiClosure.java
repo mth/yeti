@@ -68,6 +68,8 @@ class Apply extends Code {
 
         // Function sets its methodImpl field, if it has determined that
         // it optimises itself into simple method.
+        // TODO maybe only methodImpl is needed here
+        //      in this case should assign f directly to methodImpl
         if (ref != null &&
             (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null) {
             // first argument is function value (captures array really)
