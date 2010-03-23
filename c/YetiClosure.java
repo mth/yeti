@@ -66,10 +66,28 @@ class Apply extends Code {
     void gen(Ctx ctx) {
         Function f;
 
+        // Function sets its methodImpl field, if it has determined that
+        // it optimises itself into simple method.
         if (ref != null &&
             (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null) {
-            // XXX we've been pretrified! generate method call here
-        }
+            // first argument is function value (captures array really)
+            StringBuffer sig = new StringBuffer("(Ljava/lang/Object;");
+            Apply a = this; // "this" is the last argument applied, so reverse
+            Code[] args = new Code[f.methodImpl.argVar];
+            for (int i = args.length; --i > 0; a = (Apply) a.fun)
+                args[i] = a.arg;
+            args[0] = a.arg; // out-of-cycle as we need "a" for fun
+            a.fun.gen(ctx);
+            for (int i = 0; i < args.length; ++i) {
+                args[i].gen(ctx);
+                sig.append("Ljava/lang/Object;");
+            }
+            sig.append(")Ljava/lang/Object;");
+            // TODO bindName is probably wrong
+            ctx.visitMethodInsn(INVOKEVIRTUAL, f.name,
+                                f.bindName, sig.toString());
+            return;
+       }
 
         if (fun instanceof Function) {
             f = (Function) fun;
