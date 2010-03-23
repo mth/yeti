@@ -73,7 +73,7 @@ class Apply extends Code {
         if (ref != null &&
             (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null) {
             // first argument is function value (captures array really)
-            StringBuffer sig = new StringBuffer("(Ljava/lang/Object;");
+            StringBuffer sig = new StringBuffer("([Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
             Code[] args = new Code[f.methodImpl.argVar];
             for (int i = args.length; --i > 0; a = (Apply) a.fun)
@@ -757,7 +757,7 @@ final class Function extends CapturingClosure implements Binder {
             bindName += ctx.methodCounter++;
 
         name = ctx.className;
-        StringBuffer sig = new StringBuffer("(");
+        StringBuffer sig = new StringBuffer("([");
         for (int i = methodImpl.argVar + 2; --i >= 0;) {
             if (i == 0)
                 sig.append(')');
@@ -864,20 +864,28 @@ final class Function extends CapturingClosure implements Binder {
             ((Function) body).finishGen(ctx);
             return;
         }
+        boolean meth = methodImpl != null;
+        int counter = -1;
         // Capture a closure
         for (Capture c = captures; c != null; c = c.next) {
             if (c.uncaptured)
                 continue;
             ctx.visitInsn(DUP);
+            if (meth)
+                ctx.intConst(++counter);
             if (c.wrapper == null) {
                 c.ref.gen(ctx);
                 ctx.captureCast(c.captureType());
             } else {
                 c.wrapper.genPreGet(ctx);
             }
-            ctx.visitFieldInsn(PUTFIELD, name, c.id, c.captureType());
+            if (meth)
+                ctx.visitInsn(AASTORE);
+            else
+                ctx.visitFieldInsn(PUTFIELD, name, c.id, c.captureType());
         }
-        ctx.forceType("yeti/lang/Fun");
+        if (!meth)
+            ctx.forceType("yeti/lang/Fun");
     }
 
     boolean flagop(int fl) {
@@ -958,7 +966,10 @@ final class Function extends CapturingClosure implements Binder {
 
     void gen(Ctx ctx) {
         if (shared) {
-            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+            if (methodImpl == null)
+                ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+            else
+                ctx.visitInsn(ACONST_NULL);
         } else if (!merged && argUsed == 0 && body.flagop(PURE) &&
                    uncapture(NEVER)) {
             // This lambda can be optimised into "const x", so do it.
