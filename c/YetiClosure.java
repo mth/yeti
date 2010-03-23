@@ -77,46 +77,35 @@ class Apply extends Code {
                 return;
             }
         }
+
         // TODO here we should check whether fun is BindRef or Apply to
         // function optimised into method. in this case such method call
         // should be generated. This means that the inner function should be
         // marked! (Apply) fun has to be dissected then to extract all args.
-        fun.gen(ctx);
-        // XXX this cast could be optimised away sometimes
-        //  - when the fun really is Fun by java types
-        ctx.visitLine(line);
+
+        Apply to = (arity & 1) != 0 ? (Apply) fun : this;
+        to.fun.gen(ctx);
+        ctx.visitLine(to.line);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-        ctx.visitApply(arg, line);
+        if (to == this) {
+            ctx.visitApply(to.arg, line);
+        } else {
+            to.arg.gen(ctx);
+            arg.gen(ctx);
+            ctx.visitLine(line);
+            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
+                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+        }
     }
 
-    Code apply(final Code arg2, final YetiType.Type res,
-               final int line2) {
-        if (fun instanceof Function) // hopefully will be inlined.
-            return super.apply(arg2, res, line2);
-        return new Code() {
-            { type = res; }
-
-            Code apply(final Code arg, final YetiType.Type t, final int line) {
-                Apply res = new Apply(t, this, arg, line);
-                if (ref != null) {
-                    ref.arity = arity + 1;
-                    res.arity = arity + 2;
-                    res.ref = ref;
-                }
-                return res;
-            }
-
-            void gen(Ctx ctx) {
-                fun.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-                arg.gen(ctx);
-                arg2.gen(ctx);
-                ctx.visitLine(line2);
-                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
-                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-            }
-        };
+    Code apply(Code arg, final YetiType.Type res, int line) {
+        Apply a = new Apply(res, this, arg, line);
+        a.arity = arity + 1;
+        if (ref != null) {
+            ref.arity = a.arity;
+            a.ref = ref;
+        }
+        return a;
     }
 }
 
@@ -534,6 +523,11 @@ abstract class CapturingClosure extends AClosure {
 }
 
 final class Function extends CapturingClosure implements Binder {
+    // impl - Function has merged with its inner function.
+    private static final int MERGED = 1;
+    // impl - Function has optimised into 
+    static final int METHOD = 2;
+
     private static final Code NEVER = new Code() {
         void gen(Ctx ctx) {
             throw new UnsupportedOperationException();
@@ -555,8 +549,9 @@ final class Function extends CapturingClosure implements Binder {
     private Code uncaptureArg;
     // register used by argument (2 for merged inner function)
     int argVar = 1;
-    // Function has merged with its inner function.
-    private boolean merged;
+    private int impl; // impl mode
+    // impl - Function has been merged with its inner function.
+    private boolean merged; 
     // How many times the argument has been used.
     // This counter is also used by argument nulling to determine
     // when it safe to assume that argument value is no more needed.
