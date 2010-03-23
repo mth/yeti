@@ -87,7 +87,7 @@
 
 <target name="yeti" depends="compiler,checkmod,modules">
     <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
-           icast="${icast}">
+           icast="${icast}" experimental="true">
         <classpath>
             <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>

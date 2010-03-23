@@ -89,6 +89,7 @@ final class CompileCtx implements Opcodes {
     private List unstoredClasses;
     List postGen = new ArrayList();
     boolean isGCJ;
+    boolean broken; // enable experimental/broken features
     ClassFinder classPath;
     Map types = new HashMap();
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
@@ -1485,6 +1486,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             Apply a = new Apply(res, this, arg, line);
             if (st instanceof Function) {
                 a.ref = this;
+                arity = 1;
             }
             return a;
         }

@@ -53,7 +53,7 @@ interface CaptureWrapper {
 class Apply extends Code {
     final Code fun, arg;
     final int line;
-    private int arity;
+    private int arity = 1;
     BindExpr.Ref ref;
 
     Apply(YetiType.Type res, Code fun, Code arg, int line) {
@@ -71,7 +71,8 @@ class Apply extends Code {
         // TODO maybe only methodImpl is needed here
         //      in this case should assign f directly to methodImpl
         if (ref != null &&
-            (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null) {
+               (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null
+               /*&& arity < f.methodImpl.argVar*/) {
             // first argument is function value (captures array really)
             StringBuffer sig = new StringBuffer("([Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
@@ -86,10 +87,10 @@ class Apply extends Code {
             }
             sig.append(")Ljava/lang/Object;");
             // TODO bindName is probably wrong
-            ctx.visitMethodInsn(INVOKEVIRTUAL, f.name,
+            ctx.visitMethodInsn(INVOKESTATIC, f.name,
                                 f.bindName, sig.toString());
             return;
-       }
+        }
 
         if (fun instanceof Function) {
             f = (Function) fun;
@@ -105,7 +106,7 @@ class Apply extends Code {
             }
         }
 
-        Apply to = (arity & 1) != 0 ? (Apply) fun : this;
+        Apply to = (arity & 1) == 0 ? (Apply) fun : this;
         to.fun.gen(ctx);
         ctx.visitLine(to.line);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
@@ -415,7 +416,7 @@ final class Capture extends CaptureRef implements CaptureWrapper {
         } else if (localVar < 0) {
             ctx.visitVarInsn(ALOAD, 0);
             if (localVar < -1) {
-                ctx.intConst(-1 - localVar);
+                ctx.intConst(-2 - localVar);
                 ctx.visitInsn(AALOAD);
             } else {
                 ctx.visitFieldInsn(GETFIELD, ctx.className, id,
@@ -765,6 +766,7 @@ final class Function extends CapturingClosure implements Binder {
         }
 
         Ctx m = ctx.newMethod(ACC_STATIC, bindName, sig.toString());
+        m.localVarCount = methodImpl.argVar + 1; // capturearray, args
         genClosureInit(m);
         m.visitLabel(restart = new Label());
         body.gen(m);
@@ -884,8 +886,7 @@ final class Function extends CapturingClosure implements Binder {
             else
                 ctx.visitFieldInsn(PUTFIELD, name, c.id, c.captureType());
         }
-        if (!meth)
-            ctx.forceType("yeti/lang/Fun");
+        ctx.forceType("yeti/lang/Fun");
     }
 
     boolean flagop(int fl) {
@@ -900,26 +901,30 @@ final class Function extends CapturingClosure implements Binder {
             return true;
 
         // First try determine if we can reduce into method.
-        if (selfBind instanceof BindExpr) {
+        if (ctx.compilation.broken && selfBind instanceof BindExpr) {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
-                 i != null; i = i.next)
+                 i != null; i = i.next) {
+                //System.err.println("-> " + i.arity);
                 if (arityLimit > i.arity)
                     arityLimit = i.arity;
+            }
             int arity = 0;
             Function impl = this;
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
+            System.err.println("XX " + arity + " <= " + arityLimit);
             // Merged ones are a bit tricky - they're capture set is
             // merged into their inner one, where is also their own
             // argument. Also their inner ones arg is messed up.
             // Easier to not touch them, although it would be good for speed.
             if (arity > 0 && arityLimit > 0) {
-                methodImpl = impl.merged ? impl.outer : impl;
                 if (merged) { // steal captures and unmerge :)
                     captures = ((Function) body).captures;
                     merged = false;
                 }
+                methodImpl = impl.merged ? impl.outer : impl;
+                System.err.println("METH! " + methodImpl);
             }
         }
 
