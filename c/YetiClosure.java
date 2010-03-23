@@ -720,9 +720,9 @@ final class Function extends CapturingClosure implements Binder {
         Map captureMapping = null;
         
         // This has to be done before mergeCaptures to have all binders.
-        // NOP for 1-arg functions - they don't have argument captures and
+        // NOP for 1/2-arg functions - they don't have argument captures and
         // the outer captures localVar's will be set by mergeCaptures.
-        if (methodImpl != this) {
+        if (methodImpl != this && methodImpl != body) {
             captureMapping = new IdentityHashMap();
 
             // Function is binder for it's argument
