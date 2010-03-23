@@ -33,6 +33,8 @@ package yeti.lang.compiler;
 import yeti.renamed.asm3.Label;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 interface Closure {
     // Closures "wrap" references to the outside world.
@@ -792,7 +794,7 @@ final class Function extends CapturingClosure implements Binder {
             return true;
 
         // First try determine if we can reduce into method.
-        if (selfBind instanceof BindExpr) {
+        if (false && selfBind instanceof BindExpr) {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
                  i != null; i = i.next)
@@ -805,8 +807,65 @@ final class Function extends CapturingClosure implements Binder {
                 ++arity;
             }
             if (arity > 0 && arityLimit > 0) {
-                merged = false; // merge is pointless in this case
+                // Merged ones are a bit tricky - they're capture set is
+                // merged into their inner one, where is also their own
+                // argument. Also their inner ones arg is messed up.
+                // Although optimising them would be good for speed,
+                // maybe it would be simpler to avoid those.
+                //
                 // TODO mark function arity-merge
+                // XXX
+                // The make-a-method trick is actually damn easy I think.
+                // We have to convince the captures of the innermost
+                // joined lambda to refer to the method arguments and
+                // closure array instead.
+                // A little problem is, that that we have to somehow
+                // tell them where to get the shit...
+                //
+                // Now to make them know this, we have to first find them out.
+                // (or alternatively they have to find out us?)
+                // Probably easiest thing is to map our arguments and
+                // outer capture set into good vars.
+                // After that the inner captures can be scanned and made
+                // to point to those values;
+                //
+                // XXX we should really do this after uncapture of direct refs!
+
+                // Create capture mapping
+                int argCounter = 0, captureCounter = -1;
+                Integer undef = new Integer(0);
+                Map captureMapping = new HashMap();
+                for (Function f = this; i != f; i = (Function) i.body) {
+                    // don't allocate yet - some might be direct refs
+                    captureMapping.put(f.arg, new Integer(++argCounter));
+                }
+                Capture c;
+                for (c = captures; c != null; c = c.next) {
+                    captureMapping.put(c, undef);
+                }
+                i.argVar = ++argCounter;
+
+                // Hijack the inner functions capture mapping...
+                c = i.captures;
+                captures = null; // rebuild the capture list
+                for (Capture next; c != null; c = next) {
+                    next = c.next;
+                    for (Capture r = c;; r = (Capture) r.ref) {
+                        Integer mapped = (Integer) captureMapping.get(r);
+                        if (mapped == undef) {
+                            mapped = new Integer(--captureCounter);
+                            captureMapping.put(r, mapped);
+                            r.next = captures;
+                            captures = r;
+                        }
+                        if (mapped != null) {
+                            r.localVar = mapped.intValue();
+                            break;
+                        }
+                        if (!(r.ref instanceof Capture))
+                            break;
+                    }
+                }
             }
         }
 
