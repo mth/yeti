@@ -270,8 +270,10 @@ abstract class CaptureRef extends BindRef {
                   int line, int depth) {
             super(type, f, arg, line);
             this.depth = depth;
-            if (origin != null)
+            if (origin != null) {
                 origin.arity = args.length - depth + 1;
+                this.ref = origin;
+            }
         }
 
         // evaluates call arguments and pushes values into stack
@@ -310,7 +312,7 @@ abstract class CaptureRef extends BindRef {
 
         Code apply(Code arg, YetiType.Type res, int line) {
             if (depth < 0)
-                return new Apply(res, this, arg, line);
+                return super.apply(arg, res, line);
             if (depth == 1 && capturer.argCaptures == null) {
                 /*
                  * All arguments have been applied, now we have to search
