@@ -1574,6 +1574,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
     public void genSet(Ctx ctx, Code value) {
         if (directField == null) {
+            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
             ctx.intConst(id);
             value.gen(ctx);
             ctx.visitInsn(AASTORE);
