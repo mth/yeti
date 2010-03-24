@@ -698,6 +698,7 @@ abstract class Code implements Opcodes {
 
 abstract class BindRef extends Code {
     Binder binder;
+    BindExpr.Ref origin;
 
     // some bindrefs care about being captured. most wont.
     CaptureWrapper capture() {
@@ -717,6 +718,13 @@ abstract class BindRef extends Code {
     // Some bindings can be forced into direct mode
     void forceDirect() {
         throw new UnsupportedOperationException();
+    }
+
+    Code apply(Code arg, YetiType.Type res, int line) {
+        Apply a = new Apply(res, this, arg, line);
+        if ((a.ref = origin) != null)
+            origin.arity = 1;
+        return a;
     }
 }
 
@@ -1482,15 +1490,6 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             };
         }
 
-        Code apply(Code arg, YetiType.Type res, int line) {
-            Apply a = new Apply(res, this, arg, line);
-            if (st instanceof Function) {
-                a.ref = this;
-                arity = 1;
-            }
-            return a;
-        }
-
         boolean flagop(int fl) {
             if ((fl & ASSIGN) != 0)
                 return var ? assigned = true : false;
@@ -1536,6 +1535,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         res.type = st.type;
         res.polymorph = !var && st.polymorph;
         res.next = refs;
+        if (st instanceof Function)
+            res.origin = res;
         return refs = res;
     }
 

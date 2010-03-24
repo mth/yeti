@@ -264,6 +264,8 @@ abstract class CaptureRef extends BindRef {
                   int line, int depth) {
             super(type, f, arg, line);
             this.depth = depth;
+            if (origin != null)
+                origin.arity = args.length - depth + 1;
         }
 
         // evaluate call arguments and pushes values into stack
@@ -301,10 +303,9 @@ abstract class CaptureRef extends BindRef {
         }
 
         Code apply(Code arg, YetiType.Type res, int line) {
-            if (depth < 0) {
+            if (depth < 0)
                 return new Apply(res, this, arg, line);
-            }
-            if (depth == 1) {
+            if (depth == 1 && capturer.argCaptures == null) {
                 // All arguments have been applied, now we have to search
                 // their captures in the inner function (by looking for
                 // captures matching the function arguments).
@@ -313,19 +314,15 @@ abstract class CaptureRef extends BindRef {
                 // to allow tail call.
                 // NB. To understand this, remember that this is self-apply,
                 // so current scope is also the scope of applied function.
-                if (capturer.argCaptures == null) {
-                    argCaptures = new Capture[args.length];
-                    for (Capture c = capturer.captures; c != null;
-                         c = c.next) {
-                        for (int i = args.length; --i >= 0;) {
-                            if (c.binder == args[i]) {
-                                argCaptures[i] = c;
-                                break;
-                            }
+                argCaptures = new Capture[args.length];
+                for (Capture c = capturer.captures; c != null; c = c.next)
+                    for (int i = args.length; --i >= 0;) {
+                        if (c.binder == args[i]) {
+                            argCaptures[i] = c;
+                            break;
                         }
                     }
-                    capturer.argCaptures = argCaptures;
-                }
+                capturer.argCaptures = argCaptures;
             }
             return new SelfApply(res, this, arg, line, depth - 1);
         }
@@ -333,6 +330,7 @@ abstract class CaptureRef extends BindRef {
 
     Code apply(Code arg, YetiType.Type res, int line) {
         if (args != null) {
+            System.err.println("1origin = " + origin);
             return new SelfApply(res, this, arg, line, args.length);
         }
 
@@ -349,17 +347,17 @@ abstract class CaptureRef extends BindRef {
         // call is reached, in which case tail-call can be done,
         // if the application happens to be in tail position.
         int n = 0;
-        for (Function f = capturer; f != null; ++n, f = f.outer) {
+        for (Function f = capturer; f != null; ++n, f = f.outer)
             if (f.selfBind == ref.binder) {
                 args = new Binder[n];
                 f = capturer.outer;
-                for (int i = n; --i >= 0; f = f.outer) {
+                for (int i = n; --i >= 0; f = f.outer)
                     args[i] = f;
-                }
+                System.err.println("2origin = " + origin);
                 return new SelfApply(res, this, arg, line, n);
             }
-        }
-        return new Apply(res, this, arg, line);
+        System.err.println("3origin = " + origin);
+        return super.apply(arg, res, line);
     }
 }
 
@@ -497,17 +495,16 @@ abstract class CapturingClosure extends AClosure {
     Capture captures;
 
     Capture captureRef(BindRef code) {
-        for (Capture c = captures; c != null; c = c.next) {
-            if (c.binder == code.binder) {
+        for (Capture c = captures; c != null; c = c.next)
+            if (c.binder == code.binder)
                 return c;
-            }
-        }
         Capture c = new Capture();
         c.binder = code.binder;
         c.type = code.type;
         c.polymorph = code.polymorph;
         c.ref = code;
         c.wrapper = code.capture();
+        c.origin = code.origin;
         c.next = captures;
         captures = c;
         return c;
@@ -660,6 +657,7 @@ final class Function extends CapturingClosure implements Binder {
                 selfRef.binder = selfBind;
                 selfRef.type = code.type;
                 selfRef.ref = code;
+                selfRef.origin = code.origin;
                 selfRef.capturer = this;
             }
             return selfRef;
@@ -912,7 +910,7 @@ final class Function extends CapturingClosure implements Binder {
             Function impl = this;
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
-            //System.err.println("XX " + arity + " <= " + arityLimit);
+            System.err.println("XX " + arity + " <= " + arityLimit);
             // Merged ones are a bit tricky - they're capture set is
             // merged into their inner one, where is also their own
             // argument. Also their inner ones arg is messed up.
@@ -923,7 +921,7 @@ final class Function extends CapturingClosure implements Binder {
                     merged = false;
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
-                //System.err.println("METH! " + methodImpl);
+                System.err.println("METH! " + methodImpl);
             }
         }
 
