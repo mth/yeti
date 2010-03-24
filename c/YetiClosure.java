@@ -935,7 +935,7 @@ final class Function extends CapturingClosure implements Binder {
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
             /*
-             * Merged ones are a bit tricky - they're capture set is
+             * Merged ones are a bit tricky - their capture set is
              * merged into their inner one, where is also their own
              * argument. Also their inner ones arg is messed up.
              * Easier to not touch them, although it would be good for speed.
