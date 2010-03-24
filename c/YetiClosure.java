@@ -761,8 +761,7 @@ final class Function extends CapturingClosure implements Binder {
         int captureCount = mergeCaptures(ctx);
 
         // Hijack the inner functions capture mapping...
-        if (captureMapping != null) {
-            // System.out.println("do capture mapping " + captureMapping);
+        if (captureMapping != null)
             for (Capture c = methodImpl.captures; c != null; c = c.next) {
                 Object mapped = captureMapping.get(c.binder);
                 if (mapped != null) {
@@ -778,7 +777,6 @@ final class Function extends CapturingClosure implements Binder {
                     }
                 }
             }
-        }
 
         Map usedNames = ctx.usedMethodNames;
         if (usedNames == null)
@@ -975,7 +973,8 @@ final class Function extends CapturingClosure implements Binder {
         }
 
         // this can be optimised into "const x", so don't touch.
-        if (argUsed == 0 && argVar == 1 && body.flagop(PURE))
+        if (argUsed == 0 && argVar == 1 &&
+                methodImpl == null && body.flagop(PURE))
             return false; //captures == null;
 
         // Uncapture the direct bindings.
