@@ -66,22 +66,24 @@ class Apply extends Code {
 
     void gen(Ctx ctx) {
         Function f;
+        int argc = 0;
 
         // Function sets its methodImpl field, if it has determined that
         // it optimises itself into simple method.
         if (ref != null &&
                (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null
-               && arity >= f.methodImpl.argVar) {
+               && arity == (argc = f.methodImpl.argVar)) {
+            //System.err.println("A" + arity + " F" + argc);
             // first argument is function value (captures array really)
             StringBuffer sig = new StringBuffer("([Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
-            Code[] args = new Code[f.methodImpl.argVar];
-            for (int i = args.length; --i > 0; a = (Apply) a.fun)
+            Code[] args = new Code[argc];
+            for (int i = argc; --i > 0; a = (Apply) a.fun)
                 args[i] = a.arg;
             args[0] = a.arg; // out-of-cycle as we need "a" for fun
             a.fun.gen(ctx);
             ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
-            for (int i = 0; i < args.length; ++i) {
+            for (int i = 0; i < argc; ++i) {
                 args[i].gen(ctx);
                 sig.append("Ljava/lang/Object;");
             }
@@ -106,7 +108,7 @@ class Apply extends Code {
             }
         }
 
-        Apply to = (arity & 1) == 0 ? (Apply) fun : this;
+        Apply to = (arity & 1) == 0 && arity - argc > 1 ? (Apply) fun : this;
         to.fun.gen(ctx);
         ctx.visitLine(to.line);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
