@@ -57,7 +57,6 @@ class Apply extends Code {
     BindExpr.Ref ref;
 
     Apply(YetiType.Type res, Code fun, Code arg, int line) {
-        //System.err.println(fun.getClass().getName());
         type = res;
         this.fun = fun;
         this.arg = arg;
@@ -331,7 +330,6 @@ abstract class CaptureRef extends BindRef {
 
     Code apply(Code arg, YetiType.Type res, int line) {
         if (args != null) {
-            //System.err.println("1origin = " + origin);
             return new SelfApply(res, this, arg, line, args.length);
         }
 
@@ -354,10 +352,8 @@ abstract class CaptureRef extends BindRef {
                 f = capturer.outer;
                 for (int i = n; --i >= 0; f = f.outer)
                     args[i] = f;
-                //System.err.println("2origin = " + origin);
                 return new SelfApply(res, this, arg, line, n);
             }
-        //System.err.println("3origin = " + origin);
         return super.apply(arg, res, line);
     }
 }
@@ -423,6 +419,7 @@ final class Capture extends CaptureRef implements CaptureWrapper {
             }
         } else {
             ctx.visitVarInsn(ALOAD, localVar);
+            ctx.forceType(captureType());
         }
     }
 
@@ -742,7 +739,6 @@ final class Function extends CapturingClosure implements Binder {
             for (Capture c = captures; c != null; c = c.next)
                 captureMapping.put(c.binder, c);
         }
-        //System.err.println("argVar = " + methodImpl.argVar);
         
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
@@ -908,7 +904,6 @@ final class Function extends CapturingClosure implements Binder {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
                  i != null; i = i.next) {
-                //System.err.println("-> " + i.arity);
                 if (arityLimit > i.arity)
                     arityLimit = i.arity;
             }
@@ -916,7 +911,6 @@ final class Function extends CapturingClosure implements Binder {
             Function impl = this;
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
-            System.err.println("XX " + arity + " <= " + arityLimit);
             // Merged ones are a bit tricky - they're capture set is
             // merged into their inner one, where is also their own
             // argument. Also their inner ones arg is messed up.
@@ -928,7 +922,6 @@ final class Function extends CapturingClosure implements Binder {
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
                 ((BindExpr) selfBind).setArrayType();
-                System.err.println("METH! " + methodImpl);
             }
         }
 

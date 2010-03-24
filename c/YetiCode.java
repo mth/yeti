@@ -1559,11 +1559,13 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             }
         } else {
             ctx.visitVarInsn(ALOAD, mvar);
+            ctx.forceType("[Ljava/lang/Object;");
         }
     }
 
     public void genGet(Ctx ctx) {
         if (mvar != -1) {
+            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
             ctx.intConst(id);
             ctx.visitInsn(AALOAD);
         }

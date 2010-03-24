@@ -4,7 +4,7 @@
 <target name="prepare-build">
     <property name="asm" value="${basedir}/asm-3.1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
-    <property name="experimental" value="false"/>
+    <property name="experimental" value="true"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
@@ -144,7 +144,8 @@
     <taskdef name="yeticj" classname="yeti.lang.compiler.YetiTask"
              classpath="yeti.jar"/>
     <yeticj srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
-            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"/>
+            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"
+            experimental="${experimental}"/>
 </target>
 
 <target name="all-jar" depends="clean,jar,mixed-task">
