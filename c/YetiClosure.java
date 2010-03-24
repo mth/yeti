@@ -341,7 +341,7 @@ abstract class CaptureRef extends BindRef {
         }
 
         /*
-         * We have application with arg x like ((f x) y) z
+         * We have application with arg x like ((f x) y) z.
          * Now we take the inner function of our scope and travel
          * through its outer functions until there is one.
          *
@@ -730,9 +730,8 @@ final class Function extends CapturingClosure implements Binder {
          * This is done by mapping our arguments and outer capture set
          * into good vars. After that the inner captures can be scanned
          * and made to point to those values.
-         *
-         * Map captures using binder as identity.
          */
+        // Map captures using binder as identity.
         Map captureMapping = null;
 
         /*
