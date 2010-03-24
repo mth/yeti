@@ -787,7 +787,7 @@ final class Function extends CapturingClosure implements Binder {
         Map usedNames = ctx.usedMethodNames;
         if (usedNames == null)
             ctx.usedMethodNames = usedNames = new HashMap();
-        bindName = mangle(bindName);
+        bindName = bindName != null ? mangle(bindName) : "_";
         if (usedNames.containsKey(bindName) ||
             bindName.startsWith("_"))
             bindName += ctx.methodCounter++;
@@ -938,8 +938,7 @@ final class Function extends CapturingClosure implements Binder {
             return true;
 
         // First try determine if we can reduce into method.
-        if (selfBind instanceof BindExpr &&
-                "1".equals(System.getenv("YETI_BAD"))) {
+        if (selfBind instanceof BindExpr) {
             int arityLimit = 99999999;
             for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
                  i != null; i = i.next) {
