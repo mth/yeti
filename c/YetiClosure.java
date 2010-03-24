@@ -57,6 +57,7 @@ class Apply extends Code {
     BindExpr.Ref ref;
 
     Apply(YetiType.Type res, Code fun, Code arg, int line) {
+        //System.err.println(fun.getClass().getName());
         type = res;
         this.fun = fun;
         this.arg = arg;
@@ -330,7 +331,7 @@ abstract class CaptureRef extends BindRef {
 
     Code apply(Code arg, YetiType.Type res, int line) {
         if (args != null) {
-            System.err.println("1origin = " + origin);
+            //System.err.println("1origin = " + origin);
             return new SelfApply(res, this, arg, line, args.length);
         }
 
@@ -353,10 +354,10 @@ abstract class CaptureRef extends BindRef {
                 f = capturer.outer;
                 for (int i = n; --i >= 0; f = f.outer)
                     args[i] = f;
-                System.err.println("2origin = " + origin);
+                //System.err.println("2origin = " + origin);
                 return new SelfApply(res, this, arg, line, n);
             }
-        System.err.println("3origin = " + origin);
+        //System.err.println("3origin = " + origin);
         return super.apply(arg, res, line);
     }
 }
@@ -452,10 +453,15 @@ final class Capture extends CaptureRef implements CaptureWrapper {
 
     public String captureType() {
         if (refType == null) {
-            refType = wrapper == null ? 'L' + javaType(ref.type) + ';'
-                : wrapper.captureType();
-            if (refType == null)
-                throw new IllegalStateException("captureType:" + wrapper);
+            if (wrapper != null) {
+                refType = wrapper.captureType();
+                if (refType == null)
+                    throw new IllegalStateException("captureType:" + wrapper);
+            } else if (origin != null) {
+                refType = ((BindExpr) binder).captureType();
+            } else {
+                refType = 'L' + javaType(ref.type) + ';';
+            }
         }
         return refType;
     }
@@ -883,7 +889,7 @@ final class Function extends CapturingClosure implements Binder {
             else
                 ctx.visitFieldInsn(PUTFIELD, name, c.id, c.captureType());
         }
-        ctx.forceType("yeti/lang/Fun");
+        ctx.forceType(meth ? "[Ljava/lang/Object;" : "yeti/lang/Fun");
     }
 
     boolean flagop(int fl) {
@@ -921,6 +927,7 @@ final class Function extends CapturingClosure implements Binder {
                     merged = false;
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
+                ((BindExpr) selfBind).setArrayType();
                 System.err.println("METH! " + methodImpl);
             }
         }

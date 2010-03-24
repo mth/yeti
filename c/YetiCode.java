@@ -736,6 +736,7 @@ final class BindWrapper extends BindRef {
         this.binder = ref.binder;
         this.type = ref.type;
         this.polymorph = ref.polymorph;
+        this.origin = ref.origin;
     }
 
     CaptureWrapper capture() {
@@ -1595,6 +1596,10 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             value.gen(ctx);
             ctx.visitInsn(AASTORE);
         }
+    }
+
+    void setArrayType() {
+        javaDescr = javaType = "[Ljava/lang/Object;";
     }
 
     private void genBind(Ctx ctx) {

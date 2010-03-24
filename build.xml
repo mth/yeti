@@ -4,6 +4,7 @@
 <target name="prepare-build">
     <property name="asm" value="${basedir}/asm-3.1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
+    <property name="experimental" value="false"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
@@ -75,9 +76,10 @@
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
-           includes="std.yeti" preload="" icast="${icast}" experimental="true"/>
+           includes="std.yeti" preload="" icast="${icast}"
+           experimental="${experimental}"/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           includes="*.yeti" excludes="std.yeti" experimental="true"
+           includes="*.yeti" excludes="std.yeti" experimental="${experimental}"
            preload="yeti/lang/std" icast="${icast}">
         <classpath>
             <path location="${basedir}/.build/std"/>
@@ -87,7 +89,7 @@
 
 <target name="yeti" depends="compiler,checkmod,modules">
     <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
-           icast="${icast}" experimental="true">
+           icast="${icast}" experimental="${experimental}">
         <classpath>
             <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>
