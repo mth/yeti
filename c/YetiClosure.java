@@ -81,6 +81,7 @@ class Apply extends Code {
                 args[i] = a.arg;
             args[0] = a.arg; // out-of-cycle as we need "a" for fun
             a.fun.gen(ctx);
+            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
             for (int i = 0; i < args.length; ++i) {
                 args[i].gen(ctx);
                 sig.append("Ljava/lang/Object;");
