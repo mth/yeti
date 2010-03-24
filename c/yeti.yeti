@@ -119,8 +119,6 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             src := shift argv;
         "-icast":
             evaluator.gcj := true;
-        "-experimental":
-            evaluator.broken := true;
         "-compile-error-trace":
             compileErrorTrace := true;
         _:

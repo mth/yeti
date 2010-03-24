@@ -38,7 +38,6 @@ do argv: {
     var classPath = [],
     var sandbox = false,
     var gcj = false,
-    var broken = false,
     var noframes = false,
     var evalContext = () as ~YetiEval,
 
@@ -48,7 +47,6 @@ do argv: {
         if gcj then
             ctx#isGCJ := true
         fi;
-        ctx#broken := broken;
         if noframes then
             ctx#classWriterFlags := 0
         fi;

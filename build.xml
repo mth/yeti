@@ -4,7 +4,6 @@
 <target name="prepare-build">
     <property name="asm" value="${basedir}/asm-3.1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
-    <property name="experimental" value="true"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
@@ -76,10 +75,9 @@
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
-           includes="std.yeti" preload="" icast="${icast}"
-           experimental="${experimental}"/>
+           includes="std.yeti" preload="" icast="${icast}"/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
-           includes="*.yeti" excludes="std.yeti" experimental="${experimental}"
+           includes="*.yeti" excludes="std.yeti"
            preload="yeti/lang/std" icast="${icast}">
         <classpath>
             <path location="${basedir}/.build/std"/>
@@ -89,7 +87,7 @@
 
 <target name="yeti" depends="compiler,checkmod,modules">
     <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
-           icast="${icast}" experimental="${experimental}">
+           icast="${icast}">
         <classpath>
             <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>
@@ -144,8 +142,7 @@
     <taskdef name="yeticj" classname="yeti.lang.compiler.YetiTask"
              classpath="yeti.jar"/>
     <yeticj srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
-            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"
-            experimental="${experimental}"/>
+            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"/>
 </target>
 
 <target name="all-jar" depends="clean,jar,mixed-task">
