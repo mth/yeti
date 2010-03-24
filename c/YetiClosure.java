@@ -920,7 +920,9 @@ final class Function extends CapturingClosure implements Binder {
             // merged into their inner one, where is also their own
             // argument. Also their inner ones arg is messed up.
             // Easier to not touch them, although it would be good for speed.
-            if (arity > 0 && arityLimit > 0) {
+            if (arity > 0 && arityLimit > 0 && (arity > 1 || !merged)) {
+                //System.err.println("FF " + arity + " " + arityLimit +
+                //                   " " + bindName);
                 if (merged) { // steal captures and unmerge :)
                     captures = ((Function) body).captures;
                     merged = false;
