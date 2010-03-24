@@ -132,9 +132,11 @@ class Apply extends Code {
     }
 }
 
-// Since the stupid JVM discards local stack when catching exceptions,
-// try catch blocks have to be converted into fucking closures
-// (at least for the generic case).
+/*
+ * Since the stupid JVM discards local stack when catching exceptions,
+ * try catch blocks have to be converted into fucking closures
+ * (at least for the generic case).
+ */
 final class TryCatch extends CapturingClosure {
     private List catches = new ArrayList();
     private int exVar;
@@ -248,8 +250,10 @@ final class TryCatch extends CapturingClosure {
     }
 }
 
-// Bind reference that is actually some wrapper created by closure (capturer).
-// This class is mostly useful as a place where tail call optimization happens.
+/*
+ * Bind reference that is actually some wrapper created by closure (capturer).
+ * This class is mostly useful as a place where tail call optimization happens.
+ */
 abstract class CaptureRef extends BindRef {
     Function capturer;
     BindRef ref;
@@ -306,14 +310,17 @@ abstract class CaptureRef extends BindRef {
             if (depth < 0)
                 return new Apply(res, this, arg, line);
             if (depth == 1 && capturer.argCaptures == null) {
-                // All arguments have been applied, now we have to search
-                // their captures in the inner function (by looking for
-                // captures matching the function arguments).
-                // Resulting list will be also given to the inner function,
-                // so it could copy those captures into local registers
-                // to allow tail call.
-                // NB. To understand this, remember that this is self-apply,
-                // so current scope is also the scope of applied function.
+                /*
+                 * All arguments have been applied, now we have to search
+                 * their captures in the inner function (by looking for
+                 * captures matching the function arguments).
+                 * Resulting list will be also given to the inner function,
+                 * so it could copy those captures into local registers
+                 * to allow tail call.
+                 *
+                 * NB. To understand this, remember that this is self-apply,
+                 * so current scope is also the scope of applied function.
+                 */
                 argCaptures = new Capture[args.length];
                 for (Capture c = capturer.captures; c != null; c = c.next)
                     for (int i = args.length; --i >= 0;) {
@@ -333,18 +340,20 @@ abstract class CaptureRef extends BindRef {
             return new SelfApply(res, this, arg, line, args.length);
         }
 
-        // We have application with arg x like ((f x) y) z
-        // Now we take the inner function of our scope and travel
-        // through its outer functions until there is one.
-        //
-        // If function that recognizes f as itself is met,
-        // we know that this is self-application and how many
-        // arguments are needed to do tail-call optimisation.
-        // SelfApply with arguments count is given in that case.
-        //
-        // SelfApply.apply reduces the argument count until final
-        // call is reached, in which case tail-call can be done,
-        // if the application happens to be in tail position.
+        /*
+         * We have application with arg x like ((f x) y) z
+         * Now we take the inner function of our scope and travel
+         * through its outer functions until there is one.
+         *
+         * If function that recognizes f as itself is met,
+         * we know that this is self-application and how many
+         * arguments are needed to do tail-call optimisation.
+         * SelfApply with arguments count is given in that case.
+         *
+         * SelfApply.apply reduces the argument count until final
+         * call is reached, in which case tail-call can be done,
+         * if the application happens to be in tail position.
+         */
         int n = 0;
         for (Function f = capturer; f != null; ++n, f = f.outer)
             if (f.selfBind == ref.binder) {
@@ -425,10 +434,12 @@ final class Capture extends CaptureRef implements CaptureWrapper {
 
     public void genGet(Ctx ctx) {
         if (wrapper != null && !ignoreGet) {
-            // The object got from capture might not be the final value.
-            // for example captured mutable variables are wrapped into array
-            // by the binding, so the wrapper must get correct array index
-            // out of the array in that case.
+            /*
+             * The object got from capture might not be the final value.
+             * for example captured mutable variables are wrapped into array
+             * by the binding, so the wrapper must get correct array index
+             * out of the array in that case.
+             */
             wrapper.genGet(ctx);
         }
     }
@@ -639,10 +650,12 @@ final class Function extends CapturingClosure implements Binder {
         }
     }
 
-    // When function body refers to bindings outside of it,
-    // at each closure border on the way out (to the binding),
-    // a refProxy (of the ending closure) is called, possibly
-    // transforming the BindRef.
+    /*
+     * When function body refers to bindings outside of it,
+     * at each closure border on the way out (to the binding),
+     * a refProxy (of the ending closure) is called, possibly
+     * transforming the BindRef.
+     */
     public BindRef refProxy(BindRef code) {
         if (code.flagop(DIRECT_BIND)) {
             if (code.flagop(MODULE_REQUIRED)) {
@@ -710,19 +723,23 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     private void prepareMethod(Ctx ctx) {
-        // The make-a-method trick is actually damn easy I think.
-        // The captures of the innermost joined lambda must be set
-        // to refer to the method arguments and closure array instead.
-        // This is done by mapping our arguments and outer capture set
-        // into good vars. After that the inner captures can be scanned
-        // and made to point to those values.
-
-        // Map captures using binder as identity
+        /*
+         * The make-a-method trick is actually damn easy I think.
+         * The captures of the innermost joined lambda must be set
+         * to refer to the method arguments and closure array instead.
+         * This is done by mapping our arguments and outer capture set
+         * into good vars. After that the inner captures can be scanned
+         * and made to point to those values.
+         *
+         * Map captures using binder as identity.
+         */
         Map captureMapping = null;
-        
-        // This has to be done before mergeCaptures to have all binders.
-        // NOP for 1/2-arg functions - they don't have argument captures and
-        // the outer captures localVar's will be set by mergeCaptures.
+
+        /*
+         * This has to be done before mergeCaptures to have all binders.
+         * NOP for 1/2-arg functions - they don't have argument captures and
+         * the outer captures localVar's will be set by mergeCaptures.
+         */
         if (methodImpl != this && methodImpl != body) {
             captureMapping = new IdentityHashMap();
 
@@ -786,9 +803,11 @@ final class Function extends CapturingClosure implements Binder {
         }
     }
 
-    // For functions, this generates the function class
-    // An instance is also given, but capture fields are not initialised
-    // (the captures are set later in the finishGen).
+    /*
+     * For functions, this generates the function class
+     * An instance is also given, but capture fields are not initialised
+     * (the captures are set later in the finishGen).
+     */
     void prepareGen(Ctx ctx) {
         if (methodImpl != null) {
             prepareMethod(ctx);
@@ -916,10 +935,12 @@ final class Function extends CapturingClosure implements Binder {
             Function impl = this;
             while (++arity < arityLimit && impl.body instanceof Function)
                 impl = (Function) impl.body;
-            // Merged ones are a bit tricky - they're capture set is
-            // merged into their inner one, where is also their own
-            // argument. Also their inner ones arg is messed up.
-            // Easier to not touch them, although it would be good for speed.
+            /*
+             * Merged ones are a bit tricky - they're capture set is
+             * merged into their inner one, where is also their own
+             * argument. Also their inner ones arg is messed up.
+             * Easier to not touch them, although it would be good for speed.
+             */
             if (arity > 0 && arityLimit > 0 && (arity > 1 || !merged)) {
                 //System.err.println("FF " + arity + " " + arityLimit +
                 //                   " " + bindName);
