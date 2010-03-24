@@ -346,6 +346,7 @@ final class Ctx implements Opcodes {
     private int lastInsn = -1;
     private String lastType;
     Constants constants;
+    Map usedMethodNames;
     int localVarCount;
     int fieldCounter;
     int methodCounter;

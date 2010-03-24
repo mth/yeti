@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.IdentityHashMap;
+import java.util.HashMap;
 
 interface Closure {
     // Closures "wrap" references to the outside world.
@@ -753,9 +754,14 @@ final class Function extends CapturingClosure implements Binder {
                 }
             }
 
-        if ((bindName = mangle(bindName)).startsWith("_") ||
-                bindName.equals("apply"))
+        Map usedNames = ctx.usedMethodNames;
+        if (usedNames == null)
+            ctx.usedMethodNames = usedNames = new HashMap();
+        bindName = mangle(bindName);
+        if (usedNames.containsKey(bindName) ||
+            bindName.startsWith("_"))
             bindName += ctx.methodCounter++;
+        usedNames.put(bindName, null);
 
         name = ctx.className;
         StringBuffer sig = new StringBuffer("([");
