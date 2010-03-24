@@ -803,7 +803,7 @@ final class Function extends CapturingClosure implements Binder {
     }
 
     /*
-     * For functions, this generates the function class
+     * For functions, this generates the function class.
      * An instance is also given, but capture fields are not initialised
      * (the captures are set later in the finishGen).
      */
