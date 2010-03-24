@@ -281,9 +281,6 @@ abstract class CaptureRef extends BindRef {
             if (i > 0)
                 ((SelfApply) fun).genArg(ctx, i - 1);
             arg.gen(ctx);
-            if (argCaptures != null && i < argCaptures.length &&
-                    argCaptures[i] == null)
-                ctx.visitInsn(POP);
         }
 
         void gen(Ctx ctx) {
@@ -303,6 +300,8 @@ abstract class CaptureRef extends BindRef {
                 for (int i = argCaptures.length; --i >= 0;)
                     if (argCaptures[i] != null)
                         ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
+                    else
+                        ctx.visitInsn(POP);
             // And just jump into the start of the function...
             ctx.visitJumpInsn(GOTO, capturer.restart);
         }
