@@ -278,10 +278,12 @@ abstract class CaptureRef extends BindRef {
 
         // evaluates call arguments and pushes values into stack
         void genArg(Ctx ctx, int i) {
-            if (i > 0) {
+            if (i > 0)
                 ((SelfApply) fun).genArg(ctx, i - 1);
-            }
             arg.gen(ctx);
+            if (argCaptures != null && i < argCaptures.length &&
+                    argCaptures[i] == null)
+                ctx.visitInsn(POP);
         }
 
         void gen(Ctx ctx) {
@@ -297,11 +299,10 @@ abstract class CaptureRef extends BindRef {
             genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
             ctx.visitVarInsn(ASTORE, capturer.argVar);
             // Now assign the call argument values into argument registers.
-            if (argCaptures != null) {
-                for (int i = argCaptures.length; --i >= 0;) {
-                    ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
-                }
-            }
+            if (argCaptures != null)
+                for (int i = argCaptures.length; --i >= 0;)
+                    if (argCaptures[i] != null)
+                        ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
             // And just jump into the start of the function...
             ctx.visitJumpInsn(GOTO, capturer.restart);
         }
@@ -327,12 +328,11 @@ abstract class CaptureRef extends BindRef {
                  */
                 argCaptures = new Capture[args.length];
                 for (Capture c = capturer.captures; c != null; c = c.next)
-                    for (int i = args.length; --i >= 0;) {
+                    for (int i = args.length; --i >= 0;)
                         if (c.binder == args[i]) {
                             argCaptures[i] = c;
                             break;
                         }
-                    }
                 capturer.argCaptures = argCaptures;
             }
             return new SelfApply(res, this, arg, line, depth - 1);
@@ -863,7 +863,7 @@ final class Function extends CapturingClosure implements Binder {
             // - otherwise it couldn't modify them safely before restarting
             for (int i = 0; i < argCaptures.length; ++i) {
                 Capture c = argCaptures[i];
-                if (!c.uncaptured) {
+                if (c != null && !c.uncaptured) {
                     c.gen(apply);
                     c.localVar = apply.localVarCount;
                     c.ignoreGet = true;
