@@ -134,7 +134,7 @@ class Apply extends Code {
 
 /*
  * Since the stupid JVM discards local stack when catching exceptions,
- * try catch blocks have to be converted into fucking closures
+ * try-catch blocks have to be converted into fucking closures
  * (at least for the generic case).
  */
 final class TryCatch extends CapturingClosure {
