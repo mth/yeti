@@ -268,7 +268,7 @@ abstract class CaptureRef extends BindRef {
                 origin.arity = args.length - depth + 1;
         }
 
-        // evaluate call arguments and pushes values into stack
+        // evaluates call arguments and pushes values into stack
         void genArg(Ctx ctx, int i) {
             if (i > 0) {
                 ((SelfApply) fun).genArg(ctx, i - 1);
