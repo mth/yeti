@@ -20,8 +20,6 @@
   when casted into Java object
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
-* Optimise lambdas into simple methods when all their references
-  are fully applied
 * Allow cons pattern match (::) on arrays?
 * Optional Java generics support?
 * Direct double optimisation, when it can be deduced,
