@@ -1597,7 +1597,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             ctx.visitInsn(AASTORE);
         }
     }
-
+    
+    // called by Function.prepareConst when this bastard mutates into method
     void setArrayType() {
         javaDescr = javaType = "[Ljava/lang/Object;";
     }
