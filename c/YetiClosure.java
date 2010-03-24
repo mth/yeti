@@ -432,7 +432,9 @@ final class Capture extends CaptureRef implements CaptureWrapper {
             }
         } else {
             ctx.visitVarInsn(ALOAD, localVar);
-            ctx.forceType(captureType());
+            // hacky way to forceType on try-catch, but not on method argument
+            if (!ignoreGet)
+                ctx.forceType(captureType());
         }
     }
 
