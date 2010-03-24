@@ -71,7 +71,7 @@ class Apply extends Code {
         // it optimises itself into simple method.
         if (ref != null &&
                (f = (Function) ((BindExpr) ref.binder).st).methodImpl != null
-               /*&& arity < f.methodImpl.argVar*/) {
+               && arity >= f.methodImpl.argVar) {
             // first argument is function value (captures array really)
             StringBuffer sig = new StringBuffer("([Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
@@ -761,14 +761,24 @@ final class Function extends CapturingClosure implements Binder {
         int captureCount = mergeCaptures(ctx);
 
         // Hijack the inner functions capture mapping...
-        if (captureMapping != null)
+        if (captureMapping != null) {
+            // System.out.println("do capture mapping " + captureMapping);
             for (Capture c = methodImpl.captures; c != null; c = c.next) {
                 Object mapped = captureMapping.get(c.binder);
                 if (mapped != null) {
                     c.localVar = ((Capture) mapped).localVar;
                     c.ignoreGet = c.localVar > 0;
+                } else { // Capture was stealed away by direct bind?
+                    Capture x = c;
+                    while (x.capturer != this && x.ref instanceof Capture)
+                        x = (Capture) x.ref;
+                    if (x.uncaptured) {
+                        c.ref = x.ref;
+                        c.uncaptured = true;
+                    }
                 }
             }
+        }
 
         Map usedNames = ctx.usedMethodNames;
         if (usedNames == null)
