@@ -633,6 +633,10 @@ plus a b = a + b;
             (l unsafely_as ~AList)#reverse() unsafely_as list<'a>
         fi,
 
+    /// Provide return function for block.
+    /// Be careful with lazy lists, for example
+    /// withExit do e: 1 :. \(e []) done
+    /// fails with exit out scope error..
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
 
