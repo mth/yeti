@@ -295,13 +295,15 @@ public class JavaSource implements Opcodes {
             if ("*".equals(name)) {
                 pkgs.add(s.substring(0, dot + 1));
             } else {
+                // import x.y.z.Bar.Baz... stupid java
+                // TODO Doh have to verify that class exists
+                // and if not, try Bar$Baz, z$Bar$Baz etc...
                 Object o = classes.put(name, 'L'+ s + ';');
                 if (o != null) // don't override primitives!
                     classes.put(name, o);
             }
         }
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
-        imports = null;
     }
 
     private String resolve(ClassFinder finder, String type, boolean descr) {
@@ -311,12 +313,12 @@ public class JavaSource implements Opcodes {
         String name = type.substring(array);
         String res = (String) classes.get(name);
         if (res == null) {
+            // TODO Foo.Bar.Baz... stupid java
             for (int i = 0; res == null && i < importPackages.length; ++i) {
                 res = importPackages[i];
                 if (!finder.exists(res))
                     res = null;
             }
-            // TODO Foo.Bar.Baz... stupid java
             res = 'L' + (res != null ? res : importPackages[0]) + name + ';';
         }
         return descr ? type.substring(0, array).concat(res)
