@@ -316,6 +316,7 @@ public class JavaSource implements Opcodes {
                 if (!finder.exists(res))
                     res = null;
             }
+            // TODO Foo.Bar.Baz... stupid java
             res = 'L' + (res != null ? res : importPackages[0]) + name + ';';
         }
         return descr ? type.substring(0, array).concat(res)
