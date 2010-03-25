@@ -41,7 +41,7 @@ public class JavaSource implements Opcodes {
     private Map classes;
     private int line = 1;
     private final String packageName;
-    private final List imports = new ArrayList();
+    private List imports = new ArrayList();
     private String[] importPackages; // list of packages to search on resolve
 
     private String get(int level) {
@@ -301,6 +301,7 @@ public class JavaSource implements Opcodes {
             }
         }
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
+        imports = null;
     }
 
     private String resolve(ClassFinder finder, String type, boolean descr) {
