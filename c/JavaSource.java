@@ -40,8 +40,9 @@ public class JavaSource implements Opcodes {
     private String fn;
     private Map classes;
     private int line = 1;
-    final String packageName;
-    final List imports = new ArrayList();
+    private final String packageName;
+    private final List imports = new ArrayList();
+    private String[] importPackages; // list of packages to search on resolve
 
     private String get(int level) {
         if (lookahead != null) {
@@ -155,7 +156,7 @@ public class JavaSource implements Opcodes {
             }
             while (sep == "[" && mode != 2) {
                 expect("]", get(0));
-                type = type.concat("[]");
+                type = "[".concat(type);
                 sep = get(0);
             }
         }
@@ -167,9 +168,9 @@ public class JavaSource implements Opcodes {
         JavaNode n = null;
         String id = type(1);
         if (id != null && (modifiers & ACC_PRIVATE) == 0) {
-            while (id.endsWith("[]")) {
-                type = type.concat("[]");
-                id = id.substring(0, id.length() - 2);
+            while (id.startsWith("[")) {
+                type = "[".concat(type);
+                id = id.substring(1);
             }
             type = type.intern();
             if (target == null)
@@ -190,7 +191,7 @@ public class JavaSource implements Opcodes {
                     break;
                 type = field(0, id, null);
                 if ("...".equals(id = get(0)))
-                    type = type.concat("[]");
+                    type = "[".concat(type);
                 if (id != null)
                     l.add(type);
             } while (id == ",");
@@ -277,27 +278,85 @@ public class JavaSource implements Opcodes {
         fn = null;
     }
 
-    private static void mod(String name, int value) {
-        MODS.put(name, new Integer(value));
+    private void prepareResolve() {
+        if (importPackages != null)
+            return; // already done
+        // reuse classes for full-name import map
+        classes = new HashMap(JavaType.JAVA_PRIM);
+        classes.remove("number");
+        List pkgs = new ArrayList();
+        pkgs.add(packageName.concat("/"));
+        for (int i = 0; i < imports.size(); ++i) {
+            String s = (String) imports.get(i);
+            int dot = s.lastIndexOf('/');
+            if (dot <= 0)
+                continue;
+            String name = s.substring(dot + 1);
+            if ("*".equals(name)) {
+                pkgs.add(s.substring(0, dot + 1));
+            } else {
+                Object o = classes.put(name, 'L'+ s + ';');
+                if (o != null) // don't override primitives!
+                    classes.put(name, o);
+            }
+        }
+        importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
     }
 
-    static {
-        char[] x = { ' ' };
-        for (short i = 0; i < CHAR_SPOOL.length; ++i) {
-            x[0] = (char) i;
-            CHAR_SPOOL[i] = new String(x).intern();
+    private String resolve(ClassFinder finder, String type, boolean descr) {
+        int array = 0, l = type.length();
+        while (array < l && type.charAt(array) == '[')
+            ++array;
+        String name = type.substring(array);
+        String res = (String) classes.get(name);
+        if (res == null) {
+            for (int i = 0; res == null && i < importPackages.length; ++i) {
+                res = importPackages[i];
+                if (!finder.exists(res))
+                    res = null;
+            }
+            res = 'L' + (res != null ? res : importPackages[0]) + name + ';';
         }
-        mod("abstract", ACC_ABSTRACT);
-        mod("final", ACC_FINAL);
-        mod("native", ACC_NATIVE);
-        mod("private", ACC_PRIVATE);
-        mod("protected", ACC_PROTECTED);
-        mod("public", ACC_PUBLIC);
-        mod("static", ACC_STATIC);
-        mod("strictfp", ACC_STRICT);
-        mod("synchronized", ACC_SYNCHRONIZED);
-        mod("transient", ACC_TRANSIENT);
-        mod("volatile", ACC_VOLATILE);
+        return descr ? type.substring(0, array).concat(res)
+                     : array != 0 || res.length() <= 1
+                        ? name : res.substring(1, res.length() - 1);
+    }
+
+    static void loadClass(ClassFinder finder, JavaTypeReader tr, JavaNode n) {
+        JavaSource src = n.source;
+        src.prepareResolve();
+        String cname = n.name;
+        String[] interfaces = new String[n.argv.length];
+        for (int i = 0; i < interfaces.length; ++i)
+            interfaces[i] = src.resolve(finder, n.argv[i], false);
+        tr.visit(0, n.modifier, cname, null,
+                 src.resolve(finder, n.type, false), interfaces);
+        for (JavaNode i = n.field; i != null; i = i.field) {
+            int access = i.modifier;
+            String name = i.name;
+            YetiType.Type t =
+                new YetiType.Type(src.resolve(finder, i.type, true));
+            if (i.argv == null) { // field
+                ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
+                    .put(name, new JavaType.Field(name, access, cname, t));
+                continue;
+            }
+            YetiType.Type[] av = new YetiType.Type[i.argv.length];
+            for (int j = 0; j < av.length; ++j)
+                av[j] = new YetiType.Type(src.resolve(finder, i.argv[j], true));
+            JavaType.Method m = new JavaType.Method();
+            m.name = name;
+            m.access = access;
+            m.returnType = t;
+            m.arguments = av;
+            m.className = cname;
+            m.sig = name + m.descr(null);
+            if (name == "<init>")
+                tr.constructors.add(m);
+            else
+                ((access & ACC_STATIC) == 0 ? tr.methods : tr.staticMethods)
+                    .add(m);
+        }
     }
 
     // testing
@@ -309,42 +368,6 @@ public class JavaSource implements Opcodes {
             res += v[i];
         }
         return res;
-    }
-
-    private YetiType.Type resolveType(ClassFinder finder, String name) {
-        // TODO
-        return JavaType.typeOfName(name, null /*scope*/);
-    }
-
-    static void loadClass(ClassFinder finder, JavaTypeReader tr, JavaNode n) {
-        // TODO resolve super in n.type and interface names in n.argv
-        String cname = n.name;
-        tr.visit(0, n.modifier, cname, null, n.type, n.argv);
-        for (JavaNode i = n.field; i != null; i = i.field) {
-            int access = i.modifier;
-            String name = i.name;
-            YetiType.Type t = n.source.resolveType(finder, i.type);
-            if (i.argv == null) { // field
-                ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
-                    .put(name, new JavaType.Field(name, access, cname, t));
-                continue;
-            }
-            YetiType.Type[] atv = new YetiType.Type[i.argv.length];
-            for (int j = 0; j < atv.length; ++j)
-                atv[j] = n.source.resolveType(finder, i.argv[j]);
-            JavaType.Method m = new JavaType.Method();
-            m.name = name;
-            m.access = access;
-            m.returnType = t;
-            m.arguments = atv;
-            m.className = cname;
-            m.sig = name + m.descr(null);
-            if (name == "<init>")
-                tr.constructors.add(m);
-            else
-                ((access & ACC_STATIC) == 0 ? tr.methods : tr.staticMethods)
-                    .add(m);
-        }
     }
 
     public static void main(String[] argv) throws Exception {
@@ -366,5 +389,28 @@ public class JavaSource implements Opcodes {
             }
             System.out.println("}\n");
         }
+    }
+
+    private static void mod(String name, int value) {
+        MODS.put(name, new Integer(value));
+    }
+
+    static {
+        char[] x = { ' ' };
+        for (short i = 0; i < CHAR_SPOOL.length; ++i) {
+            x[0] = (char) i;
+            CHAR_SPOOL[i] = new String(x).intern();
+        }
+        mod("abstract", ACC_ABSTRACT);
+        mod("final", ACC_FINAL);
+        mod("native", ACC_NATIVE);
+        mod("private", ACC_PRIVATE);
+        mod("protected", ACC_PROTECTED);
+        mod("public", ACC_PUBLIC);
+        mod("static", ACC_STATIC);
+        mod("strictfp", ACC_STRICT);
+        mod("synchronized", ACC_SYNCHRONIZED);
+        mod("transient", ACC_TRANSIENT);
+        mod("volatile", ACC_VOLATILE);
     }
 }

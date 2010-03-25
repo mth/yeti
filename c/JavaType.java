@@ -315,6 +315,7 @@ class JavaType {
     }
 
     private static final JavaType[] EMPTY_JTARR = {};
+    static final Map JAVA_PRIM = new HashMap();
 
     final String description;
     private boolean resolved;
@@ -1093,29 +1094,26 @@ class JavaType {
             ++arrays;
             name = name.substring(0, name.length() - 2);
         }
-        if (arrays != 0)
-            name = name.intern();
-        String descr =
-            name == "int"     ? "I" :
-            name == "long"    ? "J" :
-            name == "boolean" ? "Z" :
-            name == "byte"    ? "B" :
-            name == "char"    ? "C" :
-            name == "double"  ? "D" :
-            name == "float"   ? "F" :
-            name == "short"   ? "S" :
-            name == "number"  ?  "Lyeti/lang/Num;" :
-            null;
-        YetiType.Type t;
-        if (descr == null) {
-            t = YetiType.resolveFullClass(name, scope);
-        } else {
-            t = new YetiType.Type(descr);
-        }
+        String descr = (String) JAVA_PRIM.get(name);
+        YetiType.Type t =
+            descr != null ? new YetiType.Type(descr)
+                          : YetiType.resolveFullClass(name, scope);
         while (--arrays >= 0)
             t = new YetiType.Type(YetiType.JAVA_ARRAY,
                                   new YetiType.Type[] { t });
         return t;
     }
-}
 
+    static {
+        Map p = JAVA_PRIM;
+        p.put("int",     "I");
+        p.put("long",    "J");
+        p.put("boolean", "Z");
+        p.put("byte",    "B");
+        p.put("char",    "C");
+        p.put("double",  "D");
+        p.put("float",   "F");
+        p.put("short",   "S");
+        p.put("number",  "L/yeti/lang/Num;");
+    }
+}

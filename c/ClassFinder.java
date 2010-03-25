@@ -122,6 +122,10 @@ class ClassFinder {
         defined.put(name, content);
     }
 
+    boolean exists(String name) {
+        return false; // TODO
+    }
+
     static InputStream find(String name) {
         return CompileCtx.current().classPath.findClass(name);
     }
