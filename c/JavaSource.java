@@ -311,6 +311,42 @@ public class JavaSource implements Opcodes {
         return res;
     }
 
+    private YetiType.Type resolveType(ClassFinder finder, String name) {
+        // TODO
+        return JavaType.typeOfName(name, null /*scope*/);
+    }
+
+    static void loadClass(ClassFinder finder, JavaTypeReader tr, JavaNode n) {
+        // TODO resolve super in n.type and interface names in n.argv
+        String cname = n.name;
+        tr.visit(0, n.modifier, cname, null, n.type, n.argv);
+        for (JavaNode i = n.field; i != null; i = i.field) {
+            int access = i.modifier;
+            String name = i.name;
+            YetiType.Type t = n.source.resolveType(finder, i.type);
+            if (i.argv == null) { // field
+                ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
+                    .put(name, new JavaType.Field(name, access, cname, t));
+                continue;
+            }
+            YetiType.Type[] atv = new YetiType.Type[i.argv.length];
+            for (int j = 0; j < atv.length; ++j)
+                atv[j] = n.source.resolveType(finder, i.argv[j]);
+            JavaType.Method m = new JavaType.Method();
+            m.name = name;
+            m.access = access;
+            m.returnType = t;
+            m.arguments = atv;
+            m.className = cname;
+            m.sig = name + m.descr(null);
+            if (name == "<init>")
+                tr.constructors.add(m);
+            else
+                ((access & ACC_STATIC) == 0 ? tr.methods : tr.staticMethods)
+                    .add(m);
+        }
+    }
+
     public static void main(String[] argv) throws Exception {
         HashMap m = new HashMap();
         for (int i = 0; i < argv.length; ++i) {
