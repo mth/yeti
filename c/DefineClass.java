@@ -69,7 +69,7 @@ final class MethodDesc extends YetiType {
         return scope;
     }
 
-    private void check(YetiType.Type t, Node node, String packageName) {
+    private void check(YType t, Node node, String packageName) {
         while (t.type == YetiType.JAVA_ARRAY)
             t = t.param[0];
         if (t.type == YetiType.JAVA && t.javaType.description.charAt(0) == 'L')
@@ -107,7 +107,7 @@ final class MethodDesc extends YetiType {
         private LocalClassBinding next;
         private BindRef[] captures;
         
-        LocalClassBinding(Type classType) {
+        LocalClassBinding(YType classType) {
             super(classType);
         }
 
@@ -222,7 +222,7 @@ final class MethodDesc extends YetiType {
                                  && kind != "abstract-method")
                 continue;
             Node[] m = ((XNode) cl.expr[i]).expr;
-            Type returnType = m[0].sym() == "void" ? UNIT_TYPE :
+            YType returnType = m[0].sym() == "void" ? UNIT_TYPE :
                                 JavaType.typeOfName(m[0].sym(), scope);
             JavaClass.Meth meth =
                 c.addMethod(m[1].sym(), returnType, kind,
@@ -277,7 +277,7 @@ final class MethodDesc extends YetiType {
                 Binder binder;
                 Code code;
                 if (bind.expr.kind == "lambda" && bind.name != "_") {
-                    Function lambda = new Function(new Type(depth + 1));
+                    Function lambda = new Function(new YType(depth + 1));
                     lambda.selfBind = binder =
                         c.addField(bind.name, lambda, bind.var);
                     // binding this for lambdas is unsafe, but useful

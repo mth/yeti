@@ -38,6 +38,96 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
 
+class YType {
+    int type;
+    Map partialMembers;
+    Map finalMembers;
+
+    YType[] param;
+    YType ref;
+    int depth;
+    int flags;
+    int field;
+    boolean seen;
+
+    String doc;
+    JavaType javaType;
+
+    YType(int depth) {
+        this.depth = depth;
+    }
+
+    YType(int type, YType[] param) {
+        this.type = type;
+        this.param = param;
+    }
+
+    YType(String javaSig) {
+        type = YetiType.JAVA;
+        this.javaType = JavaType.fromDescription(javaSig);
+        param = YetiType.NO_PARAM;
+    }
+
+    public String toString() {
+        TypePrettyPrinter tpp = new TypePrettyPrinter();
+        tpp.str(this, "");
+        return tpp.toString();
+    }
+
+    YType deref() {
+        YType res = this;
+        while (res.ref != null) {
+            res = res.ref;
+        }
+        for (YType next, type = this; type.ref != null; type = next) {
+            next = type.ref;
+            type.ref = res;
+        }
+        return res;
+    }
+
+    String doc() {
+        for (YType t = this; t != null; t = t.ref)
+            if (t.doc != null) {
+                t.doc = t.doc.trim();
+                if (doc.length() != 0)
+                    return doc;
+                t.doc = null;
+            }
+        return null;
+    }
+}
+
+class TypeException extends Exception {
+    boolean special;
+    private YType a, b;
+    String sep, ext;
+
+    TypeException(String what) {
+        super(what);
+    }
+
+    TypeException(YType a_, YType b_) {
+        a = a_;
+        b = b_;
+        sep = " is not ";
+        ext = "";
+    }
+
+    TypeException(YType a_, String sep_, YType b_, String ext_) {
+        a = a_;
+        b = b_;
+        sep = sep_;
+        ext = ext_;
+    }
+
+    public String getMessage() {
+        if (a == null)
+            return super.getMessage();
+        return "Type mismatch: " + a + sep + b + ext;
+    }
+}
+
 public class YetiType implements YetiParser {
     static final int VAR  = 0;
     static final int UNIT = 1;
@@ -62,59 +152,59 @@ public class YetiType implements YetiParser {
     static final int FIELD_NON_POLYMORPHIC = 1;
     static final int FIELD_MUTABLE = 2;
 
-    static final Type[] NO_PARAM = {};
-    static final Type UNIT_TYPE = new Type(UNIT, NO_PARAM);
-    static final Type NUM_TYPE  = new Type(NUM,  NO_PARAM);
-    static final Type STR_TYPE  = new Type(STR,  NO_PARAM);
-    static final Type BOOL_TYPE = new Type(BOOL, NO_PARAM);
-    static final Type CHAR_TYPE = new Type(CHAR, NO_PARAM);
-    static final Type NO_TYPE   = new Type(NONE, NO_PARAM);
-    static final Type LIST_TYPE = new Type(LIST_MARKER, NO_PARAM);
-    static final Type MAP_TYPE  = new Type(MAP_MARKER, NO_PARAM);
-    static final Type ORDERED = orderedVar(1);
-    static final Type A = new Type(1);
-    static final Type B = new Type(1);
-    static final Type C = new Type(1);
-    static final Type EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
-    static final Type LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
-    static final Type NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
-    static final Type BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
-    static final Type A_B_LIST_TYPE =
-        new Type(MAP, new Type[] { A, B, LIST_TYPE });
-    static final Type NUM_LIST_TYPE =
-        new Type(MAP, new Type[] { NUM_TYPE, B, LIST_TYPE });
-    static final Type A_B_MAP_TYPE =
-        new Type(MAP, new Type[] { B, A, MAP_TYPE });
-    static final Type A_B_C_MAP_TYPE =
-        new Type(MAP, new Type[] { B, A, C });
-    static final Type A_LIST_TYPE =
-        new Type(MAP, new Type[] { A, NO_TYPE, LIST_TYPE });
-    static final Type C_LIST_TYPE =
-        new Type(MAP, new Type[] { C, NO_TYPE, LIST_TYPE });
-    static final Type STRING_ARRAY =
-        new Type(MAP, new Type[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
-    static final Type CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
-    static final Type LAZYCONS_TYPE =
+    static final YType[] NO_PARAM = {};
+    static final YType UNIT_TYPE = new YType(UNIT, NO_PARAM);
+    static final YType NUM_TYPE  = new YType(NUM,  NO_PARAM);
+    static final YType STR_TYPE  = new YType(STR,  NO_PARAM);
+    static final YType BOOL_TYPE = new YType(BOOL, NO_PARAM);
+    static final YType CHAR_TYPE = new YType(CHAR, NO_PARAM);
+    static final YType NO_TYPE   = new YType(NONE, NO_PARAM);
+    static final YType LIST_TYPE = new YType(LIST_MARKER, NO_PARAM);
+    static final YType MAP_TYPE  = new YType(MAP_MARKER, NO_PARAM);
+    static final YType ORDERED = orderedVar(1);
+    static final YType A = new YType(1);
+    static final YType B = new YType(1);
+    static final YType C = new YType(1);
+    static final YType EQ_TYPE = fun2Arg(A, A, BOOL_TYPE);
+    static final YType LG_TYPE = fun2Arg(ORDERED, ORDERED, BOOL_TYPE);
+    static final YType NUMOP_TYPE = fun2Arg(NUM_TYPE, NUM_TYPE, NUM_TYPE);
+    static final YType BOOLOP_TYPE = fun2Arg(BOOL_TYPE, BOOL_TYPE, BOOL_TYPE);
+    static final YType A_B_LIST_TYPE =
+        new YType(MAP, new YType[] { A, B, LIST_TYPE });
+    static final YType NUM_LIST_TYPE =
+        new YType(MAP, new YType[] { NUM_TYPE, B, LIST_TYPE });
+    static final YType A_B_MAP_TYPE =
+        new YType(MAP, new YType[] { B, A, MAP_TYPE });
+    static final YType A_B_C_MAP_TYPE =
+        new YType(MAP, new YType[] { B, A, C });
+    static final YType A_LIST_TYPE =
+        new YType(MAP, new YType[] { A, NO_TYPE, LIST_TYPE });
+    static final YType C_LIST_TYPE =
+        new YType(MAP, new YType[] { C, NO_TYPE, LIST_TYPE });
+    static final YType STRING_ARRAY =
+        new YType(MAP, new YType[] { STR_TYPE, NUM_TYPE, LIST_TYPE });
+    static final YType CONS_TYPE = fun2Arg(A, A_B_LIST_TYPE, A_LIST_TYPE);
+    static final YType LAZYCONS_TYPE =
         fun2Arg(A, fun(UNIT_TYPE, A_B_LIST_TYPE), A_LIST_TYPE);
-    static final Type A_TO_BOOL = fun(A, BOOL_TYPE);
-    static final Type LIST_TO_A = fun(A_B_LIST_TYPE, A);
-    static final Type MAP_TO_BOOL = fun(A_B_C_MAP_TYPE, BOOL_TYPE);
-    static final Type LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
-    static final Type IN_TYPE = fun2Arg(A, A_B_C_MAP_TYPE, BOOL_TYPE);
-    static final Type COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
-    static final Type BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
-    static final Type NUM_TO_NUM = fun(NUM_TYPE, NUM_TYPE);
-    static final Type STR_TO_NUM_TO_STR =
+    static final YType A_TO_BOOL = fun(A, BOOL_TYPE);
+    static final YType LIST_TO_A = fun(A_B_LIST_TYPE, A);
+    static final YType MAP_TO_BOOL = fun(A_B_C_MAP_TYPE, BOOL_TYPE);
+    static final YType LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
+    static final YType IN_TYPE = fun2Arg(A, A_B_C_MAP_TYPE, BOOL_TYPE);
+    static final YType COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
+    static final YType BOOL_TO_BOOL = fun(BOOL_TYPE, BOOL_TYPE);
+    static final YType NUM_TO_NUM = fun(NUM_TYPE, NUM_TYPE);
+    static final YType STR_TO_NUM_TO_STR =
         fun2Arg(STR_TYPE, NUM_TYPE, STR_TYPE);
-    static final Type FOR_TYPE =
+    static final YType FOR_TYPE =
         fun2Arg(A_B_LIST_TYPE, fun(A, UNIT_TYPE), UNIT_TYPE);
-    static final Type STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
-    static final Type SYNCHRONIZED_TYPE = fun2Arg(A, fun(UNIT_TYPE, B), B);
-    static final Type CLASS_TYPE = new Type("Ljava/lang/Class;");
-    static final Type OBJECT_TYPE = new Type("Ljava/lang/Object;");
-    static final Type WITH_EXIT_TYPE = fun(fun(fun(A, B), A), A);
+    static final YType STR2_PRED_TYPE = fun2Arg(STR_TYPE, STR_TYPE, BOOL_TYPE);
+    static final YType SYNCHRONIZED_TYPE = fun2Arg(A, fun(UNIT_TYPE, B), B);
+    static final YType CLASS_TYPE = new YType("Ljava/lang/Class;");
+    static final YType OBJECT_TYPE = new YType("Ljava/lang/Object;");
+    static final YType WITH_EXIT_TYPE = fun(fun(fun(A, B), A), A);
 
-    static final Type[] PRIMITIVES =
+    static final YType[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
           NO_TYPE, LIST_TYPE, MAP_TYPE };
 
@@ -222,7 +312,7 @@ public class YetiType implements YetiParser {
         return new Scope(scope, name, binder);
     }
 
-    static Scope bindCompare(String op, Type type, int code, Scope scope) {
+    static Scope bindCompare(String op, YType type, int code, Scope scope) {
         return bindPoly(op, type, new Compare(type, code, op), 0, scope);
     }
 
@@ -230,32 +320,32 @@ public class YetiType implements YetiParser {
         return bindScope(op, new ArithOp(op, method, NUMOP_TYPE), scope);
     }
 
-    static Scope bindStr(String name, Type type, String method, String sig,
+    static Scope bindStr(String name, YType type, String method, String sig,
                          Scope scope) {
         return bindScope(name, new StrOp(name, method, sig, type), scope);
     }
 
-    static Scope bindRegex(String name, String impl, Type type, Scope scope) {
+    static Scope bindRegex(String name, String impl, YType type, Scope scope) {
         return bindPoly(name, type, new Regex(name, impl, type), 0, scope);
     }
 
     static Scope bindImport(String name, String className, Scope scope) {
         scope = new Scope(scope, name, null);
-        scope.importClass = new ClassBinding(new Type('L' + className + ';'));
+        scope.importClass = new ClassBinding(new YType('L' + className + ';'));
         return scope;
     }
 
-    static Type fun(Type a, Type res) {
-        return new Type(FUN, new Type[] { a, res });
+    static YType fun(YType a, YType res) {
+        return new YType(FUN, new YType[] { a, res });
     }
 
-    static Type fun2Arg(Type a, Type b, Type res) {
-        return new Type(FUN,
-            new Type[] { a, new Type(FUN, new Type[] { b, res }) });
+    static YType fun2Arg(YType a, YType b, YType res) {
+        return new YType(FUN,
+            new YType[] { a, new YType(FUN, new YType[] { b, res }) });
     }
 
-    static Type variantOf(String[] na, Type[] ta) {
-        Type t = new Type(VARIANT, ta);
+    static YType variantOf(String[] na, YType[] ta) {
+        YType t = new YType(VARIANT, ta);
         t.partialMembers = new HashMap();
         for (int i = 0; i < na.length; ++i) {
             t.partialMembers.put(na[i], ta[i]);
@@ -263,85 +353,25 @@ public class YetiType implements YetiParser {
         return t;
     }
 
-    static final class Type {
-        int type;
-        Map partialMembers;
-        Map finalMembers;
-
-        Type[] param;
-        Type ref;
-        int depth;
-        int flags;
-        int field;
-        boolean seen;
-
-        String doc;
-        JavaType javaType;
-
-        Type(int depth) {
-            this.depth = depth;
-        }
-
-        Type(int type, Type[] param) {
-            this.type = type;
-            this.param = param;
-        }
-
-        Type(String javaSig) {
-            type = JAVA;
-            this.javaType = JavaType.fromDescription(javaSig);
-            param = NO_PARAM;
-        }
-
-        public String toString() {
-            TypePrettyPrinter tpp = new TypePrettyPrinter();
-            tpp.str(this, "");
-            return tpp.toString();
-        }
-
-        Type deref() {
-            Type res = this;
-            while (res.ref != null) {
-                res = res.ref;
-            }
-            for (Type next, type = this; type.ref != null; type = next) {
-                next = type.ref;
-                type.ref = res;
-            }
-            return res;
-        }
-
-        String doc() {
-            for (Type t = this; t != null; t = t.ref)
-                if (t.doc != null) {
-                    t.doc = t.doc.trim();
-                    if (doc.length() != 0)
-                        return doc;
-                    t.doc = null;
-                }
-            return null;
-        }
-    }
-
-    static Type mutableFieldRef(Type src) {
-        Type t = new Type(src.depth);
+    static YType mutableFieldRef(YType src) {
+        YType t = new YType(src.depth);
         t.ref = src.ref;
         t.flags = src.flags;
         t.field = FIELD_MUTABLE;
         return t;
     }
 
-    static Type fieldRef(int depth, Type ref, int kind) {
-        Type t = new Type(depth);
+    static YType fieldRef(int depth, YType ref, int kind) {
+        YType t = new YType(depth);
         t.ref = ref.deref();
         t.field = kind;
         return t;
     }
 
     static class ClassBinding {
-        final Type type;
+        final YType type;
 
-        ClassBinding(Type classType) {
+        ClassBinding(YType classType) {
             this.type = classType;
         }
 
@@ -364,10 +394,10 @@ public class YetiType implements YetiParser {
         Scope outer;
         String name;
         Binder binder;
-        Type[] free;
+        YType[] free;
         Closure closure; // non-null means outer scopes must be proxied
         ClassBinding importClass;
-        Type[] typeDef;
+        YType[] typeDef;
 
         ScopeCtx ctx;
 
@@ -379,13 +409,13 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static Type orderedVar(int maxDepth) {
-        Type type = new Type(maxDepth);
+    static YType orderedVar(int maxDepth) {
+        YType type = new YType(maxDepth);
         type.flags = FL_ORDERED_REQUIRED;
         return type;
     }
 
-    static void limitDepth(Type type, int maxDepth) {
+    static void limitDepth(YType type, int maxDepth) {
         type = type.deref();
         if (type.type != VAR) {
             if (type.seen) {
@@ -401,41 +431,11 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static class TypeException extends Exception {
-        boolean special;
-        private Type a, b;
-        String sep, ext;
-
-        TypeException(String what) {
-            super(what);
-        }
-
-        TypeException(Type a_, Type b_) {
-            a = a_;
-            b = b_;
-            sep = " is not ";
-            ext = "";
-        }
-
-        TypeException(Type a_, String sep_, Type b_, String ext_) {
-            a = a_;
-            b = b_;
-            sep = sep_;
-            ext = ext_;
-        }
-
-        public String getMessage() {
-            if (a == null)
-                return super.getMessage();
-            return "Type mismatch: " + a + sep + b + ext;
-        }
-    }
-
-    static void mismatch(Type a, Type b) throws TypeException {
+    static void mismatch(YType a, YType b) throws TypeException {
         throw new TypeException(a, b);
     }
 
-    static void finalizeStruct(Type partial, Type src) throws TypeException {
+    static void finalizeStruct(YType partial, YType src) throws TypeException {
         if (src.finalMembers == null || partial.partialMembers == null /*||
                 partial.finalMembers != null*/) {
             return; // nothing to check
@@ -443,12 +443,12 @@ public class YetiType implements YetiParser {
         Object[] members = partial.partialMembers.entrySet().toArray();
         for (int i = 0; i < members.length; ++i) {
             Map.Entry entry = (Map.Entry) members[i];
-            Type ff = (Type) src.finalMembers.get(entry.getKey());
+            YType ff = (YType) src.finalMembers.get(entry.getKey());
             if (ff == null) {
                 throw new TypeException(src, " => ",
                        partial, " (member missing: " + entry.getKey() + ")");
             }
-            Type partField = (Type) entry.getValue();
+            YType partField = (YType) entry.getValue();
             if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
                 throw new TypeException("Field '" + entry.getKey()
                     + "' constness mismatch: " + src + " => " + partial);
@@ -457,8 +457,8 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unifyMembers(Type a, Type b) throws TypeException {
-        Type oldRef = b.ref;
+    static void unifyMembers(YType a, YType b) throws TypeException {
+        YType oldRef = b.ref;
         try {
             b.ref = a; // just fake ref now to avoid cycles...
             Map ff;
@@ -480,9 +480,9 @@ public class YetiType implements YetiParser {
                 ff = new HashMap(a.finalMembers);
                 for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
                     Map.Entry entry = (Map.Entry) i.next();
-                    Type f = (Type) b.finalMembers.get(entry.getKey());
+                    YType f = (YType) b.finalMembers.get(entry.getKey());
                     if (f != null) {
-                        Type t = (Type) entry.getValue();
+                        YType t = (YType) entry.getValue();
                         unify(f, t);
                         // constness spreads
                         if (t.field != f.field) {
@@ -508,9 +508,9 @@ public class YetiType implements YetiParser {
                 Object[] aa = a.partialMembers.entrySet().toArray();
                 for (int i = 0; i < aa.length; ++i) {
                     Map.Entry entry = (Map.Entry) aa[i];
-                    Type f = (Type) b.partialMembers.get(entry.getKey());
+                    YType f = (YType) b.partialMembers.get(entry.getKey());
                     if (f != null) {
-                        unify((Type) entry.getValue(), f);
+                        unify((YType) entry.getValue(), f);
                         // mutability spreads
                         if (f.field >= FIELD_NON_POLYMORPHIC) {
                             entry.setValue(f);
@@ -526,7 +526,7 @@ public class YetiType implements YetiParser {
                 ff = new HashMap(ff);
                 ff.putAll(a.partialMembers);
             }
-            a.param = (Type[]) ff.values().toArray(new Type[ff.size()]);
+            a.param = (YType[]) ff.values().toArray(new YType[ff.size()]);
             b.type = VAR;
             b.ref = a;
         } catch (TypeException ex) {
@@ -535,7 +535,7 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unifyJava(Type jt, Type t) throws TypeException {
+    static void unifyJava(YType jt, YType t) throws TypeException {
         String descr = jt.javaType.description;
         if (t.type != JAVA) {
             if (t.type == UNIT && descr == "V")
@@ -548,20 +548,20 @@ public class YetiType implements YetiParser {
         mismatch(jt, t);
     }
 
-    static void requireOrdered(Type type) throws TypeException {
+    static void requireOrdered(YType type) throws TypeException {
         switch (type.type) {
             case VARIANT:
                 if ((type.flags & FL_ORDERED_REQUIRED) == 0) {
                     if (type.partialMembers != null) {
                         Iterator i = type.partialMembers.values().iterator();
                         while (i.hasNext()) {
-                            requireOrdered((Type) i.next());
+                            requireOrdered((YType) i.next());
                         }
                     }
                     if (type.finalMembers != null) {
                         Iterator i = type.finalMembers.values().iterator();
                         while (i.hasNext()) {
-                            requireOrdered((Type) i.next());
+                            requireOrdered((YType) i.next());
                         }
                         type.flags |= FL_ORDERED_REQUIRED;
                     }
@@ -596,7 +596,7 @@ public class YetiType implements YetiParser {
         throw ex;
     }
 
-    static void occursCheck(Type type, Type var) throws TypeException {
+    static void occursCheck(YType type, YType var) throws TypeException {
         type = type.deref();
         if (type == var) {
             TypeException ex =
@@ -611,7 +611,7 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unifyToVar(Type var, Type from) throws TypeException {
+    static void unifyToVar(YType var, YType from) throws TypeException {
         occursCheck(from, var);
         if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
             requireOrdered(from);
@@ -621,7 +621,7 @@ public class YetiType implements YetiParser {
         var.ref = from;
     }
 
-    static void unify(Type a, Type b) throws TypeException {
+    static void unify(YType a, YType b) throws TypeException {
         a = a.deref();
         b = b.deref();
         if (a == b) {
@@ -644,8 +644,8 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unify(Type a, Type b, Node where,
-                      Type param1, Type param2, String error) {
+    static void unify(YType a, YType b, Node where,
+                      YType param1, YType param2, String error) {
         try {
             unify(a, b);
         } catch (TypeException ex) {
@@ -653,12 +653,12 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unify(Type a, Type b, Node where, String error) {
+    static void unify(YType a, YType b, Node where, String error) {
         unify(a, b, where, a, b, error);
     }
 
-    static Type mergeOrUnify(Type to, Type val) throws TypeException {
-        Type t = JavaType.mergeTypes(to, val);
+    static YType mergeOrUnify(YType to, YType val) throws TypeException {
+        YType t = JavaType.mergeTypes(to, val);
         if (t != null) {
             return t;
         }
@@ -670,8 +670,8 @@ public class YetiType implements YetiParser {
         Map result = new HashMap();
         for (Iterator i = types.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
-            Type t = (Type) entry.getValue();
-            Type nt = copyType(t, free, known);
+            YType t = (YType) entry.getValue();
+            YType nt = copyType(t, free, known);
             // looks like a hack, but fixing here avoids unnecessery refs
             if (t.field != nt.field) {
                 nt = mutableFieldRef(nt);
@@ -683,22 +683,22 @@ public class YetiType implements YetiParser {
         return result;
     }
 
-    static Type copyType(Type type_, Map free, Map known) {
-        Type type = type_.deref();
+    static YType copyType(YType type_, Map free, Map known) {
+        YType type = type_.deref();
         if (type.type == VAR) {
-            Type var = (Type) free.get(type);
+            YType var = (YType) free.get(type);
             return var == null ? type : var;
         }
         if (type.param.length == 0) {
             return type_;
         }
-        Type copy = (Type) known.get(type);
+        YType copy = (YType) known.get(type);
         if (copy != null) {
             return copy;
         }
-        Type[] param = new Type[type.param.length];
-        copy = new Type(type.type, param);
-        Type res = copy;
+        YType[] param = new YType[type.param.length];
+        copy = new YType(type.type, param);
+        YType res = copy;
         if (type_.field >= FIELD_NON_POLYMORPHIC) {
             res = mutableFieldRef(type_);
             res.field = type_.field;
@@ -717,11 +717,11 @@ public class YetiType implements YetiParser {
         return res;
     }
 
-    private static Map createFreeVars(Type[] freeTypes, int depth) {
+    private static Map createFreeVars(YType[] freeTypes, int depth) {
         HashMap vars = new HashMap();
         for (int i = freeTypes.length; --i >= 0;) {
-            Type t = new Type(depth);
-            Type free = freeTypes[i];
+            YType t = new YType(depth);
+            YType free = freeTypes[i];
             t.flags = free.flags;
             t.field = free.field;
             vars.put(free, t);
@@ -760,7 +760,7 @@ public class YetiType implements YetiParser {
         return ref;
     }
 
-    static Type resolveClass(String name, Scope scope, boolean shadow) {
+    static YType resolveClass(String name, Scope scope, boolean shadow) {
         if (name.indexOf('/') >= 0) {
             return JavaType.typeOfClass(null, name);
         }
@@ -777,7 +777,7 @@ public class YetiType implements YetiParser {
     static ClassBinding resolveFullClass(String name, Scope scope,
                                          boolean refs, Node checkPerm) {
         String packageName = scope.ctx.packageName;
-        Type t;
+        YType t;
         if (name.indexOf('/') >= 0) {
             packageName = null;
         } else if (refs) {
@@ -797,20 +797,20 @@ public class YetiType implements YetiParser {
         return new ClassBinding(JavaType.typeOfClass(packageName, name));
     }
 
-    static Type resolveFullClass(String name, Scope scope) {
-        Type t = resolveClass(name, scope, false);
+    static YType resolveFullClass(String name, Scope scope) {
+        YType t = resolveClass(name, scope, false);
         return t == null ?
                 JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
-    static void getFreeVar(List vars, List deny, Type type, int depth) {
+    static void getFreeVar(List vars, List deny, YType type, int depth) {
         if (type.seen) {
             return;
         }
         if (deny != null && type.field >= FIELD_NON_POLYMORPHIC) {
             vars = deny; // anything under mutable field is evil
         }
-        Type t = type.deref();
+        YType t = type.deref();
         if (t.type != VAR) {
             if (t.type == FUN) {
                 deny = null;
@@ -825,7 +825,7 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static Scope bindPoly(String name, Type valueType, Binder value,
+    static Scope bindPoly(String name, YType valueType, Binder value,
                           int depth, Scope scope) {
         List free = new ArrayList(), deny = new ArrayList();
         getFreeVar(free, deny, valueType, depth);
@@ -837,11 +837,11 @@ public class YetiType implements YetiParser {
             }
         }
         scope = new Scope(scope, name, value);
-        scope.free = (Type[]) free.toArray(new Type[free.size()]);
+        scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
     }
 
-    static Type resolveTypeDef(Scope scope, String name, Type[] param,
+    static YType resolveTypeDef(Scope scope, String name, YType[] param,
                                int depth, Node where) {
         for (; scope != null; scope = scope.outer) {
             if (scope.typeDef != null && scope.name == name) {

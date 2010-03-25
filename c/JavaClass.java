@@ -49,20 +49,20 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private int captureCount;
     private Map accessors;
     private Ctx classCtx;
-    YetiType.Type classType;
+    YType classType;
     final Meth constr = new Meth();
     final Binder self;
 
     static class Arg extends BindRef implements Binder {
         int argn;
-        final YetiType.Type javaType;
+        final YType javaType;
 
         Arg(JavaClass c) {
             type = javaType = c.classType;
             binder = this;
         }
 
-        Arg(YetiType.Type type) {
+        Arg(YType type) {
             this.javaType = type;
             this.type = JavaType.convertValueType(type);
             binder = this;
@@ -93,7 +93,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         Capture captures;
         Code code;
 
-        Binder addArg(YetiType.Type type) {
+        Binder addArg(YType type) {
             Arg arg = new Arg(type);
             args.add(arg);
             arg.argn = (access & ACC_STATIC) == 0
@@ -110,7 +110,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
         
         void init() {
-            arguments = new YetiType.Type[args.size()];
+            arguments = new YType[args.size()];
             for (int i = 0; i < arguments.length; ++i) {
                 Arg arg = (Arg) args.get(i);
                 arguments[i] = arg.javaType;
@@ -249,7 +249,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     JavaClass(String className, boolean isPublic) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
-        classType = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
+        classType = new YType(YetiType.JAVA, YetiType.NO_PARAM);
         classType.javaType = JavaType.createNewClass(className, this);
         self = new Arg(this);
         constr.name = "<init>";
@@ -259,7 +259,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         this.isPublic = isPublic;
     }
 
-    static void loadArg(Ctx ctx, YetiType.Type argType, int n) {
+    static void loadArg(Ctx ctx, YType argType, int n) {
         int ins = ALOAD;
         if (argType.type == YetiType.JAVA) {
             switch (argType.javaType.description.charAt(0)) {
@@ -273,7 +273,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         ctx.visitVarInsn(ins, n);
     }
 
-    static void genRet(Ctx ctx, YetiType.Type returnType) {
+    static void genRet(Ctx ctx, YType returnType) {
         int ins = ARETURN;
         if (returnType.type == YetiType.JAVA) {
             switch (returnType.javaType.description.charAt(0)) {
@@ -293,7 +293,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         implement = interfaces;
     }
 
-    Meth addMethod(String name, YetiType.Type returnType,
+    Meth addMethod(String name, YType returnType,
                    String mod, int line) {
         Meth m = new Meth();
         m.name = name;

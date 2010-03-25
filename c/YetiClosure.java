@@ -57,7 +57,7 @@ class Apply extends Code {
     private int arity = 1;
     BindExpr.Ref ref;
 
-    Apply(YetiType.Type res, Code fun, Code arg, int line) {
+    Apply(YType res, Code fun, Code arg, int line) {
         type = res;
         this.fun = fun;
         this.arg = arg;
@@ -123,7 +123,7 @@ class Apply extends Code {
         }
     }
 
-    Code apply(Code arg, final YetiType.Type res, int line) {
+    Code apply(Code arg, final YType res, int line) {
         Apply a = new Apply(res, this, arg, line);
         a.arity = arity + 1;
         if (ref != null) {
@@ -162,7 +162,7 @@ final class TryCatch extends CapturingClosure {
         this.block = block;
     }
 
-    Catch addCatch(YetiType.Type ex) {
+    Catch addCatch(YType ex) {
         Catch c = new Catch();
         c.type = ex;
         catches.add(c);
@@ -266,7 +266,7 @@ abstract class CaptureRef extends BindRef {
         boolean tail;
         int depth;
 
-        SelfApply(YetiType.Type type, Code f, Code arg,
+        SelfApply(YType type, Code f, Code arg,
                   int line, int depth) {
             super(type, f, arg, line);
             this.depth = depth;
@@ -310,7 +310,7 @@ abstract class CaptureRef extends BindRef {
             tail = true;
         }
 
-        Code apply(Code arg, YetiType.Type res, int line) {
+        Code apply(Code arg, YType res, int line) {
             if (depth < 0)
                 return super.apply(arg, res, line);
             if (depth == 1 && capturer.argCaptures == null) {
@@ -338,7 +338,7 @@ abstract class CaptureRef extends BindRef {
         }
     }
 
-    Code apply(Code arg, YetiType.Type res, int line) {
+    Code apply(Code arg, YType res, int line) {
         if (args != null) {
             return new SelfApply(res, this, arg, line, args.length);
         }
@@ -621,7 +621,7 @@ final class Function extends CapturingClosure implements Binder {
         }
     };
 
-    Function(YetiType.Type type) {
+    Function(YType type) {
         this.type = type;
         arg.binder = this;
     }

@@ -146,7 +146,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (arr != 0)
                     cn = cn.intern();
-                Type t = cn != "module" ? null :
+                YType t = cn != "module" ? null :
                     resolveClass("module", scope, false);
                 return new ClassOfExpr(t != null ? t.javaType :
                                 resolveFullClass(cn, scope, false, x)
@@ -196,7 +196,7 @@ public final class YetiAnalyzer extends YetiType {
             if (opop == "throw") {
                 Code throwable = analyze(op.right, scope, depth);
                 JavaType.checkThrowable(op, throwable.type);
-                return new Throw(throwable, new Type(depth));
+                return new Throw(throwable, new YType(depth));
             }
             if (opop == "instanceof") {
                 JavaType jt = resolveFullClass(((InstanceOf) op).className,
@@ -226,11 +226,11 @@ public final class YetiAnalyzer extends YetiType {
             "I think that this " + node + " should not be here.");
     }
 
-    static Type nodeToMembers(int type, TypeNode[] param, Map free,
+    static YType nodeToMembers(int type, TypeNode[] param, Map free,
                               Scope scope, int depth) {
         Map members = new HashMap();
         Map members_ = new HashMap();
-        Type[] tp = new Type[param.length];
+        YType[] tp = new YType[param.length];
         for (int i = 0; i < param.length; ++i) {
             tp[i] = nodeToType(param[i].param[0], free, scope, depth);
             tp[i].doc = param[i].doc;
@@ -248,7 +248,7 @@ public final class YetiAnalyzer extends YetiType {
                                     + name + " in structure type");
             }
         }
-        Type result = new Type(type, tp);
+        YType result = new YType(type, tp);
         if (type == STRUCT) {
             if (members.isEmpty()) {
                 members = null;
@@ -278,12 +278,12 @@ public final class YetiAnalyzer extends YetiType {
         { "string",  STR_TYPE  }
     };
 
-    static Type nodeToType(TypeNode node, Map free, Scope scope, int depth) {
+    static YType nodeToType(TypeNode node, Map free, Scope scope, int depth) {
         String name = node.name;
         for (int i = PRIMITIVE_TYPE_MAPPING.length; --i >= 0;) {
             if (PRIMITIVE_TYPE_MAPPING[i][0] == name) {
                 expectsParam(node, 0);
-                return (Type) PRIMITIVE_TYPE_MAPPING[i][1];
+                return (YType) PRIMITIVE_TYPE_MAPPING[i][1];
             }
         }
         if (name == "") {
@@ -294,64 +294,64 @@ public final class YetiAnalyzer extends YetiType {
         }
         if (name == "->") {
             expectsParam(node, 2);
-            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
+            YType[] tp = { nodeToType(node.param[0], free, scope, depth),
                           nodeToType(node.param[1], free, scope, depth) };
-            return new Type(FUN, tp);
+            return new YType(FUN, tp);
         }
         if (name == "array") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
+            YType[] tp = { nodeToType(node.param[0], free, scope, depth),
                           NUM_TYPE, LIST_TYPE };
-            return new Type(MAP, tp);
+            return new YType(MAP, tp);
         }
         if (name == "list") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
+            YType[] tp = { nodeToType(node.param[0], free, scope, depth),
                           NO_TYPE, LIST_TYPE };
-            return new Type(MAP, tp);
+            return new YType(MAP, tp);
         }
         if (name == "list?") {
             expectsParam(node, 1);
-            Type[] tp = { nodeToType(node.param[0], free, scope, depth),
-                          new Type(depth), LIST_TYPE };
-            return new Type(MAP, tp);
+            YType[] tp = { nodeToType(node.param[0], free, scope, depth),
+                          new YType(depth), LIST_TYPE };
+            return new YType(MAP, tp);
         }
         if (name == "hash") {
             expectsParam(node, 2);
-            Type[] tp = { nodeToType(node.param[1], free, scope, depth),
+            YType[] tp = { nodeToType(node.param[1], free, scope, depth),
                           nodeToType(node.param[0], free, scope, depth),
                           MAP_TYPE };
-            return new Type(MAP, tp);
+            return new YType(MAP, tp);
         }
         if (name == "map") {
             expectsParam(node, 2);
-            Type[] tp = { nodeToType(node.param[1], free, scope, depth),
+            YType[] tp = { nodeToType(node.param[1], free, scope, depth),
                           nodeToType(node.param[0], free, scope, depth),
-                          new Type(depth) };
-            return new Type(MAP, tp);
+                          new YType(depth) };
+            return new YType(MAP, tp);
         }
         if (Character.isUpperCase(name.charAt(0))) {
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth);
         }
-        Type t;
+        YType t;
         char c = name.charAt(0);
         if (c == '~') {
             expectsParam(node, 0);
             t = JavaType.typeOfName(
                 name.substring(1).replace('.', '/').intern(), scope);
         } else if (c == '\'') {
-            t = (Type) free.get(name);
+            t = (YType) free.get(name);
             if (t == null)
-                free.put(name, t = new Type(depth));
+                free.put(name, t = new YType(depth));
         } else if (c == '^') {
-            t = (Type) free.get(name);
+            t = (YType) free.get(name);
             if (t == null) {
-                free.put(name, t = new Type(depth));
+                free.put(name, t = new YType(depth));
                 t.flags = FL_ORDERED_REQUIRED;
             }
         } else {
-            Type[] tp = new Type[node.param.length];
+            YType[] tp = new YType[node.param.length];
             for (int i = 0; i < tp.length; ++i)
                 tp[i] = nodeToType(node.param[i], free, scope, depth);
             t = resolveTypeDef(scope, name, tp, depth, node);
@@ -361,8 +361,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code isOp(Node is, TypeNode type, Code value,
                      Scope scope, int depth) {
-        Type t = nodeToType(type, new HashMap(), scope, depth).deref();
-        Type vt = value.type.deref();
+        YType t = nodeToType(type, new HashMap(), scope, depth).deref();
+        YType vt = value.type.deref();
         String s;
         if (is instanceof BinOp && (s = ((BinOp) is).op) != "is") {
             // () is class is a way for writing null constant
@@ -395,7 +395,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code objectRef(ObjectRefOp ref, Scope scope, int depth) {
         Code obj = null;
-        Type t = null;
+        YType t = null;
         if (ref.right instanceof Sym) {
             String className = ref.right.sym();
             t = resolveClass(className, scope, true);
@@ -440,7 +440,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         for (int i = 1; i <= lastCatch; ++i) {
             XNode c = (XNode) t.expr[i];
-            Type exception = resolveFullClass(c.expr[0].sym(), scope);
+            YType exception = resolveFullClass(c.expr[0].sym(), scope);
             exception.javaType.resolve(c);
             TryCatch.Catch cc = tc.addCatch(exception);
             String bind = c.expr[1].sym();
@@ -454,7 +454,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code apply(Node where, Code fun, Node arg, Scope scope, int depth) {
         // try cast java types on apply
-        Type funt = fun.type.deref(),
+        YType funt = fun.type.deref(),
              funarg = funt.type == FUN ? funt.param[0].deref() : null;
         XNode lambdaArg = asLambda(arg);
         Code argCode = lambdaArg != null // prespecifing the lambda type
@@ -464,9 +464,9 @@ public final class YetiAnalyzer extends YetiType {
             JavaType.isSafeCast(where, funarg, argCode.type)) {
             argCode = new Cast(argCode, funarg, true, where.line);
         }
-        Type[] applyFun = { argCode.type, new Type(depth) };
+        YType[] applyFun = { argCode.type, new YType(depth) };
         try {
-            unify(fun.type, new Type(FUN, applyFun));
+            unify(fun.type, new YType(FUN, applyFun));
         } catch (TypeException ex) {
             if (funt.type == UNIT) {
                 throw new CompileException(where,
@@ -478,7 +478,7 @@ public final class YetiAnalyzer extends YetiType {
                             "to a function, maybe a missing `;'?" +
                             "\n    (cannot apply " + funt + " to an argument)");
             }
-            Type argt = argCode.type.deref();
+            YType argt = argCode.type.deref();
             String s = "Cannot apply #1 function";
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;
@@ -520,29 +520,29 @@ public final class YetiAnalyzer extends YetiType {
             parts.addFirst(x.sym());
             String[] fields =
                 (String[]) parts.toArray(new String[parts.size()]);
-            Type res = new Type(depth), arg = res;
+            YType res = new YType(depth), arg = res;
             for (int i = fields.length; --i >= 0;) {
                 arg = selectMemberType(arg, fields[i], depth);
             }
-            return new SelectMemberFun(new Type(FUN, new Type[] { arg, res }),
+            return new SelectMemberFun(new YType(FUN, new YType[] { arg, res }),
                                        fields);
         }
         Code fun = resolve(sym, section, scope, depth);
         Code arg = analyze(section.expr[1], scope, depth);
-        Type[] r = { new Type(depth), new Type(depth) };
-        Type[] afun = { r[0], new Type(FUN, new Type[] { arg.type, r[1] }) };
-        unify(fun.type, new Type(FUN, afun), section, fun.type, arg.type,
+        YType[] r = { new YType(depth), new YType(depth) };
+        YType[] afun = { r[0], new YType(FUN, new YType[] { arg.type, r[1] }) };
+        unify(fun.type, new YType(FUN, afun), section, fun.type, arg.type,
               "Cannot apply #2 as a 2nd argument to #1\n    #0");
-        return fun.apply2nd(arg, new Type(FUN, r), section.line);
+        return fun.apply2nd(arg, new YType(FUN, r), section.line);
     }
 
     static Code variantConstructor(String name, int depth) {
-        Type arg = new Type(depth);
-        Type tag = new Type(VARIANT, new Type[] { arg });
+        YType arg = new YType(depth);
+        YType tag = new YType(VARIANT, new YType[] { arg });
         tag.partialMembers = new HashMap();
         tag.partialMembers.put(name, arg);
-        Type[] fun = { arg, tag };
-        return new VariantConstructor(new Type(FUN, fun), name);
+        YType[] fun = { arg, tag };
+        return new VariantConstructor(new YType(FUN, fun), name);
     }
 
     static void checkSelectorSym(Node op, Node sym) {
@@ -554,8 +554,8 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
-    static Type selectMemberType(Type res, String field, int depth) {
-        Type arg = new Type(STRUCT, new Type[] { res });
+    static YType selectMemberType(YType res, String field, int depth) {
+        YType arg = new YType(STRUCT, new YType[] { res });
         arg.partialMembers = new HashMap();
         arg.partialMembers.put(field, res);
         return arg;
@@ -563,9 +563,9 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code selectMember(Node op, Sym member, Code src,
                              Scope scope, int depth) {
-        final Type res = new Type(depth);
+        final YType res = new YType(depth);
         final String field = member.sym;
-        Type arg = selectMemberType(res, field, depth);
+        YType arg = selectMemberType(res, field, depth);
         try {
             unify(arg, src.type);
         } catch (TypeException ex) {
@@ -592,17 +592,17 @@ public final class YetiAnalyzer extends YetiType {
                         "#1 do not have ." + field + " field", ex);
         }
         boolean poly = src.polymorph && src.type.finalMembers != null &&
-            ((Type) src.type.finalMembers.get(field)).field == 0;
+            ((YType) src.type.finalMembers.get(field)).field == 0;
         return new SelectMember(res, src, field, op.line, poly) {
             boolean mayAssign() {
-                Type t = st.type.deref();
-                Type given;
+                YType t = st.type.deref();
+                YType given;
                 if (t.finalMembers != null &&
-                    (given = (Type) t.finalMembers.get(field)) != null &&
+                    (given = (YType) t.finalMembers.get(field)) != null &&
                     (given.field != FIELD_MUTABLE)) {
                     return false;
                 }
-                Type self = (Type) t.partialMembers.get(field);
+                YType self = (YType) t.partialMembers.get(field);
                 if (self.field != FIELD_MUTABLE) {
                     // XXX couldn't we get along with res.field = FIELD_MUTABLE?
                     t.partialMembers.put(field, mutableFieldRef(res));
@@ -620,14 +620,14 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(keyList, "Unexpected , inside .[]");
         }
         Code key = analyze(keyList.expr[0], scope, depth);
-        Type t = val.type.deref();
+        YType t = val.type.deref();
         if (t.type == JAVA_ARRAY) {
             unify(key.type, NUM_TYPE, keyList.expr[0],
                   "Array index must be a number (but here was #1)");
             return new JavaArrayRef(t.param[0], val, key, keyList.expr[0].line);
         }
-        Type[] param = { new Type(depth), key.type, new Type(depth) };
-        unify(val.type, new Type(MAP, param), keyList, val.type, key.type,
+        YType[] param = { new YType(depth), key.type, new YType(depth) };
+        unify(val.type, new YType(MAP, param), keyList, val.type, key.type,
               "#1 cannot be referenced by #2 key");
         return new KeyRefExpr(param[0], val, key, keyList.line);
     }
@@ -653,7 +653,7 @@ public final class YetiAnalyzer extends YetiType {
         return new ConcatStrings(parts);
     }
 
-    static Type mergeIfType(Node where, Type result, Type val) {
+    static YType mergeIfType(Node where, YType result, YType val) {
         try {
             return mergeOrUnify(result, val);
         } catch (TypeException ex) {
@@ -664,7 +664,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code cond(XNode condition, Scope scope, int depth) {
         List conds = new ArrayList();
-        Type result = null;
+        YType result = null;
         boolean poly = true;
         for (;;) {
             Code cond = analyze(condition.expr[0], scope, depth);
@@ -708,7 +708,7 @@ public final class YetiAnalyzer extends YetiType {
                 "Closed binding must be a function binding");
         }
         // recursive binding
-        Function lambda = new Function(new Type(depth + 1));
+        Function lambda = new Function(new YType(depth + 1));
         BindExpr binder = new BindExpr(lambda, bind.var);
         lambda.selfBind = binder;
         if (!bind.noRec)
@@ -731,7 +731,7 @@ public final class YetiAnalyzer extends YetiType {
                     for (Scope i = ROOT_SCOPE; i != null; i = i.outer)
                         if (i.name == name)
                             continue members;
-                Type t = (Type) e.getValue();
+                YType t = (YType) e.getValue();
                 scope = bindPoly(name, t, m.bindField(name, t), depth, scope);
             }
         } else if (m.type.type != UNIT) {
@@ -816,20 +816,20 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Scope bindTypeDef(TypeDef typeDef, Object seqKind, Scope scope) {
-        Type self = new Type(-1);
+        YType self = new YType(-1);
         Scope defScope = new Scope(scope, typeDef.name, null);
         defScope.free = NO_PARAM;
-        defScope.typeDef = new Type[] { self };
-        Type[] def = new Type[typeDef.param.length + 1];
+        defScope.typeDef = new YType[] { self };
+        YType[] def = new YType[typeDef.param.length + 1];
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
-            Type arg = new Type(-1);
+            YType arg = new YType(-1);
             def[i] = arg;
             defScope = new Scope(defScope, typeDef.param[i], null);
-            defScope.typeDef = new Type[] { arg };
+            defScope.typeDef = new YType[] { arg };
             defScope.free = NO_PARAM;
         }
-        Type type =
+        YType type =
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
         def[def.length - 1] = type;
         // XXX the order of unify arguments matters!
@@ -850,7 +850,7 @@ public final class YetiAnalyzer extends YetiType {
             unify(value.type, UNIT_TYPE);
         } catch (TypeException ex) {
             String s = what + ", not a #1";
-            Type t = value.type.deref();
+            YType t = value.type.deref();
             int tt;
             if (t.type == FUN &&
                 ((tt = t.param[1].deref().type) == VAR
@@ -901,7 +901,7 @@ public final class YetiAnalyzer extends YetiType {
                 Iterator j = m.moduleType.typeDefs.entrySet().iterator();
                 while (j.hasNext()) {
                     Map.Entry e = (Map.Entry) j.next();
-                    Type[] typeDef = (Type[]) e.getValue();
+                    YType[] typeDef = (YType[]) e.getValue();
                     scope = bindPoly((String) e.getKey(),
                                 typeDef[typeDef.length - 1], null, 0, scope);
                     scope.typeDef = typeDef;
@@ -915,7 +915,7 @@ public final class YetiAnalyzer extends YetiType {
                     int lastSlash = name.lastIndexOf('/');
                     scope = new Scope(scope, (lastSlash < 0 ? name :
                                  name.substring(lastSlash + 1)).intern(), null);
-                    Type classType = new Type("L" + name + ';');
+                    YType classType = new YType("L" + name + ';');
                     scope.importClass = new ClassBinding(classType);
                     if (seq.seqKind == Seq.EVAL)
                         YetiEval.registerImport(scope.name, classType);
@@ -970,7 +970,7 @@ public final class YetiAnalyzer extends YetiType {
     } 
 
     static Code lambda(Function to, XNode lambda, Scope scope, int depth) {
-        Type expected = to.type == null ? null : to.type.deref();
+        YType expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
         Scope bodyScope = null;
         SeqExpr[] seq = null;
@@ -979,7 +979,7 @@ public final class YetiAnalyzer extends YetiType {
             if (expected != null && expected.type == FUN) {
                 to.arg.type = expected.param[0];
             } else {
-                to.arg.type = new Type(depth);
+                to.arg.type = new YType(depth);
             }
             String argName = arg.sym();
             if (argName != "_")
@@ -987,7 +987,7 @@ public final class YetiAnalyzer extends YetiType {
         } else if (arg.kind == "()") {
             to.arg.type = UNIT_TYPE;
         } else if (arg.kind == "struct") {
-            to.arg.type = new Type(depth);
+            to.arg.type = new YType(depth);
             seq = new SeqExpr[] { null, null };
             bodyScope = bindStruct(to, (XNode) arg, false, scope, depth, seq);
         } else {
@@ -1008,7 +1008,7 @@ public final class YetiAnalyzer extends YetiType {
             wrapSeq(f, seq);
         } else {
             Code body = analyze(lambda.expr[1], bodyScope, depth);
-            Type res; // try casting to expected type
+            YType res; // try casting to expected type
             if (expected != null && expected.type == FUN &&
                 JavaType.isSafeCast(lambda, res = expected.param[1].deref(),
                                     body.type)) {
@@ -1016,7 +1016,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             to.setBody(wrapSeq(body, seq));
         }
-        Type fun = new Type(FUN, new Type[] { to.arg.type, to.body.type });
+        YType fun = new YType(FUN, new YType[] { to.arg.type, to.body.type });
         if (to.type != null) {
             unify(fun, to.type, lambda,
                   "Function type #~ (self-binding)\n    #0");
@@ -1057,7 +1057,7 @@ public final class YetiAnalyzer extends YetiType {
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = getField(nodes[i]);
             Function lambda = !field.noRec && field.expr.kind == "lambda"
-                            ? funs[i] = new Function(new Type(depth)) : null;
+                            ? funs[i] = new Function(new YType(depth)) : null;
             Code code =
                 lambda != null ? lambda : analyze(field.expr, scope, depth);
             if (field.doc != null)
@@ -1075,9 +1075,9 @@ public final class YetiAnalyzer extends YetiType {
                     duplicateField(field);
                 }
                 // get is () -> t, set is t -> ()
-                Type t = (Type) fields.get(field.name);
+                YType t = (YType) fields.get(field.name);
                 if (t == null) {
-                    t = new Type(depth);
+                    t = new YType(depth);
                     t.field = FIELD_NON_POLYMORPHIC;
                     fields.put(field.name, t);
                 }
@@ -1086,8 +1086,8 @@ public final class YetiAnalyzer extends YetiType {
                 if (field.doc != null)
                     t.doc = t.doc == null
                         ? field.doc : field.doc + '\n' + t.doc;
-                Type f = new Type(FUN, field.var ? new Type[] { t, UNIT_TYPE }
-                                                 : new Type[] { UNIT_TYPE, t });
+                YType f = new YType(FUN, field.var ? new YType[] { t, UNIT_TYPE }
+                                                 : new YType[] { UNIT_TYPE, t });
                 try {
                     unify(code.type, f);
                 } catch (TypeException ex) {
@@ -1133,8 +1133,8 @@ public final class YetiAnalyzer extends YetiType {
         result.fields =
             (StructField[]) values.toArray(new StructField[values.size()]);
         result.properties = properties;
-        result.type = new Type(STRUCT,
-            (Type[]) fields.values().toArray(new Type[fields.size()]));
+        result.type = new YType(STRUCT,
+            (YType[]) fields.values().toArray(new YType[fields.size()]));
         for (int i = result.properties.length; --i >= 0; )
             if (properties[i].value == null)
                 throw new CompileException(st,
@@ -1156,7 +1156,7 @@ public final class YetiAnalyzer extends YetiType {
             depth = depth;
         }
 
-        CasePattern toPattern(Node node, Type t) {
+        CasePattern toPattern(Node node, YType t) {
             if ((t.flags & FL_ANY_PATTERN) != 0) {
                 throw new CompileException(node,
                     "Useless case " + node + " (any value already matched)");
@@ -1193,9 +1193,9 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (node.kind == "list") {
                 XNode list = (XNode) node;
-                Type itemt = new Type(depth);
-                Type lt = new Type(MAP,
-                        new Type[] { itemt, new Type(depth), LIST_TYPE });
+                YType itemt = new YType(depth);
+                YType lt = new YType(MAP,
+                        new YType[] { itemt, new YType(depth), LIST_TYPE });
                 lt.flags |= FL_PARTIAL_PATTERN;
                 if (list.expr == null || list.expr.length == 0) {
                     unify(t, lt, node, "#0");
@@ -1234,26 +1234,26 @@ public final class YetiAnalyzer extends YetiType {
                             variants.add(t);
                         }
                     }
-                    Type argt = new Type(depth);
+                    YType argt = new YType(depth);
                     CasePattern arg = toPattern(pat.right, argt);
-                    Type old = (Type) t.partialMembers.put(variant, argt);
+                    YType old = (YType) t.partialMembers.put(variant, argt);
                     if (old != null) {
                         // same constructor already. shall be same type.
                         unify(old, argt, pat.right, "#0");
                     }
-                    t.param = (Type[]) t.partialMembers.values().toArray(
-                                new Type[t.partialMembers.size()]);
+                    t.param = (YType[]) t.partialMembers.values().toArray(
+                                new YType[t.partialMembers.size()]);
                     return new VariantPattern(variant, arg);
                 }
                 if (pat.op == "::") {
-                    Type itemt = new Type(depth);
+                    YType itemt = new YType(depth);
                     // It must must have the NO_TYPE constraint,
                     // because tail has the same type as the matched
                     // (this could be probably solved by giving tail
                     //  and pattern separate list types, but then
                     //  correct use of pattern flags must be considered)
-                    Type lt = new Type(MAP,
-                                new Type[] { itemt, NO_TYPE, LIST_TYPE });
+                    YType lt = new YType(MAP,
+                                new YType[] { itemt, NO_TYPE, LIST_TYPE });
                     int flags = t.flags; 
                     unify(t, lt, node, "#0");
                     ++submatch;
@@ -1278,8 +1278,8 @@ public final class YetiAnalyzer extends YetiType {
                     if (uniq.containsKey(field.name))
                         duplicateField(field);
                     uniq.put(field.name, null);
-                    Type ft = new Type(depth);
-                    Type part = new Type(STRUCT, new Type[] { ft });
+                    YType ft = new YType(depth);
+                    YType part = new YType(STRUCT, new YType[] { ft });
                     HashMap tm = new HashMap();
                     tm.put(field.name, ft);
                     part.partialMembers = tm;
@@ -1295,7 +1295,7 @@ public final class YetiAnalyzer extends YetiType {
 
         void finalizeVariants() {
             for (int i = variants.size(); --i >= 0;) {
-                Type t = (Type) variants.get(i);
+                YType t = (YType) variants.get(i);
                 if (t.type == VARIANT && t.finalMembers == null &&
                     (t.flags & FL_ANY_PATTERN) == 0) {
                     t.finalMembers = t.partialMembers;
@@ -1321,7 +1321,7 @@ public final class YetiAnalyzer extends YetiType {
         }
     }
 
-    static String checkPartialMatch(Type t) {
+    static String checkPartialMatch(YType t) {
         if (t.seen || (t.flags & FL_ANY_PATTERN) != 0)
             return null;
         if ((t.flags & FL_PARTIAL_PATTERN) != 0) {
@@ -1363,7 +1363,7 @@ public final class YetiAnalyzer extends YetiType {
         CaseCompiler cc = new CaseCompiler(val, depth);
         CasePattern[] pats = new CasePattern[choices.length];
         Scope[] scopes = new Scope[choices.length];
-        Type argType = new Type(depth);
+        YType argType = new YType(depth);
         for (int i = 1; i < choices.length; ++i) {
             cc.scope = scope;
             pats[i] = cc.toPattern(((XNode) choices[i]).expr[0], argType);
@@ -1389,9 +1389,9 @@ public final class YetiAnalyzer extends YetiType {
         Node[] items = list.expr == null ? new Node[0] : list.expr;
         Code[] keyItems = null;
         Code[] codeItems = new Code[items.length];
-        Type type = null;
-        Type keyType = NO_TYPE;
-        Type kind = null;
+        YType type = null;
+        YType keyType = NO_TYPE;
+        YType kind = null;
         BinOp bin;
         XNode keyNode = null;
         int n = 0;
@@ -1455,19 +1455,19 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
         if (type == null) {
-            type = new Type(depth);
+            type = new YType(depth);
         }
         if (kind == null) {
             kind = LIST_TYPE;
         }
         if (list.expr == null) {
-            keyType = new Type(depth);
+            keyType = new YType(depth);
             keyItems = new Code[0];
             kind = MAP_TYPE;
         }
         Code res = kind == LIST_TYPE ? (Code) new ListConstructor(codeItems)
                                      : new MapConstructor(keyItems, codeItems);
-        res.type = new Type(MAP, new Type[] { type, keyType, kind });
+        res.type = new YType(MAP, new YType[] { type, keyType, kind });
         res.polymorph = kind == LIST_TYPE;
         return res;
     }

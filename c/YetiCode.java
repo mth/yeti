@@ -136,7 +136,7 @@ final class CompileCtx implements Opcodes {
             if (ignore.containsKey(name))
                 continue;
             String jname = Code.mangle(name);
-            String type = Code.javaType((YetiType.Type) entry.getValue());
+            String type = Code.javaType((YType) entry.getValue());
             String descr = 'L' + type + ';';
             ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, jname,
                     descr, null, null).visitEnd();
@@ -176,7 +176,7 @@ final class CompileCtx implements Opcodes {
         return className;
     }
 
-    YetiType.Type compile(String sourceName, String name,
+    YType compile(String sourceName, String name,
                           char[] code, int flags) throws Exception {
         if (definedClasses.containsKey(name)) {
             throw new RuntimeException(definedClasses.get(name) == null
@@ -583,7 +583,7 @@ abstract class Code implements Opcodes {
     // code object is a list range
     static final int LIST_RANGE = 0x100;
 
-    YetiType.Type type;
+    YType type;
     boolean polymorph;
 
     /**
@@ -595,11 +595,11 @@ abstract class Code implements Opcodes {
     abstract void gen(Ctx ctx);
 
     // Some "functions" may have special kinds of apply
-    Code apply(Code arg, YetiType.Type res, int line) {
+    Code apply(Code arg, YType res, int line) {
         return new Apply(res, this, arg, line);
     }
 
-    Code apply2nd(final Code arg2, final YetiType.Type t, int line) {
+    Code apply2nd(final Code arg2, final YType t, int line) {
         return new Code() {
             { type = t; }
 
@@ -649,7 +649,7 @@ abstract class Code implements Opcodes {
         return flagop(CONST);
     }
 
-    static final String javaType(YetiType.Type t) {
+    static final String javaType(YType t) {
         t = t.deref();
         switch (t.type) {
             case YetiType.STR: return "java/lang/String";
@@ -721,7 +721,7 @@ abstract class BindRef extends Code {
         throw new UnsupportedOperationException();
     }
 
-    Code apply(Code arg, YetiType.Type res, int line) {
+    Code apply(Code arg, YType res, int line) {
         Apply a = new Apply(res, this, arg, line);
         if ((a.ref = origin) != null)
             origin.arity = 1;
@@ -758,7 +758,7 @@ class StaticRef extends BindRef {
     protected String funFieldName;
     int line;
    
-    StaticRef(String className, String fieldName, YetiType.Type type,
+    StaticRef(String className, String fieldName, YType type,
               Binder binder, boolean polymorph, int line) {
         this.type = type;
         this.binder = binder;
@@ -885,7 +885,7 @@ final class StringConstant extends Code {
 }
 
 final class UnitConstant extends BindRef {
-    UnitConstant(YetiType.Type type) {
+    UnitConstant(YType type) {
         this.type = type == null ? YetiType.UNIT_TYPE : type;
     }
 
@@ -981,7 +981,7 @@ final class NewArrayExpr extends Code {
     private Code count;
     private int line;
 
-    NewArrayExpr(YetiType.Type type, Code count, int line) {
+    NewArrayExpr(YType type, Code count, int line) {
         this.type = type;
         this.count = count;
         this.line = line;
@@ -1078,7 +1078,7 @@ final class MethodCall extends JavaExpr {
 final class Throw extends Code {
     Code throwable;
 
-    Throw(Code throwable, YetiType.Type type) {
+    Throw(Code throwable, YType type) {
         this.type = type;
         this.throwable = throwable;
     }
@@ -1167,7 +1167,7 @@ final class ClassField extends JavaExpr {
 final class Cast extends JavaExpr {
     boolean convert;
 
-    Cast(Code code, YetiType.Type type, boolean convert, int line) {
+    Cast(Code code, YType type, boolean convert, int line) {
         super(code, null, null, line);
         this.type = type;
         this.line = line;
@@ -1194,7 +1194,7 @@ final class LoadVar extends Code {
 final class VariantConstructor extends Code {
     String name;
 
-    VariantConstructor(YetiType.Type type, String name) {
+    VariantConstructor(YType type, String name) {
         this.type = type;
         this.name = name;
     }
@@ -1211,7 +1211,7 @@ final class VariantConstructor extends Code {
         });
     }
 
-    Code apply(Code arg, YetiType.Type res, int line) {
+    Code apply(Code arg, YType res, int line) {
         Code apply = new Apply(res, this, arg, line) {
             void gen(Ctx ctx) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/Tag");
@@ -1233,7 +1233,7 @@ abstract class SelectMember extends BindRef {
     String name;
     int line;
 
-    SelectMember(YetiType.Type type, Code st, String name, int line,
+    SelectMember(YType type, Code st, String name, int line,
                  boolean polymorph) {
         this.type = type;
         this.polymorph = polymorph;
@@ -1277,7 +1277,7 @@ abstract class SelectMember extends BindRef {
 final class SelectMemberFun extends Code {
     String[] names;
     
-    SelectMemberFun(YetiType.Type type, String[] names) {
+    SelectMemberFun(YType type, String[] names) {
         this.type = type;
         this.names = names;
         this.polymorph = true;
@@ -1316,7 +1316,7 @@ final class KeyRefExpr extends Code {
     Code key;
     int line;
 
-    KeyRefExpr(YetiType.Type type, Code val, Code key, int line) {
+    KeyRefExpr(YType type, Code val, Code key, int line) {
         this.type = type;
         this.val = val;
         this.key = key;
@@ -1355,7 +1355,7 @@ final class KeyRefExpr extends Code {
 final class ConditionalExpr extends Code {
     Code[][] choices;
 
-    ConditionalExpr(YetiType.Type type, Code[][] choices, boolean poly) {
+    ConditionalExpr(YType type, Code[][] choices, boolean poly) {
         this.type = type;
         this.choices = choices;
         this.polymorph = poly;
@@ -1668,7 +1668,7 @@ final class LoadModule extends Code {
                 "eval", "()Ljava/lang/Object;");
     }
 
-    Binder bindField(final String name, final YetiType.Type type) {
+    Binder bindField(final String name, final YType type) {
         return new Binder() {
             public BindRef getRef(final int line) {
                 if (!moduleType.directFields.containsKey(name)) {

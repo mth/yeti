@@ -46,7 +46,7 @@ class TypePrettyPrinter extends YetiType {
         return Core.concat(a);
     }
 
-    private void hstr(Type tt, String indent) {
+    private void hstr(YType tt, String indent) {
         boolean variant = tt.type == VARIANT;
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
@@ -76,7 +76,7 @@ class TypePrettyPrinter extends YetiType {
             } else {
                 to.add(sep);
             } 
-            Type t = (Type) e.getValue();
+            YType t = (YType) e.getValue();
             String doc = useNL ? t.doc() : null;
             if (doc != null) {
                 to.add("// ");
@@ -105,7 +105,7 @@ class TypePrettyPrinter extends YetiType {
         }
     }
 
-    private String getVarName(Type t) {
+    private String getVarName(YType t) {
         String v = (String) vars.get(t);
         if (v == null) {
             v = (t.flags & FL_ORDERED_REQUIRED) == 0 ? "'" : "^";
@@ -119,7 +119,7 @@ class TypePrettyPrinter extends YetiType {
         return v;
     }
 
-    void str(Type t, String indent) {
+    void str(YType t, String indent) {
         final int type = t.type;
         if (type == VAR) {
             if (t.ref != null) {
@@ -158,7 +158,7 @@ class TypePrettyPrinter extends YetiType {
             to.add(recRef.ref);
             return;
         }
-        final Type[] param = t.param;
+        final YType[] param = t.param;
         switch (type) {
             case FUN:
                 if (param[0].deref().type == FUN) {
@@ -180,8 +180,8 @@ class TypePrettyPrinter extends YetiType {
                 hstr(t, indent);
                 break;
             case MAP:
-                Type p1 = param[1].deref();
-                Type p2 = param[2].deref();
+                YType p1 = param[1].deref();
+                YType p2 = param[2].deref();
                 if (p2.type == LIST_MARKER) {
                     to.add(p1.type == NONE ? "list<" : p1.type == NUM
                                 ? "array<" : "list?<");

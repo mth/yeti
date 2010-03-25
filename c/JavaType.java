@@ -87,42 +87,42 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
             }
             if (s[p] == ')')
                 continue;
-            YetiType.Type t = null;
+            YType t = null;
             if (s[p] == 'L') {
                 int p1 = p;
                 while (p < l && s[p] != ';' && s[p] != '<')
                     ++p;
-                t = new YetiType.Type(new String(s, p1, p - p1).concat(";"));
+                t = new YType(new String(s, p1, p - p1).concat(";"));
                 if (p < l && s[p] == '<') {
                     List param = new ArrayList();
                     p = parseSig(vars, param, p + 1, s) + 1;
                     /* XXX: workaround for broken generics support
                     //      strips free type vars from classes...
                     for (int i = param.size(); --i >= 0;) {
-                        if (((YetiType.Type) param.get(i)).type
+                        if (((YType) param.get(i)).type
                                 == YetiType.VAR) {
                             param.remove(i);
                         }
                     }*/
-                    t.param = (YetiType.Type[])
-                        param.toArray(new YetiType.Type[param.size()]);
+                    t.param = (YType[])
+                        param.toArray(new YType[param.size()]);
                 }
             } else if (s[p] == 'T') {
                 int p1 = p + 1;
                 while (++p < l && s[p] != ';' && s[p] != '<');
                 /*String varName = new String(s, p1, p - p1);
-                t = (YetiType.Type) vars.get(varName);
+                t = (YType) vars.get(varName);
                 if (t == null) {
-                    t = new YetiType.Type(1000000);
+                    t = new YType(1000000);
                     vars.put(varName, t);
                 }*/
                 t = YetiType.OBJECT_TYPE;
             } else {
-                t = new YetiType.Type(new String(s, p, 1));
+                t = new YType(new String(s, p, 1));
             }
             for (; arrays > 0; --arrays) {
-                t = new YetiType.Type(YetiType.JAVA_ARRAY,
-                            new YetiType.Type[] { t });
+                t = new YType(YetiType.JAVA_ARRAY,
+                            new YType[] { t });
             }
             res.add(t);
         }
@@ -135,10 +135,10 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
         return res;
     }
 
-    static YetiType.Type[] parseSig1(int start, String sig) {
+    static YType[] parseSig1(int start, String sig) {
         List res = new ArrayList();
         parseSig(new HashMap(), res, start, sig.toCharArray());
-        return (YetiType.Type[]) res.toArray(new YetiType.Type[res.size()]);
+        return (YType[]) res.toArray(new YType[res.size()]);
     }
 
     public FieldVisitor visitField(int access, String name, String desc,
@@ -150,7 +150,7 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
             List l = parseSig(0, signature == null ? desc : signature);
             (((access & ACC_STATIC) == 0) ? fields : staticFields).put(name,
                 new JavaType.Field(name, access, className,
-                                   (YetiType.Type) l.get(0)));
+                                   (YType) l.get(0)));
         }
         return null;
     }
@@ -178,13 +178,13 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
             m.name = name.intern();
             m.access = access;
             int argc = l.size() - 1;
-            m.returnType = (YetiType.Type) l.get(argc);
+            m.returnType = (YType) l.get(argc);
             /* hack for broken generic support
             if (m.returnType.type == YetiType.VAR) {
                 m.returnType = YetiType.OBJECT_TYPE;
             }*/
-            m.arguments = (YetiType.Type[])
-                l.subList(0, argc).toArray(new YetiType.Type[argc]);
+            m.arguments = (YType[])
+                l.subList(0, argc).toArray(new YType[argc]);
             m.className = className;
             if (m.name == "<init>") {
                 constructors.add(m);
@@ -211,19 +211,19 @@ class JavaType {
     static class Field {
         int access;
         String name;
-        YetiType.Type type;
-        YetiType.Type classType;
+        YType type;
+        YType classType;
         String className;
 
         public Field(String name, int access,
-                     String className, YetiType.Type type) {
+                     String className, YType type) {
             this.access = access;
             this.type = type;
             this.name = name;
             this.className = className;
         }
 
-        YetiType.Type convertedType() {
+        YType convertedType() {
             return convertValueType(type);
         }
 
@@ -237,14 +237,14 @@ class JavaType {
     static class Method {
         int access;
         String name;
-        YetiType.Type[] arguments;
-        YetiType.Type returnType;
-        YetiType.Type classType;
+        YType[] arguments;
+        YType returnType;
+        YType classType;
         String className; // name of the class the method actually belongs to
         String sig;
         String descr;
 
-        Method dup(Method[] arr, int n, YetiType.Type classType) {
+        Method dup(Method[] arr, int n, YType classType) {
             if (classType == this.classType ||
                 className.equals(classType.javaType.className())) {
                 this.classType = classType;
@@ -286,7 +286,7 @@ class JavaType {
             return s.toString();
         }
 
-        YetiType.Type convertedReturnType() {
+        YType convertedReturnType() {
             return convertValueType(returnType);
         }
 
@@ -352,7 +352,7 @@ class JavaType {
         return (access & Opcodes.ACC_INTERFACE) != 0;
     }
 
-    static String descriptionOf(YetiType.Type t) {
+    static String descriptionOf(YType t) {
         if (t.type == YetiType.VAR) {
             if (t.ref != null) {
                 return descriptionOf(t.ref);
@@ -370,7 +370,7 @@ class JavaType {
         return r.concat(t.javaType.description);
     }
 
-    static YetiType.Type convertValueType(YetiType.Type t) {
+    static YType convertValueType(YType t) {
         if (t.type != YetiType.JAVA) {
             return t;
         }
@@ -391,7 +391,7 @@ class JavaType {
         return t;
     }
 
-    private static JavaType getClass(YetiType.Type t) {
+    private static JavaType getClass(YType t) {
         switch (t.type) {
         case YetiType.JAVA:
             return t.javaType;
@@ -424,7 +424,7 @@ class JavaType {
     }
 
     static void checkUnsafeCast(YetiParser.Node cast,
-                                YetiType.Type from, YetiType.Type to) {
+                                YType from, YType to) {
         if (from.type != YetiType.JAVA && from.type != YetiType.VAR &&
             to.type != YetiType.JAVA) {
             throw new CompileException(cast,
@@ -452,7 +452,7 @@ class JavaType {
         }
     }
 
-    static void checkThrowable(YetiParser.Node node, YetiType.Type t) {
+    static void checkThrowable(YetiParser.Node node, YType t) {
         t = t.deref();
         try {
             if (t.type != YetiType.JAVA ||
@@ -621,12 +621,12 @@ class JavaType {
         return -1;
     }
 
-    YetiType.Type[] TRY_SMART =
+    YType[] TRY_SMART =
         { YetiType.BOOL_TYPE, YetiType.STR_TYPE, YetiType.NUM_TYPE };
 
     // -1 not assignable. 0 - perfect match. > 0 convertable.
-    int isAssignableJT(YetiType.Type to, YetiType.Type from, boolean smart)
-            throws JavaClassNotFoundException, YetiType.TypeException {
+    int isAssignableJT(YType to, YType from, boolean smart)
+            throws JavaClassNotFoundException, TypeException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
             return from.type == YetiType.VAR ? 1 : 10;
@@ -702,8 +702,8 @@ class JavaType {
         return description == "Ljava/lang/Object;" ? 10 : -1;
     }
 
-    static int isAssignable(YetiType.Type to, YetiType.Type from, boolean smart)
-            throws JavaClassNotFoundException, YetiType.TypeException {
+    static int isAssignable(YType to, YType from, boolean smart)
+            throws JavaClassNotFoundException, TypeException {
         int ass;
 //        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
         to = to.deref();
@@ -712,7 +712,7 @@ class JavaType {
             return to.javaType.isAssignableJT(to, from, smart);
         }
         if (to.type == YetiType.JAVA_ARRAY) {
-            YetiType.Type of = to.param[0];
+            YType of = to.param[0];
             switch (from.type) {
             case YetiType.STR:
                 return of.type == YetiType.JAVA &&
@@ -733,8 +733,8 @@ class JavaType {
         return -1;
     }
 
-    static int isAssignable(YetiParser.Node where, YetiType.Type to,
-                            YetiType.Type from, boolean smart) {
+    static int isAssignable(YetiParser.Node where, YType to,
+                            YType from, boolean smart) {
         from = from.deref();
         if (smart && from.type == YetiType.UNIT) {
             return 0;
@@ -743,25 +743,25 @@ class JavaType {
             return isAssignable(to, from, smart);
         } catch (JavaClassNotFoundException ex) {
             throw new CompileException(where, ex);
-        } catch (YetiType.TypeException ex) {
+        } catch (TypeException ex) {
             throw new CompileException(where, ex.getMessage());
         }
     }
 
     static boolean isSafeCast(YetiParser.Node where,
-                              YetiType.Type to, YetiType.Type from) {
+                              YType to, YType from) {
         to = to.deref();
         from = from.deref();
         // automatic array wrapping
-        YetiType.Type mapKind;
+        YType mapKind;
         if (from.type == YetiType.JAVA_ARRAY && to.type == YetiType.MAP &&
             ((mapKind = to.param[2].deref()).type == YetiType.LIST_MARKER ||
              mapKind.type == YetiType.VAR)) {
-            YetiType.Type fp = from.param[0].deref();
+            YType fp = from.param[0].deref();
             String fromDesc = fp.javaType.description;
             if (fromDesc == "C")
                 return false;
-            YetiType.Type tp = to.param[0].deref();
+            YType tp = to.param[0].deref();
             try {
                 if (fromDesc.length() == 1) {
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
@@ -772,12 +772,12 @@ class JavaType {
                 } else if (isAssignable(where, tp, fp, false) < 0) {
                     return false;
                 }
-            } catch (YetiType.TypeException ex) {
+            } catch (TypeException ex) {
                 return false;
             }
             mapKind.type = YetiType.LIST_MARKER;
             mapKind.param = YetiType.NO_PARAM;
-            YetiType.Type index = to.param[1].deref();
+            YType index = to.param[1].deref();
             if (index.type == YetiType.VAR) {
                 index.type = YetiType.NUM;
                 index.param = YetiType.NO_PARAM;
@@ -819,7 +819,7 @@ class JavaType {
 
     private Method resolveByArgs(YetiParser.Node n, Method[] ma,
                                  String name, Code[] args,
-                                 YetiType.Type objType) {
+                                 YType objType) {
         name = name.intern();
         int rAss = Integer.MAX_VALUE;
         int res = -1;
@@ -899,7 +899,7 @@ class JavaType {
     }
 
     private static JavaType javaTypeOf(YetiParser.Node where,
-                                       YetiType.Type objType, String err) {
+                                       YType objType, String err) {
         if (objType.type != YetiType.JAVA) {
             throw new CompileException(where,
                         err + objType + ", java object expected");
@@ -908,7 +908,7 @@ class JavaType {
     }
 
     static Method resolveConstructor(YetiParser.Node call,
-                                     YetiType.Type t, Code[] args,
+                                     YType t, Code[] args,
                                      boolean noAbstract) {
         JavaType jt = t.javaType.resolve(call);
         if ((jt.access & Opcodes.ACC_INTERFACE) != 0)
@@ -938,7 +938,7 @@ class JavaType {
     }
 
     static Method resolveMethod(YetiParser.ObjectRefOp ref,
-                                YetiType.Type objType, Code[] args,
+                                YType objType, Code[] args,
                                 boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot call method on ");
@@ -947,7 +947,7 @@ class JavaType {
     }
 
     static Field resolveField(YetiParser.ObjectRefOp ref,
-                              YetiType.Type objType,
+                              YType objType,
                               boolean isStatic) {
         objType = objType.deref();
         JavaType jt = javaTypeOf(ref, objType, "Cannot access field on ");
@@ -980,11 +980,11 @@ class JavaType {
         }
     }
 
-    static YetiType.Type typeOfClass(String packageName, String className) {
+    static YType typeOfClass(String packageName, String className) {
         if (packageName != null && packageName.length() != 0) {
             className = packageName + '/' + className;
         }
-        return new YetiType.Type("L" + className + ';');
+        return new YType("L" + className + ';');
     }
 
     public String str() {
@@ -1011,7 +1011,7 @@ class JavaType {
         return p < 0 ? "" : className.substring(0, p);
     }
 
-/*    static YetiType.Type toStructType(YetiType.Type object) {
+/*    static YType toStructType(YType object) {
         return null;   
     }*/
 
@@ -1024,7 +1024,7 @@ class JavaType {
         return a;
     }
 
-    static YetiType.Type mergeTypes(YetiType.Type a, YetiType.Type b) {
+    static YType mergeTypes(YType a, YType b) {
         a = a.deref();
         b = b.deref();
         if (a.type != YetiType.JAVA || b.type != YetiType.JAVA) {
@@ -1034,9 +1034,9 @@ class JavaType {
                 a.param[2].type == YetiType.LIST_MARKER &&
                 b.param[1].type == YetiType.NONE &&
                 b.param[2].type == YetiType.LIST_MARKER) {
-                YetiType.Type t = mergeTypes(a.param[0], b.param[0]);
+                YType t = mergeTypes(a.param[0], b.param[0]);
                 if (t != null) {
-                    return new YetiType.Type(YetiType.MAP, new YetiType.Type[] {
+                    return new YType(YetiType.MAP, new YType[] {
                                     t, YetiType.NO_TYPE, YetiType.LIST_TYPE });
                 }
             }
@@ -1083,24 +1083,23 @@ class JavaType {
                 }
             }
         }
-        YetiType.Type t = new YetiType.Type(YetiType.JAVA, YetiType.NO_PARAM);
+        YType t = new YType(YetiType.JAVA, YetiType.NO_PARAM);
         t.javaType = common;
         return t;
     }
 
-    static YetiType.Type typeOfName(String name, YetiType.Scope scope) {
+    static YType typeOfName(String name, YetiType.Scope scope) {
         int arrays = 0;
         while (name.endsWith("[]")) {
             ++arrays;
             name = name.substring(0, name.length() - 2);
         }
         String descr = (String) JAVA_PRIM.get(name);
-        YetiType.Type t =
-            descr != null ? new YetiType.Type(descr)
-                          : YetiType.resolveFullClass(name, scope);
+        YType t = descr != null ? new YType(descr) :
+                   YetiType.resolveFullClass(arrays == 0 ? name : name.intern(),
+                                             scope);
         while (--arrays >= 0)
-            t = new YetiType.Type(YetiType.JAVA_ARRAY,
-                                  new YetiType.Type[] { t });
+            t = new YType(YetiType.JAVA_ARRAY, new YType[] { t });
         return t;
     }
 

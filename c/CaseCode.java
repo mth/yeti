@@ -68,7 +68,7 @@ final class BindPattern extends CasePattern implements Binder {
         }
     };
 
-    BindPattern(CaseExpr caseExpr, YetiType.Type type) {
+    BindPattern(CaseExpr caseExpr, YType type) {
         this.caseExpr = caseExpr;
         param.binder = this;
         param.type = type;

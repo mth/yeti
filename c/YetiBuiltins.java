@@ -159,11 +159,11 @@ class IsNullPtr extends StaticRef {
     private String libName;
     boolean normalIf;
 
-    IsNullPtr(YetiType.Type type, String fun, int line) {
+    IsNullPtr(YType type, String fun, int line) {
         super("yeti/lang/std$" + fun, "_", type, null, true, line);
     }
 
-    Code apply(final Code arg, final YetiType.Type res,
+    Code apply(final Code arg, final YType res,
                final int line) {
         return new Code() {
             { type = res; }
@@ -296,7 +296,7 @@ final class Negate extends StaticRef {
               null, false, 0);
     }
 
-    Code apply(final Code arg1, final YetiType.Type res1, final int line) {
+    Code apply(final Code arg1, final YType res1, final int line) {
         if (arg1 instanceof NumericConstant) {
             return new NumericConstant(((NumericConstant) arg1)
                         .num.subFrom(0));
@@ -320,13 +320,13 @@ final class Negate extends StaticRef {
 abstract class Core2 extends StaticRef {
     boolean derivePolymorph;
 
-    Core2(String coreFun, YetiType.Type type, int line) {
+    Core2(String coreFun, YType type, int line) {
         super("yeti/lang/std$" + coreFun, "_", type, null, true, line);
     }
 
-    Code apply(final Code arg1, YetiType.Type res, int line1) {
+    Code apply(final Code arg1, YType res, int line1) {
         return new Apply(res, this, arg1, line1) {
-            Code apply(final Code arg2, final YetiType.Type res,
+            Code apply(final Code arg2, final YType res,
                        final int line2) {
                 return new Code() {
                     {
@@ -471,7 +471,7 @@ abstract class BinOpRef extends BindRef {
         private Code arg1;
         private Code arg2;
 
-        Result(Code arg1, Code arg2, YetiType.Type res) {
+        Result(Code arg1, Code arg2, YType res) {
             type = res;
             this.arg1 = arg1;
             this.arg2 = arg2;
@@ -492,11 +492,11 @@ abstract class BinOpRef extends BindRef {
         }
     }
 
-    Code apply(final Code arg1, final YetiType.Type res1, final int line) {
+    Code apply(final Code arg1, final YType res1, final int line) {
         return new Code() {
             { type = res1; }
 
-            Code apply(Code arg2, YetiType.Type res, int line) {
+            Code apply(Code arg2, YType res, int line) {
                 return new Result(arg1, arg2, res);
             }
 
@@ -527,7 +527,7 @@ final class ArithOpFun extends BinOpRef {
     private String method;
     private int line;
 
-    public ArithOpFun(String fun, String method, YetiType.Type type,
+    public ArithOpFun(String fun, String method, YType type,
                       Binder binder, int line) {
         this.type = type;
         this.method = method;
@@ -586,9 +586,9 @@ final class ArithOpFun extends BinOpRef {
 final class ArithOp implements Binder {
     private String fun;
     private String method;
-    private YetiType.Type type;
+    private YType type;
 
-    ArithOp(String op, String method, YetiType.Type type) {
+    ArithOp(String op, String method, YType type) {
         fun = op == "+" ? "plus" : Code.mangle(op);
         this.method = method;
         this.type = type;
@@ -620,7 +620,7 @@ final class CompareFun extends BoolBinOp {
     int line;
 
     void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
-        YetiType.Type t = arg1.type.deref();
+        YType t = arg1.type.deref();
         int op = this.op;
         boolean eq = (op & (COND_LT | COND_GT)) == 0;
         if (!ifTrue) {
@@ -688,11 +688,11 @@ final class CompareFun extends BoolBinOp {
 }
 
 final class Compare implements Binder {
-    YetiType.Type type;
+    YType type;
     int op;
     String fun;
 
-    public Compare(YetiType.Type type, int op, String fun) {
+    public Compare(YType type, int op, String fun) {
         this.op = op;
         this.type = type;
         this.fun = Code.mangle(fun);
@@ -756,7 +756,7 @@ final class NotOp extends StaticRef {
               YetiType.BOOL_TO_BOOL, null, false, line);
     }
 
-    Code apply(final Code arg, YetiType.Type res, int line) {
+    Code apply(final Code arg, YType res, int line) {
         return new Code() {
             { type = YetiType.BOOL_TYPE; }
 
@@ -885,7 +885,7 @@ final class MatchOpFun extends BinOpRef {
         ctx.visitApply(arg1, line);
     }
 
-    Code apply2nd(final Code arg2, final YetiType.Type t, final int line) {
+    Code apply2nd(final Code arg2, final YType t, final int line) {
         if (line == 0) {
             throw new NullPointerException();
         }
@@ -932,7 +932,7 @@ final class RegexFun extends StaticRef {
     private String impl;
     private String funName;
 
-    RegexFun(String fun, String impl, YetiType.Type type,
+    RegexFun(String fun, String impl, YType type,
              Binder binder, int line) {
         super("yeti/lang/std$" + fun, "_", type, null, false, line);
         this.funName = fun;
@@ -940,7 +940,7 @@ final class RegexFun extends StaticRef {
         this.impl = impl;
     }
 
-    Code apply(final Code arg, final YetiType.Type t, final int line) {
+    Code apply(final Code arg, final YType t, final int line) {
         final Code f = new Code() {
             { type = t; }
 
@@ -973,9 +973,9 @@ final class RegexFun extends StaticRef {
 
 final class Regex implements Binder {
     private String fun, impl;
-    private YetiType.Type type;
+    private YType type;
 
-    Regex(String fun, String impl, YetiType.Type type) {
+    Regex(String fun, String impl, YType type) {
         this.fun = fun;
         this.impl = impl;
         this.type = type;
@@ -1044,10 +1044,10 @@ final class InstanceOfExpr extends Code {
 
 final class JavaArrayRef extends Code {
     Code value, index;
-    YetiType.Type elementType;
+    YType elementType;
     int line;
 
-    JavaArrayRef(YetiType.Type _type, Code _value, Code _index, int _line) {
+    JavaArrayRef(YType _type, Code _value, Code _index, int _line) {
         type = JavaType.convertValueType(elementType = _type);
         value = _value;
         index = _index;
@@ -1122,17 +1122,17 @@ final class StrOp extends StaticRef implements Binder {
 
     String method;
     String sig;
-    YetiType.Type argTypes[];
+    YType argTypes[];
 
     final class StrApply extends Apply {
         StrApply prev;
 
-        StrApply(Code arg, YetiType.Type type, StrApply prev, int line) {
+        StrApply(Code arg, YType type, StrApply prev, int line) {
             super(type, NOP_CODE, arg, line);
             this.prev = prev;
         }
 
-        Code apply(Code arg, YetiType.Type res, int line) {
+        Code apply(Code arg, YType res, int line) {
             return new StrApply(arg, res, this, line);
         }
 
@@ -1174,7 +1174,7 @@ final class StrOp extends StaticRef implements Binder {
         }
     }
 
-    StrOp(String fun, String method, String sig, YetiType.Type type) {
+    StrOp(String fun, String method, String sig, YType type) {
         super("yeti/lang/std$" + mangle(fun), "_", type, null, false, 0);
         this.method = method;
         this.sig = sig;
@@ -1186,7 +1186,7 @@ final class StrOp extends StaticRef implements Binder {
         return this;
     }
 
-    Code apply(final Code arg, final YetiType.Type res, final int line) {
+    Code apply(final Code arg, final YType res, final int line) {
         return new StrApply(arg, res, null, line);
     }
 

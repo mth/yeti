@@ -38,8 +38,8 @@ public class CompileException extends RuntimeException {
     int col;
     String what;
 
-    static String format(YetiType.Type param1, YetiType.Type param2,
-                         String s, YetiType.TypeException ex) {
+    static String format(YType param1, YType param2,
+                         String s, TypeException ex) {
         StringBuffer result = new StringBuffer();
         int p = 0, i;
         boolean msg = false;
@@ -97,8 +97,8 @@ public class CompileException extends RuntimeException {
     }
 
     public CompileException(YetiParser.Node pos,
-                            YetiType.Type param1, YetiType.Type param2,
-                            String what, YetiType.TypeException ex) {
+                            YType param1, YType param2,
+                            String what, TypeException ex) {
         this(ex, pos, format(param1, param2, what, ex));
     }
 

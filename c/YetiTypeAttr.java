@@ -42,7 +42,7 @@ import java.io.InputStream;
  * Follows type description
  * 00 XX XX - free type variable XXXX
  * XX, where XX is 00..08 -
- *      primitives (same as YetiType.Type.type UNIT - MAP_MARKER)
+ *      primitives (same as YType.type UNIT - MAP_MARKER)
  * 09 x.. y.. - Function x -> y
  * 0A e.. i.. t.. - MAP<e,i,t>
  * 0B <partialMembers...> FF <finalMembers...> FF - Struct
@@ -66,12 +66,12 @@ class YetiTypeAttr extends Attribute {
     static final byte ORDERED = -3;
     static final byte MUTABLE = -4;
 
-    YetiType.Type type;
+    YType type;
     Map typeDefs;
     Map directFields;
     private ByteVector encoded;
 
-    YetiTypeAttr(YetiType.Type type, Map typeDefs, Map directFields) {
+    YetiTypeAttr(YType type, Map typeDefs, Map directFields) {
         super("YetiModuleType");
         this.type = type;
         this.typeDefs = typeDefs;
@@ -92,7 +92,7 @@ class YetiTypeAttr extends Attribute {
             if (m != null) {
                 for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
                     Map.Entry e = (Map.Entry) i.next();
-                    YetiType.Type t = (YetiType.Type) e.getValue();
+                    YType t = (YType) e.getValue();
                     if (t.field == YetiType.FIELD_MUTABLE) {
                         buf.putByte(MUTABLE);
                     }
@@ -104,14 +104,14 @@ class YetiTypeAttr extends Attribute {
             buf.putByte(END);
         }
 
-        void writeArray(YetiType.Type[] param) {
+        void writeArray(YType[] param) {
             for (int i = 0; i < param.length; ++i) {
                 write(param[i]);
             }
             buf.putByte(END);
         }
 
-        void write(YetiType.Type type) {
+        void write(YType type) {
             type = type.deref();
             if (type.type == YetiType.VAR) {
                 Integer id = (Integer) vars.get(type);
@@ -168,7 +168,7 @@ class YetiTypeAttr extends Attribute {
             for (Iterator i = typeDefs.entrySet().iterator(); i.hasNext();) {
                 Map.Entry e = (Map.Entry) i.next();
                 buf.putShort(cw.newUTF8((String) e.getKey()));
-                writeArray((YetiType.Type[]) e.getValue());
+                writeArray((YType[]) e.getValue());
             }
             buf.putByte(END);
         }
@@ -220,7 +220,7 @@ class YetiTypeAttr extends Attribute {
             }
             HashMap res = new HashMap();
             while (in[p] != END) {
-                YetiType.Type t = read();
+                YType t = read();
                 res.put(cr.readUTF8(p, buf), t);
                 p += 2;
             }
@@ -228,18 +228,18 @@ class YetiTypeAttr extends Attribute {
             return res;
         }
 
-        YetiType.Type[] readArray() {
+        YType[] readArray() {
             List param = new ArrayList();
             while (in[p] != END) {
                 param.add(read());
             }
             ++p;
-            return (YetiType.Type[])
-                        param.toArray(new YetiType.Type[param.size()]);
+            return (YType[])
+                        param.toArray(new YType[param.size()]);
         }
 
-        YetiType.Type read() {
-            YetiType.Type t;
+        YType read() {
+            YType t;
             int tv;
 
             if (p >= end) {
@@ -249,8 +249,8 @@ class YetiTypeAttr extends Attribute {
             case YetiType.VAR: {
                 Integer var = new Integer(cr.readUnsignedShort(p));
                 p += 2;
-                if ((t = (YetiType.Type) vars.get(var)) == null) {
-                    vars.put(var, t = new YetiType.Type(1));
+                if ((t = (YType) vars.get(var)) == null) {
+                    vars.put(var, t = new YType(1));
                 }
                 return t;
             }
@@ -264,7 +264,7 @@ class YetiTypeAttr extends Attribute {
                 if (refs.size() <= v) {
                     throw new RuntimeException("Illegal type reference");
                 }
-                return (YetiType.Type) refs.get(v);
+                return (YType) refs.get(v);
             }
             case MUTABLE:
                 return YetiType.fieldRef(1, read(), YetiType.FIELD_MUTABLE);
@@ -273,10 +273,10 @@ class YetiTypeAttr extends Attribute {
                 (t = YetiType.PRIMITIVES[tv]) != null) {
                 return t;
             }
-            t = new YetiType.Type(tv, null);
+            t = new YType(tv, null);
             refs.add(t);
             if (tv == YetiType.FUN) {
-                t.param = new YetiType.Type[2];
+                t.param = new YType[2];
                 t.param[0] = read();
                 t.param[1] = read();
             } else if (tv == YetiType.MAP) {
@@ -294,14 +294,14 @@ class YetiTypeAttr extends Attribute {
                     param.putAll(t.partialMembers);
                 }
                 t.param = param == null ? YetiType.NO_PARAM :
-                           (YetiType.Type[]) param.values().toArray(
-                                              new YetiType.Type[param.size()]);
+                           (YType[]) param.values().toArray(
+                                              new YType[param.size()]);
             } else if (tv == YetiType.JAVA) {
                 t.javaType = JavaType.fromDescription(cr.readUTF8(p, buf));
                 p += 2;
                 t.param = readArray();
             } else if (tv == YetiType.JAVA_ARRAY) {
-                t.param = new YetiType.Type[] { read() };
+                t.param = new YType[] { read() };
             } else {
                 throw new RuntimeException("Unknown type id: " + tv);
             }
@@ -352,7 +352,7 @@ class YetiTypeAttr extends Attribute {
             throw new RuntimeException("Unknown type encoding: " + cr.b[off]);
         }
         DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
-        YetiType.Type t = decoder.read();
+        YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
         return new YetiTypeAttr(t, typeDefs, decoder.readDirectFields());
     }
@@ -374,12 +374,12 @@ class YetiTypeAttr extends Attribute {
 }
 
 class ModuleType {
-    YetiType.Type type;
+    YType type;
     Map typeDefs;
     Map directFields;
     String topDoc;
 
-    ModuleType(YetiType.Type type, Map typeDefs, Map directFields) {
+    ModuleType(YType type, Map typeDefs, Map directFields) {
         this.type = type;
         this.typeDefs = typeDefs;
         this.directFields = directFields;

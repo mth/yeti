@@ -334,16 +334,16 @@ public class JavaSource implements Opcodes {
         for (JavaNode i = n.field; i != null; i = i.field) {
             int access = i.modifier;
             String name = i.name;
-            YetiType.Type t =
-                new YetiType.Type(src.resolve(finder, i.type, true));
+            YType t =
+                new YType(src.resolve(finder, i.type, true));
             if (i.argv == null) { // field
                 ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
                     .put(name, new JavaType.Field(name, access, cname, t));
                 continue;
             }
-            YetiType.Type[] av = new YetiType.Type[i.argv.length];
+            YType[] av = new YType[i.argv.length];
             for (int j = 0; j < av.length; ++j)
-                av[j] = new YetiType.Type(src.resolve(finder, i.argv[j], true));
+                av[j] = new YType(src.resolve(finder, i.argv[j], true));
             JavaType.Method m = new JavaType.Method();
             m.name = name;
             m.access = access;

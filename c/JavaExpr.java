@@ -47,8 +47,8 @@ class JavaExpr extends Code {
     }
 
     // convert to java
-    private static void convert(Ctx ctx, YetiType.Type given,
-                         YetiType.Type argType) {
+    private static void convert(Ctx ctx, YType given,
+                         YType argType) {
         given = given.deref();
         argType = argType.deref();
         String descr = argType.javaType == null
@@ -81,7 +81,7 @@ class JavaExpr extends Code {
             ctx.visitInsn(DUP2); // aiai
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "first", "()Ljava/lang/Object;");
-            YetiType.Type t = null;
+            YType t = null;
             if (argType.param.length != 0 &&
                 ((t = argType.param[0]).type != YetiType.JAVA ||
                  t.javaType.description.length() > 1)) {
@@ -259,7 +259,7 @@ class JavaExpr extends Code {
             ctx.forceType(jt.className());
     }
 
-    static void convertedArg(Ctx ctx, Code arg, YetiType.Type argType,
+    static void convertedArg(Ctx ctx, Code arg, YType argType,
                              int line) {
         String desc;
         if (arg instanceof NumericConstant &&
@@ -273,8 +273,8 @@ class JavaExpr extends Code {
     }
 
     private static boolean genRawArg(Ctx ctx, Code arg,
-                                     YetiType.Type argType, int line) {
-        YetiType.Type given = arg.type.deref();
+                                     YType argType, int line) {
+        YType given = arg.type.deref();
         String descr =
             argType.javaType == null ? null : argType.javaType.description;
         if (descr == "Z") {
@@ -353,7 +353,7 @@ class JavaExpr extends Code {
                argType.type == YetiType.JAVA_ARRAY;
     }
 
-    static void genValue(Ctx ctx, Code arg, YetiType.Type argType, int line) {
+    static void genValue(Ctx ctx, Code arg, YType argType, int line) {
         genRawArg(ctx, arg, argType, line);
         if (arg.type.type == YetiType.NUM &&
             argType.javaType.description.length() == 1) {
@@ -361,7 +361,7 @@ class JavaExpr extends Code {
         }
     }
 
-    static void convertValue(Ctx ctx, YetiType.Type t) {
+    static void convertValue(Ctx ctx, YType t) {
         if (t.type != YetiType.JAVA) {
             return; // array, no automatic conversions
         }

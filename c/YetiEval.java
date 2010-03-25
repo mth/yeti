@@ -41,7 +41,7 @@ public class YetiEval {
         int index;
         int bindId;
         String name;
-        YetiType.Type type;
+        YType type;
         boolean mutable;
         boolean polymorph;
         boolean isImport;
@@ -61,7 +61,7 @@ public class YetiEval {
         return old;
     }
 
-    static int registerBind(String name, YetiType.Type type,
+    static int registerBind(String name, YType type,
                             boolean mutable, boolean polymorph) {
         Binding bind = new Binding();
         bind.name = name;
@@ -74,7 +74,7 @@ public class YetiEval {
         return bind.bindId;
     }
 
-    static void registerImport(String name, YetiType.Type type) {
+    static void registerImport(String name, YType type) {
         Binding bind = new Binding();
         bind.name = name;
         bind.type = type;
