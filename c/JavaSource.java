@@ -278,7 +278,7 @@ public class JavaSource implements Opcodes {
         fn = null;
     }
 
-    private void prepareResolve() {
+    private synchronized void prepareResolve() {
         if (importPackages != null)
             return; // already done
         // reuse classes for full-name import map
