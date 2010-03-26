@@ -347,8 +347,7 @@ public class JavaSource implements Opcodes {
         for (JavaNode i = n.field; i != null; i = i.field) {
             int access = i.modifier;
             String name = i.name;
-            YType t =
-                new YType(src.resolve(finder, i.type, true));
+            YType t = new YType(src.resolve(finder, i.type, true));
             if (i.argv == null) { // field
                 ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
                     .put(name, new JavaType.Field(name, access, cname, t));
