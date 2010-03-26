@@ -344,8 +344,9 @@ public class JavaSource implements Opcodes {
         JavaSource src = n.source;
         src.prepareResolve(finder);
         String cname = n.name;
-        String[] superType = new String[1];
-        src.resolve(finder, n.type, superType, 0);
+        String[] superType = { "java/lang/Object" };
+        if (n.type != null)
+            src.resolve(finder, n.type, superType, 0);
         String[] interfaces = new String[n.argv.length];
         for (int i = 0; i < interfaces.length; ++i)
             src.resolve(finder, n.argv[i], interfaces, i);
