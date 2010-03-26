@@ -315,12 +315,11 @@ public class JavaSource implements Opcodes {
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
     }
 
-    private String resolve(ClassFinder finder, String type, boolean descr) {
+    private YType resolve(ClassFinder finder, String type, String[] to, int n) {
         int array = 0, l = type.length();
         while (array < l && type.charAt(array) == '[')
             ++array;
-        String name = type.substring(array);
-        String res = (String) classes.get(name);
+        String res = (String) classes.get(type = type.substring(array));
         if (res == null) {
             // TODO Foo.Bar.Baz... stupid java
             for (int i = 0; res == null && i < importPackages.length; ++i) {
@@ -328,26 +327,33 @@ public class JavaSource implements Opcodes {
                 if (!finder.exists(res))
                     res = null;
             }
-            res = 'L' + (res != null ? res : importPackages[0]) + name + ';';
+            res = 'L' + (res != null ? res : importPackages[0]) + type + ';';
         }
-        return descr ? type.substring(0, array).concat(res)
-                     : array != 0 || res.length() <= 1
-                        ? name : res.substring(1, res.length() - 1);
+        if (to != null) {
+            to[n] = array != 0 || res.length() <= 1
+                        ? type : res.substring(1, res.length() - 1);
+            return null;
+        }
+        YType t = new YType(res);
+        while (--array >= 0)
+            t = new YType(YetiType.JAVA_ARRAY, new YType[] { t });
+        return t;
     }
 
     static void loadClass(ClassFinder finder, JavaTypeReader tr, JavaNode n) {
         JavaSource src = n.source;
         src.prepareResolve(finder);
         String cname = n.name;
+        String[] superType = new String[1];
+        src.resolve(finder, n.type, superType, 0);
         String[] interfaces = new String[n.argv.length];
         for (int i = 0; i < interfaces.length; ++i)
-            interfaces[i] = src.resolve(finder, n.argv[i], false);
-        tr.visit(0, n.modifier, cname, null,
-                 src.resolve(finder, n.type, false), interfaces);
+            src.resolve(finder, n.argv[i], interfaces, i);
+        tr.visit(0, n.modifier, cname, null, superType[0], interfaces);
         for (JavaNode i = n.field; i != null; i = i.field) {
             int access = i.modifier;
             String name = i.name;
-            YType t = new YType(src.resolve(finder, i.type, true));
+            YType t = src.resolve(finder, i.type, null, 0);
             if (i.argv == null) { // field
                 ((access & ACC_STATIC) == 0 ? tr.fields : tr.staticFields)
                     .put(name, new JavaType.Field(name, access, cname, t));
@@ -355,7 +361,7 @@ public class JavaSource implements Opcodes {
             }
             YType[] av = new YType[i.argv.length];
             for (int j = 0; j < av.length; ++j)
-                av[j] = new YType(src.resolve(finder, i.argv[j], true));
+                av[j] = src.resolve(finder, i.argv[j], null, 0);
             JavaType.Method m = new JavaType.Method();
             m.name = name;
             m.access = access;
