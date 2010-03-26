@@ -225,9 +225,12 @@ public class JavaSource implements Opcodes {
         JavaNode cl = new JavaNode();
         cl.source = this;
         cl.modifier = modifiers;
-        cl.name = type(2);
+        id = type(2);
         if (outer != null)
-            cl.name = outer + '$' + cl.name;
+            id = outer + '$' + id;
+        if (packageName.length() != 0)
+            id = packageName + '/' + id;
+        cl.name = id;
         id = get(0);
         if ("extends".equals(id)) {
             cl.type = type(2);
@@ -246,8 +249,7 @@ public class JavaSource implements Opcodes {
                 return null;
             while (id != "" && field(modifiers, id, cl) == ",");
         }
-        classes.put(packageName.length() == 0 ? cl.name :
-                        packageName + '/' + cl.name, cl);
+        classes.put(cl.name, cl);
         return "";
     }
 
