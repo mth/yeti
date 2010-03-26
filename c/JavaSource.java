@@ -278,7 +278,7 @@ public class JavaSource implements Opcodes {
         fn = null;
     }
 
-    private synchronized void prepareResolve() {
+    private synchronized void prepareResolve(ClassFinder finder) {
         if (importPackages != null)
             return; // already done
         // reuse classes for full-name import map
@@ -286,22 +286,31 @@ public class JavaSource implements Opcodes {
         classes.remove("number");
         List pkgs = new ArrayList();
         pkgs.add(packageName.concat("/"));
-        for (int i = 0; i < imports.size(); ++i) {
+        for (int i = 0, j; i < imports.size(); ++i) {
             String s = (String) imports.get(i);
-            int dot = s.lastIndexOf('/');
-            if (dot <= 0)
+            if (s.endsWith("/*")) {
+                pkgs.add(s.substring(0, s.length() - 1));
                 continue;
-            String name = s.substring(dot + 1);
-            if ("*".equals(name)) {
-                pkgs.add(s.substring(0, dot + 1));
-            } else {
-                // import x.y.z.Bar.Baz... stupid java
-                // TODO Doh have to verify that class exists
-                // and if not, try Bar$Baz, z$Bar$Baz etc...
-                Object o = classes.put(name, 'L'+ s + ';');
-                if (o != null) // don't override primitives!
-                    classes.put(name, o);
             }
+            // Java weird inner class implementation means that
+            // import w.x.y.z; doesn't tell whether it means really
+            // class x.y.z or x.y$z or x$y$z.
+            // Only way to find out is to try, which class exists...
+            String name = null, full = s;
+            char[] cs = s.toCharArray();
+            for (j = cs.length; --j >= 0;)
+                if (cs[j] == '/') {
+                    if (name == null)
+                        name = s.substring(j + 1, cs.length);
+                    else
+                        full = new String(cs);
+                    if (finder.exists(full))
+                        break;
+                    cs[j] = '$';
+                }
+            Object o = classes.put(name, 'L'+ (j == 0 ? s : full) + ';');
+            if (o != null) // don't override primitives!
+                classes.put(name, o);
         }
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
     }
@@ -328,7 +337,7 @@ public class JavaSource implements Opcodes {
 
     static void loadClass(ClassFinder finder, JavaTypeReader tr, JavaNode n) {
         JavaSource src = n.source;
-        src.prepareResolve();
+        src.prepareResolve(finder);
         String cname = n.name;
         String[] interfaces = new String[n.argv.length];
         for (int i = 0; i < interfaces.length; ++i)
