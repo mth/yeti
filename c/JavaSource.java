@@ -1,27 +1,41 @@
+// ex: se sts=4 sw=4 expandtab:
+
+/*
+ * Partial Java source code parser.
+ *
+ * This file is part of Yeti language compiler.
+ *
+ * Copyright (c) 2010 Madis Janson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package yeti.lang.compiler;
 
 import yeti.renamed.asm3.Opcodes;
 import java.util.*;
 
-/*
-XXX .* imports mean we can't put classes in map, but have to try all packages
-instead, when class name is referenced. Which (in turn) means, that we have to
-run all the shit in 2 pass - 1 to parse all classes, and 2 to resolve the id's
-when we finally know what classes exist in which packages. It isn't all bad,
-though - I think that resolve pass can be done lazily on-demand, when class
-description is requested.
-Finally, we have the weird foopkg.someclass.subclass; import shit.
-I think this also couldn't be fully resolved without trying (and having all
-classes known) - you have to first guess, that it's foopkg/someclass/subclass,
-and if such beast is not found, try foopkg/somclass$subclass, and after that
-foopkg$someclass$subclass. If none of those is found, you have to give up and
-declare it to be unknown (for our purposes, a wild guess about first variant
-could be done here).
-In conclusion - we shouldn't try to resolve class-names at all in the first
-parse stage, and just add import lists with classes. When class is required
-at later stage the names can be resolved (as all classes are known then).
-*/
-
+// Java source tree node, can be class or method or field.
 class JavaNode {
     int modifier;
     String type; // extends for classes
@@ -31,7 +45,13 @@ class JavaNode {
     JavaSource source;
 }
 
-public class JavaSource implements Opcodes {
+/*
+ * Represents Java source file.
+ *
+ * It is also partial Java parser that parses class fields and
+ * method signatures, and skips method bodies.
+ */
+class JavaSource implements Opcodes {
     private static final String[] CHAR_SPOOL = new String[128];
     private static final Map MODS = new HashMap();
     private int p, e;
@@ -327,6 +347,9 @@ public class JavaSource implements Opcodes {
         imports = null;
     }
 
+    // Java package imports and inner class naming means that it is impossible
+    // to resolve Java type name without knowing what classes really exists
+    // (so all source classes must be parsed before attempting any resolving).
     private YType resolve(ClassFinder finder, String type, String[] to, int n) {
         int array = 0, l = type.length();
         while (array < l && type.charAt(array) == '[')
@@ -396,7 +419,7 @@ public class JavaSource implements Opcodes {
                     .add(m);
         }
     }
-
+/*
     // testing
     private static String join(String[] v) {
         String res = "";
@@ -428,7 +451,7 @@ public class JavaSource implements Opcodes {
             System.out.println("}\n");
         }
     }
-
+*/
     private static void mod(String name, int value) {
         MODS.put(name, new Integer(value));
     }
