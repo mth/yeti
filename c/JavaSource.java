@@ -280,6 +280,34 @@ public class JavaSource implements Opcodes {
         fn = null;
     }
 
+    /*
+     * Java weird inner class implementation means that
+     * import w.x.y.z; doesn't tell whether it means really
+     * class x.y.z or x.y$z or x$y$z.
+     * Only way to find out is to try, which class exists...
+     */
+    private static String resolveFull(ClassFinder finder, String t, Map to) {
+        String name = null, full = t;
+        char[] cs = t.toCharArray();
+        for (int i = cs.length; --i >= 0;)
+            if (cs[i] == '/') {
+                if (name == null)
+                    name = t.substring(i + 1, cs.length);
+                else
+                    full = new String(cs);
+                if (finder.exists(full)) {
+                    if (to != null) {
+                        Object o = to.put(name, 'L'+ (i == 0 ? t : full) + ';');
+                        if (o != null) // don't override primitives!
+                            to.put(name, o);
+                    }
+                    return full;
+                }
+                cs[i] = '$';
+            }
+        return null;
+    }
+
     private synchronized void prepareResolve(ClassFinder finder) {
         if (importPackages != null)
             return; // already done
@@ -288,48 +316,37 @@ public class JavaSource implements Opcodes {
         classes.remove("number");
         List pkgs = new ArrayList();
         pkgs.add(packageName.concat("/"));
-        for (int i = 0, j; i < imports.size(); ++i) {
+        for (int i = 0; i < imports.size(); ++i) {
             String s = (String) imports.get(i);
-            if (s.endsWith("/*")) {
+            if (s.endsWith("/*"))
                 pkgs.add(s.substring(0, s.length() - 1));
-                continue;
-            }
-            // Java weird inner class implementation means that
-            // import w.x.y.z; doesn't tell whether it means really
-            // class x.y.z or x.y$z or x$y$z.
-            // Only way to find out is to try, which class exists...
-            String name = null, full = s;
-            char[] cs = s.toCharArray();
-            for (j = cs.length; --j >= 0;)
-                if (cs[j] == '/') {
-                    if (name == null)
-                        name = s.substring(j + 1, cs.length);
-                    else
-                        full = new String(cs);
-                    if (finder.exists(full))
-                        break;
-                    cs[j] = '$';
-                }
-            Object o = classes.put(name, 'L'+ (j == 0 ? s : full) + ';');
-            if (o != null) // don't override primitives!
-                classes.put(name, o);
+            else
+                resolveFull(finder, s, classes);
         }
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
+        imports = null;
     }
 
     private YType resolve(ClassFinder finder, String type, String[] to, int n) {
         int array = 0, l = type.length();
         while (array < l && type.charAt(array) == '[')
             ++array;
-        String res = (String) classes.get(type = type.substring(array));
-        if (res == null) {
-            // TODO Foo.Bar.Baz... stupid java
-            for (int i = 0; res == null && i < importPackages.length; ++i) {
-                res = importPackages[i];
-                if (!finder.exists(res))
-                    res = null;
-            }
-            res = 'L' + (res != null ? res : importPackages[0]) + type + ';';
+        int dot = (type = type.substring(array)).indexOf('/');
+        String subclass = type, cname = type;
+        if (dot > 0) {
+            subclass = type.replace('/', '$');
+            cname = type.substring(0, dot);
+        }
+        String res = (String) classes.get(cname);
+        if (res == null && (dot <= 0 || (res = resolveFull(finder, type, null))
+                                            == null)) {
+            // try to resolve from package imports
+            for (int i = 0; res == null && i < importPackages.length; ++i)
+                if (finder.exists(importPackages[i].concat(cname)))
+                    res = importPackages[i].concat(subclass);
+            if (res == null) // couldn't resolve
+                res = dot > 0 ? type : importPackages[0].concat(type);
+            res = 'L' + res + ';';
         }
         if (to != null) {
             to[n] = array != 0 || res.length() <= 1
