@@ -300,7 +300,9 @@ class JavaSource implements Opcodes {
                 continue; // skip toplevel ;
             if (!"import".equals(id))
                 break;
-            if ((id = type(0)) != null)
+            if ("static".equals(id = type(0)))
+                type(0); // ignore import static blaah
+            else if (id != null)
                 imports.add(id);
         }
         lookahead = id;
@@ -433,39 +435,7 @@ class JavaSource implements Opcodes {
         if (tr.constructors.size() == 0) // default constructor
             tr.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
     }
-/*
-    // testing
-    private static String join(String[] v) {
-        String res = "";
-        for (int i = 0; i < v.length; ++i) {
-            if (i != 0)
-                res += ", ";
-            res += v[i];
-        }
-        return res;
-    }
 
-    public static void main(String[] argv) throws Exception {
-        HashMap m = new HashMap();
-        for (int i = 0; i < argv.length; ++i) {
-            String[] fn = { argv[i] };
-            char[] s = new YetiC(null).getSource(fn);
-            new JavaSource(fn[0], s, m);
-        }
-        for (Iterator i = m.keySet().iterator(); i.hasNext();) {
-            String name = (String) i.next();
-            JavaNode c = (JavaNode) m.get(name);
-            System.out.println("class " + name + " extends " +
-                    (c.type == null ? "Object" : c.type) +
-                    (c.argv == null ? "" : " implements " + join(c.argv)) + " {");
-            while ((c = c.field) != null) {
-                System.out.println("   " + c.type + ' ' + c.name +
-                    (c.argv == null ? "" : '(' + join(c.argv) + ')') + ';');
-            }
-            System.out.println("}\n");
-        }
-    }
-*/
     private static void mod(String name, int value) {
         MODS.put(name, new Integer(value));
     }
