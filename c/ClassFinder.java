@@ -112,7 +112,7 @@ class ClassFinder {
                 ? (ClassPathItem) new ClassJar(cp[i]) : new ClassDir(cp[i]);
             if (i != 0)
                 buf.append(File.pathSeparator);
-            buf.append(classPath[i]);
+            buf.append(cp[i]);
         }
         pathStr = buf.toString();
     }
