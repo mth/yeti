@@ -89,8 +89,10 @@ public class YetiTask extends MatchingTask {
         compilation.isGCJ |= gcj;
         log("Compiling " + files.length + " files.");
         try {
+            String[] javaOpt = { "-encoding", "utf-8", "-d",
+                target.length() > 1 ? target : ">" };
             for (int i = 0; i < files.length; ++i) {
-                compilation.compile(files[i], 0);
+                compilation.compileAll(files, 0, javaOpt);
             }
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());

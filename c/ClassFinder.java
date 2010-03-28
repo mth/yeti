@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
+import yeti.renamed.asm3.ClassReader;
 
 abstract class ClassPathItem {
     abstract InputStream getStream(String name) throws IOException;
@@ -95,7 +96,7 @@ class ClassJar extends ClassPathItem {
 class ClassFinder {
     private ClassPathItem[] classPath;
     private Map defined = new HashMap();
-    private Map parsed = new HashMap();
+    final Map parsed = new HashMap();
     final Map existsCache = new HashMap();
 
     ClassFinder(String cp) {
@@ -161,7 +162,27 @@ class ClassFinder {
         return found;
     }
 
-    static InputStream find(String name) {
-        return CompileCtx.current().classPath.findClass(name);
+    JavaTypeReader readClass(String className) {
+        JavaTypeReader t = new JavaTypeReader();
+        t.className = className;
+        Object classNode = parsed.get(className);
+        if (classNode != null) {
+            JavaSource.loadClass(this, t, (JavaNode) classNode);
+            return t;
+        }
+        InputStream in = findClass(className + ".class");
+        if (in == null)
+            return null;
+        try {
+            new ClassReader(in).accept(t, null,
+                    ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
+        } catch (IOException ex) {
+            return null;
+        }
+        return t;
+    }
+
+    static ClassFinder get() {
+        return CompileCtx.current().classPath;
     }
 }

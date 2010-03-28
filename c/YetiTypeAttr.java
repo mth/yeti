@@ -452,7 +452,7 @@ class YetiTypeVisitor implements ClassVisitor {
         InputStream in = null;
         if (!bySourcePath) {
             source += ".yeti";
-            in = ClassFinder.find(name + ".class");
+            in = ClassFinder.get().findClass(name + ".class");
         }
         try {
             if (in == null) {

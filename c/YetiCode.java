@@ -149,6 +149,54 @@ final class CompileCtx implements Opcodes {
         }
     }
 
+    String compileAll(String[] sources, int flags, String[] javaArg)
+            throws Exception {
+        String[] fn = new String[1];
+        List java = null;
+        int i, yetiCount = 0;
+        for (i = 0; i < sources.length; ++i)
+            if (sources[i].endsWith(".java")) {
+                fn[0] = sources[i];
+                char[] s = reader.getSource(fn);
+                new JavaSource(fn[0], s, classPath.parsed);
+                if (java == null) {
+                    java = new ArrayList();
+                    boolean encoding = false;
+                    for (int j = 0; j < javaArg.length; ++j) {
+                        java.add(javaArg[i]);
+                        if ("-encoding".equals(javaArg[i]))
+                            encoding = true;
+                    }
+                    if (!encoding) {
+                        java.add("-encoding");
+                        java.add("utf-8");
+                    }
+                }
+                java.add(sources[i]);
+            } else {
+                sources[yetiCount++] = sources[i];
+            }
+        String mainClass = null;
+        for (i = 0; i < yetiCount; ++i)
+            mainClass = compile(sources[i], flags);
+        if (java != null) {
+            javaArg = (String[]) java.toArray(new String[javaArg.length]);
+            Class javac;
+            java.lang.reflect.Method m;
+            try {
+                javac = Class.forName ("com.sun.tools.javac.Main");
+                m = javac.getMethod("compile", new Class[] { String[].class });
+            } catch (Exception ex) {
+                throw new CompileException(null, "Couldn't find Java compiler");
+            }
+            Object o = javac.newInstance();
+            if (((Integer) m.invoke(o, javaArg)).intValue() != 0)
+                throw new CompileException(null,
+                            "Error while compiling Java sources");
+        }
+        return mainClass;
+    }
+
     String compile(String sourceName, int flags) throws Exception {
         String className = (String) compiled.get(sourceName);
         if (className != null) {

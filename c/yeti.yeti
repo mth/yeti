@@ -37,6 +37,7 @@ var exec = true;
 var printType = false;
 var src = "";
 var compileErrorTrace = false;
+javaOptions = array [];
 
 srcs = array [];
 argv = array _argv;
@@ -75,6 +76,8 @@ help () =
       "  -cp path         Give classpath\n\
       "  -preload modules Preload modules (: separated list)\n\
       "  -icast           Generate superfluous casts for broken JVMs\n\
+      "  -javaver version Forces specified Java version when compiling Java\n\
+      "  -javaopt option  Option for Javac (used for compiling Java sources)\n\
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
@@ -89,6 +92,8 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-d":
             target := shift argv;
             if target != "" then
+                push javaOptions '-d';
+                push javaOptions target;
                 target := "\(target)/"
             fi;
             exec := false;
@@ -106,6 +111,11 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-parse-tree": flags := flags + YetiC#CF_PRINT_PARSE_TREE;
         "-no-import" : flags := flags + YetiC#CF_NO_IMPORT;
         "-no-frames" : evaluator.noframes := true;
+        "-javaver":
+            ver = shift argv;
+            for ['-source', ver, '-target', ver] (push javaOptions);
+        "-javaopt":
+            push javaOptions (shift argv);
         "-guard":
             time = number (shift argv);
             _ = runThread [Daemon ()] do:
@@ -165,9 +175,7 @@ try
             println mt#type
         done
     else
-        for srcs do src:
-            evaluator.mainClass := compilation#compile(src, flags)
-        done
+        evaluator.mainClass := compilation#compileAll(srcs, flags, javaOptions)
     fi;
     compilation#enumWarns(printMessage)
 catch CompileException ex:

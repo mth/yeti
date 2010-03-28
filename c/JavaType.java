@@ -518,17 +518,8 @@ class JavaType {
             resolved = true;
             return;
         }
-        String className = className();
-        InputStream in = ClassFinder.find(className + ".class");
-        if (in == null) {
-            throw new JavaClassNotFoundException(dottedName());
-        }
-        JavaTypeReader t = new JavaTypeReader();
-        t.className = className;
-        try {
-            new ClassReader(in).accept(t, null,
-                    ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
-        } catch (IOException ex) {
+        JavaTypeReader t = ClassFinder.get().readClass(className());
+        if (t == null) {
             throw new JavaClassNotFoundException(dottedName());
         }
         resolve(t);
