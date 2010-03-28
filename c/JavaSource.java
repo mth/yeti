@@ -158,6 +158,8 @@ class JavaSource implements Opcodes {
     private String type(int mode) {
         StringBuffer result = null;
         String id = get(0), sep = null;
+        if (id == "{")
+            return id;
         while (id != null && (sep = get(0)) == "." && mode != 1) {
             if (result == null)
                 result = new StringBuffer(id);
@@ -267,7 +269,10 @@ class JavaSource implements Opcodes {
         while ((id = readClass(cl.name, modifiers = modifiers())) != "}") {
             if (id == null)
                 return null;
-            while (id != "" && field(modifiers, id, cl) == ",");
+            if (id == "{")
+                get(1);
+            else
+                while (id != "" && field(modifiers, id, cl) == ",");
         }
         classes.put(cl.name, cl);
         return "";
@@ -336,6 +341,7 @@ class JavaSource implements Opcodes {
         classes.remove("number");
         List pkgs = new ArrayList();
         pkgs.add(packageName.concat("/"));
+        pkgs.add("java/lang/");
         for (int i = 0; i < imports.size(); ++i) {
             String s = (String) imports.get(i);
             if (s.endsWith("/*"))
@@ -389,7 +395,7 @@ class JavaSource implements Opcodes {
         String[] superType = { "java/lang/Object" };
         if (n.type != null)
             src.resolve(finder, n.type, superType, 0);
-        String[] interfaces = new String[n.argv.length];
+        String[] interfaces = new String[n.argv == null ? 0 : n.argv.length];
         for (int i = 0; i < interfaces.length; ++i)
             src.resolve(finder, n.argv[i], interfaces, i);
         tr.visit(0, n.modifier, cname, null, superType[0], interfaces);
