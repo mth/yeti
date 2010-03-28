@@ -190,6 +190,11 @@ class JavaSource implements Opcodes {
         JavaNode n = null;
         String id = type(1);
         if (id != null && ((modifiers & ACC_PRIVATE) == 0 || id == "(")) {
+            if ("...".equals(id)) {
+                type = "[".concat(type);
+                if ((id = type(1)) == null)
+                    return null;
+            }
             while (id.startsWith("[")) {
                 type = "[".concat(type);
                 id = id.substring(1);
@@ -217,9 +222,7 @@ class JavaSource implements Opcodes {
                 if ((id = type(3)) == ")")
                     break;
                 type = field(0, id, null);
-                if ("...".equals(id = get(0)))
-                    type = "[".concat(type);
-                if (id != null)
+                if ((id = get(0)) != null)
                     l.add(type);
             } while (id == ",");
             expect(")", id);
