@@ -77,7 +77,7 @@ help () =
       "  -preload modules Preload modules (: separated list)\n\
       "  -icast           Generate superfluous casts for broken JVMs\n\
       "  -javaver version Forces specified Java version when compiling Java\n\
-      "  -javaopt option  Option for Javac (used for compiling Java sources)\n\
+      "  -j option        Option for Javac (used when compiling Java sources)\n\
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
@@ -114,7 +114,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-javaver":
             ver = shift argv;
             for ['-source', ver, '-target', ver] (push javaOptions);
-        "-javaopt":
+        "-j":
             push javaOptions (shift argv);
         "-guard":
             time = number (shift argv);
