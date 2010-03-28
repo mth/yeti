@@ -96,6 +96,7 @@ class ClassFinder {
     private ClassPathItem[] classPath;
     private Map defined = new HashMap();
     private Map parsed = new HashMap();
+    private Map existsCache = new HashMap();
 
     ClassFinder(String cp) {
         this(cp.split(File.pathSeparator));
@@ -133,13 +134,31 @@ class ClassFinder {
     }
 
     boolean exists(String name) {
-        String fn = name.concat(".class");
-        if (defined.containsKey(fn) || parsed.containsKey(name))
+        if (parsed.containsKey(name))
             return true;
+        Boolean known = (Boolean) existsCache.get(name);
+        if (known != null)
+            return known.booleanValue();
+        String fn = name.concat(".class");
+        boolean found = false;
         for (int i = 0; i < classPath.length; ++i)
-            if (classPath[i].exists(fn))
-                return true;
-        return false;
+            if (classPath[i].exists(fn)) {
+                found = true;
+                break;
+            }
+        ClassLoader clc;
+        InputStream in;
+        if (!found &&
+              (clc = Thread.currentThread().getContextClassLoader()) != null &&
+              (in = clc.getResourceAsStream(fn)) != null) {
+            found = true;
+            try {
+                in.close();
+            } catch (Exception ex) {
+            }
+        }
+        existsCache.put(name, Boolean.valueOf(found));
+        return found;
     }
 
     static InputStream find(String name) {
