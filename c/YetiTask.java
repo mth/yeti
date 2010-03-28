@@ -43,6 +43,7 @@ public class YetiTask extends MatchingTask {
     private String[] preload = YetiC.PRELOAD;
     private String target;
     private Path classPath;
+    private List javaOpt = new ArrayList();
     private boolean gcj;
 
     public void setSrcDir(String dir) {
@@ -61,6 +62,12 @@ public class YetiTask extends MatchingTask {
             ? new String[0] : preload.split(":");
     }
 
+    public void setJavaOpt(String options) {
+        String[] a = options.split(" +");
+        for (int i = 0; i < a.length; ++i)
+            javaOpt.add(a[i]);
+    }
+
     public Path createClasspath() {
         if (classPath == null) {
             classPath = new Path(getProject());
@@ -73,12 +80,10 @@ public class YetiTask extends MatchingTask {
     }
 
     public void execute() {
-        if (dir == null) {
+        if (dir == null)
             dir = getProject().getBaseDir();
-        }
-        if (!fileset.hasPatterns()) {
+        if (!fileset.hasPatterns())
             setIncludes("*.yeti");
-        }
         String[] files = getDirectoryScanner(dir).getIncludedFiles();
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
@@ -87,13 +92,17 @@ public class YetiTask extends MatchingTask {
             new CompileCtx(new YetiC(dir.getPath()), writer, preload,
                                     new ClassFinder(classPath));
         compilation.isGCJ |= gcj;
+        javaOpt.add("-encoding");
+        javaOpt.add("utf-8");
+        if (target.length() != 0) {
+            javaOpt.add("-d");
+            javaOpt.add(target);
+        }
         log("Compiling " + files.length + " files.");
         try {
-            String[] javaOpt = { "-encoding", "utf-8", "-d",
-                target.length() > 1 ? target : ">" };
-            for (int i = 0; i < files.length; ++i) {
-                compilation.compileAll(files, 0, javaOpt);
-            }
+            for (int i = 0; i < files.length; ++i)
+                compilation.compileAll(files, 0,
+                    (String[]) javaOpt.toArray(new String[0]));
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());
         } catch (BuildException ex) {
