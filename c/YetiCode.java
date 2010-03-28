@@ -280,6 +280,7 @@ final class CompileCtx implements Opcodes {
             compiled.put(sourceName, name);
             write();
             unstoredClasses = oldUnstoredClasses;
+            classPath.existsCache.clear();
             return codeTree.type;
         } catch (CompileException ex) {
             if (ex.fn == null) {

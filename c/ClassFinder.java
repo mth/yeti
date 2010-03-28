@@ -96,7 +96,7 @@ class ClassFinder {
     private ClassPathItem[] classPath;
     private Map defined = new HashMap();
     private Map parsed = new HashMap();
-    private Map existsCache = new HashMap();
+    final Map existsCache = new HashMap();
 
     ClassFinder(String cp) {
         this(cp.split(File.pathSeparator));
