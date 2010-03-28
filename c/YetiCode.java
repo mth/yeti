@@ -39,6 +39,8 @@ import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.net.URL;
+import java.net.URLClassLoader;
 import yeti.lang.Fun;
 import yeti.lang.Num;
 import yeti.lang.RatNum;
@@ -163,13 +165,17 @@ final class CompileCtx implements Opcodes {
                     java = new ArrayList();
                     boolean encoding = false;
                     for (int j = 0; j < javaArg.length; ++j) {
-                        java.add(javaArg[i]);
-                        if ("-encoding".equals(javaArg[i]))
+                        java.add(javaArg[j]);
+                        if ("-encoding".equals(javaArg[j]))
                             encoding = true;
                     }
                     if (!encoding) {
                         java.add("-encoding");
                         java.add("utf-8");
+                    }
+                    if (classPath.pathStr.length() != 0) {
+                        java.add("-cp");
+                        java.add(classPath.pathStr);
                     }
                 }
                 java.add(sources[i]);
@@ -181,16 +187,26 @@ final class CompileCtx implements Opcodes {
             mainClass = compile(sources[i], flags);
         if (java != null) {
             javaArg = (String[]) java.toArray(new String[javaArg.length]);
-            Class javac;
+            Class javac = null;
+            try {
+                javac = Class.forName("com.sun.tools.javac.Main");
+            } catch (Exception ex) {
+            }
             java.lang.reflect.Method m;
             try {
-                javac = Class.forName ("com.sun.tools.javac.Main");
+                if (javac == null) { // find javac...
+                    URLClassLoader cl = new URLClassLoader(new URL[] {
+                        new URL("file://" + new File(System.getProperty(
+                                             "java.home"), "/../lib/tools.jar")
+                            .getAbsolutePath().replace('\\', '/')) });
+                    javac = Class.forName("com.sun.tools.javac.Main", true, cl);
+                }
                 m = javac.getMethod("compile", new Class[] { String[].class });
             } catch (Exception ex) {
                 throw new CompileException(null, "Couldn't find Java compiler");
             }
             Object o = javac.newInstance();
-            if (((Integer) m.invoke(o, javaArg)).intValue() != 0)
+            if (((Integer) m.invoke(o, new Object[] {javaArg})).intValue() != 0)
                 throw new CompileException(null,
                             "Error while compiling Java sources");
         }

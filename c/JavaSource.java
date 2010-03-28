@@ -189,7 +189,7 @@ class JavaSource implements Opcodes {
     private String field(int modifiers, String type, JavaNode target) {
         JavaNode n = null;
         String id = type(1);
-        if (id != null && (modifiers & ACC_PRIVATE) == 0) {
+        if (id != null && ((modifiers & ACC_PRIVATE) == 0 || id == "(")) {
             while (id.startsWith("[")) {
                 type = "[".concat(type);
                 id = id.substring(1);
@@ -199,8 +199,13 @@ class JavaSource implements Opcodes {
                 return type;
             n = new JavaNode();
             n.modifier = modifiers;
+            if (id == "(") {
+                type = "void";
+                n.name = "<init>";
+            } else {
+                n.name = id.intern();
+            }
             n.type = type;
-            n.name = id != "(" ? id.intern() : "<init>";
             n.field = target.field;
             target.field = n;
         }
@@ -349,6 +354,7 @@ class JavaSource implements Opcodes {
             else
                 resolveFull(finder, s, classes);
         }
+        classes.put("void", "V");
         importPackages = (String[]) pkgs.toArray(new String[pkgs.size()]);
         imports = null;
     }
@@ -424,6 +430,8 @@ class JavaSource implements Opcodes {
                 ((access & ACC_STATIC) == 0 ? tr.methods : tr.staticMethods)
                     .add(m);
         }
+        if (tr.constructors.size() == 0) // default constructor
+            tr.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
     }
 /*
     // testing

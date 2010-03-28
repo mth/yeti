@@ -98,6 +98,7 @@ class ClassFinder {
     private Map defined = new HashMap();
     final Map parsed = new HashMap();
     final Map existsCache = new HashMap();
+    final String pathStr;
 
     ClassFinder(String cp) {
         this(cp.split(File.pathSeparator));
@@ -105,10 +106,15 @@ class ClassFinder {
 
     ClassFinder(String[] cp) {
         classPath = new ClassPathItem[cp.length];
+        StringBuffer buf = new StringBuffer();
         for (int i = 0; i < cp.length; ++i) {
             classPath[i] = cp[i].endsWith(".jar")
                 ? (ClassPathItem) new ClassJar(cp[i]) : new ClassDir(cp[i]);
+            if (i != 0)
+                buf.append(File.pathSeparator);
+            buf.append(classPath[i]);
         }
+        pathStr = buf.toString();
     }
 
     public InputStream findClass(String name) {
