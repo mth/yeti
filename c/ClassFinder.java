@@ -44,6 +44,7 @@ import java.util.zip.ZipEntry;
 
 abstract class ClassPathItem {
     abstract InputStream getStream(String name) throws IOException;
+    abstract boolean exists(String name);
 }
 
 class ClassDir extends ClassPathItem {
@@ -55,6 +56,10 @@ class ClassDir extends ClassPathItem {
 
     InputStream getStream(String name) throws IOException {
         return new FileInputStream(path.concat(name));
+    }
+
+    boolean exists(String name) {
+        return new File(path.concat(name)).isFile();
     }
 }
 
@@ -81,11 +86,16 @@ class ClassJar extends ClassPathItem {
         ZipEntry entry = (ZipEntry) entries.get(name);
         return entry == null ? null : jar.getInputStream(entry);
     }
+
+    boolean exists(String name) {
+        return entries.containsKey(name);
+    }
 }
 
 class ClassFinder {
     private ClassPathItem[] classPath;
     private Map defined = new HashMap();
+    private Map parsed = new HashMap();
 
     ClassFinder(String cp) {
         this(cp.split(File.pathSeparator));
@@ -123,7 +133,13 @@ class ClassFinder {
     }
 
     boolean exists(String name) {
-        return false; // TODO
+        String fn = name.concat(".class");
+        if (defined.containsKey(fn) || parsed.containsKey(name))
+            return true;
+        for (int i = 0; i < classPath.length; ++i)
+            if (classPath[i].exists(fn))
+                return true;
+        return false;
     }
 
     static InputStream find(String name) {
