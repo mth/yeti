@@ -1205,7 +1205,7 @@ final class ClassField extends JavaExpr {
                 }
                 genValue(ctx, setValue, field.type, line);
                 String descr = JavaType.descriptionOf(field.type);
-                if (field.type.javaType.description.length() > 1) {
+                if (descr.length() > 1) {
                     ctx.visitTypeInsn(CHECKCAST,
                         field.type.type == YetiType.JAVA
                             ? field.type.javaType.className() : descr);

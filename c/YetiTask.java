@@ -88,9 +88,10 @@ public class YetiTask extends MatchingTask {
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
         CodeWriter writer = new ToFile(target);
-        CompileCtx compilation =
-            new CompileCtx(new YetiC(dir.getPath()), writer, preload,
-                                    new ClassFinder(classPath));
+        YetiC reader = new YetiC();
+        reader.basedirs = new String[] { dir.getPath() };
+        CompileCtx compilation = new CompileCtx(reader, writer, preload,
+                                                new ClassFinder(classPath));
         compilation.isGCJ |= gcj;
         javaOpt.add("-encoding");
         javaOpt.add("utf-8");

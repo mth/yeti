@@ -155,6 +155,22 @@ writer =
         new ToFile(target)
     fi;
 
+scan src dirs to is string -> (string -> ()) -> array<string> -> boolean =
+   (var ok = true;
+    if src `strEnds?` '.yeti' or src `strEnds?` '.java' then
+        push to src;
+    else
+        f = new File(src);
+        ok := f#isDirectory();
+        if ok then
+            dirs src;
+            for f#listFiles() do f:
+                _ = scan f#getPath() \() to
+            done
+        fi
+    fi;
+    ok);
+
 compilation = evaluator.compilationOf writer;
 var resultType = YetiType#UNIT_TYPE;
 
@@ -175,7 +191,16 @@ try
             println mt#type
         done
     else
-        evaluator.mainClass := compilation#compileAll(srcs, flags, javaOptions)
+        files = array [];
+        dirs = array [];
+        for srcs do src:
+            if not scan src (push dirs) files then
+                println "Don't know what to do with `\(src)'";
+                sysExit 1
+            fi
+        done;
+        evaluator.reader#basedirs := dirs as ~String[];
+        evaluator.mainClass := compilation#compileAll(files, flags, javaOptions)
     fi;
     compilation#enumWarns(printMessage)
 catch CompileException ex:

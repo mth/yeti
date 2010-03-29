@@ -759,6 +759,9 @@ final class Function extends CapturingClosure implements Binder {
 
             for (Capture c = captures; c != null; c = c.next)
                 captureMapping.put(c.binder, c);
+            Capture tmp = new Capture();
+            tmp.localVar = 0;
+            captureMapping.put(selfBind, tmp);
         }
         
         // Removes duplicate captures and calls captureInit

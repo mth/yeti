@@ -105,10 +105,18 @@ public class YetiC implements SourceReader {
     static String inCharset = "UTF-8";
     static final String[] PRELOAD =
         { "yeti/lang/std", "yeti/lang/io" };
-    private String basedir;
+    String[] basedirs;
 
-    public YetiC(String basedir) {
-        this.basedir = basedir;
+    private InputStream open(String name) throws IOException {
+        if (basedirs == null || basedirs.length == 0)
+            return new FileInputStream(name);
+        for (int i = 0;;)
+            try {
+                return new FileInputStream(new File(basedirs[i], name));
+            } catch (IOException ex) {
+                if (++i >= basedirs.length)
+                    throw ex;
+            }
     }
 
     public char[] getSource(String[] name_) throws IOException {
@@ -117,17 +125,13 @@ public class YetiC implements SourceReader {
         InputStream stream;
         String name = name_[0];
         try {
-            stream = basedir == null ? new FileInputStream(name)
-                        : new FileInputStream(new File(basedir, name));
+            stream = open(name);
         } catch (IOException ex) {
             int p = name.lastIndexOf('/');
-            if (p <= 0) {
+            if (p <= 0)
                 throw ex;
-            }
             try {
-                name = name.substring(p + 1);
-                stream = basedir == null ? new FileInputStream(name)
-                            : new FileInputStream(new File(basedir, name));
+                stream = open(name = name.substring(p + 1));
             } catch (IOException e) {
                 throw ex;
             }            

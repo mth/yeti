@@ -40,9 +40,10 @@ do argv: {
     var gcj = false,
     var noframes = false,
     var evalContext = () as ~YetiEval,
+    reader = new YetiC(),
 
     compilationOf writer =
-        ctx = new CompileCtx(new YetiC(()), writer, preload,
+        ctx = new CompileCtx(reader, writer, preload,
                              new ClassFinder(classPath as ~String[]));
         if gcj then
             ctx#isGCJ := true
@@ -136,6 +137,7 @@ do argv: {
         yrt;
         strJoin '' (map (^ "\n") res),
 
+    // deprecated
     compileToFiles sources target printMessage
             is list?<string> -> string -> (~CompileException -> ()) -> boolean =
         target = if target == "" then "" else target ^ File#separator fi;
