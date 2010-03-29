@@ -753,6 +753,7 @@ final class Function extends CapturingClosure implements Binder {
                 // just to hold localVar
                 Capture tmp = new Capture();
                 tmp.localVar = ++argCounter;
+                f.argVar = argCounter; // merge fucks up the pre-last capture
                 captureMapping.put(f, tmp);
             }
             methodImpl.argVar = ++argCounter;
