@@ -119,23 +119,26 @@ public class YetiC implements SourceReader {
             }
     }
 
-    public char[] getSource(String[] name_) throws IOException {
+    public char[] getSource(String[] name_, boolean fullPath) throws IOException {
         char[] buf = new char[0x8000];
         int l = 0;
         InputStream stream;
         String name = name_[0];
-        try {
-            stream = open(name);
-        } catch (IOException ex) {
-            int p = name.lastIndexOf('/');
-            if (p <= 0)
-                throw ex;
+        if (fullPath)
+            stream = new FileInputStream(name);
+        else
             try {
-                stream = open(name = name.substring(p + 1));
-            } catch (IOException e) {
-                throw ex;
-            }            
-        }
+                stream = open(name);
+            } catch (IOException ex) {
+                int p = name.lastIndexOf('/');
+                if (p <= 0)
+                    throw ex;
+                try {
+                    stream = open(name = name.substring(p + 1));
+                } catch (IOException e) {
+                    throw ex;
+                }
+            }
         try {
             Reader reader = new java.io.InputStreamReader(stream, inCharset);
             for (int n; (n = reader.read(buf, l, buf.length - l)) >= 0; ) {

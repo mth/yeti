@@ -31,5 +31,5 @@
 package yeti.lang.compiler;
 
 public interface SourceReader {
-    char[] getSource(String[] name) throws Exception;
+    char[] getSource(String[] name, boolean fullPath) throws Exception;
 }

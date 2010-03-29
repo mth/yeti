@@ -157,16 +157,23 @@ writer =
 
 scan src path dirs to =
    (var ok = true;
-    name = if path == '' then src else "\(src)/\(path)" fi;
-    if name `strEnds?` '.yeti' or name `strEnds?` '.java' then
-        push to name;
+    if src `strEnds?` '.yeti' then
+        push to if path == '' then src else path fi;
+    elif src `strEnds?` '.java' then
+        push to src // javac prefers full path
     else
-        f = new File(name);
+        f = new File(src);
         ok := f#isDirectory();
         if ok then
-            dirs name;
+            dirs src;
             for f#listFiles() do f:
-                _ = scan src f#getName() \() to
+                if not f#isHidden() then
+                    var fn = f#getName();
+                    if path != '' then
+                        fn := "\(path)/\(fn)"
+                    fi;
+                    _ = scan f#getPath() fn \() to
+                fi
             done
         fi
     fi;

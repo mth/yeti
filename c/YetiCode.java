@@ -159,7 +159,7 @@ final class CompileCtx implements Opcodes {
         for (i = 0; i < sources.length; ++i)
             if (sources[i].endsWith(".java")) {
                 fn[0] = sources[i];
-                char[] s = reader.getSource(fn);
+                char[] s = reader.getSource(fn, true);
                 new JavaSource(fn[0], s, classPath.parsed);
                 if (java == null) {
                     java = new ArrayList();
@@ -221,7 +221,7 @@ final class CompileCtx implements Opcodes {
         String[] srcName = { sourceName };
         char[] src;
         try {
-            src = reader.getSource(srcName);
+            src = reader.getSource(srcName, false);
         } catch (IOException ex) {
             throw new CompileException(null, ex.getMessage());
         }
