@@ -155,17 +155,18 @@ writer =
         new ToFile(target)
     fi;
 
-scan src dirs to is string -> (string -> ()) -> array<string> -> boolean =
+scan src path dirs to =
    (var ok = true;
-    if src `strEnds?` '.yeti' or src `strEnds?` '.java' then
-        push to src;
+    name = if path == '' then src else "\(src)/\(path)" fi;
+    if name `strEnds?` '.yeti' or name `strEnds?` '.java' then
+        push to name;
     else
-        f = new File(src);
+        f = new File(name);
         ok := f#isDirectory();
         if ok then
-            dirs src;
+            dirs name;
             for f#listFiles() do f:
-                _ = scan f#getPath() \() to
+                _ = scan src f#getName() \() to
             done
         fi
     fi;
@@ -194,7 +195,7 @@ try
         files = array [];
         dirs = array [];
         for srcs do src:
-            if not scan src (push dirs) files then
+            if not scan src '' (push dirs) files then
                 println "Don't know what to do with `\(src)'";
                 sysExit 1
             fi
