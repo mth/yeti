@@ -1,4 +1,13 @@
 .build
-asm-3.1.jar
+tags
 yeti.jar
+asm-3.1r.jar
 doc/intro.html
+doc/_intro.aux
+doc/_intro.latex
+doc/_intro.log
+doc/_intro.out
+doc/intro.pdf
+examples/war/demo.war
+examples/war/j2ee.jar
+examples/war/target

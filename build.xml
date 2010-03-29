@@ -134,38 +134,9 @@
     <available property="no.jar.build" file="${basedir}/yeti.jar"/>
 </target>
 
-<target name="need-jar" depends="prepare-build,checkjar" unless="no.jar.build">
+<!-- target name="need-jar" depends="prepare-build,checkjar"
+        unless="no.jar.build">
     <antcall target="jar" inheritRefs="true"/>
-</target>
-
-<target name="mixed-task" depends="need-jar">
-    <taskdef name="yeticj" classname="yeti.lang.compiler.YetiTask"
-             classpath="yeti.jar"/>
-    <yeticj srcdir="${basedir}/util" destdir="${basedir}/.build/mixedtask"
-            icast="${icast}" includes="MixedDeps.yeti,Compile.yeti"/>
-</target>
-
-<target name="all-jar" depends="clean,jar,mixed-task">
-    <jar jarfile="${basedir}/yeti-all.jar">
-        <manifest>
-            <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
-        </manifest>
-        <fileset dir="${basedir}/.build/lib"/>
-        <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
-        <fileset dir="${basedir}/.build/std"/>
-        <fileset dir="${basedir}/.build/modules"/>
-        <fileset dir="${basedir}/.build/mixedtask"/>
-        <zipfileset src="${asm}"/>
-    </jar>
-</target>
-
-<target name="scan" depends="mixed-task">
-    <taskdef name="mixedc" className="yeti.ant.MixedCompileTask"
-             classpath="yeti.jar:yeti-ant.jar"/>
-    <mkdir dir="${basedir}/.build/mtt"/>
-    <mixedc destdir="${basedir}/.build/mtt" srcdir="${basedir}/c" debug="on"
-            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
-            classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"/>
-</target>
+</target -->
 
 </project>

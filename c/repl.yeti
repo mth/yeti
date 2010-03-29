@@ -137,7 +137,7 @@ do argv: {
         yrt;
         strJoin '' (map (^ "\n") res),
 
-    // deprecated
+    /* deprecated
     compileToFiles sources target printMessage
             is list?<string> -> string -> (~CompileException -> ()) -> boolean =
         target = if target == "" then "" else target ^ File#separator fi;
@@ -152,5 +152,5 @@ do argv: {
             compilation#enumWarns(printMessage);
             printMessage ex;
             false
-        yrt
+        yrt*/
 } done
