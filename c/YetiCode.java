@@ -1439,6 +1439,7 @@ final class ConditionalExpr extends Code {
             }
             ctx.visitLabel(jmpNext);
         }
+        ctx.visitInsn(-1); // reset type
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {

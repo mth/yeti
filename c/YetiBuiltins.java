@@ -1141,6 +1141,10 @@ final class StrOp extends StaticRef implements Binder {
         }
 
         void gen(Ctx ctx) {
+            genIf(ctx, null, false);
+        }
+
+        void genIf(Ctx ctx, Label to, boolean ifTrue) {
             List argv = new ArrayList();
             for (StrApply a = this; a != null; a = a.prev) {
                 argv.add(a);
@@ -1166,7 +1170,9 @@ final class StrOp extends StaticRef implements Binder {
             ctx.visitLine(line);
             ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
                                 method, sig);
-            if (type.deref().type == YetiType.STR) {
+            if (to != null) { // really genIf
+                ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+            } else if (type.deref().type == YetiType.STR) {
                 ctx.forceType("java/lang/String;");
             } else {
                 JavaExpr.convertValue(ctx, argTypes[argTypes.length - 1]);
