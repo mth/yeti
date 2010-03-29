@@ -158,9 +158,13 @@ writer =
 scan src path dirs to =
    (var ok = true;
     if src `strEnds?` '.yeti' then
-        push to if path == '' then src else path fi;
+        name = if path == '' then src else path fi;
+        // avoid duplicates, prefer shortest name
+        if not src in to or strLength to.[src] > strLength name then
+            to.[src] := name
+        fi
     elif src `strEnds?` '.java' then
-        push to src // javac prefers full path
+        to.[src] := src // javac prefers full path
     else
         f = new File(src);
         ok := f#isDirectory();
@@ -199,7 +203,7 @@ try
             println mt#type
         done
     else
-        files = array [];
+        files = [:];
         dirs = array [];
         for srcs do src:
             if not scan src '' (push dirs) files then
@@ -208,7 +212,8 @@ try
             fi
         done;
         evaluator.reader#basedirs := dirs as ~String[];
-        evaluator.mainClass := compilation#compileAll(files, flags, javaOptions)
+        evaluator.mainClass :=
+            compilation#compileAll(sort (list files), flags, javaOptions)
     fi;
     compilation#enumWarns(printMessage)
 catch CompileException ex:

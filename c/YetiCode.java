@@ -163,16 +163,14 @@ final class CompileCtx implements Opcodes {
                 new JavaSource(fn[0], s, classPath.parsed);
                 if (java == null) {
                     java = new ArrayList();
-                    boolean encoding = false;
-                    for (int j = 0; j < javaArg.length; ++j) {
+                    for (int j = 0; j < javaArg.length; ++j)
                         java.add(javaArg[j]);
-                        if ("-encoding".equals(javaArg[j]))
-                            encoding = true;
-                    }
-                    if (!encoding) {
+                    if (!java.contains("-encoding")) {
                         java.add("-encoding");
                         java.add("utf-8");
                     }
+                    if (!java.contains("-g"))
+                        java.add("-g");
                     if (classPath.pathStr.length() != 0) {
                         java.add("-cp");
                         java.add(classPath.pathStr);
