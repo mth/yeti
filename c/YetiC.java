@@ -108,7 +108,8 @@ public class YetiC implements SourceReader {
     String[] basedirs;
 
     private InputStream open(String name) throws IOException {
-        if (basedirs == null || basedirs.length == 0)
+        if (basedirs == null || basedirs.length == 0 ||
+                new File(name).isAbsolute())
             return new FileInputStream(name);
         for (int i = 0;;)
             try {
