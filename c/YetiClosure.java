@@ -54,7 +54,7 @@ interface CaptureWrapper {
 class Apply extends Code {
     final Code fun, arg;
     final int line;
-    private int arity = 1;
+    int arity = 1;
     BindExpr.Ref ref;
 
     Apply(YType res, Code fun, Code arg, int line) {
@@ -271,7 +271,7 @@ abstract class CaptureRef extends BindRef {
             super(type, f, arg, line);
             this.depth = depth;
             if (origin != null) {
-                origin.arity = args.length - depth + 1;
+                this.arity = origin.arity = args.length - depth + 1;
                 this.ref = origin;
             }
         }
