@@ -256,11 +256,8 @@ class JavaSource implements Opcodes {
         cl.source = this;
         cl.modifier = modifiers;
         id = type(2);
-        if (outer != null)
-            id = outer + '$' + id;
-        if (packageName.length() != 0)
-            id = packageName + '/' + id;
-        cl.name = id;
+        cl.name = outer != null ? outer + '$' + id :
+                    packageName.length() != 0 ? packageName + '/' + id : id;
         id = get(0);
         if ("extends".equals(id)) {
             cl.type = type(2);
@@ -331,8 +328,9 @@ class JavaSource implements Opcodes {
                 else
                     full = new String(cs);
                 if (finder.exists(full)) {
+                    full = 'L' + full + ';';
                     if (to != null) {
-                        Object o = to.put(name, 'L'+ (i == 0 ? t : full) + ';');
+                        Object o = to.put(name, full);
                         if (o != null) // don't override primitives!
                             to.put(name, o);
                     }
