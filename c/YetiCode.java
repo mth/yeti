@@ -80,6 +80,7 @@ final class Constants implements Opcodes {
 
 final class CompileCtx implements Opcodes {
     static final ThreadLocal currentCompileCtx = new ThreadLocal();
+    private static ClassLoader JAVAC;
 
     private CodeWriter writer;
     private SourceReader reader;
@@ -191,17 +192,22 @@ final class CompileCtx implements Opcodes {
             javaArg = (String[]) java.toArray(new String[javaArg.length]);
             Class javac = null;
             try {
-                javac = Class.forName("com.sun.tools.javac.Main");
+                javac = Class.forName("com.sun.tools.javac.Main", true,
+                                      getClass().getClassLoader());
             } catch (Exception ex) {
             }
             java.lang.reflect.Method m;
             try {
                 if (javac == null) { // find javac...
-                    URLClassLoader cl = new URLClassLoader(new URL[] {
-                        new URL("file://" + new File(System.getProperty(
+                    synchronized (currentCompileCtx) {
+                        if (JAVAC == null)
+                            JAVAC = new URLClassLoader(new URL[] {
+                                new URL("file://" + new File(System.getProperty(
                                              "java.home"), "/../lib/tools.jar")
-                            .getAbsolutePath().replace('\\', '/')) });
-                    javac = Class.forName("com.sun.tools.javac.Main", true, cl);
+                                    .getAbsolutePath().replace('\\', '/')) });
+                    }
+                    javac =
+                        Class.forName("com.sun.tools.javac.Main", true, JAVAC);
                 }
                 m = javac.getMethod("compile", new Class[] { String[].class });
             } catch (Exception ex) {
