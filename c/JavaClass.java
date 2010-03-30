@@ -227,7 +227,9 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 }
 
                 boolean flagop(int fl) {
-                    return (fl & ASSIGN) != 0 && var;
+                    return (fl & ASSIGN) != 0 && var ||
+                           (fl & (CONST | DIRECT_BIND)) != 0 && directConst ||
+                           (fl & PURE) != 0 && !var;
                 }
 
                 CaptureWrapper capture() {
