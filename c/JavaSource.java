@@ -249,7 +249,7 @@ class JavaSource implements Opcodes {
     private String readClass(String outer, int modifiers) {
         String id = type(3);
         if ("interface".equals(id))
-            modifiers |= ACC_INTERFACE;
+            modifiers |= ACC_INTERFACE | ACC_ABSTRACT;
         else if (!"class".equals(id))
             return id;
         JavaNode cl = new JavaNode();
@@ -410,6 +410,9 @@ class JavaSource implements Opcodes {
         tr.visit(0, n.modifier, cname, null, superType[0], interfaces);
         for (JavaNode i = n.field; i != null; i = i.field) {
             int access = i.modifier;
+            if ((n.modifier & ACC_INTERFACE) != 0)
+                access |= i.argv == null ? ACC_PUBLIC | ACC_FINAL | ACC_STATIC
+                                         : ACC_PUBLIC | ACC_ABSTRACT;
             String name = i.name;
             YType t = src.resolve(finder, i.type, null, 0);
             if (i.argv == null) { // field
