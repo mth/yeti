@@ -63,15 +63,6 @@
         classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
 </target>
 
-<target name="test1" depends="prepare-build,taskdef">
-    <yetic srcdir="." destdir="." includes="test.yeti">
-        <classpath>
-            <path location="${basedir}/.build/std"/>
-            <path location="${basedir}/.build/modules"/>
-        </classpath>
-    </yetic>
-</target>
-
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
@@ -111,6 +102,12 @@
     </jar>
 </target>
 
+<target name="test" depends="jar">
+    <java classname="yeti.lang.compiler.yeti" classpath="${jar-name}">
+        <arg value="${basedir}/tests/test.yeti"/>
+    </java>
+</target>
+
 <target name="libjar" depends="compiler,modules,yeti">
     <jar jarfile="${basedir}/yeti-lib.jar">
         <fileset dir="${basedir}/.build/lib"/>
@@ -128,7 +125,7 @@
     <delete dir="${basedir}/.build"/>
 </target>
 
-<target name="rebuild" depends="clean,jar"/>
+<target name="rebuild" depends="clean,test"/>
 
 <target name="checkjar">
     <available property="no.jar.build" file="${basedir}/yeti.jar"/>

@@ -1,3 +1,5 @@
+program test;
+
 h = [0.5e: true, 33.2: false];
 trueTests = [
 'id': \(id true),
@@ -38,7 +40,7 @@ trueTests = [
 'any': \(any (== 3) [1 .. 5] and not (any (== 3) [5 .. 10])),
 'all': \(not (all (!= 3) [1 .. 5]) and (all (!= 3) [5 .. 10])),
 'contains': \(contains 3 [1 .. 5] and not (contains 3 [5 .. 10])),
-'maybe': \(maybe false not (Some false)),
+'maybe': \(maybe false (not) (Some false)),
 'struct': \(f a = { var x = a }; (f 33).x := 3; true),
 'lambda': \(\\\\1 2 3 4 5 == 1)
 ];
