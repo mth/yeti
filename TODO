@@ -8,7 +8,6 @@
                 restructure holding properties
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
-* turn constant class fields into private static final
 * Use typedef's in type pretty-printing (including error messages)
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
