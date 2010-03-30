@@ -32,8 +32,8 @@
         <arg value="${basedir}/.build/lib"/>
     </java>
     <javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib" debug="on"
-        encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
-        includeantruntime="false"/>
+           encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
+           includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${basedir}/.build/util">
         <arg value="tr"/>
@@ -66,10 +66,10 @@
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/std"
-           includes="std.yeti" preload="" icast="${icast}"/>
+           includes="std.yeti" preload=""/>
     <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
            includes="*.yeti" excludes="std.yeti"
-           preload="yeti/lang/std" icast="${icast}">
+           preload="yeti/lang/std">
         <classpath>
             <path location="${basedir}/.build/std"/>
         </classpath>
@@ -77,8 +77,7 @@
 </target>
 
 <target name="yeti" depends="compiler,checkmod,modules">
-    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
-           icast="${icast}">
+    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler">
         <classpath>
             <path location="${basedir}/.build/std"/>
             <path location="${basedir}/.build/modules"/>
