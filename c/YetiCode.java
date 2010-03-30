@@ -435,7 +435,8 @@ final class Ctx implements Opcodes {
 
     Ctx newClass(int flags, String name, String extend, String[] interfaces) {
         Ctx ctx = new Ctx(compilation, constants,
-                new YClassWriter(compilation.classWriterFlags), name);
+                          new YClassWriter(compilation.classWriterFlags), name);
+        ctx.usedMethodNames = new HashMap();
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
@@ -445,6 +446,7 @@ final class Ctx implements Opcodes {
 
     Ctx newMethod(int flags, String name, String type) {
         Ctx ctx = new Ctx(compilation, constants, cw, className);
+        ctx.usedMethodNames = usedMethodNames;
         ctx.m = cw.visitMethod(flags, name, type, null, null);
         ctx.m.visitCode();
         return ctx;

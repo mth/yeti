@@ -788,11 +788,8 @@ final class Function extends CapturingClosure implements Binder {
             }
 
         Map usedNames = ctx.usedMethodNames;
-        if (usedNames == null)
-            ctx.usedMethodNames = usedNames = new HashMap();
         bindName = bindName != null ? mangle(bindName) : "_";
-        if (usedNames.containsKey(bindName) ||
-            bindName.startsWith("_"))
+        if (usedNames.containsKey(bindName) || bindName.startsWith("_"))
             bindName += ctx.methodCounter++;
         usedNames.put(bindName, null);
 

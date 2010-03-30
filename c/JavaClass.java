@@ -410,12 +410,16 @@ final class JavaClass extends CapturingClosure implements Runnable {
     }
 
     void gen(Ctx ctx) {
+        int i, cnt;
         constr.captures = captures;
         ctx.visitInsn(ACONST_NULL);
         Ctx clc = ctx.newClass(classType.javaType.access | ACC_SUPER,
                         className, parentClass.type.javaType.className(),
                         implement);
         clc.fieldCounter = captureCount;
+        // block using our method names ;)
+        for (i = 0, cnt = methods.size(); i < cnt; ++i)
+            clc.usedMethodNames.put(((Meth) methods.get(i)).name, null);
         if (!isPublic)
             clc.markInnerClass(ctx.constants.ctx, ACC_STATIC);
         Ctx init = clc.newMethod(constr.access, "<init>", constr.descr(null));
@@ -432,11 +436,11 @@ final class JavaClass extends CapturingClosure implements Runnable {
             init.visitVarInsn(ALOAD, ++n);
             init.visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
-        for (int i = 0, cnt = fields.size(); i < cnt; ++i)
+        for (i = 0, cnt = fields.size(); i < cnt; ++i)
             ((Code) fields.get(i)).gen(init);
         init.visitInsn(RETURN);
         init.closeMethod();
-        for (int i = 0, cnt = methods.size(); i < cnt; ++i)
+        for (i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
         if (usedForceDirect) {
             Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
