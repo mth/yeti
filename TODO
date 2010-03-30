@@ -4,7 +4,6 @@
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
 * Fix f x = {x}; - type system copies to much and gets wrong type sig
-* Some kind of reflection
 * Fix structs - better comparision (with sorting) and
                 restructure holding properties
 * super reference in Java classes
@@ -13,9 +12,8 @@
 * Use typedef's in type pretty-printing (including error messages)
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
-  + Something better than current MixedTask for java/yeti mixed code?
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
-* Extendable structs?
+* Extendable structs.
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
   when casted into Java object
