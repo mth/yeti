@@ -411,8 +411,8 @@ class JavaSource implements Opcodes {
         for (JavaNode i = n.field; i != null; i = i.field) {
             int access = i.modifier;
             if ((n.modifier & ACC_INTERFACE) != 0)
-                access |= ACC_PUBLIC | (i.argv == null
-                        ? ACC_FINAL | ACC_STATIC : ACC_ABSTRACT);
+                access |= i.argv == null ? ACC_PUBLIC | ACC_FINAL | ACC_STATIC
+                                         : ACC_PUBLIC | ACC_ABSTRACT;
             String name = i.name;
             YType t = src.resolve(finder, i.type, null, 0);
             if (i.argv == null) { // field
