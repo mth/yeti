@@ -99,7 +99,7 @@ peekObject object =
         Boolean (o unsafely_as boolean)
     elif o instanceof AList then
         List (map peekObject (o unsafely_as list<'a>))
-    elif o instanceof Hash then
+    elif o instanceof ByKey then
         result = [:];
         i = (o unsafely_as ~Map)#entrySet()#iterator();
         i#hasNext() loop
