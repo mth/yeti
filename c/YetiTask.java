@@ -44,7 +44,7 @@ public class YetiTask extends MatchingTask {
     private String target;
     private Path classPath;
     private List javaOpt = new ArrayList();
-    private String opt = "";
+    private boolean gcj;
 
     public void setSrcDir(String dir) {
         this.dir = new java.io.File(dir);
@@ -63,7 +63,7 @@ public class YetiTask extends MatchingTask {
     }
 
     public void setJavaOpt(String options) {
-        Object[] a = options.split(" +");
+        String[] a = options.split(" +");
         for (int i = 0; i < a.length; ++i)
             javaOpt.add(a[i]);
     }
@@ -75,8 +75,8 @@ public class YetiTask extends MatchingTask {
         return classPath;
     }
 
-    public void setOpt(String options) {
-        opt = options;
+    public void setICast(boolean icast) {
+        gcj = icast;
     }
 
     public void execute() {
@@ -92,13 +92,7 @@ public class YetiTask extends MatchingTask {
         reader.basedirs = new String[] { dir.getPath() };
         CompileCtx compilation = new CompileCtx(reader, writer, preload,
                                                 new ClassFinder(classPath));
-        String[] options = opt.split(", +");
-        for (int i = 0; i < options.length; ++i) {
-            if ("icast".equals(options[i]))
-                compilation.isGCJ = true;
-            if ("no-frames".equals(options[i]))
-                compilation.classWriterFlags = 0;
-        }
+        compilation.isGCJ |= gcj;
         javaOpt.add("-encoding");
         javaOpt.add("utf-8");
         if (target.length() != 0) {
