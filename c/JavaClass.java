@@ -168,6 +168,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
         String descr;
         Code value;
         boolean var;
+        //private boolean serialVersionUID;
+        private boolean directConst;
 
         Field(String name, Code value, boolean var) {
             this.name = name;
@@ -176,11 +178,15 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, 0);
+            if (!directConst)
+                ctx.visitVarInsn(ALOAD, 0);
         }
 
         public void genGet(Ctx ctx) {
-            ctx.visitFieldInsn(GETFIELD, ctx.className, name, descr);
+            if (directConst)
+                value.gen(ctx);
+            else
+                ctx.visitFieldInsn(GETFIELD, ctx.className, name, descr);
         }
 
         public void genSet(Ctx ctx, Code value) {
@@ -234,9 +240,14 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
 
         void gen(Ctx ctx) {
+            // _ =
             if (javaType == null) {
                 value.gen(ctx);
                 ctx.visitInsn(POP);
+                return;
+            }
+            if (!var && value.prepareConst(ctx)) {
+                directConst = true;
                 return;
             }
             ctx.cw.visitField(var ? ACC_PRIVATE : ACC_PRIVATE | ACC_FINAL,
