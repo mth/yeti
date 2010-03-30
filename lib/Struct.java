@@ -99,6 +99,13 @@ public class Struct implements Serializable {
         return true;
     }
 
+    MList names() {
+        Object[] s = new Object[values.length / 2];
+        for (int i = 0; i < s.length; ++i)
+            s[i] = values[i * 2];
+        return new MList(s);
+    }
+
     public int hashCode() {
         int res = 0;
         for (int i = values.length; (i -= 2) >= 0;) {

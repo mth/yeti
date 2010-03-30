@@ -64,4 +64,11 @@ public class PStruct extends Struct {
         for (i = 0; v[i] != field; i += 3);
         ((Fun) v[i + 2]).apply(value);
     }
+
+    MList names() {
+        MList l = super.names();
+        for (int i = 0; i < properties.length; i += 3)
+            l.add(properties[i]);
+        return l;
+    }
 }

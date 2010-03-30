@@ -1,0 +1,31 @@
+showObj descr =
+    case descr of
+    Number num:
+        "number \(num)";
+    String str:
+        "string '\(str)'";
+    Boolean bool:
+        "boolean \(bool)";
+    List l:
+        "list [\(strJoin ", " (map showObj l))]";
+    Struct st:
+        field name =
+            "\(name) = \(showObj (st.value name))";
+        "struct {\(strJoin ", " (map field st.fields))}";
+    Hash h:
+        item key value =
+            "\(showObj key): \(showObj value)";
+        "hash [\(strJoin ", " (mapHash item h))]";
+    Object o:
+        "Object(\(o))";
+    esac;
+
+println (showObj (peekObject {
+    foo = 12,
+    bar = "sheep",
+    baz = [37..42],
+    tar = ["doh": 33, "wtf": 12],
+    etc = new java.util.Date(),
+    truth = false
+}))
+

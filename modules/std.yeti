@@ -77,6 +77,52 @@ hash l is list?<'a> -> hash<'a, ()> =
     for l (_ i = h.[i] := ());
     h);
 
+/// Returns [f(a), f(b), ...] for list l [a, b, ...]
+/// This map function returns lazy list when used on normal lists.
+/// Arrays and lists backed by arrays are mapped strictly.
+map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+    if empty? l then
+        []
+    else
+        (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
+    fi;
+
+peekObject object =
+   (o = object unsafely_as ~Object;
+    if nullptr? o then
+        List []
+    elif o instanceof String then
+        String (o unsafely_as string)
+    elif o instanceof Num then
+        Number (o unsafely_as number)
+    elif o instanceof Boolean then
+        Boolean (o unsafely_as boolean)
+    elif o instanceof AList then
+        List (map peekObject (o unsafely_as list<'a>))
+    elif o instanceof Hash then
+        result = [:];
+        i = (o unsafely_as ~Map)#entrySet()#iterator();
+        i#hasNext() loop
+           (e = i#next() unsafely_as ~java.util.Map$Entry;
+            result.[peekObject (e#getKey() unsafely_as 'a)] :=
+                peekObject (e#getValue() unsafely_as 'a));
+        Hash result
+    elif o instanceof Struct then
+        st = o unsafely_as ~Struct;
+        Struct {
+            fields = st#names() unsafely_as list<string>,
+            value name = peekObject
+                try
+                    st#get((name is string unsafely_as ~String)#intern())
+                        unsafely_as 'a
+                catch java.lang.IndexOutOfBoundsException:
+                    throw new NoSuchKeyException("No such field (\(name))")
+                yrt
+        }
+    else
+        Object o
+    fi);
+
 plus a b = a + b;
 
 {
@@ -190,7 +236,7 @@ plus a b = a + b;
         fi,
 
     /// damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index, keys, hash,
+    array, fold, find, index, keys, hash, map, peekObject,
 
     /// Wraps Java array object into Yeti array type.
     wrapArray a is 'a[] -> array<'a> = a,
@@ -287,16 +333,6 @@ plus a b = a + b;
         Some v: f v;
         None _: default;
         esac,
-
-    /// Returns [f(a), f(b), ...] for list l [a, b, ...]
-    /// This map function returns lazy list when used on normal lists.
-    /// Arrays and lists backed by arrays are mapped strictly.
-    map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-        if empty? l then
-            []
-        else
-            (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
-        fi,
 
     /// Strict mapping of list. map' is usually faster than map on lists,
     /// unless huge streams are processed or most of the resulting list is
