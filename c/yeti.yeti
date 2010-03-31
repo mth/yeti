@@ -172,7 +172,7 @@ scan src path dirs to =
             dirs src;
         fi;
         for dirList do {name, path}:
-            fn = if path == '' then path else "\(path)/\(name)" fi;
+            fn = if path == '' then name else "\(path)/\(name)" fi;
             _ = scan path fn \() to
         done
     fi;
