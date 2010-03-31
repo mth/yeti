@@ -259,4 +259,26 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     sleep time = Thread#sleep(time * 1000),
 
     deleteFile fn is string -> boolean = new File(fn)#delete(),
+
+    /// Lists files in given directory.
+    /// Includes hidden files only when hidden argument is true.
+    listDirectory hidden directory is boolean -> string
+            -> list<{name is string, path is string,
+                     file? is boolean, directory? is boolean}> =
+       (res = array [];
+        for new File(directory)#listFiles() do f:
+            if hidden or not f#isHidden() then
+                var path = f#getPath();
+                if File#separator == '\' then
+                    path := strReplace '\' '/' path
+                fi;
+                file? = f#isFile();
+                push res {
+                    path, file?,
+                    name = f#getName(),
+                    directory? = not file? and f#isDirectory()
+                }
+            fi
+        done;
+        list res),
 }

@@ -166,20 +166,15 @@ scan src path dirs to =
     elif src `strEnds?` '.java' then
         to.[src] := src // javac prefers full path
     else
-        f = new File(src);
-        ok := f#isDirectory();
+        dirList = listDirectory false src;
+        ok := not empty? dirList or new File(src)#isDirectory();
         if ok then
             dirs src;
-            for f#listFiles() do f:
-                if not f#isHidden() then
-                    var fn = f#getName();
-                    if path != '' then
-                        fn := "\(path)/\(fn)"
-                    fi;
-                    _ = scan f#getPath() fn \() to
-                fi
-            done
-        fi
+        fi;
+        for dirList do {name, path}:
+            fn = if path == '' then path else "\(path)/\(name)" fi;
+            _ = scan path fn \() to
+        done
     fi;
     ok);
 
