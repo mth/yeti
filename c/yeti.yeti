@@ -155,10 +155,10 @@ writer =
         new ToFile(target)
     fi;
 
-scan src path dirs to =
+scan src local dirs to =
    (var ok = true;
     if src `strEnds?` '.yeti' then
-        name = if path == '' then src else path fi;
+        name = if local == '' then src else local fi;
         // avoid duplicates, prefer shortest name
         if not src in to or strLength to.[src] > strLength name then
             to.[src] := name
@@ -172,7 +172,7 @@ scan src path dirs to =
             dirs src;
         fi;
         for dirList do {name, path}:
-            fn = if path == '' then name else "\(path)/\(name)" fi;
+            fn = if local == '' then name else "\(local)/\(name)" fi;
             _ = scan path fn \() to
         done
     fi;
