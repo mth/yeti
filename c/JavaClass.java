@@ -167,7 +167,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
         private String javaType;
         String descr;
         Code value;
-        boolean var;
+        private final boolean var;
+        private int access = ACC_PRIVATE;
         private boolean directConst;
 
         Field(String name, Code value, boolean var) {
@@ -185,21 +186,21 @@ final class JavaClass extends CapturingClosure implements Runnable {
             if (directConst)
                 value.gen(ctx);
             else
-                ctx.visitFieldInsn(GETFIELD, ctx.className, name, descr);
+                ctx.visitFieldInsn(GETFIELD, className, name, descr);
         }
 
         public void genSet(Ctx ctx, Code value) {
             value.gen(ctx);
             ctx.visitTypeInsn(CHECKCAST, javaType);
-            ctx.visitFieldInsn(PUTFIELD, ctx.className, name, descr);
+            ctx.visitFieldInsn(PUTFIELD, className, name, descr);
         }
 
         public Object captureIdentity() {
-            return this;
+            return JavaClass.this;
         }
 
         public String captureType() {
-            return descr;
+            return classType.javaType.description;
         }
 
         public BindRef getRef(int line) {
@@ -232,6 +233,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 }
 
                 CaptureWrapper capture() {
+                    access = 0; // clear private
                     return Field.this;
                 }
             };
@@ -255,7 +257,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
             } else if (!var && value.prepareConst(ctx)) {
                 directConst = true;
             } else {
-                ctx.cw.visitField(var ? ACC_PRIVATE : ACC_PRIVATE | ACC_FINAL,
+                ctx.cw.visitField(var ? access : access | ACC_FINAL,
                                   name, descr, null, null).visitEnd();
                 genPreGet(ctx);
                 genSet(ctx, value);
