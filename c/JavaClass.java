@@ -42,7 +42,6 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private YetiType.ClassBinding parentClass;
     private List fields = new ArrayList();
     private List methods = new ArrayList();
-    private Map fieldNames = new HashMap();
     private JavaExpr superInit;
     private final boolean isPublic;
     private boolean usedForceDirect;
@@ -163,9 +162,9 @@ final class JavaClass extends CapturingClosure implements Runnable {
     }
 
     final class Field extends Code implements Binder, CaptureWrapper {
-        String name; // mangled name
+        private String name; // mangled name
         private String javaType;
-        String descr;
+        private String descr;
         Code value;
         private final boolean var;
         private int access = ACC_PRIVATE;
@@ -328,17 +327,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
         return m;
     }
 
-    Binder addField(String name, Code value, boolean var) {
-        if (name != "_") {
-            String mangled = mangle(name);
-            name = mangled;
-            int n = fieldNames.size();
-            while (fieldNames.containsKey(name)) {
-                name = mangled + n++;
-            }
-        }
-        Field field = new Field(name, value, var);
-        fieldNames.put(name, null);
+    Binder addField(Code value, boolean var) {
+        Field field = new Field("$" + fields.size(), value, var);
         fields.add(field);
         return field;
     }
