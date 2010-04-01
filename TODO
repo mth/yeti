@@ -19,6 +19,7 @@
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
 * Allow cons pattern match (::) on arrays?
+* Simplify Java class fields naming - just counter
 * Optional Java generics support?
 * Direct double optimisation, when it can be deduced,
   that there are always floats
