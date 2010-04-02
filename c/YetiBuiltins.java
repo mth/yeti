@@ -127,7 +127,28 @@ final class BuiltIn implements Binder {
     }
 }
 
-final class Argv extends BindRef {
+interface CodeGen {
+    void gen2(Ctx ctx, Code param, int line);
+}
+
+class SimpleCode extends Code {
+    private Code param;
+    private int line;
+    private CodeGen impl;
+
+    SimpleCode(CodeGen impl, Code param, YType type, int line) {
+        this.impl = impl;
+        this.param = param;
+        this.line = line;
+        this.type = type == null ? YetiType.UNIT_TYPE : type;
+    }
+
+    void gen(Ctx ctx) {
+        impl.gen2(ctx, param, line);
+    }
+}
+
+final class Argv extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
                              "ARGV", "Ljava/lang/ThreadLocal;");
@@ -136,18 +157,18 @@ final class Argv extends BindRef {
             "get", "()Ljava/lang/Object;");
     }
 
+    public void gen2(Ctx ctx, Code value, int line) {
+        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+                     "ARGV", "Ljava/lang/ThreadLocal;");
+        value.gen(ctx);
+        ctx.visitMethodInsn(INVOKEVIRTUAL,
+            "java/lang/ThreadLocal",
+            "get", "(Ljava/lang/Object;)V");
+        ctx.visitInsn(ACONST_NULL);
+    }
+
     Code assign(final Code value) {
-        return new Code() {
-            void gen(Ctx ctx) {
-                ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
-                             "ARGV", "Ljava/lang/ThreadLocal;");
-                value.gen(ctx);
-                ctx.visitMethodInsn(INVOKEVIRTUAL,
-                    "java/lang/ThreadLocal",
-                    "get", "(Ljava/lang/Object;)V");
-                ctx.visitInsn(ACONST_NULL);
-            }
-        };
+        return new SimpleCode(this, value, null, 0);
     }
 
     boolean flagop(int fl) {
@@ -290,10 +311,20 @@ final class Escape extends IsNullPtr {
     }
 }
 
-final class Negate extends StaticRef {
+final class Negate extends StaticRef implements CodeGen {
     Negate() {
         super("yeti/lang/std$negate", "_", YetiType.NUM_TO_NUM,
               null, false, 0);
+    }
+
+    public void gen2(Ctx ctx, Code arg, int line) {
+        arg.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+        ctx.visitLdcInsn(new Long(0));
+        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                            "subFrom", "(J)Lyeti/lang/Num;");
+        ctx.forceType("yeti/lang/Num");
     }
 
     Code apply(final Code arg1, final YType res1, final int line) {
@@ -301,19 +332,7 @@ final class Negate extends StaticRef {
             return new NumericConstant(((NumericConstant) arg1)
                         .num.subFrom(0));
         }
-        return new Code() {
-            { type = YetiType.NUM_TYPE; }
-
-            void gen(Ctx ctx) {
-                arg1.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-                ctx.visitLdcInsn(new Long(0));
-                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                    "subFrom", "(J)Lyeti/lang/Num;");
-                ctx.forceType("yeti/lang/Num");
-            }
-        };
+        return new SimpleCode(this, arg1, YetiType.NUM_TYPE, line);
     }
 }
 
@@ -869,7 +888,7 @@ final class LazyCons extends BinOpRef {
     }
 }
 
-final class MatchOpFun extends BinOpRef {
+final class MatchOpFun extends BinOpRef implements CodeGen {
     private int line;
     private boolean yes;
 
@@ -885,23 +904,20 @@ final class MatchOpFun extends BinOpRef {
         ctx.visitApply(arg1, line);
     }
 
+    public void gen2(Ctx ctx, Code arg2, int line) {
+        ctx.visitTypeInsn(NEW, "yeti/lang/Match");
+        ctx.visitInsn(DUP);
+        arg2.gen(ctx);
+        ctx.intConst(yes ? 1 : 0);
+        ctx.visitLine(line);
+        ctx.visitInit("yeti/lang/Match", "(Ljava/lang/Object;Z)V");
+    }
+
     Code apply2nd(final Code arg2, final YType t, final int line) {
         if (line == 0) {
             throw new NullPointerException();
         }
-        final Code matcher = new Code() {
-            { type = t; }
-
-            void gen(Ctx ctx) {
-                ctx.visitTypeInsn(NEW, "yeti/lang/Match");
-                ctx.visitInsn(DUP);
-                arg2.gen(ctx);
-                ctx.intConst(yes ? 1 : 0);
-                ctx.visitLine(line);
-                ctx.visitInit("yeti/lang/Match",
-                              "(Ljava/lang/Object;Z)V");
-            }
-        };
+        final Code matcher = new SimpleCode(this, arg2, t, line);
         if (!(arg2 instanceof StringConstant))
             return matcher;
         try {
@@ -928,7 +944,7 @@ final class MatchOpFun extends BinOpRef {
     }
 }
 
-final class RegexFun extends StaticRef {
+final class RegexFun extends StaticRef implements CodeGen {
     private String impl;
     private String funName;
 
@@ -940,18 +956,16 @@ final class RegexFun extends StaticRef {
         this.impl = impl;
     }
 
-    Code apply(final Code arg, final YType t, final int line) {
-        final Code f = new Code() {
-            { type = t; }
+    public void gen2(Ctx ctx, Code arg, int line) {
+        ctx.visitTypeInsn(NEW, impl);
+        ctx.visitInsn(DUP);
+        arg.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitInit(impl, "(Ljava/lang/Object;)V");
+    }
 
-            void gen(Ctx ctx) {
-                ctx.visitTypeInsn(NEW, impl);
-                ctx.visitInsn(DUP);
-                arg.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitInit(impl, "(Ljava/lang/Object;)V");
-            }
-        };
+    Code apply(final Code arg, final YType t, final int line) {
+        final Code f = new SimpleCode(this, arg, t, line);
         if (!(arg instanceof StringConstant))
             return f;
         try {
@@ -986,7 +1000,7 @@ final class Regex implements Binder {
     }
 }
 
-final class ClassOfExpr extends Code {
+final class ClassOfExpr extends Code implements CodeGen {
     String className;
 
     ClassOfExpr(JavaType what, int array) {
@@ -1001,17 +1015,16 @@ final class ClassOfExpr extends Code {
         className = cn;
     }
 
-    void gen(Ctx ctx) {
-        ctx.constant("CLASS-OF:".concat(className), new Code() {
-            { type = YetiType.CLASS_TYPE; }
+    public void gen2(Ctx ctx, Code param, int line) {
+        ctx.visitLdcInsn(className);
+        ctx.visitMethodInsn(INVOKESTATIC, "java/lang/Class",
+            "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
+        ctx.forceType("java/lang/Class");
+    }
 
-            void gen(Ctx ctx) {
-                ctx.visitLdcInsn(className);
-                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/Class",
-                    "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
-                ctx.forceType("java/lang/Class");
-            }
-        });
+    void gen(Ctx ctx) {
+        ctx.constant("CLASS-OF:".concat(className),
+                new SimpleCode(this, null, YetiType.CLASS_TYPE, 0));
     }
 
     boolean flagop(int fl) {
@@ -1042,7 +1055,7 @@ final class InstanceOfExpr extends Code {
     }
 }
 
-final class JavaArrayRef extends Code {
+final class JavaArrayRef extends Code implements CodeGen {
     Code value, index;
     YType elementType;
     int line;
@@ -1104,13 +1117,13 @@ final class JavaArrayRef extends Code {
         JavaExpr.convertValue(ctx, elementType);
     }
 
+    public void gen2(Ctx ctx, Code setValue, int line) {
+        _gen(ctx, setValue);
+        ctx.visitInsn(ACONST_NULL);
+    }
+
     Code assign(final Code setValue) {
-        return new Code() {
-            void gen(Ctx ctx) {
-                _gen(ctx, setValue);
-                ctx.visitInsn(ACONST_NULL);
-            }
-        };
+        return new SimpleCode(this, setValue, null, 0);
     }
 }
 
