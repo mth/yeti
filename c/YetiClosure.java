@@ -103,6 +103,7 @@ class Apply extends Code {
                 arg.gen(ctx);
                 arg_.var = ctx.localVarCount++;
                 ctx.visitVarInsn(ASTORE, arg_.var);
+                f.genClosureInit(ctx);
                 f.body.gen(ctx);
                 return;
             }
@@ -490,7 +491,7 @@ abstract class AClosure extends Code implements Closure {
         closureVars.add(binder);
     }
 
-    public void genClosureInit(Ctx ctx) {
+    public final void genClosureInit(Ctx ctx) {
         int id = -1, mvarcount = 0;
         for (int i = closureVars.size(); --i >= 0;) {
             BindExpr bind = (BindExpr) closureVars.get(i);
@@ -633,11 +634,10 @@ final class Function extends CapturingClosure implements Binder {
     // uncaptures captured variables if possible
     // useful for function inlineing, don't work with self-refs
     boolean uncapture(Code arg) {
-        if (selfRef != null || closureVars.size() != 0)
+        if (selfRef != null)
             return false;
-        for (Capture c = captures; c != null; c = c.next) {
+        for (Capture c = captures; c != null; c = c.next)
             c.uncaptured = true;
-        }
         uncaptureArg = arg;
         return true;
     }
@@ -1018,6 +1018,7 @@ final class Function extends CapturingClosure implements Binder {
         } else if (!merged && argUsed == 0 && body.flagop(PURE) &&
                    uncapture(NEVER)) {
             // This lambda can be optimised into "const x", so do it.
+            genClosureInit(ctx);
             ctx.visitTypeInsn(NEW, "yeti/lang/Const");
             ctx.visitInsn(DUP);
             body.gen(ctx);

@@ -364,6 +364,8 @@ final class For extends Core2 {
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "isEmpty", "()Z");
             ctx.visitJumpInsn(IFNE, end);
+            // seems it is safe to do the init only once?
+            f.genClosureInit(ctx);
             // start of loop
             ctx.visitLabel(retry);
             ctx.visitInsn(DUP);
