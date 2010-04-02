@@ -370,7 +370,7 @@ abstract class CaptureRef extends BindRef {
     }
 }
 
-final class Capture extends CaptureRef implements CaptureWrapper {
+final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
     String id;
     Capture next;
     CaptureWrapper wrapper;
@@ -400,21 +400,20 @@ final class Capture extends CaptureRef implements CaptureWrapper {
         return (fl & (PURE | ASSIGN)) != 0 && ref.flagop(fl);
     }
 
-    Code assign(final Code value) {
-        if (!ref.flagop(ASSIGN)) {
-            return null;
+    public void gen2(Ctx ctx, Code value, int _) {
+        if (uncaptured) {
+            ref.assign(value).gen(ctx);
+        } else {
+            genPreGet(ctx);
+            wrapper.genSet(ctx, value);
+            ctx.visitInsn(ACONST_NULL);
         }
-        return new Code() {
-            void gen(Ctx ctx) {
-                if (uncaptured) {
-                    ref.assign(value).gen(ctx);
-                } else {
-                    genPreGet(ctx);
-                    wrapper.genSet(ctx, value);
-                    ctx.visitInsn(ACONST_NULL);
-                }
-            }
-        };
+    }
+
+    Code assign(final Code value) {
+        if (!ref.flagop(ASSIGN))
+            return null;
+        return new SimpleCode(this, value, null, 0);
     }
 
     public void genPreGet(Ctx ctx) {

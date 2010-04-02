@@ -161,7 +161,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
     }
 
-    final class Field extends Code implements Binder, CaptureWrapper {
+    final class Field extends Code implements Binder, CaptureWrapper, CodeGen {
         private String name; // mangled name
         private String javaType;
         private String descr;
@@ -202,6 +202,12 @@ final class JavaClass extends CapturingClosure implements Runnable {
             return classType.javaType.description;
         }
 
+        public void gen2(Ctx ctx, Code value, int _) {
+            genPreGet(ctx);
+            genSet(ctx, value);
+            ctx.visitInsn(ACONST_NULL);
+        }
+
         public BindRef getRef(int line) {
             if (javaType == null) {
                 if (name == "_")
@@ -216,13 +222,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 }
 
                 Code assign(final Code value) {
-                    return var ? new Code() {
-                        void gen(Ctx ctx) {
-                            genPreGet(ctx);
-                            genSet(ctx, value);
-                            ctx.visitInsn(ACONST_NULL);
-                        }
-                    } : null;
+                    return var ?
+                            new SimpleCode(Field.this, value, null, 0) : null;
                 }
 
                 boolean flagop(int fl) {
