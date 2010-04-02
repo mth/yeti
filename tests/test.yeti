@@ -42,7 +42,15 @@ trueTests = [
 'contains': \(contains 3 [1 .. 5] and not (contains 3 [5 .. 10])),
 'maybe': \(maybe false (not) (Some false)),
 'struct': \(f a = { var x = a }; (f 33).x := 3; true),
-'lambda': \(\\\\1 2 3 4 5 == 1)
+'lambda': \(\\\\1 2 3 4 5 == 1),
+'class closure': do:
+    class X(int a)
+        var x = a,
+        f _ = x,
+        int test() f ()
+    end;
+    new X(33)#test() == 33
+done,
 ];
 
 forHash trueTests do name f:

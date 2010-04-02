@@ -1,5 +1,5 @@
 <!-- ex: se sts=4 sw=4 expandtab: -->
-<project name="yeti" default="yeti" basedir=".">
+<project name="yeti" default="jar" basedir=".">
 
 <target name="prepare-build">
     <property name="asm" value="${basedir}/asm-3.1r.jar"/>
