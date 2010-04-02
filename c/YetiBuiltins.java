@@ -127,27 +127,6 @@ final class BuiltIn implements Binder {
     }
 }
 
-interface CodeGen {
-    void gen2(Ctx ctx, Code param, int line);
-}
-
-class SimpleCode extends Code {
-    private Code param;
-    private int line;
-    private CodeGen impl;
-
-    SimpleCode(CodeGen impl, Code param, YType type, int line) {
-        this.impl = impl;
-        this.param = param;
-        this.line = line;
-        this.type = type == null ? YetiType.UNIT_TYPE : type;
-    }
-
-    void gen(Ctx ctx) {
-        impl.gen2(ctx, param, line);
-    }
-}
-
 final class Argv extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",

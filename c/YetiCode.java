@@ -772,6 +772,27 @@ abstract class Code implements Opcodes {
     }
 }
 
+interface CodeGen {
+    void gen2(Ctx ctx, Code param, int line);
+}
+
+class SimpleCode extends Code {
+    private Code param;
+    private int line;
+    private CodeGen impl;
+
+    SimpleCode(CodeGen impl, Code param, YType type, int line) {
+        this.impl = impl;
+        this.param = param;
+        this.line = line;
+        this.type = type == null ? YetiType.UNIT_TYPE : type;
+    }
+
+    void gen(Ctx ctx) {
+        impl.gen2(ctx, param, line);
+    }
+}
+
 abstract class BindRef extends Code {
     Binder binder;
     BindExpr.Ref origin;
@@ -854,7 +875,7 @@ class StaticRef extends BindRef {
     }
 }
 
-final class NumericConstant extends Code {
+final class NumericConstant extends Code implements CodeGen {
     Num num;
 
     NumericConstant(Num num) {
@@ -895,23 +916,22 @@ final class NumericConstant extends Code {
         }
     }
 
+    public void gen2(Ctx ctx, Code param, int line) {
+        ctx.visitTypeInsn(NEW, "yeti/lang/RatNum");
+        ctx.visitInsn(DUP);
+        RatNum rat = ((RatNum) num).reduce();
+        ctx.intConst(rat.numerator());
+        ctx.intConst(rat.denominator());
+        ctx.visitInit("yeti/lang/RatNum", "(II)V");
+    }
+
     void gen(Ctx ctx) {
         if (ctx.constants.constants.containsKey(num)) {
             ctx.constant(num, this);
             return;
         }
         if (num instanceof RatNum) {
-            ctx.constant(num, new Code() {
-                { type = YetiType.NUM_TYPE; }
-                void gen(Ctx ctx) {
-                    ctx.visitTypeInsn(NEW, "yeti/lang/RatNum");
-                    ctx.visitInsn(DUP);
-                    RatNum rat = ((RatNum) num).reduce();
-                    ctx.intConst(rat.numerator());
-                    ctx.intConst(rat.denominator());
-                    ctx.visitInit("yeti/lang/RatNum", "(II)V");
-                }
-            });
+            ctx.constant(num, new SimpleCode(this, null, YetiType.NUM_TYPE, 0));
             return;
         }
         Impl v = new Impl();
@@ -1164,7 +1184,7 @@ final class Throw extends Code {
     }
 }
 
-final class ClassField extends JavaExpr {
+final class ClassField extends JavaExpr implements CodeGen {
     private JavaType.Field field;
 
     ClassField(Code object, JavaType.Field field, int line) {
@@ -1200,42 +1220,41 @@ final class ClassField extends JavaExpr {
         convertValue(ctx, field.type);
     }
 
-    Code assign(final Code setValue) {
-        if ((field.access & ACC_FINAL) != 0) {
-            return null;
+    public void gen2(Ctx ctx, Code setValue, int _) {
+        JavaType classType = field.classType.javaType;
+        String className = classType.className();
+        if (object != null) {
+            object.gen(ctx);
+            ctx.visitTypeInsn(CHECKCAST, className);
+            classType = object.type.deref().javaType;
         }
-        return new Code() {
-            void gen(Ctx ctx) {
-                JavaType classType = field.classType.javaType;
-                String className = classType.className();
-                if (object != null) {
-                    object.gen(ctx);
-                    ctx.visitTypeInsn(CHECKCAST, className);
-                    classType = object.type.deref().javaType;
-                }
-                genValue(ctx, setValue, field.type, line);
-                String descr = JavaType.descriptionOf(field.type);
-                if (descr.length() > 1) {
-                    ctx.visitTypeInsn(CHECKCAST,
-                        field.type.type == YetiType.JAVA
-                            ? field.type.javaType.className() : descr);
-                }
-                
-                if ((field.access & ACC_PROTECTED) != 0
-                        && classType.implementation != null
-                        && !object.flagop(DIRECT_THIS)) {
-                    descr = (object != null ? "(".concat(classType.description)
-                                            : "(") + descr + ")V";
-                    String name = classType.implementation
-                                           .getAccessor(field, descr, true);
-                    ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
-                } else {
-                    ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
-                                         className, field.name, descr);
-                }
-                ctx.visitInsn(ACONST_NULL);
-            }
-        };
+        genValue(ctx, setValue, field.type, line);
+        String descr = JavaType.descriptionOf(field.type);
+        if (descr.length() > 1) {
+            ctx.visitTypeInsn(CHECKCAST,
+                field.type.type == YetiType.JAVA
+                    ? field.type.javaType.className() : descr);
+        }
+        
+        if ((field.access & ACC_PROTECTED) != 0
+                && classType.implementation != null
+                && !object.flagop(DIRECT_THIS)) {
+            descr = (object != null ? "(".concat(classType.description)
+                                    : "(") + descr + ")V";
+            String name = classType.implementation
+                                   .getAccessor(field, descr, true);
+            ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
+        } else {
+            ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
+                                 className, field.name, descr);
+        }
+        ctx.visitInsn(ACONST_NULL);
+    }
+
+    Code assign(final Code setValue) {
+        if ((field.access & ACC_FINAL) != 0)
+            return null;
+        return new SimpleCode(this, setValue, null, 0);
     }
 }
 
@@ -1266,7 +1285,7 @@ final class LoadVar extends Code {
     }
 }
 
-final class VariantConstructor extends Code {
+final class VariantConstructor extends Code implements CodeGen {
     String name;
 
     VariantConstructor(YType type, String name) {
@@ -1274,16 +1293,15 @@ final class VariantConstructor extends Code {
         this.name = name;
     }
 
+    public void gen2(Ctx ctx, Code param, int line) {
+        ctx.visitTypeInsn(NEW, "yeti/lang/TagCon");
+        ctx.visitInsn(DUP);
+        ctx.visitLdcInsn(name);
+        ctx.visitInit("yeti/lang/TagCon", "(Ljava/lang/String;)V");
+    }
+
     void gen(Ctx ctx) {
-        ctx.constant("TAG:".concat(name), new Code() {
-            { type = VariantConstructor.this.type; }
-            void gen(Ctx ctx) {
-                ctx.visitTypeInsn(NEW, "yeti/lang/TagCon");
-                ctx.visitInsn(DUP);
-                ctx.visitLdcInsn(name);
-                ctx.visitInit("yeti/lang/TagCon", "(Ljava/lang/String;)V");
-            }
-        });
+        ctx.constant("TAG:".concat(name), new SimpleCode(this, null, type, 0));
     }
 
     Code apply(Code arg, YType res, int line) {
@@ -1302,7 +1320,7 @@ final class VariantConstructor extends Code {
     }
 }
 
-abstract class SelectMember extends BindRef {
+abstract class SelectMember extends BindRef implements CodeGen {
     private boolean assigned = false;
     Code st;
     String name;
@@ -1326,30 +1344,30 @@ abstract class SelectMember extends BindRef {
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
     }
 
+    public void gen2(Ctx ctx, Code setValue, int _) {
+        st.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        ctx.visitLdcInsn(name);
+        setValue.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+                "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
+        ctx.visitInsn(ACONST_NULL);
+    }
+
     Code assign(final Code setValue) {
         if (!assigned && !mayAssign()) {
             return null;
         }
         assigned = true;
-        return new Code() {
-            void gen(Ctx ctx) {
-                st.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-                ctx.visitLdcInsn(name);
-                setValue.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
-                        "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
-                ctx.visitInsn(ACONST_NULL);
-            }
-        };
+        return new SimpleCode(this, setValue, null, 0);
     }
 
     abstract boolean mayAssign();
 }
 
-final class SelectMemberFun extends Code {
+final class SelectMemberFun extends Code implements CodeGen {
     String[] names;
     
     SelectMemberFun(YType type, String[] names) {
@@ -1358,35 +1376,34 @@ final class SelectMemberFun extends Code {
         this.polymorph = true;
     }
 
+    public void gen2(Ctx ctx, Code param, int line) {
+        for (int i = 1; i < names.length; ++i) {
+            ctx.visitTypeInsn(NEW, "yeti/lang/Compose");
+            ctx.visitInsn(DUP);
+        }
+        for (int i = names.length; --i >= 0;) {
+            ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
+            ctx.visitInsn(DUP);
+            ctx.visitLdcInsn(names[i]);
+            ctx.visitInit("yeti/lang/Selector",
+                          "(Ljava/lang/String;)V");
+            if (i + 1 != names.length)
+                ctx.visitInit("yeti/lang/Compose",
+                        "(Ljava/lang/Object;Ljava/lang/Object;)V");
+        }
+    }
+
     void gen(Ctx ctx) {
         StringBuffer buf = new StringBuffer("SELECTMEMBER");
         for (int i = 0; i < names.length; ++i) {
             buf.append(':');
             buf.append(names[i]);
         }
-        ctx.constant(buf.toString(), new Code() {
-            { type = SelectMemberFun.this.type; }
-            void gen(Ctx ctx) {
-                for (int i = 1; i < names.length; ++i) {
-                    ctx.visitTypeInsn(NEW, "yeti/lang/Compose");
-                    ctx.visitInsn(DUP);
-                }
-                for (int i = names.length; --i >= 0;) {
-                    ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
-                    ctx.visitInsn(DUP);
-                    ctx.visitLdcInsn(names[i]);
-                    ctx.visitInit("yeti/lang/Selector",
-                                  "(Ljava/lang/String;)V");
-                    if (i + 1 != names.length)
-                        ctx.visitInit("yeti/lang/Compose",
-                                "(Ljava/lang/Object;Ljava/lang/Object;)V");
-                }
-            }
-        });
+        ctx.constant(buf.toString(), new SimpleCode(this, null, type, 0));
     }
 }
 
-final class KeyRefExpr extends Code {
+final class KeyRefExpr extends Code implements CodeGen {
     Code val;
     Code key;
     int line;
@@ -1409,21 +1426,21 @@ final class KeyRefExpr extends Code {
                               "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
+    public void gen2(Ctx ctx, Code setValue, int _) {
+        val.gen(ctx);
+        if (ctx.compilation.isGCJ) {
+            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+        }
+        key.gen(ctx);
+        setValue.gen(ctx);
+        ctx.visitLine(line);
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+                "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
+                "Ljava/lang/Object;");
+    }
+
     Code assign(final Code setValue) {
-        return new Code() {
-            void gen(Ctx ctx) {
-                val.gen(ctx);
-                if (ctx.compilation.isGCJ) {
-                    ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
-                }
-                key.gen(ctx);
-                setValue.gen(ctx);
-                ctx.visitLine(line);
-                ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
-                        "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
-                        "Ljava/lang/Object;");
-            }
-        };
+        return new SimpleCode(this, setValue, null, 0);
     }
 }
 
@@ -2078,11 +2095,17 @@ final class MapConstructor extends Code {
     }
 }
 
-final class EvalBind implements Binder, CaptureWrapper, Opcodes {
+final class EvalBind implements Binder, CaptureWrapper, Opcodes, CodeGen {
     YetiEval.Binding bind;
 
     EvalBind(YetiEval.Binding bind) {
         this.bind = bind;
+    }
+
+    public void gen2(Ctx ctx, Code value, int line) {
+        genPreGet(ctx);
+        genSet(ctx, value);
+        ctx.visitInsn(ACONST_NULL);
     }
 
     public BindRef getRef(int line) {
@@ -2098,13 +2121,8 @@ final class EvalBind implements Binder, CaptureWrapper, Opcodes {
             }
 
             Code assign(final Code value) {
-                return bind.mutable ? new Code() {
-                    void gen(Ctx ctx) {
-                        genPreGet(ctx);
-                        genSet(ctx, value);
-                        ctx.visitInsn(ACONST_NULL);
-                    }
-                } : null;
+                return bind.mutable ?
+                        new SimpleCode(EvalBind.this, value, null, 0) : null;
             }
 
             boolean flagop(int fl) {
