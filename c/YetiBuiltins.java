@@ -364,8 +364,6 @@ final class For extends Core2 {
             ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "isEmpty", "()Z");
             ctx.visitJumpInsn(IFNE, end);
-            // seems it is safe to do the init only once?
-            f.genClosureInit(ctx);
             // start of loop
             ctx.visitLabel(retry);
             ctx.visitInsn(DUP);
@@ -374,6 +372,9 @@ final class For extends Core2 {
             // invoke body block
             ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
             ++ctx.tainted; // disable argument-nulling - we're in cycle
+            // new closure has to be created on each cycle
+            // as closure vars could be captured
+            f.genClosureInit(ctx);
             f.body.gen(ctx);
             --ctx.tainted;
             ctx.visitLine(line);
