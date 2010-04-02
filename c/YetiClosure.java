@@ -485,7 +485,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
 }
 
 abstract class AClosure extends Code implements Closure {
-    List closureVars = new ArrayList();
+    private List closureVars = new ArrayList();
 
     public void addVar(BindExpr binder) {
         closureVars.add(binder);
