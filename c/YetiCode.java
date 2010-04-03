@@ -2147,6 +2147,7 @@ final class EvalBind implements Binder, CaptureWrapper, Opcodes, CodeGen {
             {
                 type = bind.type;
                 binder = EvalBind.this;
+                polymorph = !bind.mutable && bind.polymorph;
             }
 
             void gen(Ctx ctx) {
