@@ -108,12 +108,17 @@ class TypePrettyPrinter extends YetiType {
     private String getVarName(YType t) {
         String v = (String) vars.get(t);
         if (v == null) {
-            v = (t.flags & FL_ORDERED_REQUIRED) == 0 ? "'" : "^";
-            int n = vars.size();
-            do {
-                v += (char) ('a' + n % 26);
+            // 26^7 > 2^32, should be enough ;)
+            char[] buf = new char[8];
+            int p = buf.length;
+            int n = vars.size() + 1;
+            while (n > 26) {
+                buf[--p] = (char) ('a' + n % 26);
                 n /= 26;
-            } while (n > 0);
+            }
+            buf[--p] = (char) (96 + n);
+            buf[--p] = (t.flags & FL_ORDERED_REQUIRED) == 0 ? '\'' : '^';
+            v = new String(buf, p, buf.length - p);
             vars.put(t, v);
         }
         return v;
