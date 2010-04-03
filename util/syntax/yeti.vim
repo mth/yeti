@@ -83,7 +83,7 @@ syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains\>"
 
-syn keyword yetiOperator not and or in or div shl shr b_and b_or xor
+syn keyword yetiOperator not and or in or div shl shr b_and b_or xor with
 syn keyword yetiOperator classOf instanceof skipempty skipwhite nextgroup=yetiClassName
 syn match yetiOperator #[:;,=~!+\\\-*%<>^]\+#
 syn match yetiOperator #`[a-zA-Z_?]\+`#
