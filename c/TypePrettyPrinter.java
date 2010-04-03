@@ -87,11 +87,11 @@ class TypePrettyPrinter extends YetiType {
             if (!variant && t.field == FIELD_MUTABLE)
                 to.add("var ");
             if (!variant) {
-                if (t.finalMembers == null ||
-                        !t.finalMembers.containsKey(e.getKey())) {
+                if (tt.finalMembers == null ||
+                        !tt.finalMembers.containsKey(e.getKey())) {
                     to.add(".");
-                } else if (t.partialMembers != null &&
-                           t.partialMembers.containsKey(e.getKey())) {
+                } else if (tt.partialMembers != null &&
+                           tt.partialMembers.containsKey(e.getKey())) {
                     to.add("`");
                 }
             }
