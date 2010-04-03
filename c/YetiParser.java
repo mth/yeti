@@ -852,9 +852,10 @@ interface YetiParser {
                 }
             }
             if (s != null && i >= cnt) {
-                if (s == "loop" || s == "with" || s == "throw")
-                    throw new CompileException(partial,
-                                s + " is a reserved word");
+                if (s == "loop" || s == "with" || s == "throw" ||
+                        partial instanceof TypeOp)
+                    throw new CompileException(partial, "Special operator `" +
+                                    s + "` cannot be used as a function");
                 return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
