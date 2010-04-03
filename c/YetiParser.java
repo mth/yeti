@@ -771,7 +771,8 @@ interface YetiParser {
                 res = readCase();
             } else if (s == "in") {
                 res = new BinOp(s, COMP_OP_LEVEL, true);
-            } else if (s == "div" || s == "shr" || s == "shl" || s == "b_and") {
+            } else if (s == "div" || s == "shr" || s == "shl" ||
+                       s == "b_and" || s == "with") {
                 res = new BinOp(s, FIRST_OP_LEVEL, true);
             } else if (s == "b_or" || s == "xor") {
                 res = new BinOp(s, FIRST_OP_LEVEL + 1, true);
@@ -851,6 +852,9 @@ interface YetiParser {
                 }
             }
             if (s != null && i >= cnt) {
+                if (s == "loop" || s == "with" || s == "throw")
+                    throw new CompileException(partial,
+                                s + " is a reserved word");
                 return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
