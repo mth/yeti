@@ -1,0 +1,30 @@
+point printer = 
+   (var x = 0;
+    var y = 0;
+    {
+        show () =
+            printer "at \(x),\(y)\n",
+        move x' y' =
+            x := x';
+            y := y'
+    });
+
+// alternative implementation would be to wrap the printer ;)
+coloredPoint color printer =
+   (p = point printer;
+    p with {
+        color,
+
+        show () =
+            printer "\(color) ";
+            p.show ()
+    });
+
+coloredPrintPoint color =
+    coloredPoint color print;
+
+cp = coloredPrintPoint "red";
+cp.move 13 42;
+cp.show ();
+println "cp is \(cp.color)";
+
