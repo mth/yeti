@@ -1,3 +1,6 @@
+// simple point
+// printer is abstract callback method
+
 point printer = 
    (var x = 0;
     var y = 0;
@@ -10,6 +13,7 @@ point printer =
     });
 
 // alternative implementation would be to wrap the printer ;)
+// coloredPoint adds color accessor and overrides show method to print color
 coloredPoint color printer =
    (p = point printer;
     p with {
@@ -20,9 +24,11 @@ coloredPoint color printer =
             p.show ()
     });
 
+// this "class" provides printer using standard print function
 coloredPrintPoint color =
     coloredPoint color print;
 
+// and it works...
 cp = coloredPrintPoint "red";
 cp.move 13 42;
 cp.show ();
