@@ -155,10 +155,9 @@ public final class YetiAnalyzer extends YetiType {
         } else if (node instanceof BinOp) {
             BinOp op = (BinOp) node;
             String opop = op.op;
-            if (opop == "") {
+            if (opop == "")
                 return apply(node, analyze(op.left, scope, depth),
                              op.right, scope, depth);
-            }
             if (opop == FIELD_OP) {
                 if (op.right.kind == "list") {
                     return keyRefExpr(analyze(op.left, scope, depth),
@@ -168,45 +167,39 @@ public final class YetiAnalyzer extends YetiType {
                 return selectMember(op, (Sym) op.right,
                         analyze(op.left, scope, depth), scope, depth);
             }
-            if (opop == ":=") {
+            if (opop == ":=")
                 return assignOp(op, scope, depth);
-            }
-            if (opop == "\\") {
+            if (opop == "\\")
                 return lambda(new Function(null), shortLambda(op),
                               scope, depth);
-            }
-            if (opop == "is" || opop == "as" || opop == "unsafely_as") {
+            if (opop == "is" || opop == "as" || opop == "unsafely_as")
                 return isOp(op, ((TypeOp) op).type,
                             analyze(op.right, scope, depth), scope, depth);
-            }
-            if (opop == "#") {
+            if (opop == "#")
                 return objectRef((ObjectRefOp) op, scope, depth);
-            }
-            if (opop == "loop") {
+            if (opop == "loop")
                 return loop(op, scope, depth);
-            }
-            if (opop == "-" && op.left == null) {
+            if (opop == "-" && op.left == null)
                 return apply(op, resolve("negate", op, scope, depth),
                                  op.right, scope, depth);
-            }
-            if (opop == "not") {
+            if (opop == "not")
                 return apply(op, resolve(opop, op, scope, depth),
                                  op.right, scope, depth);
-            }
             if (opop == "throw") {
                 Code throwable = analyze(op.right, scope, depth);
                 JavaType.checkThrowable(op, throwable.type);
                 return new Throw(throwable, new YType(depth));
             }
+            if (opop == "with")
+                return withStruct(op, scope, depth);
             if (opop == "instanceof") {
                 JavaType jt = resolveFullClass(((InstanceOf) op).className,
                                                scope).javaType.resolve(op);
                 return new InstanceOfExpr(analyze(op.right, scope, depth), jt);
             }
-            if (op.left == null) {
+            if (op.left == null)
                 throw new CompileException(op,
                     "Internal error (incomplete operator " + op.op + ")");
-            }
             Code opfun = resolve(opop, op, scope, depth);
             if (opop == "^" && opfun instanceof StaticRef &&
                     "yeti/lang/std$$v".equals(((StaticRef) opfun).className)) {
@@ -702,7 +695,43 @@ public final class YetiAnalyzer extends YetiType {
         return new LoopExpr(cond, body);
     }
 
-     static Function singleBind(Bind bind, Scope scope, int depth) {
+    static Code withStruct(BinOp with, Scope scope, int depth) {
+        Code src = analyze(with.left, scope, depth);
+        Code override = analyze(with.right, scope, depth);
+        YType ot = override.type.deref();
+        Map otf = ot.finalMembers;
+        if (otf == null || ot.type != STRUCT)
+            throw new CompileException(with.right, "Right-hand side of with " +
+                            "must be a structure with known member set");
+        YType result, st = src.type.deref();
+        if (st.type == STRUCT && st.finalMembers != null) {
+            Map param = new HashMap(st.finalMembers);
+            param.putAll(otf);
+            // with ensures override, because type can change and
+            // members can be missing in the source structure.
+            // Another mechanism is needed "default arguments".
+            if (ot.partialMembers == null) {
+                ot.partialMembers = otf;
+            } else {
+                HashMap tmp = new HashMap(otf);
+                tmp.keySet().removeAll(ot.partialMembers.keySet());
+                ot.partialMembers.putAll(otf);
+            }
+            result = new YType(STRUCT, NO_PARAM);
+            result.finalMembers = param;
+            result.param =
+                (YType[]) param.values().toArray(new YType[param.size()]);
+        } else {
+            result = new YType(STRUCT, NO_PARAM);
+            result.partialMembers = new HashMap(otf);
+            result.param = ot.param;
+            unify(src.type, result, with.right, "Cannot extend #1 with #2");
+        }
+        return new WithStruct(result, src, override,
+                        (String[]) otf.keySet().toArray(new String[otf.size()]));
+    }
+
+    static Function singleBind(Bind bind, Scope scope, int depth) {
         if (bind.expr.kind != "lambda") {
             throw new CompileException(bind,
                 "Closed binding must be a function binding");

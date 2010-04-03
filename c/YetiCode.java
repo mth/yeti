@@ -2005,6 +2005,40 @@ final class StructConstructor extends Code {
     }
 }
 
+final class WithStruct extends Code {
+    private Code src;
+    private Code override;
+    private String[] names;
+
+    WithStruct(YType type, Code src, Code override, String[] names) {
+        this.type = type;
+        this.src = src;
+        this.override = override;
+        this.names = names;
+    }
+
+    void gen(Ctx ctx) {
+        src.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        override.gen(ctx);
+        if (override instanceof StructConstructor) {
+            ctx.visitInsn(ACONST_NULL);
+        } else {
+            ctx.intConst(names.length);
+            ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            for (int i = 0; i < names.length; ++i) {
+                ctx.visitInsn(DUP);
+                ctx.intConst(i);
+                ctx.visitLdcInsn(names[i]);
+                ctx.visitInsn(AASTORE);
+            }
+        }
+        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct", "with",
+                "(Ljava/lang/Object;[Ljava/lang/String;)Lyeti/lang/Struct;");
+        ctx.forceType("yeti/lang/Struct");
+    }
+}
+
 final class Range extends Code {
     final Code from;
     final Code to;

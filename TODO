@@ -12,7 +12,6 @@
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
-* Extendable structs.
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
   when casted into Java object

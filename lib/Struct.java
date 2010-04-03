@@ -31,6 +31,9 @@
 package yeti.lang;
 
 import java.io.Serializable;
+import java.util.Map.Entry;
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class Struct implements Serializable {
     final protected Object[] values;
@@ -106,6 +109,70 @@ public class Struct implements Serializable {
         return new MList(s);
     }
 
+    Object[] properties() {
+        return null;
+    }
+
+    public Struct with(Object extender_, String[] names) {
+        Struct extender = (Struct) extender_;
+        int i;
+        HashMap vm = new HashMap();
+        Object[] val = values;
+        for (i = val.length; (i -= 2) >= 0; )
+            vm.put(val[i], val[i + 1]);
+        Object[] props = properties();
+        Object[] extProp = extender.properties();
+        HashMap pm = null;
+        if (props != null || extProp != null) {
+            pm = new HashMap();
+            if (props != null)
+                for (i = props.length; (i -= 3) >= 0; )
+                    pm.put(props[i], new Object[] {props[i + 1], props[i + 2]});
+        }
+        Object[] extVal = extender.values;
+        HashMap filter = null;
+        if (names != null) {
+            filter = new HashMap();
+            for (i = 0; i < names.length; ++i)
+                filter.put(names[i], null);
+        }
+        for (i = extVal.length; (i -= 2) >= 0; ) {
+            Object name = extVal[i];
+            if (filter != null && !filter.containsKey(name))
+                continue;
+            vm.put(name, extVal[i + 1]);
+            if (pm != null)
+                pm.remove(name);
+        }
+        if (extProp != null)
+            for (i = extProp.length; (i -= 3) >= 0; ) {
+                Object name = extProp[i];
+                if (filter != null && !filter.containsKey(name))
+                    continue;
+                pm.put(name, new Object[] { extProp[i + 1], extProp[i + 2]});
+                vm.remove(name);
+            }
+        val = new Object[vm.size() * 2];
+        i = 0;
+        for (Iterator j = vm.entrySet().iterator(); j.hasNext(); ++i) {
+            Entry e = (Entry) j.next();
+            val[i] = e.getKey();
+            val[++i] = e.getValue();
+        }
+        if (pm == null || pm.size() == 0)
+            return new Struct(val);
+        props = new Object[pm.size() * 3];
+        i = 0;
+        for (Iterator j = pm.entrySet().iterator(); j.hasNext(); ++i) {
+            Entry e = (Entry) j.next();
+            Object[] v = (Object[]) e.getValue();
+            props[i] = e.getKey();
+            props[++i] = v[0];
+            props[++i] = v[1];
+        }
+        return new PStruct(val, props);
+    }
+
     public int hashCode() {
         int res = 0;
         for (int i = values.length; (i -= 2) >= 0;) {
@@ -114,5 +181,4 @@ public class Struct implements Serializable {
         }
         return res;
     }
-
 }

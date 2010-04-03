@@ -39,6 +39,10 @@ public class PStruct extends Struct {
         properties = propertyMap;
     }
 
+    Object[] properties() {
+        return properties;
+    }
+
     // expecting type system to not allow getting nonexisting fields.
     // IndexOutOfBoundsException will happen otherwise, speed matters ;)
     public Object get(String field) {
