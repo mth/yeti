@@ -717,6 +717,12 @@ public final class YetiAnalyzer extends YetiType {
                 tmp.keySet().removeAll(ot.partialMembers.keySet());
                 ot.partialMembers.putAll(otf);
             }
+            // lock used members.
+            HashMap tmp = new HashMap(st.finalMembers);
+            tmp.keySet().removeAll(otf.keySet());
+            if (st.partialMembers != null)
+                tmp.putAll(st.partialMembers);
+            st.partialMembers = tmp;
             result = new YType(STRUCT, NO_PARAM);
             result.finalMembers = param;
             result.param =
