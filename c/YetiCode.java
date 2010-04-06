@@ -2018,9 +2018,9 @@ final class WithStruct extends Code {
     }
 
     void gen(Ctx ctx) {
-        src.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         override.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        src.gen(ctx);
         if (override instanceof StructConstructor) {
             ctx.visitInsn(ACONST_NULL);
         } else {
