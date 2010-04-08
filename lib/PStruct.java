@@ -49,8 +49,8 @@ public class PStruct extends Struct {
         super(valueMap);
         properties = propertyMap;
         this.parent = parent;
-        if (names != null &&
-                names.length < values.length / 2 + properties.length / 3) {
+        if (names != null && names.length < values.length / 2 +
+                (properties == null ? 0 : properties.length / 3)) {
             HashMap m = new HashMap();
             for (int i = 0; i < names.length; ++i)
                 m.put(names[i], null);
