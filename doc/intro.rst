@@ -1454,7 +1454,7 @@ Attempt to use non-existent fields unsuprisingly results in a compile error.
 
 Structure types are polymorphic - for example a function taking structure
 as an argument can be given any structure that happens to contain the
-required fields with expected types (this is quite like duck-typeing in
+required fields with expected types (this is quite like duck-typing in
 some dynamically typed languages, although Yeti does this typechecking on
 compile-time).
 ::
@@ -2579,7 +2579,7 @@ Here ``action`` argument is used inside the ``ActionThread`` class.
 The class acts as a closure, as the instance returned from the ``createThread``
 retains the reference to the given action and calls it when started.
 Main difference from using a constructor argument is, that the action
-argument is typed according to the Yeti typeing rules, while constructor
+argument is typed according to the Yeti typing rules, while constructor
 arguments can have only Java types.
 
 The threading in the ``RunningPoint`` example could have been done using
