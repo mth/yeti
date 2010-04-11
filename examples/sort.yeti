@@ -4,7 +4,7 @@ asort f less l =
     list a);
 
 selectionSort less a =
-   (selectLess i j = if less a.[i] a.[j] then i else j fi;
+   (selectLess i j = if less a.[i] a.[j] then i else: j;
     swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
     for [0 .. length a - 2] swapMin);
 
@@ -29,7 +29,7 @@ combSort less a =
 
 shellSort less a =
    (var inc = length a;
-    (inc := if inc == 2 then 1 else inc * 10 div 23 fi; inc > 0) loop
+    (inc := if inc == 2 then 1 else: inc * 10 div 23; inc > 0) loop
        (var i = inc;
         i < length a loop
            (tmp = a.[i];
@@ -49,9 +49,8 @@ heapSort less a =
             if less a.[parent] a.[child] then
                 swapAt a parent child;
                 child := parent
-            else
-                child := 0
-            fi)
+            else:
+                child := 0)
     done;
     for (reverse [0 .. length a - 2]) do end:
         swapAt a 0 (end + 1);
@@ -64,9 +63,8 @@ heapSort less a =
             if less a.[root] a.[child] then
                 swapAt a root child;
                 root := child
-            else
-                root := end
-            fi)
+            else:
+                root := end)
     done);
 
 qsort less a =
@@ -105,9 +103,8 @@ merge less l a b =
         revAppend l a
     elif head a `less` head b then
         merge less (head a :: l) (tail a) b
-    else
-        merge less (head b :: l) a (tail b)
-    fi;
+    else:
+        merge less (head b :: l) a (tail b);
 
 splitList l fst snd =
     case l of
@@ -154,9 +151,8 @@ test n slow =
         t = System#currentTimeMillis() - t';
         if sorted != r then
             println "\(name): ERROR\n\(r) != \(sorted)"
-        else
-            println "\(name):\(n)\t\(t)ms"
-        fi);
+        else:
+            println "\(name):\(n)\t\(t)ms");
 
     testASort name f = testSort name (asort f);
 

@@ -962,11 +962,25 @@ interface YetiParser {
                 els = readIf();
             } else {
                 if (eofWas.kind == "else") {
-                    els = readSeq(' ', null);
+                    if (src.length > p && src[p] == ':') {
+                        ++p;
+                        List l = new ArrayList();
+                        while (!((els = fetch()) instanceof Eof) && els.kind != ";")
+                            l.add(els);
+                        if (l.size() == 0)
+                            throw new CompileException(els, "Unexpected " + els);
+                        if (els.kind == ";" ||
+                                els.kind != "EOF" && els.kind.length() > 1)
+                            p -= els.kind.length();
+                        els = def(null, l, false, null);
+                        eofWas = null;
+                    } else {
+                        els = readSeq(' ', null);
+                    }
                 } else {
                     els = new XNode("()").pos(eofWas.line, eofWas.col);
                 }
-                if (eofWas.kind != "fi") {
+                if (eofWas != null && eofWas.kind != "fi") {
                     throw new CompileException(eofWas,
                         "Expected fi, found " + eofWas);
                 }

@@ -37,7 +37,7 @@ syn region yetiEncl matchgroup=yetiOperator start="{" matchgroup=yetiOperator en
 syn region yetiEncl matchgroup=yetiOperator start="\[" matchgroup=yetiOperator end="\]" contains=TOP
 syn match yetiKeyword "\[:]"
 
-syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<fi\>" contains=TOP
+syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<\(fi\>\|else:\)" contains=TOP
 
 syn keyword yetiConditional then elif else containedin=yetiIf contained
 
