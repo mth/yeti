@@ -80,9 +80,9 @@ do argv: {
                 fi;
                 f ()
             else
-                c#getMethod("main", [classOf String[]])
-                 #invoke((), [argv is array<string> as ~java.lang.String[]]
-                                as ~java.lang.String[][])
+                aa = new Object[1];
+                aa.[0] := argv is array<string> as ~String[] as ~Object;
+                c#getMethod("main", [classOf String[]])#invoke((), aa)
             fi
         catch java.lang.reflect.InvocationTargetException ex:
             t = ex#getCause();
