@@ -1118,9 +1118,9 @@ Alternative way for getting array element by index is using ``at`` function::
     > map (at a) [0 .. length a - 1]
     [3,4,33,6,7] is list<number>
 
-Array can be casted into list using ``asList`` function::
+Array can be casted into list using ``list`` function::
 
-    > asList a
+    > list a
     [3,4,33,6,7] is list<number>
 
 The returned list will be still backed by the same array, so modifications
@@ -1273,12 +1273,12 @@ List of map keys can be get using keys function::
     > map (at h) (keys h)
     [666,42,11] is list<number>
 
-List of the map values can also be obtained using the ``asList`` function::
+List of the map values can also be obtained using the ``list`` function::
 
-    > asList h
+    > list h
     [666,42,11] is list<number>
 
-The ``asList`` on map creates a new list, which will not change, when the
+The ``list`` on map creates a new list, which will not change, when the
 map changes.
 
 Maps can be iterated using ``forHash`` and ``mapHash`` functions::
@@ -1377,7 +1377,7 @@ explanation for some of the type error messages.
 
 It could be seen previously, that many functions worked on both lists
 and arrays, some like ``at`` on both arrays and hashes, and some even
-on all of them (``asList`` and ``length`` for example).
+on all of them (``list`` and ``length`` for example).
 
 This is possible, because all those types - *list<>*, *array<>* and *hash<>*
 are variants of parametric *map<>* type::
@@ -1386,8 +1386,8 @@ are variants of parametric *map<>* type::
     <yeti.lang.std$at> is map<'a, 'b> -> 'a -> 'b
     > length
     <yeti.lang.std$length> is map<'a, 'b> -> number
-    > asList
-    <yeti.lang.std$asList> is map<'a, 'b> -> list<'b>
+    > list
+    <yeti.lang.std$list> is map<'a, 'b> -> list<'b>
 
 The *map<>* type actually has third hidden parameter which determines,
 whether it is a *hash<>* or *list?<>*. The value for third parameter can be
