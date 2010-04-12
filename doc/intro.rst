@@ -611,6 +611,16 @@ examples were one-liners because of the interactive environment).
 
     println (signStr 23);
 
+If you don't like writing fi, it can be omitted::
+
+    if x then
+        println "Yes"
+    else:
+        println "No";
+
+This form don't allow sequence in else part, as first ``;`` will mark
+end of the **else:** part.
+
 Looping and recursion
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
