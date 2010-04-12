@@ -1104,6 +1104,6 @@ class JavaType {
         p.put("double",  "D");
         p.put("float",   "F");
         p.put("short",   "S");
-        p.put("number",  "L/yeti/lang/Num;");
+        p.put("number",  "Lyeti/lang/Num;");
     }
 }
