@@ -1080,13 +1080,11 @@ public final class YetiAnalyzer extends YetiType {
         Node[] nodes = st.expr;
         if (nodes.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
-        Scope local = scope;
-        Map fields = new HashMap();
-        Map codeMap = new HashMap();
+        Scope local = scope, propertyScope = null;
+        Map fields = new HashMap(), codeMap = null;
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
-        Scope propertyScope = null;
 
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
@@ -1184,6 +1182,7 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(st,
                     "Property " + i.name + " has no getter");
         result.type.finalMembers = fields;
+        result.close();
         return result;
     }
 

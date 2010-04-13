@@ -1805,7 +1805,7 @@ final class StructField {
 /*
  * Being a closure allows inlining property getters/setters.
  */
-final class StructConstructor extends CapturingClosure {
+final class StructConstructor extends CapturingClosure implements Comparator {
     StructField[] fields;
     int fieldCount;
     StructField properties;
@@ -1899,6 +1899,14 @@ final class StructConstructor extends CapturingClosure {
             field.nextProperty = properties;
             properties = field;
         }
+    }
+
+    public int compare(Object a, Object b) {
+        return ((StructField) a).name.compareTo(((StructField) b).name);
+    }
+
+    void close() {
+        Arrays.sort(fields, 0, fieldCount, this);
     }
 
     void publish() {
