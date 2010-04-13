@@ -1158,31 +1158,30 @@ interface YetiParser {
                 while (node instanceof Sym) {
                     p = skipSpace();
                     if (p < src.length && src[p] == '(') {
-                        String s;
-                        if (l.size() != 0 &&
-                            ((s = ((Node) l.get(0)).sym()) == "static" ||
-                             s == "abstract")) {
-                            if (meth != "method")
-                                throw new CompileException(line,
-                                            p - lineStart + 1,
-                                            "Static method cannot be abstract");
-                            meth = s == "static" ? "static-method"
-                                                 : "abstract-method";
+                        if (meth == "error")
+                            throw new CompileException(line,
+                                        p - lineStart + 1,
+                                        "Static method cannot be abstract");
+                        if (meth != "method")
                             l.remove(0);
-                        }
-                        if (l.size() == 0) {
+                        if (l.size() == 0)
                             throw new CompileException(line, p - lineStart + 1,
                                             "Expected method name, found (");
-                        }
-                        if (l.size() == 1) {
+                        if (l.size() == 1)
                             args = readArgDefs();
-                        }
                         break;
                     }
                     if (((Sym) node).sym == "end" && l.size() == 0)
                         break collect;
                     l.add(node);
-                    node = fetch();
+                    String s;
+                    if ((s = node.sym()) == "static" || s == "abstract") {
+                        meth = meth != "method" ? "error" :
+                            s == "static" ? "static-method" : "abstract-method";
+                        node = readDottedType(EXPECT_DEF);
+                    } else {
+                        node = fetch();
+                    }
                 }
                 if (args == null) {
                     if (node instanceof IsOp) {
