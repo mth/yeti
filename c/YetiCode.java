@@ -260,7 +260,8 @@ final class CompileCtx implements Opcodes {
         Object oldCompileCtx = currentCompileCtx.get();
         currentCompileCtx.set(this);
         currentSrc = sourceName;
-        this.flags = flags;
+        if (flags != 0)
+            this.flags = flags;
         List oldUnstoredClasses = unstoredClasses;
         unstoredClasses = new ArrayList();
         try {
