@@ -1808,6 +1808,7 @@ final class StructField {
 final class StructConstructor extends CapturingClosure {
     StructField[] fields;
     int fieldCount;
+    StructField properties;
     Bind[] binds;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
@@ -1877,20 +1878,22 @@ final class StructConstructor extends CapturingClosure {
 
     StructConstructor(int maxBinds) {
         binds = new Bind[maxBinds];
+        fields = new StructField[maxBinds];
     }
 
-    Binder bind(int num, Code code, boolean mutable) {
+    // for some reason, binds are only for non-property fields
+    Binder bind(StructField sf) {
         Bind bind = new Bind();
-        bind.type = code.type;
+        bind.type = sf.value.type;
         bind.binder = bind;
-        bind.mutable = mutable;
-        bind.fun = code instanceof Function;
-        bind.value = code;
-        binds[num] = bind;
+        bind.mutable = sf.mutable;
+        bind.fun = sf.value instanceof Function;
+        bind.value = sf.value;
+        // TODO binds[num] = bind;
         return bind;
     }
 
-    int add(StructField field) {
+    void add(StructField field) {
         fields[fieldCount++] = field;
     }
 
@@ -1919,9 +1922,8 @@ final class StructConstructor extends CapturingClosure {
             if (v instanceof Function && v.flagop(CONST))
                 r.put(fields[i].name, ((Function) v).name);
         }
-        for (int i = 0; i < properties.length; ++i) {
-            r.put(properties[i].name, null);
-        }
+        for (StructField i = properties; i != null; i = i.nextProperty)
+            r.put(properties.name, null);
         return r;
     }
 
@@ -1959,7 +1961,7 @@ final class StructConstructor extends CapturingClosure {
                 }
             }
         }
-        ctx.visitTypeInsn(NEW, properties.length == 0
+        ctx.visitTypeInsn(NEW, properties == null
             ? "yeti/lang/Struct" : "yeti/lang/PStruct");
         ctx.visitInsn(DUP);
         ctx.intConst(fields.length * 2);
@@ -1993,7 +1995,7 @@ final class StructConstructor extends CapturingClosure {
         if (arrayVar != -1) {
             ctx.visitVarInsn(ALOAD, arrayVar);
         }
-        if (properties.length == 0) {
+        /*if (properties == null) {
             ctx.visitInit("yeti/lang/Struct", "([Ljava/lang/Object;)V");
             return;
         }
@@ -2016,7 +2018,7 @@ final class StructConstructor extends CapturingClosure {
             }
         }
         ctx.visitInit("yeti/lang/PStruct",
-                      "([Ljava/lang/Object;[Ljava/lang/Object;)V");
+                      "([Ljava/lang/Object;[Ljava/lang/Object;)V");*/
     }
 }
 

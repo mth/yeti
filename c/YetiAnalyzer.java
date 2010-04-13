@@ -1153,14 +1153,13 @@ public final class YetiAnalyzer extends YetiType {
                 sf.value = code;
                 sf.mutable = field.var;
                 codeMap.put(field.name, sf);
-                int n = values.size();
                 result.add(sf);
                 fields.put(field.name,
                     field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
                     code.polymorph || lambda != null ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
                 if (!field.noRec) {
-                    Binder bind = result.bind(n, code, field.var);
+                    Binder bind = result.bind(sf);
                     if (lambda != null)
                         lambda.selfBind = bind;
                     local = new Scope(local, field.name, bind);
@@ -1181,12 +1180,13 @@ public final class YetiAnalyzer extends YetiType {
                                 ? propertyScope :  local, depth);
             }
         }
+        result.properties = properties;
         result.type = new YType(STRUCT,
             (YType[]) fields.values().toArray(new YType[fields.size()]));
         for (; properties != null; properties = properties.nextProperty)
-            if (properties[i].value == null)
+            if (properties.value == null)
                 throw new CompileException(st,
-                    "Property " + properties[i].name + " has no getter");
+                    "Property " + properties.name + " has no getter");
         result.type.finalMembers = fields;
         return result;
     }
