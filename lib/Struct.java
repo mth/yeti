@@ -39,7 +39,7 @@ public interface Struct {
     /**
      * Get field by index (corresponding to names()).
      */
-    int get(int field);
+    Object get(int field);
 
     /**
      * Set field by interned name to given value.

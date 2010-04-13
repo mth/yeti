@@ -38,9 +38,14 @@ public abstract class AStruct implements Struct, Serializable {
         return null;
     }
 
+    public void set(String field, Object value) {
+        Unsafe.unsafeThrow(new NoSuchFieldException(
+                    "No mutable field (" + field + ')'));
+    }
+
     public boolean equals(Object o) {
         Struct st = (Struct) o;
-        String[] ans = names(). bns = st.names();
+        String[] ans = names(), bns = st.names();
         int i = 0, j = 0;
         while (i < ans.length && j < bns.length) {
             String an, bn;

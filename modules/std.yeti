@@ -110,7 +110,7 @@ peekObject object =
     elif o instanceof Struct then
         st = o unsafely_as ~Struct;
         Struct {
-            fields = st#names() unsafely_as list<string>,
+            fields = new MList(st#names()) unsafely_as list<string>,
             value name = peekObject
                 try
                     st#get((name is string unsafely_as ~String)#intern())
