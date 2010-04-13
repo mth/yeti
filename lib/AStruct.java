@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - structure interface.
+ * Yeti core library - structure default implementation.
  *
  * Copyright (c) 2007,2008,2009 Madis Janson
  * All rights reserved.
@@ -30,11 +30,40 @@
  */
 package yeti.lang;
 
-public interface Struct {
-    // marker used to detect non-existance of field
-    Object NO_FIELD = new Object();
-    Object get(String field);
-    int get(int field);
-    void set(String field, Object value);
-    String[] names();
+import java.io.Serializable;
+
+public abstract class AStruct implements Struct, Serializable {
+    public boolean equals(Object o) {
+        Struct st = (Struct) o;
+        String[] ans = names(). bns = st.names();
+        int i = 0, j = 0;
+        while (i < ans.length && j < bns.length) {
+            String an, bn;
+            if ((an = ans[i]) == (bn = bns[j])) {
+                Object a = get(i);
+                Object b = st.get(j);
+                if (a != b && (a == null || !a.equals(b)))
+                    return false;
+            } else {
+                int cmp = an.compareTo(bn);
+                if (cmp > 0) --i;
+                if (cmp < 0) --j;
+            }
+            ++i;
+            ++j;
+        }
+        return true;
+    }
+
+    public String toString() {
+        String[] names = names();
+        StringBuffer sb = new StringBuffer().append('{');
+        for (int cnt = names.length, i = 0; i < cnt; ++i) {
+            if (i != 0)
+                sb.append(", ");
+            sb.append(names[i]).append('=').append(get(i));
+        }
+        sb.append('}');
+        return sb.toString();
+    }
 }
