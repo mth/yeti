@@ -1086,7 +1086,6 @@ public final class YetiAnalyzer extends YetiType {
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
-        StructField properties = null;
         Scope propertyScope = null;
 
         // Functions see struct members in their scope
@@ -1101,8 +1100,6 @@ public final class YetiAnalyzer extends YetiType {
                     sf = new StructField();
                     sf.property = true;
                     sf.name = field.name;
-                    sf.nextProperty = properties;
-                    properties = sf;
                     codeMap.put(sf.name, sf);
                     result.add(sf);
                 } else if (!sf.property ||
@@ -1169,7 +1166,7 @@ public final class YetiAnalyzer extends YetiType {
                 code.type.doc = field.doc;
         }
         // property accessors must be proxied so the struct could inline them
-        if (properties != null) {
+        if (result.properties != null) {
             propertyScope = new Scope(local, null, null);
             propertyScope.closure = result;
         }
@@ -1180,13 +1177,12 @@ public final class YetiAnalyzer extends YetiType {
                                 ? propertyScope :  local, depth);
             }
         }
-        result.properties = properties;
         result.type = new YType(STRUCT,
             (YType[]) fields.values().toArray(new YType[fields.size()]));
-        for (; properties != null; properties = properties.nextProperty)
-            if (properties.value == null)
+        for (StructField i = result.properties; i != null; i = i.nextProperty)
+            if (i.value == null)
                 throw new CompileException(st,
-                    "Property " + properties.name + " has no getter");
+                    "Property " + i.name + " has no getter");
         result.type.finalMembers = fields;
         return result;
     }

@@ -1895,6 +1895,10 @@ final class StructConstructor extends CapturingClosure {
 
     void add(StructField field) {
         fields[fieldCount++] = field;
+        if (field.property) {
+            field.nextProperty = properties;
+            properties = field;
+        }
     }
 
     void publish() {
