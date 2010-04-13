@@ -1798,11 +1798,16 @@ final class StructField {
     String name;
     Code value;
     Code setter;
+    String javaName;
+    StructField nextProperty;
 }
 
-final class StructConstructor extends Code {
+/*
+ * Being a closure allows inlining property getters/setters.
+ */
+final class StructConstructor extends CapturingClosure {
     StructField[] fields;
-    StructField[] properties;
+    int fieldCount;
     Bind[] binds;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
@@ -1885,6 +1890,10 @@ final class StructConstructor extends Code {
         return bind;
     }
 
+    int add(StructField field) {
+        fields[fieldCount++] = field;
+    }
+
     void publish() {
         for (int i = 0; i < fields.length; ++i) {
             Code v = fields[i].value;
@@ -1914,6 +1923,12 @@ final class StructConstructor extends Code {
             r.put(properties[i].name, null);
         }
         return r;
+    }
+
+    void captureInit(Ctx st, Capture c, int n) {
+        // c.getId() initialises the captures id as a side effect
+        st.cw.visitField(0, c.getId(st), c.captureType(),
+                         null, null).visitEnd();
     }
 
     void gen(Ctx ctx) {

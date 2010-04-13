@@ -1083,31 +1083,38 @@ public final class YetiAnalyzer extends YetiType {
         Scope local = scope;
         Map fields = new HashMap();
         Map codeMap = new HashMap();
-        List values = new ArrayList();
-        List props = new ArrayList();
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
+        StructField properties = null;
+        Scope propertyScope = null;
+
         // Functions see struct members in their scope
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = getField(nodes[i]);
             Function lambda = !field.noRec && field.expr.kind == "lambda"
                             ? funs[i] = new Function(new YType(depth)) : null;
-            Code code =
-                lambda != null ? lambda : analyze(field.expr, scope, depth);
-            if (field.doc != null)
-                code.type.doc = field.doc;
+            Code code = lambda;
             StructField sf = (StructField) codeMap.get(field.name);
             if (field.property) {
                 if (sf == null) {
                     sf = new StructField();
                     sf.property = true;
                     sf.name = field.name;
+                    sf.nextProperty = properties;
+                    properties = sf;
                     codeMap.put(sf.name, sf);
-                    props.add(sf);
+                    result.add(sf);
                 } else if (!sf.property ||
                            (field.var ? sf.setter : sf.value) != null) {
                     duplicateField(field);
+                }
+                if (code == null) {
+                    if (propertyScope == null) {
+                        propertyScope = new Scope(scope, null, null);
+                        propertyScope.closure = result;
+                    }
+                    code = analyze(field.expr, propertyScope, depth);
                 }
                 // get is () -> t, set is t -> ()
                 YType t = (YType) fields.get(field.name);
@@ -1121,8 +1128,9 @@ public final class YetiAnalyzer extends YetiType {
                 if (field.doc != null)
                     t.doc = t.doc == null
                         ? field.doc : field.doc + '\n' + t.doc;
-                YType f = new YType(FUN, field.var ? new YType[] { t, UNIT_TYPE }
-                                                 : new YType[] { UNIT_TYPE, t });
+                YType f = new YType(FUN, field.var
+                                ? new YType[] { t, UNIT_TYPE }
+                                : new YType[] { UNIT_TYPE, t });
                 try {
                     unify(code.type, f);
                 } catch (TypeException ex) {
@@ -1138,13 +1146,15 @@ public final class YetiAnalyzer extends YetiType {
             } else {
                 if (sf != null)
                     duplicateField(field);
+                if (code == null)
+                    code = analyze(field.expr, scope, depth);
                 sf = new StructField();
                 sf.name = field.name;
                 sf.value = code;
                 sf.mutable = field.var;
                 codeMap.put(field.name, sf);
                 int n = values.size();
-                values.add(sf);
+                result.add(sf);
                 fields.put(field.name,
                     field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
                     code.polymorph || lambda != null ? code.type
@@ -1156,21 +1166,24 @@ public final class YetiAnalyzer extends YetiType {
                     local = new Scope(local, field.name, bind);
                 }
             }
+            if (field.doc != null)
+                code.type.doc = field.doc;
+        }
+        // property accessors must be proxied so the struct could inline them
+        if (properties != null) {
+            propertyScope = new Scope(local, null, null);
+            propertyScope.closure = result;
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
             if (funs[i] != null) {
-                lambdaBind(funs[i], field, local, depth);
+                lambdaBind(funs[i], field, ((Bind) nodes[i]).property
+                                ? propertyScope :  local, depth);
             }
         }
-        StructField[] properties = 
-            (StructField[]) props.toArray(new StructField[props.size()]);
-        result.fields =
-            (StructField[]) values.toArray(new StructField[values.size()]);
-        result.properties = properties;
         result.type = new YType(STRUCT,
             (YType[]) fields.values().toArray(new YType[fields.size()]));
-        for (int i = result.properties.length; --i >= 0; )
+        for (; properties != null; properties = properties.nextProperty)
             if (properties[i].value == null)
                 throw new CompileException(st,
                     "Property " + properties[i].name + " has no getter");
