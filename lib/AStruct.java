@@ -3,7 +3,7 @@
 /**
  * Yeti core library - structure default implementation.
  *
- * Copyright (c) 2007,2008,2009 Madis Janson
+ * Copyright (c) 2010 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +33,11 @@ package yeti.lang;
 import java.io.Serializable;
 
 public abstract class AStruct implements Struct, Serializable {
+    // suitable implementation for immutable structures.
+    public Struct var(int field, int[] varIndex) {
+        return null;
+    }
+
     public boolean equals(Object o) {
         Struct st = (Struct) o;
         String[] ans = names(). bns = st.names();

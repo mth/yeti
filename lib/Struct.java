@@ -3,7 +3,7 @@
 /**
  * Yeti core library - structure interface.
  *
- * Copyright (c) 2007,2008,2009 Madis Janson
+ * Copyright (c) 2007-2010 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,10 +31,30 @@
 package yeti.lang;
 
 public interface Struct {
-    // marker used to detect non-existance of field
-    Object NO_FIELD = new Object();
+    /**
+     * Get field by interned name.
+     */
     Object get(String field);
+
+    /**
+     * Get field by index (corresponding to names()).
+     */
     int get(int field);
+
+    /**
+     * Set field by interned name to given value.
+     */
     void set(String field, Object value);
+
+    /**
+     * Field names, must be sorted alphabetically.
+     */
     String[] names();
+
+    /**
+     * If field is mutable, return accessor structure and
+     * set varIndex to field index in the returned structure.
+     * A null value is returned for immutable fields.
+     */
+    Struct var(int field, int[] varIndex);
 }
