@@ -1910,7 +1910,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     void publish() {
-        for (int i = 0; i < fields.length; ++i) {
+        for (int i = 0; i < fieldCount; ++i) {
             Code v = fields[i].value;
             while (v instanceof BindRef)
                 v = ((BindRef) v).unref(true);
@@ -1921,7 +1921,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     Map getDirect() {
         Map r = new HashMap();
-        for (int i = 0; i < fields.length; ++i) {
+        for (int i = 0; i < fieldCount; ++i) {
             if (fields[i].mutable) {
                 r.put(fields[i].name, null);
                 continue;
