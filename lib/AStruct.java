@@ -61,7 +61,7 @@ public abstract class AStruct implements Struct, Serializable {
         for (int cnt = names.length, i = 0; i < cnt; ++i) {
             if (i != 0)
                 sb.append(", ");
-            sb.append(names[i]).append('=').append(get(i));
+            sb.append(names[i]).append('=').append(Core.show(get(i)));
         }
         sb.append('}');
         return sb.toString();
