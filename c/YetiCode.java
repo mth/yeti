@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.net.URL;
 import java.net.URLClassLoader;
 import yeti.lang.Fun;
@@ -1911,18 +1912,20 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     void publish() {
         for (int i = 0; i < fieldCount; ++i) {
-            Code v = fields[i].value;
-            while (v instanceof BindRef)
-                v = ((BindRef) v).unref(true);
-            if (v instanceof Function)
-                ((Function) v).publish = true;
+            if (!fields[i].property) {
+                Code v = fields[i].value;
+                while (v instanceof BindRef)
+                    v = ((BindRef) v).unref(true);
+                if (v instanceof Function)
+                    ((Function) v).publish = true;
+            }
         }
     }
 
     Map getDirect() {
         Map r = new HashMap();
         for (int i = 0; i < fieldCount; ++i) {
-            if (fields[i].mutable) {
+            if (fields[i].mutable || fields[i].property) {
                 r.put(fields[i].name, null);
                 continue;
             }
@@ -1934,8 +1937,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             if (v instanceof Function && v.flagop(CONST))
                 r.put(fields[i].name, ((Function) v).name);
         }
-        for (StructField i = properties; i != null; i = i.nextProperty)
-            r.put(properties.name, null);
         return r;
     }
 
