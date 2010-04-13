@@ -1188,7 +1188,7 @@ public final class YetiAnalyzer extends YetiType {
         CaseCompiler(Code val, int depth) {
             exp = new CaseExpr(val);
             exp.polymorph = true;
-            depth = depth;
+            this.depth = depth;
         }
 
         CasePattern toPattern(Node node, YType t) {
