@@ -17,12 +17,8 @@ clean:
 	-rm .build
 
 pub:
-	git repack -d
-	-rm -rf /tmp/yeti
-	git-clone --bare . /tmp/yeti
-	cd /tmp/yeti && git-update-server-info
-	rsync -rlpz -e ssh /tmp/yeti linux.ee:/home/mzz/public_html/git/
-	rm -rf /tmp/yeti
+	git push
+	yeti-to-hub
 
 wc:
-	wc lib/*.java c/*.java c/*.yeti modules/*.yeti util/*.java util/*.yeti
+	wc lib/*.java c/*.java c/*.yeti modules/*.yeti util/*.java
