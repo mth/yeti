@@ -235,7 +235,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 CaptureWrapper capture() {
                     if (!var)
                         return null;
-                    access = 0; // clear private
+                    access = ACC_SYNTHETIC; // clear private
                     return Field.this;
                 }
             };
