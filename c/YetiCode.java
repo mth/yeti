@@ -51,6 +51,7 @@ import yeti.lang.BigNum;
 final class Constants implements Opcodes {
     final Map constants = new HashMap();
     private Ctx sb;
+    int anonymousClassCounter;
     String sourceName;
     Ctx ctx;
 
@@ -118,10 +119,16 @@ final class CompileCtx implements Opcodes {
         warnings.add(ex);
     }
 
-    String createClassName(String outerClass, String nameBase) {
+    String createClassName(Ctx ctx, String outerClass, String nameBase) {
+        boolean anon = nameBase == "" && ctx != null;
         String name = nameBase = outerClass + '$' + nameBase;
-        for (int i = 0; definedClasses.containsKey(name); ++i) {
-            name = nameBase + i;
+        if (anon) {
+            do {
+                name = nameBase + ctx.constants.anonymousClassCounter++;
+            } while (definedClasses.containsKey(name));
+        } else {
+            for (int i = 0; definedClasses.containsKey(name); ++i)
+                name = nameBase + i;
         }
         return name;
     }
@@ -1947,6 +1954,14 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     void gen(Ctx ctx) {
+        String className = ctx.compilation.createClassName(ctx,
+                                ctx.constants.ctx.className, "");
+        Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, className,
+                              "yeti/lang/AStruct", null);
+        st.createInit(0, "yeti/lang/AStruct");
+        for (int i = 0; i < fieldCount; ++i) {
+        }
+
         int arrayVar = -1;
         for (int i = 0; i < binds.length; ++i) {
             if (binds[i] != null) {

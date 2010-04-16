@@ -836,7 +836,8 @@ final class Function extends CapturingClosure implements Binder {
 
         if (bindName == null)
             bindName = "";
-        name = ctx.compilation.createClassName(ctx.className, mangle(bindName));
+        name = ctx.compilation.createClassName(ctx,
+                        ctx.className, mangle(bindName));
 
         publish &= shared;
         String funClass =
