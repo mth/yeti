@@ -47,6 +47,7 @@ import yeti.lang.Num;
 import yeti.lang.RatNum;
 import yeti.lang.IntNum;
 import yeti.lang.BigNum;
+import yeti.lang.Core;
 
 final class Constants implements Opcodes {
     final Map constants = new HashMap();
@@ -77,9 +78,6 @@ final class Constants implements Opcodes {
             sb.visitInsn(RETURN);
             sb.closeMethod();
         }
-        Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL | ACC_SYNTHETIC,
-                              className, "yeti/lang/AStruct", null);
-        st.createInit(0, "yeti/lang/AStruct");
      }
 }
 
@@ -627,7 +625,17 @@ final class Ctx implements Opcodes {
         visitInsn(-1);
         m.visitTryCatchBlock(start, end, handler, type);
     }
-                                  
+
+    void visitSwitchInsn(int min, int max, Label dflt,
+                         int[] keys, Label[] labels) {
+        visitInsn(-1);
+        if (keys == null) {
+            m.visitTableSwitchInsn(min, max, dflt, labels);
+        } else {
+            m.visitLookupSwitchInsn(dflt, keys, labels);
+        }
+    }
+
     void constant(Object key, Code code) {
         constants.registerConstant(key, code, this);
     }
@@ -1827,11 +1835,10 @@ final class StructField implements Opcodes {
         String fn = javaName;
         if (fn.startsWith("_"))
             fn = "_".concat(Integer.toString(ctx.fieldCounter++));
-        ctx.visitField(mutable ? ACC_PRIVATE | ACC_SYNTHETIC :
-                                 ACC_PRIVATE | ACC_SYNTHETIC | ACC_FINAL,
-                       fn, "Ljava/lang/Object;", null, null).visitEnd();
-        MethodVisitor m =
-            ctx.newMethod(ACC_PUBLIC, javaName, "()Ljava/lang/Object;");
+        ctx.cw.visitField(mutable ? ACC_PRIVATE | ACC_SYNTHETIC :
+                                ACC_PRIVATE | ACC_SYNTHETIC | ACC_FINAL,
+                          fn, "Ljava/lang/Object;", null, null).visitEnd();
+        Ctx m = ctx.newMethod(ACC_PUBLIC, javaName, "()Ljava/lang/Object;");
         m.visitVarInsn(ALOAD, 0);
         m.visitFieldInsn(GETFIELD, ctx.className, fn, "Ljava/lang/Object;");
         m.visitInsn(ARETURN);
@@ -1840,7 +1847,7 @@ final class StructField implements Opcodes {
         if (!last)
             get.visitInsn(DUP);
         get.visitLdcInsn(name);
-        get.visitJumpInsn(IF_ACMPNE, next)
+        get.visitJumpInsn(IF_ACMPNE, next);
         if (!last)
             get.visitInsn(POP);
         get.visitFieldInsn(GETFIELD, ctx.className, fn, "Ljava/lang/Object;");
@@ -2018,7 +2025,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
                               "yeti/lang/AStruct", null);
         st.createInit(0, "yeti/lang/AStruct");
-        st.visitField(ACC_PRIVATE | ACC_FINAL | ACC_SYNTHETIC | ACC_STATIC, "_n"
+        st.cw.visitField(ACC_PRIVATE | ACC_FINAL | ACC_SYNTHETIC | ACC_STATIC,
+                         "_n", "[Ljava/long/String;", null, null).visitEnd();
         Ctx get = st.newMethod(ACC_PUBLIC, "get",
                         "(Ljava/lang/String;)Ljava/lang/Object;");
         get.visitVarInsn(ALOAD, 0);
@@ -2027,17 +2035,43 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         getn.visitVarInsn(ALOAD, 0);
         getn.visitVarInsn(ILOAD, 1);
         Label[] getnJumps = new Label[fieldCount];
-        boolean anyMutable = false;
+        int mutableCount = 0;
         for (int i = 0; i < fieldCount; ++i) {
             getnJumps[i] = new Label();
-            anyMutable |= fields[i].mutable;
+            if (fields[i].mutable)
+                ++mutableCount;
         }
         Label getnDefault = new Label();
-        getn.visitTableSwitchInsn(0, fieldCount - 1, getnDefault, getnJumps);
+        getn.visitSwitchInsn(0, fieldCount - 1, getnDefault, null, getnJumps);
         Ctx set = null;
-        if (anyMutable) {
-            st.newMethod(ACC_PUBLIC, "set",
-                         "(Ljava/lang/String;Ljava/lang/Object;)V");
+        if (mutableCount != 0) {
+            Ctx var = st.newMethod(ACC_PUBLIC, "var",
+                                   "(I[I)Lyeti/lang/Struct;");
+            if (mutableCount < fieldCount) {
+                int[] vars = new int[mutableCount];
+                Label[] varLabels = new Label[mutableCount];
+                Label isVar = new Label(), notVar = new Label();
+                for (int i = 0, n = 0; i < fieldCount; ++i)
+                    if (fields[i].mutable) {
+                        varLabels[n] = isVar;
+                        vars[n++] = i;
+                    }
+                var.visitVarInsn(ILOAD, 1);
+                var.visitSwitchInsn(0, 0, notVar, vars, varLabels);
+                var.visitLabel(notVar);
+                var.visitInsn(ACONST_NULL);
+                var.visitInsn(ARETURN);
+                var.visitLabel(isVar);
+            }
+            var.visitVarInsn(ALOAD, 2);
+            var.intConst(0);
+            var.visitVarInsn(ILOAD, 1);
+            var.visitInsn(AASTORE);
+            var.visitVarInsn(ALOAD, 0);
+            var.visitInsn(ARETURN);
+            var.closeMethod();
+            set = st.newMethod(ACC_PUBLIC, "set",
+                               "(Ljava/lang/String;Ljava/lang/Object;)V");
             set.visitVarInsn(ALOAD, 0);
             set.visitVarInsn(ALOAD, 2);
             set.visitVarInsn(ALOAD, 1);
@@ -2051,7 +2085,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         getn.visitInsn(ACONST_NULL);
         getn.visitInsn(ARETURN);
         getn.closeMethod();
-        if (anyMutable) {
+        if (mutableCount != 0) {
             set.visitInsn(RETURN);
             set.closeMethod();
         }
@@ -2068,7 +2102,9 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             init.visitLdcInsn(fields[i].name);
             init.visitInsn(AASTORE);
         }
-        init.visitFieldInsn(PUTSTATIC, st.ClassName, "_n", "[Ljava/lang/String;");
+        init.visitFieldInsn(PUTSTATIC, st.className, "_n",
+                            "[Ljava/lang/String;");
+        init.visitInsn(RETURN);
         init.closeMethod();
     }
 

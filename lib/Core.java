@@ -199,7 +199,7 @@ public final class Core {
         throw new IllegalArgumentException("bad match (" + match + ')');
     }
 
-    static String capitalize(String s) {
+    public static String capitalize(String s) {
         char[] tmp = s.toCharArray();
         if (tmp.length == 0)
             return s;
