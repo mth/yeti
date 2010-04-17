@@ -1997,21 +1997,19 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Ctx m = st.newMethod(ACC_PUBLIC, "get",
                              "(Ljava/lang/String;)Ljava/lang/Object;");
         m.visitVarInsn(ALOAD, 0);
-        m.visitVarInsn(ALOAD, 1);
         for (i = 0; i < fieldCount; ++i) {
             next = new Label();
-            m.visitInsn(DUP);
+            m.visitVarInsn(ALOAD, 1);
             m.visitLdcInsn(fields[i].name);
             m.visitJumpInsn(IF_ACMPNE, next);
-            m.visitInsn(POP);
             m.visitFieldInsn(GETFIELD, ctx.className, fields[i].javaName,
                              "Ljava/lang/Object;");
             m.visitInsn(ARETURN);
             m.visitLabel(next);
         }
         m.visitTypeInsn(NEW, "java/lang/NoSuchFieldException");
-        m.visitInsn(DUP_X1);
-        m.visitInsn(SWAP);
+        m.visitInsn(DUP);
+        m.visitVarInsn(ALOAD, 1);
         m.visitInit("java/lang/NoSuchFieldException", "(Ljava/lang/String;)V");
         m.visitInsn(ATHROW);
         m.closeMethod();
@@ -2074,15 +2072,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                              "(Ljava/lang/String;Ljava/lang/Object;)V");
             m.visitVarInsn(ALOAD, 0);
             m.visitVarInsn(ALOAD, 2);
-            m.visitVarInsn(ALOAD, 1);
             for (i = 0; i < fieldCount; ++i) {
                 if (!fields[i].mutable)
                     continue;
                 next = new Label();
-                m.visitInsn(DUP);
+                m.visitVarInsn(ALOAD, 1);
                 m.visitLdcInsn(fields[i].name);
                 m.visitJumpInsn(IF_ACMPNE, next);
-                m.visitInsn(POP);
                 m.visitFieldInsn(PUTFIELD, ctx.className, fields[i].name,
                                  "Ljava/lang/Object;");
                 if (--mutableCount > 0)
