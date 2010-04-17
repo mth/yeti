@@ -2000,19 +2000,20 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitVarInsn(ALOAD, 1);
         for (i = 0; i < fieldCount; ++i) {
             next = new Label();
-            if (i != fieldCount)
-                m.visitInsn(DUP);
+            m.visitInsn(DUP);
             m.visitLdcInsn(fields[i].name);
             m.visitJumpInsn(IF_ACMPNE, next);
-            if (i != fieldCount)
-                m.visitInsn(POP);
+            m.visitInsn(POP);
             m.visitFieldInsn(GETFIELD, ctx.className, fields[i].javaName,
                              "Ljava/lang/Object;");
             m.visitInsn(ARETURN);
             m.visitLabel(next);
         }
-        m.visitInsn(ACONST_NULL);
-        m.visitInsn(ARETURN);
+        m.visitTypeInsn(NEW, "java/lang/NoSuchFieldException");
+        m.visitInsn(DUP_X1);
+        m.visitInsn(SWAP);
+        m.visitInit("java/lang/NoSuchFieldException", "(Ljava/lang/String;)V");
+        m.visitInsn(ATHROW);
         m.closeMethod();
 
         // get(int)
@@ -2040,26 +2041,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.closeMethod();
 
         if (mutableCount != 0) {
-            // set(String, Object)
-            m = st.newMethod(ACC_PUBLIC, "set",
-                             "(Ljava/lang/String;Ljava/lang/Object;)V");
-            m.visitVarInsn(ALOAD, 0);
-            m.visitVarInsn(ALOAD, 2);
-            m.visitVarInsn(ALOAD, 1);
-            for (i = 0; i < fieldCount; ++i) {
-                next = new Label();
-                m.visitInsn(DUP);
-                m.visitLdcInsn(fields[i].name);
-                m.visitJumpInsn(IF_ACMPNE, next);
-                m.visitInsn(POP);
-                m.visitFieldInsn(PUTFIELD, ctx.className, fields[i].name,
-                                 "Ljava/lang/Object;");
-                m.visitInsn(RETURN);
-                m.visitLabel(next);
-            }
-            m.visitInsn(RETURN);
-            m.closeMethod();
-
             // var(int, int[])
             m = st.newMethod(ACC_PUBLIC, "var", "(I[I)Lyeti/lang/Struct;");
             if (mutableCount < fieldCount) {
@@ -2088,6 +2069,28 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitInsn(ARETURN);
             m.closeMethod();
 
+            // set(String, Object)
+            m = st.newMethod(ACC_PUBLIC, "set",
+                             "(Ljava/lang/String;Ljava/lang/Object;)V");
+            m.visitVarInsn(ALOAD, 0);
+            m.visitVarInsn(ALOAD, 2);
+            m.visitVarInsn(ALOAD, 1);
+            for (i = 0; i < fieldCount; ++i) {
+                if (!fields[i].mutable)
+                    continue;
+                next = new Label();
+                m.visitInsn(DUP);
+                m.visitLdcInsn(fields[i].name);
+                m.visitJumpInsn(IF_ACMPNE, next);
+                m.visitInsn(POP);
+                m.visitFieldInsn(PUTFIELD, ctx.className, fields[i].name,
+                                 "Ljava/lang/Object;");
+                if (--mutableCount > 0)
+                    m.visitInsn(RETURN);
+                m.visitLabel(next);
+            }
+            m.visitInsn(RETURN);
+            m.closeMethod();
         }
 
         // names
