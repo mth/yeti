@@ -49,7 +49,7 @@ public class Struct3 extends AStruct {
             return _1;
         if (a[2] == field)
             return _2;
-        throw new NoSuchKeyException(field);
+        return null;
     }
 
     public Object get(int field) {

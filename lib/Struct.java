@@ -33,16 +33,19 @@ package yeti.lang;
 public interface Struct {
     /**
      * Get field by interned name.
+     * Warning: the behaviour is undefined when field does not exists!
      */
     Object get(String field);
 
     /**
      * Get field by index (corresponding to name(field)).
+     * Warning: the behaviour is undefined when field does not exists!
      */
     Object get(int field);
 
     /**
      * Set field by interned name to given value.
+     * Warning: the behaviour is undefined when field does not exists!
      */
     void set(String field, Object value);
 
@@ -53,6 +56,7 @@ public interface Struct {
 
     /**
      * Field name by field (must be sorted alphabetically).
+     * Warning: the behaviour is undefined when field does not exists!
      */
     String name(int field);
 
@@ -60,6 +64,7 @@ public interface Struct {
      * If field is mutable, return accessor structure and
      * set varIndex to field index in the returned structure.
      * A null value is returned for immutable fields.
+     * Warning: the behaviour is undefined when field does not exists!
      */
     Struct var(int field, int[] varIndex);
 }
