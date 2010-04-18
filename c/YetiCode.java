@@ -1994,7 +1994,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                          null, null).visitEnd();
     }
 
-    void genStruct(Ctx ctx, String constClass, String namesf, String varsf) {
+    void genStruct(Ctx ctx) {
         Label next;
         int i;
         String cn = ctx.compilation.createClassName(ctx, ctx.className, "");
