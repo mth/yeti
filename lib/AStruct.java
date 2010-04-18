@@ -49,7 +49,6 @@ public abstract class AStruct implements Struct, Serializable {
         return names[field];
     }
 
-    // suitable implementation for immutable structures.
     public Struct var(int field, int[] varIndex) {
         if (!vars[field])
             return null;
