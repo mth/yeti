@@ -32,55 +32,43 @@ package yeti.lang;
 
 import java.io.Serializable;
 
-public abstract class AStruct implements Struct, Serializable {
-    String[] names;
-    private boolean[] vars;
+public class Struct3 extends AStruct {
+    public Object _0;
+    public Object _1;
+    public Object _2;
 
-    public int count() {
-        return names.length;
+    public Struct3(String[] names, boolean[] vars) {
+        super(names, vars);
     }
 
-    public String name(int field) {
-        return names[field];
+    public Object get(String field) {
+        String[] na = names;
+        int cnt = na.length;
+        for (int i = 0; i < cnt; ++i)
+            if (na[i] == field)
+                switch (i) {
+                    case 0: return _0;
+                    case 1: return _1;
+                    case 2: return _2;
+                }
+        Unsafe.unsafeThrow(new NoSuchFieldException(field));
     }
 
-    // suitable implementation for immutable structures.
-    public Struct var(int field, int[] varIndex) {
-        if (!vars[field])
-            return null;
-        varIndex[0] = field;
-        return this;
-    }
 
-    public boolean equals(Object o) {
-        Struct st = (Struct) o;
-        int acnt = count(), bcnt = st.count(), i = 0, j = 0;
-        while (i < acnt && j < bcnt) {
-            String an, bn;
-            if ((an = name(i)) == (bn = st.name(j))) {
-                Object a = get(i);
-                Object b = st.get(j);
-                if (a != b && (a == null || !a.equals(b)))
-                    return false;
-            } else {
-                int cmp = an.compareTo(bn);
-                if (cmp > 0) --i;
-                if (cmp < 0) --j;
-            }
-            ++i;
-            ++j;
+    public Object get(int field) {
+        switch (i) {
+            case 0: return _0;
+            case 1: return _1;
+            case 2: return _2;
         }
-        return true;
+        return null;
     }
 
-    public String toString() {
-        StringBuffer sb = new StringBuffer().append('{');
-        for (int cnt = count(), i = 0; i < cnt; ++i) {
-            if (i != 0)
-                sb.append(", ");
-            sb.append(name(i)).append('=').append(Core.show(get(i)));
+    public void set(String field, Object value) {
+        switch (i) {
+            case 0: _0 = value; break;
+            case 1: _1 = value; break;
+            case 2: _2 = value; break;
         }
-        sb.append('}');
-        return sb.toString();
     }
 }
