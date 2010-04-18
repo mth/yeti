@@ -36,6 +36,11 @@ public abstract class AStruct implements Struct, Serializable {
     String[] names;
     private boolean[] vars;
 
+    public AStruct(String[] names_, boolean[] vars_) {
+        names = names_;
+        vars = vars_;
+    }
+
     public int count() {
         return names.length;
     }

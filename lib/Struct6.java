@@ -32,7 +32,7 @@ package yeti.lang;
 
 import java.io.Serializable;
 
-public class Struct3 extends AStruct {
+public class Struct6 extends AStruct {
     public Object _0;
     public Object _1;
     public Object _2;
@@ -40,7 +40,7 @@ public class Struct3 extends AStruct {
     public Object _4;
     public Object _5;
 
-    public Struct3(String[] names, boolean[] vars) {
+    public Struct6(String[] names, boolean[] vars) {
         super(names, vars);
     }
 
@@ -58,6 +58,7 @@ public class Struct3 extends AStruct {
                     case 5: return _5;
                 }
         Unsafe.unsafeThrow(new NoSuchFieldException(field));
+        return null;
     }
 
     public Object get(int field) {
@@ -73,13 +74,17 @@ public class Struct3 extends AStruct {
     }
 
     public void set(String field, Object value) {
-        switch (i) {
-            case 0: _0 = value; break;
-            case 1: _1 = value; break;
-            case 2: _2 = value; break;
-            case 3: _3 = value; break;
-            case 4: _4 = value; break;
-            case 5: _5 = value; break;
-        }
+        String[] na = names;
+        int cnt = na.length;
+        for (int i = 0; i < cnt; ++i)
+            if (na[i] == field)
+                switch (i) {
+                    case 0: _0 = value; break;
+                    case 1: _1 = value; break;
+                    case 2: _2 = value; break;
+                    case 3: _3 = value; break;
+                    case 4: _4 = value; break;
+                    case 5: _5 = value; break;
+                }
     }
 }

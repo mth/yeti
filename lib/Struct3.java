@@ -52,11 +52,12 @@ public class Struct3 extends AStruct {
                     case 2: return _2;
                 }
         Unsafe.unsafeThrow(new NoSuchFieldException(field));
+        return null;
     }
 
 
     public Object get(int field) {
-        switch (i) {
+        switch (field) {
             case 0: return _0;
             case 1: return _1;
             case 2: return _2;
@@ -65,10 +66,14 @@ public class Struct3 extends AStruct {
     }
 
     public void set(String field, Object value) {
-        switch (i) {
-            case 0: _0 = value; break;
-            case 1: _1 = value; break;
-            case 2: _2 = value; break;
-        }
+        String[] na = names;
+        int cnt = na.length;
+        for (int i = 0; i < cnt; ++i)
+            if (na[i] == field)
+                switch (i) {
+                    case 0: _0 = value; break;
+                    case 1: _1 = value; break;
+                    case 2: _2 = value; break;
+                }
     }
 }
