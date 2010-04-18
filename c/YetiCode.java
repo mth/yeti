@@ -56,7 +56,7 @@ final class Constants implements Opcodes {
     String sourceName;
     Ctx ctx;
 
-    void registerConstant(Object key, final Code code, Ctx ctx_) {
+    void registerConstant(Object key, Code code, Ctx ctx_) {
         String descr = 'L' + Code.javaType(code.type) + ';';
         String name = (String) constants.get(key);
         if (name == null) {
@@ -78,7 +78,25 @@ final class Constants implements Opcodes {
             sb.visitInsn(RETURN);
             sb.closeMethod();
         }
-     }
+    }
+
+    // generates [LString;[Z into stack
+    void structInitArg(Ctx ctx, StructField[] fields, int fieldCount) {
+/*
+        // static { }
+        m = st.newMethod(ACC_STATIC, "<clinit>", "V");
+        m.intConst(fieldCount);
+        m.visitTypeInsn(ANEWARRAY, "java/lang/String");
+        for (i = 0; i < fieldCount; ++i) {
+            m.visitInsn(DUP);
+            m.intConst(i);
+            m.visitLdcInsn(fields[i].name);
+            m.visitInsn(AASTORE);
+        }
+        m.visitFieldInsn(PUTSTATIC, st.className, "_n", "[Ljava/lang/String;");
+        m.visitInsn(RETURN);
+        m.closeMethod();*/
+    }
 }
 
 final class CompileCtx implements Opcodes {
@@ -1976,15 +1994,19 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                          null, null).visitEnd();
     }
 
-    void genStruct(Ctx ctx) {
+    void genStruct(Ctx ctx, String constClass, String namesf, String varsf) {
         Label next;
         int i;
         String cn = ctx.compilation.createClassName(ctx, ctx.className, "");
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
                               "yeti/lang/AStruct", null);
-        st.createInit(0, "yeti/lang/AStruct");
-        st.cw.visitField(ACC_PRIVATE | ACC_FINAL | ACC_SYNTHETIC | ACC_STATIC,
-                         "_n", "[Ljava/long/String;", null, null).visitEnd();
+        Ctx m = st.newMethod(ACC_PUBLIC, "<init>", "()V");
+        m.visitVarInsn(ALOAD, 0); // this.
+        m.constants.structInitArg(m, fields, fieldCount);
+        m.visitMethodInsn(INVOKESPECIAL, "yeti/lang/AStruct", "<init>",
+                          "([Ljava/lang/String;[Z)V"); // super
+        m.visitInsn(RETURN);
+        m.closeMethod();
 
         // fields
         for (i = 0; i < fieldCount; ++i) {
@@ -1994,8 +2016,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         // get(String)
-        Ctx m = st.newMethod(ACC_PUBLIC, "get",
-                             "(Ljava/lang/String;)Ljava/lang/Object;");
+        m = st.newMethod(ACC_PUBLIC, "get",
+                         "(Ljava/lang/String;)Ljava/lang/Object;");
         m.visitVarInsn(ALOAD, 0);
         for (i = 0; i < fieldCount; ++i) {
             next = new Label();
@@ -2039,34 +2061,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.closeMethod();
 
         if (mutableCount != 0) {
-            // var(int, int[])
-            m = st.newMethod(ACC_PUBLIC, "var", "(I[I)Lyeti/lang/Struct;");
-            if (mutableCount < fieldCount) {
-                int[] vars = new int[mutableCount];
-                dflt = new Label();
-                jumps = new Label[mutableCount];
-                Label isVar = new Label();
-                i = 0;
-                for (int n = 0; i < fieldCount; ++i)
-                    if (fields[i].mutable) {
-                        jumps[n] = isVar;
-                        vars[n++] = i;
-                    }
-                m.visitVarInsn(ILOAD, 1);
-                m.visitSwitchInsn(0, 0, dflt, vars, jumps);
-                m.visitLabel(dflt);
-                m.visitInsn(ACONST_NULL);
-                m.visitInsn(ARETURN);
-                m.visitLabel(isVar);
-            }
-            m.visitVarInsn(ALOAD, 2);
-            m.intConst(0);
-            m.visitVarInsn(ILOAD, 1);
-            m.visitInsn(AASTORE);
-            m.visitVarInsn(ALOAD, 0);
-            m.visitInsn(ARETURN);
-            m.closeMethod();
-
             // set(String, Object)
             m = st.newMethod(ACC_PUBLIC, "set",
                              "(Ljava/lang/String;Ljava/lang/Object;)V");
@@ -2088,26 +2082,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitInsn(RETURN);
             m.closeMethod();
         }
-
-        // names
-        m = st.newMethod(ACC_PUBLIC, "names", "()[Ljava/lang/String;");
-        m.visitFieldInsn(GETSTATIC, st.className, "_n", "[Ljava/lang/String;");
-        m.visitInsn(ARETURN);
-        m.closeMethod();
-
-        // static { }
-        m = st.newMethod(ACC_STATIC, "<clinit>", "V");
-        m.intConst(fieldCount);
-        m.visitTypeInsn(ANEWARRAY, "java/lang/String");
-        for (i = 0; i < fieldCount; ++i) {
-            m.visitInsn(DUP);
-            m.intConst(i);
-            m.visitLdcInsn(fields[i].name);
-            m.visitInsn(AASTORE);
-        }
-        m.visitFieldInsn(PUTSTATIC, st.className, "_n", "[Ljava/lang/String;");
-        m.visitInsn(RETURN);
-        m.closeMethod();
     }
 
     void gen(Ctx ctx) {
