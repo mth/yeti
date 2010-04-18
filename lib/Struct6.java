@@ -62,7 +62,7 @@ public class Struct6 extends AStruct {
     }
 
     public Object get(int field) {
-        switch (i) {
+        switch (field) {
             case 0: return _0;
             case 1: return _1;
             case 2: return _2;
