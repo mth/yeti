@@ -42,19 +42,16 @@ public class Struct3 extends AStruct {
     }
 
     public Object get(String field) {
-        String[] na = names;
-        int cnt = na.length;
-        for (int i = 0; i < cnt; ++i)
-            if (na[i] == field)
-                switch (i) {
-                    case 0: return _0;
-                    case 1: return _1;
-                    case 2: return _2;
-                }
+        String[] a = names;
+        if (a[0] == field)
+            return _0;
+        if (a[1] == field)
+            return _1;
+        if (a[2] == field)
+            return _2;
         Unsafe.unsafeThrow(new NoSuchFieldException(field));
         return null;
     }
-
 
     public Object get(int field) {
         switch (field) {
@@ -66,14 +63,12 @@ public class Struct3 extends AStruct {
     }
 
     public void set(String field, Object value) {
-        String[] na = names;
-        int cnt = na.length;
-        for (int i = 0; i < cnt; ++i)
-            if (na[i] == field)
-                switch (i) {
-                    case 0: _0 = value; break;
-                    case 1: _1 = value; break;
-                    case 2: _2 = value; break;
-                }
+        String[] a = names;
+        if (a[0] == field)
+            _0 = value;
+        else if (a[1] == field)
+            _1 = value;
+        else if (a[2] == field)
+            _2 = value;
     }
 }
