@@ -58,8 +58,7 @@ public class Struct6 extends AStruct {
             return _4;
         if (a[5] == field)
             return _5;
-        Unsafe.unsafeThrow(new NoSuchFieldException(field));
-        return null;
+        throw new NoSuchKeyException(field);
     }
 
     public Object get(int field) {
