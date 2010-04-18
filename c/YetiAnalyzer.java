@@ -1081,7 +1081,7 @@ public final class YetiAnalyzer extends YetiType {
         if (nodes.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope, propertyScope = null;
-        Map fields = new HashMap(), codeMap = null;
+        Map fields = new HashMap(), codeMap = new HashMap();
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
