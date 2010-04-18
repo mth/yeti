@@ -33,23 +33,31 @@ package yeti.lang;
 import java.io.Serializable;
 
 public abstract class AStruct implements Struct, Serializable {
-    // suitable implementation for immutable structures.
-    public Struct var(int field, int[] varIndex) {
-        return null;
+    private String[] names;
+    private boolean[] vars;
+
+    int count() {
+        return names.length;
     }
 
-    public void set(String field, Object value) {
-        Unsafe.unsafeThrow(new NoSuchFieldException(
-                    "No mutable field (" + field + ')'));
+    String name(int field) {
+        return names[field];
+    }
+
+    // suitable implementation for immutable structures.
+    public Struct var(int field, int[] varIndex) {
+        if (!vars[field])
+            return null;
+        varIndex[0] = field;
+        return this;
     }
 
     public boolean equals(Object o) {
         Struct st = (Struct) o;
-        String[] ans = names(), bns = st.names();
-        int i = 0, j = 0;
-        while (i < ans.length && j < bns.length) {
+        int acnt = count(), bcnt = st.count(), i = 0, j = 0;
+        while (i < acnt && j < bcnt) {
             String an, bn;
-            if ((an = ans[i]) == (bn = bns[j])) {
+            if ((an = name(i)) == (bn = st.name(j))) {
                 Object a = get(i);
                 Object b = st.get(j);
                 if (a != b && (a == null || !a.equals(b)))
@@ -66,12 +74,11 @@ public abstract class AStruct implements Struct, Serializable {
     }
 
     public String toString() {
-        String[] names = names();
         StringBuffer sb = new StringBuffer().append('{');
-        for (int cnt = names.length, i = 0; i < cnt; ++i) {
+        for (int cnt = count(), i = 0; i < cnt; ++i) {
             if (i != 0)
                 sb.append(", ");
-            sb.append(names[i]).append('=').append(Core.show(get(i)));
+            sb.append(name(i)).append('=').append(Core.show(get(i)));
         }
         sb.append('}');
         return sb.toString();

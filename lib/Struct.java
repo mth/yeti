@@ -37,7 +37,7 @@ public interface Struct {
     Object get(String field);
 
     /**
-     * Get field by index (corresponding to names()).
+     * Get field by index (corresponding to name(field)).
      */
     Object get(int field);
 
@@ -47,9 +47,14 @@ public interface Struct {
     void set(String field, Object value);
 
     /**
-     * Field names, must be sorted alphabetically.
+     * Field count.
      */
-    String[] names();
+    int count();
+
+    /**
+     * Field name by field (must be sorted alphabetically).
+     */
+    String name(int field);
 
     /**
      * If field is mutable, return accessor structure and
