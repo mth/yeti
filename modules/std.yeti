@@ -123,8 +123,8 @@ peekObject object =
         Struct {
             fields,
             value name =
-                i = index name fields;
-                if i < 0 then
+                i = (fields unsafely_as ~AList)#index(name);
+                if nullptr? i then
                     throw new NoSuchKeyException("No such field (\(name))")
                 fi;
                 peekObject st#get(i)
