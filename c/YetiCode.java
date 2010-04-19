@@ -2091,9 +2091,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         ctx.visitInsn(DUP);
         ctx.constants.structInitArg(ctx, fields, fieldCount);
         ctx.visitInit(implClass, "([Ljava/lang/String;[Z)V");
-        if (arrayVar != -1) {
+        if (arrayVar != -1)
             ctx.visitVarInsn(ASTORE, arrayVar);
-        }
         for (int i = 0, cnt = fieldCount; i < cnt; ++i) {
             if (arrayVar != -1) {
                 ctx.visitVarInsn(ALOAD, arrayVar);
