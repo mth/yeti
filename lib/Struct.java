@@ -55,7 +55,7 @@ public interface Struct {
     int count();
 
     /**
-     * Field name by field (must be sorted alphabetically).
+     * Field name by field index (must be sorted alphabetically).
      * Warning: the behaviour is undefined when field does not exists!
      */
     String name(int field);
