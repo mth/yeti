@@ -32,7 +32,7 @@ package yeti.lang;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 
 // GenericStruct can be useful in Java code and for very large Yeti
 // structures, where pointer scan by field names becomes slow.
@@ -73,7 +73,7 @@ public final class GenericStruct extends AStruct {
      */
     public GenericStruct(String[] names, boolean[] vars) {
         super(names, vars);
-        impl = new HashMap(names.length);
+        impl = new IdentityHashMap(names.length);
     }
 
     public Object get(String field) {
