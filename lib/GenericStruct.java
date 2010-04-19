@@ -34,6 +34,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
+// GenericStruct can be useful in Java code and for very large Yeti
+// structures, where pointer scan by field names becomes slow.
 // Make it final, because maybe in future it doesn't extend AStruct,
 // so forbid access to AStruct names member by disabling subclassing.
 public final class GenericStruct extends AStruct {
