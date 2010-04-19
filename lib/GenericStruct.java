@@ -34,7 +34,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
-public class GenericStruct extends AStruct {
+// Make it final, because maybe in future it doesn't extend AStruct,
+// so forbid access to AStruct names member by disabling subclassing.
+public final class GenericStruct extends AStruct {
     private Map impl;
     private boolean allMutable;
 
