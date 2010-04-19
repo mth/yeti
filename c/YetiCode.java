@@ -130,7 +130,7 @@ final class Constants implements Opcodes {
             ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
                               name, "[Z", null, null).visitEnd();
             sb.intConst(fieldCount);
-            sb.visitTypeInsn(NEWARRAY, "Z");
+            sb.visitIntInsn(NEWARRAY, T_BOOLEAN);
             for (i = 0; i < fieldCount; ++i) {
                 sb.visitInsn(DUP);
                 sb.intConst(i);
@@ -204,7 +204,7 @@ final class CompileCtx implements Opcodes {
     }
 
     private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
@@ -217,7 +217,7 @@ final class CompileCtx implements Opcodes {
                     descr, null, null).visitEnd();
             ctx.visitInsn(DUP);
             ctx.visitLdcInsn(name);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
             ctx.visitTypeInsn(CHECKCAST, type);
             ctx.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
@@ -1423,20 +1423,20 @@ abstract class SelectMember extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         st.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.visitLdcInsn(name);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code setValue, int _) {
         st.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.visitLdcInsn(name);
         setValue.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
         ctx.visitInsn(ACONST_NULL);
     }
@@ -1954,13 +1954,26 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public void genGet(Ctx ctx) {
-            if (field != null)
+            if (field == null)
+                return;
+            if (impl != null) {
                 ctx.visitFieldInsn(GETFIELD, impl, field, "Ljava/lang/Object;");
+                return;
+            }
+            ctx.visitLdcInsn(field);
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
+                                "(Ljava/lang/String;)Ljava/lang/Object;");
         }
 
         public void genSet(Ctx ctx, Code value) {
+            if (impl != null) {
+                value.gen(ctx);
+                ctx.visitFieldInsn(PUTFIELD, impl, field, "Ljava/lang/Object;");
+            }
+            ctx.visitLdcInsn(field);
             value.gen(ctx);
-            ctx.visitFieldInsn(PUTFIELD, impl, field, "Ljava/lang/Object;");
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "set",
+                                "(Ljava/lang/String;Ljava/lang/Object;)V");
         }
 
         public Object captureIdentity() {
@@ -1968,7 +1981,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public String captureType() {
-            return "[Ljava/lang/Object;";
+            return impl != null ? impl : "Lyeti/lang/Struct;";
         }
     }
 
@@ -2052,10 +2065,9 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     void gen(Ctx ctx) {
         System.err.println("Struct gen");
-        if (fieldCount > 6) {
-            System.err.println("TODO fieldCount " + fieldCount + " > 6");
-        }
-        impl = fieldCount <= 3 ? "yeti/lang/Struct3" : "yeti/lang/Struct6";
+        impl = fieldCount <= 3 ? "yeti/lang/Struct3" :
+               fieldCount <= 6 ? "yeti/lang/Struct6" :
+               null; // GenericStruct
         int arrayVar = -1;
         for (int i = 0; i < binds.length; ++i) {
             if (binds[i] != null) {
@@ -2081,16 +2093,17 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                     if (arrayVar == -1) {
                         arrayVar = ctx.localVarCount++;
                     }
-                    binds[i].field = "_" + i;
+                    binds[i].field = impl != null ? "_" + i : fields[i].name;
                     binds[i].var = arrayVar;
                     binds[i] = null;
                 }
             }
         }
-        ctx.visitTypeInsn(NEW, impl);
+        String implClass = impl != null ? impl : "yeti/lang/GenericStruct";
+        ctx.visitTypeInsn(NEW, implClass);
         ctx.visitInsn(DUP);
         ctx.constants.structInitArg(ctx, fields, fieldCount);
-        ctx.visitInit(impl, "([Ljava/lang/String;[Z)V");
+        ctx.visitInit(implClass, "([Ljava/lang/String;[Z)V");
         if (arrayVar != -1) {
             ctx.visitVarInsn(ASTORE, arrayVar);
         }
@@ -2100,13 +2113,21 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             } else {
                 ctx.visitInsn(DUP);
             }
+            if (impl == null)
+                ctx.visitLdcInsn(fields[i].name);
             if (binds[i] != null) {
                 binds[i].gen(ctx);
                 ((Function) fields[i].value).finishGen(ctx);
             } else {
                 fields[i].value.gen(ctx);
             }
-            ctx.visitFieldInsn(PUTFIELD, impl, "_" + i, "Ljava/lang/Object;");
+            if (impl != null) {
+                ctx.visitFieldInsn(PUTFIELD, impl, "_" + i,
+                                   "Ljava/lang/Object;");
+            } else {
+                ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "set",
+                                    "(Ljava/lang/String;Ljava/lang/Object;)V");
+            }
         }
         if (arrayVar != -1)
             ctx.visitVarInsn(ALOAD, arrayVar);
