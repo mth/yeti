@@ -128,7 +128,7 @@ final class Constants implements Opcodes {
         if (name == null) {
             name = "_".concat(Integer.toString(ctx.fieldCounter++));
             ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
-                              name, "[Z;", null, null).visitEnd();
+                              name, "[Z", null, null).visitEnd();
             sb.intConst(fieldCount);
             sb.visitTypeInsn(NEWARRAY, "Z");
             for (i = 0; i < fieldCount; ++i) {
