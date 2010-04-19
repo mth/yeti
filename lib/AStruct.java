@@ -34,7 +34,7 @@ import java.io.Serializable;
 
 public abstract class AStruct implements Struct, Serializable {
     protected final String[] names;
-    private boolean[] vars;
+    private final boolean[] vars;
 
     public AStruct(String[] names_, boolean[] vars_) {
         names = names_;
