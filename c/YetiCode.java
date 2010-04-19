@@ -2125,8 +2125,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 ctx.visitFieldInsn(PUTFIELD, impl, "_" + i,
                                    "Ljava/lang/Object;");
             } else {
-                ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "set",
-                                    "(Ljava/lang/String;Ljava/lang/Object;)V");
+                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/GenericStruct",
+                        "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
             }
         }
         if (arrayVar != -1)
