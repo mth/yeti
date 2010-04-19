@@ -52,6 +52,14 @@ public class Struct3 extends AStruct {
         // sun jvm optimiser is weird
         if (a[3] == field)
             return null;
+/*        int cnt = a.length;
+        for (int i = 0; i < cnt; ++i)
+            if (a[i] == field)
+                switch (i) {
+                    case 0: return _0;
+                    case 1: return _1;
+                    case 2: return _2;
+                }*/
         return null;
     }
 

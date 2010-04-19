@@ -1,3 +1,5 @@
+none = None ();
+
 makeTree item depth =
     if depth > 0 then
         { item  = item,
