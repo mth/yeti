@@ -1883,6 +1883,7 @@ final class StructField implements Opcodes {
     String name;
     Code value;
     Code setter;
+    BindRef binder;
     String javaName;
     StructField nextProperty;
 
@@ -1905,20 +1906,44 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     StructField[] fields;
     int fieldCount;
     StructField properties;
-    Bind[] binds;
     String impl;
+    int arrayVar = -1;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
-        boolean mutable;
-        boolean used;
+        StructField field;
         boolean fun;
         boolean direct;
+        boolean mutable;
         int var;
-        String field;
-        Code value;
+
+        Bind(StructField sf) {
+            type = sf.value.type;
+            binder = this;
+            mutable = sf.mutable;
+            fun = sf.value instanceof Function;
+            field = sf;
+        }
+
+        void initGen(Ctx ctx) {
+            if (prepareConst(ctx)) {
+                direct = true;
+                field.binder = null;
+                return;
+            }
+            Function f;
+            if (!mutable && fun) {
+                ((Function) field.value).prepareGen(ctx);
+                ctx.visitVarInsn(ASTORE, var = ctx.localVarCount++);
+            } else {
+                if (arrayVar == -1)
+                    arrayVar = ctx.localVarCount++;
+                var = arrayVar;
+                field.binder = null;
+            }
+        }
 
         public BindRef getRef(int line) {
-            used = true;
+            field.binder = this;
             return this;
         }
 
@@ -1934,17 +1959,17 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             if ((fl & DIRECT_BIND) != 0)
                 return direct;
             if ((fl & CONST) != 0)
-                return !mutable && value.flagop(CONST);
+                return !mutable && field.value.flagop(CONST);
             return false;
         }
 
         boolean prepareConst(Ctx ctx) {
-            return !mutable && value.prepareConst(ctx);
+            return !mutable && field.value.prepareConst(ctx);
         }
 
         void gen(Ctx ctx) {
             if (direct)
-                value.gen(ctx);
+                field.value.gen(ctx);
             else
                 ctx.visitVarInsn(ALOAD, var);
         }
@@ -1954,13 +1979,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public void genGet(Ctx ctx) {
-            if (field == null)
-                return;
             if (impl != null) {
-                ctx.visitFieldInsn(GETFIELD, impl, field, "Ljava/lang/Object;");
+                ctx.visitFieldInsn(GETFIELD, impl, field.javaName,
+                                   "Ljava/lang/Object;");
                 return;
             }
-            ctx.visitLdcInsn(field);
+            ctx.visitLdcInsn(field.name);
             ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
                                 "(Ljava/lang/String;)Ljava/lang/Object;");
         }
@@ -1968,9 +1992,10 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         public void genSet(Ctx ctx, Code value) {
             if (impl != null) {
                 value.gen(ctx);
-                ctx.visitFieldInsn(PUTFIELD, impl, field, "Ljava/lang/Object;");
+                ctx.visitFieldInsn(PUTFIELD, impl, field.javaName,
+                                   "Ljava/lang/Object;");
             }
-            ctx.visitLdcInsn(field);
+            ctx.visitLdcInsn(field.name);
             value.gen(ctx);
             ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "set",
                                 "(Ljava/lang/String;Ljava/lang/Object;)V");
@@ -1986,21 +2011,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     StructConstructor(int maxBinds) {
-        binds = new Bind[maxBinds];
         fields = new StructField[maxBinds];
     }
 
     // for some reason, binds are only for non-property fields
     Binder bind(StructField sf) {
-        Bind bind = new Bind();
-        bind.type = sf.value.type;
-        bind.binder = bind;
-        bind.mutable = sf.mutable;
-        bind.fun = sf.value instanceof Function;
-        bind.value = sf.value;
-        bind.field = "unbound$" + sf.name;
-        // TODO binds[num] = bind;
-        return bind;
+        return new Bind(sf);
     }
 
     void add(StructField field) {
@@ -2041,7 +2057,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 r.put(fields[i].name, null);
                 continue;
             }
-            if (binds[i] != null)
+            if (fields[i].binder != null)
                 continue;
             Code v = fields[i].value;
             while (v instanceof BindRef)
@@ -2064,41 +2080,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     void gen(Ctx ctx) {
-        System.err.println("Struct gen");
         impl = fieldCount <= 3 ? "yeti/lang/Struct3" :
                fieldCount <= 6 ? "yeti/lang/Struct6" :
                null; // GenericStruct
-        int arrayVar = -1;
-        for (int i = 0; i < binds.length; ++i) {
-            if (binds[i] != null) {
-                binds[i].field = "wtf$" + i;
-                if (!binds[i].used) {
-                    binds[i].field = "unused$" + i;
-                    binds[i] = null;
-                    continue;
-                }
-                if (binds[i].prepareConst(ctx)) {
-                    binds[i].field = "const$" + i;
-                    binds[i].direct = true;
-                    binds[i] = null;
-                    continue;
-                }
-                Function f;
-                if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                    ((Function) fields[i].value).prepareGen(ctx);
-                    binds[i].field = "fun$" + i;
-                    ctx.visitVarInsn(ASTORE,
-                            binds[i].var = ctx.localVarCount++);
-                } else {
-                    if (arrayVar == -1) {
-                        arrayVar = ctx.localVarCount++;
-                    }
-                    binds[i].field = impl != null ? "_" + i : fields[i].name;
-                    binds[i].var = arrayVar;
-                    binds[i] = null;
-                }
-            }
-        }
+        for (int i = 0; i < fieldCount; ++i)
+            if (fields[i].binder != null)
+                ((Bind) fields[i].binder).initGen(ctx);
         String implClass = impl != null ? impl : "yeti/lang/GenericStruct";
         ctx.visitTypeInsn(NEW, implClass);
         ctx.visitInsn(DUP);
@@ -2115,8 +2102,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             }
             if (impl == null)
                 ctx.visitLdcInsn(fields[i].name);
-            if (binds[i] != null) {
-                binds[i].gen(ctx);
+            if (fields[i].binder != null) {
+                fields[i].binder.gen(ctx);
                 ((Function) fields[i].value).finishGen(ctx);
             } else {
                 fields[i].value.gen(ctx);
@@ -2261,7 +2248,7 @@ final class WithStruct extends Code {
 
     void gen(Ctx ctx) {
         override.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct3");
         src.gen(ctx);
         if (override instanceof StructConstructor) {
             ctx.visitInsn(ACONST_NULL);

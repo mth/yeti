@@ -1107,7 +1107,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (code == null) {
                     if (propertyScope == null) {
                         propertyScope = new Scope(scope, null, null);
-                        propertyScope.closure = result;
+                        //propertyScope.closure = result;
                     }
                     code = analyze(field.expr, propertyScope, depth);
                 }
@@ -1166,7 +1166,7 @@ public final class YetiAnalyzer extends YetiType {
         // property accessors must be proxied so the struct could inline them
         if (result.properties != null) {
             propertyScope = new Scope(local, null, null);
-            propertyScope.closure = result;
+            //propertyScope.closure = result;
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
