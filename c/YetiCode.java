@@ -80,22 +80,67 @@ final class Constants implements Opcodes {
         }
     }
 
-    // generates [LString;[Z into stack
-    void structInitArg(Ctx ctx, StructField[] fields, int fieldCount) {
-/*
-        // static { }
-        m = st.newMethod(ACC_STATIC, "<clinit>", "V");
-        m.intConst(fieldCount);
-        m.visitTypeInsn(ANEWARRAY, "java/lang/String");
-        for (i = 0; i < fieldCount; ++i) {
-            m.visitInsn(DUP);
-            m.intConst(i);
-            m.visitLdcInsn(fields[i].name);
-            m.visitInsn(AASTORE);
+    // generates [Ljava/lang/String;[Z into stack, using constant cache
+    void structInitArg(Ctx ctx_, StructField[] fields, int fieldCount) {
+        if (sb == null) {
+            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
         }
-        m.visitFieldInsn(PUTSTATIC, st.className, "_n", "[Ljava/lang/String;");
-        m.visitInsn(RETURN);
-        m.closeMethod();*/
+        String[] fieldNameArr = new String[fields.length + 1];
+        fieldNameArr[0] = "Struct";
+        char[] mutableArr = new char[fields.length + 1];
+        mutableArr[0] = '@';
+        int i, mutableCount = 0;
+        for (i = 1; i <= fieldNameArr.length; ++i) {
+            StructField f = fields[i - 1];
+            fieldNameArr[i] = f.name;
+            if (f.mutable) {
+                mutableArr[i] = '\001';
+                ++mutableCount;
+            }
+        }
+        Object key = Arrays.asList(fieldNameArr);
+        String name = (String) constants.get(key);
+        if (name == null) {
+            name = "_".concat(Integer.toString(ctx.fieldCounter++));
+            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC, name,
+                              "[Ljava/lang/String;", null, null).visitEnd();
+            sb.intConst(fieldCount);
+            sb.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            for (i = 0; i < fieldCount; ++i) {
+                sb.visitInsn(DUP);
+                sb.intConst(i);
+                sb.visitLdcInsn(fields[i].name);
+                sb.visitInsn(AASTORE);
+            }
+            sb.visitFieldInsn(PUTSTATIC, ctx.className, name,
+                             "[Ljava/lang/String;");
+            constants.put(key, name);
+        }
+        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name,
+                            "[Ljava/lang/String;");
+
+        if (mutableCount == 0) {
+            ctx_.visitInsn(ACONST_NULL);
+            return;
+        }
+        key = new String(mutableArr);
+        name = (String) constants.get(key);
+        if (name == null) {
+            name = "_".concat(Integer.toString(ctx.fieldCounter++));
+            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
+                              name, "[Z;", null, null).visitEnd();
+            sb.intConst(fieldCount);
+            sb.visitTypeInsn(NEWARRAY, "Z");
+            for (i = 0; i < fieldCount; ++i) {
+                sb.visitInsn(DUP);
+                sb.intConst(i);
+                sb.intConst(fields[i].mutable ? 1 : 0);
+                sb.visitInsn(BASTORE);
+            }
+            sb.visitFieldInsn(PUTSTATIC, ctx.className, name, "[Z");
+            constants.put(key, name);
+        }
+        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name, "[Z");
     }
 }
 
