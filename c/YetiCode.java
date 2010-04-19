@@ -2053,7 +2053,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     void gen(Ctx ctx) {
         System.err.println("Struct gen");
         if (fieldCount > 6) {
-            System.err.println("TODO fieldCount > 6");
+            System.err.println("TODO fieldCount " + fieldCount + " > 6");
         }
         impl = fieldCount <= 3 ? "yeti/lang/Struct3" : "yeti/lang/Struct6";
         int arrayVar = -1;
