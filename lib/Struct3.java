@@ -49,6 +49,9 @@ public class Struct3 extends AStruct {
             return _1;
         if (a[2] == field)
             return _2;
+        // sun jvm optimiser is weird
+        if (a[4] == field)
+            return null;
         return null;
     }
 
