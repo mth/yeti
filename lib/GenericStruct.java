@@ -36,9 +36,7 @@ import java.util.IdentityHashMap;
 
 // GenericStruct can be useful in Java code and for very large Yeti
 // structures, where pointer scan by field names becomes slow.
-// Make it final, because maybe in future it doesn't extend AStruct,
-// so forbid access to AStruct names member by disabling subclassing.
-public final class GenericStruct extends AStruct {
+public class GenericStruct extends AStruct {
     private Map impl;
     private boolean allMutable;
 
@@ -81,7 +79,7 @@ public final class GenericStruct extends AStruct {
     }
 
     public Object get(int field) {
-        return impl.get(names[field]);
+        return impl.get(name(field));
     }
 
     public void set(String field, Object value) {

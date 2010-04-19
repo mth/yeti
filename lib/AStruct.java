@@ -33,7 +33,7 @@ package yeti.lang;
 import java.io.Serializable;
 
 public abstract class AStruct implements Struct, Serializable {
-    protected final String[] names;
+    final String[] names;
     private final boolean[] vars;
 
     public AStruct(String[] names_, boolean[] vars_) {
