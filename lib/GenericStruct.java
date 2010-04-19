@@ -69,7 +69,7 @@ public class GenericStruct extends AStruct {
      */
     public GenericStruct(String[] names, boolean[] vars) {
         super(names, vars);
-        impl = new HashMap();
+        impl = new HashMap(names.length);
     }
 
     public Object get(String field) {
