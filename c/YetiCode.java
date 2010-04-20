@@ -2068,10 +2068,10 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         return r;
     }
 
-    public BindRef refProxy(BindRef code) {
+/*    public BindRef refProxy(BindRef code) {
         return code;
 //        return code.flagop(DIRECT_BIND) ? code : captureRef(code);
-    }
+    }*/
 
     void captureInit(Ctx st, Capture c, int n) {
         // c.getId() initialises the captures id as a side effect
@@ -2094,6 +2094,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         if (arrayVar != -1)
             ctx.visitVarInsn(ASTORE, arrayVar);
         for (int i = 0, cnt = fieldCount; i < cnt; ++i) {
+            if (fields[i].property)
+                continue; // TODO
             if (arrayVar != -1) {
                 ctx.visitVarInsn(ALOAD, arrayVar);
             } else {
