@@ -2006,7 +2006,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public String captureType() {
-            return impl != null ? impl : "Lyeti/lang/Struct;";
+            return impl != null ? 'L' + impl + ';' : "Lyeti/lang/Struct;";
         }
     }
 
