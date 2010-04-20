@@ -25,6 +25,6 @@ var depth = minDepth;
 depth <= maxDepth loop
    (iterations = 1 shl (maxDepth - depth + minDepth);
     out "\(iterations * 2)\t trees" depth
-        (sum (map (checkDepth depth) [1 .. iterations]));
+        (fold (_ v i = v + checkDepth depth i) 0 [1 .. iterations]);
     depth := depth + 2);
 out "long lived tree" maxDepth longLived#check();

@@ -160,7 +160,7 @@ final class CompileCtx implements Opcodes {
     boolean isGCJ;
     ClassFinder classPath;
     Map types = new HashMap();
-    int classWriterFlags = 0;//ClassWriter.COMPUTE_FRAMES;
+    int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
 
     CompileCtx(SourceReader reader, CodeWriter writer,
