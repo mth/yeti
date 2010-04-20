@@ -2022,7 +2022,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     void add(StructField field) {
         if (field.name == null)
             throw new IllegalArgumentException();
-        field.javaName = "$" + fieldCount;
         fields[fieldCount++] = field;
         if (field.property) {
             field.nextProperty = properties;
@@ -2036,6 +2035,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     void close() {
         Arrays.sort(fields, 0, fieldCount, this);
+        for (int i = 0; i < fieldCount; ++i)
+            fields[i].javaName = "_".concat(Integer.toString(i));
     }
 
     void publish() {
@@ -2110,7 +2111,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 fields[i].value.gen(ctx);
             }
             if (impl != null) {
-                ctx.visitFieldInsn(PUTFIELD, impl, "_" + i,
+                ctx.visitFieldInsn(PUTFIELD, impl, fields[i].javaName,
                                    "Ljava/lang/Object;");
             } else {
                 ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/GenericStruct",
