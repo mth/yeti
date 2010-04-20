@@ -1515,7 +1515,14 @@ public final class YetiAnalyzer extends YetiType {
         currentSrc.set(src);
         try {
             Parser parser = new Parser(sourceName, src, ctx.flags);
-            Node n = parser.parse(topLevel);
+            Node n;
+            try {
+                n = parser.parse(topLevel);
+            } catch (CompileException ex) {
+                if (ex.line == 0)
+                    ex.line = parser.currentLine();
+                throw ex;
+            }
             if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.str());
             }
