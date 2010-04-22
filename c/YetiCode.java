@@ -2157,7 +2157,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         if (!mustGen) {
             StringBuffer buf = new StringBuffer();
             for (i = 0; i < fields.length; ++i) {
-                buf.append(fields[i].mutable ? '"' : '\'')
+                buf.append(fields[i].mutable ? ';' : ',')
                    .append(fields[i].name);
             }
             structKey = buf.toString();
