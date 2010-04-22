@@ -2209,6 +2209,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
         // get(int)
         m = st.newMethod(ACC_PUBLIC, "get", "(I)Ljava/lang/Object;");
+        m.localVarCount = 2;
         m.visitVarInsn(ALOAD, 0);
         m.visitVarInsn(ILOAD, 1);
         Label[] jumps = new Label[fieldCount];
@@ -2242,6 +2243,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         // set(String, Object)
         m = st.newMethod(ACC_PUBLIC, "set",
                          "(Ljava/lang/String;Ljava/lang/Object;)V");
+        m.localVarCount = 3;
         m.visitVarInsn(ALOAD, 0);
         m.visitVarInsn(ALOAD, 2);
         for (i = 0; i < fieldCount; ++i) {
