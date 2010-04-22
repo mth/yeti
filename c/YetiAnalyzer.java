@@ -1098,6 +1098,7 @@ public final class YetiAnalyzer extends YetiType {
                     sf = new StructField();
                     sf.property = true;
                     sf.name = field.name;
+                    sf.line = field.line;
                     codeMap.put(sf.name, sf);
                     result.add(sf);
                 } else if (!sf.property ||

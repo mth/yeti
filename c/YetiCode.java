@@ -1887,6 +1887,7 @@ final class StructField implements Opcodes {
     String javaName;
     StructField nextProperty;
     int index;
+    int line;
 
     public int hashCode() {
         return name.hashCode();
@@ -1909,6 +1910,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     StructField properties;
     String impl;
     int arrayVar = -1;
+    private boolean mustGen;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
         StructField field;
@@ -2044,8 +2046,11 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     void close() {
         Arrays.sort(fields, 0, fieldCount, this);
         for (int i = 0; i < fieldCount; ++i) {
-            fields[i].javaName = "_".concat(Integer.toString(i));
-            fields[i].index = i;
+            StructField field = fields[i];
+            field.javaName = "_".concat(Integer.toString(i));
+            field.index = i;
+            if (field.property)
+                mustGen = true;
         }
     }
 
@@ -2093,13 +2098,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     void gen(Ctx ctx) {
         boolean generated = false;
         // default: null - GenericStruct
-        if (fieldCount <= 3) {
+        if (mustGen || fieldCount > 6 && fieldCount <= 15) {
+            impl = genStruct(ctx);
+            generated = true;
+        } else if (fieldCount <= 3) {
             impl = "yeti/lang/Struct3";
         } else if (fieldCount <= 6) {
             impl = "yeti/lang/Struct6";
-        } else if (fieldCount <= 15) {
-            impl = genStruct(ctx);
-            generated = true;
         }
         for (int i = 0; i < fieldCount; ++i)
             if (fields[i].binder != null)
@@ -2141,38 +2146,27 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
         if (arrayVar != -1)
             ctx.visitVarInsn(ALOAD, arrayVar);
-        /*if (properties == null) {
-            ctx.visitInit("yeti/lang/Struct", "([Ljava/lang/Object;)V");
-            return;
-        }
-        ctx.intConst(properties.length * 3);
-        ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-        for (int i = 0, cnt = properties.length; i < cnt; ++i) {
+        for (Capture c = captures; c != null; c = c.next) {
             ctx.visitInsn(DUP);
-            ctx.intConst(i * 3);
-            ctx.visitLdcInsn(properties[i].name);
-            ctx.visitInsn(AASTORE);
-            ctx.visitInsn(DUP);
-            ctx.intConst(i * 3 + 1);
-            properties[i].value.gen(ctx);
-            ctx.visitInsn(AASTORE);
-            if (properties[i].setter != null) {
-                ctx.visitInsn(DUP);
-                ctx.intConst(i * 3 + 2);
-                properties[i].setter.gen(ctx);
-                ctx.visitInsn(AASTORE);
-            }
+            if (c.wrapper == null)
+                c.ref.gen(ctx);
+            else
+                c.wrapper.genPreGet(ctx);
+            String type = c.captureType();
+            ctx.captureCast(type);
+            ctx.visitFieldInsn(PUTFIELD, impl, c.id, type);
         }
-        ctx.visitInit("yeti/lang/PStruct",
-                      "([Ljava/lang/Object;[Ljava/lang/Object;)V");*/
     }
 
     String genStruct(Ctx ctx) {
+        StructField field;
         Label next;
         int i;
         String cn = ctx.compilation.createClassName(ctx, ctx.className, "");
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
                               "yeti/lang/AStruct", null);
+        st.fieldCounter = fieldCount;
+        mergeCaptures(st);
         Ctx m = st.newMethod(ACC_PUBLIC, "<init>", "()V");
         m.visitVarInsn(ALOAD, 0); // this.
         m.constants.structInitArg(m, fields, fieldCount);
@@ -2196,9 +2190,9 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitLdcInsn(fields[i].name);
             m.visitJumpInsn(IF_ACMPNE, next);
             if (fields[i].property) {
-                ctx.intConst(i);
-                ctx.visitMethodInsn(INVOKEVIRTUAL, cn, "get",
-                                    "(I)Ljava/lang/Object;");
+                m.intConst(i);
+                m.visitMethodInsn(INVOKEVIRTUAL, cn, "get",
+                                  "(I)Ljava/lang/Object;");
             } else {
                 m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
                                  "Ljava/lang/Object;");
@@ -2227,11 +2221,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Label dflt = new Label();
         m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
         for (i = 0; i < fieldCount; ++i) {
+            field = fields[i];
             m.visitLabel(jumps[i]);
-            if (fields[i].property) {
-                m.visitInsn(ACONST_NULL); // TODO
+            if (field.property) {
+                new Apply(null, field.value,
+                          new UnitConstant(null), field.line).gen(m);
             } else {
-                m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
+                m.visitFieldInsn(GETFIELD, cn, field.javaName,
                                  "Ljava/lang/Object;");
             }
             m.visitInsn(ARETURN);
@@ -2249,12 +2245,15 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitVarInsn(ALOAD, 0);
         m.visitVarInsn(ALOAD, 2);
         for (i = 0; i < fieldCount; ++i) {
-            StructField field = fields[i];
+            field = fields[i];
             if (!field.mutable)
                 continue;
             next = new Label();
             if (field.property) {
-                // TODO
+                LoadVar var = new LoadVar();
+                var.var = 1;
+                new Apply(null, field.setter, var, field.line).gen(m);
+                m.visitInsn(POP);
             } else {
                 m.visitVarInsn(ALOAD, 1);
                 m.visitLdcInsn(field.name);
