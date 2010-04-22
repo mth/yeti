@@ -52,6 +52,7 @@ import yeti.lang.Core;
 final class Constants implements Opcodes {
     final Map constants = new HashMap();
     private Ctx sb;
+    Map structClasses = new HashMap();
     int anonymousClassCounter;
     String sourceName;
     Ctx ctx;
@@ -1888,17 +1889,6 @@ final class StructField implements Opcodes {
     StructField nextProperty;
     int index;
     int line;
-
-    public int hashCode() {
-        return name.hashCode();
-    }
-
-    public boolean equals(Object o) {
-        StructField st;
-        return o instanceof StructField &&
-            name.equals((st = (StructField) o).name) &&
-            mutable == st.mutable;
-    }
 }
 
 /*
@@ -2159,11 +2149,28 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     String genStruct(Ctx ctx) {
-        // TODO: share generated non-property structure classes
+        String cn, structKey = null;
         StructField field;
         Label next;
         int i;
-        String cn = ctx.compilation.createClassName(ctx, ctx.className, "");
+
+        if (!mustGen) {
+            StringBuffer buf = new StringBuffer();
+            for (i = 0; i < fields.length; ++i) {
+                buf.append(fields[i].mutable ? '"' : '\'')
+                   .append(fields[i].name);
+            }
+            structKey = buf.toString();
+            cn = (String) ctx.constants.structClasses.get(structKey);
+            if (cn != null)
+                return cn;
+        }
+
+        // TODO: share generated non-property structure classes
+        cn = ctx.compilation.createClassName(ctx, ctx.className, "");
+        if (structKey != null) {
+            ctx.constants.structClasses.put(structKey, cn);
+        }
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
                               "yeti/lang/AStruct", null);
         st.fieldCounter = fieldCount;
