@@ -1994,6 +1994,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 value.gen(ctx);
                 ctx.visitFieldInsn(PUTFIELD, impl, field.javaName,
                                    "Ljava/lang/Object;");
+                return;
             }
             ctx.visitLdcInsn(field.name);
             value.gen(ctx);
@@ -2081,17 +2082,28 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     void gen(Ctx ctx) {
-        impl = fieldCount <= 3 ? "yeti/lang/Struct3" :
-               fieldCount <= 6 ? "yeti/lang/Struct6" :
-               null; // GenericStruct
+        boolean generated = false;
+        // default: null - GenericStruct
+        if (fieldCount <= 3) {
+            impl = "yeti/lang/Struct3";
+        } else if (fieldCount <= 6) {
+            impl = "yeti/lang/Struct6";
+        } else if (fieldCount <= 15) {
+            impl = genStruct(ctx);
+            generated = true;
+        }
         for (int i = 0; i < fieldCount; ++i)
             if (fields[i].binder != null)
                 ((Bind) fields[i].binder).initGen(ctx);
         String implClass = impl != null ? impl : "yeti/lang/GenericStruct";
         ctx.visitTypeInsn(NEW, implClass);
         ctx.visitInsn(DUP);
-        ctx.constants.structInitArg(ctx, fields, fieldCount);
-        ctx.visitInit(implClass, "([Ljava/lang/String;[Z)V");
+        if (generated) {
+            ctx.visitInit(implClass, "()V");
+        } else {
+            ctx.constants.structInitArg(ctx, fields, fieldCount);
+            ctx.visitInit(implClass, "([Ljava/lang/String;[Z)V");
+        }
         if (arrayVar != -1)
             ctx.visitVarInsn(ASTORE, arrayVar);
         for (int i = 0, cnt = fieldCount; i < cnt; ++i) {
@@ -2146,7 +2158,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                       "([Ljava/lang/Object;[Ljava/lang/Object;)V");*/
     }
 
-    void genStruct(Ctx ctx) {
+    String genStruct(Ctx ctx) {
         Label next;
         int i;
         String cn = ctx.compilation.createClassName(ctx, ctx.className, "");
@@ -2161,8 +2173,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
         // fields
         for (i = 0; i < fieldCount; ++i) {
-            ctx.cw.visitField(fields[i].mutable ? ACC_PRIVATE | ACC_SYNTHETIC :
-                    ACC_PRIVATE | ACC_SYNTHETIC | ACC_FINAL, fields[i].javaName,
+            st.cw.visitField(ACC_SYNTHETIC, fields[i].javaName,
                     "Ljava/lang/Object;", null, null).visitEnd();
         }
 
@@ -2175,7 +2186,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitVarInsn(ALOAD, 1);
             m.visitLdcInsn(fields[i].name);
             m.visitJumpInsn(IF_ACMPNE, next);
-            m.visitFieldInsn(GETFIELD, ctx.className, fields[i].javaName,
+            m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
                              "Ljava/lang/Object;");
             m.visitInsn(ARETURN);
             m.visitLabel(next);
@@ -2202,7 +2213,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
         for (i = 0; i < fieldCount; ++i) {
             m.visitLabel(jumps[i]);
-            m.visitFieldInsn(GETFIELD, ctx.className, fields[i].javaName,
+            m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
                              "Ljava/lang/Object;");
             m.visitInsn(ARETURN);
         }
@@ -2224,15 +2235,16 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.visitVarInsn(ALOAD, 1);
                 m.visitLdcInsn(fields[i].name);
                 m.visitJumpInsn(IF_ACMPNE, next);
-                m.visitFieldInsn(PUTFIELD, ctx.className, fields[i].name,
+                m.visitFieldInsn(PUTFIELD, cn, fields[i].javaName,
                                  "Ljava/lang/Object;");
-                if (--mutableCount > 0)
-                    m.visitInsn(RETURN);
+                m.visitInsn(RETURN);
                 m.visitLabel(next);
             }
+            m.visitInsn(POP2);
             m.visitInsn(RETURN);
             m.closeMethod();
         }
+        return cn;
     }
 }
 
