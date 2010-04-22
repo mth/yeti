@@ -936,12 +936,13 @@ final class Function extends CapturingClosure implements Binder {
         if (shared) // already optimised into static constant value
             return true;
 
+        BindExpr bindExpr;
         // First try determine if we can reduce into method.
         if (selfBind instanceof BindExpr &&
-                ((BindExpr) selfBind).evalId == -1) {
+                (bindExpr = (BindExpr) selfBind).evalId == -1 &&
+                bindExpr.result != null) {
             int arityLimit = 99999999;
-            for (BindExpr.Ref i = ((BindExpr) selfBind).refs;
-                 i != null; i = i.next) {
+            for (BindExpr.Ref i = bindExpr.refs; i != null; i = i.next) {
                 if (arityLimit > i.arity)
                     arityLimit = i.arity;
             }
@@ -963,7 +964,7 @@ final class Function extends CapturingClosure implements Binder {
                     merged = false;
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
-                ((BindExpr) selfBind).setArrayType();
+                bindExpr.setArrayType();
             }
         }
 
