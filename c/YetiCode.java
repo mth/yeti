@@ -2159,6 +2159,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     String genStruct(Ctx ctx) {
+        // TODO: share generated non-property structure classes
         StructField field;
         Label next;
         int i;
