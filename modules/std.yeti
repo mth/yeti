@@ -119,7 +119,7 @@ peekObject object =
         Hash result
     elif o instanceof Struct then
         st = o unsafely_as ~Struct;
-        fields = map' (_ n = st#name(n)) [0 .. st#count()];
+        fields = map' (_ n = st#name(n)) [0 .. st#count() - 1];
         Struct {
             fields,
             value name =
@@ -127,7 +127,7 @@ peekObject object =
                 if nullptr? i then
                     throw new NoSuchKeyException("No such field (\(name))")
                 fi;
-                peekObject st#get(i)
+                peekObject (st#get(i) unsafely_as 'a)
         }
     else
         Object o
