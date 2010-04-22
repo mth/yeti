@@ -1,14 +1,11 @@
-none = None ();
-
 makeTree item depth =
     if depth > 0 then
         depth = depth - 1;
-        { item  = item,
-          left  = Some (makeTree (item * 2 - 1) depth),
-          right = Some (makeTree (item * 2) depth),
-        }
+        left = makeTree (item * 2 - 1) depth;
+        right = makeTree (item * 2) depth;
+        { item, get left () = Some left, get right () = Some right }
     else
-        { item = item, left = none, right = none }
+        { item, get left () = None (), get right () = None () }
     fi;
 
 maybeNode = maybe 0 (.item);
