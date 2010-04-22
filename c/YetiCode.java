@@ -1886,6 +1886,7 @@ final class StructField implements Opcodes {
     BindRef binder;
     String javaName;
     StructField nextProperty;
+    int index;
 
     public int hashCode() {
         return name.hashCode();
@@ -1979,18 +1980,24 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public void genGet(Ctx ctx) {
-            if (impl != null) {
+            if (impl == null) {
+                // GenericStruct
+                ctx.visitLdcInsn(field.name);
+                ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
+                                    "(Ljava/lang/String;)Ljava/lang/Object;");
+            } else if (field.property) {
+                // Property accessor
+                ctx.intConst(field.index);
+                ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                                    "get", "(I)Ljava/lang/Object;");
+            } else {
                 ctx.visitFieldInsn(GETFIELD, impl, field.javaName,
                                    "Ljava/lang/Object;");
-                return;
             }
-            ctx.visitLdcInsn(field.name);
-            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
-                                "(Ljava/lang/String;)Ljava/lang/Object;");
         }
 
         public void genSet(Ctx ctx, Code value) {
-            if (impl != null) {
+            if (impl != null && !field.property) {
                 value.gen(ctx);
                 ctx.visitFieldInsn(PUTFIELD, impl, field.javaName,
                                    "Ljava/lang/Object;");
@@ -2036,8 +2043,10 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     void close() {
         Arrays.sort(fields, 0, fieldCount, this);
-        for (int i = 0; i < fieldCount; ++i)
+        for (int i = 0; i < fieldCount; ++i) {
             fields[i].javaName = "_".concat(Integer.toString(i));
+            fields[i].index = i;
+        }
     }
 
     void publish() {
@@ -2172,10 +2181,10 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.closeMethod();
 
         // fields
-        for (i = 0; i < fieldCount; ++i) {
-            st.cw.visitField(ACC_SYNTHETIC, fields[i].javaName,
-                    "Ljava/lang/Object;", null, null).visitEnd();
-        }
+        for (i = 0; i < fieldCount; ++i)
+            if (!fields[i].property)
+                st.cw.visitField(ACC_SYNTHETIC, fields[i].javaName,
+                        "Ljava/lang/Object;", null, null).visitEnd();
 
         // get(String)
         m = st.newMethod(ACC_PUBLIC, "get",
@@ -2186,8 +2195,14 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitVarInsn(ALOAD, 1);
             m.visitLdcInsn(fields[i].name);
             m.visitJumpInsn(IF_ACMPNE, next);
-            m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
-                             "Ljava/lang/Object;");
+            if (fields[i].property) {
+                ctx.intConst(i);
+                ctx.visitMethodInsn(INVOKEVIRTUAL, cn, "get",
+                                    "(I)Ljava/lang/Object;");
+            } else {
+                m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
+                                 "Ljava/lang/Object;");
+            }
             m.visitInsn(ARETURN);
             m.visitLabel(next);
         }
@@ -2213,8 +2228,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
         for (i = 0; i < fieldCount; ++i) {
             m.visitLabel(jumps[i]);
-            m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
-                             "Ljava/lang/Object;");
+            if (fields[i].property) {
+                m.visitInsn(ACONST_NULL); // TODO
+            } else {
+                m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
+                                 "Ljava/lang/Object;");
+            }
             m.visitInsn(ARETURN);
         }
         m.visitLabel(dflt);
@@ -2222,28 +2241,33 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitInsn(ARETURN);
         m.closeMethod();
 
-        if (mutableCount != 0) {
-            // set(String, Object)
-            m = st.newMethod(ACC_PUBLIC, "set",
-                             "(Ljava/lang/String;Ljava/lang/Object;)V");
-            m.visitVarInsn(ALOAD, 0);
-            m.visitVarInsn(ALOAD, 2);
-            for (i = 0; i < fieldCount; ++i) {
-                if (!fields[i].mutable)
-                    continue;
-                next = new Label();
+        if (mutableCount == 0)
+            return cn;
+        // set(String, Object)
+        m = st.newMethod(ACC_PUBLIC, "set",
+                         "(Ljava/lang/String;Ljava/lang/Object;)V");
+        m.visitVarInsn(ALOAD, 0);
+        m.visitVarInsn(ALOAD, 2);
+        for (i = 0; i < fieldCount; ++i) {
+            StructField field = fields[i];
+            if (!field.mutable)
+                continue;
+            next = new Label();
+            if (field.property) {
+                // TODO
+            } else {
                 m.visitVarInsn(ALOAD, 1);
-                m.visitLdcInsn(fields[i].name);
+                m.visitLdcInsn(field.name);
                 m.visitJumpInsn(IF_ACMPNE, next);
-                m.visitFieldInsn(PUTFIELD, cn, fields[i].javaName,
+                m.visitFieldInsn(PUTFIELD, cn, field.javaName,
                                  "Ljava/lang/Object;");
-                m.visitInsn(RETURN);
-                m.visitLabel(next);
             }
-            m.visitInsn(POP2);
             m.visitInsn(RETURN);
-            m.closeMethod();
+            m.visitLabel(next);
         }
+        m.visitInsn(POP2);
+        m.visitInsn(RETURN);
+        m.closeMethod();
         return cn;
     }
 }
