@@ -51,6 +51,10 @@ trueTests = [
     end;
     new X(33)#test() == 33
 done,
+'named lambda': do:
+    fib = (f p n c = if c <= 0 then n else f n (p + n) (c - 1) fi) 0 1;
+    fib 10 == 89
+done,
 ];
 
 forHash trueTests do name f:
