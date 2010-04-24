@@ -81,9 +81,10 @@ public final class YetiAnalyzer extends YetiType {
         if (node instanceof Bind) {
             Bind bind = (Bind) node;
             Function r = singleBind(bind, scope, depth);
-            if (((BindExpr) r.selfBind).refs == null) {
+            BindExpr self = (BindExpr) r.selfBind;
+            if (self.refs == null)
                 unusedBinding(bind);
-            }
+            self.genBind(null); // initialize binding
             return r;
         }
         String kind = node.kind;

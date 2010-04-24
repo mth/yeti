@@ -1641,6 +1641,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     }
 
     public String captureType() {
+        if (javaDescr == null)
+            throw new IllegalStateException(toString());
         return mvar == -1 ? javaDescr : "[Ljava/lang/Object;";
     }
 
@@ -1701,9 +1703,11 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         javaDescr = javaType = "[Ljava/lang/Object;";
     }
 
-    private void genBind(Ctx ctx) {
+    void genBind(Ctx ctx) {
         javaType = javaType(st.type);
         javaDescr = 'L' + javaType + ';';
+        if (ctx == null)
+            return; // named lambdas use genBind for initializing the expr
         if (!var && st.prepareConst(ctx) && evalId == -1) {
             directBind = true;
             return;
