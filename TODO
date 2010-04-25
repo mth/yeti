@@ -25,8 +25,9 @@
    unifing those with actual function field types later)
 * Allow cons pattern match (::) on arrays?
 * Review the Java<->Yeti type autoconversions?
+* Avoid upper/lowercase dups on generated classes
 * Optional Java generics support?
+* Hidden types in modules?
 * Direct double optimisation, when it can be deduced,
   that there are always floats
 * Direct struct-ref optimisation, when only known structs are accessed
-* Avoid upper/lowercase dups on generated classes
