@@ -634,7 +634,7 @@ final class Function extends CapturingClosure implements Binder {
     // uncaptures captured variables if possible
     // useful for function inlineing, don't work with self-refs
     boolean uncapture(Code arg) {
-        if (selfRef != null)
+        if (selfRef != null || merged)
             return false;
         for (Capture c = captures; c != null; c = c.next)
             c.uncaptured = true;
