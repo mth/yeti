@@ -804,6 +804,11 @@ abstract class Code implements Opcodes {
         return false;
     }
 
+    // Used for sharing embedded constant objects
+    Object valueKey() {
+        return this;
+    }
+
     // Called by bind for direct bindings
     // bindings can use this for "preparation"
     boolean prepareConst(Ctx ctx) {
@@ -1046,6 +1051,10 @@ final class NumericConstant extends Code implements CodeGen {
         v.type = YetiType.NUM_TYPE;
         ctx.constant(num, v);
     }
+
+    Object valueKey() {
+        return num;
+    }
 }
 
 final class StringConstant extends Code {
@@ -1063,9 +1072,15 @@ final class StringConstant extends Code {
     boolean flagop(int fl) {
         return (fl & STD_CONST) != 0;
     }
+
+    Object valueKey() {
+        return str;
+    }
 }
 
 final class UnitConstant extends BindRef {
+    private final Object NULL = new Object();
+
     UnitConstant(YType type) {
         this.type = type == null ? YetiType.UNIT_TYPE : type;
     }
@@ -1076,6 +1091,10 @@ final class UnitConstant extends BindRef {
 
     boolean flagop(int fl) {
         return (fl & STD_CONST) != 0;
+    }
+
+    Object valueKey() {
+        return NULL;
     }
 }
 
@@ -1100,6 +1119,10 @@ final class BooleanConstant extends BindRef {
         if (val == ifTrue) {
             ctx.visitJumpInsn(GOTO, to);
         }
+    }
+
+    Object valueKey() {
+        return Boolean.valueOf(val);
     }
 }
 
@@ -1390,9 +1413,11 @@ final class VariantConstructor extends Code implements CodeGen {
         ctx.constant("TAG:".concat(name), new SimpleCode(this, null, type, 0));
     }
 
-    Code apply(Code arg, YType res, int line) {
-        Code apply = new Apply(res, this, arg, line) {
-            void gen(Ctx ctx) {
+    Code apply(final Code arg, YType res, int line) {
+        class Tag extends Code implements CodeGen {
+            Object key;
+
+            public void gen2(Ctx ctx, Code param, int line_) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/Tag");
                 ctx.visitInsn(DUP);
                 arg.gen(ctx);
@@ -1400,9 +1425,30 @@ final class VariantConstructor extends Code implements CodeGen {
                 ctx.visitInit("yeti/lang/Tag",
                               "(Ljava/lang/Object;Ljava/lang/String;)V");
             }
+
+            void gen(Ctx ctx) {
+                if (key != null)
+                    ctx.constant(key, new SimpleCode(this, null, null, 0));
+                else
+                    gen2(ctx, null, 0);
+            }
+
+            boolean flagop(int fl) {
+               return (fl & STD_CONST) != 0 && key != null;
+            }
+
+            Object valueKey() {
+                return key == null ? this : key;
+            }
         };
-        apply.polymorph = arg.polymorph;
-        return apply;
+        Tag tag = new Tag();
+        tag.type = res;
+        tag.polymorph = arg.polymorph;
+        if (arg.flagop(CONST)) {
+            Object[] key = {"TAG", name, arg.valueKey()};
+            tag.key = Arrays.asList(key);
+        }
+        return tag;
     }
 }
 
