@@ -27,6 +27,7 @@
 * Review the Java<->Yeti type autoconversions?
 * Avoid upper/lowercase dups on generated classes
 * Immutable map into standard library
+* More constant optimisations (list, \, maybe struct too?)
 * Optional Java generics support?
 * Hidden types in modules?
 * Direct double optimisation, when it can be deduced,
