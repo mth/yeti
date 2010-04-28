@@ -56,6 +56,10 @@ public abstract class AStruct implements Struct, Serializable {
         return this;
     }
 
+    public void set(String name, Object value) {
+        Unsafe.unsafeThrow(new NoSuchFieldException(name));
+    }
+
     public boolean equals(Object o) {
         Struct st = (Struct) o;
         int acnt = count(), bcnt = st.count(), i = 0, j = 0;

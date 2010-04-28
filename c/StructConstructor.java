@@ -40,6 +40,7 @@ import java.util.Map;
 final class StructField implements Opcodes {
     boolean property;
     boolean mutable;
+    boolean inherited; // inherited field in with { ... }
     String name;
     Code value;
     Code setter;
@@ -60,8 +61,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     String impl;
     int arrayVar = -1;
     private boolean mustGen;
-    Code withParent;
-    String[] parentFields;
+    private Code withParent;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
         StructField field;
@@ -195,6 +195,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     void close() {
+        // warning - close can be called second time by `with'
         Arrays.sort(fields, 0, fieldCount, this);
         for (int i = 0; i < fieldCount; ++i) {
             StructField field = fields[i];
@@ -344,15 +345,20 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.closeMethod();
 
         // fields
-        for (i = 0; i < fieldCount; ++i)
+        for (i = 0; i < fieldCount; ++i) {
             if (!fields[i].property)
                 st.cw.visitField(ACC_SYNTHETIC, fields[i].javaName,
                         "Ljava/lang/Object;", null, null).visitEnd();
+            if (fields[i].inherited)
+                st.cw.visitField(ACC_SYNTHETIC | ACC_PRIVATE,
+                        "i" + i, "I", null, null).visitEnd();
+        }
 
         // get(String)
         m = st.newMethod(ACC_PUBLIC, "get",
                          "(Ljava/lang/String;)Ljava/lang/Object;");
         m.visitVarInsn(ALOAD, 0);
+        Label withMutable = null;
         for (i = 0; i < fieldCount; ++i) {
             next = new Label();
             m.visitVarInsn(ALOAD, 1);
@@ -366,6 +372,15 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
                                  "Ljava/lang/Object;");
             }
+            if (fields[i].inherited) {
+                if (withMutable == null)
+                    withMutable = new Label();
+                m.visitVarInsn(ALOAD, 0);
+                m.visitFieldInsn(GETFIELD, cn, "i" + i, "I");
+                m.visitInsn(DUP);
+                m.visitJumpInsn(IFGE, withMutable);
+                m.visitInsn(POP);
+            }
             m.visitInsn(ARETURN);
             m.visitLabel(next);
         }
@@ -374,6 +389,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitVarInsn(ALOAD, 1);
         m.visitInit("java/lang/NoSuchFieldException", "(Ljava/lang/String;)V");
         m.visitInsn(ATHROW);
+        if (withMutable != null) {
+            m.visitLabel(withMutable);
+            m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                              "get", "(I)Ljava/lang/Object;");
+            m.visitInsn(ARETURN);
+        }
         m.closeMethod();
 
         // get(int)
@@ -390,6 +411,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
         Label dflt = new Label();
         m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
+        if (withMutable != null)
+            withMutable = new Label();
         for (i = 0; i < fieldCount; ++i) {
             field = fields[i];
             m.visitLabel(jumps[i]);
@@ -400,11 +423,24 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.visitFieldInsn(GETFIELD, cn, field.javaName,
                                  "Ljava/lang/Object;");
             }
+            if (field.inherited) {
+                m.visitVarInsn(ALOAD, 0);
+                m.visitFieldInsn(GETFIELD, cn, "i" + i, "I");
+                m.visitInsn(DUP);
+                m.visitJumpInsn(IFGE, withMutable);
+                m.visitInsn(POP);
+            }
             m.visitInsn(ARETURN);
         }
         m.visitLabel(dflt);
         m.visitInsn(ACONST_NULL);
         m.visitInsn(ARETURN);
+        if (withMutable != null) {
+            m.visitLabel(withMutable);
+            m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                              "get", "(I)Ljava/lang/Object;");
+            m.visitInsn(ARETURN);
+        }
         m.closeMethod();
 
         if (mutableCount == 0)
@@ -414,31 +450,54 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                          "(Ljava/lang/String;Ljava/lang/Object;)V");
         m.localVarCount = 3;
         m.visitVarInsn(ALOAD, 0);
-        m.visitVarInsn(ALOAD, 2);
         for (i = 0; i < fieldCount; ++i) {
             field = fields[i];
             if (!field.mutable)
                 continue;
             next = new Label();
+            m.visitVarInsn(ALOAD, 1);
+            m.visitLdcInsn(field.name);
+            m.visitJumpInsn(IF_ACMPNE, next);
             if (field.property) {
                 LoadVar var = new LoadVar();
-                var.var = 1;
+                var.var = 2;
                 new Apply(null, field.setter, var, field.line).gen(m);
-                m.visitInsn(POP);
-            } else {
+                m.visitInsn(POP2);
+            } else if (field.inherited) {
+                m.visitFieldInsn(GETFIELD, cn, field.javaName,
+                                 "Ljava/lang/Object;");
                 m.visitVarInsn(ALOAD, 1);
-                m.visitLdcInsn(field.name);
-                m.visitJumpInsn(IF_ACMPNE, next);
+                m.visitVarInsn(ALOAD, 2);
+                m.visitMethodInsn(INVOKEINTERFACE,  "yeti/lang/Struct", "set",
+                    "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;");
+            } else {
+                m.visitVarInsn(ALOAD, 2);
                 m.visitFieldInsn(PUTFIELD, cn, field.javaName,
                                  "Ljava/lang/Object;");
             }
             m.visitInsn(RETURN);
             m.visitLabel(next);
         }
-        m.visitInsn(POP2);
+        m.visitInsn(POP);
         m.visitInsn(RETURN);
         m.closeMethod();
         return cn;
+    }
+
+    void genWith(Ctx ctx, Code src, String[] parentFields) {
+        mustGen = true;
+        withParent = src;
+        StructField[] fields = new StructField[fieldCount + parentFields.length];
+        for (int i = 0; i < parentFields.length; ++i) {
+            StructField sf = new StructField();
+            sf.name = parentFields[i];
+            sf.inherited = true;
+            sf.mutable = true;
+        }
+        System.arraycopy(this.fields, 0, fields, parentFields.length, fieldCount);
+        fieldCount = fields.length;
+        close();
+        gen(ctx);
     }
 }
 
@@ -451,16 +510,12 @@ final class WithStruct extends Code {
         this.type = type;
         this.src = src;
         this.override = override;
-        Arrays.sort(names);
         this.names = names;
     }
 
     void gen(Ctx ctx) {
         if (override instanceof StructConstructor) {
-            StructConstructor st = (StructConstructor) override;
-            st.withParent = src;
-            st.parentFields = names;
-            st.gen(ctx);
+            ((StructConstructor) override).genWith(ctx, src, names);
             return;
         }
         override.gen(ctx);

@@ -1136,6 +1136,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 if (field.var) {
                     sf.setter = code;
+                    sf.mutable = true;
                 } else {
                     sf.value = code;
                 }
