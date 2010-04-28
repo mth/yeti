@@ -261,6 +261,16 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         for (int i = 0; i < fieldCount; ++i)
             if (fields[i].binder != null)
                 ((Bind) fields[i].binder).initGen(ctx);
+        int withVar = -1;
+        if (withParent != null) {
+            withParent.gen(ctx);
+            ctx.visitVarInsn(ASTORE, withVar = ctx.localVarCount++);
+/*            ctx.intConst(1);
+            ctx.visitIntInsn(NEWARRAY, T_INT);*/
+            ctx.visitVarInsn(ASTORE, ctx.localVarCount++);
+            if (arrayVar == -1)
+                arrayVar = ctx.localVarCount++;
+        }
         String implClass = impl != null ? impl : "yeti/lang/GenericStruct";
         ctx.visitTypeInsn(NEW, implClass);
         ctx.visitInsn(DUP);
@@ -279,6 +289,9 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 ctx.visitVarInsn(ALOAD, arrayVar);
             } else {
                 ctx.visitInsn(DUP);
+            }
+            if (fields[i].inherited) {
+                // TODO
             }
             if (impl == null)
                 ctx.visitLdcInsn(fields[i].name);
@@ -495,6 +508,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             sf.mutable = true;
         }
         System.arraycopy(this.fields, 0, fields, parentFields.length, fieldCount);
+        this.fields = fields;
         fieldCount = fields.length;
         close();
         gen(ctx);
