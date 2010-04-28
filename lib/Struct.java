@@ -72,4 +72,6 @@ public interface Struct {
      * and sorted alphabetically.
      */
     void vars(StructExtender extender, String[] extNames);
+
+    Object ref(int field, int[] index, int to);
 }

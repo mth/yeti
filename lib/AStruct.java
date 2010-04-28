@@ -50,10 +50,9 @@ public abstract class AStruct implements Struct, Serializable {
     }
 
     public void vars(StructExtender ext, String[] extNames) {
-        String[] names = this.names;
-        int j = 0;
-        for (int i = 0; i < names.length; ++i)
-            if (names[i] == extNames[j]) {
+        int j = 0, cnt = count();
+        for (int i = 0; i < cnt; ++i)
+            if (name(i) == extNames[j]) {
                 if (vars[i]) {
                     ext.superValue(j, this, i);
                 } else {
