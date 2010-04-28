@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - structure interface.
+ * Yeti core library - structure extender interface.
  *
- * Copyright (c) 2007-2010 Madis Janson
+ * Copyright (c) 2010 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,46 +30,9 @@
  */
 package yeti.lang;
 
-public interface Struct {
-    /**
-     * Get field by interned name.
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    Object get(String field);
-
-    /**
-     * Get field by index (corresponding to name(field)).
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    Object get(int field);
-
-    /**
-     * Set field by interned name to given value.
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    void set(String field, Object value);
-
-    /**
-     * Field count.
-     */
-    int count();
-
-    /**
-     * Field name by field index (must be sorted alphabetically).
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    String name(int field);
-
-    /**
-     * Calls extender.superValue for every field in the extNames array.
-     *
-     * First argument to superValue is field index in extNames array.
-     * If field is mutable, then second argument to superValue is accessor
-     * struct and third argument is field index in that accessor,
-     * otherwise second argument is field value and third is -1.
-     *
-     * Field names in extNames must be interned strings
-     * and sorted alphabetically.
-     */
-    void vars(StructExtender extender, String[] extNames);
+/**
+ * Callback interface for Struct.vars.
+ */
+public interface StructExtender {
+    void superValue(int valueIndex, Object value, int superIndex);
 }
