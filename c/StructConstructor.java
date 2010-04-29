@@ -547,7 +547,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.visitVarInsn(ALOAD, 1);
                 m.visitVarInsn(ALOAD, 2);
                 m.visitMethodInsn(INVOKEINTERFACE,  "yeti/lang/Struct", "set",
-                    "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;");
+                                  "(Ljava/lang/String;Ljava/lang/Object;)V");
             } else {
                 m.visitVarInsn(ALOAD, 2);
                 m.visitFieldInsn(PUTFIELD, cn, field.javaName,
@@ -574,12 +574,14 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         withParent = src;
         StructField[] fields = new StructField[fieldCount + srcFields.size()];
         withFields = new String[srcFields.size() + 1];
-        Iterator j = srcFields.keySet().iterator();
+        Iterator j = srcFields.entrySet().iterator();
         for (int i = 1; i < withFields.length; ++i) {
+            Map.Entry e = (Map.Entry) j.next();
             StructField sf = new StructField();
-            withFields[i] = sf.name = (String) j.next();
+            withFields[i] = sf.name = (String) e.getKey();
             sf.inherited = true;
-            sf.mutable = true;
+            // whether to generate the setter code
+            sf.mutable = ((YType) e.getValue()).field == YetiType.FIELD_MUTABLE;
             fields[i - 1] = sf;
         }
         System.arraycopy(this.fields, 0, fields, srcFields.size(), fieldCount);
