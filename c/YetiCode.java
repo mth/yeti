@@ -116,7 +116,7 @@ final class Constants implements Opcodes {
         for (i = 1; i < fieldNameArr.length; ++i) {
             StructField f = fields[i - 1];
             fieldNameArr[i] = f.name;
-            if (f.mutable) {
+            if (f.mutable || f.property) {
                 mutableArr[i] = '\001';
                 ++mutableCount;
             }
@@ -137,7 +137,7 @@ final class Constants implements Opcodes {
             for (i = 0; i < fieldCount; ++i) {
                 sb.visitInsn(DUP);
                 sb.intConst(i);
-                sb.intConst(fields[i].mutable ? 1 : 0);
+                sb.intConst(mutableArr[i + 1]);
                 sb.visitInsn(BASTORE);
             }
             sb.visitFieldInsn(PUTSTATIC, ctx.className, name, "[Z");
