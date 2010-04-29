@@ -105,7 +105,8 @@ final class Constants implements Opcodes {
     }
 
     // generates [Ljava/lang/String;[Z into stack, using constant cache
-    void structInitArg(Ctx ctx_, StructField[] fields, int fieldCount) {
+    void structInitArg(Ctx ctx_, StructField[] fields,
+                       int fieldCount, boolean nomutable) {
         if (sb == null) {
             sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
         }
@@ -122,7 +123,7 @@ final class Constants implements Opcodes {
             }
         }
         stringArray(ctx_, fieldNameArr);
-        if (mutableCount == 0) {
+        if (nomutable || mutableCount == 0) {
             ctx_.visitInsn(ACONST_NULL);
             return;
         }

@@ -272,7 +272,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         } else if (generated) {
             ctx.visitInit(implClass, "()V");
         } else {
-            ctx.constants.structInitArg(ctx, fields, fieldCount);
+            ctx.constants.structInitArg(ctx, fields, fieldCount, false);
             ctx.visitInit(implClass, "([Ljava/lang/String;[Z)V");
         }
         if (arrayVar != -1)
@@ -345,7 +345,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Ctx m = st.newMethod(ACC_PUBLIC, "<init>",
                     withParent == null ? "()V" : "(Lyeti/lang/Struct;)V");
         m.visitVarInsn(ALOAD, 0); // this.
-        m.constants.structInitArg(m, fields, fieldCount);
+        m.constants.structInitArg(m, fields, fieldCount, withParent != null);
         m.visitInit("yeti/lang/AStruct", "([Ljava/lang/String;[Z)V");
         if (withParent != null) {
             // generates code for joining super fields
@@ -520,6 +520,66 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitInsn(ARETURN);
         }
         m.closeMethod();
+
+        if (withParent != null) {
+            m = st.newMethod(ACC_PUBLIC, "ref",
+                             "(I[II)Ljava/lang/Object;");
+            Label isConst = null;
+            Label isVar = null;
+            jumps = new Label[fieldCount];
+            for (i = 0; i < fieldCount; ++i) {
+                if (fields[i].inherited) {
+                    jumps[i] = new Label();
+                } else if (fields[i].mutable) {
+                    if (isVar == null)
+                        isVar = new Label();
+                    jumps[i] = isVar;
+                } else {
+                    if (isConst == null)
+                        isConst = new Label();
+                    jumps[i] = isConst;
+                }
+            }
+            dflt = new Label();
+            m.visitVarInsn(ALOAD, 2);
+            m.visitVarInsn(ILOAD, 3);
+            m.visitVarInsn(ILOAD, 1);
+            m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
+            if (isConst != null) {
+                m.visitLabel(isConst);
+                m.intConst(-1);
+                m.visitInsn(IASTORE);
+                m.visitVarInsn(ALOAD, 0);
+                m.visitVarInsn(ILOAD, 1);
+                m.visitMethodInsn(INVOKEVIRTUAL, cn, "get",
+                                  "(I)Ljava/lang/Object;");
+                m.visitInsn(ARETURN);
+            }
+            if (isVar != null) {
+                m.visitLabel(isVar);
+                m.visitVarInsn(ILOAD, 1);
+                m.visitInsn(IASTORE);
+                m.visitVarInsn(ALOAD, 0);
+                m.visitInsn(ARETURN);
+            }
+            for (i = 0; i < fieldCount; ++i) {
+                if (!fields[i].inherited)
+                    continue;
+                m.visitLabel(jumps[i]);
+                m.visitVarInsn(ALOAD, 0);
+                m.visitFieldInsn(GETFIELD, cn, "i" + i, "I");
+                m.visitInsn(IASTORE);
+                m.visitVarInsn(ALOAD, 0);
+                m.visitFieldInsn(GETFIELD, cn, fields[i].javaName,
+                                 "Ljava/lang/Object;");
+                m.visitInsn(ARETURN);
+            }
+            m.visitLabel(dflt);
+            m.visitInsn(POP2);
+            m.visitInsn(ACONST_NULL);
+            m.visitInsn(ARETURN);
+            m.closeMethod();
+        }
 
         if (mutableCount == 0)
             return cn;
