@@ -612,20 +612,16 @@ final class WithStruct extends Code {
 
         ctx.visitTypeInsn(NEW, "yeti/lang/WithStruct");
         ctx.visitInsn(DUP);
-        override.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         src.gen(ctx);
         ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-        if (srcFields != null) {
-            String[] a = new String[names.length + 1];
-            System.arraycopy(names, 0, a, 1, names.length);
-            ctx.constants.stringArray(ctx, a);
-            ctx.visitInit("yeti/lang/WithStruct",
-                   "(Lyeti/lang/Struct;Lyeti/lang/Struct;[java/lang/String;)V");
-        } else {
-            ctx.visitInit("yeti/lang/WithStruct",
-                          "(Lyeti/lang/Struct;Lyeti/lang/Struct;)V");
-        }
+        override.gen(ctx);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        String[] a = new String[names.length + 1];
+        System.arraycopy(names, 0, a, 1, names.length);
+        ctx.constants.stringArray(ctx, a);
+        ctx.intConst(srcFields != null ? 1 : 0);
+        ctx.visitInit("yeti/lang/WithStruct",
+               "(Lyeti/lang/Struct;Lyeti/lang/Struct;[Ljava/lang/String;Z)V");
         ctx.forceType("yeti/lang/Struct");
     }
 }
