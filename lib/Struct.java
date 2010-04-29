@@ -3,7 +3,7 @@
 /**
  * Yeti core library - structure interface.
  *
- * Copyright (c) 2007-2010 Madis Janson
+ * Copyright (c) 2010 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
