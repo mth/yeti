@@ -3,8 +3,6 @@
 
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
-* Fix structs - better comparision (with sorting) and
-                restructure holding properties
 * super reference in Java classes
   (requires generating accessor methods to proxy them)
 * Use typedef's in type pretty-printing (including error messages)
