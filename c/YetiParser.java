@@ -546,9 +546,8 @@ interface YetiParser {
         Node result() {
             if (cur.left == null && cur.prio != -1 && cur.prio != 1 &&
                     cur.prio != Parser.NOT_OP_LEVEL &&
-                    !cur.postfix || cur.right == null) {
+                    !cur.postfix || cur.right == null)
                 throw new CompileException(cur, "Expecting some value");
-            }
             return root.right;
         }
     }
@@ -603,6 +602,10 @@ interface YetiParser {
             this.sourceName = sourceName;
             this.src = src;
             this.flags = flags;
+        }
+
+        int currentLine() {
+            return line;
         }
 
         private void addDoc(int from, int to) {
@@ -1301,7 +1304,10 @@ interface YetiParser {
                 if (end == 'e' && sym instanceof Sym && sym.sym() == "end")
                     break;
                 if (sym.kind == ":" && args == null) {
-                    ((XNode) sym).expr = new Node[] { def(null, l, false, null) };
+                    if (l.size() == 0)
+                        throw new CompileException(sym, "Unexpected `:'");
+                    ((XNode) sym).expr =
+                        new Node[] { def(null, l, false, null) };
                     l = new ArrayList();
                     res.add(sym);
                     continue;
@@ -1327,6 +1333,8 @@ interface YetiParser {
                     if (sep != ";" || !(sym instanceof TypeDef))
                         continue; // look for next in line
                 }
+                if (l.size() == 0)
+                    throw new CompileException(sym, "Unexpected " + sym);
                 res.add(def(args, l, end == '}', doc));
                 args = null;
                 l = new ArrayList();

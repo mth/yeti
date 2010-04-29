@@ -81,9 +81,10 @@ public final class YetiAnalyzer extends YetiType {
         if (node instanceof Bind) {
             Bind bind = (Bind) node;
             Function r = singleBind(bind, scope, depth);
-            if (((BindExpr) r.selfBind).refs == null) {
+            BindExpr self = (BindExpr) r.selfBind;
+            if (self.refs == null)
                 unusedBinding(bind);
-            }
+            self.genBind(null); // initialize binding
             return r;
         }
         String kind = node.kind;
@@ -1525,7 +1526,14 @@ public final class YetiAnalyzer extends YetiType {
         currentSrc.set(src);
         try {
             Parser parser = new Parser(sourceName, src, ctx.flags);
-            Node n = parser.parse(topLevel);
+            Node n;
+            try {
+                n = parser.parse(topLevel);
+            } catch (CompileException ex) {
+                if (ex.line == 0)
+                    ex.line = parser.currentLine();
+                throw ex;
+            }
             if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
                 System.err.println(n.str());
             }
