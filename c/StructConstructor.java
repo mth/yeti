@@ -351,10 +351,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.intConst(1);
             m.visitIntInsn(NEWARRAY, T_INT);
             m.visitVarInsn(ASTORE, 4); // index - int[]
-            m.constants.stringArray(m, withFields);
-            m.visitInsn(ARRAYLENGTH);
-            m.intConst(-1);
-            m.visitInsn(IADD);
+            m.intConst(withFields.length - 2);
             m.visitVarInsn(ISTORE, 3); // j = NAMES.length - 1
             m.visitVarInsn(ALOAD, 1); // ext (extended struct)
             m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
