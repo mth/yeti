@@ -61,17 +61,10 @@ public interface Struct {
     String name(int field);
 
     /**
-     * Calls extender.superValue for every field in the extNames array.
-     *
-     * First argument to superValue is field index in extNames array.
-     * If field is mutable, then second argument to superValue is accessor
-     * struct and third argument is field index in that accessor,
-     * otherwise second argument is field value and third is -1.
-     *
-     * Field names in extNames must be interned strings
-     * and sorted alphabetically.
+     * Returns reference struct or field value.
+     * If the field is immutable, then the field value will be returned
+     * and index[at] is assigned -1. Otherwise a reference struct is
+     * returned and index[at] is assigned a field index in the returned struct.
      */
-    void vars(StructExtender extender, String[] extNames);
-
-    Object ref(int field, int[] index, int to);
+    Object ref(int field, int[] index, int at);
 }

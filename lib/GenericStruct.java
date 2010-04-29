@@ -85,19 +85,12 @@ public class GenericStruct extends AStruct {
     public void set(String field, Object value) {
         impl.put(field, value);
     }
-
-    public void vars(StructExtender ext, String[] extNames) {
+    
+    public Object ref(int field, int[] index, int at) {
         if (!allMutable) {
-            super.vars(ext, extNames);
-            return;
+            return super.ref(field, index, at);
         }
-        int j = 0, cnt = count();
-        for (int i = 0; i < cnt; ++i)
-            if (name(i) == extNames[j]) {
-                ext.superValue(j, this, i);
-                if (++j >= extNames.length)
-                    return;
-            }
-        throw new IllegalArgumentException("Missing field: " + extNames[j]);
+        index[at] = field;
+        return this;
     }
 }

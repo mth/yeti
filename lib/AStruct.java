@@ -49,19 +49,13 @@ public abstract class AStruct implements Struct, Serializable {
         return names[field];
     }
 
-    public void vars(StructExtender ext, String[] extNames) {
-        int j = 0, cnt = count();
-        for (int i = 0; i < cnt; ++i)
-            if (name(i) == extNames[j]) {
-                if (vars[i]) {
-                    ext.superValue(j, this, i);
-                } else {
-                    ext.superValue(j, get(i), -1);
-                }
-                if (++j >= extNames.length)
-                    return;
-            }
-        throw new IllegalArgumentException("Missing field: " + extNames[j]);
+    public Object ref(int field, int[] index, int at) {
+        if (vars[field]) {
+            index[at] = field;
+            return this;
+        }
+        index[at] = -1;
+        return get(field);
     }
 
     public void set(String name, Object value) {
