@@ -62,6 +62,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     int arrayVar = -1;
     private boolean mustGen;
     private Code withParent;
+    private String[] withFields;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
         StructField field;
@@ -326,7 +327,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     String genStruct(Ctx ctx) {
         String cn, structKey = null;
         StructField field;
-        Label next;
+        Label next, jumps[];
         int i;
 
         if (!mustGen) {
@@ -350,10 +351,62 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                               "yeti/lang/AStruct", null);
         st.fieldCounter = fieldCount;
         mergeCaptures(st);
-        Ctx m = st.newMethod(ACC_PUBLIC, "<init>", "()V");
+        String initSig = withParent == null ? "()V" : "(Lyeti/lang/Struct;)V";
+        Ctx m = st.newMethod(ACC_PUBLIC, "<init>", initSig);
         m.visitVarInsn(ALOAD, 0); // this.
         m.constants.structInitArg(m, fields, fieldCount);
         m.visitInit("yeti/lang/AStruct", "([Ljava/lang/String;[Z)V");
+        if (withParent != null) {
+            m.intConst(1);
+            m.visitIntInsn(NEWARRAY, T_INT);
+            m.visitVarInsn(ASTORE, 2); // index - int[]
+            m.constants.stringArray(m, withFields);
+            m.visitInsn(ARRAYLENGTH);
+            m.visitVarInsn(ISTORE, 3); // j = NAMES.length
+            m.visitVarInsn(ALOAD, 1); // ext (extended struct)
+            m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                              "count", "()I");
+            m.visitVarInsn(ISTORE, 4); // i - field counter
+            Label retry = new Label(), cont = new Label();
+            m.visitLabel(retry);
+            m.visitIntInsn(IINC, 4); // --i
+
+            // if (ext.name(i) != NAMES[j]) goto next;
+            m.visitVarInsn(ALOAD, 1);
+            m.visitVarInsn(ILOAD, 4);
+            m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                              "name", "(I)Ljava/lang/String;");
+            m.constants.stringArray(m, withFields);
+            m.visitVarInsn(ILOAD, 3);
+            m.visitInsn(IALOAD); // NAMES[j]
+            m.visitJumpInsn(IF_ACMPNE, cont);
+
+            // ext.ref(i, index, 0)
+            m.visitVarInsn(ALOAD, 1);
+            m.visitVarInsn(ILOAD, 4);
+            m.visitVarInsn(ALOAD, 2);
+            m.intConst(0);
+            m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                              "ref", "(I[II)Ljava/lang/Object;");
+
+            jumps = new Label[withFields.length - 1];
+            for (i = 0; i < jumps.length; ++i)
+                jumps[i] = new Label();
+            //m.visitSwitchInsn(0, jumps
+            i = 0;
+            for (int j = 0; j < jumps.length; ++i)
+                if (fields[i].inherited) {
+                }
+
+            m.visitVarInsn(ALOAD, 2);
+            m.intConst(0);
+            m.visitInsn(IALOAD);
+            m.visitInsn(DUP);
+
+            m.visitLabel(cont);
+            m.visitVarInsn(ALOAD, 4);
+            m.visitJumpInsn(IFGT, retry);
+        }
         m.visitInsn(RETURN);
         m.closeMethod();
 
@@ -415,7 +468,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.localVarCount = 2;
         m.visitVarInsn(ALOAD, 0);
         m.visitVarInsn(ILOAD, 1);
-        Label[] jumps = new Label[fieldCount];
+        jumps = new Label[fieldCount];
         int mutableCount = 0;
         for (i = 0; i < fieldCount; ++i) {
             jumps[i] = new Label();

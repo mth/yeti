@@ -610,7 +610,10 @@ final class Ctx implements Opcodes {
 
     void visitIntInsn(int opcode, int param) {
         visitInsn(-1);
-        m.visitIntInsn(opcode, param);
+        if (opcode != IINC)
+            m.visitIntInsn(opcode, param);
+        else
+            m.visitIincInsn(param, -1);
     }
 
     void visitTypeInsn(int opcode, String type) {
