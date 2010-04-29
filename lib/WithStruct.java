@@ -45,8 +45,6 @@ public class WithStruct extends AStruct {
         int i = 0, j = -1, k = 0, n = 0;
         String an = src.name(0), bn;
         while ((bn = override.name(++j)) != names[0]);
-        System.err.println("src=" + src + " override=" + override +
-                " an=" + an + " bn=" + bn);
         while (an != null || bn != null) {
             int c = an == null ? 1 : bn == null ? -1 : an.compareTo(bn);
             if (c >= 0) { // src >= override - take override
@@ -62,7 +60,7 @@ public class WithStruct extends AStruct {
                 values[n + 1] = src.ref(i, index, n >> 1);
             }
             if (c <= 0) {
-                an = ++i >= ac ? null : override.name(i);
+                an = ++i >= ac ? null : src.name(i);
             }
             n += 2;
         }
