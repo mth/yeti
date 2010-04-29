@@ -162,14 +162,14 @@ test n slow =
         testSort "insertion" insertionSort;
         testASort "insertion2" insertionSort2;
         testSort "qsort2" qsort2;
+        testASort "heap" heapSort;
     fi;
     testASort "comb" combSort;
     testASort "shell" shellSort;
-    testASort "heap" heapSort;
     testASort "qsort" qsort;
     testSort "merge" mergeSort;
     testSort "sortBy" sortBy);
 
-test 1600 true;
-test 20000 false;
+test 2000 true;
+test 50000 false;
 

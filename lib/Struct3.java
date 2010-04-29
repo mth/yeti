@@ -1,7 +1,7 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /**
- * Yeti core library - structure interface.
+ * Yeti core library - structure default implementation.
  *
  * Copyright (c) 2010 Madis Janson
  * All rights reserved.
@@ -30,41 +30,55 @@
  */
 package yeti.lang;
 
-public interface Struct {
-    /**
-     * Get field by interned name.
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    Object get(String field);
+import java.io.Serializable;
 
-    /**
-     * Get field by index (corresponding to name(field)).
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    Object get(int field);
+public class Struct3 extends AStruct {
+    public Object _0;
+    public Object _1;
+    public Object _2;
 
-    /**
-     * Set field by interned name to given value.
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    void set(String field, Object value);
+    public Struct3(String[] names, boolean[] vars) {
+        super(names, vars);
+    }
 
-    /**
-     * Field count.
-     */
-    int count();
+    public Object get(String field) {
+        String[] a = names;
+        if (a[0] == field)
+            return _0;
+        if (a[1] == field)
+            return _1;
+        if (a[2] == field)
+            return _2;
+        // sun jvm optimiser is weird
+        if (a[3] == field)
+            return null;
+/*        int cnt = a.length;
+        for (int i = 0; i < cnt; ++i)
+            if (a[i] == field)
+                switch (i) {
+                    case 0: return _0;
+                    case 1: return _1;
+                    case 2: return _2;
+                }*/
+        return null;
+    }
 
-    /**
-     * Field name by field index (must be sorted alphabetically).
-     * Warning: the behaviour is undefined when field does not exists!
-     */
-    String name(int field);
+    public Object get(int field) {
+        switch (field) {
+            case 0: return _0;
+            case 1: return _1;
+            case 2: return _2;
+        }
+        return null;
+    }
 
-    /**
-     * Returns reference struct or field value.
-     * If the field is immutable, then the field value will be returned
-     * and index[at] is assigned -1. Otherwise a reference struct is
-     * returned and index[at] is assigned a field index in the returned struct.
-     */
-    Object ref(int field, int[] index, int at);
+    public void set(String field, Object value) {
+        String[] a = names;
+        if (a[0] == field)
+            _0 = value;
+        else if (a[1] == field)
+            _1 = value;
+        else if (a[2] == field)
+            _2 = value;
+    }
 }

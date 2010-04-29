@@ -50,10 +50,12 @@ import yeti.lang.BigNum;
 final class Constants implements Opcodes {
     final Map constants = new HashMap();
     private Ctx sb;
+    Map structClasses = new HashMap();
+    int anonymousClassCounter;
     String sourceName;
     Ctx ctx;
 
-    void registerConstant(Object key, final Code code, Ctx ctx_) {
+    void registerConstant(Object key, Code code, Ctx ctx_) {
         String descr = 'L' + Code.javaType(code.type) + ';';
         String name = (String) constants.get(key);
         if (name == null) {
@@ -61,8 +63,8 @@ final class Constants implements Opcodes {
                 sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
             }
             name = "_".concat(Integer.toString(ctx.fieldCounter++));
-            ctx.cw.visitField(ACC_STATIC | ACC_FINAL, name, descr,
-                              null, null).visitEnd();
+            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
+                              name, descr, null, null).visitEnd();
             code.gen(sb);
             sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
             constants.put(key, name);
@@ -75,6 +77,73 @@ final class Constants implements Opcodes {
             sb.visitInsn(RETURN);
             sb.closeMethod();
         }
+    }
+
+    // first value in array must be empty
+    void stringArray(Ctx ctx_, String[] array) {
+        array[0] = "Strings";
+        List key = Arrays.asList(array);
+        String name = (String) constants.get(key);
+        if (name == null) {
+            name = "_".concat(Integer.toString(ctx.fieldCounter++));
+            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC, name,
+                              "[Ljava/lang/String;", null, null).visitEnd();
+            sb.intConst(array.length - 1);
+            sb.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            for (int i = 1; i < array.length; ++i) {
+                sb.visitInsn(DUP);
+                sb.intConst(i - 1);
+                sb.visitLdcInsn(array[i]);
+                sb.visitInsn(AASTORE);
+            }
+            sb.visitFieldInsn(PUTSTATIC, ctx.className, name,
+                             "[Ljava/lang/String;");
+            constants.put(key, name);
+        }
+        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name,
+                            "[Ljava/lang/String;");
+    }
+
+    // generates [Ljava/lang/String;[Z into stack, using constant cache
+    void structInitArg(Ctx ctx_, StructField[] fields, int fieldCount) {
+        if (sb == null) {
+            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
+        }
+        String[] fieldNameArr = new String[fieldCount + 1];
+        char[] mutableArr = new char[fieldNameArr.length];
+        mutableArr[0] = '@';
+        int i, mutableCount = 0;
+        for (i = 1; i < fieldNameArr.length; ++i) {
+            StructField f = fields[i - 1];
+            fieldNameArr[i] = f.name;
+            if (f.mutable) {
+                mutableArr[i] = '\001';
+                ++mutableCount;
+            }
+        }
+        stringArray(ctx_, fieldNameArr);
+        if (mutableCount == 0) {
+            ctx_.visitInsn(ACONST_NULL);
+            return;
+        }
+        String key = new String(mutableArr);
+        String name = (String) constants.get(key);
+        if (name == null) {
+            name = "_".concat(Integer.toString(ctx.fieldCounter++));
+            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
+                              name, "[Z", null, null).visitEnd();
+            sb.intConst(fieldCount);
+            sb.visitIntInsn(NEWARRAY, T_BOOLEAN);
+            for (i = 0; i < fieldCount; ++i) {
+                sb.visitInsn(DUP);
+                sb.intConst(i);
+                sb.intConst(fields[i].mutable ? 1 : 0);
+                sb.visitInsn(BASTORE);
+            }
+            sb.visitFieldInsn(PUTSTATIC, ctx.className, name, "[Z");
+            constants.put(key, name);
+        }
+        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name, "[Z");
     }
 }
 
@@ -117,10 +186,16 @@ final class CompileCtx implements Opcodes {
         warnings.add(ex);
     }
 
-    String createClassName(String outerClass, String nameBase) {
+    String createClassName(Ctx ctx, String outerClass, String nameBase) {
+        boolean anon = nameBase == "" && ctx != null;
         String name = nameBase = outerClass + '$' + nameBase;
-        for (int i = 0; definedClasses.containsKey(name); ++i) {
-            name = nameBase + i;
+        if (anon) {
+            do {
+                name = nameBase + ctx.constants.anonymousClassCounter++;
+            } while (definedClasses.containsKey(name));
+        } else {
+            for (int i = 0; definedClasses.containsKey(name); ++i)
+                name = nameBase + i;
         }
         return name;
     }
@@ -132,7 +207,7 @@ final class CompileCtx implements Opcodes {
     }
 
     private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
@@ -145,7 +220,7 @@ final class CompileCtx implements Opcodes {
                     descr, null, null).visitEnd();
             ctx.visitInsn(DUP);
             ctx.visitLdcInsn(name);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
             ctx.visitTypeInsn(CHECKCAST, type);
             ctx.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
@@ -283,10 +358,10 @@ final class CompileCtx implements Opcodes {
                           null);
             constants.ctx = ctx;
             if (module) {
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, "$",
                                   "Ljava/lang/Object;", null, null).visitEnd();
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "_$", "Z",
-                                  null, Boolean.FALSE);
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
+                                  "_$", "Z", null, Boolean.FALSE);
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
                                     "eval", "()Ljava/lang/Object;");
                 ctx.visitFieldInsn(GETSTATIC, name, "_$", "Z");
@@ -536,7 +611,10 @@ final class Ctx implements Opcodes {
 
     void visitIntInsn(int opcode, int param) {
         visitInsn(-1);
-        m.visitIntInsn(opcode, param);
+        if (opcode != IINC)
+            m.visitIntInsn(opcode, param);
+        else
+            m.visitIincInsn(param, -1);
     }
 
     void visitTypeInsn(int opcode, String type) {
@@ -569,6 +647,9 @@ final class Ctx implements Opcodes {
 
     void visitFieldInsn(int opcode, String owner,
                               String name, String desc) {
+        if (owner == null || name == null || desc == null)
+            throw new IllegalArgumentException("visitFieldInsn(" + opcode +
+                        ", " + owner + ", " + name + ", " + desc + ")");
         visitInsn(-1);
         m.visitFieldInsn(opcode, owner, name, desc);
         if ((opcode == GETSTATIC || opcode == GETFIELD) &&
@@ -617,7 +698,17 @@ final class Ctx implements Opcodes {
         visitInsn(-1);
         m.visitTryCatchBlock(start, end, handler, type);
     }
-                                  
+
+    void visitSwitchInsn(int min, int max, Label dflt,
+                         int[] keys, Label[] labels) {
+        visitInsn(-1);
+        if (keys == null) {
+            m.visitTableSwitchInsn(min, max, dflt, labels);
+        } else {
+            m.visitLookupSwitchInsn(dflt, keys, labels);
+        }
+    }
+
     void constant(Object key, Code code) {
         constants.registerConstant(key, code, this);
     }
@@ -717,6 +808,11 @@ abstract class Code implements Opcodes {
 
     boolean flagop(int flag) {
         return false;
+    }
+
+    // Used for sharing embedded constant objects
+    Object valueKey() {
+        return this;
     }
 
     // Called by bind for direct bindings
@@ -961,6 +1057,10 @@ final class NumericConstant extends Code implements CodeGen {
         v.type = YetiType.NUM_TYPE;
         ctx.constant(num, v);
     }
+
+    Object valueKey() {
+        return num;
+    }
 }
 
 final class StringConstant extends Code {
@@ -978,9 +1078,15 @@ final class StringConstant extends Code {
     boolean flagop(int fl) {
         return (fl & STD_CONST) != 0;
     }
+
+    Object valueKey() {
+        return str;
+    }
 }
 
 final class UnitConstant extends BindRef {
+    private final Object NULL = new Object();
+
     UnitConstant(YType type) {
         this.type = type == null ? YetiType.UNIT_TYPE : type;
     }
@@ -991,6 +1097,10 @@ final class UnitConstant extends BindRef {
 
     boolean flagop(int fl) {
         return (fl & STD_CONST) != 0;
+    }
+
+    Object valueKey() {
+        return NULL;
     }
 }
 
@@ -1015,6 +1125,10 @@ final class BooleanConstant extends BindRef {
         if (val == ifTrue) {
             ctx.visitJumpInsn(GOTO, to);
         }
+    }
+
+    Object valueKey() {
+        return Boolean.valueOf(val);
     }
 }
 
@@ -1305,9 +1419,11 @@ final class VariantConstructor extends Code implements CodeGen {
         ctx.constant("TAG:".concat(name), new SimpleCode(this, null, type, 0));
     }
 
-    Code apply(Code arg, YType res, int line) {
-        Code apply = new Apply(res, this, arg, line) {
-            void gen(Ctx ctx) {
+    Code apply(final Code arg, YType res, int line) {
+        class Tag extends Code implements CodeGen {
+            Object key;
+
+            public void gen2(Ctx ctx, Code param, int line_) {
                 ctx.visitTypeInsn(NEW, "yeti/lang/Tag");
                 ctx.visitInsn(DUP);
                 arg.gen(ctx);
@@ -1315,9 +1431,30 @@ final class VariantConstructor extends Code implements CodeGen {
                 ctx.visitInit("yeti/lang/Tag",
                               "(Ljava/lang/Object;Ljava/lang/String;)V");
             }
+
+            void gen(Ctx ctx) {
+                if (key != null)
+                    ctx.constant(key, new SimpleCode(this, null, null, 0));
+                else
+                    gen2(ctx, null, 0);
+            }
+
+            boolean flagop(int fl) {
+               return (fl & STD_CONST) != 0 && key != null;
+            }
+
+            Object valueKey() {
+                return key == null ? this : key;
+            }
         };
-        apply.polymorph = arg.polymorph;
-        return apply;
+        Tag tag = new Tag();
+        tag.type = res;
+        tag.polymorph = arg.polymorph;
+        if (arg.flagop(CONST)) {
+            Object[] key = {"TAG", name, arg.valueKey()};
+            tag.key = Arrays.asList(key);
+        }
+        return tag;
     }
 }
 
@@ -1339,20 +1476,20 @@ abstract class SelectMember extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         st.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.visitLdcInsn(name);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code setValue, int _) {
         st.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.visitLdcInsn(name);
         setValue.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
         ctx.visitInsn(ACONST_NULL);
     }
@@ -1712,8 +1849,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             myClass = ctx.className;
             directField =
                 "$".concat(Integer.toString(ctx.constants.ctx.fieldCounter++));
-            ctx.cw.visitField(ACC_STATIC, directField, javaDescr, null, null)
-                  .visitEnd();
+            ctx.cw.visitField(ACC_STATIC | ACC_SYNTHETIC, directField,
+                              javaDescr, null, null).visitEnd();
         } else if (mvar == -1) {
             id = ctx.localVarCount++;
         }
@@ -1790,253 +1927,6 @@ final class LoadModule extends Code {
                 return new StaticRef(directRef, "_", type, this, true, line);
             }
         };
-    }
-}
-
-final class StructField {
-    boolean property;
-    boolean mutable;
-    String name;
-    Code value;
-    Code setter;
-}
-
-final class StructConstructor extends Code {
-    StructField[] fields;
-    StructField[] properties;
-    Bind[] binds;
-
-    private class Bind extends BindRef implements Binder, CaptureWrapper {
-        boolean mutable;
-        boolean used;
-        boolean fun;
-        boolean direct;
-        int var;
-        int index;
-        Code value;
-
-        public BindRef getRef(int line) {
-            used = true;
-            return this;
-        }
-
-        public CaptureWrapper capture() {
-            return !fun || mutable ? this : null;
-        }
-
-        public boolean flagop(int fl) {
-            if ((fl & ASSIGN) != 0)
-                return mutable;
-            if ((fl & PURE) != 0)
-                return !mutable;
-            if ((fl & DIRECT_BIND) != 0)
-                return direct;
-            if ((fl & CONST) != 0)
-                return !mutable && value.flagop(CONST);
-            return false;
-        }
-
-        boolean prepareConst(Ctx ctx) {
-            return !mutable && value.prepareConst(ctx);
-        }
-
-        void gen(Ctx ctx) {
-            if (direct)
-                value.gen(ctx);
-            else
-                ctx.visitVarInsn(ALOAD, var);
-        }
-
-        public void genPreGet(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, var);
-        }
-
-        public void genGet(Ctx ctx) {
-            ctx.intConst(index);
-            ctx.visitInsn(AALOAD);
-        }
-
-        public void genSet(Ctx ctx, Code value) {
-            ctx.intConst(index);
-            value.gen(ctx);
-            ctx.visitInsn(AASTORE);
-        }
-
-        public Object captureIdentity() {
-            return StructConstructor.this;
-        }
-
-        public String captureType() {
-            return "[Ljava/lang/Object;";
-        }
-    }
-
-    StructConstructor(int maxBinds) {
-        binds = new Bind[maxBinds];
-    }
-
-    Binder bind(int num, Code code, boolean mutable) {
-        Bind bind = new Bind();
-        bind.type = code.type;
-        bind.binder = bind;
-        bind.mutable = mutable;
-        bind.fun = code instanceof Function;
-        bind.value = code;
-        binds[num] = bind;
-        return bind;
-    }
-
-    void publish() {
-        for (int i = 0; i < fields.length; ++i) {
-            Code v = fields[i].value;
-            while (v instanceof BindRef)
-                v = ((BindRef) v).unref(true);
-            if (v instanceof Function)
-                ((Function) v).publish = true;
-        }
-    }
-
-    Map getDirect() {
-        Map r = new HashMap();
-        for (int i = 0; i < fields.length; ++i) {
-            if (fields[i].mutable) {
-                r.put(fields[i].name, null);
-                continue;
-            }
-            if (binds[i] != null)
-                continue;
-            Code v = fields[i].value;
-            while (v instanceof BindRef)
-                v = ((BindRef) v).unref(false);
-            if (v instanceof Function && v.flagop(CONST))
-                r.put(fields[i].name, ((Function) v).name);
-        }
-        for (int i = 0; i < properties.length; ++i) {
-            r.put(properties[i].name, null);
-        }
-        return r;
-    }
-
-    void gen(Ctx ctx) {
-        int arrayVar = -1;
-        for (int i = 0; i < binds.length; ++i) {
-            if (binds[i] != null) {
-                if (!binds[i].used) {
-                    binds[i] = null;
-                    continue;
-                }
-                if (binds[i].prepareConst(ctx)) {
-                    binds[i].direct = true;
-                    binds[i] = null;
-                    continue;
-                }
-                Function f;
-                if (binds[i].used && !binds[i].mutable && binds[i].fun) {
-                    ((Function) fields[i].value).prepareGen(ctx);
-                    ctx.visitVarInsn(ASTORE,
-                            binds[i].var = ctx.localVarCount++);
-                } else {
-                    if (arrayVar == -1) {
-                        arrayVar = ctx.localVarCount++;
-                    }
-                    binds[i].index = i * 2 + 1;
-                    binds[i].var = arrayVar;
-                    binds[i] = null;
-                }
-            }
-        }
-        ctx.visitTypeInsn(NEW, properties.length == 0
-            ? "yeti/lang/Struct" : "yeti/lang/PStruct");
-        ctx.visitInsn(DUP);
-        ctx.intConst(fields.length * 2);
-        ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-        if (arrayVar != -1) {
-            ctx.visitVarInsn(ASTORE, arrayVar);
-        }
-        for (int i = 0, cnt = fields.length; i < cnt; ++i) {
-            if (arrayVar != -1) {
-                ctx.visitVarInsn(ALOAD, arrayVar);
-            } else {
-                ctx.visitInsn(DUP);
-            }
-            ctx.intConst(i * 2);
-            ctx.visitLdcInsn(fields[i].name);
-            ctx.visitInsn(AASTORE);
-            if (arrayVar != -1) {
-                ctx.visitVarInsn(ALOAD, arrayVar);
-            } else {
-                ctx.visitInsn(DUP);
-            }
-            ctx.intConst(i * 2 + 1);
-            if (binds[i] != null) {
-                binds[i].gen(ctx);
-                ((Function) fields[i].value).finishGen(ctx);
-            } else {
-                fields[i].value.gen(ctx);
-            }
-            ctx.visitInsn(AASTORE);
-        }
-        if (arrayVar != -1) {
-            ctx.visitVarInsn(ALOAD, arrayVar);
-        }
-        if (properties.length == 0) {
-            ctx.visitInit("yeti/lang/Struct", "([Ljava/lang/Object;)V");
-            return;
-        }
-        ctx.intConst(properties.length * 3);
-        ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-        for (int i = 0, cnt = properties.length; i < cnt; ++i) {
-            ctx.visitInsn(DUP);
-            ctx.intConst(i * 3);
-            ctx.visitLdcInsn(properties[i].name);
-            ctx.visitInsn(AASTORE);
-            ctx.visitInsn(DUP);
-            ctx.intConst(i * 3 + 1);
-            properties[i].value.gen(ctx);
-            ctx.visitInsn(AASTORE);
-            if (properties[i].setter != null) {
-                ctx.visitInsn(DUP);
-                ctx.intConst(i * 3 + 2);
-                properties[i].setter.gen(ctx);
-                ctx.visitInsn(AASTORE);
-            }
-        }
-        ctx.visitInit("yeti/lang/PStruct",
-                      "([Ljava/lang/Object;[Ljava/lang/Object;)V");
-    }
-}
-
-final class WithStruct extends Code {
-    private Code src;
-    private Code override;
-    private String[] names;
-
-    WithStruct(YType type, Code src, Code override, String[] names) {
-        this.type = type;
-        this.src = src;
-        this.override = override;
-        this.names = names;
-    }
-
-    void gen(Ctx ctx) {
-        override.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-        src.gen(ctx);
-        if (override instanceof StructConstructor) {
-            ctx.visitInsn(ACONST_NULL);
-        } else {
-            ctx.intConst(names.length);
-            ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
-            for (int i = 0; i < names.length; ++i) {
-                ctx.visitInsn(DUP);
-                ctx.intConst(i);
-                ctx.visitLdcInsn(names[i]);
-                ctx.visitInsn(AASTORE);
-            }
-        }
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct", "with",
-                "(Ljava/lang/Object;[Ljava/lang/String;)Lyeti/lang/Struct;");
-        ctx.forceType("yeti/lang/Struct");
     }
 }
 

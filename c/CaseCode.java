@@ -234,7 +234,6 @@ final class StructPattern extends CasePattern {
     }
 
     int preparePattern(Ctx ctx) {
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         return 1;
     }
 
@@ -248,7 +247,7 @@ final class StructPattern extends CasePattern {
                 ctx.visitInsn(DUP);
             else dropped = true;
             ctx.visitLdcInsn(names[i]);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct",
+            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                       "get", "(Ljava/lang/String;)Ljava/lang/Object;");
             patterns[i].preparePattern(ctx);
             patterns[i].tryMatch(ctx, i < names.length - 1

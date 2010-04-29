@@ -87,6 +87,16 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
     fi;
 
+/// Strict mapping of list. map' is usually faster than map on lists,
+/// unless huge streams are processed or most of the resulting list is
+/// not used. They work identically on arrays.
+map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
+    if empty? l then
+        []
+    else
+        (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
+    fi;
+
 peekObject object =
    (o = object unsafely_as ~Object;
     if nullptr? o then
@@ -109,15 +119,15 @@ peekObject object =
         Hash result
     elif o instanceof Struct then
         st = o unsafely_as ~Struct;
+        fields = map' (_ n = st#name(n)) [0 .. st#count() - 1];
         Struct {
-            fields = st#names() unsafely_as list<string>,
-            value name = peekObject
-                try
-                    st#get((name is string unsafely_as ~String)#intern())
-                        unsafely_as 'a
-                catch java.lang.IndexOutOfBoundsException:
+            fields,
+            value name =
+                i = (fields unsafely_as ~AList)#index(name);
+                if nullptr? i then
                     throw new NoSuchKeyException("No such field (\(name))")
-                yrt
+                fi;
+                peekObject (st#get(i) unsafely_as 'a)
         }
     else
         Object o
@@ -236,7 +246,7 @@ plus a b = a + b;
         fi,
 
     /// damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index, keys, hash, map, peekObject,
+    array, fold, find, index, keys, hash, map, map', peekObject,
 
     /// Wraps Java array object into Yeti array type.
     wrapArray a is 'a[] -> array<'a> = a,
@@ -333,16 +343,6 @@ plus a b = a + b;
         Some v: f v;
         None _: default;
         esac,
-
-    /// Strict mapping of list. map' is usually faster than map on lists,
-    /// unless huge streams are processed or most of the resulting list is
-    /// not used. They work identically on arrays.
-    map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
-        if empty? l then
-            []
-        else
-            (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
-        fi,
 
     /// Splits given list into two parts, putting elements from the start of the
     /// list into fst as long as predicate function pred is false for the given

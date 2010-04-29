@@ -167,7 +167,7 @@ final class MethodDesc extends YetiType {
         String packageName = scope.ctx.packageName;
         CompileCtx cctx = CompileCtx.current();
         if (!topLevel) {
-            className = cctx.createClassName(scope.ctx.className, className);
+            className = cctx.createClassName(null, scope.ctx.className, className);
         } else if (packageName != null && packageName.length() != 0) {
             className = packageName + '/' + className;
         }

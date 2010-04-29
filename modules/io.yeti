@@ -208,7 +208,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     binInputHandle,
     binOutputHandle,
 
-    get stdin = stdin,
+    get stdin () = stdin (),
 
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,

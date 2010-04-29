@@ -719,7 +719,7 @@ final class Function extends CapturingClosure implements Binder {
     void captureInit(Ctx fun, Capture c, int n) {
         if (methodImpl == null) {
             // c.getId() initialises the captures id as a side effect
-            fun.cw.visitField(0, c.getId(fun), c.captureType(),
+            fun.cw.visitField(ACC_SYNTHETIC, c.getId(fun), c.captureType(),
                               null, null).visitEnd();
         } else {
             c.localVar = -2 - n;
@@ -836,17 +836,18 @@ final class Function extends CapturingClosure implements Binder {
 
         if (bindName == null)
             bindName = "";
-        name = ctx.compilation.createClassName(ctx.className, mangle(bindName));
+        name = ctx.compilation.createClassName(ctx,
+                        ctx.className, mangle(bindName));
 
         publish &= shared;
         String funClass =
             argVar == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
-        Ctx fun = ctx.newClass(publish ? ACC_PUBLIC + ACC_SUPER + ACC_FINAL
-                                       : ACC_SUPER + ACC_FINAL,
+        Ctx fun = ctx.newClass(publish ? ACC_PUBLIC | ACC_SUPER | ACC_FINAL
+                                       : ACC_SUPER | ACC_FINAL | ACC_SYNTHETIC,
                                name, funClass, null);
 
         if (publish)
-            fun.markInnerClass(ctx, ACC_PUBLIC + ACC_STATIC + ACC_FINAL);
+            fun.markInnerClass(ctx, ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
         mergeCaptures(fun);
         fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 

@@ -1,11 +1,11 @@
 makeTree item depth =
     if depth > 0 then
-        { item  = item,
-          left  = Some (makeTree (item * 2 - 1) (depth - 1)),
-          right = Some (makeTree (item * 2) (depth - 1)),
-        }
+        depth = depth - 1;
+        left = makeTree (item * 2 - 1) depth;
+        right = makeTree (item * 2) depth;
+        { item, get left () = Some left, get right () = Some right }
     else
-        { item = item, left = none, right = none }
+        { item, get left () = None (), get right () = None () }
     fi;
 
 maybeNode = maybe 0 (.item);
@@ -25,6 +25,6 @@ var depth = minDepth;
 depth <= maxDepth loop
    (iterations = 1 shl (maxDepth - depth + minDepth);
     out "\(iterations * 2)\t trees" depth
-        (sum (map (checkDepth depth) [1 .. iterations]));
+        (fold (_ v i = v + checkDepth depth i) 0 [1 .. iterations]);
     depth := depth + 2);
 out "long lived tree" maxDepth (check longLived);
