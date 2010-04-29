@@ -28,10 +28,7 @@
 * Avoid upper/lowercase dups on generated classes
 * More constant optimisations (list, \, maybe struct too?)
 * Optional Java generics support?
-* Immutable map support and immutable (prefix) operator
-  for transforming map<'a, 'b> into immutable_map<'a, 'b>.
-  This is simpler and more effective solution than providing
-  immutable tree map structures.
+* Immutable tree map support - this seems to be popular feature. ;)
 * Hidden types in modules?
 * Direct double optimisation, when it can be deduced,
   that there are always floats
