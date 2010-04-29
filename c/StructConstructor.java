@@ -530,7 +530,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             for (i = 0; i < fieldCount; ++i) {
                 if (fields[i].inherited) {
                     jumps[i] = new Label();
-                } else if (fields[i].mutable) {
+                } else if (fields[i].mutable || fields[i].property) {
                     if (isVar == null)
                         isVar = new Label();
                     jumps[i] = isVar;
