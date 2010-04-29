@@ -609,23 +609,23 @@ final class WithStruct extends Code {
             ((StructConstructor) override).genWith(ctx, src, srcFields);
             return;
         }
+
+        ctx.visitTypeInsn(NEW, "yeti/lang/WithStruct");
+        ctx.visitInsn(DUP);
         override.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct3");
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
         src.gen(ctx);
-        if (override instanceof StructConstructor) {
-            ctx.visitInsn(ACONST_NULL);
+        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        if (srcFields != null) {
+            String[] a = new String[names.length + 1];
+            System.arraycopy(names, 0, a, 1, names.length);
+            ctx.constants.stringArray(ctx, a);
+            ctx.visitInit("yeti/lang/WithStruct",
+                   "(Lyeti/lang/Struct;Lyeti/lang/Struct;[java/lang/String;)V");
         } else {
-            ctx.intConst(names.length);
-            ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
-            for (int i = 0; i < names.length; ++i) {
-                ctx.visitInsn(DUP);
-                ctx.intConst(i);
-                ctx.visitLdcInsn(names[i]);
-                ctx.visitInsn(AASTORE);
-            }
+            ctx.visitInit("yeti/lang/WithStruct",
+                          "(Lyeti/lang/Struct;Lyeti/lang/Struct;)V");
         }
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Struct", "with",
-                "(Ljava/lang/Object;[Ljava/lang/String;)Lyeti/lang/Struct;");
         ctx.forceType("yeti/lang/Struct");
     }
 }
