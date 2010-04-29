@@ -327,7 +327,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     String genStruct(Ctx ctx) {
         String cn, structKey = null;
         StructField field;
-        Label next, jumps[];
+        Label next, dflt, jumps[];
         int i;
 
         if (!mustGen) {
@@ -357,17 +357,21 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.constants.structInitArg(m, fields, fieldCount);
         m.visitInit("yeti/lang/AStruct", "([Ljava/lang/String;[Z)V");
         if (withParent != null) {
+            // generates code for joining super fields
             m.intConst(1);
             m.visitIntInsn(NEWARRAY, T_INT);
             m.visitVarInsn(ASTORE, 2); // index - int[]
             m.constants.stringArray(m, withFields);
             m.visitInsn(ARRAYLENGTH);
-            m.visitVarInsn(ISTORE, 3); // j = NAMES.length
+            m.intConst(-1);
+            m.visitInsn(IADD);
+            m.visitVarInsn(ISTORE, 3); // j = NAMES.length - 1
             m.visitVarInsn(ALOAD, 1); // ext (extended struct)
             m.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                               "count", "()I");
             m.visitVarInsn(ISTORE, 4); // i - field counter
-            Label retry = new Label(), cont = new Label();
+            Label retry = new Label(), cont = new Label(), exit = new Label();
+            next = new Label();
             m.visitLabel(retry);
             m.visitIntInsn(IINC, 4); // --i
 
@@ -381,6 +385,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.visitInsn(IALOAD); // NAMES[j]
             m.visitJumpInsn(IF_ACMPNE, cont);
 
+            m.visitVarInsn(ALOAD, 0); // this
             // ext.ref(i, index, 0)
             m.visitVarInsn(ALOAD, 1);
             m.visitVarInsn(ILOAD, 4);
@@ -392,20 +397,33 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             jumps = new Label[withFields.length - 1];
             for (i = 0; i < jumps.length; ++i)
                 jumps[i] = new Label();
-            //m.visitSwitchInsn(0, jumps
+            dflt = new Label();
+            m.visitVarInsn(ALOAD, 0); // this
+            m.visitVarInsn(ALOAD, 2);
+            m.intConst(0);
+            m.visitInsn(IALOAD); // index[0]
+            m.visitVarInsn(ILOAD, 3); // switch (j)
+            m.visitSwitchInsn(0, jumps.length - 1, dflt, null, jumps);
             i = 0;
             for (int j = 0; j < jumps.length; ++i)
                 if (fields[i].inherited) {
+                    m.visitLabel(jumps[j++]);
+                    m.visitFieldInsn(PUTFIELD, cn, "i" + i, "I");
+                    m.visitFieldInsn(PUTFIELD, cn, fields[i].javaName,
+                                     "Ljava/lang/Object;");
+                    m.visitJumpInsn(GOTO, next);
                 }
-
-            m.visitVarInsn(ALOAD, 2);
-            m.intConst(0);
-            m.visitInsn(IALOAD);
-            m.visitInsn(DUP);
+            m.visitLabel(dflt);
+            m.popn(4); // this ref this index
+            m.visitLabel(next);
+            m.visitIntInsn(IINC, 3); // --j
+            m.visitVarInsn(ILOAD, 4);
+            m.visitJumpInsn(IFLT, exit);
 
             m.visitLabel(cont);
             m.visitVarInsn(ALOAD, 4);
             m.visitJumpInsn(IFGT, retry);
+            m.visitLabel(exit);
         }
         m.visitInsn(RETURN);
         m.closeMethod();
@@ -475,7 +493,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             if (fields[i].mutable)
                 ++mutableCount;
         }
-        Label dflt = new Label();
+        dflt = new Label();
         m.visitSwitchInsn(0, fieldCount - 1, dflt, null, jumps);
         if (withMutable != null)
             withMutable = new Label();
