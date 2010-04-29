@@ -34,6 +34,7 @@ package yeti.lang.compiler;
 import yeti.renamed.asm3.*;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -561,22 +562,29 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         return cn;
     }
 
-    void genWith(Ctx ctx, Code src, String[] parentFields) {
+    void genWith(Ctx ctx, Code src, Map srcFields) {
+        srcFields = new HashMap(srcFields);
+        for (int i = 0; i < fieldCount; ++i)
+            srcFields.remove(fields[i].name);
+        if (srcFields.isEmpty()) { // everything has been overrided
+            gen(ctx);
+            return;
+        }
         mustGen = true;
         withParent = src;
-        StructField[] fields = new StructField[fieldCount + parentFields.length];
-        for (int i = 0; i < parentFields.length; ++i) {
+        StructField[] fields = new StructField[fieldCount + srcFields.size()];
+        withFields = new String[srcFields.size() + 1];
+        Iterator j = srcFields.keySet().iterator();
+        for (int i = 1; i < withFields.length; ++i) {
             StructField sf = new StructField();
-            sf.name = parentFields[i];
+            withFields[i] = sf.name = (String) j.next();
             sf.inherited = true;
             sf.mutable = true;
-            fields[i] = sf;
+            fields[i - 1] = sf;
         }
-        System.arraycopy(this.fields, 0, fields, parentFields.length, fieldCount);
+        System.arraycopy(this.fields, 0, fields, srcFields.size(), fieldCount);
         this.fields = fields;
         fieldCount = fields.length;
-        withFields = new String[parentFields.length + 1];
-        System.arraycopy(parentFields, 0, withFields, 1, parentFields.length);
         close();
         gen(ctx);
     }
@@ -587,7 +595,8 @@ final class WithStruct extends Code {
     private Code override;
     private String[] names;
 
-    WithStruct(YType type, Code src, Code override, String[] names) {
+    WithStruct(YType type, Code src, Code override,
+               String[] names) {
         this.type = type;
         this.src = src;
         this.override = override;
@@ -595,8 +604,9 @@ final class WithStruct extends Code {
     }
 
     void gen(Ctx ctx) {
-        if (override instanceof StructConstructor) {
-            ((StructConstructor) override).genWith(ctx, src, names);
+        Map srcFields = src.type.deref().finalMembers;
+        if (srcFields != null && override instanceof StructConstructor) {
+            ((StructConstructor) override).genWith(ctx, src, srcFields);
             return;
         }
         override.gen(ctx);
