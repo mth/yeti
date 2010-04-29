@@ -408,7 +408,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             }
             m.visitLabel(next);
             m.visitIntInsn(IINC, 3); // --j
-            m.visitVarInsn(ILOAD, 2);
+            m.visitVarInsn(ILOAD, 3);
             m.visitJumpInsn(IFLT, exit);
 
             m.visitLabel(cont);
