@@ -333,7 +333,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 return cn;
         }
 
-        // TODO: share generated non-property structure classes
         cn = ctx.compilation.createClassName(ctx, ctx.className, "");
         if (structKey != null) {
             ctx.constants.structClasses.put(structKey, cn);
