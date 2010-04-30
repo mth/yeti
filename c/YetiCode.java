@@ -406,9 +406,8 @@ final class CompileCtx implements Opcodes {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");
                 ctx.localVarCount++;
-                ctx.visitVarInsn(ALOAD, 0);
-                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
-                                    "setArgv", "([Ljava/lang/String;)V");
+                ctx.load(0).visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                            "setArgv", "([Ljava/lang/String;)V");
                 Label codeStart = new Label();
                 ctx.visitLabel(codeStart);
                 codeTree.gen(ctx);
@@ -543,8 +542,9 @@ final class Ctx implements Opcodes {
 
     void createInit(int mod, String parent) {
         MethodVisitor m = cw.visitMethod(mod, "<init>", "()V", null, null);
-        m.visitVarInsn(ALOAD, 0); // this.
-        m.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V"); // super
+        // super()
+        m.visitVarInsn(ALOAD, 0);
+        m.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V");
         m.visitInsn(RETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();
@@ -608,6 +608,12 @@ final class Ctx implements Opcodes {
     void visitVarInsn(int opcode, int var) {
         visitInsn(-1);
         m.visitVarInsn(opcode, var);
+    }
+
+    Ctx load(int var) {
+        visitInsn(-1);
+        m.visitVarInsn(ALOAD, var);
+        return this;
     }
 
     void visitIntInsn(int opcode, int param) {
@@ -1397,7 +1403,7 @@ final class LoadVar extends Code {
     int var;
 
     void gen(Ctx ctx) {
-        ctx.visitVarInsn(ALOAD, var);
+        ctx.load(var);
     }
 }
 
@@ -1787,14 +1793,12 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     public void genPreGet(Ctx ctx) {
         if (mvar == -1) {
             if (directField == null) {
-                ctx.visitVarInsn(ALOAD, id);
-                ctx.forceType(javaType);
+                ctx.load(id).forceType(javaType);
             } else {
                 ctx.visitFieldInsn(GETSTATIC, myClass, directField, javaDescr);
             }
         } else {
-            ctx.visitVarInsn(ALOAD, mvar);
-            ctx.forceType("[Ljava/lang/Object;");
+            ctx.load(mvar).forceType("[Ljava/lang/Object;");
         }
     }
 
@@ -1829,8 +1833,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
                 ctx.visitFieldInsn(PUTSTATIC, myClass, directField, javaDescr);
             }
         } else {
-            ctx.visitVarInsn(ALOAD, mvar);
-            ctx.intConst(id);
+            ctx.load(mvar).intConst(id);
             value.gen(ctx);
             ctx.visitInsn(AASTORE);
         }

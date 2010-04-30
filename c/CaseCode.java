@@ -64,7 +64,7 @@ final class BindPattern extends CasePattern implements Binder {
 
     BindRef param = new BindRef() {
         void gen(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, caseExpr.paramStart + nth);
+            ctx.load(caseExpr.paramStart + nth);
         }
     };
 

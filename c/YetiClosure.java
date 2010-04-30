@@ -154,7 +154,7 @@ final class TryCatch extends CapturingClosure {
         }
 
         void gen(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, exVar);
+            ctx.load(exVar);
         }
     }
 
@@ -217,13 +217,10 @@ final class TryCatch extends CapturingClosure {
             mc.visitVarInsn(ASTORE, exVar);
             cleanup.gen(mc);
             mc.visitInsn(POP); // cleanup's null
-            mc.visitVarInsn(ALOAD, exVar);
-            mc.visitJumpInsn(IFNONNULL, goThrow);
-            mc.visitVarInsn(ALOAD, retVar);
-            mc.visitInsn(ARETURN);
+            mc.load(exVar).visitJumpInsn(IFNONNULL, goThrow);
+            mc.load(retVar).visitInsn(ARETURN);
             mc.visitLabel(goThrow);
-            mc.visitVarInsn(ALOAD, exVar);
-            mc.visitInsn(ATHROW);
+            mc.load(exVar).visitInsn(ATHROW);
         } else {
             mc.visitInsn(ARETURN);
         }
@@ -421,7 +418,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
         if (uncaptured) {
             wrapper.genPreGet(ctx);
         } else if (localVar < 0) {
-            ctx.visitVarInsn(ALOAD, 0);
+            ctx.load(0);
             if (localVar < -1) {
                 ctx.intConst(-2 - localVar);
                 ctx.visitInsn(AALOAD);
@@ -430,7 +427,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
                                    captureType());
             }
         } else {
-            ctx.visitVarInsn(ALOAD, localVar);
+            ctx.load(localVar);
             // hacky way to forceType on try-catch, but not on method argument
             if (!ignoreGet)
                 ctx.forceType(captureType());
@@ -607,7 +604,7 @@ final class Function extends CapturingClosure implements Binder {
             if (uncaptureArg != null) {
                 uncaptureArg.gen(ctx);
             } else {
-                ctx.visitVarInsn(ALOAD, argVar);
+                ctx.load(argVar);
                 // inexact nulling...
                 if (--argUsed == 0 && ctx.tainted == 0) {
                     ctx.visitInsn(ACONST_NULL);
@@ -671,7 +668,7 @@ final class Function extends CapturingClosure implements Binder {
             if (selfRef == null) {
                 selfRef = new CaptureRef() {
                     void gen(Ctx ctx) {
-                        ctx.visitVarInsn(ALOAD, 0);
+                        ctx.load(0);
                     }
                 };
                 selfRef.binder = selfBind;

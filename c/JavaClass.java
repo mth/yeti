@@ -72,7 +72,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
 
         void gen(Ctx ctx) {
-            ctx.visitVarInsn(ALOAD, argn);
+            ctx.load(argn);
             if (javaType.type == YetiType.JAVA_ARRAY) {
                 ctx.forceType(JavaType.descriptionOf(javaType));
             } else if (javaType.javaType.description.charAt(0) == 'L') {
@@ -178,7 +178,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
         public void genPreGet(Ctx ctx) {
             if (!directConst)
-                ctx.visitVarInsn(ALOAD, 0);
+                ctx.load(0);
         }
 
         public void genGet(Ctx ctx) {
@@ -424,16 +424,15 @@ final class JavaClass extends CapturingClosure implements Runnable {
         Ctx init = clc.newMethod(constr.access, "<init>", constr.descr(null));
         constr.convertArgs(init);
         genClosureInit(init);
-        init.visitVarInsn(ALOAD, 0); // this.
-        superInit.genCall(init, parentClass.getCaptures(), INVOKESPECIAL);
+        superInit.genCall(init.load(0), parentClass.getCaptures(),
+                          INVOKESPECIAL);
         // extra arguments are used for smuggling in captured bindings
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {
             c.localVar = -1; // reset to using this
             clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
-            init.visitVarInsn(ALOAD, 0);
-            init.visitVarInsn(ALOAD, ++n);
-            init.visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
+            init.load(0).load(++n)
+                .visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
         for (i = 0, cnt = fields.size(); i < cnt; ++i)
             ((Code) fields.get(i)).gen(init);
@@ -469,7 +468,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 if ((m.access & ACC_STATIC) == 0) {
                     start = 1;
                     insn = INVOKEVIRTUAL;
-                    mc.visitVarInsn(ALOAD, 0);
+                    mc.load(0);
                 }
                 for (int j = 0; j < m.arguments.length; ++j)
                     loadArg(mc, m.arguments[j], j + start);
@@ -479,11 +478,11 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 JavaType.Field f = (JavaType.Field) accessor[1];
                 int insn = GETSTATIC, reg = 0;
                 if ((f.access & ACC_STATIC) == 0) {
-                    mc.visitVarInsn(ALOAD, reg++);
+                    mc.load(reg++);
                     insn = GETFIELD;
                 }
                 if (accessor[3] != null) {
-                    mc.visitVarInsn(ALOAD, reg);
+                    mc.load(reg);
                     insn = insn == GETFIELD ? PUTFIELD : PUTSTATIC;
                 }
                 mc.visitFieldInsn(insn, className, f.name,

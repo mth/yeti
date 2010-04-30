@@ -439,8 +439,7 @@ final class Synchronized extends Core2 {
         ctx.visitLabel(startBlock);
         new Apply(type, block, new UnitConstant(null), line).gen(ctx);
         ctx.visitLine(line);
-        ctx.visitVarInsn(ALOAD, monitorVar);
-        ctx.visitInsn(MONITOREXIT);
+        ctx.load(monitorVar).visitInsn(MONITOREXIT);
         ctx.visitLabel(endBlock);
         Label end = new Label();
         ctx.visitJumpInsn(GOTO, end);
@@ -455,11 +454,9 @@ final class Synchronized extends Core2 {
         int exceptionVar = ctx.localVarCount++;
         ctx.visitLabel(startCleanup);
         ctx.visitVarInsn(ASTORE, exceptionVar);
-        ctx.visitVarInsn(ALOAD, monitorVar);
-        ctx.visitInsn(MONITOREXIT);
+        ctx.load(monitorVar).visitInsn(MONITOREXIT);
         ctx.visitLabel(endCleanup);
-        ctx.visitVarInsn(ALOAD, exceptionVar);
-        ctx.visitInsn(ATHROW);
+        ctx.load(exceptionVar).visitInsn(ATHROW);
         ctx.visitLabel(end);
     }
 }
