@@ -38,7 +38,7 @@ abstract class CasePattern implements Opcodes {
     static final CasePattern ANY_PATTERN = new CasePattern() {
         void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
             if (!preserve) {
-                ctx.visitInsn(POP);
+                ctx.insn(POP);
             }
         }
 
@@ -81,9 +81,9 @@ final class BindPattern extends CasePattern implements Binder {
 
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         if (preserve) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
         }
-        ctx.visitVarInsn(ASTORE, caseExpr.paramStart + nth);
+        ctx.varInsn(ASTORE, caseExpr.paramStart + nth);
     }
 
     boolean irrefutable() {
@@ -100,35 +100,35 @@ final class ConstPattern extends CasePattern {
 
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         if (preserve) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
         }
         v.gen(ctx);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
+        ctx.methodInsn(INVOKEVIRTUAL, "java/lang/Object",
                             "equals", "(Ljava/lang/Object;)Z");
-        ctx.visitJumpInsn(IFEQ, onFail);
+        ctx.jumpInsn(IFEQ, onFail);
     }
 }
 
 abstract class AListPattern extends CasePattern {
     static final CasePattern EMPTY_PATTERN = new CasePattern() {
         void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
             Label cont = new Label();
-            ctx.visitJumpInsn(IFNULL, cont);
+            ctx.jumpInsn(IFNULL, cont);
             if (preserve) {
-                ctx.visitInsn(DUP);
+                ctx.insn(DUP);
             }
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AIter");
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            ctx.typeInsn(CHECKCAST, "yeti/lang/AIter");
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "isEmpty", "()Z");
-            ctx.visitJumpInsn(IFEQ, onFail);
+            ctx.jumpInsn(IFEQ, onFail);
             if (preserve) {
                 ctx.visitLabel(cont);
             } else {
                 Label end = new Label();
-                ctx.visitJumpInsn(GOTO, end);
+                ctx.jumpInsn(GOTO, end);
                 ctx.visitLabel(cont);
-                ctx.visitInsn(POP);
+                ctx.insn(POP);
                 ctx.visitLabel(end);
             }
         }
@@ -138,23 +138,23 @@ abstract class AListPattern extends CasePattern {
 
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         Label dropFail = preserve ? onFail : new Label();
-        ctx.visitInsn(DUP);
-        ctx.visitJumpInsn(IFNULL, dropFail);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-        ctx.visitInsn(DUP);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+        ctx.insn(DUP);
+        ctx.jumpInsn(IFNULL, dropFail);
+        ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+        ctx.insn(DUP);
+        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                             "isEmpty", "()Z");
-        ctx.visitJumpInsn(IFNE, dropFail);
+        ctx.jumpInsn(IFNE, dropFail);
         if (preserve) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
             dropFail = new Label();
         }
         if (listMatch(ctx, onFail, dropFail) || !preserve) {
             Label cont = new Label();
-            ctx.visitJumpInsn(GOTO, cont);
+            ctx.jumpInsn(GOTO, cont);
             ctx.visitLabel(dropFail);
-            ctx.visitInsn(POP);
-            ctx.visitJumpInsn(GOTO, onFail);
+            ctx.insn(POP);
+            ctx.jumpInsn(GOTO, onFail);
             ctx.visitLabel(cont);
         }
     }
@@ -172,22 +172,22 @@ final class ConsPattern extends AListPattern {
     boolean listMatch(Ctx ctx, Label onFail, Label dropFail) {
         if (hd != ANY_PATTERN) {
             if (tl != ANY_PATTERN) {
-                ctx.visitInsn(DUP);
+                ctx.insn(DUP);
             } else {
                 dropFail = onFail;
             }
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "first", "()Ljava/lang/Object;");
             hd.preparePattern(ctx);
             hd.tryMatch(ctx, dropFail, false);
         }
         if (tl != ANY_PATTERN) {
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "rest", "()Lyeti/lang/AList;");
             tl.preparePattern(ctx);
             tl.tryMatch(ctx, onFail, false);
         } else if (hd == ANY_PATTERN) {
-            ctx.visitInsn(POP);
+            ctx.insn(POP);
         }
         return dropFail != onFail && !hd.irrefutable();
     }
@@ -204,22 +204,22 @@ final class ListPattern extends AListPattern {
         boolean dropUsed = false;
         for (int i = 0; i < items.length; ++i) {
             if (i != 0) {
-                ctx.visitInsn(DUP);
-                ctx.visitJumpInsn(IFNULL, dropFail);
+                ctx.insn(DUP);
+                ctx.jumpInsn(IFNULL, dropFail);
                 dropUsed = true;
             }
             if (items[i] != ANY_PATTERN) {
-                ctx.visitInsn(DUP);
-                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+                ctx.insn(DUP);
+                ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                     "first", "()Ljava/lang/Object;");
                 items[i].preparePattern(ctx);
                 items[i].tryMatch(ctx, dropFail, false);
                 dropUsed |= !items[i].irrefutable();
             }
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "next", "()Lyeti/lang/AIter;");
         }
-        ctx.visitJumpInsn(IFNONNULL, onFail);
+        ctx.jumpInsn(IFNONNULL, onFail);
         return dropUsed;
     }
 }
@@ -244,10 +244,10 @@ final class StructPattern extends CasePattern {
             if (patterns[i] == ANY_PATTERN)
                 continue;
             if (preserve || i != names.length - 1)
-                ctx.visitInsn(DUP);
+                ctx.insn(DUP);
             else dropped = true;
-            ctx.visitLdcInsn(names[i]);
-            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+            ctx.ldcInsn(names[i]);
+            ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                       "get", "(Ljava/lang/String;)Ljava/lang/Object;");
             patterns[i].preparePattern(ctx);
             patterns[i].tryMatch(ctx, i < names.length - 1
@@ -255,13 +255,13 @@ final class StructPattern extends CasePattern {
         }
         if (!preserve && names.length > 1) {
             Label ok = new Label();
-            ctx.visitJumpInsn(GOTO, ok);
+            ctx.jumpInsn(GOTO, ok);
             ctx.visitLabel(failed);
-            ctx.visitInsn(POP);
-            ctx.visitJumpInsn(GOTO, onFail);
+            ctx.insn(POP);
+            ctx.jumpInsn(GOTO, onFail);
             ctx.visitLabel(ok);
             if (!dropped)
-                ctx.visitInsn(POP);
+                ctx.insn(POP);
         }
     }
 }
@@ -276,9 +276,9 @@ final class VariantPattern extends CasePattern {
     }
 
     int preparePattern(Ctx ctx) {
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Tag");
-        ctx.visitInsn(DUP);
-        ctx.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "name",
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Tag");
+        ctx.insn(DUP);
+        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "name",
                            "Ljava/lang/String;");
         return 2; // TN
     }
@@ -286,29 +286,29 @@ final class VariantPattern extends CasePattern {
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         Label jumpTo = onFail;
         if (preserve) {
-            ctx.visitInsn(DUP); // TNN
-            ctx.visitLdcInsn(variantTag);
-            ctx.visitJumpInsn(IF_ACMPNE, onFail); // TN
+            ctx.insn(DUP); // TNN
+            ctx.ldcInsn(variantTag);
+            ctx.jumpInsn(IF_ACMPNE, onFail); // TN
             if (variantArg == ANY_PATTERN) {
                 return;
             }
-            ctx.visitInsn(SWAP); // NT
-            ctx.visitInsn(DUP_X1); // TNT
+            ctx.insn(SWAP); // NT
+            ctx.insn(DUP_X1); // TNT
         } else if (variantArg == ANY_PATTERN) {
-            ctx.visitInsn(SWAP); // NT
-            ctx.visitInsn(POP); // N
-            ctx.visitLdcInsn(variantTag);
-            ctx.visitJumpInsn(IF_ACMPNE, onFail);
+            ctx.insn(SWAP); // NT
+            ctx.insn(POP); // N
+            ctx.ldcInsn(variantTag);
+            ctx.jumpInsn(IF_ACMPNE, onFail);
             return;
         } else {
             Label cont = new Label(); // TN
-            ctx.visitLdcInsn(variantTag);
-            ctx.visitJumpInsn(IF_ACMPEQ, cont); // T
-            ctx.visitInsn(POP);
-            ctx.visitJumpInsn(GOTO, onFail);
+            ctx.ldcInsn(variantTag);
+            ctx.jumpInsn(IF_ACMPEQ, cont); // T
+            ctx.insn(POP);
+            ctx.jumpInsn(GOTO, onFail);
             ctx.visitLabel(cont);
         }
-        ctx.visitFieldInsn(GETFIELD, "yeti/lang/Tag", "value",
+        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "value",
                              "Ljava/lang/Object;"); // TNt (t)
         variantArg.preparePattern(ctx); 
         variantArg.tryMatch(ctx, onFail, false); // TN ()
@@ -364,13 +364,13 @@ final class CaseExpr extends Code {
             c.pattern.tryMatch(ctx, next, true);
             ctx.popn(patternStack);
             c.expr.gen(ctx);
-            ctx.visitJumpInsn(GOTO, end);
+            ctx.jumpInsn(GOTO, end);
             ctx.visitLabel(next);
         }
         ctx.visitLabel(next);
         ctx.popn(patternStack - 1);
-        ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
-                            "badMatch", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
+                       "badMatch", "(Ljava/lang/Object;)Ljava/lang/Object;");
         ctx.visitLabel(end);
     }
 

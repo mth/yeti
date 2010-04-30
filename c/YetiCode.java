@@ -66,15 +66,15 @@ final class Constants implements Opcodes {
             ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
                               name, descr, null, null).visitEnd();
             code.gen(sb);
-            sb.visitFieldInsn(PUTSTATIC, ctx.className, name, descr);
+            sb.fieldInsn(PUTSTATIC, ctx.className, name, descr);
             constants.put(key, name);
         }
-        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name, descr);
+        ctx_.fieldInsn(GETSTATIC, ctx.className, name, descr);
     }
 
     void close() {
         if (sb != null) {
-            sb.visitInsn(RETURN);
+            sb.insn(RETURN);
             sb.closeMethod();
         }
     }
@@ -89,18 +89,18 @@ final class Constants implements Opcodes {
             ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC, name,
                               "[Ljava/lang/String;", null, null).visitEnd();
             sb.intConst(array.length - 1);
-            sb.visitTypeInsn(ANEWARRAY, "java/lang/String");
+            sb.typeInsn(ANEWARRAY, "java/lang/String");
             for (int i = 1; i < array.length; ++i) {
-                sb.visitInsn(DUP);
+                sb.insn(DUP);
                 sb.intConst(i - 1);
-                sb.visitLdcInsn(array[i]);
-                sb.visitInsn(AASTORE);
+                sb.ldcInsn(array[i]);
+                sb.insn(AASTORE);
             }
-            sb.visitFieldInsn(PUTSTATIC, ctx.className, name,
+            sb.fieldInsn(PUTSTATIC, ctx.className, name,
                              "[Ljava/lang/String;");
             constants.put(key, name);
         }
-        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name,
+        ctx_.fieldInsn(GETSTATIC, ctx.className, name,
                             "[Ljava/lang/String;");
     }
 
@@ -124,7 +124,7 @@ final class Constants implements Opcodes {
         }
         stringArray(ctx_, fieldNameArr);
         if (nomutable || mutableCount == 0) {
-            ctx_.visitInsn(ACONST_NULL);
+            ctx_.insn(ACONST_NULL);
             return;
         }
         String key = new String(mutableArr);
@@ -136,15 +136,15 @@ final class Constants implements Opcodes {
             sb.intConst(fieldCount);
             sb.visitIntInsn(NEWARRAY, T_BOOLEAN);
             for (i = 0; i < fieldCount; ++i) {
-                sb.visitInsn(DUP);
+                sb.insn(DUP);
                 sb.intConst(i);
                 sb.intConst(mutableArr[i + 1]);
-                sb.visitInsn(BASTORE);
+                sb.insn(BASTORE);
             }
-            sb.visitFieldInsn(PUTSTATIC, ctx.className, name, "[Z");
+            sb.fieldInsn(PUTSTATIC, ctx.className, name, "[Z");
             constants.put(key, name);
         }
-        ctx_.visitFieldInsn(GETSTATIC, ctx.className, name, "[Z");
+        ctx_.fieldInsn(GETSTATIC, ctx.className, name, "[Z");
     }
 }
 
@@ -208,7 +208,7 @@ final class CompileCtx implements Opcodes {
     }
 
     private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
-        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
+        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
@@ -219,12 +219,12 @@ final class CompileCtx implements Opcodes {
             String descr = 'L' + type + ';';
             ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, jname,
                     descr, null, null).visitEnd();
-            ctx.visitInsn(DUP);
-            ctx.visitLdcInsn(name);
-            ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+            ctx.insn(DUP);
+            ctx.ldcInsn(name);
+            ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
-            ctx.visitTypeInsn(CHECKCAST, type);
-            ctx.visitFieldInsn(PUTSTATIC, ctx.className, jname, descr);
+            ctx.typeInsn(CHECKCAST, type);
+            ctx.fieldInsn(PUTSTATIC, ctx.className, jname, descr);
         }
     }
 
@@ -365,12 +365,12 @@ final class CompileCtx implements Opcodes {
                                   "_$", "Z", null, Boolean.FALSE);
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
                                     "eval", "()Ljava/lang/Object;");
-                ctx.visitFieldInsn(GETSTATIC, name, "_$", "Z");
+                ctx.fieldInsn(GETSTATIC, name, "_$", "Z");
                 Label eval = new Label();
-                ctx.visitJumpInsn(IFEQ, eval);
-                ctx.visitFieldInsn(GETSTATIC, name, "$",
+                ctx.jumpInsn(IFEQ, eval);
+                ctx.fieldInsn(GETSTATIC, name, "$",
                                      "Ljava/lang/Object;");
-                ctx.visitInsn(ARETURN);
+                ctx.insn(ARETURN);
                 ctx.visitLabel(eval);
                 Code codeTail = codeTree.code;
                 while (codeTail instanceof SeqExpr) {
@@ -389,39 +389,39 @@ final class CompileCtx implements Opcodes {
                     generateModuleFields(codeTree.type.finalMembers, ctx,
                                          codeTree.moduleType.directFields);
                 }
-                ctx.visitInsn(DUP);
-                ctx.visitFieldInsn(PUTSTATIC, name, "$",
+                ctx.insn(DUP);
+                ctx.fieldInsn(PUTSTATIC, name, "$",
                                      "Ljava/lang/Object;");
                 ctx.intConst(1);
-                ctx.visitFieldInsn(PUTSTATIC, name, "_$", "Z");
-                ctx.visitInsn(ARETURN);
+                ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
+                ctx.insn(ARETURN);
                 types.put(name, codeTree.moduleType);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
                                     "(Ljava/lang/Object;)Ljava/lang/Object;");
                 codeTree.gen(ctx);
-                ctx.visitInsn(ARETURN);
+                ctx.insn(ARETURN);
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");
                 ctx.localVarCount++;
-                ctx.load(0).visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+                ctx.load(0).methodInsn(INVOKESTATIC, "yeti/lang/Core",
                                             "setArgv", "([Ljava/lang/String;)V");
                 Label codeStart = new Label();
                 ctx.visitLabel(codeStart);
                 codeTree.gen(ctx);
-                ctx.visitInsn(POP);
-                ctx.visitInsn(RETURN);
+                ctx.insn(POP);
+                ctx.insn(RETURN);
                 Label exitStart = new Label();
-                ctx.visitTryCatchBlock(codeStart, exitStart, exitStart,
+                ctx.tryCatchBlock(codeStart, exitStart, exitStart,
                                        "yeti/lang/ExitError");
                 ctx.visitLabel(exitStart);
-                ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
+                ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
                                     "getExitCode", "()I");
-                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/System",
+                ctx.methodInsn(INVOKESTATIC, "java/lang/System",
                                     "exit", "(I)V");
-                ctx.visitInsn(RETURN);
+                ctx.insn(RETURN);
             }
             ctx.closeMethod();
             constants.close();
@@ -535,7 +535,7 @@ final class Ctx implements Opcodes {
     }
 
     void closeMethod() {
-        visitInsn(-1);
+        insn(-1);
         m.visitMaxs(0, 0);
         m.visitEnd();
     }
@@ -552,9 +552,9 @@ final class Ctx implements Opcodes {
 
     void intConst(int n) {
         if (n >= -1 && n <= 5) {
-            visitInsn(n + 3);
+            insn(n + 3);
         } else {
-            visitInsn(-1);
+            insn(-1);
             if (n >= -32768 && n <= 32767) {
                 m.visitIntInsn(n >= -128 && n <= 127 ? BIPUSH : SIPUSH, n);
             } else {
@@ -569,8 +569,8 @@ final class Ctx implements Opcodes {
         } else {
             arg.gen(this);
             visitLine(line);
-            visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
+            typeInsn(CHECKCAST, "yeti/lang/Num");
+            methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
         }
     }
 
@@ -584,17 +584,17 @@ final class Ctx implements Opcodes {
     }
 
     void genBoolean(Label label) {
-        visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+        fieldInsn(GETSTATIC, "java/lang/Boolean",
                        "TRUE", "Ljava/lang/Boolean;");
         Label end = new Label();
         m.visitJumpInsn(GOTO, end);
         m.visitLabel(label);
         m.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                "FALSE", "Ljava/lang/Boolean;");
+                         "FALSE", "Ljava/lang/Boolean;");
         m.visitLabel(end);
     }
 
-    void visitInsn(int opcode) {
+    void insn(int opcode) {
         if (lastInsn != -1 && lastInsn != -2) {
             if (lastInsn == ACONST_NULL && opcode == POP) {
                 lastInsn = -1;
@@ -605,32 +605,32 @@ final class Ctx implements Opcodes {
         lastInsn = opcode;
     }
 
-    void visitVarInsn(int opcode, int var) {
-        visitInsn(-1);
+    void varInsn(int opcode, int var) {
+        insn(-1);
         m.visitVarInsn(opcode, var);
     }
 
     Ctx load(int var) {
-        visitInsn(-1);
+        insn(-1);
         m.visitVarInsn(ALOAD, var);
         return this;
     }
 
     void visitIntInsn(int opcode, int param) {
-        visitInsn(-1);
+        insn(-1);
         if (opcode != IINC)
             m.visitIntInsn(opcode, param);
         else
             m.visitIincInsn(param, -1);
     }
 
-    void visitTypeInsn(int opcode, String type) {
+    void typeInsn(int opcode, String type) {
         if (opcode == CHECKCAST &&
             (lastInsn == -2 && type.equals(lastType) ||
              lastInsn == ACONST_NULL)) {
             return; // no cast necessary
         }
-        visitInsn(-1);
+        insn(-1);
         m.visitTypeInsn(opcode, type);
     }
 
@@ -638,26 +638,26 @@ final class Ctx implements Opcodes {
         if (type.charAt(0) == 'L')
             type = type.substring(1, type.length() - 1);
         if (!type.equals("java/lang/Object"))
-            visitTypeInsn(CHECKCAST, type);
+            typeInsn(CHECKCAST, type);
     }
 
     void visitInit(String type, String descr) {
-        visitInsn(-2);
+        insn(-2);
         m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr);
         lastType = type;
     }
 
     void forceType(String type) {
-        visitInsn(-2);
+        insn(-2);
         lastType = type;
     }
 
-    void visitFieldInsn(int opcode, String owner,
+    void fieldInsn(int opcode, String owner,
                               String name, String desc) {
         if (owner == null || name == null || desc == null)
-            throw new IllegalArgumentException("visitFieldInsn(" + opcode +
+            throw new IllegalArgumentException("fieldInsn(" + opcode +
                         ", " + owner + ", " + name + ", " + desc + ")");
-        visitInsn(-1);
+        insn(-1);
         m.visitFieldInsn(opcode, owner, name, desc);
         if ((opcode == GETSTATIC || opcode == GETFIELD) &&
             desc.charAt(0) == 'L') {
@@ -666,33 +666,33 @@ final class Ctx implements Opcodes {
         }
     }
 
-    void visitMethodInsn(int opcode, String owner,
+    void methodInsn(int opcode, String owner,
                                String name, String desc) {
-        visitInsn(-1);
+        insn(-1);
         m.visitMethodInsn(opcode, owner, name, desc);
     }
 
     void visitApply(Code arg, int line) {
         arg.gen(this);
-        visitInsn(-1);
+        insn(-1);
         visitLine(line);
         m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
                 "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
-    void visitJumpInsn(int opcode, Label label) {
-        visitInsn(-1);
+    void jumpInsn(int opcode, Label label) {
+        insn(-1);
         m.visitJumpInsn(opcode, label);
     }
 
     void visitLabel(Label label) {
         if (lastInsn != -2)
-            visitInsn(-1);
+            insn(-1);
         m.visitLabel(label);
     }
 
-    void visitLdcInsn(Object cst) {
-        visitInsn(-1);
+    void ldcInsn(Object cst) {
+        insn(-1);
         m.visitLdcInsn(cst);
         if (cst instanceof String) {
             lastInsn = -2;
@@ -700,15 +700,15 @@ final class Ctx implements Opcodes {
         }
     }
     
-    void visitTryCatchBlock(Label start, Label end,
-                                  Label handler, String type) {
-        visitInsn(-1);
+    void tryCatchBlock(Label start, Label end,
+                            Label handler, String type) {
+        insn(-1);
         m.visitTryCatchBlock(start, end, handler, type);
     }
 
-    void visitSwitchInsn(int min, int max, Label dflt,
+    void switchInsn(int min, int max, Label dflt,
                          int[] keys, Label[] labels) {
-        visitInsn(-1);
+        insn(-1);
         if (keys == null) {
             m.visitTableSwitchInsn(min, max, dflt, labels);
         } else {
@@ -722,10 +722,10 @@ final class Ctx implements Opcodes {
 
     void popn(int n) {
         if ((n & 1) != 0) {
-            visitInsn(POP);
+            insn(POP);
         }
         for (; n >= 2; n -= 2) {
-            visitInsn(POP2);
+            insn(POP2);
         }
     }
 }
@@ -778,8 +778,8 @@ abstract class Code implements Opcodes {
             { type = t; }
 
             void gen(Ctx ctx) {
-                ctx.visitTypeInsn(NEW, "yeti/lang/Bind2nd");
-                ctx.visitInsn(DUP);
+                ctx.typeInsn(NEW, "yeti/lang/Bind2nd");
+                ctx.insn(DUP);
                 Code.this.gen(ctx);
                 arg2.gen(ctx);
                 ctx.visitInit("yeti/lang/Bind2nd",
@@ -803,9 +803,9 @@ abstract class Code implements Opcodes {
     // Boolean codes have ability to generate jumps.
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
         gen(ctx);
-        ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+        ctx.fieldInsn(GETSTATIC, "java/lang/Boolean",
                 "TRUE", "Ljava/lang/Boolean;");
-        ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+        ctx.jumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
     }
 
     // Used to tell that this code is at tail position in a function.
@@ -970,7 +970,7 @@ class StaticRef extends BindRef {
     
     void gen(Ctx ctx) {
         ctx.visitLine(line);
-        ctx.visitFieldInsn(GETSTATIC, className, funFieldName,
+        ctx.fieldInsn(GETSTATIC, className, funFieldName,
                              'L' + javaType(type) + ';');
     }
 
@@ -998,7 +998,7 @@ final class NumericConstant extends Code implements CodeGen {
         }
         long n = num.longValue();
         if (!small) {
-            ctx.visitLdcInsn(new Long(n));
+            ctx.ldcInsn(new Long(n));
         } else if (n >= (long) Integer.MIN_VALUE &&
                    n <= (long) Integer.MAX_VALUE) {
             ctx.intConst((int) n);
@@ -1013,16 +1013,16 @@ final class NumericConstant extends Code implements CodeGen {
         Object val;
 
         void gen(Ctx ctx) {
-            ctx.visitTypeInsn(NEW, jtype);
-            ctx.visitInsn(DUP);
-            ctx.visitLdcInsn(val);
+            ctx.typeInsn(NEW, jtype);
+            ctx.insn(DUP);
+            ctx.ldcInsn(val);
             ctx.visitInit(jtype, sig);
         }
     }
 
     public void gen2(Ctx ctx, Code param, int line) {
-        ctx.visitTypeInsn(NEW, "yeti/lang/RatNum");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, "yeti/lang/RatNum");
+        ctx.insn(DUP);
         RatNum rat = ((RatNum) num).reduce();
         ctx.intConst(rat.numerator());
         ctx.intConst(rat.denominator());
@@ -1043,7 +1043,7 @@ final class NumericConstant extends Code implements CodeGen {
             v.jtype = "yeti/lang/IntNum";
             if (IntNum.__1.compareTo(num) <= 0 &&
                 IntNum._9.compareTo(num) >= 0) {
-                ctx.visitFieldInsn(GETSTATIC, v.jtype,
+                ctx.fieldInsn(GETSTATIC, v.jtype,
                     IntNum.__1.equals(num) ? "__1" :
                     IntNum.__2.equals(num) ? "__2" : "_" + num,
                     "Lyeti/lang/IntNum;");
@@ -1079,7 +1079,7 @@ final class StringConstant extends Code {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitLdcInsn(str);
+        ctx.ldcInsn(str);
     }
 
     boolean flagop(int fl) {
@@ -1099,7 +1099,7 @@ final class UnitConstant extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     boolean flagop(int fl) {
@@ -1124,13 +1124,13 @@ final class BooleanConstant extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+        ctx.fieldInsn(GETSTATIC, "java/lang/Boolean",
                 val ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
         if (val == ifTrue) {
-            ctx.visitJumpInsn(GOTO, to);
+            ctx.jumpInsn(GOTO, to);
         }
     }
 
@@ -1151,25 +1151,25 @@ final class ConcatStrings extends Code {
         if (param.length == 1) {
             param[0].gen(ctx);
             if (param[0].type.deref().type != YetiType.STR) {
-                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                ctx.methodInsn(INVOKESTATIC, "java/lang/String",
                     "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
                 ctx.forceType("java/lang/String");
             }
             return;
         }
         ctx.intConst(param.length);
-        ctx.visitTypeInsn(ANEWARRAY, "java/lang/String");
+        ctx.typeInsn(ANEWARRAY, "java/lang/String");
         for (int i = 0; i < param.length; ++i) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
             ctx.intConst(i);
             param[i].gen(ctx);
             if (param[i].type.deref().type != YetiType.STR) {
-                ctx.visitMethodInsn(INVOKESTATIC, "java/lang/String",
+                ctx.methodInsn(INVOKESTATIC, "java/lang/String",
                     "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
             }
-            ctx.visitInsn(AASTORE);
+            ctx.insn(AASTORE);
         }
-        ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/Core",
+        ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
             "concat", "([Ljava/lang/String;)Ljava/lang/String;");
         ctx.forceType("java/lang/String");
     }
@@ -1187,8 +1187,8 @@ final class NewExpr extends JavaExpr {
 
     void gen(Ctx ctx) {
         String name = method.classType.javaType.className();
-        ctx.visitTypeInsn(NEW, name);
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, name);
+        ctx.insn(DUP);
         genCall(ctx, extraArgs.getCaptures(), INVOKESPECIAL);
         ctx.forceType(name);
     }
@@ -1208,7 +1208,7 @@ final class NewArrayExpr extends Code {
         ctx.genInt(count, line);
         ctx.visitLine(line);
         if (type.param[0].type != YetiType.JAVA) { // array of arrays
-            ctx.visitTypeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));
+            ctx.typeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));
             return;
         }
         JavaType jt = type.param[0].javaType;
@@ -1223,7 +1223,7 @@ final class NewArrayExpr extends Code {
         case 'S': t = T_SHORT; break;
         case 'Z': t = T_BOOLEAN; break;
         case 'L':
-            ctx.visitTypeInsn(ANEWARRAY, jt.className());
+            ctx.typeInsn(ANEWARRAY, jt.className());
             return;
         default:
             throw new IllegalStateException("ARRAY<" + jt.description + '>');
@@ -1254,7 +1254,7 @@ final class MethodCall extends JavaExpr {
             }
             name = classType.implementation.getAccessor(method, descr);
         }
-        ctx.visitMethodInsn(invokeInsn, className, name, descr);
+        ctx.methodInsn(invokeInsn, className, name, descr);
     }
 
     private void _gen(Ctx ctx) {
@@ -1266,7 +1266,7 @@ final class MethodCall extends JavaExpr {
             if (ins != INVOKEINTERFACE)
                 classType = object.type.deref().javaType;
             if (ctx.compilation.isGCJ || ins != INVOKEINTERFACE) {
-                ctx.visitTypeInsn(CHECKCAST, classType.className());
+                ctx.typeInsn(CHECKCAST, classType.className());
             }
         }
         genCall(ctx, null, ins);
@@ -1275,7 +1275,7 @@ final class MethodCall extends JavaExpr {
     void gen(Ctx ctx) {
         _gen(ctx);
         if (method.returnType == YetiType.UNIT_TYPE) {
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
         } else {
             convertValue(ctx, method.returnType);
         }
@@ -1285,7 +1285,7 @@ final class MethodCall extends JavaExpr {
         if (method.returnType.javaType != null &&
                 method.returnType.javaType.description == "Z") {
             _gen(ctx);
-            ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+            ctx.jumpInsn(ifTrue ? IFNE : IFEQ, to);
         } else {
             super.genIf(ctx, to, ifTrue);
         }
@@ -1302,7 +1302,7 @@ final class Throw extends Code {
 
     void gen(Ctx ctx) {
         throwable.gen(ctx);
-        ctx.visitInsn(ATHROW);
+        ctx.insn(ATHROW);
     }
 }
 
@@ -1325,7 +1325,7 @@ final class ClassField extends JavaExpr implements CodeGen {
         String descr = JavaType.descriptionOf(field.type);
         String className = classType.className();
         if (object != null)
-            ctx.visitTypeInsn(CHECKCAST, className);
+            ctx.typeInsn(CHECKCAST, className);
         // XXX: not checking for package access. shouldn't matter.
         if ((field.access & ACC_PROTECTED) != 0
                 && classType.implementation != null
@@ -1334,9 +1334,9 @@ final class ClassField extends JavaExpr implements CodeGen {
                     + descr;
             String name = classType.implementation
                                    .getAccessor(field, descr, false);
-            ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
+            ctx.methodInsn(INVOKESTATIC, className, name, descr);
         } else {
-            ctx.visitFieldInsn(object == null ? GETSTATIC : GETFIELD,
+            ctx.fieldInsn(object == null ? GETSTATIC : GETFIELD,
                                  className, field.name, descr);
         }
         convertValue(ctx, field.type);
@@ -1347,13 +1347,13 @@ final class ClassField extends JavaExpr implements CodeGen {
         String className = classType.className();
         if (object != null) {
             object.gen(ctx);
-            ctx.visitTypeInsn(CHECKCAST, className);
+            ctx.typeInsn(CHECKCAST, className);
             classType = object.type.deref().javaType;
         }
         genValue(ctx, setValue, field.type, line);
         String descr = JavaType.descriptionOf(field.type);
         if (descr.length() > 1) {
-            ctx.visitTypeInsn(CHECKCAST,
+            ctx.typeInsn(CHECKCAST,
                 field.type.type == YetiType.JAVA
                     ? field.type.javaType.className() : descr);
         }
@@ -1365,12 +1365,12 @@ final class ClassField extends JavaExpr implements CodeGen {
                                     : "(") + descr + ")V";
             String name = classType.implementation
                                    .getAccessor(field, descr, true);
-            ctx.visitMethodInsn(INVOKESTATIC, className, name, descr);
+            ctx.methodInsn(INVOKESTATIC, className, name, descr);
         } else {
-            ctx.visitFieldInsn(object == null ? PUTSTATIC : PUTFIELD,
+            ctx.fieldInsn(object == null ? PUTSTATIC : PUTFIELD,
                                  className, field.name, descr);
         }
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     Code assign(final Code setValue) {
@@ -1416,9 +1416,9 @@ final class VariantConstructor extends Code implements CodeGen {
     }
 
     public void gen2(Ctx ctx, Code param, int line) {
-        ctx.visitTypeInsn(NEW, "yeti/lang/TagCon");
-        ctx.visitInsn(DUP);
-        ctx.visitLdcInsn(name);
+        ctx.typeInsn(NEW, "yeti/lang/TagCon");
+        ctx.insn(DUP);
+        ctx.ldcInsn(name);
         ctx.visitInit("yeti/lang/TagCon", "(Ljava/lang/String;)V");
     }
 
@@ -1431,10 +1431,10 @@ final class VariantConstructor extends Code implements CodeGen {
             Object key;
 
             public void gen2(Ctx ctx, Code param, int line_) {
-                ctx.visitTypeInsn(NEW, "yeti/lang/Tag");
-                ctx.visitInsn(DUP);
+                ctx.typeInsn(NEW, "yeti/lang/Tag");
+                ctx.insn(DUP);
                 arg.gen(ctx);
-                ctx.visitLdcInsn(name);
+                ctx.ldcInsn(name);
                 ctx.visitInit("yeti/lang/Tag",
                               "(Ljava/lang/Object;Ljava/lang/String;)V");
             }
@@ -1483,22 +1483,22 @@ abstract class SelectMember extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         st.gen(ctx);
         ctx.visitLine(line);
-        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-        ctx.visitLdcInsn(name);
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        ctx.ldcInsn(name);
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code setValue, int _) {
         st.gen(ctx);
         ctx.visitLine(line);
-        //ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Struct");
-        ctx.visitLdcInsn(name);
+        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        ctx.ldcInsn(name);
         setValue.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "set", "(Ljava/lang/String;Ljava/lang/Object;)V");
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     Code assign(final Code setValue) {
@@ -1523,13 +1523,13 @@ final class SelectMemberFun extends Code implements CodeGen {
 
     public void gen2(Ctx ctx, Code param, int line) {
         for (int i = 1; i < names.length; ++i) {
-            ctx.visitTypeInsn(NEW, "yeti/lang/Compose");
-            ctx.visitInsn(DUP);
+            ctx.typeInsn(NEW, "yeti/lang/Compose");
+            ctx.insn(DUP);
         }
         for (int i = names.length; --i >= 0;) {
-            ctx.visitTypeInsn(NEW, "yeti/lang/Selector");
-            ctx.visitInsn(DUP);
-            ctx.visitLdcInsn(names[i]);
+            ctx.typeInsn(NEW, "yeti/lang/Selector");
+            ctx.insn(DUP);
+            ctx.ldcInsn(names[i]);
             ctx.visitInit("yeti/lang/Selector",
                           "(Ljava/lang/String;)V");
             if (i + 1 != names.length)
@@ -1563,23 +1563,23 @@ final class KeyRefExpr extends Code implements CodeGen {
     void gen(Ctx ctx) {
         val.gen(ctx);
         if (ctx.compilation.isGCJ) {
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+            ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
         }
         key.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
                               "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code setValue, int _) {
         val.gen(ctx);
         if (ctx.compilation.isGCJ) {
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+            ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
         }
         key.gen(ctx);
         setValue.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                 "put", "(Ljava/lang/Object;Ljava/lang/Object;)" +
                 "Ljava/lang/Object;");
     }
@@ -1605,13 +1605,13 @@ final class ConditionalExpr extends Code {
             if (choices[i].length == 2) {
                 choices[i][1].genIf(ctx, jmpNext, false); // condition
                 choices[i][0].gen(ctx); // body
-                ctx.visitJumpInsn(GOTO, end);
+                ctx.jumpInsn(GOTO, end);
             } else {
                 choices[i][0].gen(ctx);
             }
             ctx.visitLabel(jmpNext);
         }
-        ctx.visitInsn(-1); // reset type
+        ctx.insn(-1); // reset type
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
@@ -1621,7 +1621,7 @@ final class ConditionalExpr extends Code {
             if (choices[i].length == 2) {
                 choices[i][1].genIf(ctx, jmpNext, false); // condition
                 choices[i][0].genIf(ctx, to, ifTrue); // body
-                ctx.visitJumpInsn(GOTO, end);
+                ctx.jumpInsn(GOTO, end);
             } else {
                 choices[i][0].genIf(ctx, to, ifTrue);
             }
@@ -1653,10 +1653,10 @@ final class LoopExpr extends Code {
         cond.genIf(ctx, end, false);
         body.gen(ctx);
         --ctx.tainted;
-        ctx.visitInsn(POP);
-        ctx.visitJumpInsn(GOTO, start);
+        ctx.insn(POP);
+        ctx.jumpInsn(GOTO, start);
         ctx.visitLabel(end);
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 }
 
@@ -1670,13 +1670,13 @@ class SeqExpr extends Code {
 
     void gen(Ctx ctx) {
         st.gen(ctx);
-        ctx.visitInsn(POP); // ignore the result of st expr
+        ctx.insn(POP); // ignore the result of st expr
         result.gen(ctx);
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
         st.gen(ctx);
-        ctx.visitInsn(POP); // ignore the result of st expr
+        ctx.insn(POP); // ignore the result of st expr
         result.genIf(ctx, to, ifTrue);
     }
 
@@ -1725,7 +1725,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             return new Code() {
                 void gen(Ctx ctx) {
                     genLocalSet(ctx, value);
-                    ctx.visitInsn(ACONST_NULL);
+                    ctx.insn(ACONST_NULL);
                 }
             };
         }
@@ -1795,7 +1795,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             if (directField == null) {
                 ctx.load(id).forceType(javaType);
             } else {
-                ctx.visitFieldInsn(GETSTATIC, myClass, directField, javaDescr);
+                ctx.fieldInsn(GETSTATIC, myClass, directField, javaDescr);
             }
         } else {
             ctx.load(mvar).forceType("[Ljava/lang/Object;");
@@ -1804,21 +1804,21 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
     public void genGet(Ctx ctx) {
         if (mvar != -1) {
-            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
+            ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
             ctx.intConst(id);
-            ctx.visitInsn(AALOAD);
+            ctx.insn(AALOAD);
         }
     }
 
     public void genSet(Ctx ctx, Code value) {
         if (directField == null) {
-            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
+            ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
             ctx.intConst(id);
             value.gen(ctx);
-            ctx.visitInsn(AASTORE);
+            ctx.insn(AASTORE);
         } else {
             value.gen(ctx);
-            ctx.visitFieldInsn(PUTSTATIC, myClass, directField, javaDescr);
+            ctx.fieldInsn(PUTSTATIC, myClass, directField, javaDescr);
         }
     }
 
@@ -1826,16 +1826,16 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         if (mvar == -1) {
             value.gen(ctx);
             if (!javaType.equals("java/lang/Object"))
-                ctx.visitTypeInsn(CHECKCAST, javaType);
+                ctx.typeInsn(CHECKCAST, javaType);
             if (directField == null) {
-                ctx.visitVarInsn(ASTORE, id);
+                ctx.varInsn(ASTORE, id);
             } else {
-                ctx.visitFieldInsn(PUTSTATIC, myClass, directField, javaDescr);
+                ctx.fieldInsn(PUTSTATIC, myClass, directField, javaDescr);
             }
         } else {
             ctx.load(mvar).intConst(id);
             value.gen(ctx);
-            ctx.visitInsn(AASTORE);
+            ctx.insn(AASTORE);
         }
     }
     
@@ -1868,7 +1868,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             genPreGet(ctx);
             if (mvar != -1)
                 ctx.intConst(id);
-            ctx.visitMethodInsn(INVOKESTATIC,
+            ctx.methodInsn(INVOKESTATIC,
                 "yeti/lang/compiler/YetiEval", "setBind",
                 mvar == -1 ? "(ILjava/lang/Object;)V"
                            : "(I[Ljava/lang/Object;I)V");
@@ -1901,9 +1901,9 @@ final class LoadModule extends Code {
 
     void gen(Ctx ctx) {
         if (checkUsed && !used)
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
         else
-            ctx.visitMethodInsn(INVOKESTATIC, moduleName,
+            ctx.methodInsn(INVOKESTATIC, moduleName,
                 "eval", "()Ljava/lang/Object;");
     }
 
@@ -1963,20 +1963,20 @@ final class ListConstructor extends Code {
 
     void gen(Ctx ctx) {
         if (items.length == 0) {
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
             return;
         }
         for (int i = 0; i < items.length; ++i) {
             if (!(items[i] instanceof Range)) {
-                ctx.visitTypeInsn(NEW, "yeti/lang/LList");
-                ctx.visitInsn(DUP);
+                ctx.typeInsn(NEW, "yeti/lang/LList");
+                ctx.insn(DUP);
             }
             items[i].gen(ctx);
         }
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
         for (int i = items.length; --i >= 0;) {
             if (items[i] instanceof Range) {
-                ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/ListRange",
+                ctx.methodInsn(INVOKESTATIC, "yeti/lang/ListRange",
                         "range", "(Ljava/lang/Object;Ljava/lang/Object;"
                                 + "Lyeti/lang/AList;)Lyeti/lang/AList;");
             } else {
@@ -2005,8 +2005,8 @@ final class MapConstructor extends Code {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitTypeInsn(NEW, "yeti/lang/Hash");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, "yeti/lang/Hash");
+        ctx.insn(DUP);
         if (keyItems.length > 16) {
             ctx.intConst(keyItems.length);
             ctx.visitInit("yeti/lang/Hash", "(I)V");
@@ -2014,12 +2014,12 @@ final class MapConstructor extends Code {
             ctx.visitInit("yeti/lang/Hash", "()V");
         }
         for (int i = 0; i < keyItems.length; ++i) {
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
             keyItems[i].gen(ctx);
             items[i].gen(ctx);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Hash", "put",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Hash", "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-            ctx.visitInsn(POP);
+            ctx.insn(POP);
         }
     }
 
@@ -2038,7 +2038,7 @@ final class EvalBind implements Binder, CaptureWrapper, Opcodes, CodeGen {
     public void gen2(Ctx ctx, Code value, int line) {
         genPreGet(ctx);
         genSet(ctx, value);
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     public BindRef getRef(int line) {
@@ -2071,19 +2071,19 @@ final class EvalBind implements Binder, CaptureWrapper, Opcodes, CodeGen {
 
     public void genPreGet(Ctx ctx) {
         ctx.intConst(bind.bindId);
-        ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
-                            "getBind", "(I)[Ljava/lang/Object;");
+        ctx.methodInsn(INVOKESTATIC, "yeti/lang/compiler/YetiEval",
+                       "getBind", "(I)[Ljava/lang/Object;");
     }
 
     public void genGet(Ctx ctx) {
         ctx.intConst(bind.index);
-        ctx.visitInsn(AALOAD);
+        ctx.insn(AALOAD);
     }
 
     public void genSet(Ctx ctx, Code value) {
         ctx.intConst(bind.index);
         value.gen(ctx);
-        ctx.visitInsn(AASTORE);
+        ctx.insn(AASTORE);
     }
 
     public Object captureIdentity() {

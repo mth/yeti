@@ -82,14 +82,14 @@ class Apply extends Code {
                 args[i] = a.arg;
             args[0] = a.arg; // out-of-cycle as we need "a" for fun
             a.fun.gen(ctx);
-            ctx.visitTypeInsn(CHECKCAST, "[Ljava/lang/Object;");
+            ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
             for (int i = 0; i < argc; ++i) {
                 args[i].gen(ctx);
                 sig.append("Ljava/lang/Object;");
             }
             sig.append(")Ljava/lang/Object;");
             ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKESTATIC, f.name,
+            ctx.methodInsn(INVOKESTATIC, f.name,
                                 f.bindName, sig.toString());
             return;
         }
@@ -102,7 +102,7 @@ class Apply extends Code {
             if (f.uncapture(arg_)) {
                 arg.gen(ctx);
                 arg_.var = ctx.localVarCount++;
-                ctx.visitVarInsn(ASTORE, arg_.var);
+                ctx.varInsn(ASTORE, arg_.var);
                 f.genClosureInit(ctx);
                 f.body.gen(ctx);
                 return;
@@ -112,14 +112,14 @@ class Apply extends Code {
         Apply to = (arity & 1) == 0 && arity - argc > 1 ? (Apply) fun : this;
         to.fun.gen(ctx);
         ctx.visitLine(to.line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Fun");
         if (to == this) {
             ctx.visitApply(arg, line);
         } else {
             to.arg.gen(ctx);
             arg.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Fun", "apply",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
         }
     }
@@ -189,7 +189,7 @@ final class TryCatch extends CapturingClosure {
         sigb.append(")Ljava/lang/Object;");
         String sig = sigb.toString();
         String name = "_" + ctx.methodCounter++;
-        ctx.visitMethodInsn(INVOKESTATIC, ctx.className, name, sig);
+        ctx.methodInsn(INVOKESTATIC, ctx.className, name, sig);
         Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
                                name, sig);
         mc.localVarCount = argc;
@@ -201,8 +201,8 @@ final class TryCatch extends CapturingClosure {
         int retVar = -1;
         if (cleanupStart != null) {
             retVar = mc.localVarCount++;
-            mc.visitInsn(ACONST_NULL);
-            mc.visitVarInsn(ASTORE, retVar); // silence the JVM verifier...
+            mc.insn(ACONST_NULL);
+            mc.varInsn(ASTORE, retVar); // silence the JVM verifier...
         }
         mc.visitLabel(codeStart);
         block.gen(mc);
@@ -211,41 +211,41 @@ final class TryCatch extends CapturingClosure {
         if (cleanupStart != null) {
             Label goThrow = new Label();
             mc.visitLabel(cleanupEntry);
-            mc.visitVarInsn(ASTORE, retVar);
-            mc.visitInsn(ACONST_NULL);
+            mc.varInsn(ASTORE, retVar);
+            mc.insn(ACONST_NULL);
             mc.visitLabel(cleanupStart);
-            mc.visitVarInsn(ASTORE, exVar);
+            mc.varInsn(ASTORE, exVar);
             cleanup.gen(mc);
-            mc.visitInsn(POP); // cleanup's null
-            mc.load(exVar).visitJumpInsn(IFNONNULL, goThrow);
-            mc.load(retVar).visitInsn(ARETURN);
+            mc.insn(POP); // cleanup's null
+            mc.load(exVar).jumpInsn(IFNONNULL, goThrow);
+            mc.load(retVar).insn(ARETURN);
             mc.visitLabel(goThrow);
-            mc.load(exVar).visitInsn(ATHROW);
+            mc.load(exVar).insn(ATHROW);
         } else {
-            mc.visitInsn(ARETURN);
+            mc.insn(ARETURN);
         }
         for (int i = 0, cnt = catches.size(); i < cnt; ++i) {
             Catch c = (Catch) catches.get(i);
             Label catchStart = new Label();
-            mc.visitTryCatchBlock(codeStart, codeEnd, catchStart,
+            mc.tryCatchBlock(codeStart, codeEnd, catchStart,
                                   c.type.javaType.className());
             Label catchEnd = null;
             if (cleanupStart != null) {
                 catchEnd = new Label();
-                mc.visitTryCatchBlock(catchStart, catchEnd, cleanupStart, null);
+                mc.tryCatchBlock(catchStart, catchEnd, cleanupStart, null);
             }
             mc.visitLabel(catchStart);
-            mc.visitVarInsn(ASTORE, exVar);
+            mc.varInsn(ASTORE, exVar);
             c.handler.gen(mc);
             if (catchEnd != null) {
                 mc.visitLabel(catchEnd);
-                mc.visitJumpInsn(GOTO, cleanupEntry);
+                mc.jumpInsn(GOTO, cleanupEntry);
             } else {
-                mc.visitInsn(ARETURN);
+                mc.insn(ARETURN);
             }
         }
         if (cleanupStart != null)
-            mc.visitTryCatchBlock(codeStart, codeEnd, cleanupStart, null);
+            mc.tryCatchBlock(codeStart, codeEnd, cleanupStart, null);
         mc.closeMethod();
     }
 }
@@ -292,16 +292,16 @@ abstract class CaptureRef extends BindRef {
             // push all argument values into stack - they must be evaluated
             // BEFORE modifying any of the arguments for tail-"call"-jump.
             genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
-            ctx.visitVarInsn(ASTORE, capturer.argVar);
+            ctx.varInsn(ASTORE, capturer.argVar);
             // Now assign the call argument values into argument registers.
             if (argCaptures != null)
                 for (int i = argCaptures.length; --i >= 0;)
                     if (argCaptures[i] != null)
-                        ctx.visitVarInsn(ASTORE, argCaptures[i].localVar);
+                        ctx.varInsn(ASTORE, argCaptures[i].localVar);
                     else
-                        ctx.visitInsn(POP);
+                        ctx.insn(POP);
             // And just jump into the start of the function...
-            ctx.visitJumpInsn(GOTO, capturer.restart);
+            ctx.jumpInsn(GOTO, capturer.restart);
         }
 
         void markTail() {
@@ -404,7 +404,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
         } else {
             genPreGet(ctx);
             wrapper.genSet(ctx, value);
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
         }
     }
 
@@ -421,9 +421,9 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
             ctx.load(0);
             if (localVar < -1) {
                 ctx.intConst(-2 - localVar);
-                ctx.visitInsn(AALOAD);
+                ctx.insn(AALOAD);
             } else {
-                ctx.visitFieldInsn(GETFIELD, ctx.className, id,
+                ctx.fieldInsn(GETFIELD, ctx.className, id,
                                    captureType());
             }
         } else {
@@ -501,8 +501,8 @@ abstract class AClosure extends Code implements Closure {
         }
         if (mvarcount > 0) {
             ctx.intConst(mvarcount);
-            ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-            ctx.visitVarInsn(ASTORE, id);
+            ctx.typeInsn(ANEWARRAY, "java/lang/Object");
+            ctx.varInsn(ASTORE, id);
         }
     }
 }
@@ -607,8 +607,8 @@ final class Function extends CapturingClosure implements Binder {
                 ctx.load(argVar);
                 // inexact nulling...
                 if (--argUsed == 0 && ctx.tainted == 0) {
-                    ctx.visitInsn(ACONST_NULL);
-                    ctx.visitVarInsn(ASTORE, argVar);
+                    ctx.insn(ACONST_NULL);
+                    ctx.varInsn(ASTORE, argVar);
                 }
             }
         }
@@ -803,12 +803,12 @@ final class Function extends CapturingClosure implements Binder {
         m.visitLabel(methodImpl.restart = new Label());
         methodImpl.body.gen(m);
         methodImpl.restart = null;
-        m.visitInsn(ARETURN);
+        m.insn(ARETURN);
         m.closeMethod();
 
         if (!shared) {
             ctx.intConst(captureCount);
-            ctx.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+            ctx.typeInsn(ANEWARRAY, "java/lang/Object");
         }
     }
 
@@ -864,32 +864,32 @@ final class Function extends CapturingClosure implements Binder {
                     c.gen(apply);
                     c.localVar = apply.localVarCount;
                     c.ignoreGet = true;
-                    apply.visitVarInsn(ASTORE, apply.localVarCount++);
+                    apply.varInsn(ASTORE, apply.localVarCount++);
                 }
             }
         }
         if (moduleInit && publish) {
-            apply.visitMethodInsn(INVOKESTATIC, ctx.className,
-                                  "eval", "()Ljava/lang/Object;");
-            apply.visitInsn(POP);
+            apply.methodInsn(INVOKESTATIC, ctx.className,
+                             "eval", "()Ljava/lang/Object;");
+            apply.insn(POP);
         }
         genClosureInit(apply);
         apply.visitLabel(restart = new Label());
         body.gen(apply);
         restart = null;
-        apply.visitInsn(ARETURN);
+        apply.insn(ARETURN);
         apply.closeMethod();
 
         Ctx valueCtx =
             shared ? fun.newMethod(ACC_STATIC, "<clinit>", "()V") : ctx;
-        valueCtx.visitTypeInsn(NEW, name);
-        valueCtx.visitInsn(DUP);
+        valueCtx.typeInsn(NEW, name);
+        valueCtx.insn(DUP);
         valueCtx.visitInit(name, "()V");
         if (shared) {
             fun.cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
                               "_", "Lyeti/lang/Fun;", null, null).visitEnd();
-            valueCtx.visitFieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
-            valueCtx.visitInsn(RETURN);
+            valueCtx.fieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
+            valueCtx.insn(RETURN);
             valueCtx.closeMethod();
         }
     }
@@ -905,7 +905,7 @@ final class Function extends CapturingClosure implements Binder {
         for (Capture c = captures; c != null; c = c.next) {
             if (c.uncaptured)
                 continue;
-            ctx.visitInsn(DUP);
+            ctx.insn(DUP);
             if (meth)
                 ctx.intConst(++counter);
             if (c.wrapper == null)
@@ -913,11 +913,11 @@ final class Function extends CapturingClosure implements Binder {
             else
                 c.wrapper.genPreGet(ctx);
             if (meth) {
-                ctx.visitInsn(AASTORE);
+                ctx.insn(AASTORE);
             } else {
                 String type = c.captureType();
                 ctx.captureCast(type);
-                ctx.visitFieldInsn(PUTFIELD, name, c.id, type);
+                ctx.fieldInsn(PUTFIELD, name, c.id, type);
             }
         }
         ctx.forceType(meth ? "[Ljava/lang/Object;" : "yeti/lang/Fun");
@@ -1011,20 +1011,20 @@ final class Function extends CapturingClosure implements Binder {
     void gen(Ctx ctx) {
         if (shared) {
             if (methodImpl == null)
-                ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+                ctx.fieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
             else
-                ctx.visitInsn(ACONST_NULL);
+                ctx.insn(ACONST_NULL);
         } else if (!merged && argUsed == 0 && body.flagop(PURE) &&
                    uncapture(NEVER)) {
             // This lambda can be optimised into "const x", so do it.
             genClosureInit(ctx);
-            ctx.visitTypeInsn(NEW, "yeti/lang/Const");
-            ctx.visitInsn(DUP);
+            ctx.typeInsn(NEW, "yeti/lang/Const");
+            ctx.insn(DUP);
             body.gen(ctx);
             ctx.visitInit("yeti/lang/Const", "(Ljava/lang/Object;)V");
             ctx.forceType("yeti/lang/Fun");
         } else if (prepareConst(ctx)) {
-            ctx.visitFieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
+            ctx.fieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
         } else {
             prepareGen(ctx);
             finishGen(ctx);
@@ -1048,7 +1048,7 @@ final class RootClosure extends AClosure {
         for (int i = 0; i < preload.length; ++i) {
             if (preload[i] != null) {
                 preload[i].gen(ctx);
-                ctx.visitInsn(POP);
+                ctx.insn(POP);
             }
         }
         code.gen(ctx);

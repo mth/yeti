@@ -138,7 +138,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                     continue;
                 loadArg(ctx, arguments[i], i + n);
                 JavaExpr.convertValue(ctx, arguments[i]);
-                ctx.visitVarInsn(ASTORE, i + n);
+                ctx.varInsn(ASTORE, i + n);
             }
         }
 
@@ -152,8 +152,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
             closure.genClosureInit(ctx);
             JavaExpr.convertedArg(ctx, code, returnType, line);
             if (returnType.type == YetiType.UNIT) {
-                ctx.visitInsn(POP);
-                ctx.visitInsn(RETURN);
+                ctx.insn(POP);
+                ctx.insn(RETURN);
             } else {
                 genRet(ctx, returnType);
             }
@@ -185,13 +185,13 @@ final class JavaClass extends CapturingClosure implements Runnable {
             if (directConst)
                 value.gen(ctx);
             else
-                ctx.visitFieldInsn(GETFIELD, className, name, descr);
+                ctx.fieldInsn(GETFIELD, className, name, descr);
         }
 
         public void genSet(Ctx ctx, Code value) {
             value.gen(ctx);
-            ctx.visitTypeInsn(CHECKCAST, javaType);
-            ctx.visitFieldInsn(PUTFIELD, className, name, descr);
+            ctx.typeInsn(CHECKCAST, javaType);
+            ctx.fieldInsn(PUTFIELD, className, name, descr);
         }
 
         public Object captureIdentity() {
@@ -205,7 +205,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         public void gen2(Ctx ctx, Code value, int _) {
             genPreGet(ctx);
             genSet(ctx, value);
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
         }
 
         public BindRef getRef(int line) {
@@ -255,7 +255,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
             } else if (javaType == null) {
                 // _ = or just unused binding
                 value.gen(ctx);
-                ctx.visitInsn(POP);
+                ctx.insn(POP);
             } else if (!var && value.prepareConst(ctx)) {
                 directConst = true;
             } else {
@@ -291,7 +291,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 default : ins = ILOAD;
             }
         }
-        ctx.visitVarInsn(ins, n);
+        ctx.varInsn(ins, n);
     }
 
     static void genRet(Ctx ctx, YType returnType) {
@@ -306,7 +306,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 default : ins = IRETURN;
             }
         }
-        ctx.visitInsn(ins);
+        ctx.insn(ins);
     }
 
     void init(YetiType.ClassBinding parentClass, String[] interfaces) {
@@ -411,7 +411,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     void gen(Ctx ctx) {
         int i, cnt;
         constr.captures = captures;
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
         Ctx clc = ctx.newClass(classType.javaType.access | ACC_SUPER,
                         className, parentClass.type.javaType.className(),
                         implement);
@@ -432,20 +432,20 @@ final class JavaClass extends CapturingClosure implements Runnable {
             c.localVar = -1; // reset to using this
             clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
             init.load(0).load(++n)
-                .visitFieldInsn(PUTFIELD, className, c.id, c.captureType());
+                .fieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
         for (i = 0, cnt = fields.size(); i < cnt; ++i)
             ((Code) fields.get(i)).gen(init);
-        init.visitInsn(RETURN);
+        init.insn(RETURN);
         init.closeMethod();
         for (i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
         if (usedForceDirect) {
             Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
-            clinit.visitMethodInsn(INVOKESTATIC, ctx.className,
+            clinit.methodInsn(INVOKESTATIC, ctx.className,
                                    "eval", "()Ljava/lang/Object;");
-            clinit.visitInsn(POP);
-            clinit.visitInsn(RETURN);
+            clinit.insn(POP);
+            clinit.insn(RETURN);
             clinit.closeMethod();
         }
         classCtx = clc;
@@ -472,7 +472,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
                 }
                 for (int j = 0; j < m.arguments.length; ++j)
                     loadArg(mc, m.arguments[j], j + start);
-                mc.visitMethodInsn(insn, className, m.name, m.descr(null));
+                mc.methodInsn(insn, className, m.name, m.descr(null));
                 genRet(mc, m.returnType);
             } else { // field
                 JavaType.Field f = (JavaType.Field) accessor[1];
@@ -485,10 +485,10 @@ final class JavaClass extends CapturingClosure implements Runnable {
                     mc.load(reg);
                     insn = insn == GETFIELD ? PUTFIELD : PUTSTATIC;
                 }
-                mc.visitFieldInsn(insn, className, f.name,
-                                  JavaType.descriptionOf(f.type));
+                mc.fieldInsn(insn, className, f.name,
+                             JavaType.descriptionOf(f.type));
                 if (accessor[3] != null) {
-                    mc.visitInsn(RETURN);
+                    mc.insn(RETURN);
                 } else {
                     genRet(mc, f.type);
                 }

@@ -129,21 +129,21 @@ final class BuiltIn implements Binder {
 
 final class Argv extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+        ctx.fieldInsn(GETSTATIC, "yeti/lang/Core",
                              "ARGV", "Ljava/lang/ThreadLocal;");
-        ctx.visitMethodInsn(INVOKEVIRTUAL,
+        ctx.methodInsn(INVOKEVIRTUAL,
             "java/lang/ThreadLocal",
             "get", "()Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code value, int line) {
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+        ctx.fieldInsn(GETSTATIC, "yeti/lang/Core",
                      "ARGV", "Ljava/lang/ThreadLocal;");
         value.gen(ctx);
-        ctx.visitMethodInsn(INVOKEVIRTUAL,
+        ctx.methodInsn(INVOKEVIRTUAL,
             "java/lang/ThreadLocal",
             "get", "(Ljava/lang/Object;)V");
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     Code assign(final Code value) {
@@ -190,7 +190,7 @@ class IsNullPtr extends StaticRef {
 
     void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
         arg.gen(ctx);
-        ctx.visitJumpInsn(ifTrue ? IFNULL : IFNONNULL, to);
+        ctx.jumpInsn(ifTrue ? IFNULL : IFNONNULL, to);
     }
 }
 
@@ -202,16 +202,16 @@ final class IsDefined extends IsNullPtr {
     void genIf(Ctx ctx, Code arg, Label to, boolean ifTrue, int line) {
         Label isNull = new Label(), end = new Label();
         arg.gen(ctx);
-        ctx.visitInsn(DUP);
-        ctx.visitJumpInsn(IFNULL, isNull);
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/Core",
+        ctx.insn(DUP);
+        ctx.jumpInsn(IFNULL, isNull);
+        ctx.fieldInsn(GETSTATIC, "yeti/lang/Core",
                              "UNDEF_STR", "Ljava/lang/String;");
-        ctx.visitJumpInsn(IF_ACMPEQ, ifTrue ? end : to);
-        ctx.visitJumpInsn(GOTO, ifTrue ? to : end);
+        ctx.jumpInsn(IF_ACMPEQ, ifTrue ? end : to);
+        ctx.jumpInsn(GOTO, ifTrue ? to : end);
         ctx.visitLabel(isNull);
-        ctx.visitInsn(POP);
+        ctx.insn(POP);
         if (!ifTrue) {
-            ctx.visitJumpInsn(GOTO, to);
+            ctx.jumpInsn(GOTO, to);
         }
         ctx.visitLabel(end);
     }
@@ -226,18 +226,18 @@ final class IsEmpty extends IsNullPtr {
         Label isNull = new Label(), end = new Label();
         arg.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitInsn(DUP);
-        ctx.visitJumpInsn(IFNULL, isNull);
+        ctx.insn(DUP);
+        ctx.jumpInsn(IFNULL, isNull);
         if (ctx.compilation.isGCJ)
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Coll");
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/Coll",
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Coll");
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll",
                             "isEmpty", "()Z"); 
-        ctx.visitJumpInsn(IFNE, ifTrue ? to : end);
-        ctx.visitJumpInsn(GOTO, ifTrue ? end : to);
+        ctx.jumpInsn(IFNE, ifTrue ? to : end);
+        ctx.jumpInsn(GOTO, ifTrue ? end : to);
         ctx.visitLabel(isNull);
-        ctx.visitInsn(POP);
+        ctx.insn(POP);
         if (ifTrue) {
-            ctx.visitJumpInsn(GOTO, to);
+            ctx.jumpInsn(GOTO, to);
         }
         ctx.visitLabel(end);
     }
@@ -251,8 +251,8 @@ final class Head extends IsNullPtr {
     void gen(Ctx ctx, Code arg, int line) {
         arg.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+        ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                             "first", "()Ljava/lang/Object;");
     }
 }
@@ -265,11 +265,11 @@ final class Tail extends IsNullPtr {
     void gen(Ctx ctx, Code arg, int line) {
         arg.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+        ctx.insn(DUP);
         Label end = new Label();
-        ctx.visitJumpInsn(IFNULL, end);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+        ctx.jumpInsn(IFNULL, end);
+        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                             "rest", "()Lyeti/lang/AList;");
         ctx.visitLabel(end);
         ctx.forceType("yeti/lang/AList");
@@ -284,8 +284,8 @@ final class Escape extends IsNullPtr {
 
     void gen(Ctx ctx, Code block, int line) {
         block.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
-        ctx.visitMethodInsn(INVOKESTATIC, "yeti/lang/EscapeFun", "with",
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Fun");
+        ctx.methodInsn(INVOKESTATIC, "yeti/lang/EscapeFun", "with",
                             "(Lyeti/lang/Fun;)Ljava/lang/Object;");
     }
 }
@@ -299,9 +299,9 @@ final class Negate extends StaticRef implements CodeGen {
     public void gen2(Ctx ctx, Code arg, int line) {
         arg.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-        ctx.visitLdcInsn(new Long(0));
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
+        ctx.ldcInsn(new Long(0));
+        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                             "subFrom", "(J)Lyeti/lang/Num;");
         ctx.forceType("yeti/lang/Num");
     }
@@ -357,20 +357,20 @@ final class For extends Core2 {
             Label retry = new Label(), end = new Label();
             list.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-            ctx.visitInsn(DUP);
-            ctx.visitJumpInsn(IFNULL, end);
-            ctx.visitInsn(DUP);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+            ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.insn(DUP);
+            ctx.jumpInsn(IFNULL, end);
+            ctx.insn(DUP);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "isEmpty", "()Z");
-            ctx.visitJumpInsn(IFNE, end);
+            ctx.jumpInsn(IFNE, end);
             // start of loop
             ctx.visitLabel(retry);
-            ctx.visitInsn(DUP);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            ctx.insn(DUP);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "first", "()Ljava/lang/Object;");
             // invoke body block
-            ctx.visitVarInsn(ASTORE, arg.var = ctx.localVarCount++);
+            ctx.varInsn(ASTORE, arg.var = ctx.localVarCount++);
             ++ctx.tainted; // disable argument-nulling - we're in cycle
             // new closure has to be created on each cycle
             // as closure vars could be captured
@@ -378,29 +378,29 @@ final class For extends Core2 {
             f.body.gen(ctx);
             --ctx.tainted;
             ctx.visitLine(line);
-            ctx.visitInsn(POP); // ignore return value
+            ctx.insn(POP); // ignore return value
             // next
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "next", "()Lyeti/lang/AIter;");
-            ctx.visitInsn(DUP);
-            ctx.visitJumpInsn(IFNONNULL, retry);
+            ctx.insn(DUP);
+            ctx.jumpInsn(IFNONNULL, retry);
             ctx.visitLabel(end);
         } else {
             Label nop = new Label(), end = new Label();
             list.gen(ctx);
             fun.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitInsn(SWAP);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
-            ctx.visitInsn(DUP_X1);
-            ctx.visitJumpInsn(IFNULL, nop);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+            ctx.insn(SWAP);
+            ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+            ctx.insn(DUP_X1);
+            ctx.jumpInsn(IFNULL, nop);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
                                 "forEach", "(Ljava/lang/Object;)V");
-            ctx.visitJumpInsn(GOTO, end);
+            ctx.jumpInsn(GOTO, end);
             ctx.visitLabel(nop);
-            ctx.visitInsn(POP2);
+            ctx.insn(POP2);
             ctx.visitLabel(end);
-            ctx.visitInsn(ACONST_NULL);
+            ctx.insn(ACONST_NULL);
         }
     }
 }
@@ -412,8 +412,8 @@ final class Compose extends Core2 {
     }
 
     void genApply2(Ctx ctx, Code arg1, Code arg2, int line) {
-        ctx.visitTypeInsn(NEW, "yeti/lang/Compose");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, "yeti/lang/Compose");
+        ctx.insn(DUP);
         arg1.gen(ctx);
         arg2.gen(ctx);
         ctx.visitLine(line);
@@ -431,32 +431,32 @@ final class Synchronized extends Core2 {
         monitor.gen(ctx);
         int monitorVar = ctx.localVarCount++;
         ctx.visitLine(line);
-        ctx.visitInsn(DUP);
-        ctx.visitVarInsn(ASTORE, monitorVar);
-        ctx.visitInsn(MONITORENTER);
+        ctx.insn(DUP);
+        ctx.varInsn(ASTORE, monitorVar);
+        ctx.insn(MONITORENTER);
 
         Label startBlock = new Label(), endBlock = new Label();
         ctx.visitLabel(startBlock);
         new Apply(type, block, new UnitConstant(null), line).gen(ctx);
         ctx.visitLine(line);
-        ctx.load(monitorVar).visitInsn(MONITOREXIT);
+        ctx.load(monitorVar).insn(MONITOREXIT);
         ctx.visitLabel(endBlock);
         Label end = new Label();
-        ctx.visitJumpInsn(GOTO, end);
+        ctx.jumpInsn(GOTO, end);
 
         Label startCleanup = new Label(), endCleanup = new Label();
-        ctx.visitTryCatchBlock(startBlock, endBlock, startCleanup, null);
+        ctx.tryCatchBlock(startBlock, endBlock, startCleanup, null);
         // I have no fucking idea, what this second catch is supposed
         // to be doing. javac generates it, so it has to be good.
         // yeah, sure...
-        ctx.visitTryCatchBlock(startCleanup, endCleanup, startCleanup, null);
+        ctx.tryCatchBlock(startCleanup, endCleanup, startCleanup, null);
 
         int exceptionVar = ctx.localVarCount++;
         ctx.visitLabel(startCleanup);
-        ctx.visitVarInsn(ASTORE, exceptionVar);
-        ctx.load(monitorVar).visitInsn(MONITOREXIT);
+        ctx.varInsn(ASTORE, exceptionVar);
+        ctx.load(monitorVar).insn(MONITOREXIT);
         ctx.visitLabel(endCleanup);
-        ctx.load(exceptionVar).visitInsn(ATHROW);
+        ctx.load(exceptionVar).insn(ATHROW);
         ctx.visitLabel(end);
     }
 }
@@ -506,7 +506,7 @@ abstract class BinOpRef extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.visitFieldInsn(GETSTATIC, "yeti/lang/std$" + coreFun,
+        ctx.fieldInsn(GETSTATIC, "yeti/lang/std$" + coreFun,
                            "_", "Lyeti/lang/Fun;");
     }
 
@@ -541,40 +541,40 @@ final class ArithOpFun extends BinOpRef {
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         if (method == "and" && arg2 instanceof NumericConstant &&
             ((NumericConstant) arg2).flagop(INT_NUM)) {
-            ctx.visitTypeInsn(NEW, "yeti/lang/IntNum");
-            ctx.visitInsn(DUP);
+            ctx.typeInsn(NEW, "yeti/lang/IntNum");
+            ctx.insn(DUP);
             arg1.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                                 "longValue", "()J");
             ((NumericConstant) arg2).genInt(ctx, false);
-            ctx.visitInsn(LAND);
+            ctx.insn(LAND);
             ctx.visitInit("yeti/lang/IntNum", "(J)V");
             ctx.forceType("yeti/lang/Num");
             return;
         }
         arg1.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
         boolean ii = method == "intDiv" || method == "rem";
         if (method == "shl" || method == "shr") {
             ctx.genInt(arg2, line);
             if (method == "shr")
-                ctx.visitInsn(INEG);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+                ctx.insn(INEG);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                                 "shl", "(I)Lyeti/lang/Num;");
         } else if (arg2 instanceof NumericConstant &&
                  ((NumericConstant) arg2).genInt(ctx, ii)) {
             ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                 method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
             ctx.forceType("yeti/lang/Num");
         } else {
             arg2.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                     method, "(Lyeti/lang/Num;)Lyeti/lang/Num;");
         }
         ctx.forceType("yeti/lang/Num");
@@ -633,52 +633,52 @@ final class CompareFun extends BoolBinOp {
             arg2.gen(ctx);
             arg1.gen(ctx); // 2-1
             ctx.visitLine(line);
-            ctx.visitInsn(DUP); // 2-1-1
-            ctx.visitJumpInsn(IFNONNULL, nonull); // 2-1
+            ctx.insn(DUP); // 2-1-1
+            ctx.jumpInsn(IFNONNULL, nonull); // 2-1
             // reach here, when 1 was null
             if (op == COND_GT || op == COND_LE ||
                 arg2.flagop(EMPTY_LIST) &&
                     (op == COND_EQ || op == COND_NOT)) {
                 // null is never greater and always less or equal
-                ctx.visitInsn(POP2);
-                ctx.visitJumpInsn(GOTO,
+                ctx.insn(POP2);
+                ctx.jumpInsn(GOTO,
                     op == COND_LE || op == COND_EQ ? to : nojmp);
             } else {
-                ctx.visitInsn(POP); // 2
-                ctx.visitJumpInsn(op == COND_EQ || op == COND_GE
+                ctx.insn(POP); // 2
+                ctx.jumpInsn(op == COND_EQ || op == COND_GE
                                     ? IFNULL : IFNONNULL, to);
-                ctx.visitJumpInsn(GOTO, nojmp);
+                ctx.jumpInsn(GOTO, nojmp);
             }
             ctx.visitLabel(nonull);
             if (!eq && ctx.compilation.isGCJ)
-                ctx.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
-            ctx.visitInsn(SWAP); // 1-2
+                ctx.typeInsn(CHECKCAST, "java/lang/Comparable");
+            ctx.insn(SWAP); // 1-2
         } else {
             arg1.gen(ctx);
             ctx.visitLine(line);
             if (arg2.flagop(INT_NUM)) {
-                ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Num");
+                ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
                 ((NumericConstant) arg2).genInt(ctx, false);
                 ctx.visitLine(line);
-                ctx.visitMethodInsn(INVOKEVIRTUAL,
+                ctx.methodInsn(INVOKEVIRTUAL,
                         "yeti/lang/Num", "rCompare", "(J)I");
-                ctx.visitJumpInsn(ROP[op], to);
+                ctx.jumpInsn(ROP[op], to);
                 return;
             }
             if (!eq && ctx.compilation.isGCJ)
-                ctx.visitTypeInsn(CHECKCAST, "java/lang/Comparable");
+                ctx.typeInsn(CHECKCAST, "java/lang/Comparable");
             arg2.gen(ctx);
             ctx.visitLine(line);
         }
         if (eq) {
             op ^= COND_NOT;
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object",
+            ctx.methodInsn(INVOKEVIRTUAL, "java/lang/Object",
                                 "equals", "(Ljava/lang/Object;)Z");
         } else {
-            ctx.visitMethodInsn(INVOKEINTERFACE, "java/lang/Comparable",
+            ctx.methodInsn(INVOKEINTERFACE, "java/lang/Comparable",
                                 "compareTo", "(Ljava/lang/Object;)I");
         }
-        ctx.visitJumpInsn(OPS[op], to);
+        ctx.jumpInsn(OPS[op], to);
         if (nojmp != null) {
             ctx.visitLabel(nojmp);
         }
@@ -720,7 +720,7 @@ final class Same extends BoolBinOp {
                   Label to, boolean ifTrue) {
         arg1.gen(ctx);
         arg2.gen(ctx);
-        ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+        ctx.jumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
     }
 }
 
@@ -738,13 +738,13 @@ final class InOpFun extends BoolBinOp {
         arg2.gen(ctx);
         ctx.visitLine(line);
         if (ctx.compilation.isGCJ) {
-            ctx.visitTypeInsn(CHECKCAST, "yeti/lang/ByKey");
+            ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
         }
         arg1.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitMethodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/ByKey",
                             "containsKey", "(Ljava/lang/Object;)Z");
-        ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+        ctx.jumpInsn(ifTrue ? IFNE : IFEQ, to);
     }
 }
 
@@ -793,9 +793,9 @@ final class BoolOpFun extends BoolBinOp implements Binder {
             Label label = new Label(), end = new Label();
             arg1.genIf(ctx, label, orOp);
             arg2.gen(ctx);
-            ctx.visitJumpInsn(GOTO, end);
+            ctx.jumpInsn(GOTO, end);
             ctx.visitLabel(label);
-            ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
+            ctx.fieldInsn(GETSTATIC, "java/lang/Boolean",
                     orOp ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
             ctx.visitLabel(end);
         }
@@ -831,12 +831,12 @@ final class Cons extends BinOpRef {
             lclass = "yeti/lang/LMList";
         }
         ctx.visitLine(line);
-        ctx.visitTypeInsn(NEW, lclass);
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, lclass);
+        ctx.insn(DUP);
         arg1.gen(ctx);
         arg2.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/AList");
+        ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
         ctx.visitInit(lclass,
                       "(Ljava/lang/Object;Lyeti/lang/AList;)V");
         ctx.forceType("yeti/lang/AList");
@@ -855,12 +855,12 @@ final class LazyCons extends BinOpRef {
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         ctx.visitLine(line);
-        ctx.visitTypeInsn(NEW, "yeti/lang/LazyList");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, "yeti/lang/LazyList");
+        ctx.insn(DUP);
         arg1.gen(ctx);
         arg2.gen(ctx);
         ctx.visitLine(line);
-        ctx.visitTypeInsn(CHECKCAST, "yeti/lang/Fun");
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Fun");
         ctx.visitInit("yeti/lang/LazyList",
                       "(Ljava/lang/Object;Lyeti/lang/Fun;)V");
         ctx.forceType("yeti/lang/AList");
@@ -884,8 +884,8 @@ final class MatchOpFun extends BinOpRef implements CodeGen {
     }
 
     public void gen2(Ctx ctx, Code arg2, int line) {
-        ctx.visitTypeInsn(NEW, "yeti/lang/Match");
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, "yeti/lang/Match");
+        ctx.insn(DUP);
         arg2.gen(ctx);
         ctx.intConst(yes ? 1 : 0);
         ctx.visitLine(line);
@@ -917,9 +917,9 @@ final class MatchOpFun extends BinOpRef implements CodeGen {
 
     void binGenIf(Ctx ctx, Code arg1, Code arg2, Label to, boolean ifTrue) {
         binGen(ctx, arg1, arg2);
-        ctx.visitFieldInsn(GETSTATIC, "java/lang/Boolean",
-                "TRUE", "Ljava/lang/Boolean;");
-        ctx.visitJumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
+        ctx.fieldInsn(GETSTATIC, "java/lang/Boolean",
+                      "TRUE", "Ljava/lang/Boolean;");
+        ctx.jumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
     }
 }
 
@@ -936,8 +936,8 @@ final class RegexFun extends StaticRef implements CodeGen {
     }
 
     public void gen2(Ctx ctx, Code arg, int line) {
-        ctx.visitTypeInsn(NEW, impl);
-        ctx.visitInsn(DUP);
+        ctx.typeInsn(NEW, impl);
+        ctx.insn(DUP);
         arg.gen(ctx);
         ctx.visitLine(line);
         ctx.visitInit(impl, "(Ljava/lang/Object;)V");
@@ -995,8 +995,8 @@ final class ClassOfExpr extends Code implements CodeGen {
     }
 
     public void gen2(Ctx ctx, Code param, int line) {
-        ctx.visitLdcInsn(className);
-        ctx.visitMethodInsn(INVOKESTATIC, "java/lang/Class",
+        ctx.ldcInsn(className);
+        ctx.methodInsn(INVOKESTATIC, "java/lang/Class",
             "forName", "(Ljava/lang/String;)Ljava/lang/Class;");
         ctx.forceType("java/lang/Class");
     }
@@ -1023,8 +1023,8 @@ final class InstanceOfExpr extends Code {
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
         expr.gen(ctx);
-        ctx.visitTypeInsn(INSTANCEOF, className);
-        ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+        ctx.typeInsn(INSTANCEOF, className);
+        ctx.jumpInsn(ifTrue ? IFNE : IFEQ, to);
     }
 
     void gen(Ctx ctx) {
@@ -1048,7 +1048,7 @@ final class JavaArrayRef extends Code implements CodeGen {
 
     private void _gen(Ctx ctx, Code store) {
         value.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
+        ctx.typeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
         ctx.genInt(index, line);
         String resDescr = elementType.javaType == null
                             ? JavaType.descriptionOf(elementType)
@@ -1083,9 +1083,9 @@ final class JavaArrayRef extends Code implements CodeGen {
             insn += 33;
             JavaExpr.genValue(ctx, store, elementType, line);
             if (insn == AASTORE)
-                ctx.visitTypeInsn(CHECKCAST, resDescr);
+                ctx.typeInsn(CHECKCAST, resDescr);
         }
-        ctx.visitInsn(insn);
+        ctx.insn(insn);
         if (insn == AALOAD) {
             ctx.forceType(resDescr);
         }
@@ -1098,7 +1098,7 @@ final class JavaArrayRef extends Code implements CodeGen {
 
     public void gen2(Ctx ctx, Code setValue, int line) {
         _gen(ctx, setValue);
-        ctx.visitInsn(ACONST_NULL);
+        ctx.insn(ACONST_NULL);
     }
 
     Code assign(final Code setValue) {
@@ -1149,21 +1149,21 @@ final class StrOp extends StaticRef implements Binder {
             }
             ((StrApply) argv.get(argv.size() - 1)).arg.gen(ctx);
             ctx.visitLine(line);
-            ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+            ctx.typeInsn(CHECKCAST, "java/lang/String");
             for (int i = 0, last = argv.size() - 2; i <= last; ++i) {
                 StrApply a = (StrApply) argv.get(last - i);
                 if (a.arg.type.deref().type == YetiType.STR) {
                     a.arg.gen(ctx);
-                    ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+                    ctx.typeInsn(CHECKCAST, "java/lang/String");
                 } else {
                     JavaExpr.convertedArg(ctx, a.arg, argTypes[i], a.line);
                 }
             }
             ctx.visitLine(line);
-            ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
+            ctx.methodInsn(INVOKEVIRTUAL, "java/lang/String",
                                 method, sig);
             if (to != null) { // really genIf
-                ctx.visitJumpInsn(ifTrue ? IFNE : IFEQ, to);
+                ctx.jumpInsn(ifTrue ? IFNE : IFEQ, to);
             } else if (type.deref().type == YetiType.STR) {
                 ctx.forceType("java/lang/String;");
             } else {
@@ -1204,13 +1204,13 @@ final class StrChar extends BinOpRef {
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         arg1.gen(ctx);
-        ctx.visitTypeInsn(CHECKCAST, "java/lang/String");
+        ctx.typeInsn(CHECKCAST, "java/lang/String");
         ctx.genInt(arg2, line);
-        ctx.visitInsn(DUP);
+        ctx.insn(DUP);
         ctx.intConst(1);
-        ctx.visitInsn(IADD);
-        ctx.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String",
-                            "substring", "(II)Ljava/lang/String;");
+        ctx.insn(IADD);
+        ctx.methodInsn(INVOKEVIRTUAL, "java/lang/String",
+                       "substring", "(II)Ljava/lang/String;");
         ctx.forceType("java/lang/String");
     }
 }
