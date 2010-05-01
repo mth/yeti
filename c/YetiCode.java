@@ -359,9 +359,9 @@ final class CompileCtx implements Opcodes {
                           null);
             constants.ctx = ctx;
             if (module) {
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC, "$",
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                                   "Ljava/lang/Object;", null, null).visitEnd();
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC,
                                   "_$", "Z", null, Boolean.FALSE);
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
                                     "eval", "()Ljava/lang/Object;");

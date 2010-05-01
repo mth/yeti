@@ -190,8 +190,7 @@ final class TryCatch extends CapturingClosure {
         String sig = sigb.toString();
         String name = "_" + ctx.methodCounter++;
         ctx.methodInsn(INVOKESTATIC, ctx.className, name, sig);
-        Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC | ACC_SYNTHETIC,
-                               name, sig);
+        Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
         mc.localVarCount = argc;
 
         Label codeStart = new Label(), codeEnd = new Label();
@@ -716,7 +715,7 @@ final class Function extends CapturingClosure implements Binder {
     void captureInit(Ctx fun, Capture c, int n) {
         if (methodImpl == null) {
             // c.getId() initialises the captures id as a side effect
-            fun.cw.visitField(ACC_SYNTHETIC, c.getId(fun), c.captureType(),
+            fun.cw.visitField(0, c.getId(fun), c.captureType(),
                               null, null).visitEnd();
         } else {
             c.localVar = -2 - n;
@@ -840,7 +839,7 @@ final class Function extends CapturingClosure implements Binder {
         String funClass =
             argVar == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
         Ctx fun = ctx.newClass(publish ? ACC_PUBLIC | ACC_SUPER | ACC_FINAL
-                                       : ACC_SUPER | ACC_FINAL | ACC_SYNTHETIC,
+                                       : ACC_SUPER | ACC_FINAL,
                                name, funClass, null);
 
         if (publish)
