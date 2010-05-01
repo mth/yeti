@@ -1,7 +1,23 @@
 sieve stream =
-	head stream :. \(sieve (filter ((!= 0) . (% (head stream)))
-	                               (tail stream)));
+    head stream :. \(sieve (filter ((!= 0) . (% (head stream))) (tail stream)));
 
 primes = sieve (iterate (+1) 2);
 
-for (take 100 primes) println;
+sieve2 limit =
+   (numbers = array [0 .. limit];
+    numbers.[0] := -1;
+    numbers.[1] := -1;
+    var primes = [];
+    for numbers do i:
+        if i != -1 then
+            var j = i * 2;
+            j <= limit loop
+               (numbers.[j] := -1;
+                j := j + i);
+            primes := i :: primes;
+        fi
+    done;
+    reverse primes);
+
+println "lazy sieve  : \(takeWhile (<= 100) primes)";
+println "strict sieve: \(sieve2 100)";

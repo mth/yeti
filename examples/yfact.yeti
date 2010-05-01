@@ -1,5 +1,0 @@
-y f x = f (y f) x;
-fact = y do rec x:
-	if x == 0 then 1 else x * rec (x - 1) fi
-done;
-println (fact 5);

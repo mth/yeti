@@ -13,5 +13,12 @@ fact_ =
             f (acc * x) (x - 1)
         fi) 1;
 
-println (fact 5);
+y f x = f (y f) x;
+yfact = y do rec x:
+	if x == 0 then 1 else x * rec (x - 1) fi
+done;
+
+println {fact = fact 5};
+println {fact_ = fact_ 5};
+println {yfact = yfact 5};
 println (fact_ 1000);
