@@ -174,26 +174,14 @@ class YetiTypeAttr extends Attribute {
         }
 
         void writeDirectFields(Map fields) {
-            StringBuffer r = new StringBuffer();
             Iterator i = fields.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
                 Object v = e.getValue();
-                r.append(v == null ? 'P' : 'F');
-                r.append(e.getKey());
-                r.append('\000');
-                if (v != null) {
-                    r.append(v);
-                    r.append('\000');
-                }
+                buf.putShort(cw.newUTF8((String) e.getKey()));
+                buf.putShort(cw.newUTF8(v == null ? "" : (String) v));
             }
-            try {
-                byte[] v = r.toString().getBytes("UTF-8");
-                buf.putInt(v.length);
-                buf.putByteArray(v, 0, v.length);
-            } catch (java.io.UnsupportedEncodingException ex) {
-                throw new RuntimeException(ex);
-            }
+            buf.putShort(cw.newUTF8(""));
         }
     }
 
@@ -320,27 +308,15 @@ class YetiTypeAttr extends Attribute {
         }
 
         Map readDirectFields() {
-            int len = cr.readInt(p);
-            String code;
-            try {
-                code = new String(in, p + 4, len, "UTF-8");
-            } catch (java.io.UnsupportedEncodingException ex) {
-                throw new RuntimeException(ex);
-            }
-            p += len + 4;
             Map result = new HashMap();
-            for (int e, n = 0;;) {
-                if ((e = code.indexOf('\000', n)) < 0)
+            for (;;) {
+                String name = cr.readUTF8(p, buf);
+                p += 2;
+                if (name.length() == 0)
                     break;
-                String name = code.substring(n + 1, e);
-                if (code.charAt(n) == 'P') {
-                    n = e + 1;
-                    result.put(name, null);
-                    continue;
-                }
-                if ((n = code.indexOf('\000', ++e)) < 0)
-                    break;
-                result.put(name, code.substring(e, n++));
+                String fun = cr.readUTF8(p, buf);
+                p += 2;
+                result.put(name, fun.length() == 0 ? null : fun);
             }
             return result;
         }
