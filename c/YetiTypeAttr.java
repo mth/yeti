@@ -174,6 +174,7 @@ class YetiTypeAttr extends Attribute {
         }
 
         void writeDirectFields(Map fields) {
+            buf.putShort(fields.size());
             Iterator i = fields.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
@@ -181,7 +182,6 @@ class YetiTypeAttr extends Attribute {
                 buf.putShort(cw.newUTF8((String) e.getKey()));
                 buf.putShort(cw.newUTF8(v == null ? "" : (String) v));
             }
-            buf.putShort(cw.newUTF8(""));
         }
     }
 
@@ -308,17 +308,16 @@ class YetiTypeAttr extends Attribute {
         }
 
         Map readDirectFields() {
-            Map result = new HashMap();
+            int n = cr.readUnsignedShort(p);
+            Map result = new HashMap(n);
             for (;;) {
+                p += 2;
+                if (--n < 0)
+                    return result;
                 String name = cr.readUTF8(p, buf);
-                p += 2;
-                if (name.length() == 0)
-                    break;
-                String fun = cr.readUTF8(p, buf);
-                p += 2;
+                String fun = cr.readUTF8(p += 2, buf);
                 result.put(name, fun.length() == 0 ? null : fun);
             }
-            return result;
         }
     }
 
