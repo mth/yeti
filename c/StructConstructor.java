@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 final class StructField implements Opcodes {
-    boolean property;
+    int property; // 0 - not property, 1 - property, -1 - constant property
     boolean mutable;
     boolean inherited; // inherited field in with { ... }
     String name;
@@ -140,7 +140,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 ctx.ldcInsn(field.name);
                 ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
                                "(Ljava/lang/String;)Ljava/lang/Object;");
-            } else if (field.property) {
+            } else if (field.property != 0) {
                 // Property accessor
                 ctx.intConst(field.index);
                 ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
@@ -152,7 +152,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public void genSet(Ctx ctx, Code value) {
-            if (impl != null && !field.property) {
+            if (impl != null && field.property == 0) {
                 value.gen(ctx);
                 ctx.fieldInsn(PUTFIELD, impl, field.javaName,
                               "Ljava/lang/Object;");
@@ -186,7 +186,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         if (field.name == null)
             throw new IllegalArgumentException();
         fields[fieldCount++] = field;
-        if (field.property) {
+        if (field.property != 0) {
             field.nextProperty = properties;
             properties = field;
         }
@@ -203,14 +203,14 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             StructField field = fields[i];
             field.javaName = "_".concat(Integer.toString(i));
             field.index = i;
-            if (field.property)
+            if (field.property != 0)
                 mustGen = true;
         }
     }
 
     void publish() {
         for (int i = 0; i < fieldCount; ++i) {
-            if (!fields[i].property) {
+            if (fields[i].property <= 0) {
                 Code v = fields[i].value;
                 while (v instanceof BindRef)
                     v = ((BindRef) v).unref(true);
@@ -223,7 +223,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     Map getDirect() {
         Map r = new HashMap();
         for (int i = 0; i < fieldCount; ++i) {
-            if (fields[i].mutable || fields[i].property) {
+            if (fields[i].mutable || fields[i].property > 0) {
                 r.put(fields[i].name, null);
                 continue;
             }
@@ -278,7 +278,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         if (arrayVar != -1)
             ctx.varInsn(ASTORE, arrayVar);
         for (int i = 0, cnt = fieldCount; i < cnt; ++i) {
-            if (fields[i].property || fields[i].inherited)
+            if (fields[i].property != 0 || fields[i].inherited)
                 continue;
             if (arrayVar != -1) {
                 ctx.load(arrayVar);
@@ -321,7 +321,19 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Label next, dflt = null, jumps[];
         int i;
 
-        if (!mustGen) {
+        if (mustGen) {
+            /*
+             * Have to generate our own struct class anyway, so take advantage
+             * and change constant fields into inlined properties, eliminating
+             * actual field stores for these fields in the structure.
+             */
+            for (i = 0; i < fieldCount; ++i) {
+                field = fields[i];
+                if (!field.mutable && field.property == 0 &&
+                    !field.inherited && field.value.prepareConst(ctx))
+                    field.property = -1;
+            }
+        } else {
             StringBuffer buf = new StringBuffer();
             for (i = 0; i < fields.length; ++i) {
                 buf.append(fields[i].mutable ? ';' : ',')
@@ -418,7 +430,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         // fields
         for (i = 0; i < fieldCount; ++i) {
             field = fields[i];
-            if (!field.property)
+            if (field.property == 0)
                 st.cw.visitField(field.inherited ? ACC_PRIVATE : ACC_SYNTHETIC,
                                  field.javaName, "Ljava/lang/Object;",
                                  null, null).visitEnd();
@@ -436,7 +448,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             next = new Label();
             m.load(1).ldcInsn(fields[i].name);
             m.jumpInsn(IF_ACMPNE, next);
-            if (fields[i].property) {
+            if (fields[i].property != 0) {
                 m.intConst(i);
                 m.methodInsn(INVOKEVIRTUAL, cn, "get", "(I)Ljava/lang/Object;");
             } else {
@@ -485,9 +497,11 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         for (i = 0; i < fieldCount; ++i) {
             field = fields[i];
             m.visitLabel(jumps[i]);
-            if (field.property) {
+            if (field.property > 0) {
                 new Apply(null, field.value,
                           new UnitConstant(null), field.line).gen(m);
+            } else if (field.property < 0) {
+                field.value.gen(m);
             } else {
                 m.fieldInsn(GETFIELD, cn, field.javaName,
                             "Ljava/lang/Object;");
@@ -520,7 +534,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             for (i = 0; i < fieldCount; ++i) {
                 if (fields[i].inherited) {
                     jumps[i] = new Label();
-                } else if (fields[i].mutable || fields[i].property) {
+                } else if (fields[i].mutable || fields[i].property > 0) {
                     if (isVar == null)
                         isVar = new Label();
                     jumps[i] = isVar;
@@ -580,7 +594,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             next = new Label();
             m.load(1).ldcInsn(field.name);
             m.jumpInsn(IF_ACMPNE, next);
-            if (field.property) {
+            if (field.property != 0) {
                 LoadVar var = new LoadVar();
                 var.var = 2;
                 new Apply(null, field.setter, var, field.line).gen(m);

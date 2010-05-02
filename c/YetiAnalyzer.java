@@ -1097,12 +1097,12 @@ public final class YetiAnalyzer extends YetiType {
             if (field.property) {
                 if (sf == null) {
                     sf = new StructField();
-                    sf.property = true;
+                    sf.property = 1;
                     sf.name = field.name;
                     sf.line = field.line;
                     codeMap.put(sf.name, sf);
                     result.add(sf);
-                } else if (!sf.property ||
+                } else if (sf.property == 0 ||
                            (field.var ? sf.setter : sf.value) != null) {
                     duplicateField(field);
                 }

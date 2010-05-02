@@ -117,7 +117,7 @@ final class Constants implements Opcodes {
         for (i = 1; i < fieldNameArr.length; ++i) {
             StructField f = fields[i - 1];
             fieldNameArr[i] = f.name;
-            if (f.mutable || f.property) {
+            if (f.mutable || f.property > 0) {
                 mutableArr[i] = '\001';
                 ++mutableCount;
             }
