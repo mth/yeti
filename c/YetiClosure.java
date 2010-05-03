@@ -928,13 +928,14 @@ final class Function extends CapturingClosure implements Binder {
                 return;
             }
             ctx.insn(DUP);
-            if (meth)
+            if (meth) {
                 ctx.intConst(++counter);
-            c.captureGen(ctx);
-            if (meth)
+                c.captureGen(ctx);
                 ctx.insn(AASTORE);
-            else
+            } else {
+                c.captureGen(ctx);
                 ctx.fieldInsn(PUTFIELD, name, c.id, c.captureType());
+            }
         }
         ctx.forceType(meth ? "[Ljava/lang/Object;" : "yeti/lang/Fun");
     }
