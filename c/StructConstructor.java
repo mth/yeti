@@ -305,13 +305,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             ctx.load(arrayVar);
         for (Capture c = captures; c != null; c = c.next) {
             ctx.insn(DUP);
-            if (c.wrapper == null)
-                c.ref.gen(ctx);
-            else
-                c.wrapper.genPreGet(ctx);
-            String type = c.captureType();
-            ctx.captureCast(type);
-            ctx.fieldInsn(PUTFIELD, impl, c.id, type);
+            c.captureGen(ctx);
+            ctx.fieldInsn(PUTFIELD, impl, c.id, c.captureType());
         }
     }
 

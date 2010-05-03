@@ -174,12 +174,7 @@ final class TryCatch extends CapturingClosure {
 
     void captureInit(Ctx ctx, Capture c, int n) {
         c.localVar = n;
-        if (c.wrapper == null) {
-            c.ref.gen(ctx);
-            ctx.captureCast(c.captureType());
-        } else {
-            c.wrapper.genPreGet(ctx);
-        }
+        c.captureGen(ctx);
     }
 
     void gen(Ctx ctx) {
@@ -475,6 +470,15 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
             }
         }
         return refType;
+    }
+
+    void captureGen(Ctx ctx) {
+        if (wrapper == null) {
+            ref.gen(ctx);
+            ctx.captureCast(captureType());
+        } else {
+            wrapper.genPreGet(ctx);
+        }
     }
 
     BindRef unshare() {
@@ -917,24 +921,18 @@ final class Function extends CapturingClosure implements Binder {
         for (Capture c = captures; c != null; c = c.next) {
             if (c.uncaptured)
                 continue;
-            if (!capture1) {
-                ctx.insn(DUP);
-                if (meth)
-                    ctx.intConst(++counter);
-            }
-            if (c.wrapper == null)
-                c.ref.gen(ctx);
-            else
-                c.wrapper.genPreGet(ctx);
-            if (capture1)
+            if (capture1) {
+                c.captureGen(ctx);
                 return;
-            if (meth) {
-                ctx.insn(AASTORE);
-            } else {
-                String type = c.captureType();
-                ctx.captureCast(type);
-                ctx.fieldInsn(PUTFIELD, name, c.id, type);
             }
+            ctx.insn(DUP);
+            if (meth)
+                ctx.intConst(++counter);
+            c.captureGen(ctx);
+            if (meth)
+                ctx.insn(AASTORE);
+            else
+                ctx.fieldInsn(PUTFIELD, name, c.id, c.captureType());
         }
         ctx.forceType(meth ? "[Ljava/lang/Object;" : "yeti/lang/Fun");
     }
