@@ -519,8 +519,12 @@ abstract class CapturingClosure extends AClosure {
 
     Capture captureRef(BindRef code) {
         for (Capture c = captures; c != null; c = c.next)
-            if (c.binder == code.binder)
+            if (c.binder == code.binder) {
+                // evil hack... ref sharing broke fun-method
+                // optimisation accounting of ref usage
+                c.origin = code.origin;
                 return c;
+            }
         Capture c = new Capture();
         c.binder = code.binder;
         c.type = code.type;
