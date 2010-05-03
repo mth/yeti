@@ -12,8 +12,6 @@
 * Foreign structs (java dto -> struct?)
 * Ensure that unit values really are null pointers
   when casted into Java object
-* Don't use Object[] wrapping when function-method has only 1 captured
-  variable (to be faster)
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,

@@ -75,14 +75,16 @@ class Apply extends Code {
                && arity == (argc = f.methodImpl.argVar)) {
             //System.err.println("A" + arity + " F" + argc);
             // first argument is function value (captures array really)
-            StringBuffer sig = new StringBuffer("([Ljava/lang/Object;");
+            StringBuffer sig = new StringBuffer(f.capture1 ? "(" : "([");
+            sig.append("Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
             Code[] args = new Code[argc];
             for (int i = argc; --i > 0; a = (Apply) a.fun)
                 args[i] = a.arg;
             args[0] = a.arg; // out-of-cycle as we need "a" for fun
             a.fun.gen(ctx);
-            ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
+            if (!f.capture1)
+                ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
             for (int i = 0; i < argc; ++i) {
                 args[i].gen(ctx);
                 sig.append("Ljava/lang/Object;");
@@ -600,6 +602,8 @@ final class Function extends CapturingClosure implements Binder {
     // Function uses local bindings from its module. Published function
     // should ensure module initialisation in this case, when called.
     private boolean moduleInit;
+    // methodImpl and only one live capture - carry it directly.
+    boolean capture1;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -720,6 +724,11 @@ final class Function extends CapturingClosure implements Binder {
             // c.getId() initialises the captures id as a side effect
             fun.cw.visitField(0, c.getId(fun), c.captureType(),
                               null, null).visitEnd();
+        } else if (capture1) {
+            assert (n == 0);
+            c.localVar = 0;
+            fun.load(0).captureCast(c.captureType());
+            fun.varInsn(ASTORE, 0);
         } else {
             c.localVar = -2 - n;
         }
@@ -762,10 +771,24 @@ final class Function extends CapturingClosure implements Binder {
             tmp.localVar = 0;
             captureMapping.put(selfBind, tmp);
         }
+
+        // Create method
+        Map usedNames = ctx.usedMethodNames;
+        bindName = bindName != null ? mangle(bindName) : "_";
+        if (usedNames.containsKey(bindName) || bindName.startsWith("_"))
+            bindName += ctx.methodCounter++;
+        usedNames.put(bindName, null);
+        StringBuffer sig = new StringBuffer(capture1 ? "(" : "([");
+        for (int i = methodImpl.argVar + 2; --i >= 0;) {
+            if (i == 0)
+                sig.append(')');
+            sig.append("Ljava/lang/Object;");
+        }
+        Ctx m = ctx.newMethod(ACC_STATIC, bindName, sig.toString());
         
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
-        int captureCount = mergeCaptures(ctx);
+        int captureCount = mergeCaptures(m);
 
         // Hijack the inner functions capture mapping...
         if (captureMapping != null)
@@ -785,21 +808,8 @@ final class Function extends CapturingClosure implements Binder {
                 }
             }
 
-        Map usedNames = ctx.usedMethodNames;
-        bindName = bindName != null ? mangle(bindName) : "_";
-        if (usedNames.containsKey(bindName) || bindName.startsWith("_"))
-            bindName += ctx.methodCounter++;
-        usedNames.put(bindName, null);
-
+        // Generate method body
         name = ctx.className;
-        StringBuffer sig = new StringBuffer("([");
-        for (int i = methodImpl.argVar + 2; --i >= 0;) {
-            if (i == 0)
-                sig.append(')');
-            sig.append("Ljava/lang/Object;");
-        }
-
-        Ctx m = ctx.newMethod(ACC_STATIC, bindName, sig.toString());
         m.localVarCount = methodImpl.argVar + 1; // capturearray, args
         methodImpl.genClosureInit(m);
         m.visitLabel(methodImpl.restart = new Label());
@@ -808,7 +818,7 @@ final class Function extends CapturingClosure implements Binder {
         m.insn(ARETURN);
         m.closeMethod();
 
-        if (!shared) {
+        if (!shared && !capture1) {
             ctx.intConst(captureCount);
             ctx.typeInsn(ANEWARRAY, "java/lang/Object");
         }
@@ -907,13 +917,17 @@ final class Function extends CapturingClosure implements Binder {
         for (Capture c = captures; c != null; c = c.next) {
             if (c.uncaptured)
                 continue;
-            ctx.insn(DUP);
-            if (meth)
-                ctx.intConst(++counter);
+            if (!capture1) {
+                ctx.insn(DUP);
+                if (meth)
+                    ctx.intConst(++counter);
+            }
             if (c.wrapper == null)
                 c.ref.gen(ctx);
             else
                 c.wrapper.genPreGet(ctx);
+            if (capture1)
+                return;
             if (meth) {
                 ctx.insn(AASTORE);
             } else {
@@ -936,7 +950,7 @@ final class Function extends CapturingClosure implements Binder {
         if (shared) // already optimised into static constant value
             return true;
 
-        BindExpr bindExpr;
+        BindExpr bindExpr = null;
         // First try determine if we can reduce into method.
         if (selfBind instanceof BindExpr &&
                 (bindExpr = (BindExpr) selfBind).evalId == -1 &&
@@ -964,7 +978,7 @@ final class Function extends CapturingClosure implements Binder {
                     merged = false;
                 }
                 methodImpl = impl.merged ? impl.outer : impl;
-                bindExpr.setArrayType();
+                bindExpr.setCaptureType("[Ljava/lang/Object;");
             }
         }
 
@@ -987,7 +1001,7 @@ final class Function extends CapturingClosure implements Binder {
 
         // Uncapture the direct bindings.
         Capture prev = null;
-        boolean isConst = true;
+        int liveCaptures = 0;
         for (Capture c = captures; c != null; c = c.next)
             if (c.ref.flagop(DIRECT_BIND)) {
                 c.uncaptured = true;
@@ -999,17 +1013,22 @@ final class Function extends CapturingClosure implements Binder {
                 // Why in the hell are existing uncaptured ones preserved?
                 // Does some checks them (selfref, args??) after prepareConst?
                 if (!c.uncaptured)
-                    isConst = false;
+                    ++liveCaptures;
                 prev = c;
             }
         
+        if (methodImpl != null && liveCaptures == 1) {
+            capture1 = true;
+            bindExpr.setCaptureType("java/lang/Object");
+        }
+
         // If all captures were uncaptured, then the function can
         // (and will) be optimised into shared static constant.
-        if (isConst) {
+        if (liveCaptures == 0) {
             shared = true;
             prepareGen(ctx);
         }
-        return isConst;
+        return liveCaptures == 0;
     }
 
     void gen(Ctx ctx) {

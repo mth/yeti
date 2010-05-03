@@ -1840,13 +1840,14 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     }
     
     // called by Function.prepareConst when this bastard mutates into method
-    void setArrayType() {
+    void setCaptureType(String type) {
         javaDescr = javaType = "[Ljava/lang/Object;";
+        javaType = type;
+        javaDescr = type.charAt(0) == '[' ? type : 'L' + type + ';';
     }
 
     void genBind(Ctx ctx) {
-        javaType = javaType(st.type);
-        javaDescr = 'L' + javaType + ';';
+        setCaptureType(javaType(st.type));
         if (ctx == null)
             return; // named lambdas use genBind for initializing the expr
         if (!var && st.prepareConst(ctx) && evalId == -1) {
