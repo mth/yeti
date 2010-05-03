@@ -425,8 +425,10 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
         } else {
             ctx.load(localVar);
             // hacky way to forceType on try-catch, but not on method argument
-            if (!ignoreGet)
-                ctx.forceType(captureType());
+            if (!ignoreGet) {
+                ctx.forceType(captureType().charAt(0) == '['
+                        ? refType : refType.substring(1, refType.length() - 1));
+            }
         }
     }
 
