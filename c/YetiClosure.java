@@ -419,8 +419,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
                 ctx.intConst(-2 - localVar);
                 ctx.insn(AALOAD);
             } else {
-                ctx.fieldInsn(GETFIELD, ctx.className, id,
-                                   captureType());
+                ctx.fieldInsn(GETFIELD, ctx.className, id, captureType());
             }
         } else {
             ctx.load(localVar);
@@ -477,10 +476,12 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
     void captureGen(Ctx ctx) {
         if (wrapper == null) {
             ref.gen(ctx);
-            ctx.captureCast(captureType());
         } else {
             wrapper.genPreGet(ctx);
         }
+        // stupid AALOAD in genPreGet returns shit,
+        // so have to captureCast for it...
+        ctx.captureCast(captureType());
     }
 
     BindRef unshare() {
