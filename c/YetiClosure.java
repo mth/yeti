@@ -533,6 +533,9 @@ abstract class CapturingClosure extends AClosure {
     // It must be ok to copy capture after that.
     abstract void captureInit(Ctx fun, Capture c, int n);
 
+    // mergeCaptures seems to drop only some uncaptured ones
+    // (looks like because so is easy to do, currently
+    // this seems to cause extra check only in finishGen).
     int mergeCaptures(Ctx ctx) {
         int counter = 0;
         Capture prev = null;
@@ -993,6 +996,8 @@ final class Function extends CapturingClosure implements Binder {
                 else
                     prev.next = c.next;
             } else {
+                // Why in the hell are existing uncaptured ones preserved?
+                // Does some checks them (selfref, args??) after prepareConst?
                 if (!c.uncaptured)
                     isConst = false;
                 prev = c;
