@@ -691,12 +691,14 @@ final class Function extends CapturingClosure implements Binder {
                 selfRef.binder = selfBind;
                 selfRef.type = code.type;
                 selfRef.ref = code;
-                // Actually, this should be outside of if (so it would be
-                // updated on multiple selfRefs), but allowing method-fun
+
+                // Right place for this should be outside of if (so it would
+                // be updated on multiple selfRefs), but allowing method-fun
                 // in such case slows some code down (b/c array capture).
                 // Having it here means non-first self-refs arity stays zero
                 // and so these will be considered to be used as fun-values.
                 selfRef.origin = code.origin;
+
                 selfRef.capturer = this;
             }
             // selfRef.origin = code.origin;
