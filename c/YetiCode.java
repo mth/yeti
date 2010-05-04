@@ -1274,7 +1274,7 @@ final class MethodCall extends JavaExpr {
 
     void gen(Ctx ctx) {
         _gen(ctx);
-        if (method.returnType == YetiType.UNIT_TYPE) {
+        if (method.returnType.type == YetiType.UNIT) {
             ctx.insn(ACONST_NULL);
         } else {
             convertValue(ctx, method.returnType);
@@ -1393,8 +1393,12 @@ final class Cast extends JavaExpr {
     void gen(Ctx ctx) {
         if (convert) {
             convertedArg(ctx, object, type.deref(), line);
-        } else {
-            object.gen(ctx);
+            return;
+        }
+        object.gen(ctx);
+        if (type.type == YetiType.UNIT) {
+            ctx.insn(POP);
+            ctx.insn(ACONST_NULL);
         }
     }
 }
