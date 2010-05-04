@@ -1396,7 +1396,7 @@ final class Cast extends JavaExpr {
             return;
         }
         object.gen(ctx);
-        if (type.type == YetiType.UNIT) {
+        if (type.deref().type == YetiType.UNIT) {
             ctx.insn(POP);
             ctx.insn(ACONST_NULL);
         }

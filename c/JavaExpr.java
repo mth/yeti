@@ -259,8 +259,7 @@ class JavaExpr extends Code {
             ctx.forceType(jt.className());
     }
 
-    static void convertedArg(Ctx ctx, Code arg, YType argType,
-                             int line) {
+    static void convertedArg(Ctx ctx, Code arg, YType argType, int line) {
         String desc;
         if (arg instanceof NumericConstant &&
             (argType = argType.deref()).type == YetiType.JAVA &&
