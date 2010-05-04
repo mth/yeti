@@ -1,0 +1,22 @@
+{odd, even} = {
+    even n =
+        if n == 0 then
+            Done true
+        else
+            Call \(odd (n - 1))
+        fi,
+    odd n =
+        if n == 0 then
+            Done false
+        else
+            Call \(even (n - 1))
+        fi
+};
+
+trampoline v =
+    case v of
+    Call f: trampoline (f ());
+    Done v: v;
+    esac;
+
+println (trampoline (even 99998))

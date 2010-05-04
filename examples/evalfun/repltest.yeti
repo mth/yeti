@@ -1,0 +1,6 @@
+repl_argv = array [];
+repl = load yeti.lang.compiler.repl repl_argv;
+
+for (stdin.lines ()) do line:
+    println (repl.evaluate line 0)
+done
