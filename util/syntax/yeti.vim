@@ -35,13 +35,13 @@ syn match yetiParenErr ")"
 syn region yetiParens start="(" end=")" contains=TOP,yetiParenErr
 syn region yetiEncl matchgroup=yetiOperator start="{" matchgroup=yetiOperator end="}" contains=TOP
 syn region yetiEncl matchgroup=yetiOperator start="\[" matchgroup=yetiOperator end="\]" contains=TOP
-syn match yetiKeyword "\[:]"
+syn match yetiOperator "\[:]"
 
 syn region yetiIf matchgroup=yetiConditional start="\<if\>" matchgroup=yetiConditional end="\<\(fi\>\|else:\)" contains=TOP
 
 syn keyword yetiConditional then elif else containedin=yetiIf contained
 
-syn region yetiDo matchgroup=yetiKeyword start="\<do\>" matchgroup=yetiKeyword end="\<done\>" contains=TOP
+syn region yetiDo matchgroup=yetiStatement start="\<do\>" matchgroup=yetiStatement end="\<done\>" contains=TOP
 
 syn region yetiCase matchgroup=yetiConditional start="\<case\>" matchgroup=yetiConditional end="\<esac\>" contains=TOP
 
@@ -51,10 +51,10 @@ syn region yetiTry matchgroup=yetiException start="\<try\>" matchgroup=yetiExcep
 
 syn keyword yetiException catch containedin=yetiTry contained skipempty skipwhite nextgroup=yetiClassName
 syn keyword yetiException finally containedin=yetiTry contained
-syn keyword yetiException throw
+syn keyword yetiOperator throw with
 
 syn keyword yetiRepeat for forHash loop withExit
-syn keyword yetiKeyword module program synchronized with
+syn keyword yetiStatement module program synchronized
 
 syn keyword yetiStorageClass var norec get set
 
@@ -135,7 +135,7 @@ syn region yetiTypeOp matchgroup=yetiTypeDelimiter start="<" matchgroup=yetiType
 syn match yetiClassName "[A-Za-z]\(\w\|\.\|\$\)*\(\[\]\)*\(()\)\?" contained
 syn match yetiImport "[A-Za-z]\(\w\|\.\|\$\)*" contained skipwhite skipempty nextgroup=yetiImportMany
 syn region yetiImportMany matchgroup=yetiOperator start=":" matchgroup=yetiOperator end=";" contained
-syn keyword yetiKeyword new skipempty skipwhite nextgroup=yetiClassName
+syn keyword yetiOperator new skipempty skipwhite nextgroup=yetiClassName
 
 " Synchronization
 syn sync minlines=50
@@ -180,7 +180,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
 
   HiLink yetiExternal	Include
   HiLink yetiFunction	Function
-  HiLink yetiKeyword 	Keyword
+  HiLink yetiStatement	Statement
 
   HiLink yetiConstant	Constant
   HiLink yetiConstructor Identifier
