@@ -180,7 +180,10 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
 
   HiLink yetiExternal	Include
   HiLink yetiFunction	Function
-  HiLink yetiStatement	Statement
+ 
+  " these statements hilight actually keywords - and since vim thinks
+  " keyword is kind of statement it is more accurate to link this to Keyword
+  HiLink yetiStatement	Keyword
 
   HiLink yetiConstant	Constant
   HiLink yetiConstructor Identifier
