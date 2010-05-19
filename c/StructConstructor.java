@@ -131,11 +131,17 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public void genPreGet(Ctx ctx) {
-            ctx.load(var);
+            if (direct)
+                ctx.insn(ACONST_NULL); // wtf
+            else
+                ctx.load(var);
         }
 
         public void genGet(Ctx ctx) {
-            if (impl == null) {
+            if (direct) {
+                ctx.insn(POP);
+                field.value.gen(ctx);
+            } else if (impl == null) {
                 // GenericStruct
                 ctx.ldcInsn(field.name);
                 ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
@@ -165,7 +171,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
 
         public Object captureIdentity() {
-            return StructConstructor.this;
+            return direct ? null : StructConstructor.this;
         }
 
         public String captureType() {
