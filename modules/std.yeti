@@ -129,6 +129,9 @@ peekObject object =
                 fi;
                 peekObject (st#get(i) unsafely_as 'a)
         }
+    elif o instanceof Tag then
+        t = o unsafely_as ~Tag;
+        Variant {tag = t#name, value = peekObject (t#value unsafely_as 'a)}
     else
         Object o
     fi);
