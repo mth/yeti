@@ -66,11 +66,11 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     private String[] withFields;
 
     private class Bind extends BindRef implements Binder, CaptureWrapper {
-        StructField field;
-        boolean fun;
-        boolean direct;
-        boolean mutable;
-        int var;
+        private StructField field;
+        private boolean fun;
+        private boolean direct;
+        private boolean mutable;
+        private int var;
 
         Bind(StructField sf) {
             type = sf.value.type;
@@ -115,12 +115,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             if ((fl & DIRECT_BIND) != 0)
                 return direct;
             if ((fl & CONST) != 0)
-                return !mutable && field.value.flagop(CONST);
+                return direct || !mutable && field.value.flagop(CONST);
             return false;
         }
 
         boolean prepareConst(Ctx ctx) {
-            return !mutable && field.value.prepareConst(ctx);
+            return direct || !mutable && field.value.prepareConst(ctx);
         }
 
         void gen(Ctx ctx) {
