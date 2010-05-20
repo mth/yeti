@@ -44,7 +44,6 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private List methods = new ArrayList();
     private JavaExpr superInit;
     private final boolean isPublic;
-    private boolean usedForceDirect;
     private int captureCount;
     private Map accessors;
     private Ctx classCtx;
@@ -340,7 +339,6 @@ final class JavaClass extends CapturingClosure implements Runnable {
         if (!isPublic)
             return captureRef(code);
         code.forceDirect();
-        usedForceDirect = true;
         return code;
     }
 
@@ -440,10 +438,10 @@ final class JavaClass extends CapturingClosure implements Runnable {
         init.closeMethod();
         for (i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
-        if (usedForceDirect) {
+        if (isPublic) {
             Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
             clinit.methodInsn(INVOKESTATIC, ctx.className,
-                                   "eval", "()Ljava/lang/Object;");
+                              "eval", "()Ljava/lang/Object;");
             clinit.insn(POP);
             clinit.insn(RETURN);
             clinit.closeMethod();
