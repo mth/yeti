@@ -208,7 +208,8 @@ final class CompileCtx implements Opcodes {
     }
 
     private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
-        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        if (ctx.compilation.isGCJ)
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
@@ -1487,7 +1488,8 @@ abstract class SelectMember extends BindRef implements CodeGen {
     void gen(Ctx ctx) {
         st.gen(ctx);
         ctx.visitLine(line);
-        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        if (ctx.compilation.isGCJ)
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.ldcInsn(name);
         ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
@@ -1496,7 +1498,8 @@ abstract class SelectMember extends BindRef implements CodeGen {
     public void gen2(Ctx ctx, Code setValue, int _) {
         st.gen(ctx);
         ctx.visitLine(line);
-        //ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        if (ctx.compilation.isGCJ)
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
         ctx.ldcInsn(name);
         setValue.gen(ctx);
         ctx.visitLine(line);
