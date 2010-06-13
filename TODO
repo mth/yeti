@@ -1,6 +1,7 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* array<boolean> into ~boolean[] argument autoconversion
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
 * super reference in Java classes
