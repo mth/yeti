@@ -628,17 +628,19 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         mustGen = true;
         withParent = src;
         StructField[] fields = new StructField[fieldCount + srcFields.size()];
-        withFields = new String[srcFields.size() + 1];
-        Iterator j = srcFields.entrySet().iterator();
-        for (int i = 1; i < withFields.length; ++i) {
-            Map.Entry e = (Map.Entry) j.next();
+        Object[] withFields = srcFields.keySet().toArray();
+        Arrays.sort(withFields);
+        for (int i = 0; i < withFields.length; ++i) {
             StructField sf = new StructField();
-            withFields[i] = sf.name = (String) e.getKey();
+            sf.name = (String) withFields[i];
             sf.inherited = true;
             // whether to generate the setter code
-            sf.mutable = ((YType) e.getValue()).field == YetiType.FIELD_MUTABLE;
-            fields[i - 1] = sf;
+            sf.mutable = ((YType) srcFields.get(sf.name)).field
+                            == YetiType.FIELD_MUTABLE;
+            fields[i] = sf;
         }
+        this.withFields = new String[withFields.length + 1];
+        System.arraycopy(withFields, 0, this.withFields, 1, withFields.length);
         System.arraycopy(this.fields, 0, fields, srcFields.size(), fieldCount);
         this.fields = fields;
         fieldCount = fields.length;
