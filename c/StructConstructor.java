@@ -401,14 +401,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.switchInsn(0, jumps.length - 1, dflt, null, jumps);
             }
             i = 0;
-            for (int j = 0;; ++i)
+            for (int j = 0; j < jumps.length; ++i)
                 if (fields[i].inherited) {
-                    m.visitLabel(jumps[j]);
+                    m.visitLabel(jumps[j++]);
                     m.fieldInsn(PUTFIELD, cn, "i" + i, "I");
                     m.fieldInsn(PUTFIELD, cn, fields[i].javaName,
                                 "Ljava/lang/Object;");
-                    if (++j >= jumps.length)
-                        break;
                     m.jumpInsn(GOTO, next);
                 }
             if (jumps.length > 1) {
