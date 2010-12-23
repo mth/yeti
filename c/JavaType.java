@@ -1052,6 +1052,9 @@ class JavaType {
              --i >= 0 && --j >= 0 && aa.get(i) == ba.get(j);) {
             common = (JavaType) aa.get(i);
         }
+        if (common == null) {
+            return null;
+        }
         JavaType aj = a.javaType, bj = b.javaType;
         if (common.description == "Ljava/lang/Object;") {
             int mc = -1;
