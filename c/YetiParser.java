@@ -1485,8 +1485,8 @@ interface YetiParser {
             String s = "";
             do {
                 for (; i < src.length && src[i] != '\''; ++i)
-                    if (src[p] == '\n') {
-                        lineStart = p + 1;
+                    if (src[i] == '\n') {
+                        lineStart = i + 1;
                         ++line;
                     }
                 if (i >= src.length) {
