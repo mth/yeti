@@ -97,7 +97,8 @@ syn match yetiConstructor "\<\u\(\w\|'\)*\>"
 syn match yetiStringErr "\\." contained
 syn region yetiEmbedded contained matchgroup=Delimiter start="\\(" matchgroup=Delimiter end=")" contains=TOP,yetiParenErr
 syn match yetiSpecial "\\\([abefnrt0\'"]\|u\x\{4}\)" contained
-syn region yetiString start=+"+ end=+"\|\\[ \t\r]*\n+ contains=yetiEmbedded,yetiSpecial,yetiStringErr
+syn region yetiString start=+"""+ end=+"""+ contains=yetiEmbedded,yetiSpecial,yetiStringErr
+syn region yetiString start=+"\(""\)\@!+ end=+"\|\\[ \t\r]*\n+ contains=yetiEmbedded,yetiSpecial,yetiStringErr
 syn region yetiString start=+\<'+ skip=+''+ end=+'+
 
 " Numbers: supporting integers and floating point numbers

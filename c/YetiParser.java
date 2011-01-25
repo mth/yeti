@@ -1384,7 +1384,16 @@ interface YetiParser {
             List parts = null;
             StringBuffer res = new StringBuffer();
             int sline = line, scol = p - lineStart;
-            for (; p < src.length && src[p] != '"'; ++p) {
+            boolean tripleQuote;
+            if (p + 1 < src.length && src[p] == '"' && src[p + 1] == '"') {
+                st = p += 2;
+                tripleQuote = true;
+            } else {
+                tripleQuote = false;
+            }
+            for (; p < src.length &&
+                    (src[p] != '"' || tripleQuote && p + 2 < src.length &&
+                     src[p + 1] != '"' && src[p + 2] != '"'); ++p) {
                 if (src[p] == '\n') {
                     lineStart = p + 1;
                     ++line;
@@ -1467,9 +1476,13 @@ interface YetiParser {
                 }
             }
             if (p >= src.length) {
-                throw new CompileException(sline, scol, "Unclosed \"");
+                throw new CompileException(sline, scol,
+                        tripleQuote ? "Unclosed \"\"\"" : "Unclosed \"");
             }
             res.append(src, st, p++ - st);
+            if (tripleQuote) {
+                p += 2;
+            }
             if (parts == null) {
                 return new Str(res.toString());
             }

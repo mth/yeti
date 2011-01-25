@@ -16,7 +16,6 @@
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.
-* Long strings with """ string """
 * Support module qualification on type, like x is foo.sometype
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
