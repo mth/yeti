@@ -123,6 +123,8 @@ public class YetiC implements SourceReader {
         char[] buf = new char[0x8000];
         int l = 0;
         InputStream stream;
+        // XXX workaround for windows - some code expects '/'
+        name_[0] = name_[0].replace(File.separatorChar, '/');
         String name = name_[0];
         if (fullPath)
             stream = new FileInputStream(name);

@@ -101,9 +101,8 @@ public class YetiTask extends MatchingTask {
         }
         log("Compiling " + files.length + " files.");
         try {
-            for (int i = 0; i < files.length; ++i)
-                compilation.compileAll(files, 0,
-                    (String[]) javaOpt.toArray(new String[0]));
+            compilation.compileAll(files, 0,
+                (String[]) javaOpt.toArray(new String[0]));
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());
         } catch (BuildException ex) {
