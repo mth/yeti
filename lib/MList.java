@@ -340,6 +340,10 @@ public class MList extends AMList implements ByKey {
         return array[--size];
     }
 
+    public final void clear() {
+        start = size = 0;
+    }
+
     public final Object first() {
         if (start >= size) {
             throw new EmptyArrayException("No first element in empty array");

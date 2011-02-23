@@ -611,6 +611,9 @@ plus a b = a + b;
     setArrayCapacity a n is array<'a> -> number -> () =
         (a unsafely_as ~MList)#reserve(n),
 
+    clearArray a is array<'a> -> () =
+        (a unsafely_as ~MList)#clear(),
+
     shift a is array<'a> -> 'a =
         (a unsafely_as ~MList)#shift() unsafely_as 'a,
 

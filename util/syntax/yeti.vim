@@ -78,7 +78,7 @@ syn keyword yetiFunction strLastIndexOf' copy slice deleteAll hash avoid
 syn keyword yetiFunction groupBy insertHash strCapitalize strUncapitalize
 syn keyword yetiFunction identityHash deleteFile binReadFile binWriteFile
 syn keyword yetiFunction binReadAll trace runThread threadLocal peekObject
-syn keyword yetiFunction listDirectory
+syn keyword yetiFunction listDirectory clearArray
 syn keyword yetiExternal load
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains\>"
