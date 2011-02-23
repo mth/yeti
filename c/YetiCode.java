@@ -1303,6 +1303,11 @@ final class Throw extends Code {
 
     void gen(Ctx ctx) {
         throwable.gen(ctx);
+        JavaType t = throwable.type.deref().javaType;
+        if (t == null)
+            throw new CompileException(null,
+                    "Internal error - throw argument type is unknown");
+        ctx.typeInsn(CHECKCAST, t.className());
         ctx.insn(ATHROW);
     }
 }
