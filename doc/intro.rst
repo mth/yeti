@@ -819,7 +819,7 @@ like ``1 :: (3 :: [])``. The list structure would be something like this::
 The ``[1,3]`` list is the ``a`` node. Lists can be accessed using 3 basic list
 function - ``empty?``, ``head`` and ``tail``. The ``head`` returns value
 associated with the given list node (``head a`` is 1 and ``head b`` is 3).
-The ``tail`` returns next node (``head a`` is ``b`` and ``head b`` is ``[]``).
+The ``tail`` returns next node (``tail a`` is ``b`` and ``tail b`` is ``[]``).
 The ``empty?`` function just checks whether a given list is empty list (``[]``)
 or not. Any strict list function in the standard library can be written in
 the terms of ``empty?``, ``head``, ``tail`` and ``::``.
