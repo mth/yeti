@@ -71,26 +71,43 @@ Primitive types
 ~~~~~~~~~~~~~~~~~~
 
 Yeti has string, number, boolean and () as primitive types.
-String literals can be quoted by single or double quotes::
+String literals can be quoted by single, double quotes or triple-double quotes::
 
     > "some text"
     "some text" is string
     > 'some text'
     "some text" is string
+    > """some text"""
+    "some text" is string
     > "test\n"
+    "test\n" is string
+    > """test\n"""
     "test\n" is string
     > 'test\n'
     "test\\n" is string
     > 'i''m'
     "i'm" is string
 
-The difference is that double-quoted strings may contain escaped sequences
-and expressions, like "\n" while single-quoted string literal will interpret
-everything expect the apostrophe as a literal.
+The difference is that double-quoted and triple-double-quoted strings
+may contain escaped sequences and expressions, like "\n" while single-quoted
+string literal will interpret everything expect the apostrophe as a literal.
 
-Double-quoted strings may contain embedded expressions::
+The difference between double-quoted and triple-double-quoted strings
+is that in double-quoted-strings the double-quote must be escaped "\"" and
+in triple-double-quoted strings not. Otherwise both string literals behave
+the same::
+
+    > "<div id=\"head\"></div>"
+    "<div id=\"head\"></div>" is string
+    > """<div id="head">/div>"""
+    "<div id=\"head\">/div>" is string
+
+Both double-quoted and triple-double-quoted strings may contain
+embedded expressions::
 
     > "1 + 2 = \(1 + 2)"
+    "1 + 2 = 3" is string
+    > """1 + 2 = \(1 + 2)"""
     "1 + 2 = 3" is string
 
 Booleans have just two possible values::
@@ -1636,6 +1653,38 @@ The mutable fields can be assigned with ordinary assignement operator
 similarly to ordinary variables and array or hash references. Attempt
 to modify immutable field results in an error.
 
+Accessors and Mutators
+++++++++++++++++++++++
+
+Structures can have accessor field bindings. These are function field bindings
+prefixed with **get**, so that their function is invoked when they are
+accessed like regular value fields without providing the () argument::
+
+    > st = {get time () = System#currentTimeMillis()}
+    st is {time is number} = {time=1298829270035}
+    > st.time
+    1298829312364 is number
+    > st.time
+    1298829315168 is number
+
+An accessor field starts with **get** followed by a function literal with
+the unit argument { get time () = ... } .
+
+Their counterparts are mutators. They are also function fields but prefixed
+with **set**, and are invoked with the assignment operator like the
+assigment to a **var** field::
+
+    > st = (var private = 2; {get value () = private, set value v = private := v})
+    st is {var value is number} = {value=2}
+    > st.value
+    2 is number
+    > st.value := 5
+    > st.value
+    5 is number
+
+A mutator field starts with **set** followed by a function literal
+which takes one argument { set value v = ... }.
+
 Destructuring bind
 +++++++++++++++++++++
 
@@ -2045,6 +2094,69 @@ Type description syntax
 +-----------------------------------+-----------------------------------------+
 
 
+Defining Type Aliases
++++++++++++++++++++++
+
+Instead of repeatedly writing a complicated type you can assign it to a
+type-alias and than use the name of the type-alias instead of the written
+out type.
+
+To define a type-alias use the **typedef** keyword at the top-level of a module::
+
+    module foo;
+    
+    typedef listType<a> = Empty () | Node {value is a, next is listType};
+    typedef stringListType = listType<string>;
+    
+    nil is listType<'a> = Empty();
+    cons head tail is 'a -> listType<'a> -> listType<'a> = Node {value = head, next = tail};
+
+A type-alias starts with the keyword **typedef** followed by the alias-name
+than optional a comma-separated list of type-parameters in <> brackets and
+than the assignment of the type-description.
+
+A type-aliases can recursively reference itself (ie the listType) and can
+reference other type-aliases defined before it (stringListType).
+
+The type-parameters in a ``typedef`` do not have a prefixed ' like
+type-parameters in type-declarations.
+ 
+Multiple type parameters are separated by comma like ie in hash<'a, 'b>.
+
+Type-aliases have to be defined at the top-level in a module and therefore can
+not be defined in the REPL.
+
+They can only be used in the module in which they are defined.
+
+Type-aliases are used in type declarations like any of the build in types of
+yeti (ie list<'a>, string etc).
+
+It is important to remember that typedef does not define a new type instead
+type-aliases are only shortcut-names for the - possibly composed - yeti built
+in types they denote. You can always write out the type instead of using a
+type-alias or you can use a type-alias with the same content but different
+name - to the compiler it is always the same::
+
+    module foo;
+    
+    typedef funT1 = string -> string;
+    typedef funT2 = string -> string;
+
+    {
+        fun1 s is funT1 = s;
+        fun2 s is funT2 = s;
+        fun3 s is string -> string = s;
+    }
+    
+    > load foo;
+    > fun1
+    <code$fun1> is string -> string
+    > fun2
+    <code$fun2> is string -> string
+    > fun2
+    <code$fun3> is string -> string
+
+
 Running and compiling source files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Until now almost all example code has been in the form of interaction with
@@ -2258,6 +2370,35 @@ This message is caused by the fact, that compiler didn't found the compiled
 class files and therefore tried to compile from sources, which it didn't
 found either. The ``-cp`` option sets classpath for the compiler. The
 compiler also attempts to use its JVM classloader to find libraries.
+
+Compiling modules with Ant
+++++++++++++++++++++++++++
+
+The ant-task **yeti.lang.compiler.YetiTaks** which is contained in the
+yeti.jar is used to compile modules with ant::
+
+    <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
+             classpath="lib/yeti.jar"/>
+    
+    <yetic srcdir="${basedir}/src/yeti" destdir="${basedir}/build"
+           includes="*.yeti" excludes=""
+            preload="yeti/lang/std:yeti/lang/io">
+        <classpath refid="classpath"/>
+    </yetic>
+
+``taskef`` defines the yetic task. ``yetic`` compiles the modules.
+
+``srcdir`` is the base directory of the ``*.yeti`` source files.
+
+``destdir`` is the directory where the generated class files are stored.
+
+``includes`` specifies which yeti-sources from ``srcdir`` should be included.
+In the above case these are all.
+
+``preload`` defines which modules should be pre-loaded in each of the modules
+to compile.
+
+``classpath`` is the classpath used for compilation.
 
 Using modules from Java code
 +++++++++++++++++++++++++++++++++
