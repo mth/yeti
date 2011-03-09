@@ -675,6 +675,7 @@ final class WithStruct extends Code {
         ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
         override.gen(ctx);
         ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
+        Arrays.sort(names);
         String[] a = new String[names.length + 1];
         System.arraycopy(names, 0, a, 1, names.length);
         ctx.constants.stringArray(ctx, a);

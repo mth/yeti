@@ -35,6 +35,7 @@ import java.io.Serializable;
 public class WithStruct extends AStruct {
     private Object[] values;
     private int[] index;
+    private int size;
 
     public WithStruct(Struct src, Struct override,
                       String[] names, boolean allowNew) {
@@ -64,10 +65,11 @@ public class WithStruct extends AStruct {
             }
             n += 2;
         }
+        size = n >>> 1;
     }
 
     public int count() {
-        return index.length;
+        return size;
     }
 
     public String name(int i) {
