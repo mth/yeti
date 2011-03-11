@@ -660,6 +660,7 @@ final class WithStruct extends Code {
         this.src = src;
         this.override = override;
         this.names = names;
+        this.polymorph = src.polymorph && override.polymorph;
     }
 
     void gen(Ctx ctx) {
