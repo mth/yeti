@@ -32,7 +32,41 @@
 package yeti.lang.compiler;
 
 import java.util.*;
-import yeti.lang.Core;
+import yeti.lang.*;
+
+/*
+typedef typeitem<type> = {
+    field is string,
+    type is type,
+    // . - required field, ` - both required and provided
+    tag is string,
+    description is string
+}
+
+typedef type =
+    Simple string |
+    Variant list<typeitem<type>> |
+    Struct list<typeitem<type>> |
+    Function list<type>
+*/
+
+class ShowTypeFun extends Fun2 {
+    Fun showType;
+    String indentStep = "   ";
+
+    ShowTypeFun() {
+        showType = this;
+    }
+
+    private void hstr(StringBuffer result, AList fields, String indent) {
+
+    }
+
+    public Object apply(Object currentIndent, Object typeObj) {
+        Tag typeVariant = (Tag) typeObj;
+        return "";
+    }
+}
 
 class TypePrettyPrinter extends YetiType {
     final List to = new ArrayList();

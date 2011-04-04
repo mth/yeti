@@ -1,0 +1,36 @@
+module yeti.lang.compiler.showtype;
+
+typedef typeitem<type> = {
+    field is string,
+    type is type,
+    // . - required field, ` - both required and provided
+    tag is string,
+    description is string
+}
+
+typedef type =
+    Simple string |
+    Variant list<typeitem<type>> |
+    Struct list<typeitem<type>> |
+    Function list<type>
+
+typedef showType_fun = string -> type -> string
+
+typedef showType_param =
+    ShowType showType_fun |
+    Indent string
+
+{
+    // Core of it is implemented in Java to avoid self-compile issues.
+    showType param is list<showType_param> -> showType_fun =
+       (fun = new ShowTypeFun();
+        for param do i:
+            case i of
+            Indent s:
+                fun#indentStep := s;
+            ShowType f:
+                fun#showType := f is showType_fun unsafely_as ~yeti.lang.Fun;
+            esac
+        done;
+        fun unsafely_as showType_fun),
+}
