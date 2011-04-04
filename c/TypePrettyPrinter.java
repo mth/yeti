@@ -36,10 +36,11 @@ import yeti.lang.*;
 
 /*
 typedef typeitem<type> = {
-    field is string,
+    name is string,
     type is type,
     // . - required field, ` - both required and provided
     tag is string,
+    mutable is boolean,
     description is string
 }
 
@@ -58,8 +59,54 @@ class ShowTypeFun extends Fun2 {
         showType = this;
     }
 
-    private void hstr(StringBuffer result, AList fields, String indent) {
+    private void hstr(StringBuffer to, boolean variant,
+                      AList fields, String indent) {
+        if (fields != null && fields.isEmpty())
+            fields = null;
 
+        boolean useNL = false;
+        AIter i = fields;
+        for (int n = 0; i != null; i = i.next())
+            if (++n >= 3) {
+                useNL = true;
+                break;
+            }
+
+        String indent_ = indent, oldIndent = indent;
+        if (useNL) {
+            if (!variant)
+                indent = indent.concat(indentStep);
+            indent_ = indent.concat(indentStep);
+        }
+
+        String sep = variant
+            ? useNL ? "\n" + indent + "| " : " | "
+            : useNL ? ",\n".concat(indent) : ", ";
+
+        for (i = fields; i != null; i = i.next()) {
+            Struct field = (Struct) i.first();
+            if (i != fields) { // not first
+                to.append(sep);
+            } else if (useNL && !variant) {
+                to.append('\n');
+                to.append(indent);
+            }
+            String doc = useNL ? (String) field.get("description") : null;
+            if (doc != null && doc.length() > 0) {
+                to.append("// ");
+                to.append(Core.replace("\n", "\n" + indent + "//", doc));
+                to.append('\n');
+                to.append(indent);
+            }
+            if (!variant) {
+                if (field.get("mutable") == Boolean.TRUE)
+                    to.append("var ");
+                to.append(field.get("tag"));
+            }
+            to.append(field.get("name"));
+            to.append(variant ? " " : " is ");
+            to.append(showType.apply(indent_, field.get("type")));
+        }
     }
 
     public Object apply(Object currentIndent, Object typeObj) {

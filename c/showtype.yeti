@@ -1,10 +1,11 @@
 module yeti.lang.compiler.showtype;
 
 typedef typeitem<type> = {
-    field is string,
+    name is string,
     type is type,
     // . - required field, ` - both required and provided
     tag is string,
+    mutable is boolean,
     description is string
 }
 
