@@ -61,9 +61,6 @@ class ShowTypeFun extends Fun2 {
 
     private void hstr(StringBuffer to, boolean variant,
                       AList fields, String indent) {
-        if (fields != null && fields.isEmpty())
-            fields = null;
-
         boolean useNL = false;
         AIter i = fields;
         for (int n = 0; i != null; i = i.next())
@@ -109,9 +106,59 @@ class ShowTypeFun extends Fun2 {
         }
     }
 
-    public Object apply(Object currentIndent, Object typeObj) {
-        Tag typeVariant = (Tag) typeObj;
-        return "";
+    public Object apply(Object indent, Object typeObj) {
+        Tag type = (Tag) typeObj;
+        String typeTag = type.name;
+        if (typeTag == "Simple")
+            return type.value;
+
+        AList typeList;
+        String typeName = null;
+        if (typeTag == "Parametric") {
+            Struct t = (Struct) type.value;
+            typeName = (String) t.get("type");
+            typeList = (AList) t.get("params");
+        } else {
+            typeList = (AList) type.value;
+        }
+        if (typeList != null && typeList.isEmpty())
+            typeList = null;
+        AIter i = typeList;
+        StringBuffer to = new StringBuffer();
+
+        if (typeName != null) {
+            to.append(typeName);
+            to.append('<');
+            for (; i != null; i = i.next()) {
+                if (i != typeList)
+                    to.append(", ");
+                to.append(showType.apply(indent, i.first()));
+            }
+            to.append('>');
+        } else if (typeTag == "Function") {
+            for (AIter next; i != null; i = next) {
+                next = i.next();
+                Tag t = (Tag) i.first();
+                if (i != typeList)
+                    to.append(" -> ");
+                if (next != null && t.name == "Function") {
+                    to.append('(');
+                    to.append(showType.apply(indent, t));
+                    to.append(')');
+                } else {
+                    to.append(showType.apply(indent, t));
+                }
+            }
+        } else if (typeTag == "Struct") {
+            to.append('{');
+            hstr(to, false, typeList, (String) indent);
+            to.append('}');
+        } else if (typeTag == "Variant") {
+            hstr(to, true, typeList, (String) indent);
+        } else {
+            throw new IllegalArgumentException("Unknown type kind: " + typeTag);
+        }
+        return to.toString();
     }
 }
 

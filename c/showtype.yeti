@@ -11,9 +11,10 @@ typedef typeitem<type> = {
 
 typedef type =
     Simple string |
+    Parametric { type is string, params is list<type> } |
+    Function list<type> |
     Variant list<typeitem<type>> |
-    Struct list<typeitem<type>> |
-    Function list<type>
+    Struct list<typeitem<type>>
 
 typedef showType_fun = string -> type -> string
 
