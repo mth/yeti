@@ -39,7 +39,6 @@ typedef showType_param =
                 fun#formatDoc :=
                     f is string -> string unsafely_as ~yeti.lang.Fun;
             CommentDoc _:
-                println "!!!CommentDoc!!!";
                 fun#formatDoc := fun as ~yeti.lang.Fun; // magic
             esac
         done;
