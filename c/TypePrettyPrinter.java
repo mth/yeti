@@ -80,9 +80,13 @@ class ShowTypeFun extends Fun2 {
                     to.append("var ");
                 to.append(field.get("tag"));
             }
-            to.append(field.get("name"))
-              .append(variant ? " " : " is ")
-              .append(showType.apply(indent_, field.get("type")));
+            to.append(field.get("name")).append(variant ? " " : " is ");
+            Tag fieldType = (Tag) field.get("type");
+            Object tstr = showType.apply(indent_, fieldType);
+            if (variant && fieldType.name == "Function")
+                to.append('(').append(tstr).append(')');
+            else
+                to.append(tstr);
         }
         if (useNL && !variant)
             to.append("\n").append(oldIndent);
