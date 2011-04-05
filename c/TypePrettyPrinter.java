@@ -65,28 +65,27 @@ class ShowTypeFun extends Fun2 {
 
         for (i = fields; i != null; i = i.next()) {
             Struct field = (Struct) i.first();
-            if (i != fields) { // not first
+            if (i != fields) // not first
                 to.append(sep);
-            } else if (useNL && !variant) {
-                to.append('\n');
-                to.append(indent);
-            }
+            else if (useNL && !variant)
+                to.append('\n').append(indent);
             String doc = useNL ? (String) field.get("description") : null;
-            if (doc != null && doc.length() > 0) {
-                to.append("// ");
-                to.append(Core.replace("\n", "\n" + indent + "//", doc));
-                to.append('\n');
-                to.append(indent);
-            }
+            if (doc != null && doc.length() > 0)
+                to.append("// ")
+                  .append(Core.replace("\n", "\n" + indent + "//", doc))
+                  .append('\n')
+                  .append(indent);
             if (!variant) {
                 if (field.get("mutable") == Boolean.TRUE)
                     to.append("var ");
                 to.append(field.get("tag"));
             }
-            to.append(field.get("name"));
-            to.append(variant ? " " : " is ");
-            to.append(showType.apply(indent_, field.get("type")));
+            to.append(field.get("name"))
+              .append(variant ? " " : " is ")
+              .append(showType.apply(indent_, field.get("type")));
         }
+        if (useNL && !variant)
+            to.append("\n").append(oldIndent);
     }
 
     public Object apply(Object indent, Object typeObj) {
@@ -115,8 +114,7 @@ class ShowTypeFun extends Fun2 {
         StringBuffer to = new StringBuffer();
 
         if (typeName != null) {
-            to.append(typeName);
-            to.append('<');
+            to.append(typeName).append('<');
             for (; i != null; i = i.next()) {
                 if (i != typeList)
                     to.append(", ");
@@ -129,13 +127,12 @@ class ShowTypeFun extends Fun2 {
                 Tag t = (Tag) i.first();
                 if (i != typeList)
                     to.append(" -> ");
-                if (next != null && t.name == "Function") {
-                    to.append('(');
+                if (next != null && t.name == "Function")
+                    to.append('(')
+                      .append(showType.apply(indent, t))
+                      .append(')');
+                else
                     to.append(showType.apply(indent, t));
-                    to.append(')');
-                } else {
-                    to.append(showType.apply(indent, t));
-                }
             }
         } else if (typeTag == "Struct") {
             to.append('{');
@@ -166,8 +163,8 @@ class TypeDescr {
                                String name2, Object value2) {
         // low-level implementation-specific struct, don't do that ;)
         Struct3 result = new Struct3(new String[] { name1, name2 }, null);
-        result._1 = value1;
-        result._2 = value2;
+        result._0 = value1;
+        result._1 = value2;
         return result;
     }
 
@@ -208,7 +205,7 @@ class TypePrettyPrinter extends YetiType {
     
     public static String toString(YType t) {
         return (String) new ShowTypeFun().apply("",
-                new TypePrettyPrinter().prepare(t));
+                new TypePrettyPrinter().prepare(t).force());
     }
 
     private void hdescr(TypeDescr descr, YType tt) {
@@ -286,7 +283,7 @@ class TypePrettyPrinter extends YetiType {
                     descr.value = item;
                     t = param[1].deref();
                 }
-                (item = prepare(param[0])).prev = descr.value;
+                (item = prepare(t)).prev = descr.value;
                 descr.value = item;
                 break;
             case STRUCT:
