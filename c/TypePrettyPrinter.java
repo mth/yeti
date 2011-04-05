@@ -126,12 +126,12 @@ class ShowTypeFun extends Fun2 {
             }
             to.append('>');
         } else if (typeTag == "Function") {
-            for (AIter next; i != null; i = next) {
-                next = i.next();
+            while (i != null) {
                 Tag t = (Tag) i.first();
                 if (i != typeList)
                     to.append(" -> ");
-                if (next != null && t.name == "Function")
+                i = i.next();
+                if (i != null && t.name == "Function")
                     to.append('(')
                       .append(showType.apply(indent, t))
                       .append(')');
