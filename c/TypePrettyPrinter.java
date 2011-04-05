@@ -36,6 +36,7 @@ import yeti.lang.*;
 
 class ShowTypeFun extends Fun2 {
     Fun showType;
+    Fun formatDoc;
     String indentStep = "   ";
 
     ShowTypeFun() {
@@ -69,12 +70,17 @@ class ShowTypeFun extends Fun2 {
                 to.append(sep);
             else if (useNL && !variant)
                 to.append('\n').append(indent);
-            String doc = useNL ? (String) field.get("description") : null;
-            if (doc != null && doc.length() > 0)
-                to.append("// ")
-                  .append(Core.replace("\n", "\n" + indent + "//", doc))
-                  .append('\n')
-                  .append(indent);
+            if (formatDoc != null) {
+                String doc = (String) field.get("description");
+                if (formatDoc != this) {
+                    to.append(formatDoc.apply(indent, doc));
+                } else if (useNL && doc.length() > 0) {
+                    to.append("// ")
+                      .append(Core.replace("\n", "\n" + indent + "//", doc))
+                      .append('\n')
+                      .append(indent);
+                }
+            }
             if (!variant) {
                 if (field.get("mutable") == Boolean.TRUE)
                     to.append("var ");
@@ -202,9 +208,8 @@ class TypeDescr extends YetiType {
         return new Tag(pair("alias", alias, "type", res), "Alias");
     }
 
-    static String toString(YType t) {
-        return (String) new ShowTypeFun().apply("",
-                    prepare(t, new HashMap(), new HashMap()).force());
+    static Tag yetiType(YType t) {
+        return prepare(t, new HashMap(), new HashMap()).force();
     }
 
     private static void hdescr(TypeDescr descr, YType tt, Map vars, Map refs) {
@@ -218,8 +223,9 @@ class TypeDescr extends YetiType {
             Object name = e.getKey();
             YType t = (YType) e.getValue();
             Map it = new IdentityHashMap(5);
+            String doc = t.doc();
             it.put("name", name);
-            it.put("description", t.doc());
+            it.put("description", doc == null ? Core.UNDEF_STR : doc);
             it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
             it.put("tag",
                 tt.finalMembers == null || !tt.finalMembers.containsKey(name)

@@ -69,7 +69,7 @@ class YType {
     }
 
     public String toString() {
-        return TypeDescr.toString(this);
+        return (String) new ShowTypeFun().apply("", TypeDescr.yetiType(this));
     }
 
     YType deref() {

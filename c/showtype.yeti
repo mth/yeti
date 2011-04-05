@@ -21,7 +21,9 @@ typedef showType_fun = string -> type -> string
 
 typedef showType_param =
     ShowType showType_fun |
-    Indent string
+    Indent string |
+    FormatDoc (string -> string) |
+    CommentDoc ()
 
 {
     // Core of it is implemented in Java to avoid self-compile issues.
@@ -33,6 +35,12 @@ typedef showType_param =
                 fun#indentStep := s;
             ShowType f:
                 fun#showType := f is showType_fun unsafely_as ~yeti.lang.Fun;
+            FormatDoc f:
+                fun#formatDoc :=
+                    f is string -> string unsafely_as ~yeti.lang.Fun;
+            CommentDoc _:
+                println "!!!CommentDoc!!!";
+                fun#formatDoc := fun as ~yeti.lang.Fun; // magic
             esac
         done;
         fun unsafely_as showType_fun),

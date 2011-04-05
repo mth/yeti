@@ -29,6 +29,7 @@ program yeti.lang.compiler.yeti;
 
 import java.lang: ClassLoader, Thread;
 import java.io.File;
+load yeti.lang.compiler.showtype;
 
 var target = "";
 var eval = false;
@@ -195,7 +196,8 @@ try
             if mt#topDoc != "" then
                 println "/*\n\(mt#topDoc)\n*/"
             fi;
-            println mt#type
+            t = TypeDescr#yetiType(mt#type) unsafely_as type;
+            println (showType [CommentDoc ()] '' t)
         done
     else
         files = [:];
