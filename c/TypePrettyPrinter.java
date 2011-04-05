@@ -213,8 +213,7 @@ class TypeDescr extends YetiType {
             m.putAll(tt.partialMembers);
         if (tt.finalMembers != null)
             m.putAll(tt.finalMembers);
-        Iterator i = m.entrySet().iterator();
-        while (i.hasNext()) {
+        for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             Object name = e.getKey();
             YType t = (YType) e.getValue();
