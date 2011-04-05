@@ -34,23 +34,6 @@ package yeti.lang.compiler;
 import java.util.*;
 import yeti.lang.*;
 
-/*
-typedef typeitem<type> = {
-    name is string,
-    type is type,
-    // . - required field, ` - both required and provided
-    tag is string,
-    mutable is boolean,
-    description is string
-}
-
-typedef type =
-    Simple string |
-    Variant list<typeitem<type>> |
-    Struct list<typeitem<type>> |
-    Function list<type>
-*/
-
 class ShowTypeFun extends Fun2 {
     Fun showType;
     String indentStep = "   ";
@@ -111,6 +94,11 @@ class ShowTypeFun extends Fun2 {
         String typeTag = type.name;
         if (typeTag == "Simple")
             return type.value;
+        if (typeTag == "Alias") {
+            Struct t = (Struct) type.value;
+            return '(' + (String) showType.apply(indent, t.get("type"))
+                 + " is " + t.get("alias") + ')';
+        }
 
         AList typeList;
         String typeName = null;
@@ -162,74 +150,91 @@ class ShowTypeFun extends Fun2 {
     }
 }
 
+class TypeDescr {
+    int type;
+    String name;
+    TypeDescr value;
+    TypeDescr prev;
+    String alias;
+    Map properties;
+
+    TypeDescr(String name_) {
+        name = name_;
+    }
+
+    private static Struct pair(String name1, Object value1,
+                               String name2, Object value2) {
+        // low-level implementation-specific struct, don't do that ;)
+        Struct3 result = new Struct3(new String[] { name1, name2 }, null);
+        result._1 = value1;
+        result._2 = value2;
+        return result;
+    }
+
+    Tag force() {
+        if (type == 0)
+            return new Tag(name, "Simple");
+        AList l = null;
+        for (TypeDescr i = value; i != null; i = i.prev)
+            if (i.properties != null) {
+                i.properties.put("type", i.force());
+                l = new LList(new GenericStruct(i.properties), l);
+            } else {
+                l = new LList(i.force(), l);
+            }
+        Object val = l;
+        String tag = null;
+        switch (type) {
+        case YetiType.FUN:
+            tag = "Function"; break;
+        case YetiType.MAP:
+            val = pair("params", l, "type", name);
+            tag = "Parametric"; break;
+        case YetiType.STRUCT:
+            tag = "Struct"; break;
+        case YetiType.VARIANT:
+            tag = "Variant"; break;
+        }
+        Tag res = new Tag(val, tag);
+        if (alias == null)
+            return res;
+        return new Tag(pair("alias", alias, "type", res), "Alias");
+    }
+}
+
 class TypePrettyPrinter extends YetiType {
-    final List to = new ArrayList();
     private Map vars = new HashMap();
     private Map refs = new HashMap();
     
-    public String toString() {
-        String[] a = new String[to.size()];
-        for (int i = 0; i < a.length; ++i)
-            a[i] = to.get(i).toString();
-        return Core.concat(a);
+    public static String toString(YType t) {
+        return (String) new ShowTypeFun().apply("",
+                new TypePrettyPrinter().prepare(t));
     }
 
-    private void hstr(YType tt, String indent) {
-        boolean variant = tt.type == VARIANT;
+    private void hdescr(TypeDescr descr, YType tt) {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
             m.putAll(tt.partialMembers);
         if (tt.finalMembers != null)
             m.putAll(tt.finalMembers);
-        boolean useNL = m.size() >= 3;
-        String indent_ = indent, oldIndent = indent;
-        if (useNL) {
-            if (!variant)
-                indent = indent.concat("   ");
-            indent_ = indent.concat("   ");
-        }
-        String sep = variant
-            ? useNL ? "\n" + indent + "| " : " | "
-            : useNL ? ",\n".concat(indent) : ", ";
         Iterator i = m.entrySet().iterator();
-        boolean first = true;
         while (i.hasNext()) {
             Map.Entry e = (Map.Entry) i.next();
-            if (first) {
-                if (useNL && !variant) {
-                    to.add("\n");
-                    to.add(indent);
-                }
-                first = false;
-            } else {
-                to.add(sep);
-            } 
+            Object name = e.getKey();
             YType t = (YType) e.getValue();
-            String doc = useNL ? t.doc() : null;
-            if (doc != null) {
-                to.add("// ");
-                to.add(Core.replace("\n", "\n" + indent + "//", doc));
-                to.add("\n");
-                to.add(indent);
-            }
-            if (!variant && t.field == FIELD_MUTABLE)
-                to.add("var ");
-            if (!variant) {
-                if (tt.finalMembers == null ||
-                        !tt.finalMembers.containsKey(e.getKey())) {
-                    to.add(".");
-                } else if (tt.partialMembers != null &&
-                           tt.partialMembers.containsKey(e.getKey())) {
-                    to.add("`");
-                }
-            }
-            to.add(e.getKey());
-            to.add(variant ? " " : " is ");
-            str(t, indent_);
-        }
-        if (useNL && !variant) {
-            to.add("\n");
-            to.add(oldIndent);
+            Map it = new IdentityHashMap(5);
+            it.put("name", name);
+            it.put("descr", t.doc());
+            it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
+            it.put("tag",
+                tt.finalMembers == null || !tt.finalMembers.containsKey(name)
+                    ? "." :
+                tt.partialMembers != null && tt.partialMembers.containsKey(name)
+                    ? "`" : "");
+            TypeDescr field = prepare(t);
+            field.properties = it;
+            field.prev = descr.value;
+            descr.value = field;
         }
     }
 
@@ -251,91 +256,64 @@ class TypePrettyPrinter extends YetiType {
         }
         return v;
     }
-
-    void str(YType t, String indent) {
+    
+    private TypeDescr prepare(YType t) {
         final int type = t.type;
         if (type == VAR) {
-            if (t.ref != null) {
-                str(t.ref, indent);
-            } else {
-                to.add(getVarName(t));
-            }
-            return;
+            if (t.ref != null)
+                return prepare(t.ref);
+            return new TypeDescr(getVarName(t));
         }
-        if (type < PRIMITIVES.length) {
-            to.add(TYPE_NAMES[type]);
-            return;
+        if (type < PRIMITIVES.length)
+            return new TypeDescr(TYPE_NAMES[type]);
+        if (type == JAVA)
+            return new TypeDescr(t.javaType.str());
+        if (type == JAVA_ARRAY)
+            return new TypeDescr(prepare(t.param[0]).name.concat("[]"));
+        TypeDescr descr = (TypeDescr) refs.get(t), item;
+        if (descr != null) {
+            if (descr.alias == null)
+                descr.alias = getVarName(t);
+            return new TypeDescr(descr.alias);
         }
-        if (type == JAVA) {
-            to.add(t.javaType.str());
-            return;
-        }
-        class Ref {
-            String ref;
-            int endIndex;
-
-            public String toString() {
-                if (ref == null)
-                    return "";
-                to.set(endIndex, " is " + ref + ')');
-                return "(";
-            }
-        }
-        Ref recRef = (Ref) refs.get(t);
-        if (recRef == null) {
-            refs.put(t, recRef = new Ref());
-            to.add(recRef);
-        } else {
-            if (recRef.ref == null)
-                recRef.ref = getVarName(t);
-            to.add(recRef.ref);
-            return;
-        }
-        final YType[] param = t.param;
+        refs.put(t, descr = new TypeDescr(null));
+        descr.type = type;
+        YType[] param = t.param;
         switch (type) {
             case FUN:
-                if (param[0].deref().type == FUN) {
-                    to.add("(");
-                    str(param[0], indent);
-                    to.add(")");
-                } else {
-                    str(param[0], indent);
+                for (; t.type == FUN; param = t.param) {
+                    (item = prepare(param[0])).prev = descr.value;
+                    descr.value = item;
+                    t = param[1].deref();
                 }
-                to.add(" -> ");
-                str(param[1], indent);
+                (item = prepare(param[0])).prev = descr.value;
+                descr.value = item;
                 break;
             case STRUCT:
-                to.add("{");
-                hstr(t, indent);
-                to.add("}");
-                break;
             case VARIANT:
-                hstr(t, indent);
+                hdescr(descr, t);
                 break;
             case MAP:
+                int n = 1;
                 YType p1 = param[1].deref();
                 YType p2 = param[2].deref();
                 if (p2.type == LIST_MARKER) {
-                    to.add(p1.type == NONE ? "list<" : p1.type == NUM
-                                ? "array<" : "list?<");
+                    descr.name = p1.type == NONE ? "list" : p1.type == NUM
+                                    ? "array" : "list?";
                 } else {
-                    to.add(p2.type == MAP_MARKER || p1.type != NUM
-                                && p1.type != VAR ? "hash<" : "map<");
-                    str(p1, indent);
-                    to.add(", ");
+                    descr.name = p2.type == MAP_MARKER || p1.type != NUM
+                                    && p1.type != VAR ? "hash" : "map";
+                    n = 2;
                 }
-                str(param[0], indent);
-                to.add(">");
-                break;
-            case JAVA_ARRAY:
-                str(param[0], indent);
-                to.add("[]");
+                while (--n >= 0) {
+                    (item = prepare(param[n])).prev = descr.value;
+                    descr.value = item;
+                }
                 break;
             default:
-                to.add("?" + type + "?");
+                descr.name = "?" + type + '?';
                 break;
         }
-        recRef.endIndex = to.size();
-        to.add("");
+        return descr;
     }
 }

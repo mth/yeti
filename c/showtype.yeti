@@ -14,7 +14,8 @@ typedef type =
     Parametric { type is string, params is list<type> } |
     Function list<type> |
     Variant list<typeitem<type>> |
-    Struct list<typeitem<type>>
+    Struct list<typeitem<type>> |
+    Alias { alias is string, type is type }
 
 typedef showType_fun = string -> type -> string
 

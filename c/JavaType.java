@@ -853,31 +853,25 @@ class JavaType {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        TypePrettyPrinter tpp = new TypePrettyPrinter();
-        List err = tpp.to;
-        err.add("No suitable method ");
-        err.add(name);
-        err.add("(");
+        StringBuffer err = new StringBuffer("No suitable method ")
+                                .append(name).append('(');
         for (int i = 0; i < args.length; ++i) {
-            if (i != 0) {
-                err.add(", ");
-            }
-            tpp.str(args[i].type, "");
+            if (i != 0)
+                err.append(", ");
+            err.append(args[i].type);
         }
-        err.add(") found in ");
-        err.add(dottedName());
+        err.append(") found in ").append(dottedName());
         boolean fst = true;
         for (int i = ma.length; --i >= 0;) {
             if (ma[i].name != name)
                 continue;
             if (fst) {
-                err.add("\nMethods named " + name + ':');
+                err.append("\nMethods named ").append(name).append(':');
                 fst = false;
             }
-            err.add("\n    ");
-            err.add(ma[i]);
+            err.append("\n    ").append(ma[i]);
         }
-        throw new CompileException(n, tpp.toString());
+        throw new CompileException(n, err.toString());
     }
 
     JavaType resolve(YetiParser.Node where) {
