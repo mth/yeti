@@ -202,7 +202,7 @@ class TypeDescr extends YetiType {
         return new Tag(pair("alias", alias, "type", res), "Alias");
     }
 
-    public static String toString(YType t) {
+    static String toString(YType t) {
         return (String) new ShowTypeFun().apply("",
                     prepare(t, new HashMap(), new HashMap()).force());
     }
