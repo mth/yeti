@@ -151,7 +151,7 @@ class ShowTypeFun extends Fun2 {
     }
 }
 
-class TypeDescr {
+class TypeDescr extends YetiType {
     int type;
     String name;
     TypeDescr value;
@@ -186,14 +186,14 @@ class TypeDescr {
         Object val = l;
         String tag = null;
         switch (type) {
-        case YetiType.FUN:
+        case FUN:
             tag = "Function"; break;
-        case YetiType.MAP:
+        case MAP:
             val = pair("params", l, "type", name);
             tag = "Parametric"; break;
-        case YetiType.STRUCT:
+        case STRUCT:
             tag = "Struct"; break;
-        case YetiType.VARIANT:
+        case VARIANT:
             tag = "Variant"; break;
         }
         Tag res = new Tag(val, tag);
@@ -201,18 +201,13 @@ class TypeDescr {
             return res;
         return new Tag(pair("alias", alias, "type", res), "Alias");
     }
-}
 
-class TypePrettyPrinter extends YetiType {
-    private Map vars = new HashMap();
-    private Map refs = new HashMap();
-    
     public static String toString(YType t) {
         return (String) new ShowTypeFun().apply("",
-                new TypePrettyPrinter().prepare(t).force());
+                    prepare(t, new HashMap(), new HashMap()).force());
     }
 
-    private void hdescr(TypeDescr descr, YType tt) {
+    private static void hdescr(TypeDescr descr, YType tt, Map vars, Map refs) {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
             m.putAll(tt.partialMembers);
@@ -232,14 +227,14 @@ class TypePrettyPrinter extends YetiType {
                     ? "." :
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
                     ? "`" : "");
-            TypeDescr field = prepare(t);
+            TypeDescr field = prepare(t, vars, refs);
             field.properties = it;
             field.prev = descr.value;
             descr.value = field;
         }
     }
 
-    private String getVarName(YType t) {
+    private static String getVarName(YType t, Map vars) {
         String v = (String) vars.get(t);
         if (v == null) {
             // 26^7 > 2^32, should be enough ;)
@@ -258,23 +253,24 @@ class TypePrettyPrinter extends YetiType {
         return v;
     }
     
-    private TypeDescr prepare(YType t) {
+    private static TypeDescr prepare(YType t, Map vars, Map refs) {
         final int type = t.type;
         if (type == VAR) {
             if (t.ref != null)
-                return prepare(t.ref);
-            return new TypeDescr(getVarName(t));
+                return prepare(t.ref, vars, refs);
+            return new TypeDescr(getVarName(t, vars));
         }
         if (type < PRIMITIVES.length)
             return new TypeDescr(TYPE_NAMES[type]);
         if (type == JAVA)
             return new TypeDescr(t.javaType.str());
         if (type == JAVA_ARRAY)
-            return new TypeDescr(prepare(t.param[0]).name.concat("[]"));
+            return new TypeDescr(prepare(t.param[0], vars, refs)
+                                    .name.concat("[]"));
         TypeDescr descr = (TypeDescr) refs.get(t), item;
         if (descr != null) {
             if (descr.alias == null)
-                descr.alias = getVarName(t);
+                descr.alias = getVarName(t, vars);
             return new TypeDescr(descr.alias);
         }
         refs.put(t, descr = new TypeDescr(null));
@@ -283,16 +279,16 @@ class TypePrettyPrinter extends YetiType {
         switch (type) {
             case FUN:
                 for (; t.type == FUN; param = t.param) {
-                    (item = prepare(param[0])).prev = descr.value;
+                    (item = prepare(param[0], vars, refs)).prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
                 }
-                (item = prepare(t)).prev = descr.value;
+                (item = prepare(t, vars, refs)).prev = descr.value;
                 descr.value = item;
                 break;
             case STRUCT:
             case VARIANT:
-                hdescr(descr, t);
+                hdescr(descr, t, vars, refs);
                 break;
             case MAP:
                 int n = 1;
@@ -307,7 +303,7 @@ class TypePrettyPrinter extends YetiType {
                     n = 2;
                 }
                 while (--n >= 0) {
-                    (item = prepare(param[n])).prev = descr.value;
+                    (item = prepare(param[n], vars, refs)).prev = descr.value;
                     descr.value = item;
                 }
                 break;

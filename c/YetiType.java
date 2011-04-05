@@ -69,7 +69,7 @@ class YType {
     }
 
     public String toString() {
-        return TypePrettyPrinter.toString(this);
+        return TypeDescr.toString(this);
     }
 
     YType deref() {
