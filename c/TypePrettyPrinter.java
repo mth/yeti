@@ -221,7 +221,7 @@ class TypePrettyPrinter extends YetiType {
             YType t = (YType) e.getValue();
             Map it = new IdentityHashMap(5);
             it.put("name", name);
-            it.put("descr", t.doc());
+            it.put("description", t.doc());
             it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
             it.put("tag",
                 tt.finalMembers == null || !tt.finalMembers.containsKey(name)
