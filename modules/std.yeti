@@ -690,5 +690,11 @@ plus a b = a + b;
         {
             get value () = tl#get() unsafely_as 'a,
             set value v  = tl#set(v)
-        }
+        },
+
+    stackTraceString ex is ~java.lang.Throwable -> string =
+        sw = new java.io.StringWriter();
+        ex#printStackTrace(new java.io.PrintWriter(sw));
+        sw#toString(),
+
 }

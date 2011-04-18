@@ -53,11 +53,6 @@ do argv: {
         fi;
         ctx,
 
-    getTrace ex is ~java.lang.Throwable -> string =
-        sw = new java.io.StringWriter();
-        ex#printStackTrace(new java.io.PrintWriter(sw));
-        sw#toString(),
-
     execClass eval writer =
         c = Class#forName(strReplace '/' '.' mainClass, true, writer);
         try
@@ -111,9 +106,9 @@ do argv: {
                     push res "\(Core#show(val)) is \(type_)"
                 fi
             catch Exception ex:
-                push res (getTrace ex)
+                push res (stackTraceString ex)
             catch java.lang.StackOverflowError ex:
-                push res (getTrace ex)
+                push res (stackTraceString ex)
             yrt;
             for [bindBarrier .. bindings#size() - 1] do i:
                 binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
