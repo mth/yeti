@@ -55,7 +55,7 @@ repl () =
    (print "> ";
     line = readln ();
     if defined? line then
-        print (evaluator.evaluateFormatted execParam line);
+        print (evaluator.evaluate execParam line).str;
         repl ()
     else
         println "";
