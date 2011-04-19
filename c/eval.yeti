@@ -53,8 +53,7 @@ execClass params eval loader mainClass
                 class Sandbox extends java.lang.SecurityManager
                     void checkPermission(Permission perm)
                         sandboxed (),
-                    void checkPermission(Permission perm,
-                                         Object context)
+                    void checkPermission(Permission perm, Object context)
                         sandboxed (),
                     void checkExit(int status)
                         ()
