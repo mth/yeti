@@ -128,9 +128,6 @@ evalContext = do:
             compilation = compilationOf writer;
             type =
                 try
-                    // XXX EVAL_BIND is really needed only when you want
-                    //     to capture bindings, so yeti -e doesn't need it!
-                    // FIXME this actually causes a crash
                     compilation#compile((), mainClass, source,
                                         flags + extraFlags);
                 finally
