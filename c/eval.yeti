@@ -61,6 +61,7 @@ execClass params eval loader mainClass
         Argument arg: argv := arg;
         GlobalSandbox _: sandbox := true;
         NoExec _: exec := false;
+        ResetEnv _: ();
         esac
     done;
     if exec then
@@ -149,9 +150,6 @@ evalContext = do:
                 compilation#enumWarns(push warnings)
             yrt,
 
-        createEnvironment () =
-            evalEnv := new YetiEval(),
-
         evaluate params source =
             bindingVars = array [];
             warnings = array [];
@@ -159,7 +157,7 @@ evalContext = do:
             writer = new Loader();
 
             oldContext = YetiEval#get();
-            if not defined? evalEnv then
+            if not defined? evalEnv or contains (ResetEnv ()) params then
                 evalEnv := new YetiEval()
             fi;
             YetiEval#set(evalEnv);
