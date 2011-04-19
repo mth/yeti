@@ -174,10 +174,10 @@ evalContext = do:
                     val =
                         try
                             Result (execClass params true writer mainClass);
-                        catch Exception ex:
-                            Exception (ex as ~java.lang.Throwable)
                         catch java.lang.StackOverflowError ex:
                             Exception (ex as ~java.lang.Throwable)
+                        catch java.lang.Throwable ex:
+                            Exception ex
                         yrt;
 
                     for [bindBarrier .. bindings#size() - 1] do i:
