@@ -183,12 +183,12 @@ scan src local dirs to =
     ok);
 
 warnings = array [] is array<~CompileException>;
-var resultType = Simple '';
+var resultType = Simple '()';
 
 try
     if eval then
-        resultType := evaluator.compileString {source = src, eval = true,
-                                               writer, warnings};
+        resultType := evaluator.compileString {source = src, writer, warnings,
+                                               extraFlags = YetiC#CF_EVAL};
         if printType then
             println (showType [] '' resultType)
         fi

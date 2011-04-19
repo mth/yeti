@@ -124,7 +124,7 @@ evalContext = do:
         compileString {source is string,
                        writer is ~CodeWriter,
                        warnings is array<~CompileException>,
-                       eval is boolean} =
+                       extraFlags is number} =
             compilation = compilationOf writer;
             type =
                 try
@@ -132,8 +132,7 @@ evalContext = do:
                     //     to capture bindings, so yeti -e doesn't need it!
                     // FIXME this actually causes a crash
                     compilation#compile((), mainClass, source,
-                        if eval then flags + YetiC#CF_EVAL + YetiC#CF_EVAL_BIND
-                                else flags fi);
+                                        flags + extraFlags);
                 finally
                     compilation#enumWarns(push warnings)
                 yrt;
@@ -173,7 +172,8 @@ evalContext = do:
                     bindings = YetiEval#get()#bindings;
                     bindBarrier = bindings#size();
                     type := compileString {source, eval = true, warnings,
-                                           writer = writer as ~CodeWriter};
+                                           writer = writer as ~CodeWriter,
+                               extraFlags = YetiC#CF_EVAL + YetiC#CF_EVAL_BIND};
                     val =
                         try
                             Result (execClass params true writer mainClass);
