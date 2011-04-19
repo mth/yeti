@@ -39,14 +39,13 @@ evalContext = do:
     var flags = 0;
     var gcj = false;
     var noframes = false;
-    var evalCtx = () as ~YetiEval;
+    var evalEnv = () as ~YetiEval;
     reader = new YetiC();
 
     {
         var preload = ["yeti/lang/std", "yeti/lang/io"],
         var mainClass = "code",
         var classPath = [],
-        var sandbox = false,
         var javaOptions = [],
 
         option opt =
@@ -77,8 +76,11 @@ evalContext = do:
             compilation = compilationOf writer;
             type =
                 try
+                    // XXX EVAL_BIND is really needed only when you want
+                    //     to capture bindings, so yeti -e doesn't need it!
                     compilation#compile((), mainClass, source,
-                        if eval then flags + YetiC#CF_EVAL else flags fi);
+                        if eval then flags + YetiC#CF_EVAL + YetiC#CF_EVAL_BIND
+                                else flags fi);
                 finally
                     compilation#enumWarns(push warnings)
                 yrt;
@@ -98,8 +100,16 @@ evalContext = do:
                 compilation#enumWarns(push warnings)
             yrt,
 
-        execClass argv eval writer
-                is list?<string> -> boolean -> ~ClassLoader -> ~Object =
+        execClass params eval writer
+                is 'a -> boolean -> ~ClassLoader -> ~Object =
+            var argv = array [];
+            var sandbox = false;
+            for params do param:
+                case param of
+                Argument arg: argv := arg;
+                Sandbox _: sandbox := true;
+                esac
+            done;
             c = Class#forName(strReplace '/' '.' mainClass, true, writer);
             try
                 if eval then
@@ -131,52 +141,83 @@ evalContext = do:
                 throw if defined? t then t else ex fi;
             yrt,
 
-        evaluate argv line =
+        createEnvironment () =
+            evalEnv := new YetiEval(),
+
+        evaluate params source =
+            bindingVars = array [];
+            warnings = array [];
+            var type = Simple '()';
             writer = new Loader();
-            res = array [];
+
             oldContext = YetiEval#get();
-            if defined? evalCtx or not defined? oldContext then
-                if not defined? evalCtx then
-                    evalCtx := new YetiEval()
-                fi;
-                YetiEval#set(evalCtx)
+            if not defined? evalEnv then
+                evalEnv := new YetiEval()
             fi;
-            try
-                bindings = YetiEval#get()#bindings;
-                bindBarrier = bindings#size();
-                type = compileString {source = line, eval = true,
-                                      warnings = array [],
-                                      writer = writer as ~CodeWriter};
+            YetiEval#set(evalEnv);
+
+            result =
                 try
-                    val = execClass argv true writer;
+                    bindings = YetiEval#get()#bindings;
+                    bindBarrier = bindings#size();
+                    type := compileString {source, eval = true, warnings,
+                                           writer = writer as ~CodeWriter};
+                    val =
+                        try
+                            Result (execClass params true writer);
+                        catch Exception ex:
+                            Exception (ex as ~java.lang.Throwable)
+                        catch java.lang.StackOverflowError ex:
+                            Exception (ex as ~java.lang.Throwable)
+                        yrt;
+
+                    for [bindBarrier .. bindings#size() - 1] do i:
+                        push bindingVars
+                             (bindings#get(i) unsafely_as ~YetiEval$Binding)
+                    done;
+                    val
+                catch CompileException ex:
+                    CompileException ex
+                finally
+                    YetiEval#set(oldContext)
+                yrt;
+
+            {
+                warnings, type, result,
+            
+                get bindings () =
+                    res = array [];
+                    for bindingVars do binding:
+                        if not binding#isImport then
+                            t = binding#type;
+                            push res
+                                "\(if binding#mutable then "var " else "" fi)\
+                                "\(binding#name) is \(t) = \
+                                "\(if t#deref()#type == YetiType#UNIT then
+                                       "()"
+                                   elif nullptr? binding#value then
+                                       "<undef>"
+                                   else
+                                       Core#show(binding#val())
+                                   fi)"
+                        fi
+                    done;
+                    list res
+            },
+
+        evaluateFormatted params line =
+            {type, result, bindings} = evaluate params line;
+            res = array bindings;
+            case result of
+                Exception ex:
+                    push res (stackTraceString ex);
+                CompileException ex:
+                    push res (ex is ~CompileException)#getMessage();
+                Result val:
                     if type != Simple "()" then
                         push res "\(Core#show(val)) is \(showType [] '' type)"
                     fi
-                catch Exception ex:
-                    push res (stackTraceString ex)
-                catch java.lang.StackOverflowError ex:
-                    push res (stackTraceString ex)
-                yrt;
-                for [bindBarrier .. bindings#size() - 1] do i:
-                    binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
-                    if not binding#isImport then
-                        t = binding#type;
-                        push res "\(if binding#mutable then "var " else "" fi)\
-                                 "\(binding#name) is \(t) = \
-                                 "\(if t#deref()#type == YetiType#UNIT then
-                                        "()"
-                                    elif nullptr? binding#value then
-                                        "<undef>"
-                                    else
-                                        Core#show(binding#val())
-                                    fi)"
-                    fi
-                done
-            catch CompileException ex:
-                push res ex#getMessage()
-            finally
-                YetiEval#set(oldContext)
-            yrt;
+            esac;
             strJoin '' (map (^ "\n") res),
     }
 done;

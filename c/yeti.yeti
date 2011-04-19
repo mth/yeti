@@ -38,10 +38,13 @@ var exec = true;
 var printType = false;
 var src = "";
 var compileErrorTrace = false;
+var sandbox = false;
 javaOptions = array [];
 
 srcs = array [];
 argv = array _argv;
+
+var execParam = [Argument argv];
 
 evaluator = evalContext ();
 
@@ -52,7 +55,7 @@ repl () =
    (print "> ";
     line = readln ();
     if defined? line then
-        print (evaluator.evaluate argv line);
+        print (evaluator.evaluateFormatted execParam line);
         repl ()
     else
         println "";
@@ -122,7 +125,8 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
                 System#exit(13)
             done;
         "-safe-eval":
-            evaluator.sandbox := true;
+            sandbox := true;
+            execParam := Sandbox () :: execParam;
             eval := true;
             src := shift argv;
         "-compile-error-trace":
@@ -130,7 +134,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         _:
             try
                 evaluator.option arg
-            catch Exception:
+            catch IllegalArgumentException:
                 println "Unexpected option: \(arg)";
                 sysExit 1;
             yrt
@@ -220,19 +224,19 @@ catch CompileException ex:
     sysExit 1;
 yrt;
 
-out = if evaluator.sandbox then System#out else System#err fi;
+out = if sandbox then System#out else System#err fi;
 
 if exec then
     try
         classLoader = writer as ~Object unsafely_as ~ClassLoader;
         // make compiled classes visible in the thread classloader
         Thread#currentThread()#setContextClassLoader(classLoader);
-        v = evaluator.execClass argv eval classLoader;
+        v = evaluator.execClass execParam eval classLoader;
         if resultType != Simple "()" then
             println v
         fi
     catch java.lang.StackOverflowError ex:
-        if evaluator.sandbox then
+        if sandbox then
             out#println("Stack overflow")
         else
             ex#printStackTrace()

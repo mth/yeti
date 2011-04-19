@@ -290,6 +290,8 @@ public class YetiType implements YetiParser {
         bindImport("Exception", "java/lang/Exception",
         bindImport("RuntimeException", "java/lang/RuntimeException",
         bindImport("NumberFormatException", "java/lang/NumberFormatException",
+        bindImport("IllegalArgumentException",
+                   "java/lang/IllegalArgumentException",
         bindImport("Math", "java/lang/Math",
         bindImport("Object", "java/lang/Object",
         bindImport("Boolean", "java/lang/Boolean",
@@ -297,7 +299,7 @@ public class YetiType implements YetiParser {
         bindImport("Long", "java/lang/Long",
         bindImport("Double", "java/lang/Double",
         bindImport("String", "java/lang/String",
-    null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+   null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System",
