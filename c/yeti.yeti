@@ -126,7 +126,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             done;
         "-safe-eval":
             sandbox := true;
-            execParam := Sandbox () :: execParam;
+            execParam := GlobalSandbox () :: execParam;
             eval := true;
             src := shift argv;
         "-compile-error-trace":

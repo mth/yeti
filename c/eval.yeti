@@ -34,6 +34,8 @@ import java.io.File;
 
 load yeti.lang.compiler.showtype;
 
+// XXX: Beware - the GlobalSandbox argument sets a very restricive
+//      security manager globally and you CANNOT remove it later.
 execClass params eval loader mainClass
         is 'a -> boolean -> ~ClassLoader -> string -> ~Object =
    (var argv = array [];
@@ -41,7 +43,7 @@ execClass params eval loader mainClass
     for params do param:
         case param of
         Argument arg: argv := arg;
-        Sandbox _: sandbox := true;
+        GlobalSandbox _: sandbox := true;
         esac
     done;
     c = Class#forName(strReplace '/' '.' mainClass, true, loader);
