@@ -192,16 +192,15 @@ evalContext = do:
                 for bindingVars do binding:
                     if not binding#isImport then
                         t = binding#type;
-                        push res
-                            "\(if binding#mutable then "var " else "" fi)\
-                            "\(binding#name) is \(t) = \
-                            "\(if t#deref()#type == YetiType#UNIT then
-                                   "()"
-                               elif nullptr? binding#value then
-                                   "<undef>"
-                               else
-                                   Core#show(binding#val())
-                               fi)"
+                        push res "\(if binding#mutable then "var " else "" fi)\
+                                 "\(binding#name) is \(t) = \
+                                 "\(if t#deref()#type == YetiType#UNIT then
+                                        "()"
+                                    elif nullptr? binding#value then
+                                        "<undef>"
+                                    else
+                                        Core#show(binding#val())
+                                    fi)"
                     fi
                 done;
                 res);
