@@ -435,8 +435,12 @@ class JavaType {
         if (src == null)
             throw new CompileException(cast, "Illegal cast from " + from);
         JavaType dst = getClass(to);
-        if (dst == null)
+        if (dst == null) {
+            if (src.description == "Ljava/lang/Object;" &&
+                    to.deref().type == YetiType.JAVA_ARRAY)
+                return;
             throw new CompileException(cast, "Illegal cast to " + to);
+        }
         if (to.type == YetiType.JAVA &&
             (src.access & Opcodes.ACC_INTERFACE) != 0) {
             return;

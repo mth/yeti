@@ -47,8 +47,10 @@ execClass params eval loader mainClass
         esac
     done;
     c = Class#forName(strReplace '/' '.' mainClass, true, loader);
+    old_argv = Core#ARGV#get();
     try
         if eval then
+            Core#setArgv(argv);
             f = c#newInstance() unsafely_as () -> 'a;
             if sandbox then
                 var sandboxed = \();
@@ -74,6 +76,8 @@ execClass params eval loader mainClass
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();
         throw if defined? t then t else ex fi;
+    finally
+        Core#ARGV#set(old_argv)
     yrt);
 
 // XXX its still experimental
@@ -119,6 +123,7 @@ evalContext = do:
                 try
                     // XXX EVAL_BIND is really needed only when you want
                     //     to capture bindings, so yeti -e doesn't need it!
+                    // FIXME this actually causes a crash
                     compilation#compile((), mainClass, source,
                         if eval then flags + YetiC#CF_EVAL + YetiC#CF_EVAL_BIND
                                 else flags fi);
