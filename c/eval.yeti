@@ -214,14 +214,14 @@ evalContext = do:
             {type, result, bindings} = evaluate params line;
             res = array bindings;
             case result of
-                Exception ex:
-                    push res (stackTraceString ex);
-                CompileException ex:
-                    push res (ex is ~CompileException)#getMessage();
-                Result val:
-                    if type != Simple "()" then
-                        push res "\(Core#show(val)) is \(showType [] '' type)"
-                    fi
+            Exception ex:
+                push res (stackTraceString ex);
+            CompileException ex:
+                push res (ex is ~CompileException)#getMessage();
+            Result val:
+                if type != Simple "()" then
+                    push res "\(Core#show(val)) is \(showType [] '' type)"
+                fi
             esac;
             strJoin '' (map (^ "\n") res),
     }
