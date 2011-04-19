@@ -29,11 +29,11 @@ program yeti.lang.compiler.yeti;
 
 import java.lang: ClassLoader, Thread;
 import java.io.File;
+load yeti.lang.compiler.eval;
 load yeti.lang.compiler.showtype;
 
 var target = "";
 var eval = false;
-var flags = 0;
 var exec = true;
 var printType = false;
 var src = "";
@@ -43,16 +43,16 @@ javaOptions = array [];
 srcs = array [];
 argv = array _argv;
 
-evaluator = load yeti.lang.compiler.repl argv;
+evaluator = evalContext ();
 
-printMessage ex is ~Exception -> () =
+printMessage ex is ~CompileException -> () =
     println ex#getMessage();
 
 repl () =
    (print "> ";
     line = readln ();
     if defined? line then
-        print (evaluator.evaluate line flags);
+        print (evaluator.evaluate argv line);
         repl ()
     else
         println "";
@@ -109,9 +109,6 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-type":
             printType := true;
             exec := false;
-        "-parse-tree": flags := flags + YetiC#CF_PRINT_PARSE_TREE;
-        "-no-import" : flags := flags + YetiC#CF_NO_IMPORT;
-        "-no-frames" : evaluator.noframes := true;
         "-javaver":
             ver = shift argv;
             for ['-source', ver, '-target', ver] (push javaOptions);
@@ -128,13 +125,15 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             evaluator.sandbox := true;
             eval := true;
             src := shift argv;
-        "-icast":
-            evaluator.gcj := true;
         "-compile-error-trace":
             compileErrorTrace := true;
         _:
-            println "Unexpected option: \(arg)";
-            sysExit 1;
+            try
+                evaluator.option arg
+            catch Exception:
+                println "Unexpected option: \(arg)";
+                sysExit 1;
+            yrt
         esac
     else
         push srcs arg
@@ -179,18 +178,18 @@ scan src local dirs to =
     fi;
     ok);
 
-compilation = evaluator.compilationOf writer;
-var resultType = YetiType#UNIT_TYPE;
+warnings = array [] is array<~CompileException>;
+var resultType = Simple '';
 
 try
     if eval then
-        flags := flags + YetiC#CF_EVAL;
-        resultType := compilation#compile((), evaluator.mainClass, src, flags);
+        resultType := evaluator.compileString {source = src, eval = true,
+                                               writer, warnings};
         if printType then
-            println resultType
+            println (showType [] '' resultType)
         fi
     elif printType then
-        CompileCtx#currentCompileCtx#set(compilation);
+        CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
         for srcs do src:
             mt = YetiTypeVisitor#getType((), src, true);
             if mt#topDoc != "" then
@@ -201,20 +200,19 @@ try
         done
     else
         files = [:];
-        dirs = array [];
+        basedirs = array [];
         for srcs do src:
-            if not scan src '' (push dirs) files then
+            if not scan src '' (push basedirs) files then
                 println "Don't know what to do with `\(src)'";
                 sysExit 1
             fi
         done;
-        evaluator.reader#basedirs := dirs as ~String[];
-        evaluator.mainClass :=
-            compilation#compileAll(sort (list files), flags, javaOptions)
+        evaluator.compileFiles {basedirs, writer, javaOptions,
+                                files = sort (list files), warnings}
     fi;
-    compilation#enumWarns(printMessage)
+    for warnings printMessage;
 catch CompileException ex:
-    compilation#enumWarns(printMessage);
+    for warnings printMessage;
     if compileErrorTrace then
         ex#printStackTrace()
     fi;
@@ -229,8 +227,8 @@ if exec then
         classLoader = writer as ~Object unsafely_as ~ClassLoader;
         // make compiled classes visible in the thread classloader
         Thread#currentThread()#setContextClassLoader(classLoader);
-        v = evaluator.execClass eval classLoader;
-        if resultType#deref()#type != YetiType#UNIT then
+        v = evaluator.execClass argv eval classLoader;
+        if resultType != Simple "()" then
             println v
         fi
     catch java.lang.StackOverflowError ex:
