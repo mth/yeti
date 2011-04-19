@@ -1,0 +1,186 @@
+/**
+ * Yeti compiler and eval (derived from old REPL module) interface.
+ * Copyright (c) 2008,2009,2011 Madis Janson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+module yeti.lang.compiler.eval;
+
+import java.lang: Class, ClassLoader;
+import yeti.lang.Core;
+import java.security.Permission;
+import java.io.File;
+
+load yeti.lang.compiler.showtype;
+
+// XXX its still experimental
+evalContext = do:
+    var flags = 0;
+    var gcj = false;
+    var noframes = false;
+    var evalCtx = () as ~YetiEval;
+    reader = new YetiC();
+
+    {
+        var preload = ["yeti/lang/std", "yeti/lang/io"],
+        var mainClass = "code",
+        var classPath = [],
+        var sandbox = false,
+        var javaOptions = [],
+
+        option opt =
+            case opt of
+            "-parse-tree": flags := flags + YetiC#CF_PRINT_PARSE_TREE;
+            "-no-import" : flags := flags + YetiC#CF_NO_IMPORT;
+            "-no-frames" : noframes := true;
+            "-icast"     : gcj := true;
+            ...
+            esac,
+
+        compilationOf writer is ~CodeWriter -> ~CompileCtx =
+            ctx = new CompileCtx(reader, writer,
+                        preload is list?<string> as ~String[],
+                        new ClassFinder(classPath is list?<string>));
+            if gcj then
+                ctx#isGCJ := true
+            fi;
+            if noframes then
+                ctx#classWriterFlags := 0
+            fi;
+            ctx,
+
+        compileString {source is string,
+                       writer is ~CodeWriter,
+                       warnings is array<~CompileException>,
+                       eval is boolean} =
+            compilation = compilationOf writer;
+            type =
+                try
+                    compilation#compile((), mainClass, source,
+                        if eval then flags + YetiC#CF_EVAL else flags fi);
+                finally
+                    compilation#enumWarns(push warnings)
+                yrt;
+            TypeDescr#yetiType(type) unsafely_as type,
+
+        compileFiles {basedirs is list?<string>,
+                      files is list?<string>,
+                      writer is ~CodeWriter,
+                      warnings is array<~CompileException>,
+                      javaOptions is list?<string>} =
+            compilation = compilationOf writer;
+            reader#basedirs := basedirs as ~String[];
+            try
+                mainClass :=
+                   compilation#compileAll(sort (list files), flags, javaOptions)
+            finally
+                compilation#enumWarns(push warnings)
+            yrt,
+
+        execClass argv eval writer
+                is list?<string> -> boolean -> ~ClassLoader -> ~Object =
+            c = Class#forName(strReplace '/' '.' mainClass, true, writer);
+            try
+                if eval then
+                    f = c#newInstance() unsafely_as () -> 'a;
+                    if sandbox then
+                        var sandboxed = \();
+                        class Sandbox extends java.lang.SecurityManager
+                            void checkPermission(Permission perm)
+                                sandboxed (),
+                            void checkPermission(Permission perm,
+                                                 Object context)
+                                sandboxed (),
+                            void checkExit(int status)
+                                ()
+                        end;
+                        System#setSecurityManager(new Sandbox());
+                        // can't activate before, because
+                        // setSecurityManager would fail otherwise
+                        sandboxed := \throw new java.lang.SecurityException();
+                    fi;
+                    f ()
+                else
+                    aa = new Object[1];
+                    aa.[0] := argv is array<string> as ~String[] as ~Object;
+                    c#getMethod("main", [classOf String[]])#invoke((), aa)
+                fi
+            catch java.lang.reflect.InvocationTargetException ex:
+                t = ex#getCause();
+                throw if defined? t then t else ex fi;
+            yrt,
+
+        evaluate argv line =
+            writer = new Loader();
+            res = array [];
+            oldContext = YetiEval#get();
+            if defined? evalCtx or not defined? oldContext then
+                if not defined? evalCtx then
+                    evalCtx := new YetiEval()
+                fi;
+                YetiEval#set(evalCtx)
+            fi;
+            try
+                bindings = YetiEval#get()#bindings;
+                bindBarrier = bindings#size();
+                type = compileString {source = line, eval = true,
+                                      warnings = array [],
+                                      writer = writer as ~CodeWriter};
+                try
+                    val = execClass argv true writer;
+                    if type != Simple "()" then
+                        push res "\(Core#show(val)) is \(showType [] '' type)"
+                    fi
+                catch Exception ex:
+                    push res (stackTraceString ex)
+                catch java.lang.StackOverflowError ex:
+                    push res (stackTraceString ex)
+                yrt;
+                for [bindBarrier .. bindings#size() - 1] do i:
+                    binding = bindings#get(i) unsafely_as ~YetiEval$Binding;
+                    if not binding#isImport then
+                        t = binding#type;
+                        push res "\(if binding#mutable then "var " else "" fi)\
+                                 "\(binding#name) is \(t) = \
+                                 "\(if t#deref()#type == YetiType#UNIT then
+                                        "()"
+                                    elif nullptr? binding#value then
+                                        "<undef>"
+                                    else
+                                        Core#show(binding#val())
+                                    fi)"
+                    fi
+                done
+            catch CompileException ex:
+                push res ex#getMessage()
+            finally
+                YetiEval#set(oldContext)
+            yrt;
+            strJoin '' (map (^ "\n") res),
+    }
+done;
+
+{
+    evalContext
+}
