@@ -231,7 +231,7 @@ if exec then
         classLoader = writer as ~Object unsafely_as ~ClassLoader;
         // make compiled classes visible in the thread classloader
         Thread#currentThread()#setContextClassLoader(classLoader);
-        v = evaluator.execClass execParam eval classLoader;
+        v = execClass execParam eval classLoader evaluator.mainClass;
         if resultType != Simple "()" then
             println v
         fi

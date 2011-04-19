@@ -34,6 +34,47 @@ import java.io.File;
 
 load yeti.lang.compiler.showtype;
 
+execClass params eval loader mainClass
+        is 'a -> boolean -> ~ClassLoader -> string -> ~Object =
+   (var argv = array [];
+    var sandbox = false;
+    for params do param:
+        case param of
+        Argument arg: argv := arg;
+        Sandbox _: sandbox := true;
+        esac
+    done;
+    c = Class#forName(strReplace '/' '.' mainClass, true, loader);
+    try
+        if eval then
+            f = c#newInstance() unsafely_as () -> 'a;
+            if sandbox then
+                var sandboxed = \();
+                class Sandbox extends java.lang.SecurityManager
+                    void checkPermission(Permission perm)
+                        sandboxed (),
+                    void checkPermission(Permission perm,
+                                         Object context)
+                        sandboxed (),
+                    void checkExit(int status)
+                        ()
+                end;
+                System#setSecurityManager(new Sandbox());
+                // can't activate before, because
+                // setSecurityManager would fail otherwise
+                sandboxed := \throw new java.lang.SecurityException();
+            fi;
+            f ()
+        else
+            aa = new Object[1];
+            aa.[0] := argv is array<string> as ~String[] as ~Object;
+            c#getMethod("main", [classOf String[]])#invoke((), aa)
+        fi
+    catch java.lang.reflect.InvocationTargetException ex:
+        t = ex#getCause();
+        throw if defined? t then t else ex fi;
+    yrt);
+
 // XXX its still experimental
 evalContext = do:
     var flags = 0;
@@ -46,7 +87,6 @@ evalContext = do:
         var preload = ["yeti/lang/std", "yeti/lang/io"],
         var mainClass = "code",
         var classPath = [],
-        var javaOptions = [],
 
         option opt =
             case opt of
@@ -100,47 +140,6 @@ evalContext = do:
                 compilation#enumWarns(push warnings)
             yrt,
 
-        execClass params eval writer
-                is 'a -> boolean -> ~ClassLoader -> ~Object =
-            var argv = array [];
-            var sandbox = false;
-            for params do param:
-                case param of
-                Argument arg: argv := arg;
-                Sandbox _: sandbox := true;
-                esac
-            done;
-            c = Class#forName(strReplace '/' '.' mainClass, true, writer);
-            try
-                if eval then
-                    f = c#newInstance() unsafely_as () -> 'a;
-                    if sandbox then
-                        var sandboxed = \();
-                        class Sandbox extends java.lang.SecurityManager
-                            void checkPermission(Permission perm)
-                                sandboxed (),
-                            void checkPermission(Permission perm,
-                                                 Object context)
-                                sandboxed (),
-                            void checkExit(int status)
-                                ()
-                        end;
-                        System#setSecurityManager(new Sandbox());
-                        // can't activate before, because
-                        // setSecurityManager would fail otherwise
-                        sandboxed := \throw new java.lang.SecurityException();
-                    fi;
-                    f ()
-                else
-                    aa = new Object[1];
-                    aa.[0] := argv is array<string> as ~String[] as ~Object;
-                    c#getMethod("main", [classOf String[]])#invoke((), aa)
-                fi
-            catch java.lang.reflect.InvocationTargetException ex:
-                t = ex#getCause();
-                throw if defined? t then t else ex fi;
-            yrt,
-
         createEnvironment () =
             evalEnv := new YetiEval(),
 
@@ -164,7 +163,7 @@ evalContext = do:
                                            writer = writer as ~CodeWriter};
                     val =
                         try
-                            Result (execClass params true writer);
+                            Result (execClass params true writer mainClass);
                         catch Exception ex:
                             Exception (ex as ~java.lang.Throwable)
                         catch java.lang.StackOverflowError ex:
@@ -223,5 +222,5 @@ evalContext = do:
 done;
 
 {
-    evalContext
+    evalContext, execClass
 }
