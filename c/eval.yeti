@@ -165,7 +165,7 @@ evalContext = do:
             result =
                 try
                     bindings = YetiEval#get()#bindings;
-                    bindBarrier = bindings#size();
+                    var bindBarrier = bindings#size();
                     type := compileString {source, eval = true, warnings,
                                            writer = writer as ~CodeWriter,
                                extraFlags = YetiC#CF_EVAL + YetiC#CF_EVAL_BIND};
@@ -184,10 +184,10 @@ evalContext = do:
                             Exception ex
                         yrt;
 
-                    for [bindBarrier .. bindings#size() - 1] do i:
-                        push bindingVars
-                             (bindings#get(i) unsafely_as ~YetiEval$Binding)
-                    done;
+                    bindBarrier < bindings#size() loop
+                       (push bindingVars (bindings#get(bindBarrier)
+                                            unsafely_as ~YetiEval$Binding);
+                        bindBarrier := bindBarrier + 1);
                     val
                 catch CompileException ex:
                     CompileException ex

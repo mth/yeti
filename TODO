@@ -33,3 +33,5 @@
 * Direct double optimisation, when it can be deduced,
   that there are always floats
 * Direct struct-ref optimisation, when only known structs are accessed
+* Try using Struct[36] instead of Object[] for compiler helper containers
+  (should be faster, needs testing to be sure it's really useful)
