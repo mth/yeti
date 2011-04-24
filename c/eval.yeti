@@ -86,7 +86,7 @@ createCtx reader genericOpt =
     for genericOpt do opt:
         case opt of
         To dir:
-            if not defined? ctx#writer then
+            if not defined? ctx#writer and dir != '' then
                 push java '-d';
                 push java dir;
             fi;

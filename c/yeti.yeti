@@ -91,12 +91,11 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
     if arg `strStarts?` '-' then
         case arg of
         "-C":
+            push options (To '');
             exec := false;
         "-d":
             target = shift argv;
-            if target != '' then
-                push options (To "\(target)/")
-            fi;
+            push options (To if target != '' then "\(target)/" else '' fi);
             exec := false;
         "-e":
             eval := true;
