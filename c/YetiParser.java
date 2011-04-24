@@ -1512,11 +1512,14 @@ interface YetiParser {
         }
 
         String getTypename(Node node) {
-            if (!(node instanceof Sym)) {
+            if (!(node instanceof Sym))
                 throw new CompileException(node,
                             "Expected typename, not a " + node);
-            }
-            return ((Sym) node).sym;
+            String s = ((Sym) node).sym;
+            if (!Character.isLowerCase(s.charAt(0)))
+                throw new CompileException(node,
+                            "Typename must start with lowercase character");
+            return s;
         }
 
         TypeDef readTypeDef() {
