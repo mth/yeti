@@ -51,12 +51,12 @@ evaluator = evalContext ();
 printMessage ex is ~CompileException -> () =
     println ex#getMessage();
 
-repl () =
+repl eval =
    (print "> ";
     line = readln ();
     if defined? line then
-        print (evaluator.evaluate execParam line).str;
-        repl ()
+        print (eval line).str;
+        repl eval
     else
         println "";
         sysExit 0
@@ -66,7 +66,7 @@ startRepl () =
    (println "Yeti REPL.\n";
     oldEval = YetiEval#set(new YetiEval());
     try
-        repl ()
+        repl (evaluateYetiCode () execParam)
     finally
         YetiEval#set(oldEval)
     yrt);
@@ -133,6 +133,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             compileErrorTrace := true;
         _:
             try
+                // TODO process ExecParam here
                 evaluator.option arg
             catch IllegalArgumentException:
                 println "Unexpected option: \(arg)";
@@ -187,11 +188,24 @@ var resultType = Simple '()';
 
 try
     if eval then
-        resultType := evaluator.compileString {source = src, writer, warnings,
-                                               extraFlags = YetiC#CF_EVAL};
+        opt = [NoBind (), Warn (push warnings)];
         if printType then
-            println (showType [] '' resultType)
-        fi
+            {type} = evaluateYetiCode () (NoExec () :: opt) src;
+            println (showType [] '' type)
+        else
+            {type, result} = evaluateYetiCode () (opt ++ execParam) src;
+            case result of
+            Exception ex:
+                println (stackTraceString ex);
+            CompileException ex:
+                throw (ex is ~CompileException);
+            Result val: 
+                if type != Simple "()" then
+                    println val
+                fi
+            esac
+        fi;
+        sysExit 0
     elif printType then
         CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
         for srcs do src:
@@ -211,8 +225,10 @@ try
                 sysExit 1
             fi
         done;
-        evaluator.compileFiles {basedirs, writer, javaOptions,
-                                files = sort (list files), warnings}
+        evaluator.compileFiles {sourcePath = basedirs,
+                                writer, javaOptions,
+                                files = sort (list files),
+                                warn = push warnings}
     fi;
     for warnings printMessage;
 catch CompileException ex:
