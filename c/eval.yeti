@@ -110,7 +110,7 @@ compileYetiFiles genericOpt options files =
    (var exec = false;
     var execArg = array [];
     var typeAction = None ();
-    var mainClass = undef_str;
+    var mainClass = '';
 
     reader = new YetiC();
     {ctx, warn, java = javaOptions} = createCtx reader genericOpt;
