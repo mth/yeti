@@ -188,11 +188,24 @@ var resultType = Simple '()';
 
 try
     if eval then
-        resultType := evaluator.compileString {source = src, writer, warnings,
-                                               extraFlags = YetiC#CF_EVAL};
+        opt = [NoBind (), Warn (push warnings)];
         if printType then
-            println (showType [] '' resultType)
-        fi
+            {type} = evaluateYetiCode () (NoExec () :: opt) src;
+            println (showType [] '' type)
+        else
+            {type, result} = evaluateYetiCode () (opt ++ execParam) src;
+            case result of
+            Exception ex:
+                println (stackTraceString ex);
+            CompileException ex:
+                throw (ex is ~CompileException);
+            Result val: 
+                if type != Simple "()" then
+                    println val
+                fi
+            esac
+        fi;
+        sysExit 0
     elif printType then
         CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
         for srcs do src:

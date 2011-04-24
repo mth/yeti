@@ -61,7 +61,7 @@ execClass params eval loader mainClass
         Argument arg: argv := arg;
         GlobalSandbox _: sandbox := true;
         NoExec _: exec := false;
-        ResetEnv _: ();
+        _: ();
         esac
     done;
     if exec then
@@ -120,20 +120,6 @@ evalContext = do:
                 ctx#classWriterFlags := 0
             fi;
             ctx,
-
-        compileString {source is string,
-                       writer is ~CodeWriter,
-                       warnings is array<~CompileException>,
-                       extraFlags is number} =
-            compilation = compilationOf writer;
-            type =
-                try
-                    compilation#compile((), mainClass, source,
-                                        flags + extraFlags);
-                finally
-                    compilation#enumWarns(push warnings)
-                yrt;
-            TypeDescr#yetiType(type) unsafely_as type,
 
         compileFiles {sourcePath is list?<string>,
                       files is list?<string>,
@@ -224,33 +210,52 @@ compileYetiFiles options files =
         yrt
     fi);
 
+debugStupidWarning = ();
+
 evaluateYetiCode () =
-   (var flags = YetiC#CF_EVAL + YetiC#CF_EVAL_BIND;
+   (var flags = YetiC#CF_EVAL;
     var evalEnv = () as ~YetiEval;
     mainClass = "code";
     do options code:
         bindingVars = array [];
-        warnings = array [];
+        var warn = \();
         var type = Simple '()';
+        var bind = true;
         writer = new Loader();
 
+        for options do opt:
+            case opt of
+            Warn action: warn := action;
+            NoBind (): bind := false;
+            ResetEnv (): evalEnv := new YetiEval();
+            Argument _: ();
+            GlobalSandbox _: ();
+            NoExec _: ();
+            esac;
+        done;
+
         oldContext = YetiEval#get();
-        if not defined? evalEnv or contains (ResetEnv ()) options then
+        if bind then
+            flags := flags + YetiC#CF_EVAL_BIND
+        fi;
+        if not defined? evalEnv then
             evalEnv := new YetiEval()
         fi;
         YetiEval#set(evalEnv);
 
         result =
             try
-                bindings = YetiEval#get()#bindings;
+                bindings = evalEnv#bindings;
                 var bindBarrier = bindings#size();
+                // TODO get compilationOf out of evalContext
+                // TODO and give options to it
                 compilation = (evalContext ()).compilationOf writer;
                 try
                     t = compilation#compile((), mainClass,
                                             code is string, flags);
                     type := TypeDescr#yetiType(t) unsafely_as type
                 finally
-                    compilation#enumWarns(push warnings)
+                    compilation#enumWarns(warn)
                 yrt;
                 val =
                     try
@@ -297,7 +302,7 @@ evaluateYetiCode () =
             res);
 
         {
-            warnings, type, result,
+            type, result,
         
             get bindings () = list (bindings ()),
 
