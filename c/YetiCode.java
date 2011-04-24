@@ -333,6 +333,7 @@ final class CompileCtx implements Opcodes {
         RootClosure codeTree;
         Object oldCompileCtx = currentCompileCtx.get();
         currentCompileCtx.set(this);
+        String oldCurrentSrc = currentSrc;
         currentSrc = sourceName;
         if (flags != 0)
             this.flags = flags;
@@ -427,6 +428,7 @@ final class CompileCtx implements Opcodes {
             write();
             unstoredClasses = oldUnstoredClasses;
             classPath.existsCache.clear();
+            currentSrc = oldCurrentSrc;
             return codeTree.type;
         } catch (CompileException ex) {
             if (ex.fn == null) {

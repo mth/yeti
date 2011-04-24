@@ -167,8 +167,6 @@ compileYetiFiles genericOpt options files =
         yrt
     fi);
 
-debugStupidWarning = ();
-
 evaluateYetiCode genericOpt =
    (var evalEnv = () as ~YetiEval;
     mainClass = "code";
