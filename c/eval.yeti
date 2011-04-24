@@ -144,7 +144,7 @@ compileYetiFiles genericOpt options files =
         for files do src:
             mt = YetiTypeVisitor#getType((), src, true);
             action {type = TypeDescr#yetiType(mt#type) unsafely_as type,
-                    doc = mt#topDoc};
+                    doc = mt#topDoc, src};
         done;
     _:
         try
