@@ -27,7 +27,7 @@
  */
 module yeti.lang.compiler.eval;
 
-import java.lang: Class, ClassLoader;
+import java.lang: Class, ClassLoader, Thread, Throwable;
 import yeti.lang.Core;
 import java.security.Permission;
 import java.io.File;
@@ -136,18 +136,18 @@ evalContext = do:
                 yrt;
             TypeDescr#yetiType(type) unsafely_as type,
 
-        compileFiles {basedirs is list?<string>,
+        compileFiles {sourcePath is list?<string>,
                       files is list?<string>,
                       writer is ~CodeWriter,
-                      warnings is array<~CompileException>,
+                      warn is ~CompileException -> (),
                       javaOptions is list?<string>} =
             compilation = compilationOf writer;
-            reader#basedirs := basedirs as ~String[];
+            reader#basedirs := sourcePath as ~String[];
             try
                 mainClass :=
                    compilation#compileAll(sort (list files), flags, javaOptions)
             finally
-                compilation#enumWarns(push warnings)
+                compilation#enumWarns(warn)
             yrt,
 
         evaluate params source =
@@ -173,14 +173,14 @@ evalContext = do:
                         try
                             Result (execClass params true writer mainClass);
                         catch java.lang.StackOverflowError ex:
-                            Exception (ex as ~java.lang.Throwable)
+                            Exception (ex as ~Throwable)
                         catch java.lang.VirtualMachineError ex:
                             // other virtualmachine errors will be rethrown
                             // (including OutOfMemoryError)
                             throw ex
                         catch java.lang.ThreadDeath ex:
                             throw ex // honor thread death also
-                        catch java.lang.Throwable ex:
+                        catch Throwable ex:
                             Exception ex
                         yrt;
 
@@ -236,8 +236,89 @@ evalContext = do:
     }
 done;
 
+compileYetiFiles options files =
+   (var writer = () as ~CodeWriter;
+    var exec = false;
+    var execArg = array [];
+    var typeAction = None ();
+    var warn = \();
+    sourcePath = array [];
+    javaOptions = array [];
+    evaluator = evalContext ();
+    for options do opt:
+        case opt of
+        Type action:
+            typeAction := Some action;
+        Warn action:
+            warn := action;
+        Exec arg:
+            exec := true;
+            execArg := arg;
+        To dir:
+            if not defined? writer then
+                push javaOptions '-d';
+                push javaOptions dir;
+            fi;
+            writer := new ToFile(dir) as ~CodeWriter;
+        SourceDir dir:
+            push sourcePath dir;
+        JavaOption option:
+            push javaOptions option;
+        esac
+    done;
+    if not defined? writer then
+        writer := new Loader() as ~CodeWriter;
+    elif exec then
+        failWith "To andExec options together are not supported"
+    fi;
+    case typeAction of
+    Some action:
+        if exec then
+            failWith "Exec with Type is not implemented yet"
+        fi;
+        if writer instanceof ToFile then
+            failWith "To with Type is not implemented yet"
+        fi;
+        old_ctx = CompileCtx#currentCompileCtx#get();
+        CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
+        try
+            for files do src:
+                mt = YetiTypeVisitor#getType((), src, true);
+                action {type = TypeDescr#yetiType(mt#type) unsafely_as type,
+                        doc = mt#topDoc};
+            done;
+        finally
+            CompileCtx#currentCompileCtx#set(old_ctx)
+        yrt;
+    _:
+        evaluator.compileFiles {sourcePath, writer,
+                                javaOptions, files, warn}
+    esac;
+    if exec then
+        try
+            classLoader = writer as ~Object unsafely_as ~ClassLoader;
+            Thread#currentThread()#setContextClassLoader(classLoader);
+            _ = execClass [Argument execArg] false classLoader
+                          evaluator.mainClass;
+        catch java.lang.OutOfMemoryError ex:
+            throw ex
+        catch java.lang.ThreadDeath ex:
+            throw ex // honor thread death also
+        catch Throwable th:
+            throw new java.lang.reflect.InvocationTargetException(th)
+        yrt
+    fi);
+
+evaluateYetiCode () =
+   (evaluator = evalContext ();
+    do options code:
+        evaluator.evaluate options code
+    done);
+
 {
-    evalContext, execClass
+    evalContext, execClass,
+
+    compileYetiFiles, evaluateYetiCode
 
     // needs context.
     // evaluate options source
