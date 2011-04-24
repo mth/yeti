@@ -238,4 +238,23 @@ done;
 
 {
     evalContext, execClass
+
+    // needs context.
+    // evaluate options source
+
+    // context could be useful
+    // getType options (Code s | File s)
+    // although evaluate fills the (Code s) case anyway.
+    // it would be nice to reduce it all to evaluate and compileFiles.
+
+    // compileFiles options
+    // execFiles options
+    // could be joined, if Exec were option?
+
+    // there could be target option(s) also.
+    // Type (type-action)
+    // Exec argument
+    // To dir
+    // --- yes, seems that evaluate () options source
+    //                 and compileFiles options files would be okey.
 }
