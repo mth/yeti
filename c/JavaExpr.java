@@ -354,7 +354,7 @@ class JavaExpr extends Code {
 
     static void genValue(Ctx ctx, Code arg, YType argType, int line) {
         genRawArg(ctx, arg, argType, line);
-        if (arg.type.type == YetiType.NUM &&
+        if (arg.type.deref().type == YetiType.NUM &&
             argType.javaType.description.length() == 1) {
             convertNum(ctx, argType.javaType.description);
         }
