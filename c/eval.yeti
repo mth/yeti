@@ -34,141 +34,101 @@ import java.io.File;
 
 load yeti.lang.compiler.showtype;
 
-initSandbox () =
-   (var sandboxed = \();
-    class Sandbox extends java.lang.SecurityManager
-        void checkPermission(Permission perm)
-            sandboxed (),
-        void checkPermission(Permission perm, Object context)
-            sandboxed (),
-        void checkExit(int status)
-            ()
-    end;
-    System#setSecurityManager(new Sandbox());
-    // can't activate before, because
-    // setSecurityManager would fail otherwise
-    sandboxed := \throw new java.lang.SecurityException());
-
 // XXX: Beware - the GlobalSandbox argument sets a very restricive
 //      security manager globally and you CANNOT remove it later.
-execClass params eval loader mainClass
-        is 'a -> boolean -> ~ClassLoader -> string -> ~Object =
-   (var argv = array [] is array<string>;
-    var sandbox = false;
-    var exec = true;
-    for params do param:
-        case param of
-        Argument arg: argv := arg;
-        GlobalSandbox _: sandbox := true;
-        NoExec _: exec := false;
-        _: ();
+execClass argv sandbox eval loader mainClass
+        is array<string> -> boolean -> boolean
+           -> ~ClassLoader -> string -> ~Object =
+   (c = Class#forName(strReplace '/' '.' mainClass, true, loader);
+    old_argv = Core#ARGV#get();
+    th = Thread#currentThread();
+    old_cl = th#getContextClassLoader();
+    th#setContextClassLoader(loader);
+    try
+        if eval then
+            Core#ARGV#set(argv);
+            f = c#newInstance() unsafely_as () -> 'a;
+            if sandbox then
+                var sandboxed = \();
+                class Sandbox extends java.lang.SecurityManager
+                    void checkPermission(Permission perm)
+                        sandboxed (),
+                    void checkPermission(Permission perm, Object context)
+                        sandboxed (),
+                    void checkExit(int status)
+                        ()
+                end;
+                System#setSecurityManager(new Sandbox());
+                // can't activate before, because
+                // setSecurityManager would fail otherwise
+                sandboxed := \throw new java.lang.SecurityException()
+            fi;
+            f ()
+        else
+            aa = new Object[1];
+            aa.[0] := argv is array<string> as ~String[] as ~Object;
+            c#getMethod("main", [classOf String[]])#invoke((), aa)
+        fi
+    catch java.lang.reflect.InvocationTargetException ex:
+        t = ex#getCause();
+        throw if defined? t then t else ex fi;
+    finally
+        Core#ARGV#set(old_argv);
+        th#setContextClassLoader(old_cl);
+    yrt);
+
+createCtx reader writer genericOpt =
+   (var warn = \() is ~CompileException -> ();
+    var classPath = [] is list<string>;
+    ctx = new CompileCtx(reader, writer);
+
+    for genericOpt do opt:
+        case opt of
+        Warn action: warn := action;
+        ClassPath path: classPath := classPath ++ path;
+        ICast ():     ctx#isGCJ := true;
+        Preload p:    ctx#preload := p is list?<string> as ~String[];
+        ParseTree (): ctx#flags := ctx#flags b_or YetiC#CF_PRINT_PARSE_TREE;
+        NoImport ():  ctx#flags := ctx#flags b_or YetiC#CF_NO_IMPORT;
+        NoFrames ():  ctx#classWriterFlags := 0
         esac
     done;
-    if exec then
-        c = Class#forName(strReplace '/' '.' mainClass, true, loader);
-        old_argv = Core#ARGV#get();
-        try
-            if eval then
-                Core#ARGV#set(argv);
-                f = c#newInstance() unsafely_as () -> 'a;
-                if sandbox then
-                    initSandbox ();
-                fi;
-                f ()
-            else
-                aa = new Object[1];
-                aa.[0] := argv is array<string> as ~String[] as ~Object;
-                c#getMethod("main", [classOf String[]])#invoke((), aa)
-            fi
-        catch java.lang.reflect.InvocationTargetException ex:
-            t = ex#getCause();
-            throw if defined? t then t else ex fi;
-        finally
-            Core#ARGV#set(old_argv)
-        yrt
-    fi);
+    ctx#classPath := new ClassFinder(classPath);
+    {warn, ctx});
 
-// XXX its still experimental
-evalContext = do:
-    var flags = 0;
-    var gcj = false;
-    var noframes = false;
-    reader = new YetiC();
-
-    {
-        var preload = ["yeti/lang/std", "yeti/lang/io"],
-        var mainClass = "code",
-        var classPath = [],
-
-        option opt =
-            case opt of
-            "-parse-tree": flags := flags + YetiC#CF_PRINT_PARSE_TREE;
-            "-no-import" : flags := flags + YetiC#CF_NO_IMPORT;
-            "-no-frames" : noframes := true;
-            "-icast"     : gcj := true;
-            ...
-            esac,
-
-        compilationOf writer is ~CodeWriter -> ~CompileCtx =
-            ctx = new CompileCtx(reader, writer,
-                        preload is list?<string> as ~String[],
-                        new ClassFinder(classPath is list?<string>));
-            if gcj then
-                ctx#isGCJ := true
-            fi;
-            if noframes then
-                ctx#classWriterFlags := 0
-            fi;
-            ctx,
-
-        compileFiles {sourcePath is list?<string>,
-                      files is list?<string>,
-                      writer is ~CodeWriter,
-                      warn is ~CompileException -> (),
-                      javaOptions is list?<string>} =
-            compilation = compilationOf writer;
-            reader#basedirs := sourcePath as ~String[];
-            try
-                mainClass :=
-                   compilation#compileAll(sort (list files), flags, javaOptions)
-            finally
-                compilation#enumWarns(warn)
-            yrt,
-    }
-done;
-
-compileYetiFiles options files =
-   (var writer = () as ~CodeWriter;
-    var exec = false;
+compileYetiFiles genericOpt options files =
+   (var exec = false;
     var execArg = array [];
     var typeAction = None ();
-    var warn = \();
+    var mainClass = undef_str;
+
+    reader = new YetiC();
+    {ctx, warn} = createCtx reader (() as ~CodeWriter) genericOpt;
+
     sourcePath = array [];
     javaOptions = array [];
-    evaluator = evalContext ();
     for options do opt:
         case opt of
         Type action:
             typeAction := Some action;
-        Warn action:
-            warn := action;
         Exec arg:
             exec := true;
             execArg := arg;
         To dir:
-            if not defined? writer then
+            if not defined? ctx#writer then
                 push javaOptions '-d';
                 push javaOptions dir;
             fi;
-            writer := new ToFile(dir) as ~CodeWriter;
+            ctx#writer := new ToFile(dir) as ~CodeWriter;
         SourceDir dir:
             push sourcePath dir;
         JavaOption option:
             push javaOptions option;
         esac
     done;
-    if not defined? writer then
-        writer := new Loader() as ~CodeWriter;
+    reader#basedirs := sourcePath as ~String[];
+    if not defined? ctx#writer then
+        ctx#writer := new Loader() as ~CodeWriter;
     elif exec then
         failWith "To andExec options together are not supported"
     fi;
@@ -177,30 +137,26 @@ compileYetiFiles options files =
         if exec then
             failWith "Exec with Type is not implemented yet"
         fi;
-        if writer instanceof ToFile then
+        if ctx#writer instanceof ToFile then
             failWith "To with Type is not implemented yet"
         fi;
-        old_ctx = CompileCtx#currentCompileCtx#get();
-        CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
-        try
-            for files do src:
-                mt = YetiTypeVisitor#getType((), src, true);
-                action {type = TypeDescr#yetiType(mt#type) unsafely_as type,
-                        doc = mt#topDoc};
-            done;
-        finally
-            CompileCtx#currentCompileCtx#set(old_ctx)
-        yrt;
+        CompileCtx#currentCompileCtx#set(ctx);
+        for files do src:
+            mt = YetiTypeVisitor#getType((), src, true);
+            action {type = TypeDescr#yetiType(mt#type) unsafely_as type,
+                    doc = mt#topDoc};
+        done;
     _:
-        evaluator.compileFiles {sourcePath, writer,
-                                javaOptions, files, warn}
+        try
+            mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
+        finally
+            ctx#enumWarns(warn)
+        yrt
     esac;
     if exec then
         try
-            classLoader = writer as ~Object unsafely_as ~ClassLoader;
-            Thread#currentThread()#setContextClassLoader(classLoader);
-            _ = execClass [Argument execArg] false classLoader
-                          evaluator.mainClass;
+            classLoader = ctx#writer unsafely_as ~ClassLoader;
+            _ = execClass execArg false false classLoader mainClass;
         catch java.lang.OutOfMemoryError ex:
             throw ex
         catch java.lang.ThreadDeath ex:
@@ -212,31 +168,33 @@ compileYetiFiles options files =
 
 debugStupidWarning = ();
 
-evaluateYetiCode () =
-   (var flags = YetiC#CF_EVAL;
-    var evalEnv = () as ~YetiEval;
+evaluateYetiCode genericOpt =
+   (var evalEnv = () as ~YetiEval;
     mainClass = "code";
     do options code:
         bindingVars = array [];
-        var warn = \();
         var type = Simple '()';
         var bind = true;
+        var exec = true;
+        var sandbox = false;
+        var argv = array [];
         writer = new Loader();
+        {ctx, warn} = createCtx new YetiC() writer genericOpt;
+        ctx#flags := YetiC#CF_EVAL;
 
         for options do opt:
             case opt of
-            Warn action: warn := action;
-            NoBind (): bind := false;
             ResetEnv (): evalEnv := new YetiEval();
-            Argument _: ();
-            GlobalSandbox _: ();
-            NoExec _: ();
+            NoBind (): bind := false;
+            NoExec (): exec := false;
+            Exec a: argv := a;
+            GlobalSandbox (): sandbox := true;
             esac;
         done;
 
         oldContext = YetiEval#get();
         if bind then
-            flags := flags + YetiC#CF_EVAL_BIND
+            ctx#flags := ctx#flags b_or YetiC#CF_EVAL_BIND
         fi;
         if not defined? evalEnv then
             evalEnv := new YetiEval()
@@ -247,30 +205,31 @@ evaluateYetiCode () =
             try
                 bindings = evalEnv#bindings;
                 var bindBarrier = bindings#size();
-                // TODO get compilationOf out of evalContext
-                // TODO and give options to it
-                compilation = (evalContext ()).compilationOf writer;
                 try
-                    t = compilation#compile((), mainClass,
-                                            code is string, flags);
+                    t = ctx#compile((), mainClass, code is string, ctx#flags);
                     type := TypeDescr#yetiType(t) unsafely_as type
                 finally
-                    compilation#enumWarns(warn)
+                    ctx#enumWarns(warn)
                 yrt;
                 val =
-                    try
-                        Result (execClass options true writer mainClass);
-                    catch java.lang.StackOverflowError ex:
-                        Exception (ex as ~Throwable)
-                    catch java.lang.VirtualMachineError ex:
-                        // other virtualmachine errors will be rethrown
-                        // (including OutOfMemoryError)
-                        throw ex
-                    catch java.lang.ThreadDeath ex:
-                        throw ex // honor thread death also
-                    catch Throwable ex:
-                        Exception ex
-                    yrt;
+                    if exec then
+                        try
+                            Result (execClass argv sandbox true
+                                              writer mainClass);
+                        catch java.lang.StackOverflowError ex:
+                            Exception (ex as ~Throwable)
+                        catch java.lang.VirtualMachineError ex:
+                            // other virtualmachine errors will be rethrown
+                            // (including OutOfMemoryError)
+                            throw ex
+                        catch java.lang.ThreadDeath ex:
+                            throw ex // honor thread death also
+                        catch Throwable ex:
+                            Exception ex
+                        yrt
+                    else
+                        Result (() as ~Object)
+                    fi;
 
                 bindBarrier < bindings#size() loop
                    (push bindingVars (bindings#get(bindBarrier)
@@ -324,26 +283,5 @@ evaluateYetiCode () =
     done);
 
 {
-    evalContext, execClass,
-
     compileYetiFiles, evaluateYetiCode
-
-    // needs context.
-    // evaluate options source
-
-    // context could be useful
-    // getType options (Code s | File s)
-    // although evaluate fills the (Code s) case anyway.
-    // it would be nice to reduce it all to evaluate and compileFiles.
-
-    // compileFiles options
-    // execFiles options
-    // could be joined, if Exec were option?
-
-    // there could be target option(s) also.
-    // Type (type-action)
-    // Exec argument
-    // To dir
-    // --- yes, seems that evaluate () options source
-    //                 and compileFiles options files would be okey.
 }

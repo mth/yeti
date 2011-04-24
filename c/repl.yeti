@@ -43,8 +43,9 @@ do argv: {
     reader = new YetiC(),
 
     compilationOf writer =
-        ctx = new CompileCtx(reader, writer, preload,
-                             new ClassFinder(classPath as ~String[]));
+        ctx = new CompileCtx(reader, writer);
+        ctx#preload := preload as ~String[];
+        ctx#classPath := new ClassFinder(classPath as ~String[]);
         if gcj then
             ctx#isGCJ := true
         fi;

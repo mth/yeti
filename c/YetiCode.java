@@ -152,9 +152,8 @@ final class CompileCtx implements Opcodes {
     static final ThreadLocal currentCompileCtx = new ThreadLocal();
     private static ClassLoader JAVAC;
 
-    private CodeWriter writer;
+    CodeWriter writer;
     private SourceReader reader;
-    private String[] preload;
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
     private String currentSrc;
@@ -164,15 +163,13 @@ final class CompileCtx implements Opcodes {
     boolean isGCJ;
     ClassFinder classPath;
     Map types = new HashMap();
+    String[] preload = new String[] { "yeti/lang/std", "yeti/lang/io" };
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
 
-    CompileCtx(SourceReader reader, CodeWriter writer,
-               String[] preload, ClassFinder finder) {
+    CompileCtx(SourceReader reader, CodeWriter writer) {
         this.reader = reader;
         this.writer = writer;
-        this.preload = preload;
-        this.classPath = finder;
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
         isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
 //            isGCJ = true;

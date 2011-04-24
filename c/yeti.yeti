@@ -27,26 +27,25 @@
  */
 program yeti.lang.compiler.yeti;
 
-import java.lang: ClassLoader, Thread;
 import java.io.File;
 load yeti.lang.compiler.eval;
 load yeti.lang.compiler.showtype;
 
-var target = "";
 var eval = false;
 var exec = true;
-var printType = false;
 var src = "";
 var compileErrorTrace = false;
+var types = array [];
+var printType = false;
 var sandbox = false;
-javaOptions = array [];
+var out = System#err;
 
 srcs = array [];
 argv = array _argv;
 
-var execParam = [Argument argv];
-
-evaluator = evalContext ();
+options = array [];
+evalOptions = array [Exec argv];
+compileOptions = array [];
 
 printMessage ex is ~CompileException -> () =
     println ex#getMessage();
@@ -66,7 +65,7 @@ startRepl () =
    (println "Yeti REPL.\n";
     oldEval = YetiEval#set(new YetiEval());
     try
-        repl (evaluateYetiCode () execParam)
+        repl (evaluateYetiCode options evalOptions)
     finally
         YetiEval#set(oldEval)
     yrt);
@@ -94,29 +93,31 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-C":
             exec := false;
         "-d":
-            target := shift argv;
-            if target != "" then
-                push javaOptions '-d';
-                push javaOptions target;
-                target := "\(target)/"
+            target = shift argv;
+            if target != '' then
+                push compileOptions (To "\(target)/")
             fi;
             exec := false;
         "-e":
             eval := true;
             src := shift argv;
+        "-cp":
+            push options (ClassPath (splitPath (shift argv)));
+        "-preload":
+            push options (Preload (splitPath (shift argv)));
         "-h": help ();
-        "-cp": evaluator.classPath := list (splitPath (shift argv));
         "-help": help ();
         "--help": help ();
-        "-preload": evaluator.preload := list (splitPath (shift argv));
         "-type":
             printType := true;
             exec := false;
+            push compileOptions (Type (push types));
         "-javaver":
             ver = shift argv;
-            for ['-source', ver, '-target', ver] (push javaOptions);
+            for ['-source', ver, '-target', ver]
+                (push compileOptions . JavaOption);
         "-j":
-            push javaOptions (shift argv);
+            push compileOptions (JavaOption (shift argv));
         "-guard":
             time = number (shift argv);
             _ = runThread [Daemon ()] do:
@@ -125,20 +126,24 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
                 System#exit(13)
             done;
         "-safe-eval":
-            sandbox := true;
-            execParam := GlobalSandbox () :: execParam;
+            push evalOptions (GlobalSandbox ());
             eval := true;
+            sandbox := true;
             src := shift argv;
+            out := System#out;
         "-compile-error-trace":
             compileErrorTrace := true;
+        "-icast":
+            push options (ICast ());
+        "-parse-tree":
+            push options (ParseTree ());
+        "-no-import":
+            push options (NoImport ());
+        "-no-frames":
+            push options (NoFrames ());
         _:
-            try
-                // TODO process ExecParam here
-                evaluator.option arg
-            catch IllegalArgumentException:
-                println "Unexpected option: \(arg)";
-                sysExit 1;
-            yrt
+            println "Unexpected option: \(arg)";
+            sysExit 1;
         esac
     else
         push srcs arg
@@ -150,15 +155,6 @@ if empty? srcs and not eval then
     fi;
     sysExit 0
 fi;
-
-writer =
-    if printType then
-        ()
-    elif exec then
-        new Loader()
-    else
-        new ToFile(target)
-    fi;
 
 scan src local dirs to =
    (var ok = true;
@@ -183,84 +179,66 @@ scan src local dirs to =
     fi;
     ok);
 
-warnings = array [] is array<~CompileException>;
-var resultType = Simple '()';
+push options (Warn printMessage);
 
-try
-    if eval then
-        opt = [NoBind (), Warn (push warnings)];
-        if printType then
-            {type} = evaluateYetiCode () (NoExec () :: opt) src;
-            println (showType [] '' type)
-        else
-            {type, result} = evaluateYetiCode () (opt ++ execParam) src;
-            case result of
-            Exception ex:
-                println (stackTraceString ex);
-            CompileException ex:
-                throw (ex is ~CompileException);
-            Result val: 
-                if type != Simple "()" then
-                    println val
-                fi
-            esac
-        fi;
-        sysExit 0
-    elif printType then
-        CompileCtx#currentCompileCtx#set(evaluator.compilationOf writer);
-        for srcs do src:
-            mt = YetiTypeVisitor#getType((), src, true);
-            if mt#topDoc != "" then
-                println "/*\n\(mt#topDoc)\n*/"
-            fi;
-            t = TypeDescr#yetiType(mt#type) unsafely_as type;
-            println (showType [CommentDoc ()] '' t)
-        done
+printException ex is ~java.lang.Throwable -> () =
+   (if sandbox and ex instanceof java.lang.StackOverflowError then
+        out#println("Stack overflow")
+    elif ex instanceof java.lang.OutOfMemoryError then
+        out#println("Out of memory")
     else
-        files = [:];
-        basedirs = array [];
-        for srcs do src:
-            if not scan src '' (push basedirs) files then
-                println "Don't know what to do with `\(src)'";
-                sysExit 1
-            fi
-        done;
-        evaluator.compileFiles {sourcePath = basedirs,
-                                writer, javaOptions,
-                                files = sort (list files),
-                                warn = push warnings}
+        ex#printStackTrace(out)
     fi;
-    for warnings printMessage;
-catch CompileException ex:
-    for warnings printMessage;
-    if compileErrorTrace then
-        ex#printStackTrace()
+    sysExit 2);
+
+if eval then
+    push evalOptions (NoBind ());
+    if printType then
+        push evalOptions (NoExec ());
     fi;
-    printMessage ex;
-    sysExit 1;
-yrt;
-
-out = if sandbox then System#out else System#err fi;
-
-if exec then
+    {type, result} = evaluateYetiCode options evalOptions src;
+    case result of
+    Exception ex:
+        printException ex;
+    CompileException ex:
+        printMessage ex;
+        sysExit 1;
+    Result val: 
+        if printType then
+            println (showType [] '' type)
+        elif type != Simple "()" then
+            println val
+        fi
+    esac
+else
+    if exec then
+        push compileOptions (Exec argv)
+    fi;
+    files = [:];
+    sourcePath = array [];
+    for srcs do src:
+        if not scan src '' (push sourcePath) files then
+            println "Don't know what to do with `\(src)'";
+            sysExit 1
+        fi
+    done;
     try
-        classLoader = writer as ~Object unsafely_as ~ClassLoader;
-        // make compiled classes visible in the thread classloader
-        Thread#currentThread()#setContextClassLoader(classLoader);
-        v = execClass execParam eval classLoader evaluator.mainClass;
-        if resultType != Simple "()" then
-            println v
-        fi
-    catch java.lang.StackOverflowError ex:
-        if sandbox then
-            out#println("Stack overflow")
-        else
+        compileYetiFiles options compileOptions (list files);
+    catch CompileException ex:
+        if compileErrorTrace then
             ex#printStackTrace()
-        fi
-    catch java.lang.OutOfMemoryError ex:
-        out#println("Out of memory");
-    catch Exception ex:
-        ex#printStackTrace(out);
-        sysExit 2;
-    yrt
+        fi;
+        printMessage ex;
+        sysExit 1
+    catch java.lang.reflect.InvocationTargetException ex:
+        printException ex#getCause()
+    catch java.lang.Throwable ex:
+        printException ex
+    yrt;
+    for types do {type, doc}:
+        if doc != "" then
+            println "/*\n\(doc)\n*/"
+        fi;
+        println (showType [CommentDoc ()] '' type)
+    done
 fi

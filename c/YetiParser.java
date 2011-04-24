@@ -432,7 +432,7 @@ interface YetiParser {
         String className;
 
         InstanceOf(String className) {
-            super("instanceof", Parser.IS_OP_LEVEL, true);
+            super("instanceof", Parser.COMP_OP_LEVEL, true);
             postfix = true;
             this.className = className;
         }
