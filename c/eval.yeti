@@ -77,13 +77,20 @@ execClass argv sandbox eval loader mainClass
         th#setContextClassLoader(old_cl);
     yrt);
 
-createCtx reader writer genericOpt =
+createCtx reader genericOpt =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
-    ctx = new CompileCtx(reader, writer);
+    ctx = new CompileCtx(reader, ());
+    java = array [];
 
     for genericOpt do opt:
         case opt of
+        To dir:
+            if not defined? ctx#writer then
+                push java '-d';
+                push java dir;
+            fi;
+            ctx#writer := new ToFile(dir) as ~CodeWriter;
         Warn action: warn := action;
         ClassPath path: classPath := classPath ++ path;
         ICast ():     ctx#isGCJ := true;
@@ -94,7 +101,10 @@ createCtx reader writer genericOpt =
         esac
     done;
     ctx#classPath := new ClassFinder(classPath);
-    {warn, ctx});
+    if not defined? ctx#writer then
+        ctx#writer := new Loader() as ~CodeWriter;
+    fi;
+    {warn, ctx, java});
 
 compileYetiFiles genericOpt options files =
    (var exec = false;
@@ -103,23 +113,19 @@ compileYetiFiles genericOpt options files =
     var mainClass = undef_str;
 
     reader = new YetiC();
-    {ctx, warn} = createCtx reader (() as ~CodeWriter) genericOpt;
+    {ctx, warn, java = javaOptions} = createCtx reader genericOpt;
 
     sourcePath = array [];
-    javaOptions = array [];
     for options do opt:
         case opt of
         Type action:
             typeAction := Some action;
         Exec arg:
+            if not ctx#writer instanceof Loader then
+                failWith "To and Exec options together are not supported"
+            fi;
             exec := true;
             execArg := arg;
-        To dir:
-            if not defined? ctx#writer then
-                push javaOptions '-d';
-                push javaOptions dir;
-            fi;
-            ctx#writer := new ToFile(dir) as ~CodeWriter;
         SourceDir dir:
             push sourcePath dir;
         JavaOption option:
@@ -127,11 +133,6 @@ compileYetiFiles genericOpt options files =
         esac
     done;
     reader#basedirs := sourcePath as ~String[];
-    if not defined? ctx#writer then
-        ctx#writer := new Loader() as ~CodeWriter;
-    elif exec then
-        failWith "To andExec options together are not supported"
-    fi;
     case typeAction of
     Some action:
         if exec then
@@ -178,8 +179,7 @@ evaluateYetiCode genericOpt =
         var exec = true;
         var sandbox = false;
         var argv = array [];
-        writer = new Loader();
-        {ctx, warn} = createCtx new YetiC() writer genericOpt;
+        {ctx, warn} = createCtx new YetiC() genericOpt;
         ctx#flags := YetiC#CF_EVAL;
 
         for options do opt:
@@ -212,10 +212,11 @@ evaluateYetiCode genericOpt =
                     ctx#enumWarns(warn)
                 yrt;
                 val =
-                    if exec then
+                    if exec and ctx#writer instanceof Loader then
                         try
                             Result (execClass argv sandbox true
-                                              writer mainClass);
+                                              (ctx#writer unsafely_as ~Loader)
+                                              mainClass);
                         catch java.lang.StackOverflowError ex:
                             Exception (ex as ~Throwable)
                         catch java.lang.VirtualMachineError ex:

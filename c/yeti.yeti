@@ -95,7 +95,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
         "-d":
             target = shift argv;
             if target != '' then
-                push compileOptions (To "\(target)/")
+                push options (To "\(target)/")
             fi;
             exec := false;
         "-e":
