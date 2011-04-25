@@ -1556,7 +1556,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
-            if ((ctx.flags & YetiC.CF_EVAL_BIND) != 0) {
+            if ((ctx.flags & YetiC.CF_EVAL_RESOLVE) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);

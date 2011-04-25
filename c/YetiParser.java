@@ -1702,7 +1702,7 @@ interface YetiParser {
             }
             char first = p < src.length ? src[p] : ' ';
             Node res;
-            if ((flags & YetiC.CF_EVAL_BIND) != 0) {
+            if ((flags & YetiC.CF_EVAL_STORE) != 0) {
                 res = readSeq(' ', Seq.EVAL);
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;

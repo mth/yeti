@@ -173,31 +173,32 @@ evaluateYetiCode genericOpt =
     do options code:
         bindingVars = array [];
         var type = Simple '()';
-        var bind = true;
+        var bind = false;
         var exec = true;
         var sandbox = false;
         var argv = array [];
         {ctx, warn} = createCtx new YetiC() genericOpt;
-        ctx#flags := YetiC#CF_EVAL;
+        ctx#flags := YetiC#CF_EVAL + YetiC#CF_EVAL_RESOLVE;
 
         for options do opt:
             case opt of
-            ResetEnv (): evalEnv := new YetiEval();
-            NoBind (): bind := false;
-            NoExec (): exec := false;
+            Bind (): bind := true;
             Exec a: argv := a;
+            NoExec (): exec := false;
             GlobalSandbox (): sandbox := true;
+            ResetEnv (): evalEnv := new YetiEval();
             esac;
         done;
 
-        oldContext = YetiEval#get();
         if bind then
-            ctx#flags := ctx#flags b_or YetiC#CF_EVAL_BIND
+            ctx#flags := ctx#flags b_or YetiC#CF_EVAL_STORE;
         fi;
+
         if not defined? evalEnv then
             evalEnv := new YetiEval()
         fi;
-        YetiEval#set(evalEnv);
+
+        oldContext = YetiEval#set(evalEnv);
 
         result =
             try

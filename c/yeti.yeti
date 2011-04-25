@@ -61,15 +61,6 @@ repl eval =
         sysExit 0
     fi);
 
-startRepl () =
-   (println "Yeti REPL.\n";
-    oldEval = YetiEval#set(new YetiEval());
-    try
-        repl (evaluateYetiCode options evalOptions)
-    finally
-        YetiEval#set(oldEval)
-    yrt);
-
 help () =
    (println "yeti -flags... files\n\n\
       "  -h               Print this help\n\
@@ -150,7 +141,9 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
 
 if empty? srcs and not eval then
     if exec and empty? argv then
-        startRepl ()
+        println "Yeti REPL.\n";
+        push evalOptions (Bind ());
+        repl (evaluateYetiCode options evalOptions)
     fi;
     sysExit 0
 fi;
@@ -191,7 +184,6 @@ printException ex is ~java.lang.Throwable -> () =
     sysExit 2);
 
 if eval then
-    push evalOptions (NoBind ());
     if printType then
         push evalOptions (NoExec ());
     fi;
