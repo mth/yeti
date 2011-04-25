@@ -358,7 +358,6 @@ class ModuleType {
 
 class YetiTypeVisitor implements ClassVisitor {
     YetiTypeAttr typeAttr;
-    private YetiTypeAttr attrTemplate = new YetiTypeAttr(null);
     private boolean deprecated;
 
     public void visit(int version, int access, String name, String signature,
@@ -405,7 +404,7 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType readType(ClassReader reader) {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
-        reader.accept(visitor, new Attribute[] { visitor.attrTemplate },
+        reader.accept(visitor, new Attribute[] { new YetiTypeAttr(null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         if (visitor.typeAttr == null)
             return null;
