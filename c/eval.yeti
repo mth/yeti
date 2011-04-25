@@ -170,7 +170,7 @@ compileYetiFiles genericOpt options files =
     Some action:
         if exec then
             throw new CompileException(0, 0,
-                "Exec with Type is not implemented yet")
+                        "Exec with Type is not implemented yet")
         fi;
         if ctx#writer instanceof ToFile then
             throw new CompileException(0, 0,
