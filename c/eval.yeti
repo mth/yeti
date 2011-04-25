@@ -211,12 +211,12 @@ evaluateYetiCode genericOpt =
     do options code:
         bindingVars = array [];
         var type = Simple '()';
+        var exec = true;
         var bind = false;
         var sandbox = false;
         var argv = array [];
         {ctx, warn} = createCtx new YetiC() genericOpt;
         ctx#flags := YetiC#CF_EVAL + YetiC#CF_EVAL_RESOLVE;
-        var exec = false;
 
         for options do opt:
             case opt of
