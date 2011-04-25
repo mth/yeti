@@ -197,7 +197,7 @@ if eval then
     Result val: 
         if printType then
             println (showType [] '' type)
-        elif type != Simple "()" then
+        elif exec and type != Simple "()" then
             println val
         fi
     esac
