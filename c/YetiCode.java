@@ -353,9 +353,10 @@ final class CompileCtx implements Opcodes {
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
             Ctx ctx = new Ctx(this, constants, null, null)
-                .newClass(ACC_PUBLIC | ACC_SUPER, name,
-                          (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null,
-                          null);
+                .newClass(ACC_PUBLIC | ACC_SUPER |
+                   (module && codeTree.moduleType.deprecated != null
+                        ? ACC_DEPRECATED : 0), name,
+                   (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null, null);
             constants.ctx = ctx;
             if (module) {
                 ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",

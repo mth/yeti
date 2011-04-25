@@ -590,6 +590,7 @@ interface YetiParser {
         String moduleName;
         String topDoc;
         boolean isModule;
+        String deprecated;
 
         private static int opLevel(String op) {
             int i = 0;
@@ -798,8 +799,8 @@ interface YetiParser {
             } else if (s == "import") {
                 res = readImport();
             } else if (s == "load") {
-                res = new XNode(s, readDotted(false,
-                    "Expected module name after 'load', not a "));
+                res = new XNode(s,
+                    readDotted("Expected module name after 'load', not a "));
             } else if (s == "classOf") {
                 res = new XNode(s,
                             readDottedType("Expected class name, not a "));
@@ -809,7 +810,7 @@ interface YetiParser {
                 res = readTry();
             } else if (s == "instanceof") {
                 res = new InstanceOf(
-                        readDotted(false, "Expected class name, not a ").sym);
+                            readDotted("Expected class name, not a ").sym);
             } else if (s == "class") {
                 res = readClassDef();
             } else {
@@ -1056,8 +1057,7 @@ interface YetiParser {
                 XNode c = (XNode) eofWas;
                 catches.add(c);
                 c.expr = new Node[3];
-                c.expr[0] =
-                    readDotted(false, "Expected exception name, not ");
+                c.expr[0] = readDotted("Expected exception name, not ");
                 Node n = fetch();
                 if (n instanceof Sym) {
                     c.expr[1] = n;
@@ -1085,7 +1085,7 @@ interface YetiParser {
         }
 
         private Sym readDottedType(String what) {
-            Sym t = readDotted(false, what);
+            Sym t = readDotted(what);
             int s = p;
             while (src.length > p + 1 && src[p] == '[' && src[p + 1] == ']')
                 p += 2;
@@ -1135,7 +1135,7 @@ interface YetiParser {
             Node epos = node;
             if (node.sym() == "extends") {
                 do {
-                    l.add(readDotted(false, "Expected a class name, found "));
+                    l.add(readDotted("Expected a class name, found "));
                     int line_ = line, col_ = p - lineStart + 1;
                     l.add(new XNode("arguments", readArgs()).pos(line_, col_));
                 } while ((p = skipSpace()) < src.length && src[p++] == ',');
@@ -1242,7 +1242,7 @@ interface YetiParser {
             }
         }
 
-        private Sym readDotted(boolean decl, String err) {
+        private Sym readDotted(String err) {
             Node first = fetch();
             String result = "";
             for (Node n = first;; n = fetch()) {
@@ -1254,17 +1254,8 @@ interface YetiParser {
                     result += ((Sym) n).sym;
                 }
                 p = skipSpace();
-                if (p >= src.length)
+                if (p >= src.length || src[p] != '.')
                     break;
-                if (src[p] != '.') {
-                    if (!decl)
-                        break;
-                    if (src[p] == ';') {
-                        ++p;
-                        break;
-                    }
-                    throw new CompileException(n, "Expected ';', not a " + n);
-                }
                 ++p;
                 result += "/";
             }
@@ -1274,8 +1265,7 @@ interface YetiParser {
         }
 
         private XNode readImport() {
-            Sym s = readDotted(false,
-                        "Expected class path after 'import', not a ");
+            Sym s = readDotted("Expected class path after 'import', not a ");
             ArrayList imports = null;
             for (char c = ':'; ((p = skipSpace()) < src.length &&
                                 src[p] == c); c = ',') {
@@ -1696,9 +1686,25 @@ interface YetiParser {
             String s = new String(src, p, i - p);
             if (s.equals("module") || s.equals("program")) {
                 p = i;
-                moduleName = readDotted(true,
-                    "Expected " + s + " name, not a ").sym;
+                moduleName = readDotted("Expected " + s + " name, not a ").sym;
                 isModule = s.equals("module");
+
+                if (isModule) {
+                    if (p < src.length && src[p] == ':') {
+                        ++p;
+                        Node node = fetch();
+                        if (node.sym() != "deprecated")
+                            throw new CompileException(node,
+                                        "Unknown module attribute: " + node);
+                        if (!((node = fetch()) instanceof Str))
+                            throw new CompileException(node,
+                                "Expecting deprecation reason string here");
+                        deprecated = ((Str) node).str;
+                    }
+                }
+                if (p >= src.length || src[p++] != ';')
+                    throw new CompileException(line, p - lineStart,
+                                               "Expected ';' here");
             }
             char first = p < src.length ? src[p] : ' ';
             Node res;

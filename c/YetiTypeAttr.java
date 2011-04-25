@@ -66,20 +66,12 @@ class YetiTypeAttr extends Attribute {
     static final byte ORDERED = -3;
     static final byte MUTABLE = -4;
 
-    YType type;
-    Map typeDefs;
-    Map directFields;
+    ModuleType moduleType;
     private ByteVector encoded;
 
-    YetiTypeAttr(YType type, Map typeDefs, Map directFields) {
-        super("YetiModuleType");
-        this.type = type;
-        this.typeDefs = typeDefs;
-        this.directFields = directFields;
-    }
-
     YetiTypeAttr(ModuleType mt) {
-        this(mt.type, mt.typeDefs, mt.directFields);
+        super("YetiModuleType");
+        this.moduleType = mt;
     }
 
     private static final class EncodeType {
@@ -329,7 +321,8 @@ class YetiTypeAttr extends Attribute {
         DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new YetiTypeAttr(t, typeDefs, decoder.readDirectFields());
+        Map directFields = decoder.readDirectFields();
+        return new YetiTypeAttr(new ModuleType(t, typeDefs, directFields, ""));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -340,9 +333,9 @@ class YetiTypeAttr extends Attribute {
         EncodeType enc = new EncodeType();
         enc.cw = cw;
         enc.buf.putByte(0); // encoding version
-        enc.write(type);
-        enc.writeTypeDefs(typeDefs);
-        enc.writeDirectFields(directFields);
+        enc.write(moduleType.type);
+        enc.writeTypeDefs(moduleType.typeDefs);
+        enc.writeDirectFields(moduleType.directFields);
         return encoded = enc.buf;
     }
 
@@ -353,19 +346,24 @@ class ModuleType {
     Map typeDefs;
     Map directFields;
     String topDoc;
+    String deprecated;
 
-    ModuleType(YType type, Map typeDefs, Map directFields) {
+    ModuleType(YType type, Map typeDefs, Map directFields, String deprecated) {
         this.type = type;
         this.typeDefs = typeDefs;
         this.directFields = directFields;
+        this.deprecated = deprecated;
     }
 }
 
 class YetiTypeVisitor implements ClassVisitor {
     YetiTypeAttr typeAttr;
+    private YetiTypeAttr attrTemplate = new YetiTypeAttr(null);
+    private boolean deprecated;
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
+        deprecated = (access & Opcodes.ACC_DEPRECATED) != 0;
     }
 
     public void visitEnd() {
@@ -407,13 +405,14 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType readType(ClassReader reader) {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
-        reader.accept(visitor,
-                      new Attribute[] { new YetiTypeAttr(null, null, null) },
+        reader.accept(visitor, new Attribute[] { visitor.attrTemplate },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
-        return visitor.typeAttr == null ? null
-            : new ModuleType(visitor.typeAttr.type,
-                             visitor.typeAttr.typeDefs,
-                             visitor.typeAttr.directFields);
+        if (visitor.typeAttr == null)
+            return null;
+        ModuleType mt = visitor.typeAttr.moduleType;
+        if (mt != null && visitor.deprecated)
+            mt.deprecated = "";
+        return mt;
     }
 
     static ModuleType getType(YetiParser.Node node, String name,

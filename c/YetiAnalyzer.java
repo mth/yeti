@@ -133,8 +133,12 @@ public final class YetiAnalyzer extends YetiType {
                 if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
-                return new LoadModule(nam,
-                            YetiTypeVisitor.getType(node, nam, false));
+                ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
+                if (mt.deprecated != null) {
+                    CompileCtx.current().warn(new CompileException(node,
+                                "Module " + nam + " is deprecated"));
+                }
+                return new LoadModule(nam, mt);
             }
             if (kind == "new-array")
                 return newArray(x, scope, depth);
@@ -1586,7 +1590,8 @@ public final class YetiAnalyzer extends YetiType {
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
-                                             java.util.Collections.EMPTY_MAP);
+                                             java.util.Collections.EMPTY_MAP,
+                                             parser.deprecated);
             root.moduleType.topDoc = parser.topDoc;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
