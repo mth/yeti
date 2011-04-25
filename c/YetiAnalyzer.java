@@ -134,10 +134,9 @@ public final class YetiAnalyzer extends YetiType {
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
                 ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
-                if (mt.deprecated != null) {
+                if (mt.deprecated)
                     CompileCtx.current().warn(new CompileException(node,
                                 "Module " + nam + " is deprecated"));
-                }
                 return new LoadModule(nam, mt);
             }
             if (kind == "new-array")

@@ -352,9 +352,8 @@ final class CompileCtx implements Opcodes {
             module = module || codeTree.isModule;
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
-            Ctx ctx = new Ctx(this, constants, null, null)
-                .newClass(ACC_PUBLIC | ACC_SUPER |
-                   (module && codeTree.moduleType.deprecated != null
+            Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC
+                    | ACC_SUPER | (module && codeTree.moduleType.deprecated
                         ? ACC_DEPRECATED : 0), name,
                    (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null, null);
             constants.ctx = ctx;

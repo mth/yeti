@@ -346,7 +346,7 @@ class ModuleType {
     Map typeDefs;
     Map directFields;
     String topDoc;
-    String deprecated;
+    boolean deprecated;
 
     ModuleType(YType type, Map typeDefs, Map directFields) {
         this.type = type;
@@ -408,8 +408,8 @@ class YetiTypeVisitor implements ClassVisitor {
         if (visitor.typeAttr == null)
             return null;
         ModuleType mt = visitor.typeAttr.moduleType;
-        if (mt != null && visitor.deprecated)
-            mt.deprecated = "";
+        if (mt != null)
+            mt.deprecated = visitor.deprecated;
         return mt;
     }
 

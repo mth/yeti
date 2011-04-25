@@ -590,7 +590,7 @@ interface YetiParser {
         String moduleName;
         String topDoc;
         boolean isModule;
-        String deprecated;
+        boolean deprecated;
 
         private static int opLevel(String op) {
             int i = 0;
@@ -1696,10 +1696,8 @@ interface YetiParser {
                         if (node.sym() != "deprecated")
                             throw new CompileException(node,
                                         "Unknown module attribute: " + node);
-                        if (!((node = fetch()) instanceof Str))
-                            throw new CompileException(node,
-                                "Expecting deprecation reason string here");
-                        deprecated = ((Str) node).str;
+                        deprecated = true;
+                        p = skipSpace();
                     }
                 }
                 if (p >= src.length || src[p++] != ';')
