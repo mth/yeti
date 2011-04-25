@@ -73,7 +73,7 @@ execClass argv sandbox eval loader mainClass
         fi
     catch java.lang.reflect.InvocationTargetException ex:
         t = ex#getCause();
-        throw if defined? t then t else ex fi;
+        throw if not nullptr? t then t else ex fi;
     finally
         Core#ARGV#set(old_argv);
         th#setContextClassLoader(old_cl);
@@ -91,7 +91,7 @@ createCtx reader genericOpt =
         /// Set destination directory, where to write class files.
         /// Disables execution on evaluateYetiCode as side effect.
         To dir:
-            if not defined? ctx#writer and dir != '' then
+            if nullptr? ctx#writer and dir != '' then
                 push java '-d';
                 push java dir;
             fi;
@@ -124,7 +124,7 @@ createCtx reader genericOpt =
         esac
     done;
     ctx#classPath := new ClassFinder(classPath);
-    if not defined? ctx#writer then
+    if nullptr? ctx#writer then
         ctx#writer := new Loader() as ~CodeWriter;
     fi;
     {warn, ctx, java});
@@ -212,11 +212,11 @@ evaluateYetiCode genericOpt =
         bindingVars = array [];
         var type = Simple '()';
         var bind = false;
-        var exec = true;
         var sandbox = false;
         var argv = array [];
         {ctx, warn} = createCtx new YetiC() genericOpt;
         ctx#flags := YetiC#CF_EVAL + YetiC#CF_EVAL_RESOLVE;
+        var exec = false;
 
         for options do opt:
             case opt of
@@ -242,50 +242,52 @@ evaluateYetiCode genericOpt =
             ctx#flags := ctx#flags b_or YetiC#CF_EVAL_STORE;
         fi;
 
-        if not defined? evalEnv then
+        if nullptr? evalEnv then
             evalEnv := new YetiEval()
         fi;
+
+        bindings = evalEnv#bindings;
+        var bindBarrier = bindings#size();
 
         oldContext = YetiEval#set(evalEnv);
 
         result =
             try
-                bindings = evalEnv#bindings;
-                var bindBarrier = bindings#size();
-                try
-                    t = ctx#compile((), mainClass, code is string, ctx#flags);
-                    type := TypeDescr#yetiType(t) unsafely_as type
-                finally
-                    ctx#enumWarns(warn)
-                yrt;
-                val =
-                    if exec and ctx#writer instanceof Loader then
-                        try
-                            Result (execClass argv sandbox true
-                                              (ctx#writer unsafely_as ~Loader)
-                                              mainClass);
-                        catch java.lang.StackOverflowError ex:
-                            Exception (ex as ~Throwable)
-                        catch java.lang.VirtualMachineError ex:
-                            // other virtualmachine errors will be rethrown
-                            // (including OutOfMemoryError)
-                            throw ex
-                        catch java.lang.ThreadDeath ex:
-                            throw ex // honor thread death also
-                        catch Throwable ex:
-                            Exception ex
-                        yrt
-                    else
-                        Result (() as ~Object)
-                    fi;
-
-                bindBarrier < bindings#size() loop
-                   (push bindingVars (bindings#get(bindBarrier)
-                                        unsafely_as ~YetiEval$Binding);
-                    bindBarrier := bindBarrier + 1);
-                val
-            catch CompileException ex:
-                CompileException ex
+                compileErr =
+                    try
+                        t = ctx#compile((), mainClass, code is string,
+                                        ctx#flags);
+                        type := TypeDescr#yetiType(t) unsafely_as type;
+                        () as ~CompileException
+                    catch CompileException ex:
+                        ex
+                    finally
+                        ctx#enumWarns(warn)
+                    yrt;
+                if not nullptr? compileErr then
+                    CompileException compileErr
+                elif exec and ctx#writer instanceof Loader then
+                    val = Result (execClass argv sandbox true
+                                            (ctx#writer unsafely_as ~Loader)
+                                            mainClass);
+                    bindBarrier < bindings#size() loop
+                       (push bindingVars (bindings#get(bindBarrier)
+                                            unsafely_as ~YetiEval$Binding);
+                        bindBarrier := bindBarrier + 1);
+                    val
+                else
+                    Result (() as ~Object)
+                fi
+            catch java.lang.StackOverflowError ex:
+                Exception (ex as ~Throwable)
+            catch java.lang.VirtualMachineError ex:
+                // other virtualmachine errors will be rethrown
+                // (including OutOfMemoryError)
+                throw ex
+            catch java.lang.ThreadDeath ex:
+                throw ex // honor thread death also
+            catch Throwable ex:
+                Exception ex
             finally
                 YetiEval#set(oldContext)
             yrt;
