@@ -174,7 +174,8 @@ compileYetiFiles genericOpt options files =
             failWith "Exec with Type is not implemented yet"
         fi;
         if ctx#writer instanceof ToFile then
-            failWith "To with Type is not implemented yet"
+            throw new CompileException(0, 0,
+                        "To with Type is not implemented yet")
         fi;
         CompileCtx#currentCompileCtx#set(ctx);
         for files do src:
