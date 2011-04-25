@@ -151,7 +151,8 @@ compileYetiFiles genericOpt options files =
         /// The _argv will be set to the arg parameter.
         Exec arg:
             if not ctx#writer instanceof Loader then
-                failWith "To and Exec options together are not supported"
+                throw new CompileException(0, 0,
+                    "To and Exec options together are not supported")
             fi;
             exec := true;
             execArg := arg;
@@ -171,7 +172,8 @@ compileYetiFiles genericOpt options files =
     case typeAction of
     Some action:
         if exec then
-            failWith "Exec with Type is not implemented yet"
+            throw new CompileException(0, 0,
+                "Exec with Type is not implemented yet")
         fi;
         if ctx#writer instanceof ToFile then
             throw new CompileException(0, 0,
