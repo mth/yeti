@@ -71,9 +71,6 @@ execClass argv sandbox eval loader mainClass
             aa.[0] := argv is array<string> as ~String[] as ~Object;
             c#getMethod("main", [classOf String[]])#invoke((), aa)
         fi
-    catch java.lang.reflect.InvocationTargetException ex:
-        t = ex#getCause();
-        throw if not nullptr? t then t else ex fi;
     finally
         Core#ARGV#set(old_argv);
         th#setContextClassLoader(old_cl);
@@ -193,16 +190,8 @@ compileYetiFiles genericOpt options files =
         yrt
     esac;
     if exec then
-        try
-            classLoader = ctx#writer unsafely_as ~ClassLoader;
-            _ = execClass execArg false false classLoader mainClass;
-        catch java.lang.OutOfMemoryError ex:
-            throw ex
-        catch java.lang.ThreadDeath ex:
-            throw ex // honor thread death also
-        catch Throwable th:
-            throw new java.lang.reflect.InvocationTargetException(th)
-        yrt
+        classLoader = ctx#writer unsafely_as ~ClassLoader;
+        _ = execClass execArg false false classLoader mainClass;
     fi);
 
 evaluateYetiCode genericOpt =
