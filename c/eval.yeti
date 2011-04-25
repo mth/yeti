@@ -87,18 +87,39 @@ createCtx reader genericOpt =
 
     for genericOpt do opt:
         case opt of
+
+        /// Set destination directory, where to write class files.
+        /// Disables execution on evaluateYetiCode as side effect.
         To dir:
             if not defined? ctx#writer and dir != '' then
                 push java '-d';
                 push java dir;
             fi;
             ctx#writer := new ToFile(dir) as ~CodeWriter;
+
+        /// Set warning handler (~CompileException -> ()).
+        /// Called once for each warning.
+        /// Hint: use Warn (push somewhere).
         Warn action: warn := action;
+
+        /// Give class path to search for compiled libraries.
         ClassPath path: classPath := classPath ++ path;
+
+        /// If you have really broken JVM, generate superfluous casts.
         ICast ():     ctx#isGCJ := true;
+
+        /// Set modules that are preloaded. Default is yeti.lang.std and io.
         Preload p:    ctx#preload := p is list?<string> as ~String[];
+
+        /// Print parse tree to stdout.
+        /// Not very useful, unless you want to debug the compiler.
         ParseTree (): ctx#flags := ctx#flags b_or YetiC#CF_PRINT_PARSE_TREE;
+
+        /// Disable importing foreign classes. Useful when sandboxing.
         NoImport ():  ctx#flags := ctx#flags b_or YetiC#CF_NO_IMPORT;
+
+        /// Disable generated Java 1.6 frames to class files (mainly useful
+        /// for debugging, this option is not needed to run on older JVMs).
         NoFrames ():  ctx#classWriterFlags := 0
         esac
     done;
@@ -120,16 +141,28 @@ compileYetiFiles genericOpt options files =
     sourcePath = array [];
     for options do opt:
         case opt of
+
+        /// Get module types. The action ({type is type, doc is string} -> ())
+        /// is called after each module file given for compilation. 
         Type action:
             typeAction := Some action;
+
+        /// Execute main after compilation of the sources.
+        /// The _argv will be set to the arg parameter.
         Exec arg:
             if not ctx#writer instanceof Loader then
                 failWith "To and Exec options together are not supported"
             fi;
             exec := true;
             execArg := arg;
+
+        /// Add source directory to source path (where compiler searches
+        /// for uncompiled dependencies).
         SourceDir dir:
             push sourcePath dir;
+
+        /// Option to give to the javac,
+        /// when .java files were in source file set.
         JavaOption option:
             push javaOptions option;
         esac
@@ -184,11 +217,21 @@ evaluateYetiCode genericOpt =
 
         for options do opt:
             case opt of
+            /// Store top-level bindings in the evaluation environment,
+            /// so they could be accessed by later evaluations with
+            /// the same context..
             Bind (): bind := true;
+
+            /// Set _argv to given parameter turing execution.
             Exec a: argv := a;
+
+            /// Don't execute the code actually, only compile.
+            /// Useful, if you just want to get the type of expression.
             NoExec (): exec := false;
+
+            /// Create global sandbox before execution.
+            /// Unfortunately, you can't disable it later.
             GlobalSandbox (): sandbox := true;
-            ResetEnv (): evalEnv := new YetiEval();
             esac;
         done;
 
