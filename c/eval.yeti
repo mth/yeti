@@ -49,19 +49,21 @@ execClass argv sandbox eval loader mainClass
             Core#ARGV#set(argv);
             f = c#newInstance() unsafely_as () -> 'a;
             if sandbox then
-                var sandboxed = \();
-                class Sandbox extends java.lang.SecurityManager
+                class Sandbox(boolean[] act) extends java.lang.SecurityManager
                     void checkPermission(Permission perm)
-                        sandboxed (),
+                        this#checkPermission(perm, ()),
                     void checkPermission(Permission perm, Object context)
-                        sandboxed (),
+                        if act.[0] then
+                            throw new java.lang.SecurityException()
+                        fi,
                     void checkExit(int status)
                         ()
                 end;
-                System#setSecurityManager(new Sandbox());
+                sandboxed = new boolean[1];
+                System#setSecurityManager(new Sandbox(sandboxed));
                 // can't activate before, because
                 // setSecurityManager would fail otherwise
-                sandboxed := \throw new java.lang.SecurityException()
+                sandboxed.[0] := true
             fi;
             f ()
         else
