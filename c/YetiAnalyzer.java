@@ -136,7 +136,7 @@ public final class YetiAnalyzer extends YetiType {
                 ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
                 if (mt.deprecated)
                     CompileCtx.current().warn(new CompileException(node,
-                                "Module " + nam + " is deprecated"));
+                         "Module " + nam.replace('/', '.') + " is deprecated"));
                 return new LoadModule(nam, mt);
             }
             if (kind == "new-array")
