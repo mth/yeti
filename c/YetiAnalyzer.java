@@ -404,6 +404,13 @@ public final class YetiAnalyzer extends YetiType {
         if (ref.arguments == null) {
             JavaType.Field f = JavaType.resolveField(ref, t, obj == null);
             f.check(ref, scope.ctx.packageName);
+            if (f.constValue instanceof Number) {
+                Number n = (Number) f.constValue;
+                return new NumericConstant(
+                        n instanceof Double || n instanceof Float
+                        ? new yeti.lang.FloatNum(n.doubleValue())
+                        : (yeti.lang.Num) new yeti.lang.IntNum(n.longValue()));
+            }
             return new ClassField(obj, f, ref.line);
         }
         Code[] args = mapArgs(0, ref.arguments, scope, depth);

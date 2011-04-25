@@ -148,9 +148,11 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
                     + desc + " | sig=" + signature + " | val=" + value
                     + " | access=" + access);*/
             List l = parseSig(0, signature == null ? desc : signature);
-            (((access & ACC_STATIC) == 0) ? fields : staticFields).put(name,
-                new JavaType.Field(name, access, className,
-                                   (YType) l.get(0)));
+            JavaType.Field f =
+                new JavaType.Field(name, access, className, (YType) l.get(0));
+            if ((access & (ACC_FINAL | ACC_STATIC)) == (ACC_FINAL | ACC_STATIC))
+                f.constValue = value;
+            (((access & ACC_STATIC) == 0) ? fields : staticFields).put(name, f);
         }
         return null;
     }
@@ -214,6 +216,7 @@ class JavaType {
         YType type;
         YType classType;
         String className;
+        Object constValue;
 
         public Field(String name, int access,
                      String className, YType type) {
