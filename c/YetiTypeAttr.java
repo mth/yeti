@@ -321,8 +321,8 @@ class YetiTypeAttr extends Attribute {
         DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        Map directFields = decoder.readDirectFields();
-        return new YetiTypeAttr(new ModuleType(t, typeDefs, directFields));
+        return new YetiTypeAttr(new ModuleType(t, typeDefs,
+                                               decoder.readDirectFields()));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
