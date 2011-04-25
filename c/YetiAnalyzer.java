@@ -1590,9 +1590,9 @@ public final class YetiAnalyzer extends YetiType {
             root.code = analyze(n, scope, 0);
             root.type = root.code.type;
             root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
-                                             java.util.Collections.EMPTY_MAP,
-                                             parser.deprecated);
+                                             java.util.Collections.EMPTY_MAP);
             root.moduleType.topDoc = parser.topDoc;
+            root.moduleType.deprecated = parser.deprecated;
             root.moduleName = parser.moduleName;
             root.isModule = parser.isModule;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {

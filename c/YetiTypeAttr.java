@@ -322,7 +322,7 @@ class YetiTypeAttr extends Attribute {
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
         Map directFields = decoder.readDirectFields();
-        return new YetiTypeAttr(new ModuleType(t, typeDefs, directFields, ""));
+        return new YetiTypeAttr(new ModuleType(t, typeDefs, directFields));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -348,11 +348,10 @@ class ModuleType {
     String topDoc;
     String deprecated;
 
-    ModuleType(YType type, Map typeDefs, Map directFields, String deprecated) {
+    ModuleType(YType type, Map typeDefs, Map directFields) {
         this.type = type;
         this.typeDefs = typeDefs;
         this.directFields = directFields;
-        this.deprecated = deprecated;
     }
 }
 
