@@ -178,10 +178,21 @@ final class TryCatch extends CapturingClosure {
     }
 
     void gen(Ctx ctx) {
+        Capture cp = captures;
+        for (Capture prev = null; cp != null; cp = cp.next) {
+            if (cp.ref.flagop(DIRECT_BIND)) {
+                cp.uncaptured = true;
+                if (prev == null)
+                    captures = cp.next;
+                else
+                    prev.next = cp.next;
+            } else
+                prev = cp;
+        }
         int argc = mergeCaptures(ctx);
         StringBuffer sigb = new StringBuffer("(");
-        for (Capture c = captures; c != null; c = c.next) {
-            sigb.append(c.captureType());
+        for (cp = captures; cp != null; cp = cp.next) {
+            sigb.append(cp.captureType());
         }
         sigb.append(")Ljava/lang/Object;");
         String sig = sigb.toString();
