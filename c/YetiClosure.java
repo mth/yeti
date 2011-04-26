@@ -391,7 +391,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
     }
 
     boolean flagop(int fl) {
-        return (fl & (PURE | ASSIGN)) != 0 && ref.flagop(fl);
+        return (fl & (PURE | ASSIGN | DIRECT_BIND)) != 0 && ref.flagop(fl);
     }
 
     public void gen2(Ctx ctx, Code value, int _) {
