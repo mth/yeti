@@ -497,7 +497,6 @@ final class Ctx implements Opcodes {
     Map usedMethodNames;
     int localVarCount;
     int fieldCounter;
-    int methodCounter;
     int lastLine;
     int tainted; // you are inside loop, natural laws a broken
 
