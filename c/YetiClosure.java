@@ -178,21 +178,10 @@ final class TryCatch extends CapturingClosure {
     }
 
     void gen(Ctx ctx) {
-        Capture cp = captures;
-        for (Capture prev = null; cp != null; cp = cp.next) {
-            if (cp.ref.flagop(DIRECT_BIND)) {
-                cp.uncaptured = true;
-                if (prev == null)
-                    captures = cp.next;
-                else
-                    prev.next = cp.next;
-            } else
-                prev = cp;
-        }
-        int argc = mergeCaptures(ctx);
+        int argc = mergeCaptures(ctx, true);
         StringBuffer sigb = new StringBuffer("(");
-        for (cp = captures; cp != null; cp = cp.next) {
-            sigb.append(cp.captureType());
+        for (Capture c = captures; c != null; c = c.next) {
+            sigb.append(c.captureType());
         }
         sigb.append(")Ljava/lang/Object;");
         String sig = sigb.toString();
@@ -560,12 +549,19 @@ abstract class CapturingClosure extends AClosure {
     // mergeCaptures seems to drop only some uncaptured ones
     // (looks like because so is easy to do, currently
     // this seems to cause extra check only in Function.finishGen).
-    int mergeCaptures(Ctx ctx) {
+    int mergeCaptures(Ctx ctx, boolean cleanup) {
         int counter = 0;
         Capture prev = null;
     next_capture:
         for (Capture c = captures; c != null; c = c.next) {
             Object identity = c.identity = c.captureIdentity();
+            if (cleanup && (c.uncaptured || c.ref.flagop(DIRECT_BIND))) {
+                c.uncaptured = true;
+                if (prev == null)
+                    captures = c.next;
+                else
+                    prev.next = c.next;
+            }
             if (c.uncaptured)
                 continue;
             // remove shared captures
@@ -818,7 +814,7 @@ final class Function extends CapturingClosure implements Binder {
         
         // Removes duplicate captures and calls captureInit
         // (which sets captures localVar for our case).
-        int captureCount = mergeCaptures(m);
+        int captureCount = mergeCaptures(m, false);
 
         // Hijack the inner functions capture mapping...
         if (captureMapping != null)
@@ -887,7 +883,7 @@ final class Function extends CapturingClosure implements Binder {
 
         if (publish)
             fun.markInnerClass(ctx, ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
-        mergeCaptures(fun);
+        mergeCaptures(fun, false);
         fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 
         Ctx apply = argVar == 2

@@ -365,7 +365,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
     // must be called after close
     BindRef[] getCaptures() {
-        captureCount = mergeCaptures(null);
+        captureCount = mergeCaptures(null, true);
         BindRef[] r = new BindRef[captureCount];
         int n = 0;
         for (Capture c = captures; c != null; c = c.next) {

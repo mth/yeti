@@ -353,7 +353,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
                               "yeti/lang/AStruct", null);
         st.fieldCounter = fieldCount;
-        mergeCaptures(st);
+        mergeCaptures(st, true);
         Ctx m = st.newMethod(ACC_PUBLIC, "<init>",
                     withParent == null ? "()V" : "(Lyeti/lang/Struct;)V");
         m.load(0).constants
