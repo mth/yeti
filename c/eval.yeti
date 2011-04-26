@@ -193,7 +193,7 @@ compileYetiFiles genericOpt options files =
         classLoader = ctx#writer unsafely_as ~ClassLoader;
         // The Java reflection API used by execClass to invoke main() will
         // wrap exceptions from user code into InvocationTargetException,
-        // so we don't need to do anything here about them.
+        // so we don't need to do anything here with those exceptions.
         _ = execClass execArg false false classLoader mainClass;
     fi);
 
