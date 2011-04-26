@@ -392,6 +392,15 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
     }
 
     boolean flagop(int fl) {
+        /*
+         * DIRECT_BIND is allowed, because with code like
+         * x = 1; try x finally yrt
+         * the 1 won't get directly brought into try closure
+         * unless the mergeCaptures uncaptures the DIRECT_BIND ones
+         * (the variable doesn't (always) know that it will be
+         * a direct binding when it's captured, as this determined
+         * later using prepareConst())
+         */
         return (fl & (PURE | ASSIGN | DIRECT_BIND)) != 0 && ref.flagop(fl);
     }
 
