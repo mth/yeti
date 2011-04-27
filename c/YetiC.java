@@ -33,6 +33,7 @@ package yeti.lang.compiler;
 import java.io.*;
 import java.util.*;
 import java.security.Permission;
+import yeti.lang.*;
 
 class ToFile implements CodeWriter {
     private String target;
@@ -109,6 +110,7 @@ public class YetiC implements SourceReader {
     static final String[] PRELOAD =
         { "yeti/lang/std", "yeti/lang/io" };
     String[] basedirs;
+    Fun override;
 
     private InputStream open(String name) throws IOException {
         if (basedirs == null || basedirs.length == 0)
@@ -122,7 +124,25 @@ public class YetiC implements SourceReader {
             }
     }
 
+    static Struct pair(String name1, Object value1,
+                       String name2, Object value2) {
+        // low-level implementation-specific struct, don't do that ;)
+        Struct3 result = new Struct3(new String[] { name1, name2 }, null);
+        result._0 = value1;
+        result._1 = value2;
+        return result;
+    }
+
     public char[] getSource(String[] name_, boolean fullPath) throws IOException {
+        if (override != null) {
+            Struct arg = pair("name", name_[0],
+                              "fullpath", Boolean.valueOf(fullPath));
+            String result = (String) override.apply(arg);
+            if (result != Core.UNDEF_STR) {
+                name_[0] = (String) arg.get(0);
+                return result.toCharArray();
+            }
+        }
         char[] buf = new char[0x8000];
         int l = 0;
         InputStream stream;

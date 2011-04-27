@@ -79,7 +79,7 @@ execClass argv sandbox eval loader mainClass
 createCtx reader genericOpt =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
-    ctx = new CompileCtx(reader, ());
+    ctx = new CompileCtx(reader is ~YetiC, ());
     java = array [];
 
     for genericOpt do opt:
@@ -93,6 +93,15 @@ createCtx reader genericOpt =
                 push java dir;
             fi;
             ctx#writer := new ToFile(dir) as ~CodeWriter;
+
+        // Set custom source reader
+        SourceReader f:
+            reader#override := f is {var .name is string, .fullpath is boolean}
+                                 unsafely_as ~yeti.lang.Fun;
+
+        // Set custom CodeWriter
+        CodeWriter writer:
+            ctx#writer := writer;
 
         /// Set warning handler (~CompileException -> ()).
         /// Called once for each warning.
