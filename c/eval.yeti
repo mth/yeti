@@ -94,13 +94,13 @@ createCtx reader genericOpt =
             fi;
             ctx#writer := new ToFile(dir) as ~CodeWriter;
 
-        // Set custom source reader
+        /// Set custom source reader function
         SourceReader f:
             reader#override :=
                 f is {var .name is string, .fullpath is boolean} -> string
                   as ~yeti.lang.Fun;
 
-        // Set custom CodeWriter
+        /// Set custom CodeWriter
         CodeWriter writer:
             ctx#writer := writer;
 
