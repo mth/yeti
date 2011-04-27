@@ -138,10 +138,9 @@ public class YetiC implements SourceReader {
             Struct arg = pair("name", name_[0],
                               "fullpath", Boolean.valueOf(fullPath));
             String result = (String) override.apply(arg);
-            if (result != Core.UNDEF_STR) {
-                name_[0] = (String) arg.get(0);
+            name_[0] = (String) arg.get(0);
+            if (result != Core.UNDEF_STR)
                 return result.toCharArray();
-            }
         }
         char[] buf = new char[0x8000];
         int l = 0;
