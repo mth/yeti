@@ -1,0 +1,7 @@
+#!/bin/sh
+
+for f in "$@"; do
+	vim -X -E -f '+set syn=yeti' '+let html_use_css = 1'\
+		'+let html_ignore_folding = 1' '+sy on'\
+		'+run! syntax/2html.vim' '+w!' '+q!' '+q!' "$f" > /dev/null
+done
