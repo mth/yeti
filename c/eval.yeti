@@ -179,12 +179,14 @@ compileYetiFiles genericOpt options files =
     done;
     reader#basedirs := sourcePath as ~String[];
     if not nullptr? typeAction then
-        if exec or ctx#writer instanceof ToFile then
+        if exec or not ctx#writer instanceof Loader then
             ctx#moduleTypeCb := typeAction;
             typeAction := () as ~yeti.lang.Fun; // still compile ;)
         else
             CompileCtx#currentCompileCtx#set(ctx);
             for files do src:
+                // TODO use some special flags to not really compile.
+                // As a bonus, the compileAll could then handle it all.
                 TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
                               typeAction)
             done
