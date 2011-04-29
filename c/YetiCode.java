@@ -59,9 +59,8 @@ final class Constants implements Opcodes {
         String descr = 'L' + Code.javaType(code.type.deref()) + ';';
         String name = (String) constants.get(key);
         if (name == null) {
-            if (sb == null) {
+            if (sb == null)
                 sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
-            }
             name = "_".concat(Integer.toString(ctx.fieldCounter++));
             ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
                               name, descr, null, null).visitEnd();
@@ -107,9 +106,8 @@ final class Constants implements Opcodes {
     // generates [Ljava/lang/String;[Z into stack, using constant cache
     void structInitArg(Ctx ctx_, StructField[] fields,
                        int fieldCount, boolean nomutable) {
-        if (sb == null) {
+        if (sb == null)
             sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
-        }
         String[] fieldNameArr = new String[fieldCount + 1];
         char[] mutableArr = new char[fieldNameArr.length];
         mutableArr[0] = '@';
@@ -166,6 +164,7 @@ final class CompileCtx implements Opcodes {
     String[] preload = new String[] { "yeti/lang/std", "yeti/lang/io" };
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
+    Fun moduleTypeCb;
 
     CompileCtx(SourceReader reader, CodeWriter writer) {
         this.reader = reader;
@@ -297,9 +296,8 @@ final class CompileCtx implements Opcodes {
 
     String compile(String sourceName, int flags) throws Exception {
         String className = (String) compiled.get(sourceName);
-        if (className != null) {
+        if (className != null)
             return className;
-        }
         String[] srcName = { sourceName };
         char[] src;
         try {
@@ -346,9 +344,8 @@ final class CompileCtx implements Opcodes {
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
-            if (codeTree.moduleType.name != null) {
+            if (codeTree.moduleType.name != null)
                 name = codeTree.moduleType.name;
-            }
             module = module || codeTree.isModule;
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
@@ -372,9 +369,8 @@ final class CompileCtx implements Opcodes {
                 ctx.insn(ARETURN);
                 ctx.visitLabel(eval);
                 Code codeTail = codeTree.code;
-                while (codeTail instanceof SeqExpr) {
+                while (codeTail instanceof SeqExpr)
                     codeTail = ((SeqExpr) codeTail).result;
-                }
                 if (codeTail instanceof StructConstructor) {
                     ((StructConstructor) codeTail).publish();
                     codeTree.gen(ctx);
@@ -395,6 +391,8 @@ final class CompileCtx implements Opcodes {
                 ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.insn(ARETURN);
                 types.put(name, codeTree.moduleType);
+                if (moduleTypeCb != null)
+                    TypeDescr.doc(codeTree.moduleType, moduleTypeCb);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
@@ -431,9 +429,8 @@ final class CompileCtx implements Opcodes {
             currentSrc = oldCurrentSrc;
             return codeTree.type;
         } catch (CompileException ex) {
-            if (ex.fn == null) {
+            if (ex.fn == null)
                 ex.fn = sourceName;
-            }
             throw ex;
         }
     }

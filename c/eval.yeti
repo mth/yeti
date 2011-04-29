@@ -139,7 +139,7 @@ createCtx reader genericOpt =
 compileYetiFiles genericOpt options files =
    (var exec = false;
     var execArg = array [];
-    var typeAction = None ();
+    var typeAction = () as ~yeti.lang.Fun;
     var mainClass = '';
 
     reader = new YetiC();
@@ -152,7 +152,9 @@ compileYetiFiles genericOpt options files =
         /// Get module types. The action ({type is type, doc is string} -> ())
         /// is called after each module file given for compilation. 
         Type action:
-            typeAction := Some action;
+            typeAction :=
+                action is {.doc is string, .name is string, .type is type} -> ()
+                       as ~yeti.lang.Fun;
 
         /// Execute main after compilation of the sources.
         /// The _argv will be set to the arg parameter.
@@ -176,28 +178,25 @@ compileYetiFiles genericOpt options files =
         esac
     done;
     reader#basedirs := sourcePath as ~String[];
-    case typeAction of
-    Some action:
-        if exec then
-            throw new CompileException(0, 0,
-                        "Exec with Type is not implemented yet")
-        fi;
-        if ctx#writer instanceof ToFile then
-            throw new CompileException(0, 0,
-                        "To with Type is not implemented yet")
-        fi;
-        CompileCtx#currentCompileCtx#set(ctx);
-        for files do src:
-            TypeDescr#doc(YetiTypeVisitor#getType((), src, true), action
-                    is {.doc is string, .name is string, .type is type} -> ());
-        done;
-    _:
-        try
+    if not nullptr? typeAction then
+        if exec or ctx#writer instanceof ToFile then
+            ctx#moduleTypeCb := typeAction;
+            typeAction := () as ~yeti.lang.Fun; // still compile ;)
+        else
+            CompileCtx#currentCompileCtx#set(ctx);
+            for files do src:
+                TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
+                              typeAction)
+            done
+        fi
+    fi;
+    try
+        if nullptr? typeAction then
             mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
-        finally
-            ctx#enumWarns(warn)
-        yrt
-    esac;
+        fi
+    finally
+        ctx#enumWarns(warn)
+    yrt;
     if exec then
         classLoader = ctx#writer unsafely_as ~ClassLoader;
         // The Java reflection API used by execClass to invoke main() will

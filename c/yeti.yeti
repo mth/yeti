@@ -226,10 +226,10 @@ else
     catch java.lang.Throwable ex:
         printException ex
     yrt;
-    for types do {type, doc}:
+    for types do {type, name, doc}:
         if doc != "" then
             println "/*\n\(doc)\n*/"
         fi;
-        println (showType [CommentDoc ()] '' type)
+        println "module \(name);\n\(showType [CommentDoc ()] '' type)"
     done
 fi

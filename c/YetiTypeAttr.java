@@ -440,8 +440,8 @@ class YetiTypeVisitor implements ClassVisitor {
                 if (t == null) {
                     throw new Exception("`" + name + "' is not a yeti module");
                 }
+                t.name = name;
             }
-            t.name = name;
             ctx.types.put(name, t);
             return t;
         } catch (CompileException ex) {
