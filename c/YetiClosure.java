@@ -1089,7 +1089,6 @@ final class Function extends CapturingClosure implements Binder {
 final class RootClosure extends AClosure {
     Code code;
     LoadModule[] preload;
-    String moduleName;
     boolean isModule;
     ModuleType moduleType;
 

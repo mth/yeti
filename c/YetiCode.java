@@ -346,8 +346,8 @@ final class CompileCtx implements Opcodes {
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
-            if (codeTree.moduleName != null) {
-                name = codeTree.moduleName;
+            if (codeTree.moduleType.name != null) {
+                name = codeTree.moduleType.name;
             }
             module = module || codeTree.isModule;
             Constants constants = new Constants();

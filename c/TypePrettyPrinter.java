@@ -203,6 +203,14 @@ class TypeDescr extends YetiType {
         return prepare(t, new HashMap(), new HashMap()).force();
     }
 
+    static void doc(ModuleType m, Fun f) {
+        Struct3 st = new Struct3(new String[] { "doc", "name", "type" }, null);
+        st._0 = m.topDoc == null ? Core.UNDEF_STR : m.topDoc;
+        st._1 = m.name.replace('/', '.');
+        st._2 = yetiType(m.type);
+        f.apply(st);
+    }
+
     private static void hdescr(TypeDescr descr, YType tt, Map vars, Map refs) {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)

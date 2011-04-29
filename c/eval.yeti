@@ -188,9 +188,8 @@ compileYetiFiles genericOpt options files =
         fi;
         CompileCtx#currentCompileCtx#set(ctx);
         for files do src:
-            mt = YetiTypeVisitor#getType((), src, true);
-            action {type = TypeDescr#yetiType(mt#type) unsafely_as type,
-                    doc = mt#topDoc, src};
+            TypeDescr#doc(YetiTypeVisitor#getType((), src, true), action
+                    is {.doc is string, .name is string, .type is type} -> ());
         done;
     _:
         try

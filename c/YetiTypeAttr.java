@@ -346,6 +346,7 @@ class ModuleType {
     Map typeDefs;
     Map directFields;
     String topDoc;
+    String name;
     boolean deprecated;
 
     ModuleType(YType type, Map typeDefs, Map directFields) {
@@ -440,6 +441,7 @@ class YetiTypeVisitor implements ClassVisitor {
                     throw new Exception("`" + name + "' is not a yeti module");
                 }
             }
+            t.name = name;
             ctx.types.put(name, t);
             return t;
         } catch (CompileException ex) {
