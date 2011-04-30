@@ -178,25 +178,21 @@ compileYetiFiles genericOpt options files =
         esac
     done;
     reader#basedirs := sourcePath as ~String[];
-    if not nullptr? typeAction then
-        if exec or not ctx#writer instanceof Loader then
-            ctx#moduleTypeCb := typeAction;
-            typeAction := () as ~yeti.lang.Fun; // still compile ;)
-        else
-            CompileCtx#currentCompileCtx#set(ctx);
-            for files do src:
-                TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
-                              typeAction)
-            done
-        fi
-    fi;
-    try
-        if nullptr? typeAction then
+    if not nullptr? typeAction and not exec
+            and ctx#writer instanceof Loader then
+        CompileCtx#currentCompileCtx#set(ctx);
+        for files do src:
+            TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
+                          typeAction)
+        done
+    else
+        ctx#moduleTypeCb := typeAction;
+        try
             mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
-        fi
-    finally
-        ctx#enumWarns(warn)
-    yrt;
+        finally
+            ctx#enumWarns(warn)
+        yrt
+    fi;
     if exec then
         classLoader = ctx#writer unsafely_as ~ClassLoader;
         // The Java reflection API used by execClass to invoke main() will
