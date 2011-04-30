@@ -185,8 +185,6 @@ compileYetiFiles genericOpt options files =
         else
             CompileCtx#currentCompileCtx#set(ctx);
             for files do src:
-                // TODO use some special flags to not really compile.
-                // As a bonus, the compileAll could then handle it all.
                 TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
                               typeAction)
             done
