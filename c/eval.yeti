@@ -186,7 +186,6 @@ compileYetiFiles genericOpt options files =
                           typeAction)
         done
     else
-        //ctx#moduleTypeCb := typeAction;
         try
             mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
         finally
