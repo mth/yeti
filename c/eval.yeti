@@ -73,7 +73,9 @@ execClass argv sandbox eval loader mainClass
         fi
     finally
         Core#ARGV#set(old_argv);
-        th#setContextClassLoader(old_cl);
+        if not sandbox then
+            th#setContextClassLoader(old_cl)
+        fi
     yrt);
 
 createCtx reader genericOpt =
