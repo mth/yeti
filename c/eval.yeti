@@ -282,12 +282,10 @@ evaluateYetiCode genericOpt =
                 else
                     Result (() as ~Object)
                 fi
-            catch java.lang.StackOverflowError ex:
-                Exception (ex as ~Throwable)
             catch java.lang.VirtualMachineError ex:
                 // other virtualmachine errors will be rethrown
                 // (including OutOfMemoryError)
-                if sandbox and ex instanceof java.lang.OutOfMemoryError then
+                if sandbox or ex instanceof java.lang.StackOverflowError then
                     Exception (ex as ~Throwable)
                 else
                     throw ex
