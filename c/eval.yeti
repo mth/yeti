@@ -287,7 +287,11 @@ evaluateYetiCode genericOpt =
             catch java.lang.VirtualMachineError ex:
                 // other virtualmachine errors will be rethrown
                 // (including OutOfMemoryError)
-                throw ex
+                if sandbox and ex instanceof java.lang.OutOfMemoryError then
+                    Exception (ex as ~Throwable)
+                else
+                    throw ex
+                fi
             catch java.lang.ThreadDeath ex:
                 throw ex // honor thread death also
             catch Throwable ex:
