@@ -164,7 +164,6 @@ final class CompileCtx implements Opcodes {
     String[] preload = new String[] { "yeti/lang/std", "yeti/lang/io" };
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
-    Fun moduleTypeCb;
 
     CompileCtx(SourceReader reader, CodeWriter writer) {
         this.reader = reader;
@@ -391,8 +390,6 @@ final class CompileCtx implements Opcodes {
                 ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
                 ctx.insn(ARETURN);
                 types.put(name, codeTree.moduleType);
-                if (moduleTypeCb != null)
-                    TypeDescr.doc(codeTree.moduleType, moduleTypeCb);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
