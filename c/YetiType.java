@@ -806,21 +806,17 @@ public class YetiType implements YetiParser {
     }
 
     static void getFreeVar(List vars, List deny, YType type, int depth) {
-        if (type.seen) {
+        if (type.seen)
             return;
-        }
-        if (deny != null && type.field >= FIELD_NON_POLYMORPHIC) {
+        if (deny != null && type.field >= FIELD_NON_POLYMORPHIC)
             vars = deny; // anything under mutable field is evil
-        }
         YType t = type.deref();
         if (t.type != VAR) {
-            if (t.type == FUN) {
+            if (t.type == FUN)
                 deny = null;
-            }
             type.seen = true;
-            for (int i = t.param.length; --i >= 0;) {
+            for (int i = t.param.length; --i >= 0;)
                 getFreeVar(vars, deny, t.param[i], depth);
-            }
             type.seen = false;
         } else if (t.depth > depth && vars.indexOf(t) < 0) {
             vars.add(t);
@@ -831,13 +827,10 @@ public class YetiType implements YetiParser {
                           int depth, Scope scope) {
         List free = new ArrayList(), deny = new ArrayList();
         getFreeVar(free, deny, valueType, depth);
-        if (deny.size() != 0) {
-            for (int i = free.size(); --i >= 0;) {
-                if (deny.indexOf(free.get(i)) >= 0) {
+        if (deny.size() != 0)
+            for (int i = free.size(); --i >= 0;)
+                if (deny.indexOf(free.get(i)) >= 0)
                     free.remove(i);
-                }
-            }
-        }
         scope = new Scope(scope, name, value);
         scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
