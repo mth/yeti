@@ -1159,8 +1159,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (sf != null)
                     duplicateField(field);
                 if (code == null)
-                    code = analyze(field.expr, scope,
-                                   field.var ? depth : depth + 1);
+                    code = analyze(field.expr, scope, depth);
                 sf = new StructField();
                 sf.name = field.name;
                 sf.value = code;
@@ -1173,7 +1172,8 @@ public final class YetiAnalyzer extends YetiType {
                     case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
                         List deny = new ArrayList();
                         List vars = new ArrayList();
-                        getFreeVar(deny, vars, code.type, true, depth);
+                        // XXX uh. depth - 1, should it work?
+                        getFreeVar(vars, deny, code.type, true, depth - 1);
                         poly = deny.size() == 0 && vars.size() != 0;
                     }
                 }
