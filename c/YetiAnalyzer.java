@@ -801,11 +801,17 @@ public final class YetiAnalyzer extends YetiType {
 
     static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,
                              Scope scope, int depth) {
-        if (!bind.var) {
-            scope = bindPoly(bind.name, binder.st.type, binder,
-                             !binder.st.polymorph, depth, scope);
-        } else {
+        switch (binder.st.polymorph ? VAR : binder.st.type.deref().type) {
+        case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
+            if (!bind.var) {
+                scope = bindPoly(bind.name, binder.st.type, binder,
+                                 !binder.st.polymorph, depth, scope);
+                break;
+            }
+        default:
             scope = new Scope(scope, bind.name, binder);
+        }
+        if (bind.var) {
             registerVar(binder, scope.outer);
         }
         if (evalSeq) {
@@ -1153,16 +1159,27 @@ public final class YetiAnalyzer extends YetiType {
                 if (sf != null)
                     duplicateField(field);
                 if (code == null)
-                    code = analyze(field.expr, scope, depth);
+                    code = analyze(field.expr, scope,
+                                   field.var ? depth : depth + 1);
                 sf = new StructField();
                 sf.name = field.name;
                 sf.value = code;
                 sf.mutable = field.var;
                 codeMap.put(field.name, sf);
                 result.add(sf);
+                boolean poly = code.polymorph || lambda != null;
+                if (!poly && !field.var) {
+                    switch (code.type.deref().type) {
+                    case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
+                        List deny = new ArrayList();
+                        List vars = new ArrayList();
+                        getFreeVar(deny, vars, code.type, true, depth);
+                        poly = deny.size() == 0 && vars.size() != 0;
+                    }
+                }
                 fields.put(field.name,
                     field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                    code.polymorph || lambda != null ? code.type
+                    poly ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
                 if (!field.noRec) {
                     Binder bind = result.bind(sf);
