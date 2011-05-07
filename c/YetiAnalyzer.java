@@ -778,7 +778,7 @@ public final class YetiAnalyzer extends YetiType {
                         if (i.name == name)
                             continue members;
                 YType t = (YType) e.getValue();
-                scope = bindPoly(name, t, m.bindField(name, t), depth, scope);
+                scope = bindPoly(name, t, m.bindField(name, t), false, depth, scope);
             }
         } else if (m.type.type != UNIT) {
             throw new CompileException(where,
@@ -801,13 +801,11 @@ public final class YetiAnalyzer extends YetiType {
 
     static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,
                              Scope scope, int depth) {
-        if (binder.st.polymorph && !bind.var) {
+        if (!bind.var) {
             scope = bindPoly(bind.name, binder.st.type, binder,
-                             depth, scope);
+                             !binder.st.polymorph, depth, scope);
         } else {
             scope = new Scope(scope, bind.name, binder);
-        }
-        if (bind.var) {
             registerVar(binder, scope.outer);
         }
         if (evalSeq) {
@@ -881,7 +879,7 @@ public final class YetiAnalyzer extends YetiType {
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, type, self,
               "Type #~ (type self-binding)\n    #0");
-        scope = bindPoly(typeDef.name, type, null, 0, scope);
+        scope = bindPoly(typeDef.name, type, null, false, 0, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
@@ -949,7 +947,7 @@ public final class YetiAnalyzer extends YetiType {
                     Map.Entry e = (Map.Entry) j.next();
                     YType[] typeDef = (YType[]) e.getValue();
                     scope = bindPoly((String) e.getKey(),
-                                typeDef[typeDef.length - 1], null, 0, scope);
+                                typeDef[typeDef.length - 1], null, false, 0, scope);
                     scope.typeDef = typeDef;
                 }
             } else if (nodes[i].kind == "import") {
@@ -1575,9 +1573,8 @@ public final class YetiAnalyzer extends YetiType {
                         scope.importClass = new ClassBinding(bind.type);
                         continue;
                     }
-                    scope = bind.polymorph ? bindPoly(bind.name, bind.type,
-                                                new EvalBind(bind), 0, scope)
-                        : new Scope(scope, bind.name, new EvalBind(bind));
+                    scope = bindPoly(bind.name, bind.type, new EvalBind(bind),
+                                     !bind.polymorph, 0, scope);
                 }
             }
             topLevel.isModule = parser.isModule;
@@ -1596,7 +1593,7 @@ public final class YetiAnalyzer extends YetiType {
             root.isModule = parser.isModule;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
-                getFreeVar(free, deny, root.type, -1);
+                getFreeVar(free, deny, root.type, false, -1);
                 if (!deny.isEmpty() ||
                     !free.isEmpty() && !root.code.polymorph) {
                     throw new CompileException(n,
