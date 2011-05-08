@@ -163,10 +163,9 @@ public final class YetiAnalyzer extends YetiType {
                 return apply(node, analyze(op.left, scope, depth),
                              op.right, scope, depth);
             if (opop == FIELD_OP) {
-                if (op.right.kind == "list") {
+                if (op.right.kind == "list")
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (XNode) op.right, scope, depth);
-                }
                 checkSelectorSym(op, op.right);
                 return selectMember(op, (Sym) op.right,
                         analyze(op.left, scope, depth), scope, depth);
