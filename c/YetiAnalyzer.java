@@ -778,7 +778,7 @@ public final class YetiAnalyzer extends YetiType {
                         if (i.name == name)
                             continue members;
                 YType t = (YType) e.getValue();
-                scope = bindPoly(name, t, m.bindField(name, t), false, depth, scope);
+                scope = bindPoly(name, t, m.bindField(name, t), depth, scope);
             }
         } else if (m.type.type != UNIT) {
             throw new CompileException(where,
@@ -801,14 +801,9 @@ public final class YetiAnalyzer extends YetiType {
 
     static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,
                              Scope scope, int depth) {
-        switch (binder.st.polymorph ? VAR : binder.st.type.deref().type) {
-        case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
-            if (!bind.var) {
-                scope = bindPoly(bind.name, binder.st.type, binder,
-                                 !binder.st.polymorph, depth, scope);
-                break;
-            }
-        default:
+        if (binder.st.polymorph && !bind.var) {
+            scope = bindPoly(bind.name, binder.st.type, binder, depth, scope);
+        } else {
             scope = new Scope(scope, bind.name, binder);
         }
         if (bind.var) {
@@ -885,7 +880,7 @@ public final class YetiAnalyzer extends YetiType {
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, type, self,
               "Type #~ (type self-binding)\n    #0");
-        scope = bindPoly(typeDef.name, type, null, false, 0, scope);
+        scope = bindPoly(typeDef.name, type, null, 0, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
@@ -953,7 +948,7 @@ public final class YetiAnalyzer extends YetiType {
                     Map.Entry e = (Map.Entry) j.next();
                     YType[] typeDef = (YType[]) e.getValue();
                     scope = bindPoly((String) e.getKey(),
-                                typeDef[typeDef.length - 1], null, false, 0, scope);
+                                typeDef[typeDef.length - 1], null, 0, scope);
                     scope.typeDef = typeDef;
                 }
             } else if (nodes[i].kind == "import") {
@@ -1025,6 +1020,7 @@ public final class YetiAnalyzer extends YetiType {
         Scope bodyScope = null;
         SeqExpr[] seq = null;
         Node arg = lambda.expr[0];
+        int closureVarStart = scope.ctx.closureVarCount;
         if (arg instanceof Sym) {
             if (expected != null && expected.type == FUN) {
                 to.arg.type = expected.param[0];
@@ -1040,6 +1036,7 @@ public final class YetiAnalyzer extends YetiType {
             to.arg.type = new YType(depth);
             seq = new SeqExpr[] { null, null };
             bodyScope = bindStruct(to, (XNode) arg, false, scope, depth, seq);
+            scope.ctx.closureVarCount = closureVarStart; // reset
         } else {
             throw new CompileException(arg, "Bad argument: " + arg);
         }
@@ -1067,10 +1064,27 @@ public final class YetiAnalyzer extends YetiType {
             to.setBody(wrapSeq(body, seq));
         }
         YType fun = new YType(FUN, new YType[] { to.arg.type, to.body.type });
-        if (to.type != null) {
+        if (to.type != null)
             unify(fun, to.type, lambda,
                   "Function type #~ (self-binding)\n    #0");
+        int cvc = scope.ctx.closureVarCount;
+        if (cvc > closureVarStart) {
+            Map m = new java.util.IdentityHashMap(cvc - closureVarStart);
+            YType va[] = scope.ctx.closureVars;
+            for (int i = closureVarStart; i < cvc; ++i) {
+                YType t = va[i].deref();
+                if (t.type == VAR && t.depth > depth)
+                    m.put(t, null);
+                va[i] = null; // help gc
+            }
+            if (!m.isEmpty() && hasMutableStore(m, to.body.type, false)) {
+                fun.flags |= FL_CLOSURE;
+                if (to.type != null)
+                    to.type.flags |= FL_CLOSURE;
+            }
         }
+        scope.ctx.closureVarCount = closureVarStart;
+
         to.type = fun;
         to.bindName = lambda.expr.length > 2 ? lambda.expr[2].sym() : null;
         to.body.markTail();
@@ -1166,21 +1180,9 @@ public final class YetiAnalyzer extends YetiType {
                 sf.mutable = field.var;
                 codeMap.put(field.name, sf);
                 result.add(sf);
-                boolean poly = code.polymorph || lambda != null;
-                /* XXX might be unsafe.
-                 * if (!poly && !field.var) {
-                    switch (code.type.deref().type) {
-                    case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
-                        List deny = new ArrayList();
-                        List vars = new ArrayList();
-                        // XXX uh. depth - 1, should it work?
-                        getFreeVar(vars, deny, code.type, true, depth - 1);
-                        poly = deny.size() == 0 && vars.size() != 0;
-                    }
-                }*/
                 fields.put(field.name,
                     field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                    poly ? code.type
+                    code.polymorph || lambda != null ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
                 if (!field.noRec) {
                     Binder bind = result.bind(sf);
@@ -1591,8 +1593,9 @@ public final class YetiAnalyzer extends YetiType {
                         scope.importClass = new ClassBinding(bind.type);
                         continue;
                     }
-                    scope = bindPoly(bind.name, bind.type, new EvalBind(bind),
-                                     !bind.polymorph, 0, scope);
+                    scope = bind.polymorph ? bindPoly(bind.name, bind.type,
+                                                new EvalBind(bind), 0, scope)
+                        : new Scope(scope, bind.name, new EvalBind(bind));
                 }
             }
             topLevel.isModule = parser.isModule;
@@ -1611,7 +1614,7 @@ public final class YetiAnalyzer extends YetiType {
             root.isModule = parser.isModule;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
-                getFreeVar(free, deny, root.type, false, -1);
+                getFreeVar(free, deny, root.type, -1);
                 if (!deny.isEmpty() ||
                     !free.isEmpty() && !root.code.polymorph) {
                     throw new CompileException(n,

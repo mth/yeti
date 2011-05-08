@@ -144,6 +144,7 @@ public class YetiType implements YetiParser {
     static final int JAVA_ARRAY = 14;
 
     static final int FL_ORDERED_REQUIRED = 1;
+    static final int FL_CLOSURE = 2;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -220,19 +221,19 @@ public class YetiType implements YetiParser {
         bindCompare(">=", LG_TYPE, CompareFun.COND_GE,
         bindScope("_argv", new BuiltIn(1),
         bindScope("randomInt", new BuiltIn(22),
-        bindPoly(".", COMPOSE_TYPE, new BuiltIn(6),
-        bindPoly("in", IN_TYPE, new BuiltIn(2),
-        bindPoly("::", CONS_TYPE, new BuiltIn(3),
-        bindPoly(":.", LAZYCONS_TYPE, new BuiltIn(4),
-        bindPoly("for", FOR_TYPE, new BuiltIn(5),
-        bindPoly("nullptr?", A_TO_BOOL, new BuiltIn(8),
-        bindPoly("defined?", A_TO_BOOL, new BuiltIn(9),
-        bindPoly("empty?", MAP_TO_BOOL, new BuiltIn(10),
-        bindPoly("same?", EQ_TYPE, new BuiltIn(21),
-        bindPoly("head", LIST_TO_A, new BuiltIn(11),
-        bindPoly("tail", LIST_TO_LIST, new BuiltIn(12),
-        bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7),
-        bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24),
+        bindPoly(".", COMPOSE_TYPE, new BuiltIn(6), 0,
+        bindPoly("in", IN_TYPE, new BuiltIn(2), 0,
+        bindPoly("::", CONS_TYPE, new BuiltIn(3), 0,
+        bindPoly(":.", LAZYCONS_TYPE, new BuiltIn(4), 0,
+        bindPoly("for", FOR_TYPE, new BuiltIn(5), 0,
+        bindPoly("nullptr?", A_TO_BOOL, new BuiltIn(8), 0,
+        bindPoly("defined?", A_TO_BOOL, new BuiltIn(9), 0,
+        bindPoly("empty?", MAP_TO_BOOL, new BuiltIn(10), 0,
+        bindPoly("same?", EQ_TYPE, new BuiltIn(21), 0,
+        bindPoly("head", LIST_TO_A, new BuiltIn(11), 0,
+        bindPoly("tail", LIST_TO_LIST, new BuiltIn(12), 0,
+        bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7), 0,
+        bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24), 0,
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -313,7 +314,7 @@ public class YetiType implements YetiParser {
     }
 
     static Scope bindCompare(String op, YType type, int code, Scope scope) {
-        return bindPoly(op, type, new Compare(type, code, op), scope);
+        return bindPoly(op, type, new Compare(type, code, op), 0, scope);
     }
 
     static Scope bindArith(String op, String method, Scope scope) {
@@ -326,7 +327,7 @@ public class YetiType implements YetiParser {
     }
 
     static Scope bindRegex(String name, String impl, YType type, Scope scope) {
-        return bindPoly(name, type, new Regex(name, impl, type), scope);
+        return bindPoly(name, type, new Regex(name, impl, type), 0, scope);
     }
 
     static Scope bindImport(String name, String className, Scope scope) {
@@ -388,6 +389,9 @@ public class YetiType implements YetiParser {
     static final class ScopeCtx {
         String packageName;
         String className;
+        // non-polymorphic type variables from bindings in closure
+        YType closureVars[] = NO_PARAM;
+        int closureVarCount;
     }
 
     static final class Scope {
@@ -638,6 +642,11 @@ public class YetiType implements YetiParser {
         } else if (a.type == STRUCT || a.type == VARIANT) {
             unifyMembers(a, b);
         } else {
+            // spread closure flag
+            if (((a.flags | b.flags) & FL_CLOSURE) != 0) {
+                a.flags |= FL_CLOSURE;
+                b.flags |= FL_CLOSURE;
+            }
             for (int i = 0, cnt = a.param.length; i < cnt; ++i) {
                 unify(a.param[i], b.param[i]);
             }
@@ -805,9 +814,27 @@ public class YetiType implements YetiParser {
                 JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
-    // restricted - relaxed value restriction rule applies.
-    static void getFreeVar(List vars, List deny, YType type,
-                           boolean restricted, int depth) {
+    static boolean hasMutableStore(Map bindVars, YType result, boolean store) {
+        if (!result.seen) {
+            if (result.field >= FIELD_NON_POLYMORPHIC)
+                store = true;
+            YType t = result.deref();
+            if (t.type == VAR)
+                return store && bindVars.containsKey(t);
+            if (t.type == FUN || t.type == MAP && t.param[1] != NO_TYPE)
+                store = true;
+            result.seen = true;
+            for (int i = t.param.length; --i >= 0;)
+                if (hasMutableStore(bindVars, t.param[i], store)) {
+                    result.seen = false;
+                    return true;
+                }
+            result.seen = false;
+        }
+        return false;
+    }
+
+    static void getFreeVar(List vars, List deny, YType type, int depth) {
         if (type.seen)
             return;
         if (deny != null && type.field >= FIELD_NON_POLYMORPHIC)
@@ -815,16 +842,15 @@ public class YetiType implements YetiParser {
         YType t = type.deref();
         int tt = t.type;
         if (tt != VAR) {
-            if (!restricted && tt == FUN && vars != deny)
+            if (tt == FUN && vars != deny)
                 deny = null;
             type.seen = true;
             for (int i = t.param.length; --i >= 0;) {
-                // in restricted mode function argument is evil
                 // array/hash value is in mutable store and evil
-                if (i == 0 && (tt == FUN && restricted ||
-                         tt == MAP && deny != null && t.param[1] != NO_TYPE))
+                if (i == 0 && tt == MAP && deny != null
+                        && t.param[1] != NO_TYPE)
                     vars = deny;
-                getFreeVar(vars, deny, t.param[i], restricted, depth);
+                getFreeVar(vars, deny, t.param[i], depth);
             }
             type.seen = false;
         } else if (t.depth > depth && vars.indexOf(t) < 0) {
@@ -835,22 +861,22 @@ public class YetiType implements YetiParser {
     }
 
     static Scope bindPoly(String name, YType valueType, Binder value,
-                          boolean restricted, int depth, Scope scope) {
+                          int depth, Scope scope) {
         List free = new ArrayList(), deny = new ArrayList();
-        getFreeVar(free, deny, valueType, restricted, depth);
-        if (deny.size() != 0)
-            for (int i = free.size(); --i >= 0;)
+        getFreeVar(free, deny, valueType, depth);
+        if (deny.size() != 0) {
+            int i = free.size();
+            while (--i >= 0)
                 if (deny.indexOf(free.get(i)) >= 0)
                     free.remove(i);
+            int cnt = deny.size();
+            // those type variables shouldn't get a chance of copy.
+            for (i = 0; i < cnt; ++i)
+                ((YType) deny.get(i)).depth = depth;
+        }
         scope = new Scope(scope, name, value);
-        if (!restricted || free.size() != 0)
-            scope.free = (YType[]) free.toArray(new YType[free.size()]);
+        scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
-    }
-
-    static Scope bindPoly(String name, YType valueType,
-                          Binder value, Scope scope) {
-        return bindPoly(name, valueType, value, false, 0, scope);
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
