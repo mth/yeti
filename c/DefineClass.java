@@ -291,12 +291,10 @@ final class MethodDesc extends YetiType {
                     if (bind.type != null)
                         YetiAnalyzer.isOp(bind, bind.type, code, scope, depth);
                 }
-                if (bind.name == "_") {
-                } else if (code.polymorph && !bind.var) {
-                    local = bindPoly(bind.name, code.type, binder,
-                                     depth, local);
-                } else {
-                    local = new Scope(local, bind.name, binder);
+                if (bind.name != "_") {
+                    local = bind(bind.name, code.type, binder,
+                                 code.polymorph && !bind.var,
+                                 depth, local);
                 }
             }
         }

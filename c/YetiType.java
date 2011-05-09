@@ -221,19 +221,19 @@ public class YetiType implements YetiParser {
         bindCompare(">=", LG_TYPE, CompareFun.COND_GE,
         bindScope("_argv", new BuiltIn(1),
         bindScope("randomInt", new BuiltIn(22),
-        bindPoly(".", COMPOSE_TYPE, new BuiltIn(6), 0,
-        bindPoly("in", IN_TYPE, new BuiltIn(2), 0,
-        bindPoly("::", CONS_TYPE, new BuiltIn(3), 0,
-        bindPoly(":.", LAZYCONS_TYPE, new BuiltIn(4), 0,
-        bindPoly("for", FOR_TYPE, new BuiltIn(5), 0,
-        bindPoly("nullptr?", A_TO_BOOL, new BuiltIn(8), 0,
-        bindPoly("defined?", A_TO_BOOL, new BuiltIn(9), 0,
-        bindPoly("empty?", MAP_TO_BOOL, new BuiltIn(10), 0,
-        bindPoly("same?", EQ_TYPE, new BuiltIn(21), 0,
-        bindPoly("head", LIST_TO_A, new BuiltIn(11), 0,
-        bindPoly("tail", LIST_TO_LIST, new BuiltIn(12), 0,
-        bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7), 0,
-        bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24), 0,
+        bindPoly(".", COMPOSE_TYPE, new BuiltIn(6),
+        bindPoly("in", IN_TYPE, new BuiltIn(2),
+        bindPoly("::", CONS_TYPE, new BuiltIn(3),
+        bindPoly(":.", LAZYCONS_TYPE, new BuiltIn(4),
+        bindPoly("for", FOR_TYPE, new BuiltIn(5),
+        bindPoly("nullptr?", A_TO_BOOL, new BuiltIn(8),
+        bindPoly("defined?", A_TO_BOOL, new BuiltIn(9),
+        bindPoly("empty?", MAP_TO_BOOL, new BuiltIn(10),
+        bindPoly("same?", EQ_TYPE, new BuiltIn(21),
+        bindPoly("head", LIST_TO_A, new BuiltIn(11),
+        bindPoly("tail", LIST_TO_LIST, new BuiltIn(12),
+        bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7),
+        bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24),
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -314,7 +314,7 @@ public class YetiType implements YetiParser {
     }
 
     static Scope bindCompare(String op, YType type, int code, Scope scope) {
-        return bindPoly(op, type, new Compare(type, code, op), 0, scope);
+        return bindPoly(op, type, new Compare(type, code, op), scope);
     }
 
     static Scope bindArith(String op, String method, Scope scope) {
@@ -327,7 +327,7 @@ public class YetiType implements YetiParser {
     }
 
     static Scope bindRegex(String name, String impl, YType type, Scope scope) {
-        return bindPoly(name, type, new Regex(name, impl, type), 0, scope);
+        return bindPoly(name, type, new Regex(name, impl, type), scope);
     }
 
     static Scope bindImport(String name, String className, Scope scope) {
@@ -860,23 +860,41 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static Scope bindPoly(String name, YType valueType, Binder value,
-                          int depth, Scope scope) {
-        List free = new ArrayList(), deny = new ArrayList();
+    static Scope bind(String name, YType valueType, Binder value,
+                      boolean poly, int depth, Scope scope) {
+        List deny = new ArrayList();
+        List free = poly ? new ArrayList() : deny;
         getFreeVar(free, deny, valueType, depth);
         if (deny.size() != 0) {
-            int i = free.size();
-            while (--i >= 0)
-                if (deny.indexOf(free.get(i)) >= 0)
-                    free.remove(i);
-            int cnt = deny.size();
-            // those type variables shouldn't get a chance of copy.
+            int cnt = deny.size(), from = scope.ctx.closureVarCount, i;
+            YType[] va = scope.ctx.closureVars;
+            if (va.length < from + cnt) {
+                YType[] tmp = new YType[(va.length + 32) * 2];
+                System.arraycopy(va, 0, tmp, 0, from);
+                scope.ctx.closureVars = va = tmp;
+            }
             for (i = 0; i < cnt; ++i)
-                ((YType) deny.get(i)).depth = depth;
+                va[from + i] = (YType) deny.get(i);
+            scope.ctx.closureVarCount = cnt += from;
+        walk_free:
+            for (i = free.size(); --i >= 0; ) {
+                Object tv = free.get(i);
+                for (int j = from; j < cnt; ++j)
+                    if (va[j] == tv) {
+                        free.remove(i);
+                        continue walk_free;
+                    }
+            }
         }
         scope = new Scope(scope, name, value);
-        scope.free = (YType[]) free.toArray(new YType[free.size()]);
+        if (poly)
+            scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
+    }
+
+    static Scope bindPoly(String name, YType valueType, Binder value,
+                          Scope scope) {
+        return bind(name, valueType, value, true, 0, scope);
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,

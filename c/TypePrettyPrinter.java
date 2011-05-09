@@ -89,7 +89,8 @@ class ShowTypeFun extends Fun2 {
             to.append(field.get("name")).append(variant ? " " : " is ");
             Tag fieldType = (Tag) field.get("type");
             Object tstr = showType.apply(indent_, fieldType);
-            if (variant && fieldType.name == "Function")
+            if (variant && (fieldType.name == "Function" ||
+                            fieldType.name == "FunctionStore"))
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
@@ -131,13 +132,14 @@ class ShowTypeFun extends Fun2 {
                 to.append(showType.apply(indent, i.first()));
             }
             to.append('>');
-        } else if (typeTag == "Function") {
+        } else if (typeTag == "Function" || typeTag == "FunctionStore") {
             while (i != null) {
                 Tag t = (Tag) i.first();
                 if (i != typeList)
-                    to.append(" -> ");
+                    to.append(typeTag == "Function" ? " -> " : " --> ");
                 i = i.next();
-                if (i != null && t.name == "Function")
+                if (i != null &&
+                    (t.name == "Function" || t.name == "FunctionStore"))
                     to.append('(')
                       .append(showType.apply(indent, t))
                       .append(')');
@@ -184,7 +186,7 @@ class TypeDescr extends YetiType {
         String tag = null;
         switch (type) {
         case FUN:
-            tag = "Function"; break;
+            tag = name; break;
         case MAP:
             val = YetiC.pair("params", l, "type", name);
             tag = "Parametric"; break;
@@ -282,10 +284,14 @@ class TypeDescr extends YetiType {
         YType[] param = t.param;
         switch (type) {
             case FUN:
+                descr.name = (t.flags & FL_CLOSURE) == 0
+                                ? "Function" : "FunctionStore";
                 for (; t.type == FUN; param = t.param) {
                     (item = prepare(param[0], vars, refs)).prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
+                    if ((t.flags & FL_CLOSURE) != 0)
+                        break;
                 }
                 (item = prepare(t, vars, refs)).prev = descr.value;
                 descr.value = item;

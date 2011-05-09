@@ -13,6 +13,7 @@ typedef type =
     Simple string |
     Parametric { type is string, params is list<type> } |
     Function list<type> |
+    FunctionStore list<type> |
     Variant list<typeitem<type>> |
     Struct list<typeitem<type>> |
     Alias { alias is string, type is type }
