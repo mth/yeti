@@ -877,15 +877,16 @@ public class YetiType implements YetiParser {
             for (i = 0; i < cnt; ++i)
                 va[from + i] = (YType) deny.get(i);
             scope.ctx.closureVarCount = cnt += from;
-        walk_free:
-            for (i = free.size(); --i >= 0; ) {
-                Object tv = free.get(i);
-                for (int j = from; j < cnt; ++j)
-                    if (va[j] == tv) {
-                        free.remove(i);
-                        continue walk_free;
-                    }
-            }
+            if (poly)
+            walk_free:
+                for (i = free.size(); --i >= 0; ) {
+                    Object tv = free.get(i);
+                    for (int j = from; j < cnt; ++j)
+                        if (va[j] == tv) {
+                            free.remove(i);
+                            continue walk_free;
+                        }
+                }
         }
         scope = new Scope(scope, name, value);
         if (poly)
