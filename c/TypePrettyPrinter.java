@@ -290,7 +290,7 @@ class TypeDescr extends YetiType {
                     (item = prepare(param[0], vars, refs)).prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
-                    if ((t.flags & FL_RESTRICTED) != 0)
+                    if (descr.name != "Function")
                         break;
                 }
                 (item = prepare(t, vars, refs)).prev = descr.value;
