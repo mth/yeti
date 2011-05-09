@@ -846,7 +846,7 @@ public class YetiType implements YetiParser {
         YType t = type.deref();
         int tt = t.type;
         if (tt != VAR) {
-            if (tt == FUN && vars != deny)
+            if (tt == FUN)
                 deny = null;
             type.seen = true;
             for (int i = t.param.length; --i >= 0;) {
@@ -858,8 +858,6 @@ public class YetiType implements YetiParser {
             }
             type.seen = false;
         } else if (t.depth > depth && vars.indexOf(t) < 0) {
-            if (vars == deny)
-                t.depth = depth;
             vars.add(t);
         }
     }
@@ -877,14 +875,21 @@ public class YetiType implements YetiParser {
                 System.arraycopy(va, 0, tmp, 0, from);
                 scope.ctx.closureVars = va = tmp;
             }
-            for (i = 0; i < cnt; ++i)
-                va[from + i] = (YType) deny.get(i);
-            scope.ctx.closureVarCount = cnt += from;
-            if (poly)
+            int end = from;
+            for (i = 0; i < cnt; ++i) {
+                YType t = (YType) deny.get(i);
+                if (t.depth > depth) {
+                    va[end++] = t;
+                    if (name != null)
+                        t.depth = depth;
+                }
+            }
+            scope.ctx.closureVarCount = end;
+            if (poly && name != null)
             walk_free:
                 for (i = free.size(); --i >= 0; ) {
                     Object tv = free.get(i);
-                    for (int j = from; j < cnt; ++j)
+                    for (int j = from; j < end; ++j)
                         if (va[j] == tv) {
                             free.remove(i);
                             continue walk_free;

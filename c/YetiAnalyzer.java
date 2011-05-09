@@ -1060,8 +1060,8 @@ public final class YetiAnalyzer extends YetiType {
             to.setBody(wrapSeq(body, seq));
         }
         YType fun = new YType(FUN, new YType[] { to.arg.type, to.body.type });
-        if (to.type != null)
-            unify(fun, to.type, lambda,
+        if (expected != null)
+            unify(fun, expected, lambda,
                   "Function type #~ (self-binding)\n    #0");
         int argLimit = scope.ctx.closureVarCount;
         bind(null, to.arg.type, null, true, depth - 1, scope);
@@ -1072,13 +1072,13 @@ public final class YetiAnalyzer extends YetiType {
             for (int i = cvc; --i >= closureVarStart; ) {
                 YType t = va[i].deref();
                 if (t.type == VAR && t.depth >= depth)
-                    m.put(t, Boolean.valueOf(i >= argLimit));
+                    m.put(t, i < argLimit ? Boolean.FALSE : Boolean.TRUE);
                 va[i] = null; // help gc
             }
             if (!m.isEmpty() && hasMutableStore(m, to.body.type, false)) {
                 fun.flags |= FL_RESTRICTED;
                 if (to.type != null)
-                    to.type.flags |= FL_RESTRICTED;
+                    to.type.deref().flags |= FL_RESTRICTED;
             }
         }
         scope.ctx.closureVarCount = closureVarStart;
@@ -1199,10 +1199,9 @@ public final class YetiAnalyzer extends YetiType {
         }
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = (Bind) nodes[i];
-            if (funs[i] != null) {
+            if (funs[i] != null)
                 lambdaBind(funs[i], field, ((Bind) nodes[i]).property
                                 ? propertyScope :  local, depth);
-            }
         }
         result.type = new YType(STRUCT,
             (YType[]) fields.values().toArray(new YType[fields.size()]));
