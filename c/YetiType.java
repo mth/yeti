@@ -818,6 +818,9 @@ public class YetiType implements YetiParser {
                 JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
+    // XXX with bindvars from argument it could be probably enough
+    // to check only arguments in returned functions. maybe this
+    // is even true for all bindvars. have to think.
     static boolean hasMutableStore(Map bindVars, YType result, boolean store) {
         if (!result.seen) {
             if (result.field >= FIELD_NON_POLYMORPHIC)
