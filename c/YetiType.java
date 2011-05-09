@@ -142,6 +142,9 @@ public class YetiType implements YetiParser {
     static final int VARIANT = 12;
     static final int JAVA = 13;
     static final int JAVA_ARRAY = 14;
+    // Beware: this is used only by the YetiTypeAttr
+    // to carry the FL_RESTRICTED in more compact manner.
+    static final int RESTRICTED_FUN = 15;
 
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_RESTRICTED = 2;

@@ -136,11 +136,15 @@ class YetiTypeAttr extends Attribute {
                 return;
             }
             refs.put(type, new Integer(refs.size()));
-            buf.putByte(type.type);
             if (type.type == YetiType.FUN) {
+                buf.putByte((type.flags & YetiType.FL_RESTRICTED) != 0
+                                ? YetiType.RESTRICTED_FUN : YetiType.FUN);
                 write(type.param[0]);
                 write(type.param[1]);
-            } else if (type.type == YetiType.MAP) {
+                return;
+            }
+            buf.putByte(type.type);
+            if (type.type == YetiType.MAP) {
                 writeArray(type.param);
             } else if (type.type == YetiType.STRUCT ||
                        type.type == YetiType.VARIANT) {
@@ -255,7 +259,11 @@ class YetiTypeAttr extends Attribute {
             }
             t = new YType(tv, null);
             refs.add(t);
-            if (tv == YetiType.FUN) {
+            if (tv == YetiType.RESTRICTED_FUN) {
+                t.type = YetiType.FUN;
+                t.flags |= YetiType.FL_RESTRICTED;
+            }
+            if (t.type == YetiType.FUN) {
                 t.param = new YType[2];
                 t.param[0] = read();
                 t.param[1] = read();
