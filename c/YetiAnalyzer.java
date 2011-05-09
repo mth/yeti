@@ -844,13 +844,13 @@ public final class YetiAnalyzer extends YetiType {
             bind.expr.pos(bind.line, bind.col);
             Node nameNode = field.expr;
             if (!(nameNode instanceof Sym) ||
-                (bind.name = nameNode.sym()) == "_")
+                    (bind.name = nameNode.sym()) == "_")
                 throw new CompileException(nameNode,
                     "Binding name expected, not a " + nameNode);
             Code code = selectMember(fields[j], (Sym) bind.expr,
-                          binder.getRef(fields[j].line), scope, depth);
+                          binder.getRef(fields[j].line), scope, depth + 1);
             if (field.type != null)
-                isOp(field, field.type, code, scope, depth);
+                isOp(field, field.type, code, scope, depth + 1);
             BindExpr bindExpr = new BindExpr(code, false);
             scope = genericBind(bind, bindExpr, isEval, scope, depth);
             addSeq(last, bindExpr);
