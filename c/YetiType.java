@@ -709,6 +709,7 @@ public class YetiType implements YetiParser {
         }
         YType[] param = new YType[type.param.length];
         copy = new YType(type.type, param);
+        copy.flags = type.flags & 127;
         YType res = copy;
         if (type_.field >= FIELD_NON_POLYMORPHIC) {
             res = mutableFieldRef(type_);

@@ -503,10 +503,8 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where, fun.type, argCode.type, s, ex);
         }
         Code res = fun.apply(argCode, applyFun[1], where.line);
-        if ((funt.flags & FL_CLOSURE) == 0 && funt.type == FUN) {
+        if ((funt.flags & FL_CLOSURE) == 0 && funt.type == FUN)
             res.polymorph = true;
-            System.err.println("* " + funt);
-        }
         return res;
     }
 
