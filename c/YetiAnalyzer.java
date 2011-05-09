@@ -506,7 +506,8 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where, fun.type, argCode.type, s, ex);
         }
         Code res = fun.apply(argCode, applyFun[1], where.line);
-        if ((funt.flags & FL_RESTRICTED) == 0 && funt.type == FUN)
+        if (fun.polymorph && (funt.flags & FL_RESTRICTED) == 0 &&
+                funt.type == FUN)
             res.polymorph = true;
         return res;
     }
