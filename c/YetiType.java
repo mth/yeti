@@ -732,7 +732,7 @@ public class YetiType implements YetiParser {
         return res;
     }
 
-    private static Map createFreeVars(YType[] freeTypes, int depth) {
+    static Map createFreeVars(YType[] freeTypes, int depth) {
         HashMap vars = new HashMap();
         for (int i = freeTypes.length; --i >= 0;) {
             YType t = new YType(depth);

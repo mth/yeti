@@ -1897,8 +1897,8 @@ final class LoadModule extends Code {
     boolean checkUsed;
     private boolean used;
 
-    LoadModule(String moduleName, ModuleType type) {
-        this.type = type.type;
+    LoadModule(String moduleName, ModuleType type, int depth) {
+        this.type = type.copy(depth);
         this.moduleName = moduleName;
         moduleType = type;
         polymorph = true;

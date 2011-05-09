@@ -137,7 +137,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (mt.deprecated)
                     CompileCtx.current().warn(new CompileException(node,
                          "Module " + nam.replace('/', '.') + " is deprecated"));
-                return new LoadModule(nam, mt);
+                return new LoadModule(nam, mt, depth);
             }
             if (kind == "new-array")
                 return newArray(x, scope, depth);
@@ -1571,7 +1571,8 @@ public final class YetiAnalyzer extends YetiType {
                 if (!preload[i].equals(className)) {
                     preloadModules[i] =
                         new LoadModule(preload[i],
-                              YetiTypeVisitor.getType(null, preload[i], false));
+                              YetiTypeVisitor.getType(null, preload[i], false),
+                              -1);
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
@@ -1598,7 +1599,7 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx.packageName = JavaType.packageOfClass(className);
             scope.ctx.className = className;
             root.code = analyze(n, scope, 0);
-            root.type = root.code.type;
+            root.type = root.code.type.deref();
             root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
                                              java.util.Collections.EMPTY_MAP);
             root.moduleType.topDoc = parser.topDoc;

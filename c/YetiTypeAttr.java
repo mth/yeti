@@ -218,8 +218,7 @@ class YetiTypeAttr extends Attribute {
                 param.add(read());
             }
             ++p;
-            return (YType[])
-                        param.toArray(new YType[param.size()]);
+            return (YType[]) param.toArray(new YType[param.size()]);
         }
 
         YType read() {
@@ -356,11 +355,24 @@ class ModuleType {
     String topDoc;
     String name;
     boolean deprecated;
+    private YType[] free;
 
     ModuleType(YType type, Map typeDefs, Map directFields) {
         this.type = type;
         this.typeDefs = typeDefs;
         this.directFields = directFields;
+    }
+
+    YType copy(int depth) {
+        if (depth == -1)
+            return type;
+        if (free == null) {
+            List freeVars = new ArrayList();
+            YetiType.getFreeVar(freeVars, new ArrayList(), type, -1);
+            free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
+        }
+        return YetiType.copyType(type, YetiType.createFreeVars(free, depth),
+                                 new HashMap());
     }
 }
 
