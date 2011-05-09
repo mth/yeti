@@ -620,7 +620,7 @@ plus a b = a + b;
     pop a is array<'a> -> 'a =
         (a unsafely_as ~MList)#pop() unsafely_as 'a,
 
-    push a v is array<'a> -> 'a -> () =
+    push a v is array<'a> --> 'a -> () =
         (a unsafely_as ~MList)#add(v),
 
     slice a start end is array<'a> -> number -> number -> array<'a> =

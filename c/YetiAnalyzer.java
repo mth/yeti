@@ -288,11 +288,14 @@ public final class YetiAnalyzer extends YetiType {
         if (name == "|") {
             return nodeToMembers(VARIANT, node.param, free, scope, depth);
         }
-        if (name == "->") {
+        if (name == "->" || name == "-->") {
             expectsParam(node, 2);
             YType[] tp = { nodeToType(node.param[0], free, scope, depth),
                           nodeToType(node.param[1], free, scope, depth) };
-            return new YType(FUN, tp);
+            YType res = new YType(FUN, tp);
+            if (name == "-->")
+                res.flags |= FL_RESTRICTED;
+            return res;
         }
         if (name == "array") {
             expectsParam(node, 1);
@@ -1060,14 +1063,16 @@ public final class YetiAnalyzer extends YetiType {
         if (to.type != null)
             unify(fun, to.type, lambda,
                   "Function type #~ (self-binding)\n    #0");
+        int argLimit = scope.ctx.closureVarCount;
+        bind(null, to.arg.type, null, true, depth - 1, scope);
         int cvc = scope.ctx.closureVarCount;
         if (cvc > closureVarStart) {
             Map m = new java.util.IdentityHashMap(cvc - closureVarStart);
             YType va[] = scope.ctx.closureVars;
-            for (int i = closureVarStart; i < cvc; ++i) {
+            for (int i = cvc; --i >= closureVarStart; ) {
                 YType t = va[i].deref();
                 if (t.type == VAR && t.depth >= depth)
-                    m.put(t, null);
+                    m.put(t, Boolean.valueOf(i >= argLimit));
                 va[i] = null; // help gc
             }
             if (!m.isEmpty() && hasMutableStore(m, to.body.type, false)) {

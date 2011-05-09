@@ -823,7 +823,7 @@ public class YetiType implements YetiParser {
             if (result.field >= FIELD_NON_POLYMORPHIC)
                 store = true;
             YType t = result.deref();
-            if (t.type == VAR)
+            if (t.type == VAR) 
                 return store && bindVars.containsKey(t);
             if (t.type == FUN || t.type == MAP && t.param[1] != NO_TYPE)
                 store = true;
@@ -891,9 +891,11 @@ public class YetiType implements YetiParser {
                         }
                 }
         }
-        scope = new Scope(scope, name, value);
-        if (poly)
-            scope.free = (YType[]) free.toArray(new YType[free.size()]);
+        if (name != null) {
+            scope = new Scope(scope, name, value);
+            if (poly)
+                scope.free = (YType[]) free.toArray(new YType[free.size()]);
+        }
         return scope;
     }
 

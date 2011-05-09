@@ -1662,18 +1662,20 @@ interface YetiParser {
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
             }
-            if ((p = skipSpace()) + 1 >= src.length ||
-                    src[p] != '-' || src[p + 1] != '>')
+            if ((p = skipSpace()) + 1 >= src.length || src[p] != '-' ||
+                (src[p + 1] != '>' && (src[p + 1] != '-' || p + 2 >= src.length
+                                       || src[p + 2] != '>')))
                 return res;
             sline = line;
             scol = p - lineStart;
-            p += 2;
+            boolean restricted = src[p + 1] == '-';
+            p += restricted ? 3 : 2;
             TypeNode arg = readType(false);
             if (arg == null)
                 throw new CompileException(sline, scol,
                                 "Expecting return type after ->");
-            return (TypeNode) new TypeNode("->", new TypeNode[] { res, arg })
-                            .pos(sline, scol);
+            return (TypeNode) new TypeNode(restricted ? "-->" : "->",
+                                new TypeNode[] { res, arg }).pos(sline, scol);
         }
 
         Node parse(Object topLevel) {
