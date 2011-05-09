@@ -849,9 +849,8 @@ public final class YetiAnalyzer extends YetiType {
                     "Binding name expected, not a " + nameNode);
             Code code = selectMember(fields[j], (Sym) bind.expr,
                           binder.getRef(fields[j].line), scope, depth);
-            if (field.type != null) {
+            if (field.type != null)
                 isOp(field, field.type, code, scope, depth);
-            }
             BindExpr bindExpr = new BindExpr(code, false);
             scope = genericBind(bind, bindExpr, isEval, scope, depth);
             addSeq(last, bindExpr);
