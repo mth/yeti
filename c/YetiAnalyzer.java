@@ -1065,7 +1065,7 @@ public final class YetiAnalyzer extends YetiType {
             unify(fun, expected, lambda,
                   "Function type #~ (self-binding)\n    #0");
         int argLimit = scope.ctx.closureVarCount;
-        bind(null, to.arg.type, null, true, depth - 1, scope);
+        scope.ctx.restrictArg(to.arg.type, false);
         int cvc = scope.ctx.closureVarCount;
         if (cvc > closureVarStart) {
             Map m = new java.util.IdentityHashMap(cvc - closureVarStart);

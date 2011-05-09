@@ -395,6 +395,30 @@ public class YetiType implements YetiParser {
         // non-polymorphic type variables from bindings in closure
         YType closureVars[] = NO_PARAM;
         int closureVarCount;
+
+        void restrictArg(YType type, boolean active) {
+            if (type.seen)
+                return;
+            if (type.field >= FIELD_NON_POLYMORPHIC)
+                active = true; // anything under mutable field is evil
+            YType t = type.deref();
+            int tt = t.type;
+            if (tt != VAR) {
+                type.seen = true;
+                for (int i = t.param.length; --i >= 0;)
+                    // array/hash value is in mutable store and evil
+                    restrictArg(t.param[i], active || i == 0 &&
+                         (/*tt == FUN ||*/ tt == MAP && t.param[1] != NO_TYPE));
+                type.seen = false;
+            } else if (active) {
+                if (closureVars.length <= closureVarCount) {
+                    YType[] tmp = new YType[closureVars.length * 3 / 2 + 32];
+                    System.arraycopy(closureVars, 0, tmp, 0, closureVarCount);
+                    closureVars = tmp;
+                }
+                closureVars[closureVarCount++] = t;
+            }
+        }
     }
 
     static final class Scope {
@@ -818,9 +842,6 @@ public class YetiType implements YetiParser {
                 JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
-    // XXX with bindvars from argument it could be probably enough
-    // to check only arguments in returned functions. maybe this
-    // is even true for all bindvars. have to think.
     static boolean hasMutableStore(Map bindVars, YType result, boolean store) {
         if (!result.seen) {
             if (result.field >= FIELD_NON_POLYMORPHIC)
@@ -828,11 +849,12 @@ public class YetiType implements YetiParser {
             YType t = result.deref();
             if (t.type == VAR) 
                 return store && bindVars.containsKey(t);
-            if (t.type == FUN || t.type == MAP && t.param[1] != NO_TYPE)
+            if (t.type == MAP && t.param[1] != NO_TYPE)
                 store = true;
             result.seen = true;
             for (int i = t.param.length; --i >= 0;)
-                if (hasMutableStore(bindVars, t.param[i], store)) {
+                if (hasMutableStore(bindVars, t.param[i],
+                                    store || i == 0 && t.type == FUN)) {
                     result.seen = false;
                     return true;
                 }
@@ -883,12 +905,11 @@ public class YetiType implements YetiParser {
                 YType t = (YType) deny.get(i);
                 if (t.depth > depth) {
                     va[end++] = t;
-                    if (name != null)
-                        t.depth = depth;
+                    t.depth = depth;
                 }
             }
             scope.ctx.closureVarCount = end;
-            if (poly && name != null)
+            if (poly)
             walk_free:
                 for (i = free.size(); --i >= 0; ) {
                     Object tv = free.get(i);
@@ -899,11 +920,9 @@ public class YetiType implements YetiParser {
                         }
                 }
         }
-        if (name != null) {
-            scope = new Scope(scope, name, value);
-            if (poly)
-                scope.free = (YType[]) free.toArray(new YType[free.size()]);
-        }
+        scope = new Scope(scope, name, value);
+        if (poly)
+            scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
     }
 
