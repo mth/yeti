@@ -284,13 +284,13 @@ class TypeDescr extends YetiType {
         YType[] param = t.param;
         switch (type) {
             case FUN:
-                descr.name = (t.flags & FL_CLOSURE) == 0
+                descr.name = (t.flags & FL_RESTRICTED) == 0
                                 ? "Function" : "FunctionStore";
                 for (; t.type == FUN; param = t.param) {
                     (item = prepare(param[0], vars, refs)).prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
-                    if ((t.flags & FL_CLOSURE) != 0)
+                    if ((t.flags & FL_RESTRICTED) != 0)
                         break;
                 }
                 (item = prepare(t, vars, refs)).prev = descr.value;

@@ -144,7 +144,7 @@ public class YetiType implements YetiParser {
     static final int JAVA_ARRAY = 14;
 
     static final int FL_ORDERED_REQUIRED = 1;
-    static final int FL_CLOSURE = 2;
+    static final int FL_RESTRICTED = 2;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -643,9 +643,9 @@ public class YetiType implements YetiParser {
             unifyMembers(a, b);
         } else {
             // spread closure flag
-            if (((a.flags | b.flags) & FL_CLOSURE) != 0) {
-                a.flags |= FL_CLOSURE;
-                b.flags |= FL_CLOSURE;
+            if (((a.flags | b.flags) & FL_RESTRICTED) != 0) {
+                a.flags |= FL_RESTRICTED;
+                b.flags |= FL_RESTRICTED;
             }
             for (int i = 0, cnt = a.param.length; i < cnt; ++i) {
                 unify(a.param[i], b.param[i]);

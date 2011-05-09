@@ -503,7 +503,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where, fun.type, argCode.type, s, ex);
         }
         Code res = fun.apply(argCode, applyFun[1], where.line);
-        if ((funt.flags & FL_CLOSURE) == 0 && funt.type == FUN)
+        if ((funt.flags & FL_RESTRICTED) == 0 && funt.type == FUN)
             res.polymorph = true;
         return res;
     }
@@ -1072,9 +1072,9 @@ public final class YetiAnalyzer extends YetiType {
                 va[i] = null; // help gc
             }
             if (!m.isEmpty() && hasMutableStore(m, to.body.type, false)) {
-                fun.flags |= FL_CLOSURE;
+                fun.flags |= FL_RESTRICTED;
                 if (to.type != null)
-                    to.type.flags |= FL_CLOSURE;
+                    to.type.flags |= FL_RESTRICTED;
             }
         }
         scope.ctx.closureVarCount = closureVarStart;
