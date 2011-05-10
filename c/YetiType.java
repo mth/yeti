@@ -840,60 +840,74 @@ public class YetiType implements YetiParser {
             for (int i = t.param.length; --i >= 0;)
                 // array/hash value is in mutable store and evil
                 restrictArg(t.param[i], depth, active || i == 0 &&
-                     (tt == MAP && t.param[1] != NO_TYPE));
+                     tt == MAP && t.param[1].deref() != NO_TYPE);
             type.seen = false;
         } else if (active && t.depth >= depth) {
             t.flags |= FL_TAINTED_VAR;
         }
     }
 
-    static void getFreeVar(List vars, List deny, YType type, int depth) {
+    private static final int RESTRICT_PROTECT = 1;
+    private static final int RESTRICT_CONTRA  = 2;
+    static final int RESTRICT_ALL  = 4;
+    static final int RESTRICT_POLY = 8;
+
+    static void getFreeVar(List vars, List deny, YType type,
+                           int flags, int depth) {
         if (type.seen)
             return;
-        if (deny != null && type.field >= FIELD_NON_POLYMORPHIC)
-            vars = deny; // anything under mutable field is evil
+        if ((flags & RESTRICT_PROTECT) == 0 &&
+                type.field >= FIELD_NON_POLYMORPHIC)
+            flags |= RESTRICT_ALL;
         YType t = type.deref();
         int tt = t.type;
         if (tt != VAR) {
-            if (tt == FUN && deny != vars)
-                deny = null;
+            if (tt == FUN)
+                flags |= RESTRICT_PROTECT;
             type.seen = true;
             for (int i = t.param.length; --i >= 0;) {
                 // array/hash value is in mutable store and evil
-                if (i == 0 && tt == MAP && deny != null
-                        && t.param[1] != NO_TYPE)
-                    vars = deny;
-                getFreeVar(vars, deny, t.param[i], depth);
+                if (i == 0) {
+                    if (tt == FUN)
+                        flags |= RESTRICT_CONTRA;
+                    else if (tt == MAP && t.param[1].deref() != NO_TYPE)
+                        flags |= (flags & RESTRICT_PROTECT) == 0
+                            ? RESTRICT_ALL : RESTRICT_CONTRA;
+                }
+                getFreeVar(vars, deny, t.param[i], flags, depth);
             }
             type.seen = false;
         } else if (t.depth > depth) {
-            if ((t.flags & FL_TAINTED_VAR) != 0 && deny != null)
-                vars = deny;
-            if (vars == deny)
+            if ((flags & RESTRICT_ALL) != 0) {
                 t.flags |= FL_TAINTED_VAR;
+                vars = deny;
+            } else if ((flags & (RESTRICT_CONTRA | RESTRICT_POLY)) ==
+                            RESTRICT_CONTRA &&
+                       (t.flags & FL_TAINTED_VAR) != 0) {
+                vars = deny;
+            }
             if (vars.indexOf(t) < 0)
                 vars.add(t);
         }
     }
 
     static Scope bind(String name, YType valueType, Binder value,
-                      boolean poly, int depth, Scope scope) {
-        List deny = new ArrayList();
-        List free = poly ? new ArrayList() : deny;
-        getFreeVar(free, deny, valueType, depth);
+                      int flags, int depth, Scope scope) {
+        List free = new ArrayList(), deny = new ArrayList();
+        getFreeVar(free, deny, valueType, flags, depth);
         if (deny.size() != 0)
             for (int i = free.size(); --i >= 0; )
                 if (deny.indexOf(free.get(i)) >= 0)
                     free.remove(i);
         scope = new Scope(scope, name, value);
-        if (poly)
+        if ((flags & RESTRICT_ALL) == 0)
             scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
     }
 
     static Scope bindPoly(String name, YType valueType, Binder value,
                           Scope scope) {
-        return bind(name, valueType, value, true, 0, scope);
+        return bind(name, valueType, value, RESTRICT_POLY, 0, scope);
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,

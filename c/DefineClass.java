@@ -293,8 +293,8 @@ final class MethodDesc extends YetiType {
                 }
                 if (bind.name != "_") {
                     local = bind(bind.name, code.type, binder,
-                                 code.polymorph && !bind.var,
-                                 depth, local);
+                                 bind.var ? RESTRICT_ALL : code.polymorph
+                                    ? RESTRICT_POLY : 0, depth, local);
                 }
             }
         }

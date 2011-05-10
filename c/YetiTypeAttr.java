@@ -364,7 +364,8 @@ class ModuleType {
             return type;
         if (free == null) {
             List freeVars = new ArrayList();
-            YetiType.getFreeVar(freeVars, freeVars, type, -1);
+            YetiType.getFreeVar(freeVars, freeVars, type,
+                                YetiType.RESTRICT_POLY, -1);
             free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
         }
         return YetiType.copyType(type, YetiType.createFreeVars(free, depth),
