@@ -801,9 +801,15 @@ public final class YetiAnalyzer extends YetiType {
 
     static Scope genericBind(Bind bind, BindExpr binder, boolean evalSeq,
                              Scope scope, int depth) {
-        scope = bind(bind.name, binder.st.type, binder,
-                     bind.var ? RESTRICT_ALL : binder.st.polymorph
-                        ? RESTRICT_POLY : 0, depth, scope);
+        switch (binder.st.type.deref().type) {
+        case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
+            scope = bind(bind.name, binder.st.type, binder,
+                         bind.var ? RESTRICT_ALL : binder.st.polymorph
+                            ? RESTRICT_POLY : 0, depth, scope);
+            break;
+        default:
+            scope = new Scope(scope, bind.name, binder);
+        }
         if (bind.var) {
             registerVar(binder, scope.outer);
         }
