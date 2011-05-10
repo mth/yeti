@@ -89,8 +89,7 @@ class ShowTypeFun extends Fun2 {
             to.append(field.get("name")).append(variant ? " " : " is ");
             Tag fieldType = (Tag) field.get("type");
             Object tstr = showType.apply(indent_, fieldType);
-            if (variant && (fieldType.name == "Function" ||
-                            fieldType.name == "FunctionStore"))
+            if (variant && fieldType.name == "Function")
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
@@ -132,14 +131,13 @@ class ShowTypeFun extends Fun2 {
                 to.append(showType.apply(indent, i.first()));
             }
             to.append('>');
-        } else if (typeTag == "Function" || typeTag == "FunctionStore") {
+        } else if (typeTag == "Function") {
             while (i != null) {
                 Tag t = (Tag) i.first();
                 if (i != typeList)
-                    to.append(typeTag == "Function" ? " -> " : " --> ");
+                    to.append(" -> ");
                 i = i.next();
-                if (i != null &&
-                    (t.name == "Function" || t.name == "FunctionStore"))
+                if (i != null && t.name == "Function")
                     to.append('(')
                       .append(showType.apply(indent, t))
                       .append(')');
@@ -186,7 +184,7 @@ class TypeDescr extends YetiType {
         String tag = null;
         switch (type) {
         case FUN:
-            tag = name; break;
+            tag = "Function"; break;
         case MAP:
             val = YetiC.pair("params", l, "type", name);
             tag = "Parametric"; break;
@@ -244,7 +242,7 @@ class TypeDescr extends YetiType {
         String v = (String) vars.get(t);
         if (v == null) {
             // 26^7 > 2^32, should be enough ;)
-            char[] buf = new char[8];
+            char[] buf = new char[9];
             int p = buf.length;
             int n = vars.size() + 1;
             while (n > 26) {
@@ -252,6 +250,8 @@ class TypeDescr extends YetiType {
                 n /= 26;
             }
             buf[--p] = (char) (96 + n);
+            if ((t.flags & FL_TAINTED_VAR) != 0)
+                buf[--p] = '_';
             buf[--p] = (t.flags & FL_ORDERED_REQUIRED) == 0 ? '\'' : '^';
             v = new String(buf, p, buf.length - p);
             vars.put(t, v);
@@ -284,14 +284,10 @@ class TypeDescr extends YetiType {
         YType[] param = t.param;
         switch (type) {
             case FUN:
-                descr.name = (t.flags & FL_RESTRICTED) == 0
-                                ? "Function" : "FunctionStore";
                 for (; t.type == FUN; param = t.param) {
                     (item = prepare(param[0], vars, refs)).prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
-                    if (descr.name != "Function")
-                        break;
                 }
                 (item = prepare(t, vars, refs)).prev = descr.value;
                 descr.value = item;

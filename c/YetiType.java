@@ -144,10 +144,11 @@ public class YetiType implements YetiParser {
     static final int JAVA_ARRAY = 14;
     // Beware: this is used only by the YetiTypeAttr
     // to carry the FL_RESTRICTED in more compact manner.
-    static final int RESTRICTED_FUN = 15;
+    //static final int RESTRICTED_FUN = 15;
 
     static final int FL_ORDERED_REQUIRED = 1;
-    static final int FL_RESTRICTED = 2;
+    //static final int FL_RESTRICTED = 2;
+    static final int FL_TAINTED_VAR = 2;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -392,9 +393,6 @@ public class YetiType implements YetiParser {
     static final class ScopeCtx {
         String packageName;
         String className;
-        // non-polymorphic type variables from bindings in closure
-        YType closureVars[] = NO_PARAM;
-        int closureVarCount;
     }
 
     static final class Scope {
@@ -645,14 +643,8 @@ public class YetiType implements YetiParser {
         } else if (a.type == STRUCT || a.type == VARIANT) {
             unifyMembers(a, b);
         } else {
-            // spread closure flag
-            if (((a.flags | b.flags) & FL_RESTRICTED) != 0) {
-                a.flags |= FL_RESTRICTED;
-                b.flags |= FL_RESTRICTED;
-            }
-            for (int i = 0, cnt = a.param.length; i < cnt; ++i) {
+            for (int i = 0, cnt = a.param.length; i < cnt; ++i)
                 unify(a.param[i], b.param[i]);
-            }
         }
     }
 
@@ -712,7 +704,6 @@ public class YetiType implements YetiParser {
         }
         YType[] param = new YType[type.param.length];
         copy = new YType(type.type, param);
-        copy.flags = type.flags & 127;
         YType res = copy;
         if (type_.field >= FIELD_NON_POLYMORPHIC) {
             res = mutableFieldRef(type_);
@@ -849,7 +840,7 @@ public class YetiType implements YetiParser {
         YType t = type.deref();
         int tt = t.type;
         if (tt != VAR) {
-            if (tt == FUN)
+            if (tt == FUN && deny != vars)
                 deny = null;
             type.seen = true;
             for (int i = t.param.length; --i >= 0;) {
@@ -860,8 +851,13 @@ public class YetiType implements YetiParser {
                 getFreeVar(vars, deny, t.param[i], depth);
             }
             type.seen = false;
-        } else if (t.depth > depth && vars.indexOf(t) < 0) {
-            vars.add(t);
+        } else if (t.depth > depth) {
+            if ((t.flags & FL_TAINTED_VAR != 0 && deny != null)
+                vars = deny;
+            if (vars == deny)
+                t.flags |= FL_TAINTED_VAR;
+            if (vars.indexOf(t) < 0)
+                vars.add(t);
         }
     }
 
@@ -871,6 +867,9 @@ public class YetiType implements YetiParser {
         List free = poly ? new ArrayList() : deny;
         getFreeVar(free, deny, valueType, depth);
         if (deny.size() != 0) {
+            for (int i = free.size(); --i >= 0; )
+                if (deny.indexOf(free.get(i)) >= 0)
+                    free.remove(i);
             int cnt = deny.size(), from = scope.ctx.closureVarCount, i;
             YType[] va = scope.ctx.closureVars;
             if (va.length < from + cnt) {
