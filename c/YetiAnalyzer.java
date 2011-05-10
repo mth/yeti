@@ -1156,9 +1156,20 @@ public final class YetiAnalyzer extends YetiType {
                 sf.mutable = field.var;
                 codeMap.put(field.name, sf);
                 result.add(sf);
+                boolean poly = code.polymorph || lambda != null;
+                if (!poly && !field.var) {
+                    switch (code.type.deref().type) {
+                    case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
+                        List deny = new ArrayList();
+                        List vars = new ArrayList();
+                        // XXX uh. depth - 1, should it work?
+                        getFreeVar(vars, deny, code.type, 0, depth - 1);
+                        poly = deny.size() == 0 && vars.size() != 0;
+                    }
+                }
                 fields.put(field.name,
                     field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                    code.polymorph || lambda != null ? code.type
+                    poly ? code.type
                         : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
                 if (!field.noRec) {
                     Binder bind = result.bind(sf);
