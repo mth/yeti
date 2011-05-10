@@ -614,9 +614,10 @@ public class YetiType implements YetiParser {
 
     static void unifyToVar(YType var, YType from) throws TypeException {
         occursCheck(from, var);
-        if ((var.flags & FL_ORDERED_REQUIRED) != 0) {
+        if ((var.flags & FL_ORDERED_REQUIRED) != 0)
             requireOrdered(from);
-        }
+        if ((var.flags & FL_TAINTED_VAR) != 0)
+            from.flags |= FL_TAINTED_VAR;
         
         limitDepth(from, var.depth);
         var.ref = from;
