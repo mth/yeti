@@ -889,6 +889,8 @@ public class YetiType implements YetiParser {
             }
             if (vars.indexOf(t) < 0)
                 vars.add(t);
+        } else if ((flags & RESTRICT_ALL) != 0 && t.depth == depth) {
+            t.flags |= FL_TAINTED_VAR;
         }
     }
 
