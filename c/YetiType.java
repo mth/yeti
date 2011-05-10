@@ -833,14 +833,15 @@ public class YetiType implements YetiParser {
             return;
         if (type.field >= FIELD_NON_POLYMORPHIC)
             active = true; // anything under mutable field is evil
-        YType t = type.deref();
+        YType t = type.deref(), k;
         int tt = t.type;
         if (tt != VAR) {
             type.seen = true;
             for (int i = t.param.length; --i >= 0;)
                 // array/hash value is in mutable store and evil
                 restrictArg(t.param[i], depth, active || i == 0 &&
-                     tt == MAP && t.param[1].deref() != NO_TYPE);
+                        tt == MAP && (k = t.param[1].deref()) != NO_TYPE &&
+                        (k.type != VAR || t.param[2] != LIST_TYPE));
             type.seen = false;
         } else if (active && t.depth >= depth) {
             t.flags |= FL_TAINTED_VAR;
