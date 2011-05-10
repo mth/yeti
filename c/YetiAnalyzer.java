@@ -288,14 +288,11 @@ public final class YetiAnalyzer extends YetiType {
         if (name == "|") {
             return nodeToMembers(VARIANT, node.param, free, scope, depth);
         }
-        if (name == "->" || name == "-->") {
+        if (name == "->") {
             expectsParam(node, 2);
             YType[] tp = { nodeToType(node.param[0], free, scope, depth),
                           nodeToType(node.param[1], free, scope, depth) };
-            YType res = new YType(FUN, tp);
-            if (name == "-->")
-                res.flags |= FL_RESTRICTED;
-            return res;
+            return new YType(FUN, tp);
         }
         if (name == "array") {
             expectsParam(node, 1);
@@ -506,8 +503,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where, fun.type, argCode.type, s, ex);
         }
         Code res = fun.apply(argCode, applyFun[1], where.line);
-        if (fun.polymorph && (funt.flags & FL_RESTRICTED) == 0 &&
-                funt.type == FUN)
+        if (fun.polymorph)
             res.polymorph = true;
         return res;
     }
@@ -1018,7 +1014,7 @@ public final class YetiAnalyzer extends YetiType {
         Scope bodyScope = null;
         SeqExpr[] seq = null;
         Node arg = lambda.expr[0];
-        int closureVarStart = scope.ctx.closureVarCount;
+
         if (arg instanceof Sym) {
             if (expected != null && expected.type == FUN)
                 to.arg.type = expected.param[0];
@@ -1033,7 +1029,6 @@ public final class YetiAnalyzer extends YetiType {
             to.arg.type = new YType(depth);
             seq = new SeqExpr[] { null, null };
             bodyScope = bindStruct(to, (XNode) arg, false, scope, depth, seq);
-            scope.ctx.closureVarCount = closureVarStart; // reset
         } else {
             throw new CompileException(arg, "Bad argument: " + arg);
         }
@@ -1064,25 +1059,8 @@ public final class YetiAnalyzer extends YetiType {
         if (expected != null)
             unify(fun, expected, lambda,
                   "Function type #~ (self-binding)\n    #0");
-        int argLimit = scope.ctx.closureVarCount;
-        bind(null, to.arg.type, null, true, depth - 1, scope);
-        int cvc = scope.ctx.closureVarCount;
-        if (cvc > closureVarStart) {
-            Map m = new java.util.IdentityHashMap(cvc - closureVarStart);
-            YType va[] = scope.ctx.closureVars;
-            for (int i = cvc; --i >= closureVarStart; ) {
-                YType t = va[i].deref();
-                if (t.type == VAR && t.depth >= depth)
-                    m.put(t, i < argLimit ? Boolean.FALSE : Boolean.TRUE);
-                va[i] = null; // help gc
-            }
-            if (!m.isEmpty() && hasMutableStore(m, to.body.type, false)) {
-                fun.flags |= FL_RESTRICTED;
-                if (to.type != null)
-                    to.type.deref().flags |= FL_RESTRICTED;
-            }
-        }
-        scope.ctx.closureVarCount = closureVarStart;
+
+        restrictArg(to.arg.type, depth, false);
 
         to.type = fun;
         to.bindName = lambda.expr.length > 2 ? lambda.expr[2].sym() : null;

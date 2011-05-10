@@ -41,7 +41,7 @@ import java.io.InputStream;
  * 00 - format identifier
  * Follows type description
  * 00 XX XX - free type variable XXXX
- * XX, where XX is 00..08 -
+ * XX, where XX is 01..08 -
  *      primitives (same as YType.type UNIT - MAP_MARKER)
  * 09 x.. y.. - Function x -> y
  * 0A e.. i.. t.. - MAP<e,i,t>
@@ -49,6 +49,9 @@ import java.io.InputStream;
  * 0C <partialMembers...> FF <finalMembers...> FF - Variant
  * 0D XX XX <param...> FF - java type
  * 0E e.. FF - java array e[]
+ * FB XX XX - non-free type variable XXXX
+ * FC ... - mutable field type
+ * FD ... - the following type variable is ORDERED
  * FE XX XX - reference to non-primitive type
  * Follows list of type definitions
  *  <typeDef name
@@ -65,6 +68,7 @@ class YetiTypeAttr extends Attribute {
     static final byte REF = -2;
     static final byte ORDERED = -3;
     static final byte MUTABLE = -4;
+    static final byte TAINTED = -5;
 
     ModuleType moduleType;
     private ByteVector encoded;
@@ -85,9 +89,8 @@ class YetiTypeAttr extends Attribute {
                 for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
                     Map.Entry e = (Map.Entry) i.next();
                     YType t = (YType) e.getValue();
-                    if (t.field == YetiType.FIELD_MUTABLE) {
+                    if (t.field == YetiType.FIELD_MUTABLE)
                         buf.putByte(MUTABLE);
-                    }
                     write(t);
                     int name = cw.newUTF8((String) e.getKey());
                     buf.putShort(name);
@@ -109,14 +112,13 @@ class YetiTypeAttr extends Attribute {
                 Integer id = (Integer) vars.get(type);
                 if (id == null) {
                     vars.put(type, id = new Integer(vars.size()));
-                    if (id.intValue() > 0x7fff) {
+                    if (id.intValue() > 0x7fff)
                         throw new RuntimeException("Too many type parameters");
-                    }
-                    if ((type.flags & YetiType.FL_ORDERED_REQUIRED) != 0) {
+                    if ((type.flags & YetiType.FL_ORDERED_REQUIRED) != 0)
                         buf.putByte(ORDERED);
-                    }
                 }
-                buf.putByte(YetiType.VAR);
+                buf.putByte((type.flags & YetiType.FL_TAINTED_VAR) == 0
+                                ? YetiType.VAR : TAINTED);
                 buf.putShort(id.intValue());
                 return;
             }
@@ -136,15 +138,11 @@ class YetiTypeAttr extends Attribute {
                 return;
             }
             refs.put(type, new Integer(refs.size()));
+            buf.putByte(type.type);
             if (type.type == YetiType.FUN) {
-                buf.putByte((type.flags & YetiType.FL_RESTRICTED) != 0
-                                ? YetiType.RESTRICTED_FUN : YetiType.FUN);
                 write(type.param[0]);
                 write(type.param[1]);
-                return;
-            }
-            buf.putByte(type.type);
-            if (type.type == YetiType.MAP) {
+            } else if (type.type == YetiType.MAP) {
                 writeArray(type.param);
             } else if (type.type == YetiType.STRUCT ||
                        type.type == YetiType.VARIANT) {
@@ -229,12 +227,14 @@ class YetiTypeAttr extends Attribute {
                 throw new RuntimeException("Invalid type description");
             }
             switch (tv = in[p++]) {
-            case YetiType.VAR: {
+            case YetiType.VAR:
+            case TAINTED: {
                 Integer var = new Integer(cr.readUnsignedShort(p));
                 p += 2;
-                if ((t = (YType) vars.get(var)) == null) {
+                if ((t = (YType) vars.get(var)) == null)
                     vars.put(var, t = new YType(1));
-                }
+                if (tv == TAINTED)
+                    t.flags |= YetiType.FL_TAINTED_VAR;
                 return t;
             }
             case ORDERED:
@@ -258,10 +258,6 @@ class YetiTypeAttr extends Attribute {
             }
             t = new YType(tv, null);
             refs.add(t);
-            if (tv == YetiType.RESTRICTED_FUN) {
-                t.type = YetiType.FUN;
-                t.flags |= YetiType.FL_RESTRICTED;
-            }
             if (t.type == YetiType.FUN) {
                 t.param = new YType[2];
                 t.param[0] = read();
@@ -368,7 +364,7 @@ class ModuleType {
             return type;
         if (free == null) {
             List freeVars = new ArrayList();
-            YetiType.getFreeVar(freeVars, new ArrayList(), type, -1);
+            YetiType.getFreeVar(freeVars, freeVars, type, -1);
             free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
         }
         return YetiType.copyType(type, YetiType.createFreeVars(free, depth),

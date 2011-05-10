@@ -142,12 +142,8 @@ public class YetiType implements YetiParser {
     static final int VARIANT = 12;
     static final int JAVA = 13;
     static final int JAVA_ARRAY = 14;
-    // Beware: this is used only by the YetiTypeAttr
-    // to carry the FL_RESTRICTED in more compact manner.
-    //static final int RESTRICTED_FUN = 15;
 
     static final int FL_ORDERED_REQUIRED = 1;
-    //static final int FL_RESTRICTED = 2;
     static final int FL_TAINTED_VAR = 2;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
@@ -809,9 +805,6 @@ public class YetiType implements YetiParser {
                 JavaType.typeOfClass(scope.ctx.packageName, name) : t;
     }
 
-    // XXX with bindvars from argument it could be probably enough
-    // to check only arguments in returned functions. maybe this
-    // is even true for all bindvars. have to think.
     static boolean hasMutableStore(Map bindVars, YType result, boolean store) {
         if (!result.seen) {
             if (result.field >= FIELD_NON_POLYMORPHIC)
@@ -819,17 +812,38 @@ public class YetiType implements YetiParser {
             YType t = result.deref();
             if (t.type == VAR) 
                 return store && bindVars.containsKey(t);
-            if (t.type == FUN || t.type == MAP && t.param[1] != NO_TYPE)
+            if (t.type == MAP && t.param[1] != NO_TYPE)
                 store = true;
             result.seen = true;
             for (int i = t.param.length; --i >= 0;)
-                if (hasMutableStore(bindVars, t.param[i], store)) {
+                if (hasMutableStore(bindVars, t.param[i],
+                                    store || i == 0 && t.type == FUN)) {
                     result.seen = false;
                     return true;
                 }
             result.seen = false;
         }
         return false;
+    }
+
+    // difference from getFreeVar is that functions don't protect
+    static void restrictArg(YType type, int depth, boolean active) {
+        if (type.seen)
+            return;
+        if (type.field >= FIELD_NON_POLYMORPHIC)
+            active = true; // anything under mutable field is evil
+        YType t = type.deref();
+        int tt = t.type;
+        if (tt != VAR) {
+            type.seen = true;
+            for (int i = t.param.length; --i >= 0;)
+                // array/hash value is in mutable store and evil
+                restrictArg(t.param[i], depth, active || i == 0 &&
+                     (tt == MAP && t.param[1] != NO_TYPE));
+            type.seen = false;
+        } else if (active && t.depth == depth) {
+            t.flags |= FL_TAINTED_VAR;
+        }
     }
 
     static void getFreeVar(List vars, List deny, YType type, int depth) {
@@ -852,7 +866,7 @@ public class YetiType implements YetiParser {
             }
             type.seen = false;
         } else if (t.depth > depth) {
-            if ((t.flags & FL_TAINTED_VAR != 0 && deny != null)
+            if ((t.flags & FL_TAINTED_VAR) != 0 && deny != null)
                 vars = deny;
             if (vars == deny)
                 t.flags |= FL_TAINTED_VAR;
@@ -866,43 +880,13 @@ public class YetiType implements YetiParser {
         List deny = new ArrayList();
         List free = poly ? new ArrayList() : deny;
         getFreeVar(free, deny, valueType, depth);
-        if (deny.size() != 0) {
+        if (deny.size() != 0)
             for (int i = free.size(); --i >= 0; )
                 if (deny.indexOf(free.get(i)) >= 0)
                     free.remove(i);
-            int cnt = deny.size(), from = scope.ctx.closureVarCount, i;
-            YType[] va = scope.ctx.closureVars;
-            if (va.length < from + cnt) {
-                YType[] tmp = new YType[(va.length + 32) * 2];
-                System.arraycopy(va, 0, tmp, 0, from);
-                scope.ctx.closureVars = va = tmp;
-            }
-            int end = from;
-            for (i = 0; i < cnt; ++i) {
-                YType t = (YType) deny.get(i);
-                if (t.depth > depth) {
-                    va[end++] = t;
-                    if (name != null)
-                        t.depth = depth;
-                }
-            }
-            scope.ctx.closureVarCount = end;
-            if (poly && name != null)
-            walk_free:
-                for (i = free.size(); --i >= 0; ) {
-                    Object tv = free.get(i);
-                    for (int j = from; j < end; ++j)
-                        if (va[j] == tv) {
-                            free.remove(i);
-                            continue walk_free;
-                        }
-                }
-        }
-        if (name != null) {
-            scope = new Scope(scope, name, value);
-            if (poly)
-                scope.free = (YType[]) free.toArray(new YType[free.size()]);
-        }
+        scope = new Scope(scope, name, value);
+        if (poly)
+            scope.free = (YType[]) free.toArray(new YType[free.size()]);
         return scope;
     }
 
@@ -912,7 +896,7 @@ public class YetiType implements YetiParser {
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
-                               int depth, Node where) {
+                                int depth, Node where) {
         for (; scope != null; scope = scope.outer) {
             if (scope.typeDef != null && scope.name == name) {
                 if (scope.typeDef.length - 1 != param.length) {
