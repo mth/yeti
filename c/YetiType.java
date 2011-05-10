@@ -841,7 +841,7 @@ public class YetiType implements YetiParser {
                 restrictArg(t.param[i], depth, active || i == 0 &&
                      (tt == MAP && t.param[1] != NO_TYPE));
             type.seen = false;
-        } else if (active && t.depth == depth) {
+        } else if (active && t.depth >= depth) {
             t.flags |= FL_TAINTED_VAR;
         }
     }
