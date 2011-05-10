@@ -837,11 +837,13 @@ public class YetiType implements YetiParser {
         int tt = t.type;
         if (tt != VAR) {
             type.seen = true;
-            for (int i = t.param.length; --i >= 0;)
+            for (int i = t.param.length; --i >= 0;) {
+                if (i == 1 && !active)
+                    active = tt == MAP && (k = t.param[1].deref()) != NO_TYPE
+                        && (k.type != VAR || t.param[2] != LIST_TYPE);
                 // array/hash value is in mutable store and evil
-                restrictArg(t.param[i], depth, active || i == 0 &&
-                        tt == MAP && (k = t.param[1].deref()) != NO_TYPE &&
-                        (k.type != VAR || t.param[2] != LIST_TYPE));
+                restrictArg(t.param[i], depth, active);
+            }
             type.seen = false;
         } else if (active && t.depth >= depth) {
             t.flags |= FL_TAINTED_VAR;
@@ -868,13 +870,11 @@ public class YetiType implements YetiParser {
             type.seen = true;
             for (int i = t.param.length; --i >= 0;) {
                 // array/hash value is in mutable store and evil
-                if (i == 0) {
-                    if (tt == FUN)
-                        flags |= RESTRICT_CONTRA;
-                    else if (tt == MAP && t.param[1].deref() != NO_TYPE)
-                        flags |= (flags & RESTRICT_PROTECT) == 0
-                            ? RESTRICT_ALL : RESTRICT_CONTRA;
-                }
+                if (i == 0 && tt == FUN)
+                    flags |= RESTRICT_CONTRA;
+                else if (i == 1 && tt == MAP && t.param[1].deref() != NO_TYPE)
+                    flags |= (flags & RESTRICT_PROTECT) == 0
+                        ? RESTRICT_ALL : RESTRICT_CONTRA;
                 getFreeVar(vars, deny, t.param[i], flags, depth);
             }
             type.seen = false;
