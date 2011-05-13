@@ -1607,9 +1607,9 @@ public final class YetiAnalyzer extends YetiType {
             root.isModule = parser.isModule;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
-                getFreeVar(free, deny, root.type, RESTRICT_POLY, -1);
-                if (!deny.isEmpty() ||
-                    !free.isEmpty() && !root.code.polymorph) {
+                getFreeVar(free, deny, root.type,
+                           root.code.polymorph ? RESTRICT_POLY : 0, -1);
+                if (!deny.isEmpty()) {
                     System.err.println(root.code.type);
                     throw new CompileException(n,
                         "Module type is not fully defined");
