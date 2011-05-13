@@ -258,8 +258,11 @@ final class CompileCtx implements Opcodes {
                 sources[yetiCount++] = sources[i];
             }
         String mainClass = null;
-        for (i = 0; i < yetiCount; ++i)
-            mainClass = compile(sources[i], flags);
+        for (i = 0; i < yetiCount; ++i) {
+            String className = compile(sources[i], flags);
+            if (!types.containsKey(className))
+                mainClass = className;
+        }
         if (java != null) {
             javaArg = (String[]) java.toArray(new String[javaArg.length]);
             Class javac = null;
@@ -290,7 +293,7 @@ final class CompileCtx implements Opcodes {
                 throw new CompileException(null,
                             "Error while compiling Java sources");
         }
-        return mainClass;
+        return yetiCount != 0 ? mainClass : "";
     }
 
     String compile(String sourceName, int flags) throws Exception {
