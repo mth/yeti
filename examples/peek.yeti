@@ -12,6 +12,8 @@ showObj descr =
         field name =
             "\(name) = \(showObj (st.value name))";
         "struct {\(strJoin ", " (map field st.fields))}";
+    Variant st:
+        "\(st.tag) (\(st.value))";
     Hash h:
         item key value =
             "\(showObj key): \(showObj value)";
@@ -22,7 +24,7 @@ showObj descr =
 
 println (showObj (peekObject {
     foo = 12,
-    bar = "sheep",
+    bar = Some "sheep",
     baz = [37..42],
     tar = ["doh": 33, "wtf": 12],
     etc = new java.util.Date(),
