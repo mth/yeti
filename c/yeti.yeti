@@ -31,14 +31,15 @@ import java.io.File;
 load yeti.lang.compiler.eval;
 load yeti.lang.compiler.showtype;
 
-var eval = false;
+var eval = undef_str;
 var exec = true;
-var src = "";
 var compileErrorTrace = false;
 var types = array [];
 var printType = false;
 var sandbox = false;
 var out = System#err;
+var doc_dir = undef_str;
+var doc_script = '';
 
 srcs = array [];
 argv = array _argv;
@@ -57,8 +58,7 @@ repl eval =
         print (eval line).str;
         repl eval
     else
-        println "";
-        sysExit 0
+        println ""
     fi);
 
 help () =
@@ -75,9 +75,14 @@ help () =
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
+storeDoc to {type, name, doc} =
+    writeFile "\(to)/\(name).txt" 'utf-8' do f:
+        f.writeln (showType [CommentDoc ()] '' type)
+    done;
+
 splitPath = strSplit File#pathSeparator;
 
-not (eval or empty? argv) and (not exec or empty? srcs) loop
+not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
    (arg = shift argv;
     if arg `strStarts?` '-' then
         case arg of
@@ -89,8 +94,7 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             push options (To if target != '' then "\(target)/" else '' fi);
             exec := false;
         "-e":
-            eval := true;
-            src := shift argv;
+            eval := shift argv;
         "-cp":
             push options (ClassPath (splitPath (shift argv)));
         "-preload":
@@ -102,6 +106,10 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             printType := true;
             exec := false;
             push compileOptions (Type (push types));
+        "-doc":
+            push compileOptions (Type (storeDoc (shift argv)));
+        "-doc-format":
+            doc_script := shift argv;
         "-javaver":
             ver = shift argv;
             for ['-source', ver, '-target', ver]
@@ -117,9 +125,8 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
             done;
         "-safe-eval":
             push evalOptions (GlobalSandbox ());
-            eval := true;
             sandbox := true;
-            src := shift argv;
+            eval := shift argv;
             out := System#out;
         "-compile-error-trace":
             compileErrorTrace := true;
@@ -138,15 +145,6 @@ not (eval or empty? argv) and (not exec or empty? srcs) loop
     else
         push srcs arg
     fi);
-
-if empty? srcs and not eval then
-    if exec and empty? argv then
-        println "Yeti REPL.\n";
-        push evalOptions (Bind ());
-        repl (evaluateYetiCode options evalOptions)
-    fi;
-    sysExit 0
-fi;
 
 scan src local dirs to =
    (var ok = true;
@@ -171,8 +169,6 @@ scan src local dirs to =
     fi;
     ok);
 
-push options (Warn printMessage);
-
 printException ex is ~java.lang.Throwable -> () =
    (if sandbox and ex instanceof java.lang.StackOverflowError then
         out#println("Stack overflow")
@@ -183,11 +179,13 @@ printException ex is ~java.lang.Throwable -> () =
     fi;
     sysExit 2);
 
-if eval then
+push options (Warn printMessage);
+
+if defined? eval then
     if printType then
         push evalOptions (NoExec ());
     fi;
-    {type, result} = evaluateYetiCode options evalOptions src;
+    {type, result} = evaluateYetiCode options evalOptions eval;
     case result of
     Exception ex:
         printException ex;
@@ -201,6 +199,13 @@ if eval then
             println val
         fi
     esac
+elif empty? srcs then
+    if exec and empty? argv then
+        _ = pop options; // no Warn
+        println "Yeti REPL.\n";
+        push evalOptions (Bind ());
+        repl (evaluateYetiCode options evalOptions)
+    fi
 else
     if exec then
         push compileOptions (Exec argv)
