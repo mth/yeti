@@ -106,6 +106,7 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             exec := false;
             push compileOptions (Type (push types));
         "-doc":
+            exec := false;
             push compileOptions (Type (storeDoc (shift argv)));
         "-doc-format":
             doc_script := shift argv;
