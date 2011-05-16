@@ -228,16 +228,15 @@ else
     catch java.lang.Throwable ex:
         printException ex
     yrt;
-    for types do {type, name, doc}:
-        if defined? doc_dir then
-            writeFile "\(doc_dir)/\(name).txt" 'utf-8' do f:
-                f.writeln (showType [CommentDoc ()] '' type)
-            done
-        else
-            if doc != "" then
-                println "/*\n\(doc)\n*/"
-            fi;
-            println "module \(name);\n\(showType [CommentDoc ()] '' type)"
-        fi
-    done
+    if not empty? types then
+        ctx = evaluateYetiCode [ICast ()];
+        case ctx [Bind (), Exec (array [doc_dir])]
+                 ((inputHandle classOf YetiEval#getClassLoader()
+                                #getResourceAsStream('doc.yeti')
+                               'UTF-8').contents ()) of
+        {result = Result obj}:
+            for types (obj is ~Object unsafely_as 'a);
+        ...
+        esac
+    fi
 fi

@@ -1,0 +1,16 @@
+load yeti.lang.compiler.showtype;
+
+doc_dir = _argv.[0];
+
+do {type, name, doc}:
+    if defined? doc_dir then
+        writeFile "\(doc_dir)/\(name).txt" 'utf-8' do f:
+            f.writeln (showType [CommentDoc ()] '' type)
+        done
+    else
+        if doc != "" then
+            println "/*\n\(doc)\n*/"
+        fi;
+        println "module \(name);\n\(showType [CommentDoc ()] '' type)"
+    fi
+done

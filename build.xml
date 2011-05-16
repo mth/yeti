@@ -84,6 +84,7 @@
             <path location="${basedir}/.build/modules"/>
         </classpath>
     </yetic>
+    <copy file="${basedir}/util/doc.yeti" todir="${basedir}/.build/compiler"/>
 </target>
 
 <target name="jar" depends="compiler,modules,yeti">
