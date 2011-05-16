@@ -38,6 +38,7 @@ var types = array [];
 var printType = false;
 var sandbox = false;
 var out = System#err;
+var doc_dir = undef_str;
 var doc_script = '';
 
 srcs = array [];
@@ -74,11 +75,6 @@ help () =
       "  -type            Print type signature of given expression or module\n";
     sysExit 0);
 
-storeDoc to {type, name, doc} =
-    writeFile "\(to)/\(name).txt" 'utf-8' do f:
-        f.writeln (showType [CommentDoc ()] '' type)
-    done;
-
 splitPath = strSplit File#pathSeparator;
 
 not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
@@ -106,8 +102,9 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             exec := false;
             push compileOptions (Type (push types));
         "-doc":
+            doc_dir := shift argv;
             exec := false;
-            push compileOptions (Type (storeDoc (shift argv)));
+            push compileOptions (Type (push types));
         "-doc-format":
             doc_script := shift argv;
         "-javaver":
@@ -232,9 +229,15 @@ else
         printException ex
     yrt;
     for types do {type, name, doc}:
-        if doc != "" then
-            println "/*\n\(doc)\n*/"
-        fi;
-        println "module \(name);\n\(showType [CommentDoc ()] '' type)"
+        if defined? doc_dir then
+            writeFile "\(doc_dir)/\(name).txt" 'utf-8' do f:
+                f.writeln (showType [CommentDoc ()] '' type)
+            done
+        else
+            if doc != "" then
+                println "/*\n\(doc)\n*/"
+            fi;
+            println "module \(name);\n\(showType [CommentDoc ()] '' type)"
+        fi
     done
 fi
