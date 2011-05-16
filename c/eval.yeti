@@ -222,7 +222,7 @@ evaluateYetiCode genericOpt =
         var sandbox = false;
         var argv = array [];
         {ctx, warn} = createCtx new YetiC() genericOpt;
-        ctx#flags := YetiC#CF_EVAL + YetiC#CF_EVAL_RESOLVE;
+        ctx#flags := ctx#flags b_or YetiC#CF_EVAL b_or YetiC#CF_EVAL_RESOLVE;
 
         for options do opt:
             case opt of
