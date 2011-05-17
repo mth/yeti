@@ -61,19 +61,18 @@ repl eval =
         println ""
     fi);
 
-help () =
-   (println "yeti -flags... files\n\n\
-      "  -h               Print this help\n\
-      "  -e expr          Evaluate expr and print result\n\
-      "  -d directory     Compile and store the generated class files\n\
-      "                   in the given directory\n\
-      "  -cp path         Give classpath\n\
-      "  -preload modules Preload modules (: separated list)\n\
-      "  -icast           Generate superfluous casts for broken JVMs\n\
-      "  -javaver version Forces specified Java version when compiling Java\n\
-      "  -j option        Option for Javac (used when compiling Java sources)\n\
-      "  -type            Print type signature of given expression or module\n";
-    sysExit 0);
+help =
+    "yeti -flags... files\n\n\
+    "  -h               Print this help\n\
+    "  -e expr          Evaluate expr and print result\n\
+    "  -d directory     Compile and store the generated class files\n\
+    "                   in the given directory\n\
+    "  -cp path         Give classpath\n\
+    "  -preload modules Preload modules (: separated list)\n\
+    "  -icast           Generate superfluous casts for broken JVMs\n\
+    "  -javaver version Forces specified Java version when compiling Java\n\
+    "  -j option        Option for Javac (used when compiling Java sources)\n\
+    "  -type            Print type signature of given expression or module\n";
 
 splitPath = strSplit File#pathSeparator;
 
@@ -94,9 +93,6 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             push options (ClassPath (splitPath (shift argv)));
         "-preload":
             push options (Preload (splitPath (shift argv)));
-        "-h": help ();
-        "-help": help ();
-        "--help": help ();
         "-type":
             printType := true;
             exec := false;
@@ -136,8 +132,16 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
         "-no-frames":
             push options (NoFrames ());
         _:
-            println "Unexpected option: \(arg)";
-            sysExit 1;
+            case arg of
+            "-h": ();
+            "-help": ();
+            "--help": ();
+            _:
+                println "Unexpected option: \(arg)";
+                sysExit 1;
+            esac;
+            println help;
+            sysExit 0
         esac
     else
         push srcs arg
