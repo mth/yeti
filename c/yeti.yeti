@@ -236,7 +236,8 @@ else
                                'UTF-8').contents ()) of
         {result = Result obj}:
             for types (obj is ~Object unsafely_as 'a);
-        ...
+        {str}:
+            println str
         esac
     fi
 fi
