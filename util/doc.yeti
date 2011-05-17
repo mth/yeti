@@ -2,10 +2,26 @@ load yeti.lang.compiler.showtype;
 
 doc_dir = _argv.[0];
 
+(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
+
+html_page name doc descr = """<html>
+<head><title>Module \(name@)</title></head>
+<body>
+<h1>\(name@)</h1>
+\(substAll "\n[ \\t]*\n" "\n<p>" (doc@))
+<div class="type">
+\(descr)
+</div>
+</body>
+</html>""";
+
 do {type, name, doc}:
     if defined? doc_dir then
-        writeFile "\(doc_dir)/\(name).txt" 'utf-8' do f:
-            f.writeln (showType [CommentDoc ()] '' type)
+        descr = showType [CommentDoc ()] '' type;
+        descr = strReplace "\n" "<br>\n" descr;
+        page = html_page name doc descr;
+        writeFile "\(doc_dir)/\(name).html" 'utf-8' do f:
+            f.writeln page
         done
     else
         if doc != "" then

@@ -230,7 +230,7 @@ else
     yrt;
     if not empty? types then
         ctx = evaluateYetiCode [ICast ()];
-        case ctx [Bind (), Exec (array [doc_dir])]
+        case ctx [Bind (), Source 'doc.yeti', Exec (array [doc_dir])]
                  ((inputHandle classOf YetiEval#getClassLoader()
                                 #getResourceAsStream('doc.yeti')
                                'UTF-8').contents ()) of

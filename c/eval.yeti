@@ -221,6 +221,7 @@ evaluateYetiCode genericOpt =
         var bind = false;
         var sandbox = false;
         var argv = array [];
+        var sourceName = undef_str;
         {ctx, warn} = createCtx new YetiC() genericOpt;
         ctx#flags := ctx#flags b_or YetiC#CF_EVAL b_or YetiC#CF_EVAL_RESOLVE;
 
@@ -241,6 +242,9 @@ evaluateYetiCode genericOpt =
             /// Create global sandbox before execution.
             /// Unfortunately, you can't disable it later.
             GlobalSandbox (): sandbox := true;
+
+            /// Source "filename"
+            Source name: sourceName := name;
             esac;
         done;
 
@@ -261,8 +265,8 @@ evaluateYetiCode genericOpt =
             try
                 compileErr =
                     try
-                        t = ctx#compile((), mainClass, code is string,
-                                        ctx#flags);
+                        t = ctx#compile(sourceName, mainClass,
+                                        code is string, ctx#flags);
                         type := TypeDescr#yetiType(t) unsafely_as type;
                         () as ~CompileException
                     catch CompileException ex:

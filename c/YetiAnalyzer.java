@@ -36,6 +36,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
+import yeti.lang.Num;
+import yeti.lang.FloatNum;
+import yeti.lang.IntNum;
 
 public final class YetiAnalyzer extends YetiType {
     static final class TopLevel {
@@ -410,8 +413,8 @@ public final class YetiAnalyzer extends YetiType {
                 Number n = (Number) f.constValue;
                 return new NumericConstant(
                         n instanceof Double || n instanceof Float
-                        ? new yeti.lang.FloatNum(n.doubleValue())
-                        : (yeti.lang.Num) new yeti.lang.IntNum(n.longValue()));
+                        ? new FloatNum(n.doubleValue())
+                        : (Num) new IntNum(n.longValue()));
             }
             return new ClassField(obj, f, ref.line);
         }

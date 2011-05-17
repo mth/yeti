@@ -54,8 +54,13 @@
     <mkdir dir="${basedir}/.build/compiler"/>
     <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
-           classpath="${asm}:${basedir}/.build/lib:${ant.home}/lib/ant.jar"
-           includeantruntime="true"/>
+           includeantruntime="true">
+        <classpath>
+            <path location="${asm}"/>
+            <path location="${basedir}/.build/lib"/>
+            <path location="${ant.home}/lib/ant.jar"/>
+        </classpath>
+    </javac>
 </target>
 
 <target name="taskdef">
