@@ -367,7 +367,7 @@ interface YetiParser {
                     buf.append(' ');
                 buf.append(param[i]);
             }
-            return buf.append(") ").append(type.str()).toString();
+            return buf.append(") ").append(type.str()).append(')').toString();
         }
     }
 
