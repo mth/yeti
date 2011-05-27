@@ -114,8 +114,8 @@ interface YetiParser {
 
         String str() {
             if (expr == null)
-                return "@".concat(kind);
-            StringBuffer buf = new StringBuffer("(@");
+                return "`".concat(kind);
+            StringBuffer buf = new StringBuffer("(`");
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
                 buf.append(' ');
@@ -230,18 +230,18 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer s = new StringBuffer("(@let ");
+            StringBuffer s = new StringBuffer("(`let ");
             if (doc != null) {
                 s.append("/**");
                 s.append(doc);
                 s.append(" */ ");
             }
             if (noRec)
-                s.append("@norec ");
+                s.append("`norec ");
             if (property)
-                s.append(var ? "@set " : "@get ");
+                s.append(var ? "`set " : "`get ");
             else if (var)
-                s.append("@var ");
+                s.append("`var ");
             s.append(name);
             s.append(' ');
             s.append(expr.str());
@@ -262,17 +262,9 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer res = new StringBuffer();
-            res.append('(');
-            if (st == null) {
-                res.append(':');
-            } else {
-                for (int i = 0; i < st.length; ++i) {
-                    if (i != 0) {
-                        res.append(", ");
-                    }
-                    res.append(st[i].str());
-                }
+            StringBuffer res = new StringBuffer("(`begin");
+            for (int i = 0; st != null && i < st.length; ++i) {
+                res.append(' ').append(st[i].str());
             }
             res.append(')');
             return res.toString();
@@ -349,8 +341,16 @@ interface YetiParser {
         }
 
         String str() {
-            return '(' + (left == null ? "<>" : left.str()) + ' ' + op + ' '
-                       + (right == null ? "<>" : right.str()) + ')';
+            StringBuffer s = new StringBuffer().append('(');
+            if (left == null)
+                s.append("`flip ");
+            if (op != "")
+                s.append(op).append(' ');
+            if (left != null)
+                s.append(left.str()).append(' ');
+            if (right != null)
+                s.append(right.str());
+            return s.append(')').toString();
         }
     }
 
@@ -360,20 +360,14 @@ interface YetiParser {
         TypeNode type;
 
         String str() {
-            StringBuffer buf = new StringBuffer("type ");
-            buf.append(name);
-            if (param.length > 0) {
-                buf.append('<');
-                for (int i = 0; i < param.length; ++i) {
-                    if (i != 0)
-                        buf.append(", ");
-                    buf.append(param[i]);
-                }
-                buf.append('>');
+            StringBuffer buf =
+                new StringBuffer("(`typedef ").append(name).append(" (");
+            for (int i = 0; i < param.length; ++i) {
+                if (i != 0)
+                    buf.append(' ');
+                buf.append(param[i]);
             }
-            buf.append(" = ");
-            buf.append(type.str());
-            return buf.toString();
+            return buf.append(") ").append(type.str()).toString();
         }
     }
 
@@ -387,8 +381,8 @@ interface YetiParser {
         }
 
         String str() {
-            return (right == null ? "<>" : right.str())
-                        + ' ' + op + ' ' + type.str();
+            return "(`" + op + ' ' + (right == null ? "()" : right.str())
+                    + ' ' + type.str() + ')';
         }
     }
 
