@@ -345,7 +345,7 @@ interface YetiParser {
             if (left == null)
                 s.append("`flip ");
             if (op != "")
-                s.append(op).append(' ');
+                s.append(op == FIELD_OP ? "`." : op).append(' ');
             if (left != null)
                 s.append(left.str()).append(' ');
             if (right != null)
