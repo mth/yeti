@@ -468,8 +468,11 @@ plus a b = a + b;
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
     /// Replaces occurences of needle in the haystack with replacement
-    strReplace needle replacement haystack =
-        Core#replace(needle, replacement, haystack),
+    strReplace needle replacement haystack
+            is string -> string -> string -> string =
+        Core#replace(needle unsafely_as ~String,
+                     replacement unsafely_as ~String,
+                     haystack unsafely_as ~String),
 
     /// String length
     norec strLength s = strLength s,

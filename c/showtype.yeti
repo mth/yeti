@@ -23,7 +23,7 @@ typedef showType_fun = string -> type -> string
 typedef showType_param =
     ShowType showType_fun |
     Indent string |
-    FormatDoc (string -> string) |
+    FormatDoc (string -> string -> string) |
     CommentDoc ()
 
 {
@@ -38,7 +38,7 @@ typedef showType_param =
                 fun#showType := f is showType_fun unsafely_as ~yeti.lang.Fun;
             FormatDoc f:
                 fun#formatDoc :=
-                    f is string -> string unsafely_as ~yeti.lang.Fun;
+                    f is string -> string -> string unsafely_as ~yeti.lang.Fun;
             CommentDoc _:
                 fun#formatDoc := fun as ~yeti.lang.Fun; // magic
             esac
