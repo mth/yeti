@@ -24,7 +24,7 @@ html_page name doc descr = """<html><style type="text/css">
           margin-top: 2pt;
           margin-bottom: -3pt;*/
           display: inline-table }
-.variant { background: #bbbbff }
+.variant { background: #c7c7ff }
 .doc { background: white }
 </style><title>Module \(name@)</title>
 <body>
