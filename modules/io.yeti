@@ -42,6 +42,7 @@ readerHandle reader is ~BufferedReader -> 'a =
         read num =
             Core#read(reader, num),
 
+        /// Read a line from the stream.
         readln () =
             synchronized reader do:
                 if used then
@@ -51,6 +52,7 @@ readerHandle reader is ~BufferedReader -> 'a =
                 fi
             done,
 
+        /// Read a full contents of the stream.
         contents () =
             synchronized reader do:
                 if used then

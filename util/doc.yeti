@@ -4,9 +4,31 @@ doc_dir = _argv.[0];
 
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
-html_page name doc descr = """<html>
-<head><title>Module \(name@)</title></head>
+html_page name doc descr = """<html><style type="text/css">
+.main { background: white; line-height: 130% }
+.type { background: white }
+.other { background: #cccccc }
+.struct { background: #bbffbb; border-width: 1px;
+          border-color: black; border-style: solid;
+          padding-left: 0.1strong;
+          padding-right: 0.1strong;
+          margin-left: 1pt;
+          margin-right: 1pt;
+          padding-top: 1px;
+          padding-bottom: 1pt;
+          margin-top: 1px;
+          margin-bottom: -3pt;
+/*          padding: 3pt;
+          margin-left: 3pt;
+          margin-right: 3pt;
+          margin-top: 2pt;
+          margin-bottom: -3pt;*/
+          display: inline-table }
+.variant { background: #bbbbff }
+.doc { background: white }
+</style><title>Module \(name@)</title>
 <body>
+<p class="main">
 <h1>\(name@)</h1>
 \(substAll "\n[ \\t]*\n" "\n<p>" (doc@))
 <div class="type">
@@ -15,21 +37,54 @@ html_page name doc descr = """<html>
 </body>
 </html>""";
 
+format_doc _ doc =
+    if doc =~ '\S' then
+        "<div class=\"doc\">\(strReplace "\n\n" "<p>" (doc@))</div>"
+    else
+        undef_str
+    fi;
+
 type_as_html st =
    (var cur = '';
+    var big = false;
     do indent t:
         old = cur;
         s = case t of
-            Struct _:
+            Struct l:
+                types = [:];
+                var flag = false;
+                for l do {name, type}:
+                    big := false;
+                    types.[name] := st indent type;
+                    flag := flag or big
+                done;
+                big := flag or length l >= 3 or
+                    not empty? (find ((!= '') . (.description)) l);
                 cur := 'struct';
-                "<div class=\"struct\">\(st indent t)</div>";
+                field f =
+                    "\(if f.description != "" then
+                        format_doc '' f.description else '' fi)\
+                    "\(if f.mutable then '<strong>var</strong> ' else '' fi)\
+                    "\(f.tag)\(f.name) <strong>is</strong> \(types.[f.name])";
+                if big then
+                    var a = array [];
+                    for l do f:
+                        push a '<div class="field">';
+                        push a (field f);
+                        push a ',</div>'
+                    done;
+                    a.[length a - 1] := '</div>';
+                    "{<div class=\"struct\">\(strJoin '' a)</div>}"
+                else
+                    "{ \(strJoin ', ' (map field l)) }"
+                fi;
             Variant _:
-                cur := 'variant';
-                "<div class=\"variant\">\(st indent t)</div>";
+                cur := '';
+                "<span class=\"variant\">\(st indent t)</span>";
             _:
                 if cur != '' then
                     cur := '';
-                    "<div class=\"other\">\(st indent t)</div>"
+                    "<span class=\"other\">\(st indent t)</span>"
                 else
                     st indent t
                 fi
@@ -37,13 +92,6 @@ type_as_html st =
         cur := old;
         s
     done);
-
-format_doc _ doc =
-    if doc =~ '\S' then
-        "<div class=\"doc\">\(strReplace "\n\n" "<p>" (doc@))</div>"
-    else
-        undef_str
-    fi;
 
 do {type, name, doc}:
     if defined? doc_dir then
