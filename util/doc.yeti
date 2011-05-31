@@ -26,10 +26,10 @@ html_page name doc descr = """<html><style type="text/css">
           display: inline-table }
 .variant { background: #c7c7ff }
 .doc { background: white }
-</style><title>Module \(name@)</title>
+</style><title>\(name@)</title>
 <body>
 <p class="main">
-<h1>\(name@)</h1>
+<h2>Module \(name@);</h2>
 \(substAll "\n[ \\t]*\n" "\n<p>" (doc@))
 <div class="type">
 \(descr)
