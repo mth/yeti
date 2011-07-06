@@ -765,7 +765,8 @@ public final class YetiAnalyzer extends YetiType {
         if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
         lambdaBind(lambda, bind, scope, depth + 1);
-        lambda.type.doc = bind.doc;
+        if (bind.doc != null)
+            lambda.type.doc = bind.doc;
         return lambda;
     }
 
@@ -931,9 +932,8 @@ public final class YetiAnalyzer extends YetiType {
                 } else {
                     Code code = analyze(bind.expr, scope, depth + 1);
                     binder = new BindExpr(code, bind.var);
-                    if (bind.type != null) {
+                    if (bind.type != null)
                         isOp(bind, bind.type, binder.st, scope, depth);
-                    }
                 }
                 if (bind.doc != null)
                     binder.st.type.doc = bind.doc;

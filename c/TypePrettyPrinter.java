@@ -216,8 +216,16 @@ class TypeDescr extends YetiType {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
             m.putAll(tt.partialMembers);
-        if (tt.finalMembers != null)
-            m.putAll(tt.finalMembers);
+        if (tt.finalMembers != null) {
+            Iterator i = tt.finalMembers.entrySet().iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry) i.next();
+                YType t = (YType) e.getValue();
+                Object v = m.put(e.getKey(), t);
+                if (v != null && t.doc == null)
+                    t.doc = v;
+            }
+        }
         for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             Object name = e.getKey();
