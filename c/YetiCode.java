@@ -1230,6 +1230,7 @@ final class NewArrayExpr extends Code {
 
 final class MethodCall extends JavaExpr {
     private JavaType classType;
+    private boolean useAccessor, invokeSuper;
 
     MethodCall(Code object, JavaType.Method method, Code[] args, int line) {
         super(object, method, args, line);
@@ -1237,25 +1238,15 @@ final class MethodCall extends JavaExpr {
     }
 
     void visitInvoke(Ctx ctx, int invokeInsn) {
-        JavaType ct = classType;
         String descr = method.descr(null);
         String name = method.name;
-        // XXX: not checking for package access. shouldn't matter.
-        if (classType.implementation != null) {
-            ct = classType.implementation.classType.deref().javaType;
-            boolean invokeSuper = classType != ct;
-            if ((invokeSuper || (method.access & ACC_PROTECTED) != 0) &&
-                    !object.flagop(DIRECT_THIS)) {
-                if (invokeInsn == INVOKEINTERFACE)
-                    invokeInsn = INVOKEVIRTUAL;
-                name = classType.implementation.getAccessor(method, descr,
-                                                            invokeSuper);
-            } else if (invokeInsn == INVOKEVIRTUAL && invokeSuper) {
-                invokeInsn = INVOKESPECIAL;
-                ct = classType;
-            }
+        if (useAccessor) {
+            if (invokeInsn == INVOKEINTERFACE)
+                invokeInsn = INVOKEVIRTUAL;
+            name = classType.implementation.getAccessor(method, descr,
+                                                        invokeSuper);
         }
-        ctx.methodInsn(invokeInsn, ct.className(), name, descr);
+        ctx.methodInsn(invokeInsn, classType.className(), name, descr);
     }
 
     private void _gen(Ctx ctx) {
@@ -1266,9 +1257,22 @@ final class MethodCall extends JavaExpr {
             object.gen(ctx);
             if (ins != INVOKEINTERFACE)
                 classType = object.type.deref().javaType;
-            if (ctx.compilation.isGCJ || ins != INVOKEINTERFACE) {
-                ctx.typeInsn(CHECKCAST, classType.className());
+        }
+        if (classType.implementation != null) {
+            JavaType ct = classType.implementation.classType.deref().javaType;
+            invokeSuper = classType != ct;
+            // XXX: not checking for package access. shouldn't matter.
+            useAccessor = (invokeSuper || (method.access & ACC_PROTECTED) != 0)
+                && !object.flagop(DIRECT_THIS);
+            if (useAccessor) {
+                classType = ct;
+            } else if (ins == INVOKEVIRTUAL && invokeSuper) {
+                ins = INVOKESPECIAL;
             }
+        }
+        if (object != null &&
+                (ctx.compilation.isGCJ || ins != INVOKEINTERFACE)) {
+            ctx.typeInsn(CHECKCAST, classType.className());
         }
         genCall(ctx, null, ins);
     }
