@@ -1271,7 +1271,7 @@ final class MethodCall extends JavaExpr {
             }
         }
         if (object != null &&
-                (ctx.compilation.isGCJ || ins != INVOKEINTERFACE)) {
+                (ins != INVOKEINTERFACE || ctx.compilation.isGCJ)) {
             ctx.typeInsn(CHECKCAST, classType.className());
         }
         genCall(ctx, null, ins);
