@@ -267,6 +267,8 @@ final class MethodDesc extends YetiType {
                     .check(superNode, packageName);
         c.superInit(superCons, initArgs, superNode.line);
 
+        local = new Scope(local, "super", c.superRef);
+
         // field defs
         for (int i = 3; i < cl.expr.length; ++i) {
             if (cl.expr[i] instanceof Bind) {
@@ -300,8 +302,7 @@ final class MethodDesc extends YetiType {
             }
         }
 
-        local = new Scope(new Scope(local, "this", c.self),
-                          "super", c.superRef);
+        local = new Scope(local, "this", c.self);
 
         // analyze method bodies
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
