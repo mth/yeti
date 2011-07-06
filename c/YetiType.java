@@ -50,7 +50,7 @@ class YType {
     int field;
     boolean seen;
 
-    String doc;
+    Object doc;
     JavaType javaType;
 
     YType(int depth) {
@@ -81,16 +81,29 @@ class YType {
             next = type.ref;
             type.ref = res;
         }
+        if (res.doc == null)
+            res.doc = this;
         return res;
     }
 
     String doc() {
         for (YType t = this; t != null; t = t.ref)
             if (t.doc != null) {
-                t.doc = t.doc.trim();
-                if (doc.length() != 0)
-                    return doc;
-                t.doc = null;
+                String doc;
+                if (t.doc instanceof YType) {
+                    YType ref = (YType) t.doc;
+                    t.doc = null;
+                    doc = ref.doc();
+                } else {
+                    doc = (String) t.doc;
+                }
+                if (doc != null) {
+                    if ((doc = doc.trim()).length() != 0) {
+                        t.doc = doc;
+                        return doc;
+                    }
+                    t.doc = null;
+                }
             }
         return null;
     }
@@ -701,6 +714,7 @@ public class YetiType implements YetiParser {
         }
         YType[] param = new YType[type.param.length];
         copy = new YType(type.type, param);
+        copy.doc = type_;
         YType res = copy;
         if (type_.field >= FIELD_NON_POLYMORPHIC) {
             res = mutableFieldRef(type_);
@@ -756,9 +770,7 @@ public class YetiType implements YetiParser {
         if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
             Map vars = createFreeVars(r[0].free, depth);
-            String doc = ref.type.doc();
             ref.type = copyType(ref.type, vars, new HashMap());
-            ref.type.doc = doc;
         }
         return ref;
     }
