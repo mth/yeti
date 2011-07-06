@@ -465,16 +465,21 @@ final class JavaClass extends CapturingClosure implements Runnable {
             return;
         for (Iterator i = accessors.values().iterator(); i.hasNext(); ) {
             Object[] accessor = (Object[]) i.next();
-            Ctx mc = classCtx.newMethod(ACC_STATIC | ACC_SYNTHETIC,
+            int acc = ACC_STATIC;
+            JavaType.Method m = null;
+            if (accessor.length == 4) { // method
+                m = (JavaType.Method) accessor[1];
+                acc = m.access & ACC_STATIC;
+            }
+            Ctx mc = classCtx.newMethod(acc | ACC_SYNTHETIC,
                                        (String) accessor[0],
                                        (String) accessor[2]);
-            if (accessor.length == 4) { // method
-                JavaType.Method m = (JavaType.Method) accessor[1];
+            if (m != null) { // method
                 int start = 0;
                 int insn = INVOKESTATIC;
-                if ((m.access & ACC_STATIC) == 0) {
-                    start = 1;
+                if ((acc & ACC_STATIC) == 0) {
                     insn = accessor[3] == null ? INVOKEVIRTUAL : INVOKESPECIAL;
+                    start = 1;
                     mc.load(0);
                 }
                 for (int j = 0; j < m.arguments.length; ++j)

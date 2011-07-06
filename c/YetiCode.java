@@ -1237,26 +1237,25 @@ final class MethodCall extends JavaExpr {
     }
 
     void visitInvoke(Ctx ctx, int invokeInsn) {
-        String className = classType.className();
+        JavaType ct = classType;
         String descr = method.descr(null);
         String name = method.name;
         // XXX: not checking for package access. shouldn't matter.
         if (classType.implementation != null) {
-            boolean invokeSuper = classType !=
-               classType.implementation.classType.deref().javaType;
+            ct = classType.implementation.classType.deref().javaType;
+            boolean invokeSuper = classType != ct;
             if ((invokeSuper || (method.access & ACC_PROTECTED) != 0) &&
                     !object.flagop(DIRECT_THIS)) {
-                if (invokeInsn != INVOKESTATIC) {
-                    descr = '(' + classType.description + descr.substring(1);
-                    invokeInsn = INVOKESTATIC;
-                }
+                if (invokeInsn == INVOKEINTERFACE)
+                    invokeInsn = INVOKEVIRTUAL;
                 name = classType.implementation.getAccessor(method, descr,
                                                             invokeSuper);
             } else if (invokeInsn == INVOKEVIRTUAL && invokeSuper) {
                 invokeInsn = INVOKESPECIAL;
+                ct = classType;
             }
         }
-        ctx.methodInsn(invokeInsn, className, name, descr);
+        ctx.methodInsn(invokeInsn, ct.className(), name, descr);
     }
 
     private void _gen(Ctx ctx) {
