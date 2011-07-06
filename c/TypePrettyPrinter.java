@@ -48,7 +48,8 @@ class ShowTypeFun extends Fun2 {
         boolean useNL = false;
         AIter i = fields;
         for (int n = 0; i != null; i = i.next())
-            if (++n >= 3) {
+            if (++n >= 3 || formatDoc != null && ((String) ((Struct)
+                                i.first()).get("description")).length() > 0) {
                 useNL = true;
                 break;
             }
