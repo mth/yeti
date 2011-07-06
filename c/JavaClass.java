@@ -315,6 +315,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         YType t = new YType(YetiType.JAVA, YetiType.NO_PARAM);
         t.javaType = parentClass.type.javaType.dup();
         t.javaType.implementation = this;
+        t.javaType.publicMask = ACC_PUBLIC | ACC_PROTECTED;
         superRef = new Arg(t, true);
     }
 
