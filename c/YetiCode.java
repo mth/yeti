@@ -1241,14 +1241,20 @@ final class MethodCall extends JavaExpr {
         String descr = method.descr(null);
         String name = method.name;
         // XXX: not checking for package access. shouldn't matter.
-        if ((method.access & ACC_PROTECTED) != 0 &&
-                classType.implementation != null &&
-                !object.flagop(DIRECT_THIS)) {
-            if (invokeInsn != INVOKESTATIC) {
-                descr = '(' + classType.description + descr.substring(1);
-                invokeInsn = INVOKESTATIC;
+        if (classType.implementation != null) {
+            boolean invokeSuper = classType !=
+               classType.implementation.classType.deref().javaType;
+            if ((invokeSuper || (method.access & ACC_PROTECTED) != 0) &&
+                    !object.flagop(DIRECT_THIS)) {
+                if (invokeInsn != INVOKESTATIC) {
+                    descr = '(' + classType.description + descr.substring(1);
+                    invokeInsn = INVOKESTATIC;
+                }
+                name = classType.implementation.getAccessor(method, descr,
+                                                            invokeSuper);
+            } else if (invokeInsn == INVOKEVIRTUAL && invokeSuper) {
+                invokeInsn = INVOKESPECIAL;
             }
-            name = classType.implementation.getAccessor(method, descr);
         }
         ctx.methodInsn(invokeInsn, className, name, descr);
     }

@@ -209,7 +209,7 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     }
 }
 
-class JavaType {
+class JavaType implements Cloneable {
     static class Field {
         int access;
         String name;
@@ -969,6 +969,16 @@ class JavaType {
                 CACHE.put(sig, t);
             }
             return t;
+        }
+    }
+
+    JavaType dup() {
+        if (!resolved)
+            throw new IllegalStateException("Cannot clone unresolved class");
+        try {
+            return (JavaType) clone();
+        } catch (CloneNotSupportedException ex) {
+            throw new IllegalStateException(ex);
         }
     }
 

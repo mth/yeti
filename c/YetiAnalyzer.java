@@ -401,6 +401,9 @@ public final class YetiAnalyzer extends YetiType {
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
                 (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.ctx.packageName, className);
+            // a terrible hack - tell super ref that it's used for call
+            if (className == "super")
+                ref.right.line = ref.right.line > 0 ? -ref.right.line : -1;
         }
         if (t == null) {
             obj = analyze(ref.right, scope, depth);

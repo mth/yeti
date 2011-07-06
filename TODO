@@ -4,8 +4,6 @@
 * array<boolean> into ~boolean[] argument autoconversion
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
-* super reference in Java classes
-  (requires generating accessor methods to proxy them)
 * Use typedef's in type pretty-printing (including error messages)
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling

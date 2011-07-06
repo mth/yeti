@@ -50,23 +50,24 @@ final class JavaClass extends CapturingClosure implements Runnable {
     YType classType;
     final Meth constr = new Meth();
     final Binder self;
+    Binder superRef;
 
     static class Arg extends BindRef implements Binder {
         int argn;
         final YType javaType;
+        private boolean isSuper;
 
-        Arg(JavaClass c) {
-            type = javaType = c.classType;
-            binder = this;
-        }
-
-        Arg(YType type) {
+        Arg(YType type, boolean isSuper) {
             this.javaType = type;
             this.type = JavaType.convertValueType(type);
+            this.isSuper = isSuper;
             binder = this;
         }
 
         public BindRef getRef(int line) {
+            if (isSuper && line >= 0)
+                throw new CompileException(line, 0,
+                        "super cannot be used as a value");
             return this;
         }
 
@@ -92,7 +93,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         Code code;
 
         Binder addArg(YType type) {
-            Arg arg = new Arg(type);
+            Arg arg = new Arg(type, false);
             args.add(arg);
             arg.argn = (access & ACC_STATIC) == 0
                             ? args.size() : args.size() - 1;
@@ -271,7 +272,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         this.className = className;
         classType = new YType(YetiType.JAVA, YetiType.NO_PARAM);
         classType.javaType = JavaType.createNewClass(className, this);
-        self = new Arg(this);
+        self = new Arg(classType, false);
         constr.name = "<init>";
         constr.returnType = YetiType.UNIT_TYPE;
         constr.className = className;
@@ -309,8 +310,12 @@ final class JavaClass extends CapturingClosure implements Runnable {
     }
 
     void init(YetiType.ClassBinding parentClass, String[] interfaces) {
-        this.parentClass = parentClass;
         implement = interfaces;
+        this.parentClass = parentClass;
+        YType t = new YType(YetiType.JAVA, YetiType.NO_PARAM);
+        t.javaType = parentClass.type.javaType.dup();
+        t.javaType.implementation = this;
+        superRef = new Arg(t, true);
     }
 
     Meth addMethod(String name, YType returnType,
@@ -381,13 +386,17 @@ final class JavaClass extends CapturingClosure implements Runnable {
         c.localVar = n + constr.args.size() + 1;
     }
 
-    String getAccessor(JavaType.Method method, String descr) {
+    String getAccessor(JavaType.Method method, String descr,
+                       boolean invokeSuper) {
         if (accessors == null)
             accessors = new HashMap();
-        Object[] accessor = (Object[]) accessors.get(method.sig);
+        String sig = method.sig;
+        if (invokeSuper)
+            sig = "*".concat(method.sig);
+        Object[] accessor = (Object[]) accessors.get(sig);
         if (accessor == null) {
-            accessor = new Object[] { "access$" + accessors.size(),
-                                      method, descr };
+            accessor = new Object[] { "access$" + accessors.size(), method,
+                                      descr, invokeSuper ? "" : null };
             accessors.put(method.sig, accessor);
         }
         return (String) accessor[0];
@@ -400,7 +409,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         Object[] accessor = (Object[]) accessors.get(key);
         if (accessor == null) {
             accessor = new Object[] { "access$" + accessors.size(), field,
-                                      descr, write ? "" : null };
+                                      descr, write ? "" : null, null };
             accessors.put(key, accessor);
         }
         return (String) accessor[0];
@@ -459,18 +468,20 @@ final class JavaClass extends CapturingClosure implements Runnable {
             Ctx mc = classCtx.newMethod(ACC_STATIC | ACC_SYNTHETIC,
                                        (String) accessor[0],
                                        (String) accessor[2]);
-            if (accessor.length == 3) { // method
+            if (accessor.length == 4) { // method
                 JavaType.Method m = (JavaType.Method) accessor[1];
                 int start = 0;
                 int insn = INVOKESTATIC;
                 if ((m.access & ACC_STATIC) == 0) {
                     start = 1;
-                    insn = INVOKEVIRTUAL;
+                    insn = accessor[3] == null ? INVOKEVIRTUAL : INVOKESPECIAL;
                     mc.load(0);
                 }
                 for (int j = 0; j < m.arguments.length; ++j)
                     loadArg(mc, m.arguments[j], j + start);
-                mc.methodInsn(insn, className, m.name, m.descr(null));
+                mc.methodInsn(insn, accessor[3] == null ? className :
+                                    parentClass.type.javaType.className(),
+                              m.name, m.descr(null));
                 genRet(mc, m.returnType);
             } else { // field
                 JavaType.Field f = (JavaType.Field) accessor[1];

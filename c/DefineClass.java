@@ -206,6 +206,7 @@ final class MethodDesc extends YetiType {
         }
         if (parentClass == null)
             parentClass = new ClassBinding(OBJECT_TYPE);
+        parentClass.type.javaType.resolve(cl);
         c.init(parentClass,
                (String[]) interfaces.toArray(new String[interfaces.size()]));
         scope = new Scope(scope_[0], cl.expr[0].sym(), null);
@@ -299,7 +300,8 @@ final class MethodDesc extends YetiType {
             }
         }
 
-        local = new Scope(local, "this", c.self);
+        local = new Scope(new Scope(local, "this", c.self),
+                          "super", c.superRef);
 
         // analyze method bodies
         for (int i = 0, cnt = methods.size(); i < cnt; ++i) {
