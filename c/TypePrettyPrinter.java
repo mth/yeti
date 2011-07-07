@@ -331,23 +331,33 @@ class TypeDescr extends YetiType {
 }
 
 class TypePattern {
-    int[] idx;
+    int[] idx; // if next is longer than idx, then it has wildcard path
     TypePattern[] next;
-    String field;
+    String field; // struct/variant field match, next[0] when no such field
+    int var; // if var != 0 then match stores type in typeVars as var
     Scope end;
 
-    // TODO free type variables
-    TypePattern match(YType type) {
+    TypePattern match(YType type, Map typeVars) {
+        int i;
+
         type = type.deref();
-        int i, p = Arrays.binarySearch(idx, type.type);
-        if (p < 0)
+        Object tv = typeVars.get(type);
+        if (tv != null) {
+            i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
+            if (i >= 0)
+                return next[i];
+        }
+        i = Arrays.binarySearch(idx, type.type);
+        if (i < 0 && (i = idx.length) >= next.length)
             return null;
-        TypePattern pat = next[p];
+        if (var != 0)
+            typeVars.put(type, Integer.valueOf(var));
+        TypePattern pat = next[i];
         if (pat.fields == null) {
             YType[] param = type.param;
             if (param != null)
                 for (i = 0; i < param.length && pat != null; ++i)
-                    pat = pat.match(param[i]);
+                    pat = pat.match(param[i], typeVars);
         } else {
             // TODO check var/non-var field
             // TODO check final/partial if necessary
@@ -360,7 +370,7 @@ class TypePattern {
                     return null;
                 type = (YType) m.get(pat.field);
                 if (type != null)
-                    pat = pat.match(type);
+                    pat = pat.match(type, typeVars);
                 else
                     pat = pat.next[0];
             }
