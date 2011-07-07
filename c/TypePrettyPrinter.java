@@ -331,9 +331,12 @@ class TypeDescr extends YetiType {
 }
 
 class TypePattern {
-    int[] idx; // if next is longer than idx, then it has wildcard path
+    // Integer.MIN_VALUE is type end marker
+    // Integer.MAX_VALUE matches any type
+    int[] idx;
     TypePattern[] next;
-    String field; // struct/variant field match, next[0] when no such field
+    // struct/variant field match, next[idx.length] when no such field
+    String field;
     int var; // if var != 0 then match stores type in typeVars as var
     YetiType.Scope end;
 
@@ -348,7 +351,7 @@ class TypePattern {
                 return next[i];
         }
         i = Arrays.binarySearch(idx, type.type);
-        if (i < 0 && (i = idx.length) >= next.length)
+        if (i < 0 && idx[i = idx.length - 1] != Integer.MAX_VALUE)
             return null;
         if (var != 0)
             typeVars.put(type, Integer.valueOf(var));
@@ -369,10 +372,8 @@ class TypePattern {
                 if (pat.field == null)
                     return null;
                 type = (YType) m.get(pat.field);
-                if (type != null)
-                    pat = pat.match(type, typeVars);
-                else // TODO can't to so simply - end marker can be here!
-                    pat = pat.next[0];
+                pat = type != null ? pat.match(type, typeVars)
+                                   : pat.next[idx.length];
             }
         }
         // go for type end marker
