@@ -227,8 +227,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static YType nodeToMembers(int type, TypeNode[] param, Map free,
                               Scope scope, int depth) {
-        Map members = new HashMap();
-        Map members_ = new HashMap();
+        Map members = new HashMap(param.length);
+        Map members_ = new HashMap(param.length);
         YType[] tp = new YType[param.length];
         for (int i = 0; i < param.length; ++i) {
             tp[i] = nodeToType(param[i].param[0], free, scope, depth);
@@ -1098,7 +1098,8 @@ public final class YetiAnalyzer extends YetiType {
         if (nodes.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope, propertyScope = null;
-        Map fields = new HashMap(), codeMap = new HashMap();
+        Map fields = new HashMap(nodes.length),
+            codeMap = new HashMap(nodes.length);
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
@@ -1343,7 +1344,7 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(node, NONSENSE_STRUCT);
                 String[] names = new String[fields.length];
                 CasePattern[] patterns = new CasePattern[fields.length];
-                HashMap uniq = new HashMap();
+                HashMap uniq = new HashMap(fields.length);
                 ++submatch;
                 for (int i = 0; i < fields.length; ++i) {
                     Bind field = getField(fields[i]);

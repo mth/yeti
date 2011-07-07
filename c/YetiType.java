@@ -361,7 +361,7 @@ public class YetiType implements YetiParser {
 
     static YType variantOf(String[] na, YType[] ta) {
         YType t = new YType(VARIANT, ta);
-        t.partialMembers = new HashMap();
+        t.partialMembers = new HashMap(na.length);
         for (int i = 0; i < na.length; ++i) {
             t.partialMembers.put(na[i], ta[i]);
         }
@@ -682,7 +682,7 @@ public class YetiType implements YetiParser {
     }
 
     static Map copyTypeMap(Map types, Map free, Map known) {
-        Map result = new HashMap();
+        Map result = new HashMap(types.size());
         for (Iterator i = types.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             YType t = (YType) entry.getValue();
@@ -736,7 +736,7 @@ public class YetiType implements YetiParser {
     }
 
     static Map createFreeVars(YType[] freeTypes, int depth) {
-        IdentityHashMap vars = new IdentityHashMap();
+        IdentityHashMap vars = new IdentityHashMap(freeTypes.length);
         for (int i = freeTypes.length; --i >= 0;) {
             YType t = new YType(depth);
             YType free = freeTypes[i];

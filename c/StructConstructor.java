@@ -227,7 +227,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     Map getDirect() {
-        Map r = new HashMap();
+        Map r = new HashMap(fieldCount);
         for (int i = 0; i < fieldCount; ++i) {
             if (fields[i].mutable || fields[i].property > 0) {
                 r.put(fields[i].name, null);
