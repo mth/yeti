@@ -333,7 +333,7 @@ class TypeDescr extends YetiType {
 class TypePattern {
     int[] idx;
     TypePattern[] next;
-    String[] fields;
+    String field;
     Scope end;
 
     static TypePattern match(YType type) {
@@ -342,7 +342,7 @@ class TypePattern {
         if (p < 0)
             return null;
         TypePattern pat = next[p];
-        if (fields == null) {
+        if (pat.fields == null) {
             YType[] param = type.param;
             if (param != null)
                 for (i = 0; i < param.length && pat != null; ++i)
@@ -351,13 +351,15 @@ class TypePattern {
             Map m = type.finalMembers;
             if (m == null)
                 m = type.partialMembers;
-            if (m.size() != fields.length)
-                return null;
-            for (i = 0; i < fields.length && pat != null; ++i) {
-                type = (YType) m.get(fields[i]);
-                if (type == null)
+            i = m.size();
+            while (--i >= 0 && pat != null) {
+                if (pat.field == null)
                     return null;
-                pat = pat.match(type);
+                type = (YType) m.get(pat.field);
+                if (type != null)
+                    pat = pat.match(type);
+                else
+                    pat = pat.next[0];
             }
         }
         // go for type end marker
