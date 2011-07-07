@@ -371,7 +371,7 @@ class TypePattern {
                 type = (YType) m.get(pat.field);
                 if (type != null)
                     pat = pat.match(type, typeVars);
-                else
+                else // TODO can't to so simply - end marker can be here!
                     pat = pat.next[0];
             }
         }
