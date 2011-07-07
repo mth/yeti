@@ -335,7 +335,7 @@ class TypePattern {
     TypePattern[] next;
     String field; // struct/variant field match, next[0] when no such field
     int var; // if var != 0 then match stores type in typeVars as var
-    Scope end;
+    YetiType.Scope end;
 
     TypePattern match(YType type, Map typeVars) {
         int i;
@@ -353,7 +353,7 @@ class TypePattern {
         if (var != 0)
             typeVars.put(type, Integer.valueOf(var));
         TypePattern pat = next[i];
-        if (pat.fields == null) {
+        if (pat.field == null) {
             YType[] param = type.param;
             if (param != null)
                 for (i = 0; i < param.length && pat != null; ++i)
