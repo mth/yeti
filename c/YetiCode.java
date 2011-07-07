@@ -1201,7 +1201,8 @@ final class NewArrayExpr extends Code {
     }
 
     void gen(Ctx ctx) {
-        ctx.genInt(count, line);
+        if (count != null)
+            ctx.genInt(count, line);
         ctx.visitLine(line);
         if (type.param[0].type != YetiType.JAVA) { // array of arrays
             ctx.typeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));
@@ -1417,7 +1418,7 @@ final class LoadVar extends Code {
     int var;
 
     void gen(Ctx ctx) {
-        ctx.load(var);
+        ctx.varInsn(ALOAD, var);
     }
 }
 

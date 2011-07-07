@@ -594,7 +594,7 @@ class JavaType implements Cloneable {
         "Ljava/math/BigDecimal;"
     };
 
-    static final String[] NUMBER_X = { "B", "S", "F", "D", "I", "J", "i", "d" };
+    //static final String[] NUMBER_X = { "B", "S", "F", "D", "I", "J", "i", "d" };
 
     int isAssignable(JavaType from) throws JavaClassNotFoundException {
         from.resolve();

@@ -47,8 +47,7 @@ class JavaExpr extends Code {
     }
 
     // convert to java
-    private static void convert(Ctx ctx, YType given,
-                         YType argType) {
+    private static void convert(Ctx ctx, YType given, YType argType) {
         given = given.deref();
         argType = argType.deref();
         String descr = argType.javaType == null
@@ -101,12 +100,14 @@ class JavaExpr extends Code {
                 return; // a - List/Set
 
             String s = "";
+            YType argArrayType = argType;
             while ((argType = argType.param[0]).type ==
                         YetiType.JAVA_ARRAY) {
                 s += "[";
+                argArrayType = argType;
             }
             String arrayPrefix = s;
-            if (s == "") {
+            if (s == "" && argType.javaType.description.length() != 1) {
                 s = argType.javaType.className();
             } else {
                 s += argType.javaType.description;
@@ -132,13 +133,12 @@ class JavaExpr extends Code {
             Label next = new Label(), done = new Label();
             ctx.insn(DUP); // ann
             ctx.varInsn(ISTORE, index); // an
-            ctx.typeInsn(ANEWARRAY, s); // aA
+            new NewArrayExpr(argArrayType, null, 0).gen(ctx);
             ctx.insn(SWAP); // Aa
             ctx.visitLabel(next);
             ctx.varInsn(ILOAD, index); // Aan
             ctx.jumpInsn(IFEQ, done); // Aa
-            ctx.intConst(-1); // Aa1
-            ctx.varInsn(IINC, index); // Aa
+            ctx.visitIntInsn(IINC, index); // Aa --index
             ctx.insn(DUP2); // AaAa
             ctx.varInsn(ILOAD, index); // AaAan
             ctx.methodInsn(INVOKEVIRTUAL, tmpClass,
