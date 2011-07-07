@@ -336,7 +336,8 @@ class TypePattern {
     String field;
     Scope end;
 
-    static TypePattern match(YType type) {
+    // TODO free type variables
+    TypePattern match(YType type) {
         type = type.deref();
         int i, p = Arrays.binarySearch(idx, type.type);
         if (p < 0)
@@ -348,6 +349,8 @@ class TypePattern {
                 for (i = 0; i < param.length && pat != null; ++i)
                     pat = pat.match(param[i]);
         } else {
+            // TODO check var/non-var field
+            // TODO check final/partial if necessary
             Map m = type.finalMembers;
             if (m == null)
                 m = type.partialMembers;
