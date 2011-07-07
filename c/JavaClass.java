@@ -42,6 +42,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private YetiType.ClassBinding parentClass;
     private List fields = new ArrayList();
     private List methods = new ArrayList();
+    private Field serialVersion;
     private JavaExpr superInit;
     private final boolean isPublic;
     private int captureCount;
@@ -245,8 +246,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
 
         void gen(Ctx ctx) {
-            if ("serialVersionUID".equals(name) &&
-                       value instanceof NumericConstant) {
+            if (this == serialVersion) {
                 // hack to allow defining serialVersionUID
                 Long v = new Long((((NumericConstant) value).num).longValue());
                 ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL,
@@ -333,8 +333,14 @@ final class JavaClass extends CapturingClosure implements Runnable {
         return m;
     }
 
-    Binder addField(Code value, boolean var) {
-        Field field = new Field("$" + fields.size(), value, var);
+    Binder addField(Code value, boolean var, String name) {
+        Field field;
+        if (name == "serialVersionUID" && !var &&
+                serialVersion == null && value instanceof NumericConstant) {
+            serialVersion = field = new Field(name, value, false);
+        } else {
+            field = new Field("$" + fields.size(), value, var);
+        }
         fields.add(field);
         return field;
     }

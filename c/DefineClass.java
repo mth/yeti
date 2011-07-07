@@ -62,7 +62,8 @@ final class MethodDesc extends YetiType {
         for (int i = 0; i < arguments.length; ++i) {
             scope = new Scope(scope, names[i], arguments[i]);
             if (regField != null) {
-                Binder field = regField.addField(arguments[i].getRef(0), false);
+                Binder field =
+                    regField.addField(arguments[i].getRef(0), false, null);
                 fields[0] = new Scope(fields[0], names[i], field);
             }
         }
@@ -281,7 +282,8 @@ final class MethodDesc extends YetiType {
                 Code code;
                 if (bind.expr.kind == "lambda" && bind.name != "_") {
                     Function lambda = new Function(new YType(depth + 1));
-                    lambda.selfBind = binder = c.addField(lambda, bind.var);
+                    lambda.selfBind = binder =
+                        c.addField(lambda, bind.var, null);
                     // binding this for lambdas is unsafe, but useful
                     Scope funScope = new Scope(local, "this", c.self);
                     if (!bind.noRec)
@@ -290,7 +292,7 @@ final class MethodDesc extends YetiType {
                     code = lambda;
                 } else {
                     code = YetiAnalyzer.analyze(bind.expr, local, depth + 1);
-                    binder = c.addField(code, bind.var);
+                    binder = c.addField(code, bind.var, bind.name);
                     if (bind.type != null)
                         YetiAnalyzer.isOp(bind, bind.type, code, scope, depth);
                 }
