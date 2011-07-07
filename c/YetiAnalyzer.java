@@ -239,7 +239,7 @@ public final class YetiAnalyzer extends YetiType {
             String name = param[i].name;
             Map m = members;
             if (name.charAt(0) == '.') {
-                name = name.substring(1);
+                name = name.substring(1).intern();
                 m = members_;
             }
             if (m.put(name, tp[i]) != null) {

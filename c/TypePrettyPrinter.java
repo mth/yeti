@@ -329,3 +329,40 @@ class TypeDescr extends YetiType {
         return descr;
     }
 }
+
+class TypePattern {
+    int[] idx;
+    TypePattern[] next;
+    String[] fields;
+    Scope end;
+
+    static TypePattern match(YType type) {
+        type = type.deref();
+        int i, p = Arrays.binarySearch(idx, type.type);
+        if (p < 0)
+            return null;
+        TypePattern pat = next[p];
+        if (fields == null) {
+            YType[] param = type.param;
+            if (param != null)
+                for (i = 0; i < param.length && pat != null; ++i)
+                    pat = pat.match(param[i]);
+        } else {
+            Map m = type.finalMembers;
+            if (m == null)
+                m = type.partialMembers;
+            if (m.size() != fields.length)
+                return null;
+            for (i = 0; i < fields.length && pat != null; ++i) {
+                type = (YType) m.get(fields[i]);
+                if (type == null)
+                    return null;
+                pat = pat.match(type);
+            }
+        }
+        // go for type end marker
+        if (pat != null && pat.idx[0] == Integer.MIN_VALUE)
+            return pat.next[0];
+        return null;
+    }
+}
