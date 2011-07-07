@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 
 class YType {
@@ -735,7 +736,7 @@ public class YetiType implements YetiParser {
     }
 
     static Map createFreeVars(YType[] freeTypes, int depth) {
-        HashMap vars = new HashMap();
+        IdentityHashMap vars = new IdentityHashMap();
         for (int i = freeTypes.length; --i >= 0;) {
             YType t = new YType(depth);
             YType free = freeTypes[i];
@@ -770,7 +771,7 @@ public class YetiType implements YetiParser {
         if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
             Map vars = createFreeVars(r[0].free, depth);
-            ref.type = copyType(ref.type, vars, new HashMap());
+            ref.type = copyType(ref.type, vars, new IdentityHashMap());
         }
         return ref;
     }
@@ -940,7 +941,7 @@ public class YetiType implements YetiParser {
                 for (int i = param.length; --i >= 0;)
                     vars.put(scope.typeDef[i], param[i]);
                 return copyType(scope.typeDef[param.length], vars,
-                                new HashMap());
+                                new IdentityHashMap());
             }
         }
         throw new CompileException(where, "Unknown type: " + name);
