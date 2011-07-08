@@ -159,12 +159,12 @@ class ShowTypeFun extends Fun2 {
 }
 
 class TypeDescr extends YetiType {
-    int type;
-    String name;
-    TypeDescr value;
-    TypeDescr prev;
-    String alias;
-    Map properties;
+    private int type;
+    private String name;
+    private TypeDescr value;
+    private TypeDescr prev;
+    private String alias;
+    private Map properties;
 
     TypeDescr(String name_) {
         name = name_;
@@ -333,12 +333,12 @@ class TypeDescr extends YetiType {
 class TypePattern {
     // Integer.MIN_VALUE is type end marker
     // Integer.MAX_VALUE matches any type
-    int[] idx;
-    TypePattern[] next;
+    private int[] idx;
+    private TypePattern[] next;
     // struct/variant field match, next[idx.length] when no such field
-    String field;
-    int var; // if var != 0 then match stores type in typeVars as var
-    YetiType.Scope end;
+    private String field;
+    private int var; // if var != 0 then match stores type in typeVars as var
+    private YetiType.Scope end;
 
     TypePattern match(YType type, Map typeVars) {
         int i;
