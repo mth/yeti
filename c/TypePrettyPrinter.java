@@ -334,26 +334,51 @@ class TypeWalk implements Comparable {
     private YType type;
     private int st;
     private TypeWalk parent;
-    int id;
+    TypePattern pattern;
+    int id, var;
 
-    TypeWalk(YType t, TypeWalk parent) {
-        type = t;
-        id = t.type;
+    TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
+        pattern = p;
+        TypeWalk tvar = (TypeWalk) tvars.get(type = t.deref());
+        if (tvar != null) {
+            id = tvar.var;
+            tvar.pattern.var = id; // var needs to be allocated
+        } else {
+            id = t.type;
+            if (id == YetiType.VAR) {
+                id = Integer.MAX_VALUE;
+            }
+            if (id >= YetiType.FUN) {
+                tvars.put(t, this);
+                var = -tvars.size();
+            }
+        }
         this.parent = parent;
     }
 
-    TypeWalk next() {
-        if (type.param != null && st < type.param.length)
-            return new TypeWalk(type.param[st++], this);
-        if (id != Integer.MIN_VALUE) {
-            id = Integer.MIN_VALUE;
-            return this;
+    TypeWalk next(Map tvars, TypePattern pattern) {
+        System.err.println("tw " + this);
+        if (id < 0) {
+            System.err.println("tw >> parent");
+            return parent != null ? parent.next(tvars, pattern) : null;
         }
-        return parent != null ? parent.next() : null;
+        if (type.param != null && st < type.param.length) {
+            System.err.println("tw << " + st);
+            return new TypeWalk(type.param[st++], this, tvars, pattern);
+        }
+        id = Integer.MIN_VALUE;
+        System.err.println("tw .");
+        return this;
     }
 
     public int compareTo(Object o) {
         return id - ((TypeWalk) o).id;
+    }
+
+    public String toString() {
+        return "TW[id=" + (id == Integer.MIN_VALUE ? "." :
+                id == Integer.MAX_VALUE ? "_" :
+                "" + id) + " st=" + st + ' ' + type + ']';
     }
 }
 
@@ -364,7 +389,7 @@ class TypePattern {
     private TypePattern[] next;
     // struct/variant field match, next[idx.length] when no such field
     private String field;
-    private int var; // if var != 0 then match stores type in typeVars as var
+    int var; // if var != 0 then match stores type in typeVars as var
     private YetiType.Scope end;
 
     TypePattern match(YType type, Map typeVars) {
@@ -410,38 +435,51 @@ class TypePattern {
     }
 
     static TypePattern toPattern(YType[] types) {
+        Map tvars = new IdentityHashMap();
         int[] ids = new int[types.length];
         TypePattern[] patterns = new TypePattern[types.length];
         TypePattern presult = new TypePattern();
         TypeWalk[] wg = new TypeWalk[types.length];
         for (int i = 0; i < types.length; ++i)
-            wg[i] = new TypeWalk(types[i], null);
+            wg[i] = new TypeWalk(types[i], null, tvars, null);
         List walkers = new ArrayList();
-        walkers.add(presult);
         walkers.add(wg);
+        walkers.add(presult);
         while (walkers.size() > 0) {
             List current = walkers;
             walkers = new ArrayList();
+            System.err.println("=== STEP ===");
             for (int i = 0, cnt = current.size(); i < cnt; i += 2) {
                 TypeWalk[] w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
+                System.err.println("group " + i/2 + ' ' + Arrays.asList(w));
                 int start = 0, n = 0, e;
                 // group by different types
+                TypePattern p = new TypePattern();
                 for (int j = 1; j <= w.length; ++j) {
-                    if (j < w.length && w[j].id == w[j - 1].id)
+                    System.err.println("* j=" + j + " w[j].id=" +
+                            (j < w.length ? "" + w[j].id : "*") +
+                            "w[j-1].id=" + w[j-1].id);
+                    if (j < w.length && w[j].id == w[j - 1].id) {
+                        w[j].var = w[j - 1].var;
+                        System.err.println("* continue");
                         continue; // skip until same
+                    }
                     // add branch
                     ids[n] = w[j - 1].id;
-                    for (int k = e = start; k < i; ++k)
-                        if ((w[e] = w[k].next()) != null)
+                    System.err.println("** add branch " + ids[n] +
+                            " for [" + start + " to " + j);
+                    for (int k = e = start; k < j; ++k)
+                        if ((w[e] = w[k].next(tvars, p)) != null)
                             ++e;
                     wg = new TypeWalk[e - start];
                     System.arraycopy(w, start, wg, 0, wg.length);
                     walkers.add(wg);
-                    walkers.add(patterns[n++] = new TypePattern());
+                    walkers.add(patterns[n++] = p);
+                    p = new TypePattern();
                     start = j;
                 }
-                TypePattern p = (TypePattern) current.get(i + 1);
+                p = (TypePattern) current.get(i + 1);
                 p.idx = new int[n];
                 System.arraycopy(ids, 0, p.idx, 0, n);
                 p.next = new TypePattern[n];
@@ -449,5 +487,34 @@ class TypePattern {
             }
         }
         return presult;
+    }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        if (var != 0)
+            sb.append(var).append(':');
+        sb.append('{');
+        for (int i = 0; i < next.length; ++i) {
+            if (i != 0)
+                sb.append(", ");
+            if (i >= idx.length) {
+                sb.append('!');
+            } else if (idx[i] == Integer.MIN_VALUE) {
+                sb.append('.');
+            } else if (idx[i] == Integer.MAX_VALUE) {
+                sb.append('_');
+            } else {
+                sb.append(idx[i]);
+            }
+            sb.append(" => ").append(next[i]);
+        }
+        return sb.append('}').toString();
+    }
+
+    public static void main(String[] _) {
+        System.err.println(toPattern(new YType[] {
+//            YetiType.CONS_TYPE
+            YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE, YetiType.STRING_ARRAY
+        }));
     }
 }
