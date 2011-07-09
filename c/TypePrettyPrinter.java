@@ -385,7 +385,7 @@ class TypeWalk implements Comparable {
             res.field = fields[st++];
             System.err.println("tw << " + res.field);
             return res;
-        } 
+        }
         id = Integer.MIN_VALUE;
         System.err.println("tw .");
         return this;
