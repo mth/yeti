@@ -516,6 +516,7 @@ class TypePattern {
                     if (j < w.length && (field == w[j].field ||
                             (field != null && field.equals(w[j].field))))
                         continue;
+                    System.err.println("** create pattern for " + field);
                     p.idx = new int[n];
                     System.arraycopy(ids, 0, p.idx, 0, n);
                     if (field != null) {
@@ -530,6 +531,7 @@ class TypePattern {
                     }
                     System.arraycopy(patterns, 0, p.next, 0, n);
                     p = next;
+                    n = 0;
                 }
             }
         }
@@ -571,7 +573,7 @@ class TypePattern {
         st.finalMembers = new HashMap();
         st.finalMembers.put("yes", YetiType.BOOL_TYPE);
         st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
-        YType[] types = {st};
+        YType[] types = {YetiType.CONS_TYPE, st};
         //YType[] types = { YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE,
         //                  YetiType.STRING_ARRAY, st };
         TypePattern pat = toPattern(types);
