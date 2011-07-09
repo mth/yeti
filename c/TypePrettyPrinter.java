@@ -361,7 +361,8 @@ class TypeWalk implements Comparable {
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
                                               : t.partialMembers;
-            fields = fieldMap.keySet().toArray(new String[fieldMap.size()]);
+            fields = (String[])
+                fieldMap.keySet().toArray(new String[fieldMap.size()]);
             Arrays.sort(fields);
         }
     }
