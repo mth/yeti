@@ -394,9 +394,9 @@ class TypeWalk implements Comparable {
     public int compareTo(Object o) {
         TypeWalk tw = (TypeWalk) o;
         if (field == null)
-            return tw.field == null ? id - tw.id : -1;
+            return tw.field == null ? id - tw.id : 1;
         if (tw.field == null)
-            return 1;
+            return -1;
         int cmp = field.compareTo(tw.field);
         return cmp == 0 ? id - tw.id : cmp;
     }
