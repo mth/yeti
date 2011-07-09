@@ -386,6 +386,7 @@ class TypeWalk implements Comparable {
             System.err.println("tw << " + res.field);
             return res;
         }
+        field = null;
         id = Integer.MIN_VALUE;
         System.err.println("tw .");
         return this;
@@ -451,7 +452,7 @@ class TypePattern {
                     return null;
                 type = (YType) m.get(pat.field);
                 if (type != null) {
-                    pat = pat.match(type, typeVars)
+                    pat = pat.match(type, typeVars);
                 } else {
                     pat = pat.next[idx.length];
                     ++i; // was not matched
@@ -487,7 +488,9 @@ class TypePattern {
                 System.err.println("group " + i/2 + ' ' + Arrays.asList(w));
                 int start = 0, n = 0, e;
                 // group by different types
-                TypePattern p = new TypePattern();
+                TypePattern next = new TypePattern(),
+                    p = (TypePattern) current.get(i + 1);
+                String field = w.length != 0 ? w[0].field : null;
                 for (int j = 1; j <= w.length; ++j) {
                     System.err.println("* j=" + j + " w[j].id=" +
                             (j < w.length ? "" + w[j].id : "*") +
@@ -502,20 +505,32 @@ class TypePattern {
                     System.err.println("** add branch " + ids[n] +
                             " for [" + start + " to " + j);
                     for (int k = e = start; k < j; ++k)
-                        if ((w[e] = w[k].next(tvars, p)) != null)
+                        if ((w[e] = w[k].next(tvars, next)) != null)
                             ++e;
                     wg = new TypeWalk[e - start];
                     System.arraycopy(w, start, wg, 0, wg.length);
                     walkers.add(wg);
-                    walkers.add(patterns[n++] = p);
-                    p = new TypePattern();
+                    walkers.add(patterns[n++] = next);
+                    next = new TypePattern();
                     start = j;
+                    if (j < w.length && (field == w[j].field ||
+                            (field != null && field.equals(w[j].field))))
+                        continue;
+                    p.idx = new int[n];
+                    System.arraycopy(ids, 0, p.idx, 0, n);
+                    if (field != null) {
+                        p.field = field;
+                        p.next = new TypePattern[n + 1];
+                        if (j < w.length) {
+                            field = w[j].field;
+                            p.next[n] = next = new TypePattern();
+                        }
+                    } else {
+                        p.next = new TypePattern[n];
+                    }
+                    System.arraycopy(patterns, 0, p.next, 0, n);
+                    p = next;
                 }
-                p = (TypePattern) current.get(i + 1);
-                p.idx = new int[n];
-                System.arraycopy(ids, 0, p.idx, 0, n);
-                p.next = new TypePattern[n];
-                System.arraycopy(patterns, 0, p.next, 0, n);
             }
         }
         return presult;
@@ -525,8 +540,12 @@ class TypePattern {
         StringBuffer sb = new StringBuffer();
         if (var != 0)
             sb.append(var).append(':');
+        if (field != null)
+            sb.append(field).append(' ');
         sb.append('{');
-        for (int i = 0; i < next.length; ++i) {
+        if (next == null)
+            sb.append('-');
+        else for (int i = 0; i < next.length; ++i) {
             if (i != 0)
                 sb.append(", ");
             if (i >= idx.length) {
@@ -548,12 +567,19 @@ class TypePattern {
     }
 
     public static void main(String[] _) {
-        TypePattern pat = toPattern(new YType[] {
-//            YetiType.CONS_TYPE
-            YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE, YetiType.STRING_ARRAY
-        });
+        YType st = new YType(YetiType.STRUCT, null);
+        st.finalMembers = new HashMap();
+        st.finalMembers.put("yes", YetiType.BOOL_TYPE);
+        st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
+        YType[] types = {st};
+        //YType[] types = { YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE,
+        //                  YetiType.STRING_ARRAY, st };
+        TypePattern pat = toPattern(types);
         System.err.println(pat);
-        TypePattern res = pat.match(YetiType.CONS_TYPE, new IdentityHashMap());
-        System.err.println(res == null ? "FAIL" : res.end == null ? "NONE" : res.end.name);
+        for (int i = 0; i < types.length; ++i) {
+            TypePattern res = pat.match(types[i], new IdentityHashMap());
+            System.err.println(types[i] + " " + (res == null
+                ? "FAIL" : res.end == null ? "NONE" : res.end.name));
+        }
     }
 }
