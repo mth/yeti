@@ -450,8 +450,12 @@ class TypePattern {
                 if (pat.field == null)
                     return null;
                 type = (YType) m.get(pat.field);
-                pat = type != null ? pat.match(type, typeVars)
-                                   : pat.next[idx.length];
+                if (type != null) {
+                    pat = pat.match(type, typeVars)
+                } else {
+                    pat = pat.next[idx.length];
+                    ++i; // was not matched
+                }
             }
         }
         // go for type end marker
