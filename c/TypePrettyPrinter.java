@@ -331,30 +331,39 @@ class TypeDescr extends YetiType {
 }
 
 class TypeWalk implements Comparable {
+    int id, var;
     private YType type;
     private int st;
     private TypeWalk parent;
+    private String[] fields;
+    private Map fieldMap;
+    String field;
     TypePattern pattern;
     YetiType.Scope end;
-    int id, var;
 
     TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
         pattern = p;
-        TypeWalk tvar = (TypeWalk) tvars.get(type = t.deref());
+        this.parent = parent;
+        type = t = t.deref();
+        TypeWalk tvar = (TypeWalk) tvars.get(t);
         if (tvar != null) {
             id = tvar.var;
             tvar.pattern.var = id; // var needs to be allocated
-        } else {
-            id = t.type;
-            if (id == YetiType.VAR) {
-                id = Integer.MAX_VALUE;
-            }
-            if (id >= YetiType.FUN) {
-                tvars.put(t, this);
-                var = -tvars.size();
-            }
+            return;
         }
-        this.parent = parent;
+        id = t.type;
+        if (id == YetiType.VAR)
+            id = Integer.MAX_VALUE;
+        if (id >= YetiType.FUN) {
+            tvars.put(t, this);
+            var = -tvars.size();
+        }
+        if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
+            fieldMap = t.finalMembers != null ? t.finalMembers
+                                              : t.partialMembers;
+            fields = fieldMap.keySet().toArray(new String[fieldMap.size()]);
+            Arrays.sort(fields);
+        }
     }
 
     TypeWalk next(Map tvars, TypePattern pattern) {
