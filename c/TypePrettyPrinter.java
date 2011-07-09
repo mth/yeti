@@ -335,6 +335,7 @@ class TypeWalk implements Comparable {
     private int st;
     private TypeWalk parent;
     TypePattern pattern;
+    YetiType.Scope end;
     int id, var;
 
     TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
@@ -360,6 +361,7 @@ class TypeWalk implements Comparable {
         System.err.println("tw " + this);
         if (id < 0) {
             System.err.println("tw >> parent");
+            pattern.end = end;
             return parent != null ? parent.next(tvars, pattern) : null;
         }
         if (type.param != null && st < type.param.length) {
@@ -390,7 +392,7 @@ class TypePattern {
     // struct/variant field match, next[idx.length] when no such field
     private String field;
     int var; // if var != 0 then match stores type in typeVars as var
-    private YetiType.Scope end;
+    YetiType.Scope end;
 
     TypePattern match(YType type, Map typeVars) {
         int i;
@@ -440,8 +442,10 @@ class TypePattern {
         TypePattern[] patterns = new TypePattern[types.length];
         TypePattern presult = new TypePattern();
         TypeWalk[] wg = new TypeWalk[types.length];
-        for (int i = 0; i < types.length; ++i)
+        for (int i = 0; i < types.length; ++i) {
             wg[i] = new TypeWalk(types[i], null, tvars, null);
+            wg[i].end = new YetiType.Scope(null, "TYPE_" + i, null);
+        }
         List walkers = new ArrayList();
         walkers.add(wg);
         walkers.add(presult);
@@ -508,13 +512,20 @@ class TypePattern {
             }
             sb.append(" => ").append(next[i]);
         }
-        return sb.append('}').toString();
+        sb.append('}');
+        if (end != null) {
+            sb.append(':').append(end.name);
+        }
+        return sb.toString();
     }
 
     public static void main(String[] _) {
-        System.err.println(toPattern(new YType[] {
+        TypePattern pat = toPattern(new YType[] {
 //            YetiType.CONS_TYPE
             YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE, YetiType.STRING_ARRAY
-        }));
+        });
+        System.err.println(pat);
+        TypePattern res = pat.match(YetiType.CONS_TYPE, new IdentityHashMap());
+        System.err.println(res == null ? "FAIL" : res.end == null ? "NONE" : res.end.name);
     }
 }
