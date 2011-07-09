@@ -374,10 +374,18 @@ class TypeWalk implements Comparable {
             pattern.end = end;
             return parent != null ? parent.next(tvars, pattern) : null;
         }
-        if (type.param != null && st < type.param.length) {
-            System.err.println("tw << " + st);
-            return new TypeWalk(type.param[st++], this, tvars, pattern);
-        }
+        if (fields == null) {
+            if (type.param != null && st < type.param.length) {
+                System.err.println("tw << " + st);
+                return new TypeWalk(type.param[st++], this, tvars, pattern);
+            }
+        } else if (st < fields.length) {
+            TypeWalk res = new TypeWalk((YType) fieldMap.get(fields[st]),
+                                        this, tvars, pattern);
+            res.field = fields[st++];
+            System.err.println("tw << " + res.field);
+            return res;
+        } 
         id = Integer.MIN_VALUE;
         System.err.println("tw .");
         return this;
