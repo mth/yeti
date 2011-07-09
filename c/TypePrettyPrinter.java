@@ -429,7 +429,7 @@ class TypePattern {
                 // group by different types
                 for (int j = 1; j <= w.length; ++j) {
                     if (j < w.length && w[j].id == w[j - 1].id)
-                        continue;
+                        continue; // skip until same
                     // add branch
                     ids[n] = w[j - 1].id;
                     for (int k = e = start; k < i; ++k)
