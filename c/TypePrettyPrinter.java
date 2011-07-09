@@ -330,6 +330,33 @@ class TypeDescr extends YetiType {
     }
 }
 
+class TypeWalk implements Comparable {
+    private YType type;
+    private int st;
+    private TypeWalk parent;
+    int id;
+
+    TypeWalk(YType t, TypeWalk parent) {
+        type = t;
+        id = t.type;
+        this.parent = parent;
+    }
+
+    TypeWalk next() {
+        if (type.param != null && st < type.param.length)
+            return new TypeWalk(type.param[st++], this);
+        if (id != Integer.MIN_VALUE) {
+            id = Integer.MIN_VALUE;
+            return this;
+        }
+        return parent != null ? parent.next() : null;
+    }
+
+    public int compareTo(Object o) {
+        return id - ((TypeWalk) o).id;
+    }
+}
+
 class TypePattern {
     // Integer.MIN_VALUE is type end marker
     // Integer.MAX_VALUE matches any type
@@ -380,5 +407,47 @@ class TypePattern {
         if (pat != null && pat.idx[0] == Integer.MIN_VALUE)
             return pat.next[0];
         return null;
+    }
+
+    static TypePattern toPattern(YType[] types) {
+        int[] ids = new int[types.length];
+        TypePattern[] patterns = new TypePattern[types.length];
+        TypePattern presult = new TypePattern();
+        TypeWalk[] wg = new TypeWalk[types.length];
+        for (int i = 0; i < types.length; ++i)
+            wg[i] = new TypeWalk(types[i], null);
+        List walkers = new ArrayList();
+        walkers.add(presult);
+        walkers.add(wg);
+        while (walkers.size() > 0) {
+            List current = walkers;
+            walkers = new ArrayList();
+            for (int i = 0, cnt = current.size(); i < cnt; i += 2) {
+                TypeWalk[] w = (TypeWalk[]) current.get(i);
+                Arrays.sort(w);
+                int start = 0, n = 0, e;
+                // group by different types
+                for (int j = 1; j <= w.length; ++j) {
+                    if (j < w.length && w[j].id == w[j - 1].id)
+                        continue;
+                    // add branch
+                    ids[n] = w[j - 1].id;
+                    for (int k = e = start; k < i; ++k)
+                        if ((w[e] = w[k].next()) != null)
+                            ++e;
+                    wg = new TypeWalk[e - start];
+                    System.arraycopy(w, start, wg, 0, wg.length);
+                    walkers.add(wg);
+                    walkers.add(patterns[n++] = new TypePattern());
+                    start = j;
+                }
+                TypePattern p = (TypePattern) current.get(i + 1);
+                p.idx = new int[n];
+                System.arraycopy(ids, 0, p.idx, 0, n);
+                p.next = new TypePattern[n];
+                System.arraycopy(patterns, 0, p.next, 0, n);
+            }
+        }
+        return presult;
     }
 }
