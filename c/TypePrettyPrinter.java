@@ -510,6 +510,8 @@ class TypePattern {
     }
 
     static TypePattern toPattern(Map typedefs) {
+        if (typedefs.isEmpty())
+            return null;
         int j = 0, varAlloc = 0;
         int[] ids = new int[typedefs.size()];
         TypePattern[] patterns = new TypePattern[ids.length];
