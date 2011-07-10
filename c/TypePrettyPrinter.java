@@ -577,7 +577,7 @@ class TypePattern {
                         if (j < w.length) {
                             field = w[j].field;
                             p.next[n] = next;
-                            //next = new TypePattern(++varAlloc);
+                            next = new TypePattern(++varAlloc);
                         }
                     } else {
                         p.next = new TypePattern[n];
