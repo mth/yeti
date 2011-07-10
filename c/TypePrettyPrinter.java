@@ -462,16 +462,27 @@ class TypePattern {
         return null;
     }
 
-    static TypePattern toPattern(YType[] types) {
-        int varAlloc = 0;
-        int[] ids = new int[types.length];
-        TypePattern[] patterns = new TypePattern[types.length];
+    static TypePattern toPattern(YetiType.Scope scope) {
+        Map typedefs = new IdentityHashMap();
+        for (; scope != null; scope = scope.outer)
+            if (scope.typeDef != null) {
+                Object old = typedefs.put(scope.name, scope);
+                if (old != null)
+                    typedefs.put(scope.name, old);
+            }
+        int j = 0, varAlloc = 0;
+        int[] ids = new int[typedefs.size()];
+        TypePattern[] patterns = new TypePattern[ids.length];
         TypePattern presult = new TypePattern(++varAlloc);
-        TypeWalk[] wg = new TypeWalk[types.length];
+        TypeWalk[] wg = new TypeWalk[ids.length];
         Map tvars = new IdentityHashMap();
-        for (int i = 0; i < types.length; ++i) {
-            wg[i] = new TypeWalk(types[i], null, tvars, null);
-            wg[i].end = new YetiType.Scope(null, "TYPE_" + i, null);
+        for (Iterator i = typedefs.values().iterator(); i.hasNext(); ++j) {
+            scope = (YetiType.Scope) i.next();
+            for (int k = scope.typeDef.length - 1; --k >= 0; )
+                tvars.put(scope.typeDef[k], null); // mark as param
+            wg[j] = new TypeWalk(scope.typeDef[scope.typeDef.length - 1],
+                                 null, tvars, null);
+            wg[j].end = scope;
         }
         List walkers = new ArrayList();
         walkers.add(wg);
@@ -490,7 +501,7 @@ class TypePattern {
                     p = (TypePattern) current.get(i + 1);
                 String field = w.length != 0 ? w[0].field : null;
                 int start = 0, n = 0, e;
-                for (int j = 1; j <= w.length; ++j) {
+                for (j = 1; j <= w.length; ++j) {
                     if (j < w.length && w[j].id == w[j - 1].id)
                         continue; // skip until same
                     // add branch
@@ -562,25 +573,33 @@ class TypePattern {
         return sb.toString();
     }
 
+    private static YetiType.Scope tdef(String name, YType type, YetiType.Scope next) {
+        YetiType.Scope res = new YetiType.Scope(next, name, null);
+        res.typeDef = new YType[] { type };
+        return res;
+    }
+
     public static void main(String[] _) {
         YType st = new YType(YetiType.STRUCT, null);
         st.finalMembers = new HashMap();
         st.finalMembers.put("yes", YetiType.BOOL_TYPE);
         st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
         //YType[] types = {YetiType.CONS_TYPE, st};
-        YType[] types = { YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE,
-                          YetiType.STRING_ARRAY, st };
-        TypePattern pat = toPattern(types);
+        YetiType.Scope scope = tdef("cons", YetiType.CONS_TYPE,
+                tdef("str_pred", YetiType.STR2_PRED_TYPE,
+                tdef("str_array", YetiType.STRING_ARRAY,
+                tdef("my_struct", st, null))));
+        TypePattern res, pat = toPattern(scope);
         System.err.println(pat);
-        for (int i = 0; i < types.length; ++i) {
-            TypePattern res = pat.match(types[i], new IdentityHashMap());
-            System.err.println(types[i] + " " + (res == null
+        for (; scope != null; scope = scope.outer) {
+            res = pat.match(scope.typeDef[0], new IdentityHashMap());
+            System.err.println(scope.typeDef[0] + " " + (res == null
                 ? "FAIL" : res.end == null ? "NONE" : res.end.name));
         }
         YType intlist = new YType(YetiType.MAP, new YType[] {
             YetiType.NUM_TYPE, YetiType.NO_TYPE, YetiType.LIST_TYPE });
         YType il2il = YetiType.fun2Arg(YetiType.NUM_TYPE, intlist, intlist);
-        TypePattern res = pat.match(il2il, new IdentityHashMap());
+        res = pat.match(il2il, new IdentityHashMap());
         System.err.println(il2il + " " + (res == null
                 ? "FAIL" : res.end == null ? "NONE" : res.end.name));
 
