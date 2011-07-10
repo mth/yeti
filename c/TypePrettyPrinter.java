@@ -341,6 +341,7 @@ class TypeWalk implements Comparable {
     TypePattern pattern;
     String typename;
     YType[] def;
+    int[] defvars;
 
     TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
         pattern = p;
@@ -372,6 +373,10 @@ class TypeWalk implements Comparable {
             if (parent != null)
                 return parent.next(tvars, pattern);
             pattern.end = this;
+            defvars = new int[def.length - 1];
+            for (int i = 0; i < defvars.length; ++i)
+                if ((pattern = (TypePattern) tvars.get(def[i])) != null)
+                    defvars[i] = pattern.var;
             return null;
         }
         if (fields == null) {
@@ -570,9 +575,36 @@ class TypePattern {
         }
         sb.append('}');
         if (end != null) {
-            sb.append(':').append(end.typename);
+            sb.append(':').append(end.typename).append('<');
+            for (int i = 0; i < end.defvars.length; ++i) {
+                if (i != 0)
+                    sb.append(',');
+                sb.append(end.defvars[i]);
+            }
+            sb.append('>');
         }
         return sb.toString();
+    }
+
+    static String showres(TypePattern res, Map vars) {
+        if (res == null)
+            return "FAIL";
+        Map rvars = new HashMap();
+        for (Iterator i = vars.entrySet().iterator(); i.hasNext();) {
+            Map.Entry e = (Map.Entry) i.next();
+            rvars.put(e.getValue(), e.getKey());
+        }
+        StringBuffer r = new StringBuffer(res.end.typename).append('<');
+        for (int i = 0; i < res.end.defvars.length; ++i) {
+            if (i != 0)
+                r.append(", ");
+            YType t = (YType) rvars.get(Integer.valueOf(res.end.defvars[i]));
+            if (t != null)
+                r.append(t);
+            else
+                r.append("t" + i);
+        }
+        return r + ">";
     }
 
     public static void main(String[] _) {
@@ -582,25 +614,23 @@ class TypePattern {
         st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
         //YType[] types = {YetiType.CONS_TYPE, st};
         Map defs = new HashMap();
-        defs.put("cons", new YType[] {  YetiType.CONS_TYPE });
+        defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
         defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
         defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
-        defs.put("my_struct", new YType[] { st });
+        defs.put("my_struct", new YType[] { YetiType.A, st });
         TypePattern res, pat = toPattern(defs);
         System.err.println(pat);
         for (Iterator i = defs.values().iterator(); i.hasNext(); ) {
             YType[] def = (YType[]) i.next();
             YType t = def[def.length - 1];
-            res = pat.match(t, new IdentityHashMap());
-            System.err.println(t + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.typename));
+            Map vars = new IdentityHashMap();
+            System.out.println(t + " " + showres(pat.match(t, vars), vars));
         }
         YType intlist = new YType(YetiType.MAP, new YType[] {
             YetiType.NUM_TYPE, YetiType.NO_TYPE, YetiType.LIST_TYPE });
         YType il2il = YetiType.fun2Arg(YetiType.NUM_TYPE, intlist, intlist);
-        res = pat.match(il2il, new IdentityHashMap());
-        System.err.println(il2il + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.typename));
-
+        Map vars = new IdentityHashMap();
+        res = pat.match(il2il, vars);
+        System.out.println(il2il + " " + showres(pat.match(il2il, vars), vars));
     }
 }
