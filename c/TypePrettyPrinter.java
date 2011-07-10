@@ -576,13 +576,15 @@ class TypePattern {
                         p.next = new TypePattern[n + 1];
                         if (j < w.length) {
                             field = w[j].field;
-                            p.next[n] = next = new TypePattern(++varAlloc);
+                            p.next[n] = next;
+                            //next = new TypePattern(++varAlloc);
                         }
                     } else {
                         p.next = new TypePattern[n];
                         if (p.field != null) { // FIXME!
-                            System.err.println("WARN overriding [" +
-                                               p.field + "] ");
+                            System.err.println("WARN overriding [" + p.field +
+                                "] j:" + j + " w.length:" + w.length +
+                                " field:" + field);
                             p.field = null;
                         }
                     }
