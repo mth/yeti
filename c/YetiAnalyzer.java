@@ -883,6 +883,7 @@ public final class YetiAnalyzer extends YetiType {
             defScope = new Scope(defScope, typeDef.param[i], null);
             defScope.typeDef = new YType[] { arg };
             defScope.free = NO_PARAM;
+            arg.doc = defScope.name; // to provide name to pretty-printer
         }
         YType type =
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
