@@ -383,9 +383,11 @@ class TypeWalk implements Comparable {
             if (type.param != null && st < type.param.length)
                 return new TypeWalk(type.param[st++], this, tvars, pattern);
         } else if (st < fields.length) {
-            TypeWalk res = new TypeWalk((YType) fieldMap.get(fields[st]),
-                                        this, tvars, pattern);
+            YType t = (YType) fieldMap.get(fields[st]);
+            TypeWalk res = new TypeWalk(t, this, tvars, pattern);
             res.field = fields[st++];
+            if (t.field == YetiType.FIELD_MUTABLE)
+                res.field = ";".concat(res.field);
             return res;
         }
         field = null;
@@ -411,6 +413,7 @@ class TypePattern {
     private TypePattern[] next;
     // struct/variant field match, next[idx.length] when no such field
     private String field;
+    private boolean mutable;
     int var; // if var < 0 then match stores type in typeVars as var
     TypeWalk end; // end result
 
@@ -440,7 +443,6 @@ class TypePattern {
                 for (i = 0; i < param.length && pat != null; ++i)
                     pat = pat.match(param[i], typeVars);
         } else {
-            // TODO check var/non-var field
             // TODO check final/partial if necessary
             Map m = type.finalMembers;
             if (m == null)
@@ -450,7 +452,8 @@ class TypePattern {
                 if (pat.field == null)
                     return null;
                 type = (YType) m.get(pat.field);
-                if (type != null) {
+                if (type != null &&
+                        type.field == YetiType.FIELD_MUTABLE == mutable) {
                     pat = pat.match(type, typeVars);
                 } else {
                     pat = pat.next[idx.length];
@@ -521,6 +524,10 @@ class TypePattern {
                     p.idx = new int[n];
                     System.arraycopy(ids, 0, p.idx, 0, n);
                     if (field != null) {
+                        if (field.charAt(0) == ';') {
+                            field = field.substring(1).intern();
+                            p.mutable = true;
+                        }
                         p.field = field;
                         p.next = new TypePattern[n + 1];
                         if (j < w.length) {
