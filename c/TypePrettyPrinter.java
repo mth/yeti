@@ -577,5 +577,12 @@ class TypePattern {
             System.err.println(types[i] + " " + (res == null
                 ? "FAIL" : res.end == null ? "NONE" : res.end.name));
         }
+        YType intlist = new YType(YetiType.MAP, new YType[] {
+            YetiType.NUM_TYPE, YetiType.NO_TYPE, YetiType.LIST_TYPE });
+        YType il2il = YetiType.fun2Arg(YetiType.NUM_TYPE, intlist, intlist);
+        TypePattern res = pat.match(il2il, new IdentityHashMap());
+        System.err.println(il2il + " " + (res == null
+                ? "FAIL" : res.end == null ? "NONE" : res.end.name));
+
     }
 }
