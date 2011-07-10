@@ -158,7 +158,7 @@ moduleDoc m is ~ModuleType -> type_action_param =
     i = m#typeDefs#entrySet()#iterator();
     i#hasNext() loop
        (e = i#next() unsafely_as ~java.util.Map$Entry;
-        param = array [] is array<string>;
+        param = array [];
         type = TypeDescr#typeDef(e#getValue() unsafely_as ~YType[],
                                  param unsafely_as ~yeti.lang.MList);
         push typedefs {
