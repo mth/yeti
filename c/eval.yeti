@@ -35,16 +35,16 @@ import java.io.File;
 load yeti.lang.compiler.showtype;
 
 typedef typedef_description = {
-    .name is string,
-    .type is type,
-    .param is list<string>
+    name is string,
+    type is type,
+    param is list<string>
 }
 
 typedef module_description = {
-    .doc is string,
-    .name is string,
-    .type is type,
-    .typedefs is list<typedef_description>
+    doc is string,
+    name is string,
+    type is type,
+    typedefs is list<typedef_description>
 }
 
 // XXX: Beware - the GlobalSandbox argument sets a very restricive
