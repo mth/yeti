@@ -1704,9 +1704,11 @@ interface YetiParser {
                 res = readSeq(' ', Seq.EVAL);
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;
-                    if (seq.st[seq.st.length - 1] instanceof Bind ||
-                        seq.st[seq.st.length - 1].kind == "struct-bind" ||
-                        seq.st[seq.st.length - 1].kind == "import") {
+                    Node last = seq.st[seq.st.length - 1];
+                    if (last instanceof Bind ||
+                        last.kind == "struct-bind" ||
+                        last.kind == "import" ||
+                        last instanceof TypeDef) {
                         Node[] tmp = new Node[seq.st.length + 1];
                         System.arraycopy(seq.st, 0, tmp, 0, seq.st.length);
                         tmp[tmp.length - 1] =
