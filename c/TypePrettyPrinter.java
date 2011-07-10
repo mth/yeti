@@ -368,7 +368,8 @@ class TypeWalk implements Comparable {
 
     TypeWalk next(Map tvars, TypePattern pattern) {
         if (id < 0) {
-            pattern.end = end;
+            if (end != null)
+                pattern.end = this;
             return parent != null ? parent.next(tvars, pattern) : null;
         }
         if (fields == null) {
@@ -410,7 +411,7 @@ class TypePattern {
     // struct/variant field match, next[idx.length] when no such field
     private String field;
     int var; // if var < 0 then match stores type in typeVars as var
-    YetiType.Scope end;
+    TypeWalk end; // end result
 
     TypePattern(int var) {
         this.var = var;
@@ -567,8 +568,8 @@ class TypePattern {
             sb.append(" => ").append(next[i]);
         }
         sb.append('}');
-        if (end != null) {
-            sb.append(':').append(end.name);
+        if (end != null && end != null) {
+            sb.append(':').append(end.end.name);
         }
         return sb.toString();
     }
@@ -594,14 +595,14 @@ class TypePattern {
         for (; scope != null; scope = scope.outer) {
             res = pat.match(scope.typeDef[0], new IdentityHashMap());
             System.err.println(scope.typeDef[0] + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.name));
+                ? "FAIL" : res.end == null ? "NONE" : res.end.end.name));
         }
         YType intlist = new YType(YetiType.MAP, new YType[] {
             YetiType.NUM_TYPE, YetiType.NO_TYPE, YetiType.LIST_TYPE });
         YType il2il = YetiType.fun2Arg(YetiType.NUM_TYPE, intlist, intlist);
         res = pat.match(il2il, new IdentityHashMap());
         System.err.println(il2il + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.name));
+                ? "FAIL" : res.end == null ? "NONE" : res.end.end.name));
 
     }
 }
