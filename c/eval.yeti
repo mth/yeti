@@ -40,7 +40,7 @@ typedef typedef_description = {
     .param is list<string>
 }
 
-typedef type_action_param = {
+typedef module_description = {
     .doc is string,
     .name is string,
     .type is type,
@@ -151,9 +151,9 @@ createCtx reader genericOpt =
     fi;
     {warn, ctx, java});
 
-nullTypeAction _ is type_action_param -> () = ();
+nullTypeAction _ is module_description -> () = ();
 
-moduleDoc m is ~ModuleType -> type_action_param =
+moduleDoc m is ~ModuleType -> module_description =
    (typedefs = array [];
     i = m#typeDefs#entrySet()#iterator();
     i#hasNext() loop
