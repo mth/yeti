@@ -396,12 +396,6 @@ class TypeWalk implements Comparable {
         int cmp = field.compareTo(tw.field);
         return cmp == 0 ? id - tw.id : cmp;
     }
-
-    public String toString() {
-        return "TW[id=" + (id == Integer.MIN_VALUE ? "." :
-                id == Integer.MAX_VALUE ? "_" :
-                "" + id) + " st=" + st + ' ' + type + ']';
-    }
 }
 
 class TypePattern {
