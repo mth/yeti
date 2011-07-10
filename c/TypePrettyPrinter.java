@@ -355,13 +355,11 @@ class TypeWalk implements Comparable {
             return;
         }
         id = t.type;
-        if (id == YetiType.VAR)
-            id = tvars.containsKey(t) || parent != null &&
-                    parent.type.type == YetiType.MAP &&
-                    parent.st > 1 && (parent.st > 2 ||
-                    parent.type.param[2] == YetiType.LIST_TYPE)
-                ? Integer.MAX_VALUE : Integer.MIN_VALUE + 1;
-        if (id >= YetiType.FUN)
+        if (id == YetiType.VAR && (tvars.containsKey(t) || parent != null &&
+                parent.type.type == YetiType.MAP && parent.st > 1 &&
+                (parent.st > 2 || parent.type.param[2] == YetiType.LIST_TYPE)))
+            id = Integer.MAX_VALUE;
+        if (id >= YetiType.FUN || id == YetiType.VAR)
             tvars.put(t, p);
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
