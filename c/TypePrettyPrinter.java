@@ -362,12 +362,14 @@ class TypeWalk implements Comparable {
                        parent.st > 1 && (parent.st > 2 ||
                             parent.type.param[2] == YetiType.LIST_TYPE)) {
                 id = Integer.MAX_VALUE; // map kind - match anything
+                System.err.println("*** " + parent.st);
                 return; // and don't associate
             }
             tvars.put(t, p);
         } else if (id >= YetiType.FUN) {
             tvars.put(t, p);
-        } else if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
+        }
+        if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
                                               : t.partialMembers;
             fields = (String[])
