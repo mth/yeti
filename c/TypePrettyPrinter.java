@@ -371,8 +371,6 @@ class TypeWalk implements Comparable {
         if (id < 0) {
             if (parent != null)
                 return parent.next(tvars, pattern);
-            if (def == null)
-                throw new IllegalArgumentException("WTF");
             pattern.end = this;
             return null;
         }
