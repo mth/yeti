@@ -340,7 +340,7 @@ class TypeWalk implements Comparable {
     String field;
     TypePattern pattern;
     String typename;
-    YType[] end;
+    YType[] def;
 
     TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
         pattern = p;
@@ -369,7 +369,7 @@ class TypeWalk implements Comparable {
 
     TypeWalk next(Map tvars, TypePattern pattern) {
         if (id < 0) {
-            if (end != null)
+            if (def != null)
                 pattern.end = this;
             return parent != null ? parent.next(tvars, pattern) : null;
         }
@@ -478,7 +478,7 @@ class TypePattern {
                 tvars.put(def[k], null); // mark as param
             wg[j] = new TypeWalk(def[def.length - 1], null, tvars, null);
             wg[j].typename = (String) e.getKey();
-            wg[j].end = def;
+            wg[j].def = def;
         }
         List walkers = new ArrayList();
         walkers.add(wg);
