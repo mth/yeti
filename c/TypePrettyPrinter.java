@@ -355,8 +355,14 @@ class TypeWalk implements Comparable {
             return;
         }
         id = t.type;
+        if (parent != null)
+            System.err.println(parent.st);
         if (id == YetiType.VAR)
-            id = Integer.MAX_VALUE;
+            id = tvars.containsKey(t) || parent != null &&
+                    parent.type.type == YetiType.MAP &&
+                    parent.st > 1 && (parent.st > 2 ||
+                    parent.type.param[2] == YetiType.LIST_TYPE)
+                ? Integer.MAX_VALUE : Integer.MIN_VALUE + 1;
         if (id >= YetiType.FUN)
             tvars.put(t, p);
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
@@ -372,11 +378,13 @@ class TypeWalk implements Comparable {
         if (id < 0) {
             if (parent != null)
                 return parent.next(tvars, pattern);
-            pattern.end = this;
-            defvars = new int[def.length - 1];
-            for (int i = 0; i < defvars.length; ++i)
-                if ((pattern = (TypePattern) tvars.get(def[i])) != null)
-                    defvars[i] = pattern.var;
+            if (def != null) {
+                pattern.end = this;
+                defvars = new int[def.length - 1];
+                for (int i = 0; i < defvars.length; ++i)
+                    if ((pattern = (TypePattern) tvars.get(def[i])) != null)
+                        defvars[i] = pattern.var;
+            }
             return null;
         }
         if (fields == null) {
@@ -478,7 +486,7 @@ class TypePattern {
             Map.Entry e = (Map.Entry) i.next();
             YType[] def = (YType[]) e.getValue();
             for (int k = def.length - 1; --k >= 0; )
-                tvars.put(def[k], null); // mark as param
+                tvars.put(def[k].deref(), null); // mark as param
             wg[j] = new TypeWalk(def[def.length - 1], null, tvars, null);
             wg[j].typename = (String) e.getKey();
             wg[j].def = def;
