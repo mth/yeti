@@ -355,11 +355,8 @@ class TypeWalk implements Comparable {
         id = t.type;
         if (id == YetiType.VAR)
             id = Integer.MAX_VALUE;
-        if (id >= YetiType.FUN) {
-            if (p != null)
-                System.err.println("ALLOC tvar " + p.var);
+        if (id >= YetiType.FUN)
             tvars.put(t, p);
-        }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
                                               : t.partialMembers;
@@ -370,27 +367,21 @@ class TypeWalk implements Comparable {
     }
 
     TypeWalk next(Map tvars, TypePattern pattern) {
-        System.err.println("tw " + this);
         if (id < 0) {
-            System.err.println("tw >> parent");
             pattern.end = end;
             return parent != null ? parent.next(tvars, pattern) : null;
         }
         if (fields == null) {
-            if (type.param != null && st < type.param.length) {
-                System.err.println("tw << " + st);
+            if (type.param != null && st < type.param.length)
                 return new TypeWalk(type.param[st++], this, tvars, pattern);
-            }
         } else if (st < fields.length) {
             TypeWalk res = new TypeWalk((YType) fieldMap.get(fields[st]),
                                         this, tvars, pattern);
             res.field = fields[st++];
-            System.err.println("tw << " + res.field);
             return res;
         }
         field = null;
         id = Integer.MIN_VALUE;
-        System.err.println("tw .");
         return this;
     }
 
@@ -429,8 +420,6 @@ class TypePattern {
         int i;
 
         type = type.deref();
-        //System.err.println("MATCH " + type + " WITH " + this);
-
         Object tv = typeVars.get(type);
         if (tv != null) {
             i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
@@ -440,10 +429,8 @@ class TypePattern {
         i = Arrays.binarySearch(idx, type.type);
         if (i < 0 && idx[i = idx.length - 1] != Integer.MAX_VALUE)
             return null;
-        if (var < 0) {
-            //System.err.println("SET typevar " + var);
+        if (var < 0)
             typeVars.put(type, Integer.valueOf(var));
-        }
         TypePattern pat = next[i];
         if (pat.field == null) {
             YType[] param = type.param;
@@ -497,25 +484,19 @@ class TypePattern {
             for (int i = 0, cnt = current.size(); i < cnt; i += 3) {
                 TypeWalk[] w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
-                System.err.println("group " + i/2 + ' ' + Arrays.asList(w));
+                System.err.println("group " + i/3 + ' ' + Arrays.asList(w));
                 // group by different types
                 TypePattern next = new TypePattern(++varAlloc),
                     p = (TypePattern) current.get(i + 1);
                 String field = w.length != 0 ? w[0].field : null;
                 int start = 0, n = 0, e;
                 for (int j = 1; j <= w.length; ++j) {
-                    System.err.println("* j=" + j + " w[j].id=" +
-                            (j < w.length ? "" + w[j].id : "*") +
-                            "w[j-1].id=" + w[j-1].id);
-                    if (j < w.length && w[j].id == w[j - 1].id) {
-                        System.err.println("* continue");
+                    if (j < w.length && w[j].id == w[j - 1].id)
                         continue; // skip until same
-                    }
                     // add branch
                     tvars = new IdentityHashMap((Map) current.get(i + 2));
                     ids[n] = w[j - 1].id;
-                    System.err.println("** add branch " + ids[n] +
-                            " for [" + start + " to " + j);
+                    System.err.println("** add branch " + ids[n] + " for [" + start + " to " + j);
                     for (int k = e = start; k < j; ++k)
                         if ((w[e] = w[k].next(tvars, next)) != null)
                             ++e;
