@@ -497,11 +497,9 @@ class TypePattern {
                 if (type != null &&
                         type.field == YetiType.FIELD_MUTABLE == mutable) {
                     pat = pat.match(type, typeVars);
-                } else if (pat.next.length > pat.idx.length) {
+                } else {
                     pat = pat.next[pat.idx.length];
                     ++i; // was not matched
-                } else {
-                    return null;
                 }
             }
         }
@@ -582,6 +580,11 @@ class TypePattern {
                         }
                     } else {
                         p.next = new TypePattern[n];
+                        if (p.field != null) { // FIXME!
+                            System.err.println("WARN overriding [" +
+                                               p.field + "] ");
+                            p.field = null;
+                        }
                     }
                     System.arraycopy(patterns, 0, p.next, 0, n);
                     p = next;
