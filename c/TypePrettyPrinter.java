@@ -204,7 +204,7 @@ class TypeDescr extends YetiType {
         return prepare(t, defs, new HashMap(), new HashMap()).force();
     }
 
-    static Tag typeDef(YType[] def, MList param) {
+    static Tag typeDef(YType[] def, MList param, TypePattern defs) {
         Map vars = new HashMap();
         for (int i = 0, n = 0; i < def.length - 1; ++i) {
             String name = def[i].doc instanceof String
@@ -212,7 +212,7 @@ class TypeDescr extends YetiType {
             vars.put(def[i].deref(), name);
             param.add(name);
         }
-        return prepare(def[def.length - 1], null, vars, new HashMap()).force();
+        return prepare(def[def.length - 1], defs, vars, new HashMap()).force();
     }
 
     private static void hdescr(TypeDescr descr, YType tt,
@@ -497,9 +497,11 @@ class TypePattern {
                 if (type != null &&
                         type.field == YetiType.FIELD_MUTABLE == mutable) {
                     pat = pat.match(type, typeVars);
-                } else {
-                    pat = pat.next[idx.length];
+                } else if (pat.next.length > pat.idx.length) {
+                    pat = pat.next[pat.idx.length];
                     ++i; // was not matched
+                } else {
+                    return null;
                 }
             }
         }

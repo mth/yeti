@@ -155,23 +155,45 @@ nullTypeAction _ is module_description -> () = ();
 
 moduleDoc m is ~ModuleType -> module_description =
    (typedefs = array [];
-    i = m#typeDefs#entrySet()#iterator();
-    i#hasNext() loop
-       (e = i#next() unsafely_as ~java.util.Map$Entry;
-        param = array [];
-        type = TypeDescr#typeDef(e#getValue() unsafely_as ~YType[],
-                                 param unsafely_as ~yeti.lang.MList);
+    addDef name def scope =
+       (param = array [];
+        type = TypeDescr#typeDef(def unsafely_as ~YType[],
+                                 param unsafely_as ~yeti.lang.MList,
+                                 scope is ~TypePattern);
         push typedefs {
-            name = string e#getKey(),
+            name = string name,
             type = type unsafely_as type,
             param = list param
         });
-    defPattern = TypePattern#toPattern(m#typeDefs);
+    var scope = m#typeScope;
+    typedefs =
+        if nullptr? scope then
+            i = m#typeDefs#entrySet()#iterator();
+            i#hasNext() loop
+               (e = i#next() unsafely_as ~java.util.Map$Entry;
+                addDef e#getKey() e#getValue() (() as ~TypePattern));
+            sortBy (on (<) (.name)) typedefs
+        else
+            count = m#typeDefs#size();
+            not nullptr? scope and length typedefs < count loop
+               (if not nullptr? scope#typeDef
+                        and m#typeDefs#containsKey(scope#name) then
+                    addDef scope#name scope#typeDef
+                           TypePattern#toPattern(scope#outer)
+                fi;
+                scope := scope#outer);
+            reverse typedefs
+        fi;
+    defPattern = if nullptr? scope then
+                     TypePattern#toPattern(m#typeDefs)
+                 else
+                     TypePattern#toPattern(m#typeScope)
+                 fi;
     {
         doc = m#topDoc,
         name = strReplace '/' '.' m#name,
         type = TypeDescr#yetiType(m#type, defPattern) unsafely_as type,
-        typedefs = sortBy (on (<) (.name)) typedefs
+        typedefs
     });
 
 compileYetiFiles genericOpt options files =

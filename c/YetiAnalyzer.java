@@ -1617,6 +1617,7 @@ public final class YetiAnalyzer extends YetiType {
             root.moduleType.topDoc = parser.topDoc;
             root.moduleType.deprecated = parser.deprecated;
             root.moduleType.name = parser.moduleName;
+            root.moduleType.typeScope = topLevel.typeScope;
             root.isModule = parser.isModule;
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
