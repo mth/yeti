@@ -339,7 +339,8 @@ class TypeWalk implements Comparable {
     private Map fieldMap;
     String field;
     TypePattern pattern;
-    YetiType.Scope end;
+    String typename;
+    YType[] end;
 
     TypeWalk(YType t, TypeWalk parent, Map tvars, TypePattern p) {
         pattern = p;
@@ -463,27 +464,21 @@ class TypePattern {
         return null;
     }
 
-    static TypePattern toPattern(YetiType.Scope scope) {
-        Map typedefs = new IdentityHashMap();
-        for (; scope != null; scope = scope.outer)
-            if (scope.typeDef != null) {
-                Object old = typedefs.put(scope.name, scope);
-                if (old != null)
-                    typedefs.put(scope.name, old);
-            }
+    static TypePattern toPattern(Map typedefs) {
         int j = 0, varAlloc = 0;
         int[] ids = new int[typedefs.size()];
         TypePattern[] patterns = new TypePattern[ids.length];
         TypePattern presult = new TypePattern(++varAlloc);
         TypeWalk[] wg = new TypeWalk[ids.length];
         Map tvars = new IdentityHashMap();
-        for (Iterator i = typedefs.values().iterator(); i.hasNext(); ++j) {
-            scope = (YetiType.Scope) i.next();
-            for (int k = scope.typeDef.length - 1; --k >= 0; )
-                tvars.put(scope.typeDef[k], null); // mark as param
-            wg[j] = new TypeWalk(scope.typeDef[scope.typeDef.length - 1],
-                                 null, tvars, null);
-            wg[j].end = scope;
+        for (Iterator i = typedefs.entrySet().iterator(); i.hasNext(); ++j) {
+            Map.Entry e = (Map.Entry) i.next();
+            YType[] def = (YType[]) e.getValue();
+            for (int k = def.length - 1; --k >= 0; )
+                tvars.put(def[k], null); // mark as param
+            wg[j] = new TypeWalk(def[def.length - 1], null, tvars, null);
+            wg[j].typename = (String) e.getKey();
+            wg[j].end = def;
         }
         List walkers = new ArrayList();
         walkers.add(wg);
@@ -544,6 +539,17 @@ class TypePattern {
         return presult;
     }
 
+    static TypePattern toPattern(YetiType.Scope scope) {
+        Map typedefs = new HashMap();
+        for (; scope != null; scope = scope.outer)
+            if (scope.typeDef != null) {
+                Object old = typedefs.put(scope.name, scope.typeDef);
+                if (old != null)
+                    typedefs.put(scope.name, old);
+            }
+        return toPattern(typedefs);
+    }
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         if (var < 0)
@@ -568,8 +574,8 @@ class TypePattern {
             sb.append(" => ").append(next[i]);
         }
         sb.append('}');
-        if (end != null && end != null) {
-            sb.append(':').append(end.end.name);
+        if (end != null) {
+            sb.append(':').append(end.typename);
         }
         return sb.toString();
     }
@@ -595,14 +601,14 @@ class TypePattern {
         for (; scope != null; scope = scope.outer) {
             res = pat.match(scope.typeDef[0], new IdentityHashMap());
             System.err.println(scope.typeDef[0] + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.end.name));
+                ? "FAIL" : res.end == null ? "NONE" : res.end.typename));
         }
         YType intlist = new YType(YetiType.MAP, new YType[] {
             YetiType.NUM_TYPE, YetiType.NO_TYPE, YetiType.LIST_TYPE });
         YType il2il = YetiType.fun2Arg(YetiType.NUM_TYPE, intlist, intlist);
         res = pat.match(il2il, new IdentityHashMap());
         System.err.println(il2il + " " + (res == null
-                ? "FAIL" : res.end == null ? "NONE" : res.end.end.name));
+                ? "FAIL" : res.end == null ? "NONE" : res.end.typename));
 
     }
 }
