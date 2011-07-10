@@ -109,6 +109,13 @@ do {type, name, doc, typedefs}:
         if doc != "" then
             println "/*\n\(doc)\n*/"
         fi;
-        println "module \(name);\n\(showType [CommentDoc ()] '' type)"
+        println "module \(name);\n";
+        for typedefs do {name, type, param}:
+            paramStr =
+                if empty? param then "" else "<\(strJoin ', ' param)>" fi;
+            println "typedef \(name)\(paramStr) = \
+                    "\(showType [CommentDoc ()] '' type)\n"
+        done;
+        println (showType [CommentDoc ()] '' type);
     fi
 done

@@ -142,7 +142,7 @@ createCtx reader genericOpt =
 
         /// Disable generation of Java 1.6 frames to class files (mainly useful
         /// for debugging, this option is not needed to run on older JVMs).
-        NoFrames ():  ctx#classWriterFlags := 0
+        NoFrames (): ctx#classWriterFlags := 0
         esac
     done;
     ctx#classPath := new ClassFinder(classPath);
@@ -153,12 +153,25 @@ createCtx reader genericOpt =
 
 nullTypeAction _ is type_action_param -> () = ();
 
-moduleDoc m is ~ModuleType -> type_action_param = {
-    doc = m#topDoc,
-    name = strReplace '/' '.' m#name,
-    type = TypeDescr#yetiType(m#type) unsafely_as type,
-    typedefs = []
-};
+moduleDoc m is ~ModuleType -> type_action_param =
+   (typedefs = array [];
+    i = m#typeDefs#entrySet()#iterator();
+    i#hasNext() loop
+       (e = i#next() unsafely_as ~java.util.Map$Entry;
+        param = array [] is array<string>;
+        type = TypeDescr#typeDef(e#getValue() unsafely_as ~YType[],
+                                 param unsafely_as ~yeti.lang.MList);
+        push typedefs {
+            name = string e#getKey(),
+            type = type unsafely_as type,
+            param = list param
+        });
+    {
+        doc = m#topDoc,
+        name = strReplace '/' '.' m#name,
+        type = TypeDescr#yetiType(m#type) unsafely_as type,
+        typedefs = sortBy (on (<) (.name)) typedefs
+    });
 
 compileYetiFiles genericOpt options files =
    (var exec = false;

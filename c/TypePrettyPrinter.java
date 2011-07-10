@@ -204,6 +204,17 @@ class TypeDescr extends YetiType {
         return prepare(t, new HashMap(), new HashMap()).force();
     }
 
+    static Tag typeDef(YType[] def, MList param) {
+        Map vars = new HashMap();
+        for (int i = 0, n = 0; i < def.length - 1; ++i) {
+            String name = def[i].doc instanceof String
+                ? (String) def[i].doc : "t" + ++n;
+            vars.put(def[i].deref(), name);
+            param.add(name);
+        }
+        return prepare(def[def.length - 1], vars, new HashMap()).force();
+    }
+
     private static void hdescr(TypeDescr descr, YType tt, Map vars, Map refs) {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
