@@ -355,8 +355,6 @@ class TypeWalk implements Comparable {
             return;
         }
         id = t.type;
-        if (parent != null)
-            System.err.println(parent.st);
         if (id == YetiType.VAR)
             id = tvars.containsKey(t) || parent != null &&
                     parent.type.type == YetiType.MAP &&
