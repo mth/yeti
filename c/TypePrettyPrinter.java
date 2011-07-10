@@ -331,7 +331,7 @@ class TypeDescr extends YetiType {
 }
 
 class TypeWalk implements Comparable {
-    int id, var;
+    int id;
     private YType type;
     private int st;
     private TypeWalk parent;
@@ -345,18 +345,20 @@ class TypeWalk implements Comparable {
         pattern = p;
         this.parent = parent;
         type = t = t.deref();
-        TypeWalk tvar = (TypeWalk) tvars.get(t);
+        TypePattern tvar = (TypePattern) tvars.get(t);
         if (tvar != null) {
             id = tvar.var;
-            tvar.pattern.var = id; // var needs to be allocated
+            if (id > 0)
+                tvar.var = id = -id; // mark used
             return;
         }
         id = t.type;
         if (id == YetiType.VAR)
             id = Integer.MAX_VALUE;
         if (id >= YetiType.FUN) {
-            tvars.put(t, this);
-            var = -tvars.size();
+            if (p != null)
+                System.err.println("ALLOC tvar " + p.var);
+            tvars.put(t, p);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
@@ -416,13 +418,19 @@ class TypePattern {
     private TypePattern[] next;
     // struct/variant field match, next[idx.length] when no such field
     private String field;
-    int var; // if var != 0 then match stores type in typeVars as var
+    int var; // if var < 0 then match stores type in typeVars as var
     YetiType.Scope end;
+
+    TypePattern(int var) {
+        this.var = var;
+    }
 
     TypePattern match(YType type, Map typeVars) {
         int i;
 
         type = type.deref();
+        //System.err.println("MATCH " + type + " WITH " + this);
+
         Object tv = typeVars.get(type);
         if (tv != null) {
             i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
@@ -432,8 +440,10 @@ class TypePattern {
         i = Arrays.binarySearch(idx, type.type);
         if (i < 0 && idx[i = idx.length - 1] != Integer.MAX_VALUE)
             return null;
-        if (var != 0)
+        if (var < 0) {
+            //System.err.println("SET typevar " + var);
             typeVars.put(type, Integer.valueOf(var));
+        }
         TypePattern pat = next[i];
         if (pat.field == null) {
             YType[] param = type.param;
@@ -466,11 +476,12 @@ class TypePattern {
     }
 
     static TypePattern toPattern(YType[] types) {
-        Map tvars = new IdentityHashMap();
+        int varAlloc = 0;
         int[] ids = new int[types.length];
         TypePattern[] patterns = new TypePattern[types.length];
-        TypePattern presult = new TypePattern();
+        TypePattern presult = new TypePattern(++varAlloc);
         TypeWalk[] wg = new TypeWalk[types.length];
+        Map tvars = new IdentityHashMap();
         for (int i = 0; i < types.length; ++i) {
             wg[i] = new TypeWalk(types[i], null, tvars, null);
             wg[i].end = new YetiType.Scope(null, "TYPE_" + i, null);
@@ -478,29 +489,30 @@ class TypePattern {
         List walkers = new ArrayList();
         walkers.add(wg);
         walkers.add(presult);
+        walkers.add(tvars);
         while (walkers.size() > 0) {
             List current = walkers;
             walkers = new ArrayList();
             System.err.println("=== STEP ===");
-            for (int i = 0, cnt = current.size(); i < cnt; i += 2) {
+            for (int i = 0, cnt = current.size(); i < cnt; i += 3) {
                 TypeWalk[] w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
                 System.err.println("group " + i/2 + ' ' + Arrays.asList(w));
-                int start = 0, n = 0, e;
                 // group by different types
-                TypePattern next = new TypePattern(),
+                TypePattern next = new TypePattern(++varAlloc),
                     p = (TypePattern) current.get(i + 1);
                 String field = w.length != 0 ? w[0].field : null;
+                int start = 0, n = 0, e;
                 for (int j = 1; j <= w.length; ++j) {
                     System.err.println("* j=" + j + " w[j].id=" +
                             (j < w.length ? "" + w[j].id : "*") +
                             "w[j-1].id=" + w[j-1].id);
                     if (j < w.length && w[j].id == w[j - 1].id) {
-                        w[j].var = w[j - 1].var;
                         System.err.println("* continue");
                         continue; // skip until same
                     }
                     // add branch
+                    tvars = new IdentityHashMap((Map) current.get(i + 2));
                     ids[n] = w[j - 1].id;
                     System.err.println("** add branch " + ids[n] +
                             " for [" + start + " to " + j);
@@ -511,7 +523,8 @@ class TypePattern {
                     System.arraycopy(w, start, wg, 0, wg.length);
                     walkers.add(wg);
                     walkers.add(patterns[n++] = next);
-                    next = new TypePattern();
+                    walkers.add(tvars);
+                    next = new TypePattern(++varAlloc);
                     start = j;
                     if (j < w.length && (field == w[j].field ||
                             (field != null && field.equals(w[j].field))))
@@ -524,7 +537,7 @@ class TypePattern {
                         p.next = new TypePattern[n + 1];
                         if (j < w.length) {
                             field = w[j].field;
-                            p.next[n] = next = new TypePattern();
+                            p.next[n] = next = new TypePattern(++varAlloc);
                         }
                     } else {
                         p.next = new TypePattern[n];
@@ -540,7 +553,7 @@ class TypePattern {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        if (var != 0)
+        if (var < 0)
             sb.append(var).append(':');
         if (field != null)
             sb.append(field).append(' ');
@@ -573,9 +586,9 @@ class TypePattern {
         st.finalMembers = new HashMap();
         st.finalMembers.put("yes", YetiType.BOOL_TYPE);
         st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
-        YType[] types = {YetiType.CONS_TYPE, st};
-        //YType[] types = { YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE,
-        //                  YetiType.STRING_ARRAY, st };
+        //YType[] types = {YetiType.CONS_TYPE, st};
+        YType[] types = { YetiType.CONS_TYPE, YetiType.STR2_PRED_TYPE,
+                          YetiType.STRING_ARRAY, st };
         TypePattern pat = toPattern(types);
         System.err.println(pat);
         for (int i = 0; i < types.length; ++i) {
