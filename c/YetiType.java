@@ -70,7 +70,8 @@ class YType {
     }
 
     public String toString() {
-        return (String) new ShowTypeFun().apply("", TypeDescr.yetiType(this));
+        return (String) new ShowTypeFun().apply("",
+                    TypeDescr.yetiType(this, null));
     }
 
     YType deref() {

@@ -166,10 +166,11 @@ moduleDoc m is ~ModuleType -> module_description =
             type = type unsafely_as type,
             param = list param
         });
+    defPattern = TypePattern#toPattern(m#typeDefs);
     {
         doc = m#topDoc,
         name = strReplace '/' '.' m#name,
-        type = TypeDescr#yetiType(m#type) unsafely_as type,
+        type = TypeDescr#yetiType(m#type, defPattern) unsafely_as type,
         typedefs = sortBy (on (<) (.name)) typedefs
     });
 
@@ -299,7 +300,7 @@ evaluateYetiCode genericOpt =
                     try
                         t = ctx#compile(sourceName, mainClass,
                                         code is string, ctx#flags);
-                        type := TypeDescr#yetiType(t) unsafely_as type;
+                        type := TypeDescr#yetiType(t, ()) unsafely_as type;
                         () as ~CompileException
                     catch CompileException ex:
                         ex
