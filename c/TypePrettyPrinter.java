@@ -369,9 +369,12 @@ class TypeWalk implements Comparable {
 
     TypeWalk next(Map tvars, TypePattern pattern) {
         if (id < 0) {
-            if (def != null)
-                pattern.end = this;
-            return parent != null ? parent.next(tvars, pattern) : null;
+            if (parent != null)
+                return parent.next(tvars, pattern);
+            if (def == null)
+                throw new IllegalArgumentException("WTF");
+            pattern.end = this;
+            return null;
         }
         if (fields == null) {
             if (type.param != null && st < type.param.length)
@@ -574,27 +577,24 @@ class TypePattern {
         return sb.toString();
     }
 
-    private static YetiType.Scope tdef(String name, YType type, YetiType.Scope next) {
-        YetiType.Scope res = new YetiType.Scope(next, name, null);
-        res.typeDef = new YType[] { type };
-        return res;
-    }
-
     public static void main(String[] _) {
         YType st = new YType(YetiType.STRUCT, null);
         st.finalMembers = new HashMap();
         st.finalMembers.put("yes", YetiType.BOOL_TYPE);
         st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
         //YType[] types = {YetiType.CONS_TYPE, st};
-        YetiType.Scope scope = tdef("cons", YetiType.CONS_TYPE,
-                tdef("str_pred", YetiType.STR2_PRED_TYPE,
-                tdef("str_array", YetiType.STRING_ARRAY,
-                tdef("my_struct", st, null))));
-        TypePattern res, pat = toPattern(scope);
+        Map defs = new HashMap();
+        defs.put("cons", new YType[] {  YetiType.CONS_TYPE });
+        defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
+        defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
+        defs.put("my_struct", new YType[] { st });
+        TypePattern res, pat = toPattern(defs);
         System.err.println(pat);
-        for (; scope != null; scope = scope.outer) {
-            res = pat.match(scope.typeDef[0], new IdentityHashMap());
-            System.err.println(scope.typeDef[0] + " " + (res == null
+        for (Iterator i = defs.values().iterator(); i.hasNext(); ) {
+            YType[] def = (YType[]) i.next();
+            YType t = def[def.length - 1];
+            res = pat.match(t, new IdentityHashMap());
+            System.err.println(t + " " + (res == null
                 ? "FAIL" : res.end == null ? "NONE" : res.end.typename));
         }
         YType intlist = new YType(YetiType.MAP, new YType[] {
