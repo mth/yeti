@@ -43,6 +43,7 @@ import yeti.lang.IntNum;
 public final class YetiAnalyzer extends YetiType {
     static final class TopLevel {
         Map typeDefs = new HashMap();
+        Scope typeScope;
         boolean isModule;
     }
 
@@ -895,6 +896,7 @@ public final class YetiAnalyzer extends YetiType {
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
+            ((TopLevel) seqKind).typeScope = scope;
         }
         return scope;
     }
@@ -960,6 +962,9 @@ public final class YetiAnalyzer extends YetiType {
                     scope = bind((String) e.getKey(),
                              typeDef[typeDef.length - 1], null, RESTRICT_POLY, 0, scope);
                     scope.typeDef = typeDef;
+                }
+                if (seq.seqKind instanceof TopLevel) {
+                    ((TopLevel) seq.seqKind).typeScope = scope;
                 }
             } else if (nodes[i].kind == "import") {
                 if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)

@@ -34,6 +34,19 @@ import java.io.File;
 
 load yeti.lang.compiler.showtype;
 
+typedef typedef_description = {
+    .name is string,
+    .type is type,
+    .param is list<string>
+}
+
+typedef type_action_param = {
+    .doc is string,
+    .name is string,
+    .type is type,
+    .typedefs is list<typedef_description>
+}
+
 // XXX: Beware - the GlobalSandbox argument sets a very restricive
 //      security manager globally and you CANNOT remove it later.
 execClass argv sandbox eval loader mainClass
@@ -138,10 +151,19 @@ createCtx reader genericOpt =
     fi;
     {warn, ctx, java});
 
+nullTypeAction _ is type_action_param -> () = ();
+
+moduleDoc m is ~ModuleType -> type_action_param = {
+    doc = m#topDoc,
+    name = strReplace '/' '.' m#name,
+    type = TypeDescr#yetiType(m#type) unsafely_as type,
+    typedefs = []
+};
+
 compileYetiFiles genericOpt options files =
    (var exec = false;
     var execArg = array [];
-    var typeAction = () as ~yeti.lang.Fun;
+    var typeAction = nullTypeAction;
     var mainClass = '';
 
     reader = new YetiC();
@@ -154,9 +176,7 @@ compileYetiFiles genericOpt options files =
         /// Get module types. The action ({type is type, doc is string} -> ())
         /// is called after each module file given for compilation. 
         Type action:
-            typeAction :=
-                action is {.doc is string, .name is string, .type is type} -> ()
-                       as ~yeti.lang.Fun;
+            typeAction := action;
 
         /// Execute main after compilation of the sources.
         /// The _argv will be set to the arg parameter.
@@ -186,8 +206,7 @@ compileYetiFiles genericOpt options files =
             and ctx#writer instanceof Loader then
         CompileCtx#currentCompileCtx#set(ctx);
         for files do src:
-            TypeDescr#doc(YetiTypeVisitor#getType((), src, true),
-                          typeAction)
+            typeAction (moduleDoc YetiTypeVisitor#getType((), src, true))
         done
     else
         try
@@ -198,7 +217,7 @@ compileYetiFiles genericOpt options files =
         if not nullptr? typeAction then
             i = ctx#types#values()#iterator();
             i#hasNext() loop
-                TypeDescr#doc(i#next() unsafely_as ~ModuleType, typeAction);
+                typeAction (moduleDoc (i#next() unsafely_as ~ModuleType))
         fi
     fi;
     if mainClass != '' then

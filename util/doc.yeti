@@ -93,7 +93,7 @@ type_as_html st =
         s
     done);
 
-do {type, name, doc}:
+do {type, name, doc, typedefs}:
     if defined? doc_dir then
         var stf _ _ = '';
         to_html = type_as_html (_ i = stf i);
