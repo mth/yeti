@@ -35,6 +35,22 @@ import java.lang.Thread;
 
 var stdin' = None ();
 
+typedef input_handle = {
+    read is number -> string,
+    readln is () -> string,
+    contents is () -> string,
+    lines is () -> list<string>,
+    close is () -> (),
+    rawClose is () -> ()
+}
+
+typedef output_handle = {
+    close is () -> (),
+    flush is () -> (),
+    write is string -> (),
+    writeln is string -> ()
+}
+
 readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
     var used = false;
