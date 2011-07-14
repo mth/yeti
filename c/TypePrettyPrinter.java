@@ -528,20 +528,22 @@ class TypePattern {
             wg[j].def = def;
         }
         List walkers = new ArrayList();
-        walkers.add(wg);
-        walkers.add(presult);
+        walkers.add(wg); // types
+        walkers.add(presult); // resulting pattern
         walkers.add(tvars);
         while (walkers.size() > 0) {
             List current = walkers;
             walkers = new ArrayList();
-            //System.err.println("=== STEP ===");
+            //System.err.println("=== STEP === " + presult);
             for (int i = 0, cnt = current.size(); i < cnt; i += 3) {
                 TypeWalk[] w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
                 //System.err.println("group " + i/3 + ' ' + Arrays.asList(w));
+
                 // group by different types
+                // next - target for group in next cycle
                 TypePattern next = new TypePattern(++varAlloc),
-                    p = (TypePattern) current.get(i + 1);
+                    target = (TypePattern) current.get(i + 1);
                 String field = w.length != 0 ? w[0].field : null;
                 int start = 0, n = 0, e;
                 for (j = 1; j <= w.length; ++j) {
@@ -560,36 +562,43 @@ class TypePattern {
                     walkers.add(patterns[n++] = next);
                     walkers.add(tvars);
                     next = new TypePattern(++varAlloc);
+                    //System.err.println("Created typepattern " + next.hashCode());
                     start = j;
                     if (j < w.length && (field == w[j].field ||
                             (field != null && field.equals(w[j].field))))
-                        continue;
-                    //System.err.println("** create pattern for " + field);
-                    p.idx = new int[n];
-                    System.arraycopy(ids, 0, p.idx, 0, n);
+                        continue; // continue same pattern
+                    //System.err.println("** create pattern for " + field +
+                    //        " @ " + target.hashCode());
+                    target.idx = new int[n];
+                    System.arraycopy(ids, 0, target.idx, 0, n);
                     if (field != null) {
                         if (field.charAt(0) == ';') {
                             field = field.substring(1).intern();
-                            p.mutable = true;
+                            target.mutable = true;
                         }
-                        p.field = field;
-                        p.next = new TypePattern[n + 1];
+                        target.field = field;
+                        target.next = new TypePattern[n + 1];
+                        System.arraycopy(patterns, 0, target.next, 0, n);
                         if (j < w.length) {
                             field = w[j].field;
-                            p.next[n] = next;
+                            target.next[n] = next;
+                            target = next;
                             next = new TypePattern(++varAlloc);
+                            //System.err.println("F: Created typepattern " + next.hashCode());
                         }
                     } else {
-                        p.next = new TypePattern[n];
-                        if (p.field != null) { // FIXME!
-                            System.err.println("WARN overriding [" + p.field +
-                                "] j:" + j + " w.length:" + w.length +
-                                " field:" + field);
-                            p.field = null;
+                        target.next = new TypePattern[n];
+                        System.arraycopy(patterns, 0, target.next, 0, n);
+                        if (target.field != null) { // FIXME!
+                            System.err.println("WARN overriding [" + target.field +
+                                " " + target.hashCode() + "] j:" + j + " w.length:" +
+                                w.length + " field:" + field);
+                            for (int ii = 0; ii < n; ++ii)
+                                System.err.print(ids[ii] + " ");
+                            System.err.println("XX");
+                            target.field = null;
                         }
                     }
-                    System.arraycopy(patterns, 0, p.next, 0, n);
-                    p = next;
                     n = 0;
                 }
             }
@@ -607,7 +616,7 @@ class TypePattern {
             }
         return toPattern(typedefs);
     }
-/*
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
         if (var < 0)
@@ -668,14 +677,19 @@ class TypePattern {
     public static void main(String[] _) {
         YType st = new YType(YetiType.STRUCT, null);
         st.finalMembers = new HashMap();
-        st.finalMembers.put("yes", YetiType.BOOL_TYPE);
-        st.finalMembers.put("doh", YetiType.LIST_TO_LIST);
+        st.finalMembers.put("doh", YetiType.BOOL_TYPE);
+        st.finalMembers.put("yes", YetiType.LIST_TO_LIST);
+        YType st2 = new YType(YetiType.STRUCT, null);
+        st2.finalMembers = new HashMap();
+        st2.finalMembers.put("doh", YetiType.BOOL_TYPE);
+        st2.finalMembers.put("wtf", YetiType.STR_TYPE);
         //YType[] types = {YetiType.CONS_TYPE, st};
         Map defs = new HashMap();
-        defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
-        defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
-        defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
+//        defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
+//        defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
+//        defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
         defs.put("my_struct", new YType[] { YetiType.A, st });
+        defs.put("a_struct", new YType[] { st2 });
         TypePattern res, pat = toPattern(defs);
         System.err.println(pat);
         for (Iterator i = defs.values().iterator(); i.hasNext(); ) {
@@ -690,5 +704,5 @@ class TypePattern {
         Map vars = new IdentityHashMap();
         res = pat.match(il2il, vars);
         System.out.println(il2il + " " + showres(pat.match(il2il, vars), vars));
-    }*/
+    }
 }
