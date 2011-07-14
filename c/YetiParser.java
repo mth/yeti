@@ -650,7 +650,7 @@ interface YetiParser {
                                 ++i; ++level;
                             }
                         }
-                        if (i - 1 > sp && src[sp] == '*')
+                        if (i - 3 > sp && src[sp] == '*')
                             addDoc(sp, i - 2);
                         continue;
                     }
