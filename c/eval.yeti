@@ -157,6 +157,7 @@ moduleDoc m is ~ModuleType -> module_description =
    (typedefs = array [];
     addDef name def scope =
        (param = array [];
+        eprintln "typeDef \(name).";
         type = TypeDescr#typeDef(def unsafely_as ~YType[],
                                  param unsafely_as ~yeti.lang.MList,
                                  scope is ~TypePattern);

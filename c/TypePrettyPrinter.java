@@ -413,7 +413,7 @@ class TypeWalk implements Comparable {
     }
 
     TypeWalk next(Map tvars, TypePattern pattern) {
-        if (id < 0) {
+        if (id < 0 || id == Integer.MAX_VALUE) {
             if (parent != null)
                 return parent.next(tvars, pattern);
             if (def != null) {
@@ -474,14 +474,28 @@ class TypePattern {
         Object tv = typeVars.get(type);
         if (tv != null) {
             i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
-            if (i >= 0)
+            if (i >= 0) {
+                System.err.println(tv + " TYPEVAR " + type + " GAVE " + i + " FROM " + this);
                 return next[i];
+            }
         }
         i = Arrays.binarySearch(idx, type.type);
-        if (i < 0 && idx[i = idx.length - 1] != Integer.MAX_VALUE)
-            return null;
-        if (var < 0)
+        if (i < 0) {
+            if (idx[i = idx.length - 1] != Integer.MAX_VALUE) {
+                System.err.println(type.type + " TYPE " + type + " NOT FOUND FROM " + this);
+                return null;
+            }
+            if (var < 0) {
+                typeVars.put(type, Integer.valueOf(var));
+                System.err.println("STORE _ as " + var);
+            }
+            return next[i];
+        }
+        System.err.println(type.type + " TYPE " + type + " GAVE " + i + " FROM " + this);
+        if (var < 0) {
             typeVars.put(type, Integer.valueOf(var));
+            System.err.println("STORE as " + var);
+        }
         TypePattern pat = next[i];
         if (pat.field == null) {
             YType[] param = type.param;
@@ -531,6 +545,7 @@ class TypePattern {
             wg[j] = new TypeWalk(def[def.length - 1], null, tvars, presult);
             wg[j].typename = (String) e.getKey();
             wg[j].def = def;
+            System.err.println("TYPEDEF " + e.getKey() + " = " + def[def.length - 1]);
         }
         List walkers = new ArrayList();
         walkers.add(wg); // types
