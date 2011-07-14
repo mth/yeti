@@ -106,8 +106,8 @@ class ShowTypeFun extends Fun2 {
             return type.value;
         if (typeTag == "Alias") {
             Struct t = (Struct) type.value;
-            return '(' + (String) showType.apply(indent, t.get("type"))
-                 + " is " + t.get("alias") + ')';
+            return '(' + (String) t.get("alias") + " is " + 
+                showType.apply(indent, t.get("type")) + ')';
         }
 
         AList typeList;
