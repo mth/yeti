@@ -651,7 +651,7 @@ interface YetiParser {
                             }
                         }
                         if (i - 1 > sp && src[sp] == '*')
-                            addDoc(sp, i);
+                            addDoc(sp, i - 2);
                         continue;
                     }
                 }
