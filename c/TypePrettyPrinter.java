@@ -380,6 +380,7 @@ class TypeWalk implements Comparable {
         TypePattern tvar = (TypePattern) tvars.get(t);
         if (tvar != null) {
             id = tvar.var;
+            System.err.println("using var " + tvar.var + "/" + t.hashCode() + ": " + t);
             if (id > 0)
                 tvar.var = id = -id; // mark used
             return;
@@ -388,16 +389,19 @@ class TypeWalk implements Comparable {
         if (id == YetiType.VAR) {
             if (tvars.containsKey(t)) {
                 id = Integer.MAX_VALUE; // typedef parameter - match anything
+                if (p != null && p.var >= 0)
+                    p.var = -p.var; // parameters must be saved
             } else if (parent != null && parent.type.type == YetiType.MAP &&
                        parent.st > 1 && (parent.st > 2 ||
                             parent.type.param[2] == YetiType.LIST_TYPE)) {
                 id = Integer.MAX_VALUE; // map kind - match anything
                 //System.err.println("*** " + parent.st);
                 return; // and don't associate
-            }
+            } else System.err.println("WARN: STRICT VAR match");
             tvars.put(t, p);
         } else if (id >= YetiType.FUN) {
             tvars.put(t, p);
+            System.err.println("storing var " + (p == null ? "null" : "" + p.var) + "/" + t.hashCode() + ": " + t);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
@@ -512,6 +516,7 @@ class TypePattern {
     static TypePattern toPattern(Map typedefs) {
         if (typedefs.isEmpty())
             return null;
+        System.err.println("====> toPattern");
         int j = 0, varAlloc = 0;
         int[] ids = new int[typedefs.size()];
         TypePattern[] patterns = new TypePattern[ids.length];
@@ -523,7 +528,7 @@ class TypePattern {
             YType[] def = (YType[]) e.getValue();
             for (int k = def.length - 1; --k >= 0; )
                 tvars.put(def[k].deref(), null); // mark as param
-            wg[j] = new TypeWalk(def[def.length - 1], null, tvars, null);
+            wg[j] = new TypeWalk(def[def.length - 1], null, tvars, presult);
             wg[j].typename = (String) e.getKey();
             wg[j].def = def;
         }
@@ -603,6 +608,7 @@ class TypePattern {
                 }
             }
         }
+        System.err.println(presult);
         return presult;
     }
 
@@ -685,9 +691,9 @@ class TypePattern {
         st2.finalMembers.put("wtf", YetiType.STR_TYPE);
         //YType[] types = {YetiType.CONS_TYPE, st};
         Map defs = new HashMap();
-//        defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
-//        defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
-//        defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
+        defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
+        defs.put("str_pred", new YType[] { YetiType.STR2_PRED_TYPE });
+        defs.put("str_array", new YType[] { YetiType.STRING_ARRAY });
         defs.put("my_struct", new YType[] { YetiType.A, st });
         defs.put("a_struct", new YType[] { st2 });
         TypePattern res, pat = toPattern(defs);
