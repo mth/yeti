@@ -380,8 +380,6 @@ class TypeWalk implements Comparable {
         TypePattern tvar = (TypePattern) tvars.get(t);
         if (tvar != null) {
             id = tvar.var;
-            //System.err.println("using var " + tvar.var +
-            //                   "/" + t.hashCode() + ": " + t);
             if (id > 0)
                 tvar.var = id = -id; // mark used
             return;
@@ -396,13 +394,11 @@ class TypeWalk implements Comparable {
                        parent.st > 1 && (parent.st > 2 ||
                             parent.type.param[2] == YetiType.LIST_TYPE)) {
                 id = Integer.MAX_VALUE; // map kind - match anything
-                //System.err.println("*** " + parent.st);
                 return; // and don't associate
-            }// else System.err.println("WARN: STRICT VAR match");
+            }
             tvars.put(t, p);
         } else if (id >= YetiType.FUN) {
             tvars.put(t, p);
-            //System.err.println("storing var " + (p == null ? "null" : "" + p.var) + "/" + t.hashCode() + ": " + t);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
@@ -475,28 +471,19 @@ class TypePattern {
         Object tv = typeVars.get(type);
         if (tv != null) {
             i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
-            if (i >= 0) {
-                //System.err.println(tv + " TYPEVAR " + type + " GAVE " + i + " FROM " + this);
+            if (i >= 0)
                 return next[i];
-            }
         }
         i = Arrays.binarySearch(idx, type.type);
         if (i < 0) {
-            if (idx[i = idx.length - 1] != Integer.MAX_VALUE) {
-                //System.err.println(type.type + " TYPE " + type + " NOT FOUND FROM " + this);
+            if (idx[i = idx.length - 1] != Integer.MAX_VALUE)
                 return null;
-            }
-            if (var < 0) {
+            if (var < 0)
                 typeVars.put(type, Integer.valueOf(var));
-                //System.err.println("STORE _ as " + var);
-            }
             return next[i];
         }
-        //System.err.println(type.type + " TYPE " + type + " GAVE " + i + " FROM " + this);
-        if (var < 0) {
+        if (var < 0)
             typeVars.put(type, Integer.valueOf(var));
-            //System.err.println("STORE as " + var);
-        }
         TypePattern pat = next[i];
         if (pat.field == null) {
             YType[] param = type.param;
@@ -531,7 +518,6 @@ class TypePattern {
     static TypePattern toPattern(Map typedefs) {
         if (typedefs.isEmpty())
             return null;
-        //System.err.println("====> toPattern");
         int j = 0, varAlloc = 0;
         int[] ids = new int[typedefs.size()];
         TypePattern[] patterns = new TypePattern[ids.length];
@@ -546,7 +532,6 @@ class TypePattern {
             wg[j] = new TypeWalk(def[def.length - 1], null, tvars, presult);
             wg[j].typename = (String) e.getKey();
             wg[j].def = def;
-            //System.err.println("TYPEDEF " + e.getKey() + " = " + def[def.length - 1]);
         }
         List walkers = new ArrayList();
         walkers.add(wg); // types
@@ -555,12 +540,9 @@ class TypePattern {
         while (walkers.size() > 0) {
             List current = walkers;
             walkers = new ArrayList();
-            //System.err.println("=== STEP === " + presult);
             for (int i = 0, cnt = current.size(); i < cnt; i += 3) {
                 TypeWalk[] w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
-                //System.err.println("group " + i/3 + ' ' + Arrays.asList(w));
-
                 // group by different types
                 // next - target for group in next cycle
                 TypePattern next = new TypePattern(++varAlloc),
@@ -568,15 +550,12 @@ class TypePattern {
                 String field = w.length != 0 ? w[0].field : null;
                 int start = 0, n = 0, e;
                 for (j = 1; j <= w.length; ++j) {
-                    //System.err.println("+ " + w[j - 1].id + "/" + w[j - 1].field);
                     if (j < w.length && w[j].id == w[j - 1].id &&
                             (field == w[j].field || field.equals(w[j].field)))
                         continue; // skip until same
                     // add branch
                     tvars = new IdentityHashMap((Map) current.get(i + 2));
                     ids[n] = w[j - 1].id;
-                    //System.err.println("** add branch " + ids[n] + " for [" + start + " to " + j
-                    //        + " ." + field);
                     for (int k = e = start; k < j; ++k)
                         if ((w[e] = w[k].next(tvars, next)) != null)
                             ++e;
@@ -586,13 +565,10 @@ class TypePattern {
                     walkers.add(patterns[n++] = next);
                     walkers.add(tvars);
                     next = new TypePattern(++varAlloc);
-                    //System.err.println("Created typepattern " + next.hashCode());
                     start = j;
                     if (j < w.length &&
                             (field == w[j].field || field.equals(w[j].field)))
                         continue; // continue same pattern
-                    //System.err.println("** create pattern for " + field +
-                    //        " @ " + target.hashCode());
                     target.idx = new int[n];
                     System.arraycopy(ids, 0, target.idx, 0, n);
                     if (field != null) {
@@ -608,26 +584,15 @@ class TypePattern {
                             target.next[n] = next;
                             target = next;
                             next = new TypePattern(++varAlloc);
-                            //System.err.println("F: Created typepattern " + next.hashCode());
                         }
                     } else {
                         target.next = new TypePattern[n];
                         System.arraycopy(patterns, 0, target.next, 0, n);
-                        /*if (target.field != null) {
-                            System.err.println("WARN overriding [" + target.field +
-                                " " + target.hashCode() + "] j:" + j + " w.length:" +
-                                w.length + " field:" + field);
-                            for (int ii = 0; ii < n; ++ii)
-                                System.err.print(ids[ii] + " ");
-                            System.err.println("XX");
-                            target.field = null;
-                        }*/
                     }
                     n = 0;
                 }
             }
         }
-        //System.err.println(presult);
         return presult;
     }
 
