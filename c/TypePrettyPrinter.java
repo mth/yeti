@@ -380,7 +380,8 @@ class TypeWalk implements Comparable {
         TypePattern tvar = (TypePattern) tvars.get(t);
         if (tvar != null) {
             id = tvar.var;
-            System.err.println("using var " + tvar.var + "/" + t.hashCode() + ": " + t);
+            //System.err.println("using var " + tvar.var +
+            //                   "/" + t.hashCode() + ": " + t);
             if (id > 0)
                 tvar.var = id = -id; // mark used
             return;
@@ -397,11 +398,11 @@ class TypeWalk implements Comparable {
                 id = Integer.MAX_VALUE; // map kind - match anything
                 //System.err.println("*** " + parent.st);
                 return; // and don't associate
-            } else System.err.println("WARN: STRICT VAR match");
+            }// else System.err.println("WARN: STRICT VAR match");
             tvars.put(t, p);
         } else if (id >= YetiType.FUN) {
             tvars.put(t, p);
-            System.err.println("storing var " + (p == null ? "null" : "" + p.var) + "/" + t.hashCode() + ": " + t);
+            //System.err.println("storing var " + (p == null ? "null" : "" + p.var) + "/" + t.hashCode() + ": " + t);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
             fieldMap = t.finalMembers != null ? t.finalMembers
@@ -475,26 +476,26 @@ class TypePattern {
         if (tv != null) {
             i = Arrays.binarySearch(idx, ((Integer) tv).intValue());
             if (i >= 0) {
-                System.err.println(tv + " TYPEVAR " + type + " GAVE " + i + " FROM " + this);
+                //System.err.println(tv + " TYPEVAR " + type + " GAVE " + i + " FROM " + this);
                 return next[i];
             }
         }
         i = Arrays.binarySearch(idx, type.type);
         if (i < 0) {
             if (idx[i = idx.length - 1] != Integer.MAX_VALUE) {
-                System.err.println(type.type + " TYPE " + type + " NOT FOUND FROM " + this);
+                //System.err.println(type.type + " TYPE " + type + " NOT FOUND FROM " + this);
                 return null;
             }
             if (var < 0) {
                 typeVars.put(type, Integer.valueOf(var));
-                System.err.println("STORE _ as " + var);
+                //System.err.println("STORE _ as " + var);
             }
             return next[i];
         }
-        System.err.println(type.type + " TYPE " + type + " GAVE " + i + " FROM " + this);
+        //System.err.println(type.type + " TYPE " + type + " GAVE " + i + " FROM " + this);
         if (var < 0) {
             typeVars.put(type, Integer.valueOf(var));
-            System.err.println("STORE as " + var);
+            //System.err.println("STORE as " + var);
         }
         TypePattern pat = next[i];
         if (pat.field == null) {
@@ -530,7 +531,7 @@ class TypePattern {
     static TypePattern toPattern(Map typedefs) {
         if (typedefs.isEmpty())
             return null;
-        System.err.println("====> toPattern");
+        //System.err.println("====> toPattern");
         int j = 0, varAlloc = 0;
         int[] ids = new int[typedefs.size()];
         TypePattern[] patterns = new TypePattern[ids.length];
@@ -545,7 +546,7 @@ class TypePattern {
             wg[j] = new TypeWalk(def[def.length - 1], null, tvars, presult);
             wg[j].typename = (String) e.getKey();
             wg[j].def = def;
-            System.err.println("TYPEDEF " + e.getKey() + " = " + def[def.length - 1]);
+            //System.err.println("TYPEDEF " + e.getKey() + " = " + def[def.length - 1]);
         }
         List walkers = new ArrayList();
         walkers.add(wg); // types
@@ -567,12 +568,15 @@ class TypePattern {
                 String field = w.length != 0 ? w[0].field : null;
                 int start = 0, n = 0, e;
                 for (j = 1; j <= w.length; ++j) {
-                    if (j < w.length && w[j].id == w[j - 1].id)
+                    //System.err.println("+ " + w[j - 1].id + "/" + w[j - 1].field);
+                    if (j < w.length && w[j].id == w[j - 1].id &&
+                            (field == w[j].field || field.equals(w[j].field)))
                         continue; // skip until same
                     // add branch
                     tvars = new IdentityHashMap((Map) current.get(i + 2));
                     ids[n] = w[j - 1].id;
-                    //System.err.println("** add branch " + ids[n] + " for [" + start + " to " + j);
+                    //System.err.println("** add branch " + ids[n] + " for [" + start + " to " + j
+                    //        + " ." + field);
                     for (int k = e = start; k < j; ++k)
                         if ((w[e] = w[k].next(tvars, next)) != null)
                             ++e;
@@ -584,8 +588,8 @@ class TypePattern {
                     next = new TypePattern(++varAlloc);
                     //System.err.println("Created typepattern " + next.hashCode());
                     start = j;
-                    if (j < w.length && (field == w[j].field ||
-                            (field != null && field.equals(w[j].field))))
+                    if (j < w.length &&
+                            (field == w[j].field || field.equals(w[j].field)))
                         continue; // continue same pattern
                     //System.err.println("** create pattern for " + field +
                     //        " @ " + target.hashCode());
@@ -609,7 +613,7 @@ class TypePattern {
                     } else {
                         target.next = new TypePattern[n];
                         System.arraycopy(patterns, 0, target.next, 0, n);
-                        if (target.field != null) { // FIXME!
+                        /*if (target.field != null) {
                             System.err.println("WARN overriding [" + target.field +
                                 " " + target.hashCode() + "] j:" + j + " w.length:" +
                                 w.length + " field:" + field);
@@ -617,13 +621,13 @@ class TypePattern {
                                 System.err.print(ids[ii] + " ");
                             System.err.println("XX");
                             target.field = null;
-                        }
+                        }*/
                     }
                     n = 0;
                 }
             }
         }
-        System.err.println(presult);
+        //System.err.println(presult);
         return presult;
     }
 
@@ -637,7 +641,7 @@ class TypePattern {
             }
         return toPattern(typedefs);
     }
-
+/*
     public String toString() {
         StringBuffer sb = new StringBuffer();
         if (var < 0)
@@ -698,12 +702,12 @@ class TypePattern {
     public static void main(String[] _) {
         YType st = new YType(YetiType.STRUCT, null);
         st.finalMembers = new HashMap();
-        st.finalMembers.put("doh", YetiType.BOOL_TYPE);
-        st.finalMembers.put("yes", YetiType.LIST_TO_LIST);
+        st.finalMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
+        st.finalMembers.put("read", YetiType.fun(YetiType.A, YetiType.STR_TYPE));
         YType st2 = new YType(YetiType.STRUCT, null);
         st2.finalMembers = new HashMap();
-        st2.finalMembers.put("doh", YetiType.BOOL_TYPE);
-        st2.finalMembers.put("wtf", YetiType.STR_TYPE);
+        st2.finalMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
+        st2.finalMembers.put("write", YetiType.fun(YetiType.STR_TYPE, YetiType.UNIT_TYPE));
         //YType[] types = {YetiType.CONS_TYPE, st};
         Map defs = new HashMap();
         defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });
@@ -725,5 +729,5 @@ class TypePattern {
         Map vars = new IdentityHashMap();
         res = pat.match(il2il, vars);
         System.out.println(il2il + " " + showres(pat.match(il2il, vars), vars));
-    }
+    }*/
 }
