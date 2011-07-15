@@ -374,12 +374,12 @@ public final class YetiAnalyzer extends YetiType {
                 JavaType.checkUnsafeCast(is, vt, t);
             } else if (s == "as" &&
                        JavaType.isAssignable(is, t, vt, true) < 0) {
-                throw new CompileException(is, "impossible cast from " +
-                                               vt + " to " + t);
+                throw new CompileException(is, scope, vt, t,
+                                "impossible cast from #1 to #2", null);
             }
             return new Cast(value, t, s == "as", is.line);
         }
-        unify(value.type, t, is, "#0 (when checking #1 is #2)");
+        unify(value.type, t, is, scope, "#0 (when checking #1 is #2)");
         return value;
     }
 
@@ -430,7 +430,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code newArray(XNode op, Scope scope, int depth) {
         Code cnt = analyze(op.expr[1], scope, depth);
-        unify(cnt.type, NUM_TYPE, op.expr[1],
+        unify(cnt.type, NUM_TYPE, op.expr[1], scope,
               "array size must be a number (but here was #1)");
         return new NewArrayExpr(JavaType.typeOfName(op.expr[0].sym(), scope),
                                 cnt, op.line);
@@ -444,7 +444,7 @@ public final class YetiAnalyzer extends YetiType {
         int lastCatch = t.expr.length - 1;
         if (t.expr[lastCatch].kind != "catch") {
             tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
-            expectUnit(tc.cleanup, t.expr[lastCatch],
+            expectUnit(tc.cleanup, t.expr[lastCatch], scope,
                       "finally block must have a unit type");
             --lastCatch;
         }
@@ -456,7 +456,7 @@ public final class YetiAnalyzer extends YetiType {
             String bind = c.expr[1].sym();
             cc.handler = analyze(c.expr[2], bind == "_" ? scope
                                     : new Scope(scope, bind, cc), depth);
-            unify(tc.block.type, cc.handler.type, c.expr[2],
+            unify(tc.block.type, cc.handler.type, c.expr[2], scope,
                   "This catch has #2 type, while try block was #1");
         }
         return tc;
@@ -486,7 +486,8 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(where,
                             "Too many arguments applied " +
                             "to a function, maybe a missing `;'?" +
-                            "\n    (cannot apply " + funt + " to an argument)");
+                            "\n    (cannot apply " + funt.toString(scope) +
+                            " to an argument)");
             }
             YType argt = argCode.type.deref();
             String s = "Cannot apply #1 function";
@@ -507,7 +508,7 @@ public final class YetiAnalyzer extends YetiType {
                               " as an argument to some arguments?";
                 }
             }
-            throw new CompileException(where, fun.type, argCode.type, s, ex);
+            throw new CompileException(where, scope, fun.type, argCode.type, s, ex);
         }
         return fun.apply(argCode, applyFun[1], where.line);
     }
@@ -541,8 +542,8 @@ public final class YetiAnalyzer extends YetiType {
         Code arg = analyze(section.expr[1], scope, depth);
         YType[] r = { new YType(depth), new YType(depth) };
         YType[] afun = { r[0], new YType(FUN, new YType[] { arg.type, r[1] }) };
-        unify(fun.type, new YType(FUN, afun), section, fun.type, arg.type,
-              "Cannot apply #2 as a 2nd argument to #1\n    #0");
+        unify(fun.type, new YType(FUN, afun), section, scope, fun.type,
+              arg.type, "Cannot apply #2 as a 2nd argument to #1\n    #0");
         return fun.apply2nd(arg, new YType(FUN, r), section.line);
     }
 
@@ -581,7 +582,7 @@ public final class YetiAnalyzer extends YetiType {
         } catch (TypeException ex) {
             int t = src.type.deref().type;
             if (t == JAVA) {
-                throw new CompileException(member, src.type, null,
+                throw new CompileException(member, scope, src.type, null,
                     "Cannot use class #1 as a structure with ." +
                     field + " field\n    " +
                     "(use # instead of . to reference object fields/methods)",
@@ -595,10 +596,11 @@ public final class YetiAnalyzer extends YetiType {
                     "(use # instead of . to reference class fields/methods)");
             }
             if (t != STRUCT && t != VAR) {
-                throw new CompileException(member, "Cannot use " + src.type +
+                throw new CompileException(member, "Cannot use " +
+                                src.type.toString(scope) +
                                 " as a structure with ." + field + " field");
             }
-            throw new CompileException(member, src.type, null,
+            throw new CompileException(member, scope, src.type, null,
                         "#1 do not have ." + field + " field", ex);
         }
         boolean poly = src.polymorph && src.type.finalMembers != null &&
@@ -632,20 +634,20 @@ public final class YetiAnalyzer extends YetiType {
         Code key = analyze(keyList.expr[0], scope, depth);
         YType t = val.type.deref();
         if (t.type == JAVA_ARRAY) {
-            unify(key.type, NUM_TYPE, keyList.expr[0],
+            unify(key.type, NUM_TYPE, keyList.expr[0], scope,
                   "Array index must be a number (but here was #1)");
             return new JavaArrayRef(t.param[0], val, key, keyList.expr[0].line);
         }
         YType[] param = { new YType(depth), key.type, new YType(depth) };
-        unify(val.type, new YType(MAP, param), keyList, val.type, key.type,
-              "#1 cannot be referenced by #2 key");
+        unify(val.type, new YType(MAP, param), keyList, scope,
+              val.type, key.type, "#1 cannot be referenced by #2 key");
         return new KeyRefExpr(param[0], val, key, keyList.line);
     }
 
     static Code assignOp(BinOp op, Scope scope, int depth) {
         Code left = analyze(op.left, scope, depth);
         Code right = analyze(op.right, scope, depth);
-        unify(left.type, right.type, op, "#0");
+        unify(left.type, right.type, op, scope, "#0");
         Code assign = left.assign(right);
         if (assign == null) {
             throw new CompileException(op,
@@ -663,11 +665,11 @@ public final class YetiAnalyzer extends YetiType {
         return new ConcatStrings(parts);
     }
 
-    static YType mergeIfType(Node where, YType result, YType val) {
+    static YType mergeIfType(Node where, Scope scope, YType result, YType val) {
         try {
             return mergeOrUnify(result, val);
         } catch (TypeException ex) {
-            throw new CompileException(where, val, result,
+            throw new CompileException(where, scope, val, result,
                 "This if branch has a #1 type, while another was a #2", ex);
         }
     }
@@ -678,7 +680,7 @@ public final class YetiAnalyzer extends YetiType {
         boolean poly = true;
         for (;;) {
             Code cond = analyze(condition.expr[0], scope, depth);
-            unify(cond.type, BOOL_TYPE, condition.expr[0],
+            unify(cond.type, BOOL_TYPE, condition.expr[0], scope,
                   "if condition must have a boolean type (but here was #1)");
             Code val = analyze(condition.expr[1], scope, depth);
             conds.add(new Code[] { val, cond });
@@ -686,14 +688,15 @@ public final class YetiAnalyzer extends YetiType {
             if (result == null) {
                 result = val.type;
             } else {
-                result = mergeIfType(condition.expr[1], result, val.type);
+                result =
+                    mergeIfType(condition.expr[1], scope, result, val.type);
             }
             if (condition.expr[2].kind != "if")
                 break;
             condition = (XNode) condition.expr[2];
         }
         Code val = analyze(condition.expr[2], scope, depth);
-        result = mergeIfType(condition.expr[2], result, val.type);
+        result = mergeIfType(condition.expr[2], scope, result, val.type);
         conds.add(new Code[] { val });
         Code[][] expr = (Code[][]) conds.toArray(new Code[conds.size()][]);
         return new ConditionalExpr(result, expr, poly && val.polymorph);
@@ -702,13 +705,13 @@ public final class YetiAnalyzer extends YetiType {
     static Code loop(BinOp loop, Scope scope, int depth) {
         Node condNode = loop.left != null ? loop.left : loop.right;
         Code cond = analyze(condNode, scope, depth);
-        unify(cond.type, BOOL_TYPE, condNode,
+        unify(cond.type, BOOL_TYPE, condNode, scope,
               "Loop condition must have a boolean type (but here was #1)");
         if (loop.left == null) {
             return new LoopExpr(cond, new UnitConstant(null));
         }
         Code body = analyze(loop.right, scope, depth);
-        expectUnit(body, loop.right, "Loop body must have a unit type");
+        expectUnit(body, loop.right, scope, "Loop body must have a unit type");
         return new LoopExpr(cond, body);
     }
 
@@ -748,7 +751,8 @@ public final class YetiAnalyzer extends YetiType {
             result = new YType(STRUCT, NO_PARAM);
             result.partialMembers = new HashMap(otf);
             result.param = ot.param;
-            unify(src.type, result, with.right, "Cannot extend #1 with #2");
+            unify(src.type, result, with.right, scope,
+                  "Cannot extend #1 with #2");
         }
         return new WithStruct(result, src, override,
                         (String[]) otf.keySet().toArray(new String[otf.size()]));
@@ -791,7 +795,8 @@ public final class YetiAnalyzer extends YetiType {
         } else if (m.type.type != UNIT) {
             throw new CompileException(where,
                 "Expected module with struct or unit type here (" +
-                m.moduleName.replace('/', '.') + " has type " + m.type +
+                m.moduleName.replace('/', '.') + " has type " +
+                m.type.toString(scope) +
                 ", but only structs can be exploded)");
         }
         return scope;
@@ -890,7 +895,7 @@ public final class YetiAnalyzer extends YetiType {
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
         def[def.length - 1] = type;
         // XXX the order of unify arguments matters!
-        unify(self, type, typeDef, type, self,
+        unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
         scope = bind(typeDef.name, type, null, RESTRICT_POLY, 0, scope);
         scope.typeDef = def;
@@ -901,7 +906,7 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static void expectUnit(Code value, Node where, String what) {
+    static void expectUnit(Code value, Node where, Scope scope, String what) {
         if (value.type.type == JAVA || value.type.type == JAVA_ARRAY)
             return; // java is messy, don't try to be strict with it
         try {
@@ -918,7 +923,7 @@ public final class YetiAnalyzer extends YetiType {
                 s += "\n    Maybe you should give more arguments"
                    + " to the function?";
             }
-            throw new CompileException(where, value.type, null, s, ex);
+            throw new CompileException(where, scope, value.type, null, s, ex);
         }
     }
 
@@ -991,7 +996,7 @@ public final class YetiAnalyzer extends YetiType {
                 scope = scope_[0];
             } else {
                 Code code = analyze(nodes[i], scope, depth);
-                expectUnit(code, nodes[i], "Unit type expected here");
+                expectUnit(code, nodes[i], scope, "Unit type expected here");
                 //code.ignoreValue();
                 addSeq(last, new SeqExpr(code));
             }
@@ -1074,7 +1079,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         YType fun = new YType(FUN, new YType[] { to.arg.type, to.body.type });
         if (expected != null)
-            unify(fun, expected, lambda,
+            unify(fun, expected, lambda, scope,
                   "Function type #~ (self-binding)\n    #0");
 
         restrictArg(to.arg.type, depth, false);
@@ -1154,7 +1159,7 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     unify(code.type, f);
                 } catch (TypeException ex) {
-                    throw new CompileException(nodes[i], code.type, f,
+                    throw new CompileException(nodes[i], scope, code.type, f,
                                 (field.var ? "Setter " : "Getter ")
                                 + field.name + " type #~", ex);
                 }
@@ -1254,7 +1259,7 @@ public final class YetiAnalyzer extends YetiType {
                 return binding;
             }
             if (node.kind == "()") {
-                unify(t, UNIT_TYPE, node, "#0");
+                unify(t, UNIT_TYPE, node, scope, "#0");
                 return CasePattern.ANY_PATTERN;
             }
             if (node instanceof NumLit || node instanceof Str) {
@@ -1265,8 +1270,8 @@ public final class YetiAnalyzer extends YetiType {
                     t.param = NO_PARAM;
                     t.flags = FL_PARTIAL_PATTERN;
                 } else if (t.type != c.type.type) {
-                    throw new CompileException(node,
-                        "Pattern type mismatch: " + c.type + " is not " + t);
+                    throw new CompileException(node, scope, c.type, t,
+                                            "Pattern type mismatch: #~", null);
                 }
                 return new ConstPattern(c);
             }
@@ -1277,7 +1282,7 @@ public final class YetiAnalyzer extends YetiType {
                         new YType[] { itemt, new YType(depth), LIST_TYPE });
                 lt.flags |= FL_PARTIAL_PATTERN;
                 if (list.expr == null || list.expr.length == 0) {
-                    unify(t, lt, node, "#0");
+                    unify(t, lt, node, scope, "#0");
                     return AListPattern.EMPTY_PATTERN;
                 }
                 CasePattern[] items = new CasePattern[list.expr.length];
@@ -1290,7 +1295,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 --submatch;
                 itemt.flags &= anyitem;
-                unify(t, lt, node, "#0");
+                unify(t, lt, node, scope, "#0");
                 return new ListPattern(items);
             }
             if (node instanceof BinOp) {
@@ -1303,8 +1308,8 @@ public final class YetiAnalyzer extends YetiType {
                     }
                     t = t.deref();
                     if (t.type != VAR && t.type != VARIANT) {
-                        throw new CompileException(node,
-                            "Variant " + variant + " ... is not " + t);
+                        throw new CompileException(node, "Variant " + variant +
+                                        " ... is not " + t.toString(scope));
                     }
                     t.type = VARIANT;
                     if (t.partialMembers == null) {
@@ -1318,7 +1323,7 @@ public final class YetiAnalyzer extends YetiType {
                     YType old = (YType) t.partialMembers.put(variant, argt);
                     if (old != null) {
                         // same constructor already. shall be same type.
-                        unify(old, argt, pat.right, "#0");
+                        unify(old, argt, pat.right, scope, "#0");
                     }
                     t.param = (YType[]) t.partialMembers.values().toArray(
                                 new YType[t.partialMembers.size()]);
@@ -1334,7 +1339,7 @@ public final class YetiAnalyzer extends YetiType {
                     YType lt = new YType(MAP,
                                 new YType[] { itemt, NO_TYPE, LIST_TYPE });
                     int flags = t.flags; 
-                    unify(t, lt, node, "#0");
+                    unify(t, lt, node, scope, "#0");
                     ++submatch;
                     CasePattern hd = toPattern(pat.left, itemt);
                     CasePattern tl = toPattern(pat.right, t);
@@ -1362,7 +1367,7 @@ public final class YetiAnalyzer extends YetiType {
                     HashMap tm = new HashMap();
                     tm.put(field.name, ft);
                     part.partialMembers = tm;
-                    unify(t, part, field, "#0");
+                    unify(t, part, field, scope, "#0");
                     names[i] = field.name;
                     patterns[i] = toPattern(field.expr, ft);
                 }
@@ -1392,7 +1397,7 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     exp.type = mergeOrUnify(exp.type, opt.type);
                 } catch (TypeException e) {
-                    throw new CompileException(node, opt.type, exp.type,
+                    throw new CompileException(node, scope, opt.type, exp.type,
                         "This choice has a #1 type, while another was a #2", e);
                 }
             }
@@ -1459,7 +1464,7 @@ public final class YetiAnalyzer extends YetiType {
                 cc.mergeChoice(pats[i], ((XNode) choices[i]).expr[1], scopes[i]);
             }
         }
-        unify(val.type, argType, choices[0],
+        unify(val.type, argType, choices[0], scope,
           "Inferred type for case argument is #2, but a #1 is given\n    (#0)");
         return cc.exp;
     }
@@ -1495,7 +1500,7 @@ public final class YetiAnalyzer extends YetiType {
                     kind = MAP_TYPE;
                     keyItems = new Code[items.length / 2];
                 } else {
-                    unify(keyType, key.type, items[i],
+                    unify(keyType, key.type, items[i], scope,
                         "This map element has #2 key, but others have had #1");
                 }
                 keyItems[n] = key;
@@ -1511,9 +1516,9 @@ public final class YetiAnalyzer extends YetiType {
                     (bin = (BinOp) items[i]).op == "..") {
                     Code from = analyze(bin.left, scope, depth);
                     Code to = analyze(bin.right, scope, depth);
-                    unify(from.type, NUM_TYPE, bin.left,
+                    unify(from.type, NUM_TYPE, bin.left, scope,
                           ".. range expects limit to be number, not a #1");
-                    unify(to.type, NUM_TYPE, bin.right,
+                    unify(to.type, NUM_TYPE, bin.right, scope,
                           ".. range expects limit to be number, not a #1");
                     codeItems[n] = new Range(from, to);
                 } else {
@@ -1526,9 +1531,10 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     type = mergeOrUnify(type, codeItems[n].type);
                 } catch (TypeException ex) {
-                    throw new CompileException(items[i], codeItems[n].type,
-                        type, (kind == LIST_TYPE ? "This list element is "
-                                                 : "This map element is ") +
+                    throw new CompileException(items[i], scope,
+                        codeItems[n].type, type,
+                        (kind == LIST_TYPE ? "This list element is "
+                                           : "This map element is ") +
                          "#1, but others have been #2", ex);
                 }
             }
@@ -1629,7 +1635,8 @@ public final class YetiAnalyzer extends YetiType {
                         "Module type is not fully defined");
                 }
             } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
-                expectUnit(root, n, "Program body must have a unit type");
+                expectUnit(root, n, topLevel.typeScope,
+                           "Program body must have a unit type");
             }
             return root;
         } finally {

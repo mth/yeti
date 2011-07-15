@@ -73,6 +73,11 @@ class YType {
         return (String) new ShowTypeFun().apply("",
                     TypeDescr.yetiType(this, null));
     }
+ 
+    public String toString(Scope scope) {
+        return (String) new ShowTypeFun().apply("",
+                    TypeDescr.yetiType(this, TypePattern.toPattern(scope)));
+    }
 
     YType deref() {
         YType res = this;
@@ -135,9 +140,33 @@ class TypeException extends Exception {
     }
 
     public String getMessage() {
+        return getMessage(null);
+    }
+
+    public String getMessage(Scope scope) {
         if (a == null)
             return super.getMessage();
-        return "Type mismatch: " + a + sep + b + ext;
+        return "Type mismatch: " + a.toString(scope) +
+               sep + b.toString(scope) + ext;
+    }
+}
+
+class Scope {
+    Scope outer;
+    String name;
+    Binder binder;
+    YType[] free;
+    Closure closure; // non-null means outer scopes must be proxied
+    YetiType.ClassBinding importClass;
+    YType[] typeDef;
+
+    YetiType.ScopeCtx ctx;
+
+    Scope(Scope outer, String name, Binder binder) {
+        this.outer = outer;
+        this.name = name;
+        this.binder = binder;
+        ctx = outer == null ? null : outer.ctx;
     }
 }
 
@@ -406,25 +435,6 @@ public class YetiType implements YetiParser {
         String className;
     }
 
-    static final class Scope {
-        Scope outer;
-        String name;
-        Binder binder;
-        YType[] free;
-        Closure closure; // non-null means outer scopes must be proxied
-        ClassBinding importClass;
-        YType[] typeDef;
-
-        ScopeCtx ctx;
-
-        public Scope(Scope outer, String name, Binder binder) {
-            this.outer = outer;
-            this.name = name;
-            this.binder = binder;
-            ctx = outer == null ? null : outer.ctx;
-        }
-    }
-
     static YType orderedVar(int maxDepth) {
         YType type = new YType(maxDepth);
         type.flags = FL_ORDERED_REQUIRED;
@@ -660,17 +670,17 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void unify(YType a, YType b, Node where,
+    static void unify(YType a, YType b, Node where, Scope scope,
                       YType param1, YType param2, String error) {
         try {
             unify(a, b);
         } catch (TypeException ex) {
-            throw new CompileException(where, param1, param2, error, ex);
+            throw new CompileException(where, scope, param1, param2, error, ex);
         }
     }
 
-    static void unify(YType a, YType b, Node where, String error) {
-        unify(a, b, where, a, b, error);
+    static void unify(YType a, YType b, Node where, Scope scope, String error) {
+        unify(a, b, where, scope, a, b, error);
     }
 
     static YType mergeOrUnify(YType to, YType val) throws TypeException {

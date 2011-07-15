@@ -348,7 +348,7 @@ class ModuleType {
     YType type;
     Map typeDefs;
     Map directFields;
-    YetiType.Scope typeScope;
+    Scope typeScope;
     String topDoc;
     String name;
     boolean deprecated;

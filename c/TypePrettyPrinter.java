@@ -631,7 +631,7 @@ class TypePattern {
         return presult;
     }
 
-    static TypePattern toPattern(YetiType.Scope scope) {
+    static TypePattern toPattern(Scope scope) {
         Map typedefs = new HashMap();
         for (; scope != null; scope = scope.outer)
             if (scope.typeDef != null) {

@@ -1093,7 +1093,7 @@ class JavaType implements Cloneable {
         return t;
     }
 
-    static YType typeOfName(String name, YetiType.Scope scope) {
+    static YType typeOfName(String name, Scope scope) {
         int arrays = 0;
         while (name.endsWith("[]")) {
             ++arrays;

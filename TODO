@@ -3,7 +3,6 @@
 
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
-* Use typedef's in type pretty-printing (including error messages)
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
 * Fix full path script invocation (yeti /some/fubar/script.yeti)

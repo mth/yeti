@@ -39,7 +39,7 @@ public class CompileException extends RuntimeException {
     String what;
 
     static String format(YType param1, YType param2,
-                         String s, TypeException ex) {
+                         String s, TypeException ex, Scope scope) {
         StringBuffer result = new StringBuffer();
         int p = 0, i;
         boolean msg = false;
@@ -48,15 +48,15 @@ public class CompileException extends RuntimeException {
             p = i + 2;
             switch (s.charAt(i + 1)) {
                 case '0':
-                    result.append(ex.getMessage());
+                    result.append(ex.getMessage(scope));
                     msg = true;
                     break;
-                case '1': result.append(param1); break;
-                case '2': result.append(param2); break;
+                case '1': result.append(param1.toString(scope)); break;
+                case '2': result.append(param2.toString(scope)); break;
                 case '~':
-                    result.append(param1);
+                    result.append(param1.toString(scope));
                     result.append(" is not ");
-                    result.append(param2);
+                    result.append(param2.toString(scope));
                     break;
                 default:
                     result.append('#');
@@ -64,9 +64,9 @@ public class CompileException extends RuntimeException {
             }
         }
         result.append(s.substring(p));
-        if (!msg && ex.special) {
+        if (!msg && ex != null && ex.special) {
             result.append(" (");
-            result.append(ex.getMessage());
+            result.append(ex.getMessage(scope));
             result.append(")");
         }
         return result.toString();
@@ -96,10 +96,10 @@ public class CompileException extends RuntimeException {
         this.what = what;
     }
 
-    public CompileException(YetiParser.Node pos,
-                            YType param1, YType param2,
-                            String what, TypeException ex) {
-        this(ex, pos, format(param1, param2, what, ex));
+    public CompileException(YetiParser.Node pos, Scope scope,
+                            YType param1, YType param2, String what,
+                            TypeException ex) {
+        this(ex, pos, format(param1, param2, what, ex, scope));
     }
 
     public String getMessage() {
