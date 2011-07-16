@@ -299,6 +299,17 @@ evaluateYetiCode genericOpt =
             esac;
         done;
 
+        typeOf? = code =~ '\Wis$';
+
+        code = if typeOf? then
+                   bind := false;
+                   exec := false;
+                   "throw (() as ~Exception) is\n\(strLeft code
+                        (strLength code - 2))"
+               else
+                   code
+               fi;
+
         if bind then
             ctx#flags := ctx#flags b_or YetiC#CF_EVAL_STORE;
         fi;
@@ -316,9 +327,12 @@ evaluateYetiCode genericOpt =
             try
                 compileErr =
                     try
-                        t = ctx#compile(sourceName, mainClass,
-                                        code is string, ctx#flags);
-                        type := t#yetiType() unsafely_as type;
+                        t = ctx#compile(sourceName, mainClass, code, ctx#flags);
+                        type := if typeOf? then
+                                    TypeDescr#yetiType(t#type, ())
+                                else
+                                    t#yetiType()
+                                fi unsafely_as type;
                         () as ~CompileException
                     catch CompileException ex:
                         ex
@@ -386,7 +400,9 @@ evaluateYetiCode genericOpt =
                 CompileException ex:
                     push res (ex is ~CompileException)#getMessage();
                 Result val:
-                    if type != Simple "()" then
+                    if typeOf? then
+                        push res (showType [] '' type)
+                    elif type != Simple "()" then
                         push res
                              "\(Core#show(val)) is \(showType [] '' type)"
                     fi
