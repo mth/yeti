@@ -799,6 +799,14 @@ public final class YetiAnalyzer extends YetiType {
                 m.type.toString(scope) +
                 ", but only structs can be exploded)");
         }
+        Iterator j = m.moduleType.typeDefs.entrySet().iterator();
+        while (j.hasNext()) {
+            Map.Entry e = (Map.Entry) j.next();
+            YType[] typeDef = (YType[]) e.getValue();
+            scope = bind((String) e.getKey(), typeDef[typeDef.length - 1],
+                         null, RESTRICT_POLY, 0, scope);
+            scope.typeDef = typeDef;
+        }
         return scope;
     }
 
@@ -960,14 +968,6 @@ public final class YetiAnalyzer extends YetiType {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
                 scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
                 addSeq(last, new SeqExpr(m));
-                Iterator j = m.moduleType.typeDefs.entrySet().iterator();
-                while (j.hasNext()) {
-                    Map.Entry e = (Map.Entry) j.next();
-                    YType[] typeDef = (YType[]) e.getValue();
-                    scope = bind((String) e.getKey(),
-                             typeDef[typeDef.length - 1], null, RESTRICT_POLY, 0, scope);
-                    scope.typeDef = typeDef;
-                }
                 if (seq.seqKind instanceof TopLevel) {
                     ((TopLevel) seq.seqKind).typeScope = scope;
                 }
