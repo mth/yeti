@@ -14,6 +14,7 @@
   + Module type not fully defined message is confusing,
     should give more info about where error is.
 * Support module qualification on type, like x is foo.sometype
+* Typedefs in REPL
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
