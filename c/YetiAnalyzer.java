@@ -601,7 +601,7 @@ public final class YetiAnalyzer extends YetiType {
                                 " as a structure with ." + field + " field");
             }
             throw new CompileException(member, scope, src.type, null,
-                        "#1 do not have ." + field + " field", ex);
+                        "#1 does not have ." + field + " field", ex);
         }
         boolean poly = src.polymorph && src.type.finalMembers != null &&
             ((YType) src.type.finalMembers.get(field)).field == 0;
