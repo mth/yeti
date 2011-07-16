@@ -397,7 +397,7 @@ class TypeWalk implements Comparable {
                 return; // and don't associate
             }
             tvars.put(t, p);
-        } else if (id >= YetiType.FUN) {
+        } else if (id >= YetiType.PRIMITIVES.length) {
             tvars.put(t, p);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
@@ -516,23 +516,28 @@ class TypePattern {
     }
 
     static TypePattern toPattern(Map typedefs) {
-        if (typedefs.isEmpty())
-            return null;
-        int j = 0, varAlloc = 0;
-        int[] ids = new int[typedefs.size()];
-        TypePattern[] patterns = new TypePattern[ids.length];
-        TypePattern presult = new TypePattern(++varAlloc);
-        TypeWalk[] wg = new TypeWalk[ids.length];
+        int j = 0, varAlloc = 1;
+        TypePattern presult = new TypePattern(varAlloc);
+        TypeWalk[] w = new TypeWalk[typedefs.size()];
         Map tvars = new IdentityHashMap();
-        for (Iterator i = typedefs.entrySet().iterator(); i.hasNext(); ++j) {
+        for (Iterator i = typedefs.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             YType[] def = (YType[]) e.getValue();
+            YType t = def[def.length - 1].deref();
+            if (t.type < YetiType.PRIMITIVES.length)
+                continue;
             for (int k = def.length - 1; --k >= 0; )
                 tvars.put(def[k].deref(), null); // mark as param
-            wg[j] = new TypeWalk(def[def.length - 1], null, tvars, presult);
-            wg[j].typename = (String) e.getKey();
-            wg[j].def = def;
+            w[j] = new TypeWalk(t, null, tvars, presult);
+            w[j].typename = (String) e.getKey();
+            w[j++].def = def;
         }
+        if (j == 0)
+            return null;
+        TypeWalk[] wg = new TypeWalk[j];
+        System.arraycopy(w, 0, wg, 0, j);
+        int[] ids = new int[j];
+        TypePattern[] patterns = new TypePattern[j];
         List walkers = new ArrayList();
         walkers.add(wg); // types
         walkers.add(presult); // resulting pattern
@@ -541,7 +546,7 @@ class TypePattern {
             List current = walkers;
             walkers = new ArrayList();
             for (int i = 0, cnt = current.size(); i < cnt; i += 3) {
-                TypeWalk[] w = (TypeWalk[]) current.get(i);
+                w = (TypeWalk[]) current.get(i);
                 Arrays.sort(w);
                 // group by different types
                 // next - target for group in next cycle
