@@ -1611,6 +1611,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
             topLevel.isModule = parser.isModule;
+            topLevel.typeScope = scope;
             root.preload = preloadModules;
             scope.closure = root;
             scope.ctx = new ScopeCtx();
