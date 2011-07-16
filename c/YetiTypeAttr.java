@@ -32,6 +32,7 @@ package yeti.lang.compiler;
 
 import java.util.*;
 import yeti.renamed.asm3.*;
+import yeti.lang.Tag;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -371,6 +372,12 @@ class ModuleType {
         }
         return YetiType.copyType(type, YetiType.createFreeVars(free, depth),
                                  new HashMap());
+    }
+
+    Tag yetiType() {
+        return TypeDescr.yetiType(type, typeScope != null
+                ? TypePattern.toPattern(typeScope)
+                : TypePattern.toPattern(typeDefs));
     }
 }
 

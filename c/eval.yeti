@@ -185,15 +185,10 @@ moduleDoc m is ~ModuleType -> module_description =
                 scope := scope#outer);
             reverse typedefs
         fi;
-    defPattern = if nullptr? scope then
-                     TypePattern#toPattern(m#typeDefs)
-                 else
-                     TypePattern#toPattern(m#typeScope)
-                 fi;
     {
         doc = m#topDoc,
         name = strReplace '/' '.' m#name,
-        type = TypeDescr#yetiType(m#type, defPattern) unsafely_as type,
+        type = m#yetiType() unsafely_as type,
         typedefs
     });
 
@@ -323,7 +318,7 @@ evaluateYetiCode genericOpt =
                     try
                         t = ctx#compile(sourceName, mainClass,
                                         code is string, ctx#flags);
-                        type := TypeDescr#yetiType(t, ()) unsafely_as type;
+                        type := t#yetiType() unsafely_as type;
                         () as ~CompileException
                     catch CompileException ex:
                         ex

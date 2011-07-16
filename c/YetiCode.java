@@ -322,7 +322,7 @@ final class CompileCtx implements Opcodes {
         return className;
     }
 
-    YType compile(String sourceName, String name,
+    ModuleType compile(String sourceName, String name,
                           char[] code, int flags) throws Exception {
         if (definedClasses.containsKey(name)) {
             throw new RuntimeException(definedClasses.get(name) == null
@@ -427,7 +427,7 @@ final class CompileCtx implements Opcodes {
             unstoredClasses = oldUnstoredClasses;
             classPath.existsCache.clear();
             currentSrc = oldCurrentSrc;
-            return codeTree.type;
+            return codeTree.moduleType;
         } catch (CompileException ex) {
             if (ex.fn == null)
                 ex.fn = sourceName;

@@ -100,7 +100,7 @@ do argv: {
             bindBarrier = bindings#size();
             compilation = compilationOf writer;
             type_ = compilation#compile((), mainClass, line is string, flags +
-                                            YetiC#CF_EVAL + YetiC#CF_EVAL_BIND);
+                                       YetiC#CF_EVAL + YetiC#CF_EVAL_BIND)#type;
             try
                 val = execClass true writer;
                 if type_#deref()#type != YetiType#UNIT then
