@@ -153,20 +153,23 @@ createCtx reader genericOpt =
 
 nullTypeAction _ is module_description -> () = ();
 
-moduleDoc m is ~ModuleType -> module_description =
-   (typedefs = array [];
-    addDef name def scope =
-       (param = array [];
-        type = TypeDescr#typeDef(def unsafely_as ~YType[],
-                                 param unsafely_as ~yeti.lang.MList,
-                                 scope is ~TypePattern);
-        push typedefs {
-            name = string name,
-            type = type unsafely_as type,
-            param = list param
-        });
-    var scope = m#typeScope;
+moduleDoc m is ~ModuleType -> module_description = {
+    doc = m#topDoc,
+    name = strReplace '/' '.' m#name,
+    type = m#yetiType() unsafely_as type,
     typedefs =
+        typedefs = array [];
+        addDef name def scope =
+           (param = array [];
+            type = TypeDescr#typeDef(def unsafely_as ~YType[],
+                                     param unsafely_as ~yeti.lang.MList,
+                                     scope is ~TypePattern);
+            push typedefs {
+                name = string name,
+                type = type unsafely_as type,
+                param = list param
+            });
+        var scope = m#typeScope;
         if nullptr? scope then
             i = m#typeDefs#entrySet()#iterator();
             i#hasNext() loop
@@ -184,13 +187,8 @@ moduleDoc m is ~ModuleType -> module_description =
                 fi;
                 scope := scope#outer);
             reverse typedefs
-        fi;
-    {
-        doc = m#topDoc,
-        name = strReplace '/' '.' m#name,
-        type = m#yetiType() unsafely_as type,
-        typedefs
-    });
+        fi
+};
 
 compileYetiFiles genericOpt options files =
    (var exec = false;
