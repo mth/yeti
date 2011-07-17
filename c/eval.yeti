@@ -157,6 +157,7 @@ moduleDoc m is ~ModuleType -> module_description = {
     doc = m#topDoc,
     name = strReplace '/' '.' m#name,
     type = m#yetiType() unsafely_as type,
+
     typedefs =
         typedefs = array [];
         addDef name def scope =
