@@ -11,8 +11,8 @@ html_page name doc descr typedefs =
 .other { background: #cccccc }
 .struct { background: #bbffbb; border-width: 1px;
           border-color: black; border-style: solid;
-          padding-left: 0.1strong;
-          padding-right: 0.1strong;
+          padding-left: 0.1em;
+          padding-right: 0.1em;
           margin-left: 1pt;
           margin-right: 1pt;
           padding-top: 1px;
@@ -49,8 +49,10 @@ format_doc _ doc =
 type_as_html st =
    (var cur = '';
     var big = false;
+    var depth = 0;
     do indent t:
         old = cur;
+        depth := depth + 1;
         s = case t of
             Struct l:
                 types = [:];
@@ -76,7 +78,9 @@ type_as_html st =
                         push a ',</div>'
                     done;
                     a.[length a - 1] := '</div>';
-                    "{<div class=\"struct\">\(strJoin '' a)</div>}"
+                    block =
+                        if depth == 1 then ' style="display: block; margin: 2pt"' else '' fi;
+                    "{<div class=\"struct\"\(block)>\(strJoin '' a)</div>}"
                 else
                     "{ \(strJoin ', ' (map field l)) }"
                 fi;
@@ -100,6 +104,7 @@ type_as_html st =
                     st indent t
                 fi
             esac;
+        depth := depth - 1;
         cur := old;
         s
     done);
@@ -110,7 +115,7 @@ typedef_param param =
 typedef_html to_html {name, type, param} =
 """<div class="typedef">
 <b>typedef</b> \(name@)\(typedef_param param@) = <span class="type">
-\(to_html '' type)</span></div><hr>""";
+\(to_html '' type)</span></div><p>""";
 
 do {type, name, doc, typedefs}:
     if defined? doc_dir then

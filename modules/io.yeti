@@ -36,8 +36,10 @@ import java.lang.Thread;
 var stdin' = None ();
 
 typedef input_handle = {
+    /// Read a line from the stream.
     read is number -> string,
     readln is () -> string,
+    /// Read a full contents of the stream.
     contents is () -> string,
     lines is () -> list<string>,
     close is () -> (),
@@ -58,7 +60,6 @@ readerHandle reader is ~BufferedReader -> 'a =
         read num =
             Core#read(reader, num),
 
-        /// Read a line from the stream.
         readln () =
             synchronized reader do:
                 if used then
@@ -68,7 +69,6 @@ readerHandle reader is ~BufferedReader -> 'a =
                 fi
             done,
 
-        /// Read a full contents of the stream.
         contents () =
             synchronized reader do:
                 if used then
