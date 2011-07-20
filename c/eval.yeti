@@ -257,7 +257,7 @@ compileYetiFiles genericOpt options files =
         // wrap exceptions from user code into InvocationTargetException,
         // so we don't need to do anything here with those exceptions.
         _ = execClass execArg false false classLoader mainClass;
-    elif not defined? mainClass then
+    elif not defined? mainClass and exec then
         throw new CompileException(0, 0, "Cannot run a module")
     fi);
 
