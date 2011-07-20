@@ -125,7 +125,8 @@ public final class YetiAnalyzer extends YetiType {
                 ClassBinding cb = resolveFullClass(name, scope, true, x);
                 return new NewExpr(
                     JavaType.resolveConstructor(x, cb.type, args, true)
-                            .check(x, scope.ctx.packageName), args, cb, x.line);
+                            .check(x, scope.ctx.packageName, 0),
+                                   args, cb, x.line);
             }
             if (kind == "rsection") {
                 return rsection(x, scope, depth);
@@ -425,7 +426,7 @@ public final class YetiAnalyzer extends YetiType {
         Code[] args = mapArgs(0, ref.arguments, scope, depth);
         return new MethodCall(obj,
                     JavaType.resolveMethod(ref, t, args, obj == null)
-                        .check(ref, scope.ctx.packageName), args, ref.line);
+                        .check(ref, scope.ctx.packageName, 0), args, ref.line);
     }
 
     static Code newArray(XNode op, Scope scope, int depth) {

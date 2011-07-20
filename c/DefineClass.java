@@ -32,6 +32,7 @@ package yeti.lang.compiler;
 
 import java.util.List;
 import java.util.ArrayList;
+import yeti.renamed.asm3.Opcodes;
 
 final class MethodDesc extends YetiType {
     Binder[] arguments;
@@ -265,7 +266,7 @@ final class MethodDesc extends YetiType {
         JavaType.Method superCons =
             JavaType.resolveConstructor(superNode, parentClass.type,
                                         initArgs, false)
-                    .check(superNode, packageName);
+                    .check(superNode, packageName, Opcodes.ACC_PROTECTED);
         c.superInit(superCons, initArgs, superNode.line);
 
         local = new Scope(local, "super", c.superRef);

@@ -266,9 +266,9 @@ class JavaType implements Cloneable {
             return m;
         }
 
-        Method check(YetiParser.Node where, String packageName) {
+        Method check(YetiParser.Node where, String packageName, int extraMask) {
             classType.javaType.checkPackage(where, packageName);
-            if ((access & classType.javaType.publicMask) == 0)
+            if ((access & (classType.javaType.publicMask | extraMask)) == 0)
                 checkPackage(where, packageName, className, "method", name);
             return this;
         }
