@@ -443,9 +443,8 @@ class YetiTypeVisitor implements ClassVisitor {
                               boolean bySourcePath) {
         CompileCtx ctx = CompileCtx.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
-        if (t != null) {
+        if (t != null)
             return t;
-        }
         String source = name;
         InputStream in = null;
         if (!bySourcePath) {
@@ -454,17 +453,16 @@ class YetiTypeVisitor implements ClassVisitor {
         }
         try {
             if (in == null) {
+                System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
                 t = (ModuleType) ctx.types.get(ctx.compile(source, 0));
-                if (t == null) {
+                if (t == null)
                     throw new Exception("Could not compile `" + name
                                       + "' to a module");
-                }
             } else {
                 t = readType(new ClassReader(in));
                 in.close();
-                if (t == null) {
+                if (t == null)
                     throw new Exception("`" + name + "' is not a yeti module");
-                }
                 t.name = name;
             }
             ctx.types.put(name, t);

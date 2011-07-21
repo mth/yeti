@@ -324,6 +324,13 @@ final class CompileCtx implements Opcodes {
 
     ModuleType compile(String sourceName, String name,
                           char[] code, int flags) throws Exception {
+        // TODO
+        // The circular dep check doesn't work always, as the SourceReader +
+        // compile(sourceName, flags) gets the proposed classname wrong
+        // when the sourcereader modifies the path - even when the original
+        // sourceName contained correct name base for classname provided
+        // by the YetiTypeAttr when loading a module.
+        // The source reading logic is a mess and needs a refactoring, badly.
         if (definedClasses.containsKey(name)) {
             throw new CompileException(0, 0, (definedClasses.get(name) == null
                 ? "Circular module dependency: "

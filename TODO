@@ -7,6 +7,7 @@
 * Rebuild modified dependencies when compiling
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
   + Use unique path identifiers (File? URL?) on module (re)compilation.
+  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
 * Compile modules required by load directly after parse, before type analyse
 * Foreign structs (java dto -> struct?)
 * Better error messages
