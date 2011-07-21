@@ -325,9 +325,9 @@ final class CompileCtx implements Opcodes {
     ModuleType compile(String sourceName, String name,
                           char[] code, int flags) throws Exception {
         if (definedClasses.containsKey(name)) {
-            throw new RuntimeException(definedClasses.get(name) == null
-                ? "Circular module dependency: " + name
-                : "Duplicate module name: " + name);
+            throw new CompileException(0, 0, (definedClasses.get(name) == null
+                ? "Circular module dependency: "
+                : "Duplicate module name: ") + name.replace('/', '.'));
         }
         boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
         RootClosure codeTree;

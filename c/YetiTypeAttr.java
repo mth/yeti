@@ -470,6 +470,10 @@ class YetiTypeVisitor implements ClassVisitor {
             ctx.types.put(name, t);
             return t;
         } catch (CompileException ex) {
+            if (ex.line == 0) {
+                ex.line = node.line;
+                ex.col = node.col;
+            }
             throw ex;
         } catch (RuntimeException ex) {
             throw ex;
