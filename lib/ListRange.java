@@ -259,11 +259,20 @@ public final class ListRange extends AList implements Serializable {
     }
 
     public Num index(Object v) {
-        if (inc > 0)
-            return first.compareTo(v) <= 0 && last.compareTo(v) >= 0
-                    ? ((Num) v).sub(first) : null;
-        return last.compareTo(v) <= 0 && first.compareTo(v) >= 0
-                ? ((Num) v).sub(last) : null;
+        if (inc > 0) {
+            if (first.compareTo(v) <= 0 && last.compareTo(v) >= 0)
+                return ((Num) v).sub(first);
+        } else {
+            if (last.compareTo(v) <= 0 && first.compareTo(v) >= 0)
+                return ((Num) v).sub(last);
+        }
+        if (rest == null)
+            return null;
+        Num res;
+        if ((res = rest.index(v)) == null)
+            return null;
+        long n = last.sub(first).longValue() / inc;
+        return n <= 0 ? res : res.add(n + 1);
     }
 
     public AList sort() {
