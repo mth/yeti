@@ -147,7 +147,11 @@ public final class ListRange extends AList implements Serializable {
             i = i.next();
             j = j.next();
         }
-        return i != null ? 1 : j != null ? -1 : 0;
+        if (i != null)
+            return 1;
+        if (j != null)
+            return -1;
+        return 0;
     }
 
     public void forEach(Object fun) {
@@ -189,7 +193,9 @@ public final class ListRange extends AList implements Serializable {
             for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc))
                 v = f.apply(v, i);
         }
-        return rest == null ? v : rest.fold(f, v);
+        if (rest == null)
+            return v;
+        return rest.fold(f, v);
     }
 
     public AList reverse() {
@@ -220,7 +226,9 @@ public final class ListRange extends AList implements Serializable {
                     return l;
                 }
         }
-        return rest == null ? null : rest.find(pred);
+        if (rest == null)
+            return null;
+        return rest.find(pred);
     }
 
     public AList smap(Fun f) {
@@ -255,7 +263,9 @@ public final class ListRange extends AList implements Serializable {
         long n = last.sub(first).longValue() / inc + 1;
         if (n < 0)
             n = 0;
-        return rest == null ? n : n + rest.length();
+        if (rest == null)
+            return n;
+        return n + rest.length();
     }
 
     public Num index(Object v) {
@@ -271,8 +281,10 @@ public final class ListRange extends AList implements Serializable {
         Num res;
         if ((res = rest.index(v)) == null)
             return null;
-        long n = last.sub(first).longValue() / inc;
-        return n <= 0 ? res : res.add(n + 1);
+        long n;
+        if ((n = last.sub(first).longValue() / inc) <= 0)
+            return res;
+        return res.add(n + 1);
     }
 
     public AList sort() {
