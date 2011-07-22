@@ -168,8 +168,8 @@ public final class ListRange extends AList implements Serializable {
             for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc))
                 f.apply(i);
         }
-        for (AIter i = rest; i != null; i = i.next())
-            f.apply(i.first());
+        if (rest != null)
+            rest.forEach(fun);
     }
 
     public Object fold(Fun f, Object v) {
@@ -189,9 +189,7 @@ public final class ListRange extends AList implements Serializable {
             for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc))
                 v = f.apply(v, i);
         }
-        for (AIter i = rest; i != null; i = i.next())
-            v = f.apply(v, i.first());
-        return v;
+        return rest == null ? v : rest.fold(f, v);
     }
 
     public AList reverse() {
@@ -222,10 +220,7 @@ public final class ListRange extends AList implements Serializable {
                     return l;
                 }
         }
-        AList l = rest;
-        while (l != null && pred.apply(l.first()) != Boolean.TRUE)
-            l = l.rest();
-        return l;
+        return rest == null ? null : rest.find(pred);
     }
 
     public AList smap(Fun f) {
@@ -257,8 +252,10 @@ public final class ListRange extends AList implements Serializable {
     }
 
     public long length() {
-        long n = last.sub(first).intValue() / inc;
-        return n >= 0 ? n + 1 : 0;
+        long n = last.sub(first).longValue() / inc + 1;
+        if (n < 0)
+            n = 0;
+        return rest == null ? n : n + rest.length();
     }
 
     public Num index(Object v) {
