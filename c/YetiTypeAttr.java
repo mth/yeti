@@ -453,7 +453,7 @@ class YetiTypeVisitor implements ClassVisitor {
         }
         try {
             if (in == null) {
-                System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
+                //System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
                 t = (ModuleType) ctx.types.get(ctx.compile(source, 0));
                 if (t == null)
                     throw new Exception("Could not compile `" + name
