@@ -1331,9 +1331,11 @@ interface YetiParser {
                 throw new CompileException(line, p - lineStart + 1,
                                            "Expecting " + end);
             }
-            if (l.size() != 0) {
+            if (l.size() != 0)
                 res.add(def(args, l, end == '}', doc));
-            }
+            else if (args != null)
+                throw new CompileException(line, p - lineStart,
+                                           "Expression missing after '='");
             return (Node[]) res.toArray(new Node[res.size()]);
         }
 
