@@ -93,9 +93,8 @@ public final class ListRange extends AList implements Serializable {
 
     public int hashCode() {
         int hashCode = 1;
-        for (Num i = first; i.compareTo(last) <= 0; i = i.add(inc)) {
+        for (Num i = first; i.compareTo(last) <= 0; i = i.add(inc))
             hashCode = 31 * hashCode + i.hashCode();
-        }
         for (AIter i = rest; i != null; i = i.next()) {
             Object x = i.first();
             hashCode = 31 * hashCode + (x == null ? 0 : x.hashCode());
@@ -122,19 +121,17 @@ public final class ListRange extends AList implements Serializable {
         StringBuffer buf = new StringBuffer("[");
         boolean f = true;
         for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-            if (f) {
+            if (f)
                 f = false;
-            } else {
+            else
                 buf.append(',');
-            }
             buf.append(i);
         }
         for (AIter i = rest; i != null; i = i.next()) {
-            if (f) {
+            if (f)
                 f = false;
-            } else {
+            else
                 buf.append(',');
-            }
             buf.append(Core.show(i.first()));
         }
         buf.append(']');
@@ -145,9 +142,8 @@ public final class ListRange extends AList implements Serializable {
         AIter i = this, j = (AIter) obj;
         while (i != null && j != null) {
             int r;
-            if ((r = ((Comparable) i.first()).compareTo(j.first())) != 0) {
+            if ((r = ((Comparable) i.first()).compareTo(j.first())) != 0)
                 return r;
-            }
             i = i.next();
             j = j.next();
         }
@@ -158,55 +154,43 @@ public final class ListRange extends AList implements Serializable {
         Fun f = (Fun) fun;
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
-            if (first.compareTo(last) <= 0) {
+            if (first.compareTo(last) <= 0)
                 for (int i = first.intValue(), e = last.intValue();
-                     i <= e; ++i) {
+                     i <= e; ++i)
                     f.apply(new IntNum(i));
-                }
-            }
         } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
-            if (first.compareTo(last) >= 0) {
+            if (first.compareTo(last) >= 0)
                 for (int i = first.intValue(), e = last.intValue();
-                     i >= e; --i) {
+                     i >= e; --i)
                     f.apply(new IntNum(i));
-                }
-            }
         } else {
-            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc))
                 f.apply(i);
-            }
         }
-        for (AIter i = rest; i != null; i = i.next()) {
+        for (AIter i = rest; i != null; i = i.next())
             f.apply(i.first());
-        }
     }
 
     public Object fold(Fun f, Object v) {
         if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
                        last.rCompare(Integer.MAX_VALUE) > 0) {
-            if (first.compareTo(last) <= 0) {
+            if (first.compareTo(last) <= 0)
                 for (int i = first.intValue(), e = last.intValue();
-                     i <= e; ++i) {
+                     i <= e; ++i)
                     v = f.apply(v, new IntNum(i));
-                }
-            }
         } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
-            if (first.compareTo(last) >= 0) {
+            if (first.compareTo(last) >= 0)
                 for (int i = first.intValue(), e = last.intValue();
-                     i >= e; --i) {
+                     i >= e; --i)
                     v = f.apply(v, new IntNum(i));
-                }
-            }
         } else {
-            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
+            for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc))
                 v = f.apply(v, i);
-            }
         }
-        for (AIter i = rest; i != null; i = i.next()) {
+        for (AIter i = rest; i != null; i = i.next())
             v = f.apply(v, i.first());
-        }
         return v;
     }
 
@@ -214,19 +198,29 @@ public final class ListRange extends AList implements Serializable {
         ListRange r = new ListRange(last, first, null);
         r.inc = -inc;
         AList l = r;
-        for (AIter i = rest; i != null; i = i.next()) {
+        for (AIter i = rest; i != null; i = i.next())
             l = new LList(i.first(), l);
-        }
         return l;
     }
 
     public AList find(Fun pred) {
-        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-            if (pred.apply(i) == Boolean.TRUE) {
-                ListRange l = new ListRange(i, last, rest);
-                l.inc = inc;
-                return l;
-            }
+        Num j;
+        if (inc > 0 && first.rCompare(Integer.MIN_VALUE) < 0 &&
+                       last.rCompare(Integer.MAX_VALUE) > 0) {
+            if (first.compareTo(last) <= 0)
+                for (int i = first.intValue(), e = last.intValue();
+                     i <= e; ++i) {
+                    j = new IntNum(i);
+                    if (pred.apply(j) == Boolean.TRUE)
+                        return new ListRange(j, last, rest);
+                }
+        } else {
+            for (j = first; j.compareTo(last) * inc <= 0; j = j.add(inc))
+                if (pred.apply(j) == Boolean.TRUE) {
+                    ListRange l = new ListRange(j, last, rest);
+                    l.inc = inc;
+                    return l;
+                }
         }
         AList l = rest;
         while (l != null && pred.apply(l.first()) != Boolean.TRUE)
@@ -243,9 +237,8 @@ public final class ListRange extends AList implements Serializable {
                 return rest.smap(f);
             l = new MList();
             l.reserve(e - i + 1);
-            while (i <= e) {
+            while (i <= e)
                 l.add(f.apply(new IntNum(i++)));
-            }
         } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
             int i = first.intValue(), e = last.intValue();
@@ -253,15 +246,13 @@ public final class ListRange extends AList implements Serializable {
                 return rest.smap(f);
             l = new MList();
             l.reserve(i - e + 1);
-            while (i >= e) {
+            while (i >= e)
                 l.add(f.apply(new IntNum(i--)));
-            }
         } else {
             return new MapList(this, f);
         }
-        for (AIter i = rest; i != null; i = i.next()) {
+        for (AIter i = rest; i != null; i = i.next())
             l.add(f.apply(i.first()));
-        }
         return l;
     }
 
@@ -271,10 +262,9 @@ public final class ListRange extends AList implements Serializable {
     }
 
     public Num index(Object v) {
-        if (inc > 0) {
+        if (inc > 0)
             return first.compareTo(v) <= 0 && last.compareTo(v) >= 0
                     ? ((Num) v).sub(first) : null;
-        }
         return last.compareTo(v) <= 0 && first.compareTo(v) >= 0
                 ? ((Num) v).sub(last) : null;
     }
