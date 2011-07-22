@@ -864,9 +864,11 @@ interface YetiParser {
             if (s != null) {
                 if (cnt < expr.size()) {
                     BinOp r = new BinOp("", 2, true);
-                    r.left = new Sym(s);
-                    r.right = e;
                     r.parent = r; // so it would be considered "processed"
+                    r.right = e;
+                    r.left = e = new Sym(s);
+                    e.line = partial.line;
+                    e.col = partial.col;
                     e = r;
                 } else {
                     e = new XNode("rsection",
