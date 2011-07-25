@@ -653,6 +653,15 @@ final class CompareFun extends BoolBinOp {
             if (!eq && ctx.compilation.isGCJ)
                 ctx.typeInsn(CHECKCAST, "java/lang/Comparable");
             ctx.insn(SWAP); // 1-2
+        } else if (arg2 instanceof StringConstant &&
+                   ((StringConstant) arg2).str.length() == 0 &&
+                   (op & COND_LT) == 0) {
+            arg1.gen(ctx);
+            ctx.visitLine(line);
+            ctx.typeInsn(CHECKCAST, "java/lang/String");
+            ctx.methodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I");
+            ctx.jumpInsn((op & COND_NOT) == (op >>> 2) ? IFEQ : IFNE, to);
+            return;
         } else {
             arg1.gen(ctx);
             ctx.visitLine(line);

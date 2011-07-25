@@ -262,7 +262,11 @@ plus a b = a + b;
     wrapArray a is 'a[] -> array<'a> = a,
 
     mapJavaList f l is (~Object -> 'a) -> ~java.util.Collection -> list<'a> =
-        map f l#toArray(),
+        if nullptr? l then
+            []
+        else
+            map f l#toArray()
+        fi,
 
     forJavaMap = forHash unsafely_as ~yeti.lang.Fun unsafely_as
         ~java.util.Map -> (~Object -> ~Object -> ()) -> (),
