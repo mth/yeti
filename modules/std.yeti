@@ -77,6 +77,13 @@ hash l is list?<'a> -> hash<'a, ()> =
     for l (_ i = h.[i] := ());
     h);
 
+forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
+    // warning: it's also used as forMap implementation
+   (i = (h unsafely_as ~Map)#entrySet()#iterator();
+    i#hasNext() loop
+       (e = i#next() unsafely_as ~java.util.Map$Entry;
+        f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
+
 /// Returns [f(a), f(b), ...] for list l [a, b, ...]
 /// This map function returns lazy list when used on normal lists.
 /// Arrays and lists backed by arrays are mapped strictly.
@@ -249,10 +256,16 @@ plus a b = a + b;
         fi,
 
     /// damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index, keys, hash, map, map', peekObject,
+    array, fold, find, index, keys, hash, map, map', forHash, peekObject,
 
     /// Wraps Java array object into Yeti array type.
     wrapArray a is 'a[] -> array<'a> = a,
+
+    mapJavaList f l is (~Object -> 'a) -> ~java.util.Collection -> list<'a> =
+        map f l#toArray(),
+
+    forJavaMap = forHash unsafely_as ~yeti.lang.Fun unsafely_as
+        ~java.util.Map -> (~Object -> ~Object -> ()) -> (),
 
     /// Gives values from collection a as a list.
     list a is map<'k, 'a> -> list<'a> =
@@ -411,7 +424,7 @@ plus a b = a + b;
     /// The ordering of list is not preserved.
     nub is list?<'a> -> list<'a> =
         keys . hash,
-    
+ 
     /// Returns a list of lists, where each sublist contains only equal elements
     /// and the concatenation of the result is equal to the original list l.
     /// Elements are considered equal when the given predicate function
@@ -559,12 +572,6 @@ plus a b = a + b;
 
     strUncapitalize str is string -> string =
         Core#uncapitalize(str unsafely_as ~String),
-
-    forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
-        i = (h unsafely_as ~Map)#entrySet()#iterator();
-        i#hasNext() loop
-           (e = i#next() unsafely_as ~java.util.Map$Entry;
-            f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)),
 
     mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c> =
         a = new MList();
