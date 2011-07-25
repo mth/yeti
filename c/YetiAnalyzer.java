@@ -1149,6 +1149,9 @@ public final class YetiAnalyzer extends YetiType {
                     t.field = FIELD_NON_POLYMORPHIC;
                     fields.put(field.name, t);
                 }
+                if (field.type != null)
+                    unify(t, nodeToType(field.type, new HashMap(), scope,depth),
+                          field, scope, "#0 (when checking #1 is #2)");
                 if (field.var)
                     t.field = FIELD_MUTABLE;
                 if (field.doc != null)
@@ -1173,8 +1176,11 @@ public final class YetiAnalyzer extends YetiType {
             } else {
                 if (sf != null)
                     duplicateField(field);
-                if (code == null)
+                if (code == null) {
                     code = analyze(field.expr, scope, depth);
+                    if (field.type != null)
+                        isOp(field, field.type, code, scope, depth);
+                }
                 sf = new StructField();
                 sf.name = field.name;
                 sf.value = code;

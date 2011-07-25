@@ -424,7 +424,7 @@ plus a b = a + b;
     /// The ordering of list is not preserved.
     nub is list?<'a> -> list<'a> =
         keys . hash,
- 
+
     /// Returns a list of lists, where each sublist contains only equal elements
     /// and the concatenation of the result is equal to the original list l.
     /// Elements are considered equal when the given predicate function
