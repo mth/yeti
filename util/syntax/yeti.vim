@@ -53,7 +53,7 @@ syn keyword yetiException catch containedin=yetiTry contained skipempty skipwhit
 syn keyword yetiException finally containedin=yetiTry contained
 syn keyword yetiOperator throw with
 
-syn keyword yetiRepeat for forHash loop withExit
+syn keyword yetiRepeat for forHash forJavaMap loop withExit
 syn keyword yetiStatement module program synchronized
 
 syn keyword yetiStorageClass var norec get set
@@ -78,7 +78,7 @@ syn keyword yetiFunction strLastIndexOf' copy slice deleteAll hash avoid
 syn keyword yetiFunction groupBy insertHash strCapitalize strUncapitalize
 syn keyword yetiFunction identityHash deleteFile binReadFile binWriteFile
 syn keyword yetiFunction binReadAll trace runThread threadLocal peekObject
-syn keyword yetiFunction listDirectory clearArray mapJavaList forJavaMap
+syn keyword yetiFunction listDirectory clearArray mapJavaList
 syn keyword yetiExternal load deprecated
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains\>"
