@@ -1952,8 +1952,8 @@ Partial matches are not allowed::
     > carrots n = case n of 1: "1 carrot" esac
     1:13: Partial match: number
 
-Here the compiler deduces, that no meaningful result value have been given
-for a case, when the ``n != 1``.
+Here the compiler deduces, that no meaningful result value was given
+to the case, when ``n != 1``.
 
 Type declarations
 ~~~~~~~~~~~~~~~~~~~~
