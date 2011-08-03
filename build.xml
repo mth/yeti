@@ -96,14 +96,17 @@
     <condition property="jar-name" value="yeti.jar">
         <not><isset property="jar-name"/></not>
     </condition>
-    <jar jarfile="${basedir}/${jar-name}">
+    <jar jarfile="${basedir}/yeti-lib.jar" roundup="false">
+        <fileset dir="${basedir}/.build/lib"/>
+        <fileset dir="${basedir}/.build/std"/>
+        <fileset dir="${basedir}/.build/modules"/>
+    </jar>
+    <jar jarfile="${basedir}/${jar-name}" keepcompression="true">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
-        <fileset dir="${basedir}/.build/lib"/>
+        <zipfileset src="${basedir}/yeti-lib.jar"/>
         <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
-        <fileset dir="${basedir}/.build/std"/>
-        <fileset dir="${basedir}/.build/modules"/>
         <zipfileset src="${asm}" excludes="yeti/renamed/asm3/signature/*"/>
     </jar>
 </target>
@@ -112,14 +115,6 @@
     <java classname="yeti.lang.compiler.yeti" classpath="${jar-name}">
         <arg value="${basedir}/tests/test.yeti"/>
     </java>
-</target>
-
-<target name="libjar" depends="compiler,modules,yeti">
-    <jar jarfile="${basedir}/yeti-lib.jar">
-        <fileset dir="${basedir}/.build/lib"/>
-        <fileset dir="${basedir}/.build/std"/>
-        <fileset dir="${basedir}/.build/modules"/>
-    </jar>
 </target>
 
 <target name="noant">
@@ -136,10 +131,5 @@
 <target name="checkjar">
     <available property="no.jar.build" file="${basedir}/yeti.jar"/>
 </target>
-
-<!-- target name="need-jar" depends="prepare-build,checkjar"
-        unless="no.jar.build">
-    <antcall target="jar" inheritRefs="true"/>
-</target -->
 
 </project>
