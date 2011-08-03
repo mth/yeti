@@ -2,7 +2,7 @@ newGame size = {
     maxPos = size * size - 1,
     pos x y = x + y * size,
     board = array (map \' ' [1 .. size * size]),
-    full? () = not contains ' ' board,
+    full? () = not contains? ' ' board,
     hasWon player =
         m = size - 1;
         check from by = all (_ p = board.[p * by + from] == player) [0 .. m];
