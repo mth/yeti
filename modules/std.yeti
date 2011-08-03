@@ -354,8 +354,11 @@ plus a b = a + b;
         value unsafely_as 'a,
 
     /// Whether l contains element equal (as defined by (==)) to v
-    contains v l is 'a -> list?<'a> -> boolean =
+    contains? v l is 'a -> list?<'a> -> boolean =
         not (nullptr? l or nullptr? (l unsafely_as ~AList)#index(v)),
+
+    /// deprecated!!!
+    contains v l = contains? v l,
 
     /// Returns default when opt == None () and f x when opt == Some x
     maybe default f opt =
