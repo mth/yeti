@@ -31,13 +31,15 @@ module yeti.http;
 load yeti.lang.io;
 
 {
-    openTextUrl url is string -> 'a =
+    openTextUrl contentTypeHandler url
+            is (string -> string) -> string -> 'a =
         conn = new java.net.URL(url)#openConnection();
         stream = conn#getInputStream();
         contentType = conn#getContentType();
-        cs = strTrim (strRightOf 'CHARSET=' (strUpper contentType));
+        cs = contentTypeHandler
+            (strTrim (strRightOf 'CHARSET=' (strUpper contentType)));
         inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
     getTextByUrl url =
-        (openTextUrl url).contents ()
+        (openTextUrl id url).contents ()
 }
