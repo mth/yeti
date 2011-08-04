@@ -35,9 +35,14 @@ load yeti.lang.io;
             is (string -> string) -> string -> 'a =
         conn = new java.net.URL(url)#openConnection();
         stream = conn#getInputStream();
-        contentType = conn#getContentType();
-        cs = contentTypeHandler
-            (strTrim (strRightOf 'CHARSET=' (strUpper contentType)));
+        cs = try
+                contentType = conn#getContentType();
+                contentTypeHandler
+                    (strTrim (strRightOf 'CHARSET=' (strUpper contentType)))
+             catch java.lang.Throwable t:
+                stream#close();
+                throw t
+             yrt;
         inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
     getTextByUrl url =
