@@ -111,6 +111,9 @@
     </jar>
 </target>
 
+
+<target name="yeti-lib" depends="jar"/>
+
 <target name="test" depends="jar">
     <java classname="yeti.lang.compiler.yeti" classpath="${jar-name}">
         <arg value="${basedir}/tests/test.yeti"/>
