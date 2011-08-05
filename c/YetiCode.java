@@ -55,17 +55,21 @@ final class Constants implements Opcodes {
     String sourceName;
     Ctx ctx;
 
+    void constField(int mode, String name, Code code, String descr) {
+        ctx.cw.visitField(mode, name, descr, null, null).visitEnd();
+        if (sb == null)
+            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
+        code.gen(sb);
+        sb.fieldInsn(PUTSTATIC, ctx.className, name, descr);
+    }
+
     void registerConstant(Object key, Code code, Ctx ctx_) {
         String descr = 'L' + Code.javaType(code.type.deref()) + ';';
         String name = (String) constants.get(key);
         if (name == null) {
-            if (sb == null)
-                sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
             name = "_".concat(Integer.toString(ctx.fieldCounter++));
-            ctx.cw.visitField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
-                              name, descr, null, null).visitEnd();
-            code.gen(sb);
-            sb.fieldInsn(PUTSTATIC, ctx.className, name, descr);
+            constField(ACC_STATIC | ACC_FINAL | ACC_SYNTHETIC,
+                       name, code, descr);
             constants.put(key, name);
         }
         ctx_.fieldInsn(GETSTATIC, ctx.className, name, descr);
@@ -384,7 +388,7 @@ final class CompileCtx implements Opcodes {
                     ((StructConstructor) codeTail).publish();
                     codeTree.gen(ctx);
                     codeTree.moduleType.directFields =
-                        ((StructConstructor) codeTail).getDirect();
+                        ((StructConstructor) codeTail).getDirect(constants);
                 } else {
                     codeTree.gen(ctx);
                 }
@@ -1957,7 +1961,13 @@ final class LoadModule extends Code {
                         }
                     };
                 }
-                return new StaticRef(directRef, "_", type, this, true, line);
+                String field = "_";
+                int dot = directRef.indexOf('.');
+                if (dot > 0) {
+                    field = directRef.substring(dot + 1);
+                    directRef = directRef.substring(0, dot);
+                }
+                return new StaticRef(directRef, field, type, this, true, line);
             }
         };
     }

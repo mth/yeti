@@ -226,7 +226,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
     }
 
-    Map getDirect() {
+    Map getDirect(Constants constants) {
         Map r = new HashMap(fieldCount);
         for (int i = 0; i < fieldCount; ++i) {
             if (fields[i].mutable || fields[i].property > 0) {
@@ -238,8 +238,17 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             Code v = fields[i].value;
             while (v instanceof BindRef)
                 v = ((BindRef) v).unref(false);
-            if (v instanceof Function && v.flagop(CONST))
-                r.put(fields[i].name, ((Function) v).name);
+            if (v != null && v.flagop(CONST)) {
+                if (v instanceof Function) {
+                    r.put(fields[i].name, ((Function) v).name);
+                } else {
+                    String descr = 'L' + Code.javaType(v.type) + ';';
+                    constants.constField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
+                                         fields[i].name, v, descr);
+                    r.put(fields[i].name,
+                          constants.ctx.className + '.' + fields[i].name);
+                }
+            }
         }
         return r;
     }
