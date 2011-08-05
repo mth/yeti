@@ -244,9 +244,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 } else {
                     String descr = 'L' + Code.javaType(v.type) + ';';
                     constants.constField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
-                                         fields[i].name, v, descr);
-                    r.put(fields[i].name,
-                          constants.ctx.className + '.' + fields[i].name);
+                                         mangle(fields[i].name), v, descr);
+                    r.put(fields[i].name, ".");
                 }
             }
         }

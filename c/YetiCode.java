@@ -1938,31 +1938,21 @@ final class LoadModule extends Code {
 
     Binder bindField(final String name, final YType type) {
         return new Binder() {
-            private String directRef, field;
-
             public BindRef getRef(final int line) {
-                if (!moduleType.directFields.containsKey(name)) {
+                String directRef = (String) moduleType.directFields.get(name);
+                if (directRef != null && !directRef.equals("."))
+                    return new StaticRef(directRef, "_", type,
+                                         this, true, line);
+                if (directRef == null)
                     used = true;
+
+                // constant field
+                if (directRef != null || // "." - static final on module
+                        !moduleType.directFields.containsKey(name))
                     return new StaticRef(moduleName, mangle(name), type,
                                          this, true, line);
-                }
-                if (directRef == null)
-                    directRef = (String) moduleType.directFields.get(name);
-                if (directRef != null) {
-                    if (field == null) {
-                        int dot = directRef.indexOf('.');
-                        if (dot > 0) {
-                            field = directRef.substring(dot + 1);
-                            directRef = directRef.substring(0, dot);
-                        } else {
-                            field = "_";
-                        }
-                    }
-                    return new StaticRef(directRef, field, type,
-                                         this, true, line);
-                }
+
                 // property or mutable field
-                used = true;
                 final boolean mutable = type.field == YetiType.FIELD_MUTABLE;
                 return new SelectMember(type, LoadModule.this,
                                         name, line, false) {
