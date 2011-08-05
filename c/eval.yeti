@@ -255,14 +255,16 @@ compileYetiFiles genericOpt options files =
                 typeAction (moduleDoc (i#next() unsafely_as ~ModuleType))
         fi
     fi;
-    if mainClass != '' then
-        classLoader = ctx#writer unsafely_as ~ClassLoader;
-        // The Java reflection API used by execClass to invoke main() will
-        // wrap exceptions from user code into InvocationTargetException,
-        // so we don't need to do anything here with those exceptions.
-        _ = execClass execArg false false classLoader mainClass;
-    elif not defined? mainClass and exec then
-        throw new CompileException(0, 0, "Cannot run a module")
+    if exec then
+        if mainClass != '' then
+            classLoader = ctx#writer unsafely_as ~ClassLoader;
+            // The Java reflection API used by execClass to invoke main() will
+            // wrap exceptions from user code into InvocationTargetException,
+            // so we don't need to do anything here with those exceptions.
+            _ = execClass execArg false false classLoader mainClass;
+        elif not defined? mainClass then
+            throw new CompileException(0, 0, "Cannot run a module")
+        fi
     fi);
 
 evaluateYetiCode genericOpt =
