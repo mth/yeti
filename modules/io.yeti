@@ -1,7 +1,7 @@
 /*
  * Yeti io library.
  *
- * Copyright (c) 2008,2009 Madis Janson
+ * Copyright (c) 2008-2011 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -256,6 +256,24 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     binReadAll limit handle
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
+
+    // Example openTextUrl [] 'http://example.com/'
+    openTextUrl options url
+            is list<CharSet (string -> string)> -> string -> 'a =
+        conn = new java.net.URL(url)#openConnection();
+        stream = conn#getInputStream();
+        cs = try
+                contentType = conn#getContentType();
+                cs = strTrim (strRightOf 'CHARSET=' (strUpper contentType));
+                case options of
+                CharSet f :: _: f cs;
+                _: cs
+                esac
+             catch java.lang.Throwable t:
+                stream#close();
+                throw t
+             yrt;
+        inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
     trace msg a = (System#err#println(msg); a),
 

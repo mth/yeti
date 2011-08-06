@@ -26,25 +26,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module yeti.http;
+module yeti.http: deprecated;
 
 load yeti.lang.io;
 
 {
-    openTextUrl contentTypeHandler url
-            is (string -> string) -> string -> 'a =
-        conn = new java.net.URL(url)#openConnection();
-        stream = conn#getInputStream();
-        cs = try
-                contentType = conn#getContentType();
-                contentTypeHandler
-                    (strTrim (strRightOf 'CHARSET=' (strUpper contentType)))
-             catch java.lang.Throwable t:
-                stream#close();
-                throw t
-             yrt;
-        inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
+    openTextUrl,
 
-    getTextByUrl url =
-        (openTextUrl id url).contents ()
+    getTextByUrl url = getContents (openTextUrl [] url)
 }
