@@ -12,7 +12,7 @@ format_doc _ doc =
         undef_str
     fi;
 
-html_page name doc descr typedefs =
+html_page {name, doc, descr, typedefs} =
 """<html><style type="text/css">
 .main { background: white; line-height: 130% }
 .type { background: white }
@@ -161,8 +161,8 @@ do {type, name, doc, typedefs}:
                          ShowType to_html, FormatDoc format_doc];
         descr = to_html '' type;
         //descr = strReplace "\n" "<br>\n" descr;
-        page = html_page name doc descr
-                    (strJoin '' (map (typedef_html to_html) typedefs));
+        page = html_page {name, doc, descr, typedefs =
+                    strJoin '' (map (typedef_html to_html) typedefs) };
         writeFile "\(doc_dir)/\(name).html" 'utf-8' do f:
             f.writeln page
         done
