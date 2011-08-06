@@ -33,5 +33,5 @@ load yeti.lang.io;
 {
     openTextUrl,
 
-    getTextByUrl url = getContents (openTextUrl [] url)
+    getTextByUrl = getContents . openTextUrl []
 }
