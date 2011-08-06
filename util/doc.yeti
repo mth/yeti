@@ -17,7 +17,9 @@ html_page name doc descr typedefs =
 .main { background: white; line-height: 130% }
 .type { background: white }
 .other { background: #cccccc }
-.struct { background: #bbffbb; border-width: 1px;
+.struct { //background: #bbffbb;
+          background: #ffffff;
+          border-width: 1px;
           border-color: black; border-style: solid;
           padding-left: 0.1em;
           padding-right: 0.1em;
@@ -50,6 +52,7 @@ html_page name doc descr typedefs =
 <p class="main">
 <h2>Module \(name@);</h2>
 \(format_doc () doc)
+<hr>
 \(typedefs)
 <div class="type">
 \(descr)
@@ -76,27 +79,31 @@ type_as_html st =
             big := flag or length l >= 3 or
                 not empty? (find ((!= '') . (.description)) l);
             cur := param.what;
+            iter l =
+                case l of
+                f :: r: param.member types f (empty? r) :: iter r;
+                _: []
+                esac;
+            ls = iter l;
             if big then
-                var a = array [];
-                for l do f:
-                    push a '<div class="field">';
-                    push a (param.member types f);
-                    push a "\(param.sep)</div>"
-                done;
-                a.[length a - 1] := '</div>';
+                a = map (_ s = "<div class=field>\(s)</div>") ls;
                 block =
-                    if depth == 1 then ' style="display: block; margin: 2pt"' else '' fi;
+                    if depth == 1 then ' style="display: block; margin: 2pt"'
+                                  else '' fi;
                 param.wrap "<div class=\"\(param.what)\"\(block)>\
                            "\(strJoin '' a)</div>"
             else
-                param.wrap " \(strJoin param.sep (map (param.member types) l)) "
+                param.wrap " \(strJoin '' ls) "
             fi);
 
-        field types f =
-            "\(if f.description != "" then
-                format_doc '' f.description else '' fi)\
+        field types f last =
+            "<table border=0><tr><td valign=top nowrap>\
             "\(if f.mutable then '<strong>var</strong> ' else '' fi)\
-            "\(f.tag)\(f.name) <strong>is</strong> \(types.[f.name])";
+            "\(f.tag)\(f.name) <strong>is</strong>\
+            "</td><td>\(types.[f.name])\
+            "\(if last then '' else ',' fi)</td></tr></table>\
+            "\(if f.description != "" then
+                format_doc '' f.description else '' fi)";
 
         s = case t of
             Struct l:
@@ -104,21 +111,21 @@ type_as_html st =
                     what = 'struct',
                     wrap s = "{\(s)}",
                     member = field,
-                    sep = ', ',
                 };
             Variant l:
                 dataType l {
                     what = 'variant',
                     wrap s = " \(s) ",
-                    member types m = "\(m.name) \(types.[m.name])",
-                    sep = ' | '
+                    member types m last =
+                        "\(m.name) \(types.[m.name])\
+                        "\(if last then '' else ' | ' fi)"
                 };
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
                 res = "\(type)&lt;\(res)&gt;";
                 if cur != '' then
                     cur := '';
-                    "<span class=\"other\">\(res)</span"
+                    "<span class=\"other\">\(res)</span>"
                 else
                     res
                 fi;
