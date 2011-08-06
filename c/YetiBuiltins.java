@@ -43,6 +43,11 @@ final class BuiltIn implements Binder {
         this.op = op;
     }
 
+    static BindRef undef_str(Binder binder, int line) {
+        return new StaticRef("yeti/lang/Core", "UNDEF_STR",
+                             YetiType.STR_TYPE, binder, true, line);
+    }
+
     public BindRef getRef(int line) {
         BindRef r = null;
         switch (op) {
@@ -115,8 +120,7 @@ final class BuiltIn implements Binder {
                               YetiType.NUM_TO_NUM, this, true, line);
             break;
         case 23:
-            r = new StaticRef("yeti/lang/Core", "UNDEF_STR",
-                              YetiType.STR_TYPE, this, true, line);
+            r = undef_str(this, line);
             break;
         case 24:
             r = new Escape(line);

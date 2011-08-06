@@ -8,8 +8,6 @@ format_doc _ doc =
     if doc =~ '\S' then
         esc = strReplace "\n" "<br>" . substAll "\n[ \\t]*\n" "<p>";
         "<div class=\"doc\">\(esc (doc@))</div>"
-    else
-        undef_str
     fi;
 
 html_page {name, doc, descr, typedefs} =
@@ -62,11 +60,11 @@ html_page {name, doc, descr, typedefs} =
 
 structMember f = """
 <table border=0><tr><td valign=top nowrap>
-\(if f.mutable then '<strong>var</strong> ' else '' fi)
+\(if f.mutable then '<strong>var</strong> ' fi)
 \(f.tag)\(f.name) <strong>is</strong>
 </td><td>\(f.typeStr)
-\(if f.last then '' else ',' fi)</td></tr></table>
-\(if f.description != '' then format_doc '' f.description else '' fi)
+\(if not f.last then ',' fi)</td></tr></table>
+\(if f.description != '' then format_doc '' f.description fi)
 """;
 
 formatStruct = {
@@ -76,7 +74,7 @@ formatStruct = {
 
 formatVariant = {
     wrap s = " \(s) ",
-    member m = "\(m.name) \(m.typeStr)\(if m.last then '' else ' | ' fi)"
+    member m = "\(m.name) \(m.typeStr)\(if not m.last then ' | ' fi)"
 };
 
 type_as_html st =
@@ -110,8 +108,7 @@ type_as_html st =
             if big then
                 a = map (_ s = "<div class=field>\(s)</div>") ls;
                 block =
-                    if depth == 1 then ' style="display: block; margin: 2pt"'
-                                  else '' fi;
+                   if depth == 1 then ' style="display: block; margin: 2pt"' fi;
                 param.wrap "<div class=\"\(what)\"\(block)>\
                            "\(strJoin '' a)</div>"
             else
