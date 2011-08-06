@@ -31,7 +31,7 @@ module yeti.http: deprecated;
 load yeti.lang.io;
 
 {
-    openTextUrl,
+    openTextUrl = openTextUrl [],
 
     getTextByUrl = getContents . openTextUrl []
 }
