@@ -66,8 +66,7 @@ structMember f = """
 \(f.tag)\(f.name) <strong>is</strong>
 </td><td>\(f.typeStr)
 \(if f.last then '' else ',' fi)</td></tr></table>
-\(if f.description != "" then
-        format_doc '' f.description else '' fi)
+\(if f.description != '' then format_doc '' f.description else '' fi)
 """;
 
 formatStruct = {
