@@ -81,7 +81,10 @@ type_as_html st =
             cur := param.what;
             iter l =
                 case l of
-                f :: r: param.member types f (empty? r) :: iter r;
+                f :: r: param.member (f is typeitem<type> with {
+                                        last = empty? r,
+                                        typeStr = types.[f.name]
+                                      }) :: iter r;
                 _: []
                 esac;
             ls = iter l;
@@ -96,12 +99,12 @@ type_as_html st =
                 param.wrap " \(strJoin '' ls) "
             fi);
 
-        field types f last =
+        field f =
             "<table border=0><tr><td valign=top nowrap>\
             "\(if f.mutable then '<strong>var</strong> ' else '' fi)\
             "\(f.tag)\(f.name) <strong>is</strong>\
-            "</td><td>\(types.[f.name])\
-            "\(if last then '' else ',' fi)</td></tr></table>\
+            "</td><td>\(f.typeStr)\
+            "\(if f.last then '' else ',' fi)</td></tr></table>\
             "\(if f.description != "" then
                 format_doc '' f.description else '' fi)";
 
@@ -116,9 +119,9 @@ type_as_html st =
                 dataType l {
                     what = 'variant',
                     wrap s = " \(s) ",
-                    member types m last =
-                        "\(m.name) \(types.[m.name])\
-                        "\(if last then '' else ' | ' fi)"
+                    member m =
+                        "\(m.name) \(m.typeStr)\
+                        "\(if m.last then '' else ' | ' fi)"
                 };
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
