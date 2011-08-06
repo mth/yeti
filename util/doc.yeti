@@ -142,7 +142,7 @@ type_as_html st =
     format);
 
 typedef_param param =
-    if empty? param then "" else "<\(strJoin ', ' param)>" fi;
+    if not empty? param then "<\(strJoin ', ' param)>" fi;
 
 typedef_html to_html {name, type, param} =
 """<div class="typedef">
