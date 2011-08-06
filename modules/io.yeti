@@ -257,7 +257,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
 
-    // Example openTextUrl [] 'http://example.com/'
+    // Example: getContents (openTextUrl [] 'http://example.com/')
     openTextUrl options url
             is list<CharSet (string -> string)> -> string -> 'a =
         conn = new java.net.URL(url)#openConnection();
