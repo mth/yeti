@@ -978,7 +978,7 @@ interface YetiParser {
                         els = readSeq(' ', null);
                     }
                 } else {
-                    els = new XNode("()").pos(eofWas.line, eofWas.col);
+                    els = eofWas;
                 }
                 if (eofWas != null && eofWas.kind != "fi") {
                     throw new CompileException(eofWas,

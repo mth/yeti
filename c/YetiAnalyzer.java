@@ -697,9 +697,11 @@ public final class YetiAnalyzer extends YetiType {
             condition = (XNode) condition.expr[2];
         }
         Code val =
-            result.deref() == STR_TYPE && condition.expr[2].kind == "()"
-            ? BuiltIn.undef_str(null, condition.line)
-            : analyze(condition.expr[2], scope, depth);
+            condition.expr[2].kind != "fi" ?
+                analyze(condition.expr[2], scope, depth) :
+            result.deref() == STR_TYPE ?
+                BuiltIn.undef_str(null, condition.line) :
+                new UnitConstant(null);
         result = mergeIfType(condition.expr[2], scope, result, val.type);
         conds.add(new Code[] { val });
         Code[][] expr = (Code[][]) conds.toArray(new Code[conds.size()][]);
