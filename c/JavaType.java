@@ -632,6 +632,7 @@ class JavaType implements Cloneable {
         switch (from.type) {
         case YetiType.STR:
             return "Ljava/lang/String;" == description ? 0 :
+                   "Ljava/lang/CharSequence;" == description ? 1 :
                    "Ljava/lang/StringBuffer;" == description ||
                    "Ljava/lang/StringBuilder;" == description ? 2 :
                    "C" == description ? 3 : -1;
