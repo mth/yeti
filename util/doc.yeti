@@ -56,7 +56,7 @@ type_as_html template st =
 
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
-                res = "\(type)\(leftArrow)\(res)\(rightArrow)";
+                res = type ^ leftArrow ^ res ^ rightArrow;
                 if cur != '' then
                     cur := '';
                     template.other res
