@@ -554,7 +554,7 @@ plus a b = a + b;
             buf = new java.lang.StringBuffer(
                         "\(head list)" unsafely_as ~String);
             var l = tail list;
-            if strLength sep == 0 then
+            if sep == '' then
                 not nullptr? l loop
                    (buf#append(head l unsafely_as ~Object);
                     l := tail l)
