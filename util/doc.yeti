@@ -113,14 +113,6 @@ html_page {name, doc, descr, typedefs} =
 </body>
 </html>""";
 
-structMember f sep = """
-<table border=0><tr><td valign=top nowrap>
-\(if f.mutable then '<strong>var</strong> ' fi)
-\(f.tag)\(f.name) <strong>is</strong>
-</td><td>\(f.typeStr)\(sep)</td></tr></table>
-\(if f.description != '' then formatDoc '' f.description fi)
-""";
-
 complexType what before sep after f {big, top, fields} =
    (mapFields l =
         case l of
@@ -136,7 +128,13 @@ complexType what before sep after f {big, top, fields} =
     strJoin '' (before :: fields ++ [after]));
 
 template = {
-    struct = complexType 'struct' '{' ',' '}' structMember,
+    struct = complexType 'struct' '{' ',' '}' do f sep:
+        "<table border=0><tr><td valign=top nowrap>\
+        "\(if f.mutable then '<strong>var</strong> ' fi)\
+        "\(f.tag)\(f.name) <strong>is</strong>\
+        "</td><td>\(f.typeStr)\(sep)</td></tr></table>\
+        "\(if f.description != '' then formatDoc '' f.description fi)"
+    done,
     variant = complexType 'variant' ' ' ' | ' ' '
                           (_ m sep = "\(m.name) \(m.typeStr)\(sep)"),
     other descr = "<span class=\"other\">\(descr)</span>",
