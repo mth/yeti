@@ -54,8 +54,7 @@ formatType template =
         cur := old;
         s);
 
-    st := showType [CommentDoc (), ShowType format,
-                    FormatDoc template.formatDoc];
+    st := showType (ShowType format :: template.options);
     format);
 
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
@@ -142,13 +141,13 @@ to_html = formatType {
                           (_ m sep = "\(m.name) \(m.typeStr)\(sep)"),
     other descr = "<span class=\"other\">\(descr)</span>",
     escape = (@),
-    formatDoc
+    options = [FormatDoc formatDoc]
 };
 
 typedef_param param =
     if not empty? param then "<\(strJoin ', ' param)>" fi;
 
-typedef_html to_html {name, type, param} =
+typedef_html {name, type, param} =
 """<div class="typedef">
 <b>typedef</b> \(name@)\(typedef_param param@) = <span class="type">
 \(to_html '' type)</span></div><p>""";
@@ -157,7 +156,7 @@ do {type, name, doc, typedefs}:
     descr = to_html '' type;
     page = html_page {
         name, doc, descr,
-        typedefs = strJoin '' (map (typedef_html to_html) typedefs)
+        typedefs = strJoin '' (map typedef_html typedefs)
     };
     writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page])
 done
