@@ -2,14 +2,6 @@ load yeti.lang.compiler.showtype;
 
 doc_dir = _argv.[0];
 
-(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
-
-format_doc _ doc =
-    if doc =~ '\S' then
-        esc = strReplace "\n" "<br>" . substAll "\n[ \\t]*\n" "<p>";
-        "<div class=\"doc\">\(esc (doc@))</div>"
-    fi;
-
 type_as_html template st =
    (var cur = '';
     var big = false;
@@ -75,6 +67,14 @@ type_as_html template st =
         cur := old;
         s);
     format);
+
+(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
+
+format_doc _ doc =
+    if doc =~ '\S' then
+        esc = strReplace "\n" "<br>" . substAll "\n[ \\t]*\n" "<p>";
+        "<div class=\"doc\">\(esc (doc@))</div>"
+    fi;
 
 html_page {name, doc, descr, typedefs} =
 """<html><style type="text/css">
