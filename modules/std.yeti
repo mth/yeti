@@ -560,7 +560,7 @@ plus a b = a + b;
                     l := tail l)
             else
                 not nullptr? l loop
-                   (buf#append(sep);
+                   (buf#append(sep unsafely_as ~String);
                     buf#append("\(head l)" unsafely_as ~String);
                     l := tail l)
             fi;
@@ -571,8 +571,8 @@ plus a b = a + b;
         if strLength str >= n then
             str
         else
-            buf = new java.lang.StringBuffer(str);
-            buf#length() < n loop buf#append(pad);
+            buf = new java.lang.StringBuffer(str unsafely_as ~String);
+            buf#length() < n loop buf#append(pad unsafely_as ~String);
             buf#toString()
         fi,
 
