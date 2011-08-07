@@ -550,16 +550,18 @@ plus a b = a + b;
         if empty? list then
             ""
         else
-            buf = new java.lang.StringBuffer("\(head list)");
+            // use unsafely_as to not give null's for undef_str's
+            buf = new java.lang.StringBuffer(
+                        "\(head list)" unsafely_as ~String);
             var l = tail list;
             if strLength sep == 0 then
                 not nullptr? l loop
-                   (buf#append("\(head l)");
+                   (buf#append("\(head l)" unsafely_as ~String);
                     l := tail l)
             else
                 not nullptr? l loop
                    (buf#append(sep);
-                    buf#append("\(head l)");
+                    buf#append("\(head l)" unsafely_as ~String);
                     l := tail l)
             fi;
             buf#toString()

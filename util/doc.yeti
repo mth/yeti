@@ -130,11 +130,13 @@ complexType what before sep after f {big, top, fields} =
 
 to_html = formatType {
     struct = complexType 'struct' '{' ',' '}' do f sep:
-        "<table border=0><tr><td valign=top nowrap>\
-        "\(if f.mutable then '<strong>var</strong> ' fi)\
-        "\(f.tag)\(f.name) <strong>is</strong>\
-        "</td><td>\(f.typeStr)\(sep)</td></tr></table>\
-        "\(if f.description != '' then formatDoc '' f.description fi)"
+        strJoin '' [
+            '<table border=0><tr><td valign=top nowrap>',
+            if f.mutable then '<strong>var</strong> ' fi,
+            f.tag, f.name, ' <strong>is</strong>',
+            '</td><td>', f.typeStr, sep, '</td></tr></table>',
+            if f.description != '' then formatDoc '' f.description fi
+        ]
     done,
     variant = complexType 'variant' ' ' ' | ' ' '
                           (_ m sep = "\(m.name) \(m.typeStr)\(sep)"),
