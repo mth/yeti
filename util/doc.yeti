@@ -9,6 +9,7 @@ formatType template =
     var st _ _ = '';
     leftArrow = template.escape '<';
     rightArrow = template.escape '>';
+
     format indent t =
        (old = cur;
         depth := depth + 1;
