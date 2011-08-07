@@ -556,12 +556,12 @@ plus a b = a + b;
             var l = tail list;
             if strLength sep == 0 then
                 not nullptr? l loop
-                   (buf#append("\(head l)" unsafely_as ~String);
+                   (buf#append(head l unsafely_as ~Object);
                     l := tail l)
             else
                 not nullptr? l loop
                    (buf#append(sep unsafely_as ~String);
-                    buf#append("\(head l)" unsafely_as ~String);
+                    buf#append(head l unsafely_as ~Object);
                     l := tail l)
             fi;
             buf#toString()
