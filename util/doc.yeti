@@ -10,6 +10,72 @@ format_doc _ doc =
         "<div class=\"doc\">\(esc (doc@))</div>"
     fi;
 
+type_as_html template st =
+   (var cur = '';
+    var big = false;
+    var depth = 0;
+    leftArrow = template.escape '<';
+    rightArrow = template.escape '>';
+    format indent t =
+       (old = cur;
+        depth := depth + 1;
+
+        dataType l what param =
+           (types = [:];
+            var flag = false;
+            for l do {name, type}:
+                big := false;
+                types.[name] := format indent type;
+                flag := flag or big
+            done;
+            big := flag or length l >= 3 or
+                not empty? (find ((!= '') . (.description)) l);
+            cur := what;
+            iter l =
+                case l of
+                f :: r: param.member (f is typeitem<type> with {
+                                        last = empty? r,
+                                        typeStr = types.[f.name]
+                                      }) :: iter r;
+                _: []
+                esac;
+            ls = iter l;
+            if big then
+                a = map (_ s = "<div class=field>\(s)</div>") ls;
+                block =
+                   if depth == 1 then ' style="display: block; margin: 2pt"' fi;
+                param.wrap "<div class=\"\(what)\"\(block)>\
+                           "\(strJoin '' a)</div>"
+            else
+                param.wrap " \(strJoin '' ls) "
+            fi);
+
+        s = case t of
+            Struct  l: dataType l 'struct' template.struct;
+            Variant l: dataType l 'variant' template.variant;
+
+            Parametric {type, params}:
+                res = strJoin ', ' (map (format indent) params);
+                res = "\(type)\(leftArrow)\(res)\(rightArrow)";
+                if cur != '' then
+                    cur := '';
+                    template.other res
+                else
+                    res
+                fi;
+            _:
+                if cur != '' then
+                    cur := '';
+                    template.other (st indent t)
+                else
+                    st indent t
+                fi
+            esac;
+        depth := depth - 1;
+        cur := old;
+        s);
+    format);
+
 html_page {name, doc, descr, typedefs} =
 """<html><style type="text/css">
 .main { background: white; line-height: 130% }
@@ -67,79 +133,18 @@ structMember f = """
 \(if f.description != '' then format_doc '' f.description fi)
 """;
 
-formatStruct = {
-    wrap s = "{\(s)}",
-    member = structMember
+template = {
+    struct = {
+        wrap s = "{\(s)}",
+        member = structMember
+    },
+    variant = {
+        wrap s = " \(s) ",
+        member m = "\(m.name) \(m.typeStr)\(if not m.last then ' | ' fi)"
+    },
+    other descr = "<span class=\"other\">\(descr)</span>",
+    escape = (@)
 };
-
-formatVariant = {
-    wrap s = " \(s) ",
-    member m = "\(m.name) \(m.typeStr)\(if not m.last then ' | ' fi)"
-};
-
-type_as_html st =
-   (var cur = '';
-    var big = false;
-    var depth = 0;
-    format indent t =
-       (old = cur;
-        depth := depth + 1;
-
-        dataType l what param =
-           (types = [:];
-            var flag = false;
-            for l do {name, type}:
-                big := false;
-                types.[name] := format indent type;
-                flag := flag or big
-            done;
-            big := flag or length l >= 3 or
-                not empty? (find ((!= '') . (.description)) l);
-            cur := what;
-            iter l =
-                case l of
-                f :: r: param.member (f is typeitem<type> with {
-                                        last = empty? r,
-                                        typeStr = types.[f.name]
-                                      }) :: iter r;
-                _: []
-                esac;
-            ls = iter l;
-            if big then
-                a = map (_ s = "<div class=field>\(s)</div>") ls;
-                block =
-                   if depth == 1 then ' style="display: block; margin: 2pt"' fi;
-                param.wrap "<div class=\"\(what)\"\(block)>\
-                           "\(strJoin '' a)</div>"
-            else
-                param.wrap " \(strJoin '' ls) "
-            fi);
-
-        s = case t of
-            Struct  l: dataType l 'struct' formatStruct;
-            Variant l: dataType l 'variant' formatVariant;
-
-            Parametric {type, params}:
-                res = strJoin ', ' (map (format indent) params);
-                res = "\(type)&lt;\(res)&gt;";
-                if cur != '' then
-                    cur := '';
-                    "<span class=\"other\">\(res)</span>"
-                else
-                    res
-                fi;
-            _:
-                if cur != '' then
-                    cur := '';
-                    "<span class=\"other\">\(st indent t)</span>"
-                else
-                    st indent t
-                fi
-            esac;
-        depth := depth - 1;
-        cur := old;
-        s);
-    format);
 
 typedef_param param =
     if not empty? param then "<\(strJoin ', ' param)>" fi;
@@ -152,7 +157,7 @@ typedef_html to_html {name, type, param} =
 do {type, name, doc, typedefs}:
     if defined? doc_dir then
         var stf _ _ = '';
-        to_html = type_as_html (_ i = stf i);
+        to_html = type_as_html template (_ i = stf i);
         stf := showType [/*Indent '&nbsp; &nbsp;',*/ CommentDoc (),
                          ShowType to_html, FormatDoc format_doc];
         descr = to_html '' type;

@@ -1155,29 +1155,34 @@ final class ConcatStrings extends Code {
     }
 
     void gen(Ctx ctx) {
-        if (param.length == 1) {
-            param[0].gen(ctx);
-            if (param[0].type.deref().type != YetiType.STR) {
-                ctx.methodInsn(INVOKESTATIC, "java/lang/String",
-                    "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
-                ctx.forceType("java/lang/String");
-            }
-            return;
+        boolean arr = false;
+        if (param.length > 2) {
+            arr = true;
+            ctx.intConst(param.length);
+            ctx.typeInsn(ANEWARRAY, "java/lang/String");
         }
-        ctx.intConst(param.length);
-        ctx.typeInsn(ANEWARRAY, "java/lang/String");
         for (int i = 0; i < param.length; ++i) {
-            ctx.insn(DUP);
-            ctx.intConst(i);
+            if (arr) {
+                ctx.insn(DUP);
+                ctx.intConst(i);
+            }
             param[i].gen(ctx);
             if (param[i].type.deref().type != YetiType.STR) {
                 ctx.methodInsn(INVOKESTATIC, "java/lang/String",
                     "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
             }
-            ctx.insn(AASTORE);
+            if (arr)
+                ctx.insn(AASTORE);
+            else
+                ctx.typeInsn(CHECKCAST, "java/lang/String");
         }
-        ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
-            "concat", "([Ljava/lang/String;)Ljava/lang/String;");
+        if (arr) {
+            ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
+                           "concat", "([Ljava/lang/String;)Ljava/lang/String;");
+        } else if (param.length == 2) {
+            ctx.methodInsn(INVOKEVIRTUAL, "java/lang/String",
+                           "concat", "(Ljava/lang/String;)Ljava/lang/String;");
+        }
         ctx.forceType("java/lang/String");
     }
 }
