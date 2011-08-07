@@ -2,17 +2,18 @@ load yeti.lang.compiler.showtype;
 
 doc_dir = _argv.[0];
 
-type_as_html template st =
+formatType template =
    (var cur = '';
     var big = false;
     var depth = 0;
+    var st _ _ = '';
     leftArrow = template.escape '<';
     rightArrow = template.escape '>';
     format indent t =
        (old = cur;
         depth := depth + 1;
 
-        dataType l what param =
+        dataType l what =
            (types = [:];
             var flag = false;
             for l do {name, type}:
@@ -23,28 +24,13 @@ type_as_html template st =
             big := flag or length l >= 3 or
                 not empty? (find ((!= '') . (.description)) l);
             cur := what;
-            iter l =
-                case l of
-                f :: r: param.member (f is typeitem<type> with {
-                                        last = empty? r,
-                                        typeStr = types.[f.name]
-                                      }) :: iter r;
-                _: []
-                esac;
-            ls = iter l;
-            if big then
-                a = map (_ s = "<div class=field>\(s)</div>") ls;
-                block =
-                   if depth == 1 then ' style="display: block; margin: 2pt"' fi;
-                param.wrap "<div class=\"\(what)\"\(block)>\
-                           "\(strJoin '' a)</div>"
-            else
-                param.wrap " \(strJoin '' ls) "
-            fi);
+            fieldDesc f =
+                f is typeitem<type> with { typeStr = types.[f.name] };
+            { big, fields = map fieldDesc l, top = depth == 1 });
 
         s = case t of
-            Struct  l: dataType l 'struct' template.struct;
-            Variant l: dataType l 'variant' template.variant;
+            Struct  l: template.struct (dataType l 'struct');
+            Variant l: template.variant (dataType l 'variant');
 
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
@@ -66,11 +52,14 @@ type_as_html template st =
         depth := depth - 1;
         cur := old;
         s);
+
+    st := showType [CommentDoc (), ShowType format,
+                    FormatDoc template.formatDoc];
     format);
 
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
-format_doc _ doc =
+formatDoc _ doc =
     if doc =~ '\S' then
         esc = strReplace "\n" "<br>" . substAll "\n[ \\t]*\n" "<p>";
         "<div class=\"doc\">\(esc (doc@))</div>"
@@ -115,7 +104,7 @@ html_page {name, doc, descr, typedefs} =
 <body>
 <p class="main">
 <h2>Module \(name@);</h2>
-\(format_doc () doc)
+\(formatDoc () doc)
 <hr>
 \(typedefs)
 <div class="type">
@@ -124,26 +113,35 @@ html_page {name, doc, descr, typedefs} =
 </body>
 </html>""";
 
-structMember f = """
+structMember f sep = """
 <table border=0><tr><td valign=top nowrap>
 \(if f.mutable then '<strong>var</strong> ' fi)
 \(f.tag)\(f.name) <strong>is</strong>
-</td><td>\(f.typeStr)
-\(if not f.last then ',' fi)</td></tr></table>
-\(if f.description != '' then format_doc '' f.description fi)
+</td><td>\(f.typeStr)\(sep)</td></tr></table>
+\(if f.description != '' then formatDoc '' f.description fi)
 """;
 
+complexType what before sep after f {big, top, fields} =
+   (mapFields l =
+        case l of
+        h :: t: f h if empty? t then '' else sep fi :: mapFields t;
+        _: []
+        esac;
+    var fields = mapFields fields;
+    if big then
+        block = if top then ' style="display: block; margin: 2pt"' fi;
+        fields := "<div class=\"\(what)\"\(block)>" :: 
+            map (_ s = "<div class=field>\(s)</div>") fields ++ ["</div>"]
+    fi;
+    strJoin '' (before :: fields ++ [after]));
+
 template = {
-    struct = {
-        wrap s = "{\(s)}",
-        member = structMember
-    },
-    variant = {
-        wrap s = " \(s) ",
-        member m = "\(m.name) \(m.typeStr)\(if not m.last then ' | ' fi)"
-    },
+    struct = complexType 'struct' '{' ',' '}' structMember,
+    variant = complexType 'variant' ' ' ' | ' ' '
+                          (_ m sep = "\(m.name) \(m.typeStr)\(sep)"),
     other descr = "<span class=\"other\">\(descr)</span>",
-    escape = (@)
+    escape = (@),
+    formatDoc
 };
 
 typedef_param param =
@@ -156,12 +154,8 @@ typedef_html to_html {name, type, param} =
 
 do {type, name, doc, typedefs}:
     if defined? doc_dir then
-        var stf _ _ = '';
-        to_html = type_as_html template (_ i = stf i);
-        stf := showType [/*Indent '&nbsp; &nbsp;',*/ CommentDoc (),
-                         ShowType to_html, FormatDoc format_doc];
+        to_html = formatType template;
         descr = to_html '' type;
-        //descr = strReplace "\n" "<br>\n" descr;
         page = html_page {name, doc, descr, typedefs =
                     strJoin '' (map (typedef_html to_html) typedefs) };
         writeFile "\(doc_dir)/\(name).html" 'utf-8' do f:
