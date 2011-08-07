@@ -245,17 +245,17 @@ else
                 println str
             esac
         else
-            for types do {type, name, doc, typedefs}:
-                if doc != "" then
-                    println "/*\n\(doc)\n*/"
+            for types do t:
+                if t.doc != "" then
+                    println "/*\n\(t.doc)\n*/"
                 fi;
-                println "module \(name);\n";
-                for typedefs do {name, type, param}:
+                println "module \(t.name);\n";
+                for t.typedefs do {name, type, param}:
                     p = if not empty? param then "<\(strJoin ', ' param)>" fi;
                     println "typedef \(name)\(p) = \
                             "\(showType [CommentDoc ()] '' type)\n"
                 done;
-                println (showType [CommentDoc ()] '' type);
+                println (showType [CommentDoc ()] '' t.type);
             done
         fi
     fi
