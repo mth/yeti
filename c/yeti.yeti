@@ -233,15 +233,30 @@ else
         printException ex
     yrt;
     if not empty? types then
-        ctx = evaluateYetiCode [ICast ()];
-        case ctx [Bind (), Source 'doc.yeti', Exec (array [doc_dir])]
-                 ((inputHandle classOf YetiEval#getClassLoader()
-                                #getResourceAsStream('doc.yeti')
-                               'UTF-8').contents ()) of
-        {result = Result obj}:
-            for types (obj is ~Object unsafely_as 'a);
-        {str}:
-            println str
-        esac
+        if defined? doc_dir then
+            ctx = evaluateYetiCode [ICast ()];
+            case ctx [Bind (), Source 'doc.yeti', Exec (array [doc_dir])]
+                     ((inputHandle classOf YetiEval#getClassLoader()
+                                    #getResourceAsStream('doc.yeti')
+                                   'UTF-8').contents ()) of
+            {result = Result obj}:
+                for types (obj is ~Object unsafely_as 'a);
+            {str}:
+                println str
+            esac
+        else
+            for types do {type, name, doc, typedefs}:
+                if doc != "" then
+                    println "/*\n\(doc)\n*/"
+                fi;
+                println "module \(name);\n";
+                for typedefs do {name, type, param}:
+                    p = if not empty? param then "<\(strJoin ', ' param)>" fi;
+                    println "typedef \(name)\(p) = \
+                            "\(showType [CommentDoc ()] '' type)\n"
+                done;
+                println (showType [CommentDoc ()] '' type);
+            done
+        fi
     fi
 fi

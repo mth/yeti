@@ -152,23 +152,11 @@ typedef_html to_html {name, type, param} =
 \(to_html '' type)</span></div><p>""";
 
 do {type, name, doc, typedefs}:
-    if defined? doc_dir then
-        to_html = formatType template;
-        descr = to_html '' type;
-        page = html_page {name, doc, descr, typedefs =
-                    strJoin '' (map (typedef_html to_html) typedefs) };
-        writeFile "\(doc_dir)/\(name).html" 'utf-8' do f:
-            f.writeln page
-        done
-    else
-        if doc != "" then
-            println "/*\n\(doc)\n*/"
-        fi;
-        println "module \(name);\n";
-        for typedefs do {name, type, param}:
-            println "typedef \(name)\(typedef_param param) = \
-                    "\(showType [CommentDoc ()] '' type)\n"
-        done;
-        println (showType [CommentDoc ()] '' type);
-    fi
+    to_html = formatType template;
+    descr = to_html '' type;
+    page = html_page {
+        name, doc, descr,
+        typedefs = strJoin '' (map (typedef_html to_html) typedefs)
+    };
+    writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page])
 done
