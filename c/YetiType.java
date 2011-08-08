@@ -930,6 +930,25 @@ public class YetiType implements YetiParser {
         }
     }
 
+    static void removeStructs(YType t, List vars) {
+        if (!t.seen) {
+            if (t.type != VAR) {
+                int i = 0;
+                if (t.type == STRUCT || t.type == VARIANT) {
+                    vars.remove(t.param[0].deref());
+                    i = 1;
+                }
+                t.seen = true;
+                for (; i < t.param.length; ++i) {
+                   removeStructs(t.param[i], vars);
+                }
+                t.seen = false;
+            } else if (t.ref != null) {
+                removeStructs(t.ref, vars);
+            }
+        }
+    }
+
     static Scope bind(String name, YType valueType, Binder value,
                       int flags, int depth, Scope scope) {
         List free = new ArrayList(), deny = new ArrayList();

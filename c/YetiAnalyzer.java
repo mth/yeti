@@ -1644,6 +1644,8 @@ public final class YetiAnalyzer extends YetiType {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type,
                            root.code.polymorph ? RESTRICT_POLY : 0, -1);
+                if (!deny.isEmpty())
+                    removeStructs(root.type, deny);
                 if (!deny.isEmpty()) {
                     for (int i = deny.size(); --i >= 0;)
                         ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
