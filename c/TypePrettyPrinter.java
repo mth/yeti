@@ -255,8 +255,10 @@ class TypeDescr extends YetiType {
         String v = (String) vars.get(t);
         if (v == null) {
             // 26^7 > 2^32, should be enough ;)
-            char[] buf = new char[9];
+            char[] buf = new char[10];
             int p = buf.length;
+            if ((t.flags & FL_ERROR_IS_HERE) != 0)
+                buf[--p] = '*';
             int n = vars.size() + 1;
             while (n > 26) {
                 buf[--p] = (char) ('a' + n % 26);

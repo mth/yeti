@@ -550,7 +550,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code variantConstructor(String name, int depth) {
         YType arg = new YType(depth);
-        YType tag = new YType(VARIANT, new YType[] { arg });
+        YType tag = new YType(VARIANT, new YType[] { new YType(depth), arg });
         tag.partialMembers = new HashMap();
         tag.partialMembers.put(name, arg);
         YType[] fun = { arg, tag };
@@ -567,7 +567,7 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static YType selectMemberType(YType res, String field, int depth) {
-        YType arg = new YType(STRUCT, new YType[] { res });
+        YType arg = new YType(STRUCT, new YType[] { new YType(depth), res });
         arg.partialMembers = new HashMap();
         arg.partialMembers.put(field, res);
         return arg;
@@ -604,14 +604,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(member, scope, src.type, null,
                         "#1 does not have ." + field + " field", ex);
         }
-        // XXX Consider a = x.a;
-        // the ref var of .a is really from the scope of x
-        // and giving it inner scope depth will make a polymorphic,
-        // when it really shouldn't be. Not sure that brute-forcing
-        // outer scope is correct fix, maybe structs/variants should
-        // really be considered to be depth-holding like type vars.
-        //if (res.depth >= depth)
-        //    res.depth = depth - 1;
+        limitDepth(res, arg.deref().param[0].deref().depth);
         boolean poly = src.polymorph && src.type.finalMembers != null &&
             ((YType) src.type.finalMembers.get(field)).field == 0;
         return new SelectMember(res, src, field, op.line, poly) {
@@ -739,6 +732,8 @@ public final class YetiAnalyzer extends YetiType {
                             "must be a structure with known member set");
         YType result, st = src.type.deref();
         if (st.type == STRUCT && st.finalMembers != null) {
+            unify(st.param[0], ot.param[0], with, scope,
+                  "Internal error (withStruct depth unify)");
             Map param = new HashMap(st.finalMembers);
             param.putAll(otf);
             // with ensures override, because type can change and
@@ -757,12 +752,11 @@ public final class YetiAnalyzer extends YetiType {
             if (st.partialMembers != null)
                 tmp.putAll(st.partialMembers);
             st.partialMembers = tmp;
-            result = new YType(STRUCT, NO_PARAM);
+            result = new YType(STRUCT, null);
             result.finalMembers = param;
-            result.param =
-                (YType[]) param.values().toArray(new YType[param.size()]);
+            structParam(result, param, st.param[0].deref());
         } else {
-            result = new YType(STRUCT, NO_PARAM);
+            result = new YType(STRUCT, null);
             result.partialMembers = new HashMap(otf);
             result.param = ot.param;
             unify(src.type, result, with.right, scope,
@@ -1236,12 +1230,12 @@ public final class YetiAnalyzer extends YetiType {
                 lambdaBind(funs[i], field, ((Bind) nodes[i]).property
                                 ? propertyScope :  local, depth);
         }
-        result.type = new YType(STRUCT,
-            (YType[]) fields.values().toArray(new YType[fields.size()]));
+        result.type = new YType(STRUCT, null);
         for (StructField i = result.properties; i != null; i = i.nextProperty)
             if (i.value == null)
                 throw new CompileException(st,
                     "Property " + i.name + " has no getter");
+        structParam(result.type, fields, new YType(depth));
         result.type.finalMembers = fields;
         result.close();
         return result;
@@ -1345,8 +1339,7 @@ public final class YetiAnalyzer extends YetiType {
                         // same constructor already. shall be same type.
                         unify(old, argt, pat.right, scope, "#0");
                     }
-                    t.param = (YType[]) t.partialMembers.values().toArray(
-                                new YType[t.partialMembers.size()]);
+                    structParam(t, t.partialMembers, new YType(depth));
                     return new VariantPattern(variant, arg);
                 }
                 if (pat.op == "::") {
@@ -1383,7 +1376,8 @@ public final class YetiAnalyzer extends YetiType {
                         duplicateField(field);
                     uniq.put(field.name, null);
                     YType ft = new YType(depth);
-                    YType part = new YType(STRUCT, new YType[] { ft });
+                    YType part = new YType(STRUCT,
+                            new YType[] { new YType(depth), ft });
                     HashMap tm = new HashMap();
                     tm.put(field.name, ft);
                     part.partialMembers = tm;
@@ -1651,9 +1645,12 @@ public final class YetiAnalyzer extends YetiType {
                 getFreeVar(free, deny, root.type,
                            root.code.polymorph ? RESTRICT_POLY : 0, -1);
                 if (!deny.isEmpty()) {
+                    for (int i = deny.size(); --i >= 0;)
+                        ((YType) deny.get(i)).flags |= FL_ERROR_IS_HERE;
                     System.err.println(root.code.type);
                     throw new CompileException(n,
-                        "Module type is not fully defined");
+                        "Module type is not fully defined\n    " +
+                        "(offending type variables are marked with *)");
                 }
             } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
                 expectUnit(root, n, topLevel.typeScope,

@@ -189,6 +189,7 @@ public class YetiType implements YetiParser {
 
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_TAINTED_VAR = 2;
+    static final int FL_ERROR_IS_HERE = 0x100;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -552,13 +553,24 @@ public class YetiType implements YetiParser {
                 ff = new HashMap(ff);
                 ff.putAll(a.partialMembers);
             }
-            a.param = (YType[]) ff.values().toArray(new YType[ff.size()]);
+            unify(a.param[0], b.param[0]);
+            structParam(a, ff, a.param[0].deref());
             b.type = VAR;
             b.ref = a;
         } catch (TypeException ex) {
             b.ref = oldRef;
             throw ex;
         }
+    }
+
+    static void structParam(YType st, Map values, YType depth) {
+        YType[] a = new YType[values.size() + 1];
+        a[0] = depth;
+        Iterator i = values.values().iterator();
+        for (int j = 1; i.hasNext(); ++j) {
+            a[j] = (YType) i.next();
+        }
+        st.param = a;
     }
 
     static void unifyJava(YType jt, YType t) throws TypeException {
