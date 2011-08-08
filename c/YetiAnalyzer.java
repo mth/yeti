@@ -604,6 +604,14 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(member, scope, src.type, null,
                         "#1 does not have ." + field + " field", ex);
         }
+        // XXX Consider a = x.a;
+        // the ref var of .a is really from the scope of x
+        // and giving it inner scope depth will make a polymorphic,
+        // when it really shouldn't be. Not sure that brute-forcing
+        // outer scope is correct fix, maybe structs/variants should
+        // really be considered to be depth-holding like type vars.
+        if (res.ref == null && res.depth >= depth)
+            res.depth = depth - 1;
         boolean poly = src.polymorph && src.type.finalMembers != null &&
             ((YType) src.type.finalMembers.get(field)).field == 0;
         return new SelectMember(res, src, field, op.line, poly) {
