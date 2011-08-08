@@ -27,7 +27,7 @@ formatType template =
             cur := what;
             fieldDesc f =
                 f is typeitem<type> with { typeStr = types.[f.name] };
-            { big, fields = map fieldDesc l, top = depth == 1 });
+            { big, fields = array (map fieldDesc l), top = depth == 1 });
 
         s = case t of
             Struct  l: template.struct (dataType l 'struct');
@@ -114,12 +114,8 @@ html_page {name, doc, descr, typedefs} =
 </html>""";
 
 complexType what before sep after f {big, top, fields} =
-   (mapFields l =
-        case l of
-        h :: t: f h if empty? t then '' else sep fi :: mapFields t;
-        _: []
-        esac;
-    var fields = mapFields fields;
+   (last = pop fields;
+    var fields = map (f sep) fields ++ [f '' last];
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
         fields := "<div class=\"\(what)\"\(block)>" :: 
@@ -128,7 +124,7 @@ complexType what before sep after f {big, top, fields} =
     strJoin '' (before :: fields ++ [after]));
 
 to_html = formatType {
-    struct = complexType 'struct' '{' ',' '}' do f sep:
+    struct = complexType 'struct' '{' ',' '}' do sep f:
         strJoin '' [
             '<table border=0><tr><td valign=top nowrap>',
             if f.mutable then '<strong>var</strong> ' fi,
@@ -137,8 +133,9 @@ to_html = formatType {
             if f.description != '' then formatDoc '' f.description fi
         ]
     done,
-    variant = complexType 'variant' ' ' ' | ' ' '
-                          (_ m sep = "\(m.name) \(m.typeStr)\(sep)"),
+    variant = complexType 'variant' ' ' ' | ' ' ' do sep m:
+        "\(m.name) \(m.typeStr)\(sep)"
+    done,
     other descr = "<span class=\"other\">\(descr)</span>",
     escape = (@),
     options = [FormatDoc formatDoc]
