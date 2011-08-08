@@ -335,6 +335,9 @@ class TypeDescr extends YetiType {
             case STRUCT:
             case VARIANT:
                 hdescr(descr, t, defs, vars, refs);
+                t = t.param[0].deref();
+                if ((t.flags & FL_ERROR_IS_HERE) != 0)
+                    descr.alias = getVarName(t, vars);
                 break;
             case MAP:
                 int n = 1;

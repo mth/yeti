@@ -1646,10 +1646,9 @@ public final class YetiAnalyzer extends YetiType {
                            root.code.polymorph ? RESTRICT_POLY : 0, -1);
                 if (!deny.isEmpty()) {
                     for (int i = deny.size(); --i >= 0;)
-                        ((YType) deny.get(i)).flags |= FL_ERROR_IS_HERE;
-                    System.err.println(root.code.type);
-                    throw new CompileException(n,
-                        "Module type is not fully defined\n    " +
+                        ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
+                    throw new CompileException(n, root.code.type +
+                        "\nModule type is not fully defined " +
                         "(offending type variables are marked with *)");
                 }
             } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
