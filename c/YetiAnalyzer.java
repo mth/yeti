@@ -1202,7 +1202,10 @@ public final class YetiAnalyzer extends YetiType {
                         List vars = new ArrayList();
                         // XXX uh. depth - 1, should it work?
                         getFreeVar(vars, deny, code.type, 0, depth - 1);
-                        poly = deny.size() == 0 && vars.size() != 0;
+                        if ((poly = vars.size() != 0) && deny.size() != 0) {
+                            removeStructs(code.type, deny);
+                            poly = deny.size() == 0;
+                        }
                     }
                 }
                 fields.put(field.name,
