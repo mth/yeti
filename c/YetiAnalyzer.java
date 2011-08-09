@@ -484,11 +484,16 @@ public final class YetiAnalyzer extends YetiType {
                             "Missing ; (Cannot apply ())");
             }
             if (funt.type != FUN && funt.type != VAR) {
-                throw new CompileException(where,
-                            "Too many arguments applied " +
-                            "to a function, maybe a missing `;'?" +
-                            "\n    (cannot apply " + funt.toString(scope) +
-                            " to an argument)");
+                if (fun instanceof Apply ||
+                        fun.getClass().getName().indexOf('$') > 0) {
+                    throw new CompileException(where,
+                                "Too many arguments applied " +
+                                "to a function, maybe a missing `;'?" +
+                                "\n    (cannot apply " + funt.toString(scope) +
+                                " to an argument)");
+                }
+                throw new CompileException(where, scope, fun.type, null,
+                                           "Cannot use #1 as a function", ex);
             }
             YType argt = argCode.type.deref();
             String s = "Cannot apply #1 function";
