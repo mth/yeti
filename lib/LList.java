@@ -98,8 +98,11 @@ public class LList extends AList implements Serializable {
         AIter i = this, j = (AIter) obj;
         while (i != null && j != null) {
             int r;
-            if ((r = ((Comparable) i.first()).compareTo(j.first())) != 0) {
-                return r;
+            if ((obj = i.first()) != null) {
+                if ((r = ((Comparable) obj).compareTo(j.first())) != 0)
+                    return r;
+            } else if (j.first() != null) {
+                return -1;
             }
             i = i.next();
             j = j.next();

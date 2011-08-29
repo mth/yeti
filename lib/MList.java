@@ -160,23 +160,32 @@ abstract class AMList extends AList implements Serializable {
         return map(f);
     }
 
-    public int compareTo(Object other) {
-        AMList o = (AMList) other;
+    public int compareTo(Object obj) {
         Object[] array = array();
-        Object[] array_ = o.array();
-        int cnt = _size(), cnt_ = o._size();
-        for (int r, i = start, j = o.start; i < cnt && j < cnt_; ++i, ++j) {
-            Object a, b;
-            if ((b = array_[j]) != (a = array[i])) {
-                if (a == null) {
+        int cnt = _size(), r, i = start;
+        if (!(obj instanceof AMList)) {
+            AIter j = (AIter) obj;
+            for (; i < cnt && j != null; ++i) {
+                if ((obj = array[i]) != null) {
+                    if ((r = ((Comparable) obj).compareTo(j.first())) != 0)
+                        return r;
+                } else if (j.first() != null) {
                     return -1;
                 }
-                if (b == null) {
-                    return 1;
-                }
-                if ((r = ((Comparable) a).compareTo(b)) != 0) {
+                j = j.next();
+            }
+            return j != null ? -1 : i < cnt ? 1 : 0;
+        }
+        AMList o = (AMList) obj;
+        Object[] array_ = o.array();
+        int cnt_ = o._size();
+        for (int j = o.start; i < cnt && j < cnt_; ++i, ++j) {
+            if ((obj = array[i]) != null) {
+                if ((r = ((Comparable) obj).compareTo(array_[j])) != 0) {
                     return r;
                 }
+            } else if (array_[j] != null) {
+                return -1;
             }
         }
         return cnt < cnt_ ? -1 : cnt > cnt_ ? 1 : 0;
