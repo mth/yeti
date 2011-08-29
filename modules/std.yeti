@@ -716,5 +716,8 @@ plus a b = a + b;
         ex#printStackTrace(new java.io.PrintWriter(sw));
         sw#toString(),
 
+    /// Yeti version string. Don't try simple string comparision on it.
+    /// At least convert it to number list with something like
+    /// map number (strSplit '\D+' yetiRuntimeVersion) >= [0,9]
     yetiRuntimeVersion = "0.9+"
 }
