@@ -707,8 +707,7 @@ final class Ctx implements Opcodes {
         }
     }
     
-    void tryCatchBlock(Label start, Label end,
-                            Label handler, String type) {
+    void tryCatchBlock(Label start, Label end, Label handler, String type) {
         insn(-1);
         m.visitTryCatchBlock(start, end, handler, type);
     }

@@ -715,4 +715,6 @@ plus a b = a + b;
         sw = new java.io.StringWriter();
         ex#printStackTrace(new java.io.PrintWriter(sw));
         sw#toString(),
+
+    yetiRuntimeVersion = "0.9"
 }

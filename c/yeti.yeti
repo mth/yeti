@@ -131,6 +131,9 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             push options (NoImport ());
         "-no-frames":
             push options (NoFrames ());
+        "-v":
+            println "Yeti \(yetiRuntimeVersion)";
+            sysExit 0;
         _:
             case arg of
             "-h": ();
@@ -203,7 +206,7 @@ if defined? eval then
 elif empty? srcs then
     if exec and empty? argv then
         _ = pop options; // no Warn
-        println "Yeti REPL.\n";
+        println "Yeti \(yetiRuntimeVersion) REPL.\n";
         push evalOptions (Bind ());
         repl (evaluateYetiCode options evalOptions)
     fi
