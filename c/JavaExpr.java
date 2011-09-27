@@ -243,10 +243,12 @@ class JavaExpr extends Code {
         }
         if (extraArgs != null) {
             for (int i = 0; i < extraArgs.length; ++i) {
-                CaptureWrapper cw = extraArgs[i].capture();
+                BindRef arg = extraArgs[i];
+                CaptureWrapper cw = arg.capture();
                 if (cw == null) {
-                    extraArgs[i].gen(ctx);
-                    ctx.captureCast(javaType(extraArgs[i].type));
+                    arg.gen(ctx);
+                    ctx.captureCast(arg instanceof Capture
+                        ? ((Capture) arg).captureType() : javaType(arg.type));
                 } else {
                     cw.genPreGet(ctx);
                 }

@@ -1,5 +1,9 @@
 program test;
 
+received = array [];
+addReceived v =
+    push received v;
+
 h = [0.5e: true, 33.2: false];
 trueTests = [
 'id': \(id true),
@@ -80,7 +84,7 @@ done,
     class X(int a)
         var x = a,
         f _ = x,
-        int test() f ()
+        int test() f (addReceived "kala")
     end;
     new X(33)#test() == 33
 done,
