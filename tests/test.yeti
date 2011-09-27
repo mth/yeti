@@ -86,7 +86,11 @@ done,
         f _ = x,
         int test() f (addReceived "kala")
     end;
-    new X(33)#test() == 33
+    class Y
+        void test() push received "test"
+    end;
+    new Y()#test();
+    new X(33)#test() == 33 and list received == ["test", "kala"];
 done,
 'with': do:
     a = {x = 10};
