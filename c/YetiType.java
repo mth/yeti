@@ -564,6 +564,8 @@ public class YetiType implements YetiParser {
     }
 
     static void structParam(YType st, Map values, YType depth) {
+        if (depth.type != VAR || depth.ref != null)
+            throw new IllegalStateException("non-freevar struct depth: " + depth);
         YType[] a = new YType[values.size() + 1];
         a[0] = depth;
         Iterator i = values.values().iterator();

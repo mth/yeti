@@ -181,6 +181,7 @@ class YetiTypeAttr extends Attribute {
     }
 
     private static final class DecodeType {
+        private static final int VAR_DEPTH = 1;
         ClassReader cr;
         byte[] in;
         char[] buf;
@@ -233,7 +234,7 @@ class YetiTypeAttr extends Attribute {
                 Integer var = new Integer(cr.readUnsignedShort(p));
                 p += 2;
                 if ((t = (YType) vars.get(var)) == null)
-                    vars.put(var, t = new YType(1));
+                    vars.put(var, t = new YType(VAR_DEPTH));
                 if (tv == TAINTED)
                     t.flags |= YetiType.FL_TAINTED_VAR;
                 return t;
@@ -277,9 +278,11 @@ class YetiTypeAttr extends Attribute {
                     param = new HashMap(t.finalMembers);
                     param.putAll(t.partialMembers);
                 }
-                t.param = param == null ? YetiType.NO_PARAM :
-                           (YType[]) param.values().toArray(
-                                              new YType[param.size()]);
+                t.param = new YType[param.size() + 1];
+                t.param[0] = new YType(VAR_DEPTH);
+                Iterator i = param.values().iterator();
+                for (int n = 1; i.hasNext(); ++n)
+                    t.param[n] = (YType) i.next();
             } else if (tv == YetiType.JAVA) {
                 t.javaType = JavaType.fromDescription(cr.readUTF8(p, buf));
                 p += 2;

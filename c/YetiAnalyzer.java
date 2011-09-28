@@ -231,23 +231,23 @@ public final class YetiAnalyzer extends YetiType {
                               Scope scope, int depth) {
         Map members = new HashMap(param.length);
         Map members_ = new HashMap(param.length);
-        YType[] tp = new YType[param.length];
-        for (int i = 0; i < param.length; ++i) {
-            tp[i] = nodeToType(param[i].param[0], free, scope, depth);
-            tp[i].doc = param[i].doc;
-            if (param[i].var) {
+        YType[] tp = new YType[param.length + 1];
+        tp[0] = new YType(depth);
+        for (int i = 1; i <= param.length; ++i) {
+            TypeNode arg = param[i - 1];
+            tp[i] = nodeToType(arg.param[0], free, scope, depth);
+            tp[i].doc = arg.doc;
+            if (arg.var)
                 tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
-            }
-            String name = param[i].name;
+            String name = arg.name;
             Map m = members;
             if (name.charAt(0) == '.') {
                 name = name.substring(1).intern();
                 m = members_;
             }
-            if (m.put(name, tp[i]) != null) {
-                throw new CompileException(param[i], "Duplicate field name "
+            if (m.put(name, tp[i]) != null)
+                throw new CompileException(arg, "Duplicate field name "
                                     + name + " in structure type");
-            }
         }
         YType result = new YType(type, tp);
         if (type == STRUCT) {
