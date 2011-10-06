@@ -29,6 +29,8 @@
   It should allocate new type code and associate t with it in the scope.
 * Immutable tree map support - this seems to be popular feature. ;)
 * Optional Java generics support?
+* Transparent closures that won't capture outer variables for closures
+  that will be optimised away (for do done, synchronized do done)?
 * Direct double optimisation, when it can be deduced,
   that there are always floats
 * Direct struct-ref optimisation, when only known structs are accessed
