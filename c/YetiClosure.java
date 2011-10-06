@@ -1089,9 +1089,8 @@ final class Function extends CapturingClosure implements Binder {
 class LoopExpr extends AClosure {
     Code cond, body;
 
-    LoopExpr(Code cond) {
+    LoopExpr() {
         this.type = YetiType.UNIT_TYPE;
-        this.cond = cond;
     }
 
     public BindRef refProxy(BindRef code) {
@@ -1118,10 +1117,6 @@ final class RootClosure extends LoopExpr {
     LoadModule[] preload;
     boolean isModule;
     ModuleType moduleType;
-
-    RootClosure() {
-        super(null);
-    }
 
     void gen(Ctx ctx) {
         genClosureInit(ctx);

@@ -715,16 +715,17 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code loop(BinOp node, Scope scope, int depth) {
+        LoopExpr loop = new LoopExpr();
+        scope = new Scope(scope, null, null);
+        scope.closure = loop;
         Node condNode = node.left != null ? node.left : node.right;
-        LoopExpr loop = new LoopExpr(analyze(condNode, scope, depth));
+        loop.cond = analyze(condNode, scope, depth);
         unify(loop.cond.type, BOOL_TYPE, condNode, scope,
               "Loop condition must have a boolean type (but here was #1)");
         if (node.left == null) {
             loop.body = new UnitConstant(null);
             return loop;
         }
-        scope = new Scope(scope, null, null);
-        scope.closure = loop;
         loop.body = analyze(node.right, scope, depth);
         expectUnit(loop.body, node.right, scope,
                    "Loop body must have a unit type");

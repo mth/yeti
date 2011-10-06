@@ -88,7 +88,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
     static class Meth extends JavaType.Method implements Closure {
         private List args = new ArrayList();
-        private AClosure closure = new LoopExpr(null); // just for closure init
+        private AClosure closure = new LoopExpr(); // just for closure init
         private int line;
         Capture captures;
         Code code;
