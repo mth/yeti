@@ -1102,8 +1102,8 @@ class LoopExpr extends AClosure {
         Label start = new Label();
         Label end = new Label();
         ctx.visitLabel(start);
-        genClosureInit(ctx);
         ++ctx.tainted;
+        genClosureInit(ctx);
         cond.genIf(ctx, end, false);
         body.gen(ctx);
         --ctx.tainted;
