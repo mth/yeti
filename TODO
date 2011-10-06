@@ -3,6 +3,8 @@
 
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
+* Fix closure scoping of vars in loop
+  (loop e should really be interpretated as loop \e())
 * Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
