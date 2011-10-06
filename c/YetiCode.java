@@ -1849,7 +1849,6 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     
     // called by Function.prepareConst when this bastard mutates into method
     void setCaptureType(String type) {
-        javaDescr = javaType = "[Ljava/lang/Object;";
         javaType = type;
         javaDescr = type.charAt(0) == '[' ? type : 'L' + type + ';';
     }
