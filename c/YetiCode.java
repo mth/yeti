@@ -381,7 +381,7 @@ final class CompileCtx implements Opcodes {
                                      "Ljava/lang/Object;");
                 ctx.insn(ARETURN);
                 ctx.visitLabel(eval);
-                Code codeTail = codeTree.code;
+                Code codeTail = codeTree.body;
                 while (codeTail instanceof SeqExpr)
                     codeTail = ((SeqExpr) codeTail).result;
                 if (codeTail instanceof StructConstructor) {
@@ -1665,30 +1665,6 @@ final class ConditionalExpr extends Code {
         for (int i = choices.length; --i >= 0;) {
             choices[i][0].markTail();
         }
-    }
-}
-
-final class LoopExpr extends Code {
-    Code cond, body;
-
-    LoopExpr(Code cond, Code body) {
-        this.type = YetiType.UNIT_TYPE;
-        this.cond = cond;
-        this.body = body;
-    }
-
-    void gen(Ctx ctx) {
-        Label start = new Label();
-        Label end = new Label();
-        ctx.visitLabel(start);
-        ++ctx.tainted;
-        cond.genIf(ctx, end, false);
-        body.gen(ctx);
-        --ctx.tainted;
-        ctx.insn(POP);
-        ctx.jumpInsn(GOTO, start);
-        ctx.visitLabel(end);
-        ctx.insn(ACONST_NULL);
     }
 }
 

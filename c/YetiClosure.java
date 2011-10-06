@@ -1086,14 +1086,41 @@ final class Function extends CapturingClosure implements Binder {
     }
 }
 
-final class RootClosure extends AClosure {
-    Code code;
+class LoopExpr extends AClosure {
+    Code cond, body;
+
+    LoopExpr(Code cond) {
+        this.type = YetiType.UNIT_TYPE;
+        this.cond = cond;
+    }
+
+    public BindRef refProxy(BindRef code) {
+        return code;
+    }
+
+    void gen(Ctx ctx) {
+        Label start = new Label();
+        Label end = new Label();
+        ctx.visitLabel(start);
+        genClosureInit(ctx);
+        ++ctx.tainted;
+        cond.genIf(ctx, end, false);
+        body.gen(ctx);
+        --ctx.tainted;
+        ctx.insn(POP);
+        ctx.jumpInsn(GOTO, start);
+        ctx.visitLabel(end);
+        ctx.insn(ACONST_NULL);
+    }
+}
+
+final class RootClosure extends LoopExpr {
     LoadModule[] preload;
     boolean isModule;
     ModuleType moduleType;
 
-    public BindRef refProxy(BindRef code) {
-        return code;
+    RootClosure() {
+        super(null);
     }
 
     void gen(Ctx ctx) {
@@ -1104,6 +1131,6 @@ final class RootClosure extends AClosure {
                 ctx.insn(POP);
             }
         }
-        code.gen(ctx);
+        body.gen(ctx);
     }
 }

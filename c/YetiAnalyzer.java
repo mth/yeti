@@ -714,17 +714,21 @@ public final class YetiAnalyzer extends YetiType {
         return new ConditionalExpr(result, expr, poly && val.polymorph);
     }
 
-    static Code loop(BinOp loop, Scope scope, int depth) {
-        Node condNode = loop.left != null ? loop.left : loop.right;
-        Code cond = analyze(condNode, scope, depth);
-        unify(cond.type, BOOL_TYPE, condNode, scope,
+    static Code loop(BinOp node, Scope scope, int depth) {
+        Node condNode = node.left != null ? node.left : node.right;
+        LoopExpr loop = new LoopExpr(analyze(condNode, scope, depth));
+        unify(loop.cond.type, BOOL_TYPE, condNode, scope,
               "Loop condition must have a boolean type (but here was #1)");
-        if (loop.left == null) {
-            return new LoopExpr(cond, new UnitConstant(null));
+        if (node.left == null) {
+            loop.body = new UnitConstant(null);
+            return loop;
         }
-        Code body = analyze(loop.right, scope, depth);
-        expectUnit(body, loop.right, scope, "Loop body must have a unit type");
-        return new LoopExpr(cond, body);
+        scope = new Scope(scope, null, null);
+        scope.closure = loop;
+        loop.body = analyze(node.right, scope, depth);
+        expectUnit(loop.body, node.right, scope,
+                   "Loop body must have a unit type");
+        return loop;
     }
 
     static Code withStruct(BinOp with, Scope scope, int depth) {
@@ -1639,8 +1643,8 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx = new ScopeCtx();
             scope.ctx.packageName = JavaType.packageOfClass(className);
             scope.ctx.className = className;
-            root.code = analyze(n, scope, 0);
-            root.type = root.code.type.deref();
+            root.body = analyze(n, scope, 0);
+            root.type = root.body.type.deref();
             root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
                                              java.util.Collections.EMPTY_MAP);
             root.moduleType.topDoc = parser.topDoc;
@@ -1651,13 +1655,13 @@ public final class YetiAnalyzer extends YetiType {
             if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type,
-                           root.code.polymorph ? RESTRICT_POLY : 0, -1);
+                           root.body.polymorph ? RESTRICT_POLY : 0, -1);
                 if (!deny.isEmpty())
                     removeStructs(root.type, deny);
                 if (!deny.isEmpty()) {
                     for (int i = deny.size(); --i >= 0;)
                         ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
-                    throw new CompileException(n, root.code.type +
+                    throw new CompileException(n, root.body.type +
                         "\nModule type is not fully defined " +
                         "(offending type variables are marked with *)");
                 }
