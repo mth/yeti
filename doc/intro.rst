@@ -2374,7 +2374,7 @@ compiler also attempts to use its JVM classloader to find libraries.
 Compiling modules with Ant
 ++++++++++++++++++++++++++
 
-The ant-task **yeti.lang.compiler.YetiTaks** which is contained in the
+The ant-task **yeti.lang.compiler.YetiTask** which is contained in the
 yeti.jar is used to compile modules with ant::
 
     <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
