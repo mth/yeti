@@ -1,0 +1,18 @@
+// idea of orm in yeti
+
+person query =
+   (t = query.table "PERSON";
+    // t.number is string -> db_record -> string -> number
+    {
+        name = t.string "a_name",
+        age  = t.number "age"
+    });
+
+// structOf person is db_record -> { name is string, age is number }
+db_get_all (structMap (person query));
+
+{query} = db;
+p = person query;
+query.where p.age (>) 20;
+query.list (structMap p);
+

@@ -19,6 +19,7 @@
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
+* struct mapping (as in doc/stmap.yeti)
 * Allow cons pattern match (::) on arrays?
 * Review the Java<->Yeti type autoconversions?
 * Avoid upper/lowercase dups on generated classes
