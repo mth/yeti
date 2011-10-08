@@ -9,10 +9,10 @@ person query =
     });
 
 // structOf person is db_record -> { name is string, age is number }
-db_get_all (structMap (person query));
+db_get_all (structOf (person query));
 
 {query} = db;
 p = person query;
 query.where p.age (>) 20;
-query.list (structMap p);
+query.list (structOf p);
 
