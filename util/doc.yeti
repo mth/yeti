@@ -184,7 +184,12 @@ to_html = formatType {
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
     other descr = "<span class=\"other\">\(descr)</span>",
-    escape = (@),
+    escape s =
+        case s of
+        '<': '<tt>&lt;</tt>';
+        '>': '<tt>&gt;</tt>';
+        _: s@
+        esac,
     options = [FormatDoc formatDoc]
 };
 
