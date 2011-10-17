@@ -7,6 +7,7 @@ formatType template =
     var big = false;
     var depth = 0;
     var st _ _ = '';
+    funArrow = " \(template.escape '->') ";
     leftArrow = template.escape '<';
     rightArrow = template.escape '>';
 
@@ -29,26 +30,25 @@ formatType template =
                 f is typeitem<type> with { typeStr = types.[f.name] };
             { big, fields = array (map fieldDesc l), top = depth == 1 });
 
+        other s =
+            if cur != '' then
+                cur := '';
+                template.other s
+            else
+                s
+            fi;
+
         s = case t of
             Struct  l: template.struct (dataType l 'struct');
             Variant l: template.variant (dataType l 'variant');
 
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
-                res = type ^ leftArrow ^ res ^ rightArrow;
-                if cur != '' then
-                    cur := '';
-                    template.other res
-                else
-                    res
-                fi;
+                other (type ^ leftArrow ^ res ^ rightArrow);
+            Function args:
+                other (strJoin funArrow (map (format indent) args));
             _:
-                if cur != '' then
-                    cur := '';
-                    template.other (st indent t)
-                else
-                    st indent t
-                fi
+                other (st indent t);
             esac;
         depth := depth - 1;
         cur := old;
@@ -57,7 +57,8 @@ formatType template =
     st := showType (ShowType format :: template.options);
     format);
 
-(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
+(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;'
+      . strReplace '->' '&rarr;' . strReplace '&' '&amp;';
 
 formatDoc _ doc =
     if doc =~ '\S' then
