@@ -7,7 +7,6 @@ formatType template =
     var big = false;
     var depth = 0;
     var st _ _ = '';
-    funArrow = " \(template.escape '->') ";
     leftArrow = template.escape '<';
     rightArrow = template.escape '>';
 
@@ -42,11 +41,20 @@ formatType template =
             Struct  l: template.struct (dataType l 'struct');
             Variant l: template.variant (dataType l 'variant');
 
+            Function l:
+                var flag = false;
+                fields = array [];
+                for l do type:
+                    big := false;
+                    push fields (format indent type);
+                    flag := flag or big
+                done;
+                big := flag or length fields > 4;
+                template.function {big, fields, top = depth == 1};
+     
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
                 other (type ^ leftArrow ^ res ^ rightArrow);
-            Function args:
-                other (strJoin funArrow (map (format indent) args));
             _:
                 other (st indent t);
             esac;
@@ -71,6 +79,19 @@ html_page {name, doc, descr, typedefs} =
 .type { background: white }
 .other { background: #cccccc }
 .field { padding: 1.5pt }
+.function {
+          background: #ffffff;
+          border-width: 1px;
+          border-color: black; border-style: solid;
+          padding-left: 0.1em;
+          padding-right: 0.1em;
+          margin-left: 1pt;
+          margin-right: 1pt;
+          padding-top: 1px;
+          padding-bottom: 1pt;
+          margin-top: 1px;
+          margin-bottom: 0pt;
+          display: inline-block }
 .struct { //background: #bbffbb;
           background: #ffffff;
           border-width: 1px;
@@ -131,12 +152,13 @@ to_html = formatType {
     variant = complexType 'variant' ' ' ' | ' ' ' do sep m:
         "\(m.name) \(m.typeStr)\(sep)"
     done,
+    function = complexType 'function' '' ' &rarr; ' ''
+                           (_ sep t = "\(t) \(sep)"),
     other descr = "<span class=\"other\">\(descr)</span>",
     escape s =
         case s of
         '<': '&lang;';
         '>': '&rang;';
-        '->': '&rarr;';
         _: (@) s;
         esac,
     options = [FormatDoc formatDoc]
