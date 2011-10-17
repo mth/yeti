@@ -216,7 +216,7 @@ plus a b = a + b;
     norec negate a = negate a,
 
     /// Low-level nullpointer check.
-    /// Use defined? instead, as nullptr? may behive unexpectedly together
+    /// Use defined? instead, as nullptr? may behave unexpectedly together
     /// with some conversions done by yeti.
     norec nullptr? a = nullptr? a,
 
