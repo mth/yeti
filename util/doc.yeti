@@ -101,7 +101,8 @@ html_page {name, doc, descr, typedefs} =
 """<html><style type="text/css">
 .main { background: white; line-height: 130%; font-family: sans-serif }
 .type { background: white; font-size: 12pt }
-BIG { font-size: 13pt }
+BIG { font-size: 13pt; font-family: monospace }
+SMALL { font-size: 13pt }
 .other { background: #cccccc }
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
@@ -174,11 +175,11 @@ complexType what before sep after f {big, docs, top, fields} =
 to_html = formatType {
     struct = complexType 'struct' '<b>{</b>' ', ' '<b>}</b>' do sep f:
         [f.description, if f.mutable then '<b>var</b> ' fi,
-            f.tag, '<big>', f.name, '</big> <b>is</b> ',
+            '<big>', f.tag, f.name, '</big> <b>is</b> ',
             f.typeStr, sep]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
-        [m.description, '<big>', m.name, '</big> ', m.typeStr, sep]
+        [m.description, '<small>', m.name, '</small> ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
