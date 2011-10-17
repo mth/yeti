@@ -25,17 +25,28 @@ formatType template =
        (old = cur;
         depth := depth + 1;
 
-        dataType l what =
+        enclose s t =
+            case t of
+            Function _: "(\(s))";
+            Variant (_ :: _): "(\(s))";
+            _: s;
+            esac;
+
+        dataType l variant =
            (types = [:];
             var flag = false;
             for l do {name, type}:
                 big := false;
-                types.[name] := format indent type;
+                var str = format indent type;
+                if variant then
+                    str := enclose str type
+                fi;
+                types.[name] := str;
                 flag := flag or big
             done;
             docs = not empty? (find ((!= '') . (.description)) l);
             big := docs or flag or length l >= 3;
-            cur := what;
+            cur := if variant then 'variant' else 'struct' fi;
             fieldDesc f =
                 f is typeitem<type> with { typeStr = types.[f.name] };
             { big, docs, fields = array (map fieldDesc l), top = depth == 1 });
@@ -49,19 +60,15 @@ formatType template =
             fi;
 
         s = case t of
-            Struct  l: template.struct (dataType l 'struct');
-            Variant l: template.variant (dataType l 'variant');
+            Struct  l: template.struct (dataType l false);
+            Variant l: template.variant (dataType l true);
 
             Function l:
                 var flag = false;
                 fields = array [];
                 for l do type:
                     big := false;
-                    push fields (format indent type);
-                    case type of
-                    Function f: push fields "(\(pop fields))";
-                    _: ();
-                    esac;
+                    push fields (enclose (format indent type) type);
                     flag := flag or big
                 done;
                 big := flag or length fields > 4;
