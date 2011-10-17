@@ -120,7 +120,13 @@ html_page {name, doc, descr, typedefs} =
           margin-top: 1px;
           margin-bottom: 0pt;
           display: inline-block }
-.doc { background: white }
+.doc { background: #ffffc5;
+       padding-left: 2.5em;
+       padding-top: 0.5em;
+       padding-bottom: 0.5em;
+       padding-right: 0.5em;
+       // TODO use field margin-top instead, when block contains comments
+       margin-bottom: 0.5em }
 </style><title>\(name@)</title>
 <body>
 <p class="main">
