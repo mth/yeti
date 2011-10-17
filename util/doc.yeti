@@ -90,8 +90,9 @@ formatType template =
 
 formatDoc _ doc =
     if doc =~ '\S' then
-        esc = substAll "\n[ \\t]*\n" "<p>";
-        "<div class=\"doc\">\(esc (doc@))</div>"
+        doc = substAll "\n[ \\t]*\n" "<p> </p>"
+                       ((strTrim (substAll "\n[ \\t]+\\*" "\n" doc))@);
+        "<div class=\"doc\">\(doc)</div>"
     fi;
 
 html_page {name, doc, descr, typedefs} =
