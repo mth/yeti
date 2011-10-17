@@ -175,18 +175,13 @@ to_html = formatType {
             f.tag, '<big>', f.name, '</big> <b>is</b> ',
             f.typeStr, sep]
     done,
-    variant = complexType 'variant' ' ' ' | ' ' ' do sep m:
+    variant = complexType 'variant' '' ' | ' '' do sep m:
         [m.description, '<big>', m.name, '</big> ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
     other descr = "<span class=\"other\">\(descr)</span>",
-    escape s =
-        case s of
-        '<': '&lang;';
-        '>': '&rang;';
-        _: (@) s;
-        esac,
+    escape = (@),
     options = [FormatDoc formatDoc]
 };
 
