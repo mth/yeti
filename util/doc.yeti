@@ -57,8 +57,7 @@ formatType template =
     st := showType (ShowType format :: template.options);
     format);
 
-(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;'
-      . strReplace '->' '&rarr;' . strReplace '&' '&amp;';
+(@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 formatDoc _ doc =
     if doc =~ '\S' then
@@ -121,7 +120,7 @@ complexType what before sep after f {big, top, fields} =
     strJoin '' (before :: fields ++ [after]));
 
 to_html = formatType {
-    struct = complexType 'struct' '{' ',' '}' do sep f:
+    struct = complexType 'struct' '{' ', ' '}' do sep f:
         strJoin '' [
             if f.mutable then '<strong>var</strong> ' fi,
             f.tag, f.name, ' <strong>is</strong> ',
@@ -133,7 +132,13 @@ to_html = formatType {
         "\(m.name) \(m.typeStr)\(sep)"
     done,
     other descr = "<span class=\"other\">\(descr)</span>",
-    escape = (@),
+    escape s =
+        case s of
+        '<': '&lang;';
+        '>': '&rang;';
+        '->': '&rarr;';
+        _: (@) s;
+        esac,
     options = [FormatDoc formatDoc]
 };
 
