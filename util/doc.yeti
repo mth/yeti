@@ -91,11 +91,11 @@ formatDoc _ doc =
 html_page {name, doc, descr, typedefs} =
 """<html><style type="text/css">
 .main { background: white; line-height: 130% }
-.type { background: white }
+.type { background: white; font-family: sans-serif; font-size: 13pt }
 .other { background: #cccccc }
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
-//.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; }
+/*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box {
     border-width: 1px;
     border-color: black;
@@ -112,14 +112,17 @@ html_page {name, doc, descr, typedefs} =
 }
 .function { background: #ffffff }
 .struct { background: #ffffff }
-//background: #bbffbb;
 .variant { background: #c7c7ff }
-.ft { padding-left: 2em }
+/* background: #bbffbb; */
+.ft { padding-left: 0em }
 .doc { background: #ffffa8;
-       padding-left: 0.5em;
+       padding-left: 2em;
        padding-top: 0.5em;
        padding-bottom: 0.5em;
-       padding-right: 0.5em; }
+       padding-right: 0.5em;
+       font-family: serif;
+       font-size: 11pt;
+       }
 </style><title>\(name@)</title>
 <body>
 <p class="main">
@@ -144,7 +147,7 @@ complexType what before sep after f {big, docs, top, fields} =
                 s := "<div class=ft>\(s)</div>"
             fi;
             if head descr != '' then
-                s := formatDoc '' (head descr) ^ s
+                s := s ^ formatDoc '' (head descr)
             fi;
             s := "<div class=\(style)>\(s)</div>\n"
         fi;
@@ -183,13 +186,16 @@ typedef_param param =
 typedef_html {name, type, param} =
 """<div class="typedef">
 <b>typedef</b> \(name@)\(typedef_param param@) = <span class="type">
-\(to_html '' type)</span></div><p>""";
+\(to_html '' type)</span></div>""";
 
 do {type, name, doc, typedefs}:
     descr = to_html '' type;
     page = html_page {
         name, doc, descr,
-        typedefs = strJoin '' (map typedef_html typedefs)
+        typedefs =
+            if not empty? typedefs then
+                strJoin '<p>' (map typedef_html typedefs) ^ '<hr>'
+            fi
     };
     writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page])
 done
