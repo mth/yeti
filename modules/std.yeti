@@ -148,17 +148,19 @@ plus a b = a + b;
 {
     none = None (),
 
-    /// identity function (I combinator)
+    /// Identity function (I combinator).
     id x = x,
 
-    /// constant function (K combinator)
+    /// Constant function (K combinator).
     const x _ = x,
 
     apply arg f = f arg,
     at h k = h.[k],
 
-    /// f g x y = f (g x) (g y)
-    /// for example sort (on (<) (.name)) list
+    /** f g x y = f (g x) (g y)
+     *
+     * For example: sort (on (<) (.name)) list
+     */
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
         new On(f, g) unsafely_as 'a, 
 
@@ -169,10 +171,10 @@ plus a b = a + b;
     norec (and) a b = a and b,
     norec (or) a b = a or b,
 
-    /// element a in hash b
+    /// Element a in hash b
     norec (in) a b = a in b,
 
-    /// comparision operators
+    /// Comparision operators
     norec (==) a b = a == b,
     norec (!=) a b = a != b,
     norec (<)  a b = a <  b,
@@ -180,30 +182,30 @@ plus a b = a + b;
     norec (>)  a b = a >  b,
     norec (>=) a b = a >= b,
 
-    /// arithmetic operators
+    /// Arithmetic operators
     norec (+)      = plus,
     norec (-)  a b = a - b,
     norec (*)  a b = a * b,
     norec (/)  a b = a / b,
     norec (%)  a b = a % b,
 
-    /// function composition - (f . g) x is same as f (g x)
+    /// Function composition - (f . g) x is same as f (g x)
     norec (.)  a b = a . b,
 
-    /// list constructor a :: [b, c] is same as [a, b, c]
+    /// List constructor a :: [b, c] is same as [a, b, c]
     norec (::) v l = v :: l,
 
-    /// lazy list constructor a :. \[b] is same as [a, b], but the second
+    /// Lazy list constructor a :. \[b] is same as [a, b], but the second
     /// lambda is invoked only when the tail is accessed for the first time.
     norec (:.) v l = v :. l,
 
-    /// regex match, like s =~ '\d' to check whether string s contains number
+    /// Regex match, like s =~ '\d' to check whether string s contains number
     norec (=~) s p = s =~ p,
 
-    /// negated regex match: s !~ p is same as not (s =~ p)
+    /// Negated regex match: s !~ p is same as not (s =~ p)
     norec (!~) s p = s !~ p,
 
-    /// integer operations (when arguments are rational or floating numbers,
+    /// Integer operations (when arguments are rational or floating numbers,
     /// then only the integer part of argument is used))
     norec (div) a b = a div b,
     norec (shl) a b = a shl b,
@@ -212,7 +214,7 @@ plus a b = a + b;
     norec (b_or) a b = a b_or b,
     norec (b_and) a b = a b_and b,
 
-    /// negate a = -a
+    /// Negate a = -a
     norec negate a = negate a,
 
     /// Low-level nullpointer check.
@@ -220,7 +222,7 @@ plus a b = a + b;
     /// with some conversions done by yeti.
     norec nullptr? a = nullptr? a,
 
-    /// checks whether value is defined
+    /// Checks whether value is defined
     norec defined? a = defined? a,
 
     /// Check whether a collection is empty one.

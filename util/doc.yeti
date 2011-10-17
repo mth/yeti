@@ -4,11 +4,8 @@ doc_dir = _argv.[0];
 
 /* TODO
  * Foo x -> y shall be Foo (x -> y)
- * x -> y , shall be x -> y,
- * maybe comment should be less indented than the type declaration preceding it
  * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
- * variant docs are not collected by compiler, should be
  * yetidoc tags shouldn't be attached to global primitive types like string!
  * do something to describe function arguments
  * some formatting for the doc strings
@@ -147,7 +144,7 @@ complexType what before sep after f {big, docs, top, fields} =
                 s := "<div class=ft>\(s)</div>"
             fi;
             if head descr != '' then
-                s := s ^ formatDoc '' (head descr)
+                s := formatDoc '' (head descr) ^ s
             fi;
             s := "<div class=\(style)>\(s)</div>\n"
         fi;
@@ -169,7 +166,7 @@ to_html = formatType {
         [m.description, m.name, ' ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
-                           (_ sep t = ['', t, ' ', sep]),
+                           (_ sep t = ['', t, sep]),
     other descr = "<span class=\"other\">\(descr)</span>",
     escape s =
         case s of
