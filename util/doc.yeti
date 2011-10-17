@@ -9,6 +9,7 @@ doc_dir = _argv.[0];
  * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
  * variant docs are not collected by compiler, should be
+ * yetidoc tags shouldn't be attached to global primitive types like string!
  * do something to describe function arguments
  * some formatting for the doc strings
  * maybe A | B | C should be A\n| B\n| C, instead of | in the eol
