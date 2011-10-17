@@ -459,7 +459,7 @@ plus a b = a + b;
             result unsafely_as 'l
         fi,
 
-    /// Sorts list. Same as sortBy (<) l
+    /// Sorts list. Same as sortBy (<)
     sort l is list?<^a> -> list<^a> =
         if empty? l then
             []
