@@ -3,7 +3,6 @@ load yeti.lang.compiler.showtype;
 doc_dir = _argv.[0];
 
 /* TODO
- * Foo x -> y shall be Foo (x -> y)
  * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
  * yetidoc tags shouldn't be attached to global primitive types like string!
