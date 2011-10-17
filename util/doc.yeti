@@ -83,7 +83,7 @@ html_page {name, doc, descr, typedefs} =
 .type { background: white }
 .other { background: #cccccc }
 .field { padding: 1.5pt }
-.wdoc { padding-top: 0.5em; padding-bottom: 0.3em; }
+.wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 //.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; }
 .function {
           background: #ffffff;
