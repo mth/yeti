@@ -99,44 +99,25 @@ html_page {name, doc, descr, typedefs} =
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 //.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; }
-.function {
-          background: #ffffff;
-          border-width: 1px;
-          border-color: black; border-style: solid;
-          padding-left: 0.1em;
-          padding-right: 0.1em;
-          margin-left: 1pt;
-          margin-right: 1pt;
-          padding-top: 1px;
-          padding-bottom: 1pt;
-          margin-top: 1px;
-          margin-bottom: 0pt;
-          display: inline-block; }
-.struct { //background: #bbffbb;
-          background: #ffffff;
-          border-width: 1px;
-          border-color: black; border-style: solid;
-          padding-left: 0.1em;
-          padding-right: 0.1em;
-          margin-left: 1pt;
-          margin-right: 1pt;
-          padding-top: 1px;
-          padding-bottom: 1pt;
-          margin-top: 1px;
-          margin-bottom: 0pt;
-          display: inline-block; }
-.variant { background: #c7c7ff; border-width: 1px;
-          border-color: black; border-style: solid;
-          padding-left: 0.1em;
-          padding-right: 0.1em;
-          margin-left: 1pt;
-          margin-right: 1pt;
-          padding-top: 1px;
-          padding-bottom: 1pt;
-          margin-top: 1px;
-          margin-bottom: 0pt;
-          display: inline-block; }
-.doc { background: #ffffc5;
+.box {
+    border-width: 1px;
+    border-color: black;
+    border-style: solid;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
+    margin-left: 1pt;
+    margin-right: 1pt;
+    padding-top: 1px;
+    padding-bottom: 1pt;
+    margin-top: 1px;
+    margin-bottom: 0pt;
+    display: inline-block;
+}
+.function { background: #ffffff }
+.struct { background: #ffffff }
+//background: #bbffbb;
+.variant { background: #c7c7ff }
+.doc { background: #ffffa8;
        padding-left: 2.5em;
        padding-top: 0.5em;
        padding-bottom: 0.5em;
@@ -161,7 +142,7 @@ complexType what before sep after f {big, docs, top, fields} =
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
         style = if docs then '"field wdoc"' else 'field' fi;
-        fields := "<div class=\"\(what)\"\(block)>" :: 
+        fields := "<div class=\"box \(what)\"\(block)>" :: 
             map (_ s = "<div class=\(style)>\(s)</div>") fields ++ ["</div>"]
     fi;
     strJoin '' (before :: fields ++ [after]));
