@@ -70,6 +70,7 @@ html_page {name, doc, descr, typedefs} =
 .main { background: white; line-height: 130% }
 .type { background: white }
 .other { background: #cccccc }
+.field { padding: 1.5pt }
 .struct { //background: #bbffbb;
           background: #ffffff;
           border-width: 1px;
@@ -81,13 +82,8 @@ html_page {name, doc, descr, typedefs} =
           padding-top: 1px;
           padding-bottom: 1pt;
           margin-top: 1px;
-          margin-bottom: -3pt;
-/*          padding: 3pt;
-          margin-left: 3pt;
-          margin-right: 3pt;
-          margin-top: 2pt;
-          margin-bottom: -3pt;*/
-          display: inline-table }
+          margin-bottom: 0pt;
+          display: inline-block }
 .variant { background: #c7c7ff; border-width: 1px;
           border-color: black; border-style: solid;
           padding-left: 0.1em;
@@ -97,8 +93,8 @@ html_page {name, doc, descr, typedefs} =
           padding-top: 1px;
           padding-bottom: 1pt;
           margin-top: 1px;
-          margin-bottom: -3pt;
-          display: inline-table }
+          margin-bottom: 0pt;
+          display: inline-block }
 .doc { background: white }
 </style><title>\(name@)</title>
 <body>
@@ -126,10 +122,9 @@ complexType what before sep after f {big, top, fields} =
 to_html = formatType {
     struct = complexType 'struct' '{' ',' '}' do sep f:
         strJoin '' [
-            '<table border=0><tr><td valign=top nowrap>',
             if f.mutable then '<strong>var</strong> ' fi,
-            f.tag, f.name, ' <strong>is</strong>',
-            '</td><td>', f.typeStr, sep, '</td></tr></table>',
+            f.tag, f.name, ' <strong>is</strong> ',
+            f.typeStr, sep,
             if f.description != '' then formatDoc '' f.description fi
         ]
     done,
