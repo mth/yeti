@@ -124,7 +124,7 @@ html_page {name, doc, descr, typedefs} =
 </style><title>\(name@)</title>
 <body>
 <p class="main">
-<h2>Module \(name@);</h2>
+<h2>module \(name@)</h2>
 \(formatDoc () doc)
 <hr>
 \(typedefs)
