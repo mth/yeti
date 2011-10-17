@@ -2,6 +2,19 @@ load yeti.lang.compiler.showtype;
 
 doc_dir = _argv.[0];
 
+/* TODO
+ * Foo x -> y shall be Foo (x -> y)
+ * x -> y , shall be x -> y,
+ * maybe comment should be less indented than the type declaration preceding it
+ * 'x is .. alias should have is in bold
+ * links to typedefs, typedefs in different modules and java class javadocs
+ * variant docs are not collected by compiler, should be
+ * do something to describe function arguments
+ * some formatting for the doc strings
+ * maybe A | B | C should be A\n| B\n| C, instead of | in the eol
+ * ... general style improvements, make it look nicer?
+ */
+
 formatType template =
    (var cur = '';
     var big = false;
