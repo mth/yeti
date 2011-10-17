@@ -87,7 +87,7 @@ formatType template =
 
 formatDoc _ doc =
     if doc =~ '\S' then
-        esc = strReplace "\n" "<br>" . substAll "\n[ \\t]*\n" "<p>";
+        esc = substAll "\n[ \\t]*\n" "<p>";
         "<div class=\"doc\">\(esc (doc@))</div>"
     fi;
 
@@ -117,8 +117,9 @@ html_page {name, doc, descr, typedefs} =
 .struct { background: #ffffff }
 //background: #bbffbb;
 .variant { background: #c7c7ff }
+.ft { padding-left: 2em }
 .doc { background: #ffffa8;
-       padding-left: 2.5em;
+       padding-left: 0.5em;
        padding-top: 0.5em;
        padding-bottom: 0.5em;
        padding-right: 0.5em; }
@@ -137,30 +138,38 @@ html_page {name, doc, descr, typedefs} =
 </html>""";
 
 complexType what before sep after f {big, docs, top, fields} =
-   (last = pop fields;
-    var fields = map (f sep) fields ++ [f '' last];
+   (style = if docs then '"field wdoc"' else 'field' fi;
+    str sep field =
+       (descr = f sep field;
+        var s = strJoin '' (tail descr);
+        if big then
+            if docs then
+                s := "<div class=ft>\(s)</div>"
+            fi;
+            if head descr != '' then
+                s := s ^ formatDoc '' (head descr)
+            fi;
+            s := "<div class=\(style)>\(s)</div>\n"
+        fi;
+        s);
+    last = pop fields;
+    var fields = map (str sep) fields ++ [str '' last];
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
-        style = if docs then '"field wdoc"' else 'field' fi;
-        fields := "<div class=\"box \(what)\"\(block)>" :: 
-            map (_ s = "<div class=\(style)>\(s)</div>") fields ++ ["</div>"]
+        fields := "<div class=\"box \(what)\"\(block)>" :: fields ++ ["</div>"]
     fi;
     strJoin '' (before :: fields ++ [after]));
 
 to_html = formatType {
     struct = complexType 'struct' '{' ', ' '}' do sep f:
-        strJoin '' [
-            if f.mutable then '<strong>var</strong> ' fi,
-            f.tag, f.name, ' <strong>is</strong> ',
-            f.typeStr, sep,
-            if f.description != '' then formatDoc '' f.description fi
-        ]
+        [f.description, if f.mutable then '<strong>var</strong> ' fi,
+            f.tag, f.name, ' <strong>is</strong> ', f.typeStr, sep]
     done,
     variant = complexType 'variant' ' ' ' | ' ' ' do sep m:
-        "\(m.name) \(m.typeStr)\(sep)"
+        [m.description, m.name, ' ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
-                           (_ sep t = "\(t) \(sep)"),
+                           (_ sep t = ['', t, ' ', sep]),
     other descr = "<span class=\"other\">\(descr)</span>",
     escape s =
         case s of
