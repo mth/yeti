@@ -47,6 +47,10 @@ formatType template =
                 for l do type:
                     big := false;
                     push fields (format indent type);
+                    case type of
+                    Function f: push fields "(\(pop fields))";
+                    _: ();
+                    esac;
                     flag := flag or big
                 done;
                 big := flag or length fields > 4;
