@@ -22,12 +22,12 @@ formatType template =
                 types.[name] := format indent type;
                 flag := flag or big
             done;
-            big := flag or length l >= 3 or
-                not empty? (find ((!= '') . (.description)) l);
+            docs = not empty? (find ((!= '') . (.description)) l);
+            big := docs or flag or length l >= 3;
             cur := what;
             fieldDesc f =
                 f is typeitem<type> with { typeStr = types.[f.name] };
-            { big, fields = array (map fieldDesc l), top = depth == 1 });
+            { big, docs, fields = array (map fieldDesc l), top = depth == 1 });
 
         other s =
             if cur != '' then
@@ -54,7 +54,7 @@ formatType template =
                     flag := flag or big
                 done;
                 big := flag or length fields > 4;
-                template.function {big, fields, top = depth == 1};
+                template.function {big, docs = false, fields, top = depth == 1};
      
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
@@ -83,6 +83,8 @@ html_page {name, doc, descr, typedefs} =
 .type { background: white }
 .other { background: #cccccc }
 .field { padding: 1.5pt }
+.wdoc { padding-top: 0.5em; padding-bottom: 0.3em; }
+//.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; }
 .function {
           background: #ffffff;
           border-width: 1px;
@@ -95,7 +97,7 @@ html_page {name, doc, descr, typedefs} =
           padding-bottom: 1pt;
           margin-top: 1px;
           margin-bottom: 0pt;
-          display: inline-block }
+          display: inline-block; }
 .struct { //background: #bbffbb;
           background: #ffffff;
           border-width: 1px;
@@ -108,7 +110,7 @@ html_page {name, doc, descr, typedefs} =
           padding-bottom: 1pt;
           margin-top: 1px;
           margin-bottom: 0pt;
-          display: inline-block }
+          display: inline-block; }
 .variant { background: #c7c7ff; border-width: 1px;
           border-color: black; border-style: solid;
           padding-left: 0.1em;
@@ -119,14 +121,12 @@ html_page {name, doc, descr, typedefs} =
           padding-bottom: 1pt;
           margin-top: 1px;
           margin-bottom: 0pt;
-          display: inline-block }
+          display: inline-block; }
 .doc { background: #ffffc5;
        padding-left: 2.5em;
        padding-top: 0.5em;
        padding-bottom: 0.5em;
-       padding-right: 0.5em;
-       // TODO use field margin-top instead, when block contains comments
-       margin-bottom: 0.5em }
+       padding-right: 0.5em; }
 </style><title>\(name@)</title>
 <body>
 <p class="main">
@@ -141,13 +141,14 @@ html_page {name, doc, descr, typedefs} =
 </body>
 </html>""";
 
-complexType what before sep after f {big, top, fields} =
+complexType what before sep after f {big, docs, top, fields} =
    (last = pop fields;
     var fields = map (f sep) fields ++ [f '' last];
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
+        style = if docs then '"field wdoc"' else 'field' fi;
         fields := "<div class=\"\(what)\"\(block)>" :: 
-            map (_ s = "<div class=field>\(s)</div>") fields ++ ["</div>"]
+            map (_ s = "<div class=\(style)>\(s)</div>") fields ++ ["</div>"]
     fi;
     strJoin '' (before :: fields ++ [after]));
 
