@@ -136,7 +136,7 @@ B { color: #000080 }
 <p class="main">
 <h2><b>module</b> \(name@)</h2>
 \(formatDoc () doc)
-<hr>
+<p>
 \(typedefs)
 <h3>Module signature</h3>
 <div class="type">
@@ -202,10 +202,7 @@ do {type, name, doc, typedefs}:
     descr = to_html '' type;
     page = html_page {
         name, doc, descr,
-        typedefs =
-            if not empty? typedefs then
-                strJoin '<p>' (map typedef_html typedefs) ^ '<hr>'
-            fi
+        typedefs = strJoin '<p>' (map typedef_html typedefs)
     };
     writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page])
 done
