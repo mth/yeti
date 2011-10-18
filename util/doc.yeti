@@ -124,7 +124,8 @@ html_page {name, doc, descr, typedefs} =
     margin-bottom: 0pt;
     display: inline-block;
 }
-B { color: #000080; font-size: 13pt; }
+.module { color: #000080 }
+em { color: #000080; font: bold 13pt sans-serif }
 .function { background: #ffffff }
 .struct { background: #ffffff }
 .variant { background: #c7c7ff }
@@ -140,7 +141,7 @@ B { color: #000080; font-size: 13pt; }
 </style><title>\(name@)</title>
 <body>
 <div class="main">
-<h2><b>module</b> \(name@)</h2>
+<h2><span class=module>module</span> \(name@)</h2>
 \(formatDoc () doc)
 <p>
 \(typedefs)
@@ -176,9 +177,9 @@ complexType what before sep after f {big, docs, top, fields} =
     strJoin '' (before :: fields ++ [after]));
 
 to_html = formatType {
-    struct = complexType 'struct' '<b>{</b>' ', ' '<b>}</b>' do sep f:
-        [f.description, if f.mutable then '<b>var </b>' fi,
-            '<span class=sn>', f.tag, f.name@, '</span><b> is </b>',
+    struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
+        [f.description, if f.mutable then '<em>var </em>' fi,
+            '<span class=sn>', f.tag, f.name@, '</span><em> is </em>',
             f.typeStr, sep]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
@@ -200,7 +201,7 @@ typedef_param param =
     if not empty? param then "<\(strJoin ', ' param)>" fi;
 
 typedef_html {name, type, param} =
-    "<div class=\"type\"><b>typedef</b> \
+    "<div class=\"type\"><em>typedef</em> \
     "\(name@)\(typedef_param param@) = \(to_html '' type)</div>";
 
 do {type, name, doc, typedefs}:
