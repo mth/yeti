@@ -98,12 +98,15 @@ formatDoc _ doc =
     fi;
 
 html_page {name, doc, descr, typedefs} =
-"""<html><style type="text/css">
+"""<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"
+\"http://www.w3.org/TR/html4/strict.dtd\">
+<html><meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<style type="text/css">
 .main { background: white; line-height: 130%; font-family: sans-serif }
-.type { background: white; font-size: 12pt }
-BIG { font-size: 13pt; font-family: monospace }
-SMALL { font-size: 13pt }
-.other { background: #cccccc }
+.type { background: white; font-size: 12pt; }
+.sn { font-size: 13pt; font-family: monospace }
+.vn { font-size: 13pt }
+.other { background: #cccccc; display: inline; }
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
@@ -121,7 +124,7 @@ SMALL { font-size: 13pt }
     margin-bottom: 0pt;
     display: inline-block;
 }
-B { color: #000080; font-face: monospace }
+B { color: #000080; font-size: 13pt; }
 .function { background: #ffffff }
 .struct { background: #ffffff }
 .variant { background: #c7c7ff }
@@ -136,7 +139,7 @@ B { color: #000080; font-face: monospace }
        }
 </style><title>\(name@)</title>
 <body>
-<p class="main">
+<div class="main">
 <h2><b>module</b> \(name@)</h2>
 \(formatDoc () doc)
 <p>
@@ -145,7 +148,7 @@ B { color: #000080; font-face: monospace }
 <div class="type">
 \(descr)
 </div>
-</p>
+</div>
 </body>
 </html>""";
 
@@ -175,15 +178,15 @@ complexType what before sep after f {big, docs, top, fields} =
 to_html = formatType {
     struct = complexType 'struct' '<b>{</b>' ', ' '<b>}</b>' do sep f:
         [f.description, if f.mutable then '<b>var </b>' fi,
-            '<big>', f.tag, f.name@, '</big><b> is </b>',
+            '<span class=sn>', f.tag, f.name@, '</span><b> is </b>',
             f.typeStr, sep]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
-        [m.description, '<small>', m.name, '</small> ', m.typeStr, sep]
+        [m.description, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
-    other descr = "<span class=\"other\">\(descr)</span>",
+    other descr = "<div class=\"other\">\(descr)</div>",
     escape s =
         case s of
         '<': '<tt>&lt;</tt>';
@@ -197,9 +200,8 @@ typedef_param param =
     if not empty? param then "<\(strJoin ', ' param)>" fi;
 
 typedef_html {name, type, param} =
-"""<div class="typedef">
-<b>typedef</b> \(name@)\(typedef_param param@) = <span class="type">
-\(to_html '' type)</span></div>""";
+    "<div class=\"type\"><b>typedef</b> \
+    "\(name@)\(typedef_param param@) = \(to_html '' type)</div>";
 
 do {type, name, doc, typedefs}:
     descr = to_html '' type;
