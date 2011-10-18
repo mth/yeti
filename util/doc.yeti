@@ -174,7 +174,7 @@ complexType what before sep after f {big, docs, top, fields} =
 
 to_html = formatType {
     struct = complexType 'struct' '<b>{</b>' ', ' '<b>}</b>' do sep f:
-        [f.description, if f.mutable then '<b> var </b>' fi,
+        [f.description, if f.mutable then '<b>var </b>' fi,
             '<big>', f.tag, f.name@, '</big><b> is </b>',
             f.typeStr, sep]
     done,
