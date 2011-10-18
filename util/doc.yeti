@@ -5,7 +5,6 @@ doc_dir = _argv.[0];
 /* TODO
  * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
- * yetidoc tags shouldn't be attached to global primitive types like string!
  * do something to describe function arguments, like
  *    someFun x y is number -> boolean -> string
  *    (with x y in cursive font)
