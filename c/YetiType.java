@@ -1000,7 +1000,6 @@ public class YetiType implements YetiParser {
             YType tmp = t;
             t = new YType(0);
             t.ref = tmp;
-            new Exception("DOCREF " + t).printStackTrace();
         }
         t.doc = doc;
         return t;
