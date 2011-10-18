@@ -88,7 +88,8 @@ class YType {
             next = type.ref;
             type.ref = res;
         }
-        if (res.doc == null)
+        if ((res.type <= 0 || res.type > YetiType.PRIMITIVE_END) &&
+                res.doc == null)
             res.doc = this;
         return res;
     }
@@ -180,6 +181,7 @@ public class YetiType implements YetiParser {
     static final int NONE = 6;
     static final int LIST_MARKER = 7;
     static final int MAP_MARKER  = 8;
+    static final int PRIMITIVE_END = 8;
     static final int FUN  = 9; // a -> b
     static final int MAP  = 10; // value, index, (LIST | MAP)
     static final int STRUCT = 11;
@@ -989,5 +991,18 @@ public class YetiType implements YetiParser {
             }
         }
         throw new CompileException(where, "Unknown type: " + name);
+    }
+
+    static YType withDoc(YType t, String doc) {
+        if (doc == null)
+            return t;
+        if (t.type > 0 && t.type <= PRIMITIVE_END) {
+            YType tmp = t;
+            t = new YType(0);
+            t.ref = tmp;
+            new Exception("DOCREF " + t).printStackTrace();
+        }
+        t.doc = doc;
+        return t;
     }
 }

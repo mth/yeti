@@ -159,9 +159,9 @@ complexType what before sep after f {big, docs, top, fields} =
        (descr = f sep field;
         var s = strJoin '' (tail descr);
         if big then
-            if docs then
+            /*if docs then
                 s := "<div class=ft>\(s)</div>"
-            fi;
+            fi;*/
             if head descr != '' then
                 s := s ^ formatDoc '' (head descr)
             fi;

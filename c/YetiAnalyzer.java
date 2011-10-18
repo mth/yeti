@@ -228,15 +228,15 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static YType nodeToMembers(int type, TypeNode[] param, Map free,
-                              Scope scope, int depth) {
+                               Scope scope, int depth) {
         Map members = new HashMap(param.length);
         Map members_ = new HashMap(param.length);
         YType[] tp = new YType[param.length + 1];
         tp[0] = new YType(depth);
         for (int i = 1; i <= param.length; ++i) {
             TypeNode arg = param[i - 1];
-            tp[i] = nodeToType(arg.param[0], free, scope, depth);
-            tp[i].doc = arg.doc;
+            tp[i] = withDoc(nodeToType(arg.param[0], free, scope, depth),
+                            arg.doc);
             if (arg.var)
                 tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
             String name = arg.name;
@@ -970,7 +970,7 @@ public final class YetiAnalyzer extends YetiType {
                         isOp(bind, bind.type, binder.st, scope, depth);
                 }
                 if (bind.doc != null)
-                    binder.st.type.doc = bind.doc;
+                    binder.st.type = withDoc(binder.st.type, bind.doc);
                 scope = genericBind(bind, binder, seq.seqKind == Seq.EVAL,
                                     scope, depth);
                 bindings[i] = binder;
@@ -1171,9 +1171,12 @@ public final class YetiAnalyzer extends YetiType {
                           field, scope, "#0 (when checking #1 is #2)");
                 if (field.var)
                     t.field = FIELD_MUTABLE;
-                if (field.doc != null)
-                    t.doc = t.doc == null
-                        ? field.doc : field.doc + '\n' + t.doc;
+                if (field.doc != null) {
+                    if (t.doc == null)
+                        t = withDoc(t, field.doc);
+                    else
+                        t.doc = field.doc + '\n' + t.doc;
+                }
                 YType f = new YType(FUN, field.var
                                 ? new YType[] { t, UNIT_TYPE }
                                 : new YType[] { UNIT_TYPE, t });
@@ -1205,23 +1208,25 @@ public final class YetiAnalyzer extends YetiType {
                 codeMap.put(field.name, sf);
                 result.add(sf);
                 boolean poly = code.polymorph || lambda != null;
+                YType t = code.type;
                 if (!poly && !field.var) {
-                    switch (code.type.deref().type) {
+                    switch (t.deref().type) {
                     case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
                         List deny = new ArrayList();
                         List vars = new ArrayList();
                         // XXX uh. depth - 1, should it work?
-                        getFreeVar(vars, deny, code.type, 0, depth - 1);
+                        getFreeVar(vars, deny, t, 0, depth - 1);
                         if ((poly = vars.size() != 0) && deny.size() != 0) {
-                            removeStructs(code.type, deny);
+                            removeStructs(t, deny);
                             poly = deny.size() == 0;
                         }
                     }
                 }
-                fields.put(field.name,
-                    field.var ? fieldRef(depth, code.type, FIELD_MUTABLE) :
-                    poly ? code.type
-                        : fieldRef(depth, code.type, FIELD_NON_POLYMORPHIC));
+                if (field.var)
+                    t = fieldRef(depth, t, FIELD_MUTABLE);
+                else if (!poly)
+                    t = fieldRef(depth, t, FIELD_NON_POLYMORPHIC);
+                fields.put(field.name, withDoc(t, field.doc));
                 if (!field.noRec) {
                     Binder bind = result.bind(sf);
                     if (lambda != null)
@@ -1229,8 +1234,6 @@ public final class YetiAnalyzer extends YetiType {
                     local = new Scope(local, field.name, bind);
                 }
             }
-            if (field.doc != null)
-                code.type.doc = field.doc;
         }
         // property accessors must be proxied so the struct could inline them
         if (result.properties != null) {
