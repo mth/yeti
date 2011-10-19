@@ -312,11 +312,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                 push res {
                     /// Path to the file or directory.
                     path = path,
-                    /// Whether this record denotes a normal file.
+                    /// Whether this entry denotes a normal file.
                     file? = file?,
                     /// Name without any preceding path.
                     name = f#getName(),
-                    /// Whether this record denotes a directory.
+                    /// Whether this entry denotes a directory.
                     directory? = not file? and f#isDirectory()
                 }
             fi
