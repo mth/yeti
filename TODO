@@ -21,6 +21,9 @@
    unifing those with actual function field types later)
 * struct mapping (as in doc/stmap.yeti)
 * Allow cons pattern match (::) on arrays?
+* Exhaustive list match detection probably could be improved by something
+  like introducing FL_EMPTY_PATTERN and keeping account about the list tail
+  being exhaustive.
 * Review the Java<->Yeti type autoconversions?
 * Avoid upper/lowercase dups on generated classes
 * typedef opaque fobar<> = t and support using as to cast t to fobar<>
