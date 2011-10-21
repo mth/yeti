@@ -81,16 +81,18 @@ trueTests = [
     fib 10 == 89
 done,
 'class closure': do:
+    wtf = [:];
+    wtff x = wtf.[x] := true;
     class X(int a)
         var x = a,
         f _ = x,
-        int test() f (addReceived "kala")
+        int test() f (addReceived "kala"; wtff 12)
     end;
     class Y
         void test() push received "test"
     end;
     new Y()#test();
-    new X(33)#test() == 33 and list received == ["test", "kala"];
+    new X(33)#test() == 33 and list received == ["test", "kala"] and wtf.[12];
 done,
 'with': do:
     a = {x = 10};
