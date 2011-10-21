@@ -912,6 +912,14 @@ abstract class BindRef extends Code {
         return null;
     }
 
+    // As what java types the values of this should be captured.
+    // Same as CaptureWrapper.captureType()
+    String captureType() {
+        if (origin != null)
+            return ((BindExpr) binder).captureType();
+        return 'L' + javaType(type) + ';';
+    }
+
     // unshare. normally bindrefs are not shared
     // Capture shares refs and therefore has to copy for unshareing
     BindRef unshare() {

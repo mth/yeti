@@ -247,8 +247,7 @@ class JavaExpr extends Code {
                 CaptureWrapper cw = arg.capture();
                 if (cw == null) {
                     arg.gen(ctx);
-                    ctx.captureCast(arg instanceof Capture
-                        ? ((Capture) arg).captureType() : javaType(arg.type));
+                    ctx.captureCast(arg.captureType());
                 } else {
                     cw.genPreGet(ctx);
                 }
