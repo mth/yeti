@@ -1664,12 +1664,13 @@ interface YetiParser {
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
             }
-            if ((p = skipSpace()) + 1 >= src.length ||
-                    src[p] != '-' || src[p + 1] != '>')
+            p = i = skipSpace();
+            if (i + 1 >= src.length ||
+                    src[i] != '\u2192' && (src[i] != '-' || src[++i] != '>'))
                 return res;
             sline = line;
             scol = p - lineStart;
-            p += 2;
+            p = i + 1;
             TypeNode arg = readType(false);
             if (arg == null)
                 throw new CompileException(sline, scol,
