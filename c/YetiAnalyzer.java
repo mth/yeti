@@ -1270,7 +1270,7 @@ public final class YetiAnalyzer extends YetiType {
             this.depth = depth;
         }
 
-        CasePattern toPattern(Node node, YType t) {
+        CasePattern toPattern(Node node, YType t, String doc) {
             if ((t.flags & FL_ANY_PATTERN) != 0) {
                 throw new CompileException(node,
                     "Useless case " + node + " (any value already matched)");
@@ -1320,7 +1320,7 @@ public final class YetiAnalyzer extends YetiType {
                 ++submatch;
                 for (int i = 0; i < items.length; ++i) {
                     itemt.flags &= ~FL_ANY_PATTERN;
-                    items[i] = toPattern(list.expr[i], itemt);
+                    items[i] = toPattern(list.expr[i], itemt, null);
                     anyitem &= itemt.flags;
                 }
                 --submatch;
@@ -1349,7 +1349,8 @@ public final class YetiAnalyzer extends YetiType {
                         }
                     }
                     YType argt = new YType(depth);
-                    CasePattern arg = toPattern(pat.right, argt);
+                    argt.doc = doc;
+                    CasePattern arg = toPattern(pat.right, argt, null);
                     YType old = (YType) t.partialMembers.put(variant, argt);
                     if (old != null) {
                         // same constructor already. shall be same type.
@@ -1370,8 +1371,8 @@ public final class YetiAnalyzer extends YetiType {
                     int flags = t.flags; 
                     unify(t, lt, node, scope, "#0");
                     ++submatch;
-                    CasePattern hd = toPattern(pat.left, itemt);
-                    CasePattern tl = toPattern(pat.right, t);
+                    CasePattern hd = toPattern(pat.left, itemt, null);
+                    CasePattern tl = toPattern(pat.right, t, null);
                     --submatch;
                     lt.flags = FL_PARTIAL_PATTERN;
                     t.flags = flags;
@@ -1399,7 +1400,7 @@ public final class YetiAnalyzer extends YetiType {
                     part.partialMembers = tm;
                     unify(t, part, field, scope, "#0");
                     names[i] = field.name;
-                    patterns[i] = toPattern(field.expr, ft);
+                    patterns[i] = toPattern(field.expr, ft, null);
                 }
                 --submatch;
                 return new StructPattern(names, patterns);
@@ -1480,7 +1481,8 @@ public final class YetiAnalyzer extends YetiType {
         YType argType = new YType(depth);
         for (int i = 1; i < choices.length; ++i) {
             cc.scope = scope;
-            pats[i] = cc.toPattern(((XNode) choices[i]).expr[0], argType);
+            XNode choice = (XNode) choices[i];
+            pats[i] = cc.toPattern(choice.expr[0], argType, choice.doc);
             scopes[i] = cc.scope;
             cc.exp.resetParams();
         }

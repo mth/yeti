@@ -95,6 +95,7 @@ interface YetiParser {
 
     class XNode extends Node {
         Node[] expr;
+        String doc;
 
         XNode(String kind) {
             this.kind = kind;
@@ -1292,8 +1293,11 @@ interface YetiParser {
                 if (sym.kind == ":" && args == null) {
                     if (l.size() == 0)
                         throw new CompileException(sym, "Unexpected `:'");
-                    ((XNode) sym).expr =
-                        new Node[] { def(null, l, false, null) };
+                    XNode colon = (XNode) sym;
+                    colon.expr = new Node[] { def(null, l, false, null) };
+                    colon.doc = doc;
+                    doc = null;
+                    yetiDocStr = null;
                     l = new ArrayList();
                     res.add(sym);
                     continue;
