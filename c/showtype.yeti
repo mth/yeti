@@ -6,7 +6,7 @@ typedef typeitem<type> = {
     // . - required field, ` - both required and provided
     tag is string,
     mutable is boolean,
-    description is string
+    description is list<string>
 }
 
 typedef type =

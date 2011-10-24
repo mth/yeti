@@ -72,12 +72,13 @@ class ShowTypeFun extends Fun2 {
             else if (useNL && !variant)
                 to.append('\n').append(indent);
             if (formatDoc != null) {
-                String doc = (String) field.get("description");
+                AList doc = (AList) field.get("description");
                 if (formatDoc != this) {
                     to.append(formatDoc.apply(indent, doc));
-                } else if (useNL && doc.length() > 0) {
+                } else if (useNL && doc != null) {
                     to.append("// ")
-                      .append(Core.replace("\n", "\n" + indent + "//", doc))
+                      .append(Core.replace("\n", "\n" + indent + "//",
+                                           (String) doc.first()))
                       .append('\n')
                       .append(indent);
                 }
@@ -235,9 +236,8 @@ class TypeDescr extends YetiType {
             Object name = e.getKey();
             YType t = (YType) e.getValue();
             Map it = new IdentityHashMap(5);
-            String doc = t.doc();
             it.put("name", name);
-            it.put("description", doc == null ? Core.UNDEF_STR : doc);
+            it.put("description", t.doc());
             it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
             it.put("tag",
                 tt.finalMembers == null || !tt.finalMembers.containsKey(name)
