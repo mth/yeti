@@ -115,6 +115,7 @@ html_page {name, doc, descr, typedefs} =
 .other { background: #cccccc; display: inline; }
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
+var { font: italic 11pt sans-serif }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box {
     border-width: 1px;
@@ -184,9 +185,14 @@ complexType what before sep after f {big, docs, top, fields} =
 
 to_html = formatType {
     struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
+        var l = ['<em> is </em>', f.typeStr, sep];
+        case f.description of
+        _ :: _ :: _:
+            l := ' <var>' :: strJoin ' ' (tail f.description) :: '</var> ' :: l;
+        _: ();
+        esac;
         [f.doc, if f.mutable then '<em>var </em>' fi,
-            '<span class=sn>', f.tag, f.name@, '</span><em> is </em>',
-            f.typeStr, sep]
+            '<span class=sn>', f.tag, f.name@, '</span>'] ++ l
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
         [m.doc, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
