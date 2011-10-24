@@ -5,9 +5,6 @@ doc_dir = _argv.[0];
 /* TODO
  * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
- * do something to describe function arguments, like
- *    someFun x y is number -> boolean -> string
- *    (with x y in cursive font)
  * some formatting for the doc strings
  * maybe A | B | C should be A\n| B\n| C, instead of | in the eol
  * ... general style improvements, make it look nicer?
