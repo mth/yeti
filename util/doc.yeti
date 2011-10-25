@@ -3,7 +3,6 @@ load yeti.lang.compiler.showtype;
 doc_dir = _argv.[0];
 
 /* TODO
- * 'x is .. alias should have is in bold
  * links to typedefs, typedefs in different modules and java class javadocs
  * some formatting for the doc strings
  * maybe A | B | C should be A\n| B\n| C, instead of | in the eol
@@ -81,6 +80,10 @@ formatType template =
             Parametric {type, params}:
                 res = strJoin ', ' (map (format indent) params);
                 other (type ^ leftArrow ^ res ^ rightArrow);
+
+            Alias {type, alias}:
+                other "(\(template.alias alias (format indent type)))";
+
             _:
                 other (st indent t);
             esac;
@@ -196,6 +199,7 @@ to_html = formatType {
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
+    alias alias type = "\(alias)<em> is </em>\(type)",
     other descr = "<div class=\"other\">\(descr)</div>",
     escape s =
         case s of
