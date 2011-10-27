@@ -36,6 +36,9 @@ class FailureException(String what)
     extends RuntimeException(what)
 end;
 
+/// Identity function (I combinator).
+id x = x;
+
 /// struct inner bindings are non-polymorphic
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
@@ -148,9 +151,6 @@ plus a b = a + b;
 {
     none = None (),
 
-    /// Identity function (I combinator).
-    id x = x,
-
     /// Constant function (K combinator).
     const x _ = x,
 
@@ -258,10 +258,10 @@ plus a b = a + b;
         fi,
 
     /// damn struct polymorphism restriction. is it really needed?
-    array, fold, find, index, keys, hash, map, map', forHash, peekObject,
+    array, fold, find, id, index, keys, hash, map, map', forHash, peekObject,
 
     /// Wraps Java array object into Yeti array type.
-    wrapArray a is 'a[] -> array<'a> = a,
+    wrapArray is 'a[] -> array<'a> = id,
 
     mapJavaList f l is (~Object -> 'a) -> ~java.util.Collection -> list<'a> =
         if nullptr? l then
