@@ -89,11 +89,39 @@ formatType template =
 
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
+parseDoc doc =
+   (doc = strSplit "\n[ \\t]*\n"
+                   ((strTrim (substAll "\n[ \\t]+\\*" "\n" doc))@);
+    descr = array [];
+    args = array [];
+    var state = \();
+    argState line =
+        case like '^(\w) - ' line () of
+        [arg]:
+            push args {arg, text = array [strRight line (strLength arg + 3)]};
+        _:
+            if empty? args then
+                push args {arg = "???", text = array [line]}
+            else
+                push args.[length args - 1].text line
+            fi
+        esac;
+    state := do line:
+        if line == "Arguments:" then
+            state := argState
+        else
+            push descr line
+        fi
+    done;
+    for doc do line:
+        state (strTrim line)
+    done;
+    {descr, args});
+
 formatDoc _ doc =
     if doc =~ '\S' then
-        doc = substAll "\n[ \\t]*\n" "<p> </p>"
-                       ((strTrim (substAll "\n[ \\t]+\\*" "\n" doc))@);
-        "<div class=\"doc\">\(doc)</div>"
+        doc = parseDoc doc;
+        "<div class=\"doc\">\(strJoin '<p></p>' doc.descr)</div>"
     fi;
 
 html_page {name, doc, descr, typedefs} =
