@@ -40,19 +40,12 @@ formatType template =
                 types.[name] := str;
                 flag := flag or big
             done;
-            l = map do f:
-                f is typeitem<type> with {
-                    doc = case f.description of
-                          doc :: _: doc;
-                          _: ''
-                          esac,
-                    typeStr = types.[f.name]
-                }
-            done l;
-            cur := if variant then 'variant' else 'struct' fi;
-            docs = not empty? (find ((!= '') . (.doc)) l);
+            docs = not empty? (find ((!= '') . (.description)) l);
             big := docs or flag or length l >= 3;
-            { big, docs, fields = array l, top = depth == 1 });
+            cur := if variant then 'variant' else 'struct' fi;
+            fieldDesc f =
+                f is typeitem<type> with { typeStr = types.[f.name] };
+            { big, docs, fields = array (map fieldDesc l), top = depth == 1 });
 
         other s =
             if cur != '' then
@@ -185,17 +178,12 @@ complexType what before sep after f {big, docs, top, fields} =
 
 to_html = formatType {
     struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
-        var l = ['<em> is </em>', f.typeStr, sep];
-        case f.description of
-        _ :: _ :: _:
-            l := ' <var>' :: strJoin ' ' (tail f.description) :: '</var> ' :: l;
-        _: ();
-        esac;
-        [f.doc, if f.mutable then '<em>var </em>' fi,
-            '<span class=sn>', f.tag, f.name@, '</span>'] ++ l
+        [f.description, if f.mutable then '<em>var </em>' fi,
+            '<span class=sn>', f.tag, f.name@, '</span><em> is </em>',
+            f.typeStr, sep]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
-        [m.doc, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
+        [m.description, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),

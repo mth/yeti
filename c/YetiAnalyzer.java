@@ -36,11 +36,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Iterator;
-import yeti.lang.AList;
-import yeti.lang.LList;
+import yeti.lang.Num;
 import yeti.lang.FloatNum;
 import yeti.lang.IntNum;
-import yeti.lang.Num;
 
 public final class YetiAnalyzer extends YetiType {
     static final class TopLevel {
@@ -238,7 +236,7 @@ public final class YetiAnalyzer extends YetiType {
         for (int i = 1; i <= param.length; ++i) {
             TypeNode arg = param[i - 1];
             tp[i] = withDoc(nodeToType(arg.param[0], free, scope, depth),
-                            arg.doc, null);
+                            arg.doc);
             if (arg.var)
                 tp[i] = fieldRef(depth, tp[i], FIELD_MUTABLE);
             String name = arg.name;
@@ -790,6 +788,8 @@ public final class YetiAnalyzer extends YetiType {
         if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
         lambdaBind(lambda, bind, scope, depth + 1);
+        if (bind.doc != null)
+            lambda.type.doc = bind.doc;
         return lambda;
     }
 
@@ -915,7 +915,7 @@ public final class YetiAnalyzer extends YetiType {
             defScope = new Scope(defScope, typeDef.param[i], null);
             defScope.typeDef = new YType[] { arg };
             defScope.free = NO_PARAM;
-            arg.doc = defScope.name;
+            arg.doc = defScope.name; // to provide name to pretty-printer
         }
         YType type =
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
@@ -970,8 +970,7 @@ public final class YetiAnalyzer extends YetiType {
                         isOp(bind, bind.type, binder.st, scope, depth);
                 }
                 if (bind.doc != null)
-                    binder.st.type =
-                        withDoc(binder.st.type, bind.doc, bind.expr);
+                    binder.st.type = withDoc(binder.st.type, bind.doc);
                 scope = genericBind(bind, binder, seq.seqKind == Seq.EVAL,
                                     scope, depth);
                 bindings[i] = binder;
@@ -1173,12 +1172,10 @@ public final class YetiAnalyzer extends YetiType {
                 if (field.var)
                     t.field = FIELD_MUTABLE;
                 if (field.doc != null) {
-                    // XXX we could trace out possible inner lambda for withDoc
                     if (t.doc == null)
-                        t = withDoc(t, field.doc, null);
+                        t = withDoc(t, field.doc);
                     else
-                        t.doc = new LList(field.doc + '\n' + ((AList) t.doc)
-                                            .first(), ((AList) t.doc).rest());
+                        t.doc = field.doc + '\n' + t.doc;
                 }
                 YType f = new YType(FUN, field.var
                                 ? new YType[] { t, UNIT_TYPE }
@@ -1229,7 +1226,7 @@ public final class YetiAnalyzer extends YetiType {
                     t = fieldRef(depth, t, FIELD_MUTABLE);
                 else if (!poly)
                     t = fieldRef(depth, t, FIELD_NON_POLYMORPHIC);
-                fields.put(field.name, withDoc(t, field.doc, field.expr));
+                fields.put(field.name, withDoc(t, field.doc));
                 if (!field.noRec) {
                     Binder bind = result.bind(sf);
                     if (lambda != null)
@@ -1352,8 +1349,7 @@ public final class YetiAnalyzer extends YetiType {
                         }
                     }
                     YType argt = new YType(depth);
-                    if (doc != null)
-                        argt.doc = new LList(doc, null);
+                    argt.doc = doc;
                     CasePattern arg = toPattern(pat.right, argt, null);
                     YType old = (YType) t.partialMembers.put(variant, argt);
                     if (old != null) {

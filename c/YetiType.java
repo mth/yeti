@@ -38,9 +38,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
-import yeti.lang.AList;
-import yeti.lang.LList;
-import yeti.lang.MList;
 
 class YType {
     int type;
@@ -97,23 +94,20 @@ class YType {
         return res;
     }
 
-    AList doc() {
+    String doc() {
         for (YType t = this; t != null; t = t.ref)
             if (t.doc != null) {
-                AList doc;
+                String doc;
                 if (t.doc instanceof YType) {
                     YType ref = (YType) t.doc;
                     t.doc = null;
-                    if ((t.doc = doc = ref.doc()) != null)
-                        return doc;
-                } else if (t.doc instanceof AList) {
-                    doc = (AList) t.doc;
-                    String sd = (String) doc.first();
-                    String s = sd.trim();
-                    if (sd == s)
-                        return doc;
-                    if (s.length() != 0) {
-                        t.doc = doc = new LList(s, doc.rest());
+                    doc = ref.doc();
+                } else {
+                    doc = (String) t.doc;
+                }
+                if (doc != null) {
+                    if ((doc = doc.trim()).length() != 0) {
+                        t.doc = doc;
                         return doc;
                     }
                     t.doc = null;
@@ -999,7 +993,7 @@ public class YetiType implements YetiParser {
         throw new CompileException(where, "Unknown type: " + name);
     }
 
-    static YType withDoc(YType t, String doc, Node node) {
+    static YType withDoc(YType t, String doc) {
         if (doc == null)
             return t;
         if (t.type > 0 && t.type <= PRIMITIVE_END) {
@@ -1007,19 +1001,7 @@ public class YetiType implements YetiParser {
             t = new YType(0);
             t.ref = tmp;
         }
-        if (node == null || node.kind != "lambda") {
-            t.doc = new LList(doc, null);
-            return t;
-        }
-        MList l = new MList();
-        l.reserve(1);
-        l.add(doc);
-        while (node.kind == "lambda") {
-            Node[] n = ((XNode) node).expr;
-            l.add(n[0].sym());
-            node = n[1];
-        }
-        t.doc = l;
+        t.doc = doc;
         return t;
     }
 }
