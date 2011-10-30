@@ -788,8 +788,6 @@ public final class YetiAnalyzer extends YetiType {
         if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
         lambdaBind(lambda, bind, scope, depth + 1);
-        if (bind.doc != null)
-            lambda.type.doc = bind.doc;
         return lambda;
     }
 
