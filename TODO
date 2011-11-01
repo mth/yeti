@@ -3,19 +3,20 @@
 
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
-* Support as in type definitions for recursive types
 * Rebuild modified dependencies when compiling
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
   + Use unique path identifiers (File? URL?) on module (re)compilation.
   + Fix the circular dependency checking (TODO in CompileCtx.compile()).
-* Compile modules required by load directly after parse, before type analyse
-* Foreign structs (java dto -> struct?)
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.
-* Support module qualification on type, like x is foo.sometype
+* v1.0
 * Typedefs in REPL
+* Foreign structs (java dto -> struct?)
+* Compile modules required by load directly after parse, before type analyse
+* Support as in type definitions for recursive types
+* Support module qualification on type, like x is foo.sometype
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
