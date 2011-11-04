@@ -45,6 +45,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private Field serialVersion;
     private JavaExpr superInit;
     private final boolean isPublic;
+    private boolean hasStatic;
     private int captureCount;
     private Map accessors;
     private Ctx classCtx;
@@ -328,6 +329,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
         m.access = mod == "static-method" ? ACC_PUBLIC + ACC_STATIC
                  : mod == "abstract-method" ? ACC_PUBLIC + ACC_ABSTRACT
                  : ACC_PUBLIC;
+        if ((m.access & ACC_STATIC) != 0)
+            hasStatic = true;
         m.line = line;
         methods.add(m);
         return m;
@@ -436,6 +439,11 @@ final class JavaClass extends CapturingClosure implements Runnable {
         if (!isPublic)
             clc.markInnerClass(ctx.constants.ctx, ACC_STATIC);
         Ctx init = clc.newMethod(constr.access, "<init>", constr.descr(null));
+        if (isPublic && !hasStatic) {
+            init.methodInsn(INVOKESTATIC, ctx.className,
+                            "eval", "()Ljava/lang/Object;");
+            init.insn(POP);
+        }
         constr.convertArgs(init);
         genClosureInit(init);
         superInit.genCall(init.load(0), parentClass.getCaptures(),
@@ -454,7 +462,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         init.closeMethod();
         for (i = 0, cnt = methods.size(); i < cnt; ++i)
             ((Meth) methods.get(i)).gen(clc);
-        if (isPublic) {
+        if (isPublic && hasStatic) {
             Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
             clinit.methodInsn(INVOKESTATIC, ctx.className,
                               "eval", "()Ljava/lang/Object;");
