@@ -417,17 +417,17 @@ final class CompileCtx implements Opcodes {
         mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                            "Ljava/lang/Object;", null, null).visitEnd();
         mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_VOLATILE,
-                           "_$", "S", null, null);
+                           "_$", "I", null, null);
         Ctx ctx = mctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
                                  "eval", "()Ljava/lang/Object;");
-        ctx.fieldInsn(GETSTATIC, name, "_$", "S");
+        ctx.fieldInsn(GETSTATIC, name, "_$", "I");
         Label eval = new Label();
         ctx.jumpInsn(IFLE, eval);
         ctx.fieldInsn(GETSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.insn(ARETURN);
         ctx.visitLabel(eval);
         ctx.intConst(-1); // mark in eval
-        ctx.fieldInsn(PUTSTATIC, name, "_$", "S");
+        ctx.fieldInsn(PUTSTATIC, name, "_$", "I");
         Code codeTail = codeTree.body;
         while (codeTail instanceof SeqExpr)
             codeTail = ((SeqExpr) codeTail).result;
@@ -447,11 +447,11 @@ final class CompileCtx implements Opcodes {
         ctx.insn(DUP);
         ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.intConst(1);
-        ctx.fieldInsn(PUTSTATIC, name, "_$", "S");
+        ctx.fieldInsn(PUTSTATIC, name, "_$", "I");
         ctx.insn(ARETURN);
         ctx.closeMethod();
         ctx = mctx.newMethod(ACC_PUBLIC | ACC_STATIC, "init", "()V");
-        ctx.fieldInsn(GETSTATIC, name, "_$", "S");
+        ctx.fieldInsn(GETSTATIC, name, "_$", "I");
         Label ret = new Label();
         ctx.jumpInsn(IFNE, ret);
         ctx.methodInsn(INVOKESTATIC, ctx.className,
