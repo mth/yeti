@@ -456,9 +456,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
             ((Meth) methods.get(i)).gen(clc);
         if (isPublic) {
             Ctx clinit = clc.newMethod(ACC_STATIC, "<clinit>", "()V");
-            clinit.methodInsn(INVOKESTATIC, ctx.className,
-                              "eval", "()Ljava/lang/Object;");
-            clinit.insn(POP);
+            clinit.methodInsn(INVOKESTATIC, ctx.className, "init", "()V");
             clinit.insn(RETURN);
             clinit.closeMethod();
         }

@@ -916,11 +916,8 @@ final class Function extends CapturingClosure implements Binder {
                 }
             }
         }
-        if (moduleInit && publish) {
-            apply.methodInsn(INVOKESTATIC, ctx.className,
-                             "eval", "()Ljava/lang/Object;");
-            apply.insn(POP);
-        }
+        if (moduleInit && publish)
+            apply.methodInsn(INVOKESTATIC, ctx.className, "init", "()V");
         genClosureInit(apply);
         apply.visitLabel(restart = new Label());
         body.gen(apply);

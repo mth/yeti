@@ -1936,7 +1936,7 @@ final class LoadModule extends Code {
             ctx.insn(ACONST_NULL);
         else
             ctx.methodInsn(INVOKESTATIC, moduleName,
-                "eval", "()Ljava/lang/Object;");
+                           "eval", "()Ljava/lang/Object;");
     }
 
     Binder bindField(final String name, final YType type) {
