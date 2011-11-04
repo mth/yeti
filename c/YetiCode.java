@@ -413,7 +413,7 @@ final class CompileCtx implements Opcodes {
         }
     }
 
-    void moduleEval(RootClosure codeTree, Ctx mctx, String name) {
+    private void moduleEval(RootClosure codeTree, Ctx mctx, String name) {
         mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                            "Ljava/lang/Object;", null, null).visitEnd();
         mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_VOLATILE,
