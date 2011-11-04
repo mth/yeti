@@ -327,7 +327,7 @@ final class CompileCtx implements Opcodes {
     }
 
     ModuleType compile(String sourceName, String name,
-                          char[] code, int flags) throws Exception {
+                      char[] code, int flags) throws Exception {
         // TODO
         // The circular dep check doesn't work always, as the SourceReader +
         // compile(sourceName, flags) gets the proposed classname wrong
@@ -368,41 +368,7 @@ final class CompileCtx implements Opcodes {
                    (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null, null);
             constants.ctx = ctx;
             if (module) {
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
-                                  "Ljava/lang/Object;", null, null).visitEnd();
-                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC,
-                                  "_$", "Z", null, Boolean.FALSE);
-                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
-                                    "eval", "()Ljava/lang/Object;");
-                ctx.fieldInsn(GETSTATIC, name, "_$", "Z");
-                Label eval = new Label();
-                ctx.jumpInsn(IFEQ, eval);
-                ctx.fieldInsn(GETSTATIC, name, "$",
-                                     "Ljava/lang/Object;");
-                ctx.insn(ARETURN);
-                ctx.visitLabel(eval);
-                Code codeTail = codeTree.body;
-                while (codeTail instanceof SeqExpr)
-                    codeTail = ((SeqExpr) codeTail).result;
-                if (codeTail instanceof StructConstructor) {
-                    ((StructConstructor) codeTail).publish();
-                    codeTree.gen(ctx);
-                    codeTree.moduleType.directFields =
-                        ((StructConstructor) codeTail).getDirect(constants);
-                } else {
-                    codeTree.gen(ctx);
-                }
-                ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.moduleType));
-                if (codeTree.type.type == YetiType.STRUCT) {
-                    generateModuleFields(codeTree.type.finalMembers, ctx,
-                                         codeTree.moduleType.directFields);
-                }
-                ctx.insn(DUP);
-                ctx.fieldInsn(PUTSTATIC, name, "$",
-                                     "Ljava/lang/Object;");
-                ctx.intConst(1);
-                ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
-                ctx.insn(ARETURN);
+                moduleEval(codeTree, ctx, name);
                 types.put(name, codeTree.moduleType);
             } else if ((flags & YetiC.CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
@@ -410,6 +376,7 @@ final class CompileCtx implements Opcodes {
                                     "(Ljava/lang/Object;)Ljava/lang/Object;");
                 codeTree.gen(ctx);
                 ctx.insn(ARETURN);
+                ctx.closeMethod();
             } else {
                 ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
                                     "([Ljava/lang/String;)V");
@@ -430,8 +397,8 @@ final class CompileCtx implements Opcodes {
                 ctx.methodInsn(INVOKESTATIC, "java/lang/System",
                                     "exit", "(I)V");
                 ctx.insn(RETURN);
+                ctx.closeMethod();
             }
-            ctx.closeMethod();
             constants.close();
             compiled.put(sourceName, name);
             write();
@@ -444,6 +411,44 @@ final class CompileCtx implements Opcodes {
                 ex.fn = sourceName;
             throw ex;
         }
+    }
+
+    void moduleEval(RootClosure codeTree, Ctx ctx, String name) {
+        Ctx moduleClass = ctx;
+        ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
+                          "Ljava/lang/Object;", null, null).visitEnd();
+        ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC,
+                          "_$", "Z", null, Boolean.FALSE);
+        ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
+                            "eval", "()Ljava/lang/Object;");
+        ctx.fieldInsn(GETSTATIC, name, "_$", "Z");
+        Label eval = new Label();
+        ctx.jumpInsn(IFEQ, eval);
+        ctx.fieldInsn(GETSTATIC, name, "$", "Ljava/lang/Object;");
+        ctx.insn(ARETURN);
+        ctx.visitLabel(eval);
+        Code codeTail = codeTree.body;
+        while (codeTail instanceof SeqExpr)
+            codeTail = ((SeqExpr) codeTail).result;
+        if (codeTail instanceof StructConstructor) {
+            ((StructConstructor) codeTail).publish();
+            codeTree.gen(ctx);
+            codeTree.moduleType.directFields =
+                ((StructConstructor) codeTail).getDirect(ctx.constants);
+        } else {
+            codeTree.gen(ctx);
+        }
+        ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.moduleType));
+        if (codeTree.type.type == YetiType.STRUCT) {
+            generateModuleFields(codeTree.type.finalMembers, ctx,
+                                 codeTree.moduleType.directFields);
+        }
+        ctx.insn(DUP);
+        ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
+        ctx.intConst(1);
+        ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
+        ctx.insn(ARETURN);
+        ctx.closeMethod();
     }
 
     void addClass(String name, Ctx ctx) {
