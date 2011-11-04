@@ -413,20 +413,21 @@ final class CompileCtx implements Opcodes {
         }
     }
 
-    void moduleEval(RootClosure codeTree, Ctx ctx, String name) {
-        Ctx moduleClass = ctx;
-        ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
-                          "Ljava/lang/Object;", null, null).visitEnd();
-        ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC,
-                          "_$", "Z", null, Boolean.FALSE);
-        ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
-                            "eval", "()Ljava/lang/Object;");
-        ctx.fieldInsn(GETSTATIC, name, "_$", "Z");
+    void moduleEval(RootClosure codeTree, Ctx mctx, String name) {
+        mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
+                           "Ljava/lang/Object;", null, null).visitEnd();
+        mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_VOLATILE,
+                           "_$", "S", null, null);
+        Ctx ctx = mctx.newMethod(ACC_PUBLIC | ACC_STATIC | ACC_SYNCHRONIZED,
+                                 "eval", "()Ljava/lang/Object;");
+        ctx.fieldInsn(GETSTATIC, name, "_$", "S");
         Label eval = new Label();
-        ctx.jumpInsn(IFEQ, eval);
+        ctx.jumpInsn(IFLE, eval);
         ctx.fieldInsn(GETSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.insn(ARETURN);
         ctx.visitLabel(eval);
+        ctx.intConst(-1); // mark in eval
+        ctx.fieldInsn(PUTSTATIC, name, "_$", "S");
         Code codeTail = codeTree.body;
         while (codeTail instanceof SeqExpr)
             codeTail = ((SeqExpr) codeTail).result;
@@ -446,8 +447,18 @@ final class CompileCtx implements Opcodes {
         ctx.insn(DUP);
         ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.intConst(1);
-        ctx.fieldInsn(PUTSTATIC, name, "_$", "Z");
+        ctx.fieldInsn(PUTSTATIC, name, "_$", "S");
         ctx.insn(ARETURN);
+        ctx.closeMethod();
+        ctx = mctx.newMethod(ACC_PUBLIC | ACC_STATIC, "init", "()V");
+        ctx.fieldInsn(GETSTATIC, name, "_$", "S");
+        Label ret = new Label();
+        ctx.jumpInsn(IFNE, ret);
+        ctx.methodInsn(INVOKESTATIC, ctx.className,
+                       "eval", "()Ljava/lang/Object;");
+        ctx.insn(POP);
+        ctx.visitLabel(ret);
+        ctx.insn(RETURN);
         ctx.closeMethod();
     }
 
