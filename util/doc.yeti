@@ -96,7 +96,6 @@ parseDoc' doc =
     var state = \();
     join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
                               . groupBy (on (==) ('' ==));
-    joinArg {arg, text} = {arg, text = join text};
     argState line =
         case like '^(\w++)\s++-\s++(.*)$' line () of
         [_, arg, text]:
@@ -120,8 +119,8 @@ parseDoc' doc =
     for doc do line:
         state (strTrim line)
     done;
-    descr = reverse (join descr);
     format = strJoin '<p></p>';
+    descr = reverse (join descr);
     descr = if not empty? descr or not empty? args then
         arg {arg, text} = "<dt>\(arg)</dt><dd>\(format text)</dd>";
         "<div class=\"doc\">\(format descr)\
@@ -129,7 +128,7 @@ parseDoc' doc =
             "<dl>\(strJoin '' (map arg args))</dl>"
            fi)</div>"
     fi;
-    {descr, args = map joinArg args});
+    {descr, args = map (.arg) args});
 
 parseDoc doc =
     if doc != '' then parseDoc' doc else {descr = undef_str, args = []}  fi;
@@ -201,15 +200,10 @@ complexType what before sep after f {big, docs, top, fields} =
        (descr = f sep field;
         var s = strJoin '' (tail descr);
         if big then
-            /*if docs then
-                s := "<div class=ft>\(s)</div>"
-            fi;*/
-            if head descr != '' then
-                s := s ^ formatDoc '' (head descr)
-            fi;
-            s := "<div class=\(style)>\(s)</div>\n"
-        fi;
-        s);
+            "<div class=\(style)>\(s)\(head descr)</div>\n"
+        else
+            s
+        fi);
     last = pop fields;
     var fields = map (str sep) fields ++ [str '' last];
     if big then
@@ -220,12 +214,14 @@ complexType what before sep after f {big, docs, top, fields} =
 
 to_html = formatType {
     struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
-        [f.description, if f.mutable then '<em>var </em>' fi,
+        {descr, args} = parseDoc f.description;
+        [descr, if f.mutable then '<em>var </em>' fi,
             '<span class=sn>', f.tag, f.name@, '</span><em> is </em>',
             f.typeStr, sep]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
-        [m.description, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
+        {descr} = parseDoc m.description;
+        [descr, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
     done,
     function = complexType 'function' '' ' &rarr; ' ''
                            (_ sep t = ['', t, sep]),
