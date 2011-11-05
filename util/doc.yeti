@@ -89,7 +89,7 @@ formatType template =
 
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
-parseDoc doc =
+parseDoc' doc =
    (doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
     var descr = [];
     args = array [];
@@ -97,9 +97,9 @@ parseDoc doc =
     join = concat . filter ((not) . ('' ==) . head) . groupBy (on (==) ('' ==));
     joinArg {arg, text} = {arg, text = join text};
     argState line =
-        case like '^(\w)\s++-\s++' line () of
-        [arg]:
-            push args {arg, text = array [strRight line (strLength arg + 3)]};
+        case like '^(\w++)\s++-\s++(.*)$' line () of
+        [_, arg, text]:
+            push args {arg, text = array [text]};
         _:
             if empty? args then
                 push args {arg = "???", text = array [line]}
@@ -119,13 +119,22 @@ parseDoc doc =
     for doc do line:
         state (strTrim line)
     done;
-    {descr = reverse (join descr), args = map joinArg args});
+    descr = reverse (join descr);
+    format = strJoin '<p></p>';
+    descr = if not empty? descr or not empty? args then
+        arg {arg, text} = "<dt>\(arg)</dt><dd>\(format text)</dd>";
+        "<div class=\"doc\">\(format descr)\
+        "\(if not empty? args then
+            "<p><b>Arguments:</b><dl>\(strJoin '' (map arg args))</dl>"
+           fi)</div>"
+    fi;
+    {descr, args = map joinArg args});
+
+parseDoc doc =
+    if doc != '' then parseDoc' doc else {descr = undef_str, args = []}  fi;
 
 formatDoc _ doc =
-    if doc =~ '\S' then
-        doc = parseDoc doc;
-        "<div class=\"doc\">\(strJoin '<p></p>' doc.descr)</div>"
-    fi;
+    (parseDoc doc).descr;
 
 html_page {name, doc, descr, typedefs} =
 """<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"
@@ -140,6 +149,7 @@ html_page {name, doc, descr, typedefs} =
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 var { font: italic 11pt sans-serif }
+dt { font: italic 11pt sans-serif }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box {
     border-width: 1px;
