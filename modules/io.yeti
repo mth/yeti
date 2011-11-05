@@ -298,11 +298,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Lists files in given directory.
-     * Includes hidden files only when hidden argument is true.
      *
      * Arguments:
-     *   hidden    - return hidden file/directory entries
-     *   directory - path to the directory to list
+     *   hidden    - Include hidden file/directory entries
+     *   directory - Path to the directory to list
      */
     listDirectory hidden directory is boolean -> string
             -> list<{name is string, path is string,
