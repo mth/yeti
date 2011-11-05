@@ -215,9 +215,10 @@ complexType what before sep after f {big, docs, top, fields} =
 to_html = formatType {
     struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
         {descr, args} = parseDoc f.description;
-        [descr, if f.mutable then '<em>var </em>' fi,
-            '<span class=sn>', f.tag, f.name@, '</span><em> is </em>',
-            f.typeStr, sep]
+        args = map (_ arg = " <var>\(arg)</var>") args;
+        concat [[descr, if f.mutable then '<em>var </em>' fi,
+                 '<span class=sn>', f.tag, f.name@, '</span>'],
+                args, ['<em> is </em>', f.typeStr, sep]]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
         {descr} = parseDoc m.description;
