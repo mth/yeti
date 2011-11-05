@@ -296,8 +296,14 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     deleteFile fn is string -> boolean = new File(fn)#delete(),
 
-    /// Lists files in given directory.
-    /// Includes hidden files only when hidden argument is true.
+    /**
+     * Lists files in given directory.
+     * Includes hidden files only when hidden argument is true.
+     *
+     * Arguments:
+     *   hidden    - return hidden file/directory entries
+     *   directory - path to the directory to list
+     */
     listDirectory hidden directory is boolean -> string
             -> list<{name is string, path is string,
                      file? is boolean, directory? is boolean}> =

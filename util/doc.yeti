@@ -90,13 +90,14 @@ formatType template =
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 parseDoc doc =
-   (doc = strSplit "\n[ \\t]*\n"
-                   ((strTrim (substAll "\n[ \\t]+\\*" "\n" doc))@);
-    descr = array [];
+   (doc = map strTrim (strSplit "\n" (substAll "\n[ \\t]+\\*" "\n" doc@));
+    var descr = [];
     args = array [];
     var state = \();
+    join = concat . filter ((not) . ('' ==) . head) . groupBy (on (==) ('' ==));
+    joinArg {arg, text} = {arg, text = join text};
     argState line =
-        case like '^(\w) - ' line () of
+        case like '^(\w)\s++-\s++' line () of
         [arg]:
             push args {arg, text = array [strRight line (strLength arg + 3)]};
         _:
@@ -107,16 +108,18 @@ parseDoc doc =
             fi
         esac;
     state := do line:
-        if line == "Arguments:" then
-            state := argState
-        else
-            push descr line
-        fi
+        descr := line :: descr;
+        case descr of
+        'Arguments:' :: '' :: rest:
+            state := argState;
+            descr := rest;
+        _: ()
+        esac
     done;
     for doc do line:
         state (strTrim line)
     done;
-    {descr, args});
+    {descr = reverse (join descr), args = map joinArg args});
 
 formatDoc _ doc =
     if doc =~ '\S' then
