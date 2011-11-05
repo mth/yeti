@@ -94,7 +94,8 @@ parseDoc' doc =
     var descr = [];
     args = array [];
     var state = \();
-    join = concat . filter ((not) . ('' ==) . head) . groupBy (on (==) ('' ==));
+    join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
+                              . groupBy (on (==) ('' ==));
     joinArg {arg, text} = {arg, text = join text};
     argState line =
         case like '^(\w++)\s++-\s++(.*)$' line () of
@@ -125,7 +126,7 @@ parseDoc' doc =
         arg {arg, text} = "<dt>\(arg)</dt><dd>\(format text)</dd>";
         "<div class=\"doc\">\(format descr)\
         "\(if not empty? args then
-            "<p><b>Arguments:</b><dl>\(strJoin '' (map arg args))</dl>"
+            "<dl>\(strJoin '' (map arg args))</dl>"
            fi)</div>"
     fi;
     {descr, args = map joinArg args});
