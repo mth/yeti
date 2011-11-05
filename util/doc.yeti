@@ -90,7 +90,7 @@ formatType template =
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 parseDoc doc =
-   (doc = map strTrim (strSplit "\n" (substAll "\n[ \\t]+\\*" "\n" doc@));
+   (doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
     var descr = [];
     args = array [];
     var state = \();
