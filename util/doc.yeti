@@ -116,12 +116,18 @@ parseDoc' doc =
         fi;
         prev := line
     done;
+    arg_list = map (.arg) args;
     join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
                               . groupBy (on (==) ('' ==));
-    format = strJoin '<p></p>' . join;
+    arg_set = hash arg_list;
+    mark_arg a =
+        if a.[0] in arg_set then "<var>\(a.[0])</var>" else a.[0] fi;
+    mark_args = map (strJoin '' . matchAll '\w+' mark_arg id);
+    lines = strJoin '<p></p>';
     descr = if not empty? descr or not empty? args then
-        arg {arg, text} = "<tr><td><var>\(arg)</var><td>-<td>\(format text)";
-        "<div class=\"doc\">\(format descr)\
+        arg {arg, text} =
+            "<tr><td><var>\(arg)</var><td>-<td>\(lines (join text))";
+        "<div class=\"doc\">\(lines (mark_args (join descr)))\
         "\(if not empty? args then
             "<table class=\"args\">\(strJoin '' (map arg args))</table>"
            fi)\
@@ -130,7 +136,7 @@ parseDoc' doc =
             "\(strJoin '' (map arg exceptions))</table>"
            fi)</div>"
     fi;
-    {descr, args = map (.arg) args});
+    {descr, args = arg_list});
 
 parseDoc doc =
     if doc != '' then parseDoc' doc else {descr = undef_str, args = []}  fi;
