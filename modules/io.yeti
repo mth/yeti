@@ -251,7 +251,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                    (writer . (.write)),
 
     /**
-     * Example:
+     * Examples:
      * : data = binReadFile "test" (binReadAll 0);
      * : binWriteFile "test2" data;
      */

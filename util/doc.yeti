@@ -100,60 +100,62 @@ parseDoc' doc =
                 push to.[length to - 1].text line
             fi
         esac;
-    doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
-    descr = array [];
-    args = array [];
-    exceptions = array [];
-    var prev = '';
     var code = false;
-    var state line =
+    withCode to line =
        (was = code;
         code := strStarts? line ':';
         if not was and code then
-            push descr '';
-            push descr '<pre>'
+            push to '<pre>'
         elif was and not code then
-            push descr '</pre>';
-            push descr ''
+            push to '</pre>'
         fi;
-        push descr if code then strRight line 1 else line fi);
+        push to if code then strRight line 1 else line fi);
+    doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
+    about = array [];
+    args = array [];
+    description = array [];
+    exceptions = array [];
+    examples = array [];
+    seeAlso = array [];
+    var prev = '';
+    var state = push about;
     for doc do line:
-        if prev == '' and line == 'Arguments:' then
-            state := listState args
-        elif prev == '' and line == 'Exceptions:' then
-            state := listState exceptions
+        if prev == '' then
+            case line of
+            'Arguments:':   state := listState args;
+            'Description:': state := withCode description;
+            'Exceptions:':  state := listState exceptions;
+            'Examples:': state := withCode examples;
+            'See also:': state := push seeAlso;
+            _: state line
+            esac
         else
             state line
         fi;
         prev := line
     done;
-    if code then
-        push descr '</pre>'
-    fi;
     arg_list = map (.arg) args;
     join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
                               . groupBy (on (==) ('' ==));
     arg_set = hash arg_list;
     mark_arg a =
         if a.[0] in arg_set then "<var>\(a.[0])</var>" else a.[0] fi;
-    mark_args line =
-        if strStarts? line '<pre>' then
-            line
-        else
-            strJoin '' (matchAll '\w+' mark_arg id  line)
-        fi;
+    mark_args = strJoin '' . matchAll '\w+' mark_arg id;
     lines = strJoin '<p></p>';
-    descr = if not empty? descr or not empty? args then
+    show pre post f v = if not empty? v then "\(pre)\(f v)\(post)" fi;
+    text what = show "<br><b>\(what)</b><br>" '' (lines . join);
+    descr = if not all empty? [args, exceptions] or
+               not all empty? [about, description, examples, seeAlso] then
+        state ''; // </pre> if needed
         arg {arg, text} =
             "<tr><td><var>\(arg)</var><td>-<td>\(lines (join text))";
-        "<div class=\"doc\">\(lines (map mark_args (join descr)))\
-        "\(if not empty? args then
-            "<table class=\"args\">\(strJoin '' (map arg args))</table>"
-           fi)\
-        "\(if not empty? exceptions then
-            "<br><b>Exceptions thrown</b><table class=\"args\">\
-            "\(strJoin '' (map arg exceptions))</table>"
-           fi)</div>"
+        "<div class=\"doc\">\(lines (map mark_args (join about)))\
+        "\(show '<table class="args">' '</table>' (strJoin '' . map arg) args)\
+        "\(show '<br><b>Exceptions thrown</b><table class="args">'
+                '</table>' (strJoin '' . map arg) exceptions)\
+        "\(text 'Description' description)\
+        "\(text 'Examples' examples)\
+        "\(text 'See also' seeAlso)</div>"
     fi;
     {descr, args = arg_list});
 
