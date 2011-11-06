@@ -604,6 +604,15 @@ plus a b = a + b;
             (h is map<'a, 'b> unsafely_as ~Coll)#copy() unsafely_as map<'a, 'b>
         fi,
 
+    /**
+     * Fail evaluation with given error message by throwing FailureException.
+     *
+     * Arguments:
+     *  message - error message used as exception description
+     *
+     * Exceptions:
+     *  FailureException - always.
+     */
     failWith message =
         throw new FailureException(message),
 
