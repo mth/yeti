@@ -250,9 +250,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
         withHandle (binOutputHandle new FileOutputStream(name is string))
                    (writer . (.write)),
 
-    // Example
-    // data = binReadFile "test" (binReadAll 0);
-    // binWriteFile "test2" data;
+    /**
+     * Example:
+     * : data = binReadFile "test" (binReadAll 0);
+     * : binWriteFile "test2" data;
+     */
     binReadAll limit handle
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
