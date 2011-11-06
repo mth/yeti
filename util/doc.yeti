@@ -151,12 +151,12 @@ html_page {name, doc, descr, typedefs} =
 <style type="text/css">
 .main { background: white; line-height: 130%; font-family: sans-serif }
 .type { background: white; font-size: 12pt; }
-.sn { font-size: 13pt; font-family: monospace }
+.sn { font: 13pt monospace }
 .vn { font-size: 13pt }
 .other { background: #cccccc; display: inline; }
 .field { padding: 1.5pt }
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
-var { font: italic 11pt sans-serif }
+var { font: 11pt monospace }
 .args { padding-left: 1.4em }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box {
