@@ -93,31 +93,36 @@ parseDoc' doc =
    (doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
     var descr = [];
     args = array [];
+    exceptions = array [];
+    var prev = '';
     var state = \();
     join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
                               . groupBy (on (==) ('' ==));
-    argState line =
-        case like '^(\w++)\s++-\s++(.*)$' line () of
-        [_, arg, text]:
-            push args {arg, text = array [text]};
-        _:
-            if empty? args then
-                push args {arg = "???", text = array [line]}
-            else
-                push args.[length args - 1].text line
-            fi
-        esac;
+    defState to line =
+        if prev == '' and line == 'Exceptions:' then
+            state := defState exceptions
+        else
+            case like '^(\w++)\s++-\s++(.*)$' line () of
+            [_, arg, text]:
+                push to {arg, text = array [text]};
+            _:
+                if empty? to then
+                    push to {arg = "???", text = array [line]}
+                else
+                    push to.[length to - 1].text line
+                fi
+            esac
+        fi;
     state := do line:
-        descr := line :: descr;
-        case descr of
-        'Arguments:' :: '' :: rest:
-            state := argState;
-            descr := rest;
-        _: ()
-        esac
+        if prev == '' and line == 'Arguments:' then
+            state := defState args
+        else
+            descr := line :: descr
+        fi
     done;
     for doc do line:
-        state (strTrim line)
+        state (strTrim line);
+        prev := line
     done;
     format = strJoin '<p></p>';
     descr = reverse (join descr);
