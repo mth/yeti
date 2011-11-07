@@ -252,12 +252,15 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Reads up to limit bytes from input handle and returns function
-     * that will apply it's argument to byte[] buffer and actual number
-     * of bytes read.
+     * that will apply it's argument to byte[] buffer containing the data
+     * and actual number of bytes read.
      *
      * Arguments:
      *  limit - Maximum number of bytes to read (<= 0 means unlimited).
      *  handle - Binary input stream handle.
+     *
+     * Exceptions:
+     *  java.io.IOException - on IO errors
      *
      * Examples:
      * A contents of file could be copied in the following way:

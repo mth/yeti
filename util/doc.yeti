@@ -89,8 +89,8 @@ formatType template =
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 parseDoc' doc =
-   (listState to line =
-        case like '^(\w++)\s++-\s++(.*)$' line () of
+   (listState to pattern line =
+        case pattern line () of
         [_, arg, text]:
             push to {arg, text = array [text]};
         _:
@@ -122,9 +122,11 @@ parseDoc' doc =
     for doc do line:
         if prev == '' then
             case line of
-            'Arguments:':   state := listState args;
+            'Arguments:':
+                state := listState args (like '^(\w++)\s++-\s++(.*)$');
             'Description:': state := withCode description;
-            'Exceptions:':  state := listState exceptions;
+            'Exceptions:':
+                state := listState exceptions (like '^([\w.]++)\s++-\s++(.*)$');
             'Examples:': state := withCode examples;
             'See also:': state := push seeAlso;
             _: state line
