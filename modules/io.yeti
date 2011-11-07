@@ -26,6 +26,14 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * Standard input/output functions.
+ *
+ * Exceptions:
+ *  java.io.IOException -
+ *      Can be thrown for IO errors by any function in this module.
+ */
 module yeti.lang.io;
 
 import java.io: File, FileInputStream, FileOutputStream,
@@ -258,9 +266,6 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Arguments:
      *  limit - Maximum number of bytes to read (<= 0 means unlimited).
      *  handle - Binary input stream handle.
-     *
-     * Exceptions:
-     *  java.io.IOException - on IO errors
      *
      * Examples:
      * A contents of file could be copied in the following way:

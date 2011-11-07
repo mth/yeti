@@ -122,11 +122,11 @@ parseDoc' doc =
     for doc do line:
         if prev == '' then
             case line of
-            'Arguments:':
-                state := listState args (like '^(\w++)\s++-\s++(.*)$');
+            'Arguments:': state := listState args
+                            (like '^(\w++)\s++-(?:\s++(.*))?$');
             'Description:': state := withCode description;
-            'Exceptions:':
-                state := listState exceptions (like '^([\w.]++)\s++-\s++(.*)$');
+            'Exceptions:': state := listState exceptions
+                            (like '^([\w.]++)\s++-(?:\s++(.*))?$');
             'Examples:': state := withCode examples;
             'See also:': state := push seeAlso;
             _: state line
