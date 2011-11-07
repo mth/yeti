@@ -186,14 +186,9 @@ var { font: 11pt monospace }
     border-width: 1px;
     border-color: black;
     border-style: solid;
-    padding-left: 0.1em;
-    padding-right: 0.1em;
-    margin-left: 1pt;
-    margin-right: 1pt;
-    padding-top: 1px;
-    padding-bottom: 1pt;
-    margin-top: 1px;
-    margin-bottom: 0pt;
+    /* top/bottom right/left | top right/left bottom | top right bottom left */
+    padding: 1px 0.1em 1pt;
+    margin: 1px 1pt 0pt;
     display: inline-block;
 }
 .module { color: #000080 }
@@ -204,12 +199,8 @@ em { color: #000080; font: bold 13pt sans-serif }
 /* background: #bbffbb; */
 .ft { padding-left: 0em }
 .doc { background: #ffffa8;
-       padding-left: 2em;
-       padding-top: 0.5em;
-       padding-bottom: 0.5em;
-       padding-right: 0.5em;
-       font-size: 12pt;
-       }
+       padding: 0.5em 0.5em 0.5em 2em;
+       font-size: 12pt; }
 </style><title>\(name@)</title>
 <body>
 <div class="main">
