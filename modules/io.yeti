@@ -251,7 +251,16 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                    (writer . (.write)),
 
     /**
+     * Reads up to limit bytes from input handle and returns function
+     * that will apply it's argument to byte[] buffer and actual number
+     * of bytes read.
+     *
+     * Arguments:
+     *  limit - Maximum number of bytes to read (<= 0 means unlimited).
+     *  handle - Binary input stream handle.
+     *
      * Examples:
+     * A contents of file could be copied in the following way:
      * : data = binReadFile "test" (binReadAll 0);
      * : binWriteFile "test2" data;
      */
