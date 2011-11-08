@@ -87,9 +87,12 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
        (e = i#next() unsafely_as ~java.util.Map$Entry;
         f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
-/// Returns [f(a), f(b), ...] for list l [a, b, ...]
-/// This map function returns lazy list when used on normal lists.
-/// Arrays and lists backed by arrays are mapped strictly.
+/**
+ * Returns [f(a), f(b), ...] for list l [a, b, ...]
+ *
+ * This map function returns lazy list when used on normal lists.
+ * Arrays and lists backed by arrays are mapped strictly.
+ */
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
         []

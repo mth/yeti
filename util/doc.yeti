@@ -182,15 +182,11 @@ html_page {name, doc, descr, typedefs} =
 var { font: 11pt monospace }
 .args { padding-left: 1.4em }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
-.box {
-    border-width: 1px;
-    border-color: black;
-    border-style: solid;
+.box { border: 1px solid black;
     /* top/bottom right/left | top right/left bottom | top right bottom left */
     padding: 1px 0.1em 1pt;
     margin: 1px 1pt 0pt;
-    display: inline-block;
-}
+    display: inline-block; }
 .module { color: #000080 }
 em { color: #000080; font: bold 13pt sans-serif }
 .function { background: #ffffff }
@@ -199,8 +195,8 @@ em { color: #000080; font: bold 13pt sans-serif }
 /* background: #bbffbb; */
 .ft { padding-left: 0em }
 .doc { background: #ffffa8;
-       padding: 0.5em 0.5em 0.5em 2em;
-       font-size: 12pt; }
+    padding: 0.5em 0.5em 0.5em 2em;
+    font-size: 12pt; }
 .doc p { margin: 0.6em 0px 1px; font-weight: bold }
 .doc pre { background: #ffffc8;
     border: 1px dashed black;
