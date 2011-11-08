@@ -145,7 +145,7 @@ parseDoc' doc =
     mark_args = strJoin '' . matchAll '\w+' mark_arg id;
     lines = strJoin '<p></p>';
     show pre post f v = if not empty? v then "\(pre)\(f v)\(post)" fi;
-    text what = show "<br><b>\(what)</b><br>" '' (lines . join);
+    text what = show "<p>\(what)</p>" '' (lines . join);
     descr = if not all empty? [args, exceptions] or
                not all empty? [about, description, examples, seeAlso] then
         state ''; // </pre> if needed
@@ -153,7 +153,7 @@ parseDoc' doc =
             "<tr><td><var>\(arg)</var><td>-<td>\(lines (join text))";
         "<div class=\"doc\">\(lines (map mark_args (join about)))\
         "\(show '<table class="args">' '</table>' (strJoin '' . map arg) args)\
-        "\(show '<br><b>Exceptions thrown</b><table class="args">'
+        "\(show '<p>Exceptions thrown</p><table class="args">'
                 '</table>' (strJoin '' . map arg) exceptions)\
         "\(text 'Description' description)\
         "\(text 'Examples' examples)\
@@ -201,6 +201,11 @@ em { color: #000080; font: bold 13pt sans-serif }
 .doc { background: #ffffa8;
        padding: 0.5em 0.5em 0.5em 2em;
        font-size: 12pt; }
+.doc p { margin: 0.6em 0px 1px; font-weight: bold }
+.doc pre { background: #ffffc8;
+    border: 1px dashed black;
+    margin: 0.3em 1.5em 0.3em 0px;
+    padding: 0.3em; overflow: auto }
 </style><title>\(name@)</title>
 <body>
 <div class="main">
