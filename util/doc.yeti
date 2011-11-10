@@ -159,19 +159,25 @@ parseDoc' doc =
         "\(text 'Examples' examples)\
         "\(text 'See also' seeAlso)</div>"
     fi;
-    {descr, args = arg_list});
+    {descr, args = arg_list, raw_doc = doc});
 
 parseDoc doc =
-    if doc != '' then parseDoc' doc else {descr = undef_str, args = []}  fi;
+    if doc != '' then
+        parseDoc' doc
+    else
+        {descr = undef_str, args = [], raw_doc = []}
+    fi;
 
 formatDoc _ doc =
     (parseDoc doc).descr;
 
-html_page {name, doc, descr, typedefs} =
-"""<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\"
-\"http://www.w3.org/TR/html4/strict.dtd\">
-<html><meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<style type="text/css">
+html_prelude =
+'<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html><meta http-equiv="Content-Type" content="text/html;charset=utf-8" >';
+
+html_page {name, descr, moduleType, typedefs} =
+"""\(html_prelude)<style type="text/css">
 .main { background: white; line-height: 130%; font-family: sans-serif }
 .type { background: white; font-size: 12pt; }
 .sn { font: 13pt monospace }
@@ -206,16 +212,11 @@ em { color: #000080; font: bold 13pt sans-serif }
 <body>
 <div class="main">
 <h2><span class=module>module</span> \(name@)</h2>
-\(formatDoc () doc)
-<p>
-\(typedefs)
+\(descr)<p>\(typedefs)
 <h3>Module signature</h3>
-<div class="type">
-\(descr)
+<div class="type">\(moduleType)</div>
 </div>
-</div>
-</body>
-</html>""";
+</body></html>""";
 
 complexType what before sep after f {big, docs, top, fields} =
    (style = if docs then '"field wdoc"' else 'field' fi;
@@ -267,11 +268,26 @@ typedef_html {name, type, param} =
     "<div class=\"type\"><em>typedef</em> \
     "\(name@)\(typedef_param param@) = \(to_html '' type)</div>";
 
-do {type, name, doc, typedefs}:
-    descr = to_html '' type;
+modules = [:];
+
+moduleDoc {type, name, doc, typedefs} =
+   (moduleType = to_html '' type;
+    {descr, raw_doc} = parseDoc doc;
     page = html_page {
-        name, doc, descr,
+        name, descr, moduleType,
         typedefs = strJoin '<p>' (map typedef_html typedefs)
     };
-    writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page])
-done
+    writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page]);
+    modules.[name] := head ((splitBy (!= '') raw_doc).snd ++ [undef_str]));
+
+docIndex () =
+   (item name =
+        "<dt><a href=\"\(name).html\">\(name)</a><dd>\(modules.[name])";
+    writeFile "\(doc_dir)/index.html" 'utf-8' (`putLines`
+       ["\(html_prelude)<title>Module index</title>\
+        "<style type=\"text/css\">DD {margin-bottom: 0.8em}</style>\
+        "<body><div><big>Module index</big><dl>\
+        "\(strJoin '' (map item (sort (keys modules))))\
+        "</dl></div></body></html>"]));
+
+{moduleDoc, docIndex}

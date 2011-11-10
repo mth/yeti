@@ -243,7 +243,9 @@ else
                                     #getResourceAsStream('doc.yeti')
                                    'UTF-8').contents ()) of
             {result = Result obj}:
-                for types (obj is ~Object unsafely_as 'a);
+                {moduleDoc, docIndex} = obj is ~Object unsafely_as 'a;
+                for types moduleDoc;
+                docIndex ();
             {str}:
                 println str
             esac
