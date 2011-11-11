@@ -85,7 +85,7 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             exec := false;
         "-d":
             target = shift argv;
-            push options (To if target != '' then "\(target)/" else '' fi);
+            push options (To target);
             exec := false;
         "-e":
             eval := shift argv;

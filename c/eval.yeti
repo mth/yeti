@@ -107,6 +107,7 @@ createCtx reader genericOpt =
         /// Set destination directory, where to write class files.
         /// Disables execution on evaluateYetiCode as side effect.
         To dir:
+            dir = if dir != '' then "\(dir)/" else '' fi;
             if nullptr? ctx#writer and dir != '' then
                 push java '-d';
                 push java dir;
@@ -415,6 +416,64 @@ evaluateYetiCode genericOpt =
                 strJoin '' (map (^ "\n") res),
         }
     done);
+
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.taskdefs.MatchingTask;
+import org.apache.tools.ant.types.Path;
+
+class YetiTask extends MatchingTask
+    genOpt = array [],
+    options = array [],
+    var src = () as ~File,
+    var classPath = () as ~Path,
+
+    void setSrcDir(String dir)
+        src := new File(dir),
+
+    void setDestDir(String dir)
+        push genOpt (To dir),
+
+    void setPreload(String preload)
+        push genOpt (Preload (strSplit ':' preload)),
+
+    void setJavaOpt(String option)
+        for (strSplit ' +' option) (push options . JavaOption),
+
+    Path createClasspath()
+        if nullptr? classPath then
+            classPath := new Path(this#getProject())
+        fi;
+        classPath,
+
+    void setICast(boolean icast)
+        if icast then
+            push genOpt (ICast ())
+        fi,
+
+    void execute()
+        if nullptr? src then
+            src := this#getProject()#getBaseDir()
+        fi;
+        if not this#fileset#hasPatterns() then
+            this#setIncludes("*.yeti")
+        fi;
+        files = this#getDirectoryScanner(src)#getIncludedFiles();
+        cp = if nullptr? classPath then [] else map string classPath#list() fi;
+        push genOpt (ClassPath cp);
+        warn ex = this#log((ex is ~CompileException)#getMessage());
+        push genOpt (Warn warn);
+        push options (SourceDir src#getPath());
+        options = JavaOption "-encoding" :: JavaOption "utf-8" :: options;
+        this#log("Compiling \(length files) files.");
+        try
+            compileYetiFiles genOpt options files
+        catch CompileException ex:
+            throw new BuildException(ex#getMessage())
+        catch Exception ex:
+            ex#printStackTrace();
+            throw new BuildException(ex)
+        yrt
+end;
 
 {
     compileYetiFiles, evaluateYetiCode

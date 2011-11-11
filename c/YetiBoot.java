@@ -34,16 +34,13 @@ import java.util.*;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.Parameter;
 import yeti.lang.Fun;
 
-public class YetiTask extends MatchingTask {
-    private List paths = new ArrayList();
+public class YetiBoot extends MatchingTask {
     private java.io.File dir;
     private String[] preload = YetiC.PRELOAD;
     private String target;
     private Path classPath;
-    private List javaOpt = new ArrayList();
     private boolean gcj;
 
     public void setSrcDir(String dir) {
@@ -60,12 +57,6 @@ public class YetiTask extends MatchingTask {
     public void setPreload(String preload) {
         this.preload = preload.length() == 0
             ? new String[0] : preload.split(":");
-    }
-
-    public void setJavaOpt(String options) {
-        String[] a = options.split(" +");
-        for (int i = 0; i < a.length; ++i)
-            javaOpt.add(a[i]);
     }
 
     public Path createClasspath() {
@@ -94,16 +85,10 @@ public class YetiTask extends MatchingTask {
         compilation.preload = preload;
         compilation.classPath = new ClassFinder(classPath);
         compilation.isGCJ |= gcj;
-        javaOpt.add("-encoding");
-        javaOpt.add("utf-8");
-        if (target.length() != 0) {
-            javaOpt.add("-d");
-            javaOpt.add(target);
-        }
+        String[] javaOpt = { "-encoding", "utf-8", "-d", target };
         log("Compiling " + files.length + " files.");
         try {
-            compilation.compileAll(files, 0,
-                (String[]) javaOpt.toArray(new String[0]));
+            compilation.compileAll(files, 0, javaOpt);
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());
         } catch (BuildException ex) {

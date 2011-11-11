@@ -64,7 +64,7 @@
 </target>
 
 <target name="taskdef">
-    <taskdef name="yetic" classname="yeti.lang.compiler.YetiTask"
+    <taskdef name="yetic" classname="yeti.lang.compiler.YetiBoot"
         classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
 </target>
 
@@ -106,7 +106,8 @@
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
         <zipfileset src="${basedir}/yeti-lib.jar"/>
-        <fileset dir="${basedir}/.build/compiler" excludes="${jar-excludes}"/>
+        <fileset dir="${basedir}/.build/compiler"
+            excludes="yeti/lang/compiler/YetiBoot*.class,${jar-excludes}"/>
         <zipfileset src="${asm}" excludes="yeti/renamed/asm3/signature/*"/>
     </jar>
 </target>
