@@ -1,9 +1,9 @@
 // ex: se sts=4 sw=4 expandtab:
 
 /*
- * Yeti language compiler java bytecode generator.
+ * Yeti language compiler bootstrap ANT task.
  *
- * Copyright (c) 2007,2008 Madis Janson
+ * Copyright (c) 2007,2008,2011 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
