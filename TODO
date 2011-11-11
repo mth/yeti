@@ -11,6 +11,7 @@
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.
+  + class end something without ; after end gives confusing error message
 * v1.0
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
