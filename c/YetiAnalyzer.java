@@ -224,7 +224,8 @@ public final class YetiAnalyzer extends YetiType {
                          op.right, scope, depth);
         }
         throw new CompileException(node,
-            "I think that this " + node + " should not be here.");
+            node.kind == "class" ? "Missing ; after class definition"
+                : "I think that this " + node + " should not be here.");
     }
 
     static YType nodeToMembers(int type, TypeNode[] param, Map free,

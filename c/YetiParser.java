@@ -206,9 +206,10 @@ interface YetiParser {
                         "Variable name is missing");
             }
             if (!(nameNode instanceof Sym)) {
-                throw new CompileException(nameNode,
-                        "Illegal binding name: " + nameNode
-                         + " (missing ; after expression?)");
+                throw new CompileException(nameNode, nameNode.kind == "class"
+                            ? "Missing ; after class definition"
+                            : "Illegal binding name: " + nameNode
+                              + " (missing ; after expression?)");
             }
             line = nameNode.line;
             col = nameNode.col;
