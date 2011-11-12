@@ -417,7 +417,7 @@ evaluateYetiCode genericOpt =
         }
     done);
 
-generateYetiDoc {directory, types, error} =
+generateYetiDoc {directory, modules, error} =
    (cl = classOf YetiEval#getClassLoader();
     ctx = evaluateYetiCode [ICast (),
             CodeWriter (new Loader(cl) as ~CodeWriter)];
@@ -427,7 +427,7 @@ generateYetiDoc {directory, types, error} =
     {result = Result obj}:
         {moduleDoc, docIndex} = obj is ~Object unsafely_as 'a;
         createPath directory;
-        for (types is list?<module_description>) moduleDoc;
+        for (modules is list?<module_description>) moduleDoc;
         docIndex ();
     {str}:
         error str is ()
@@ -440,7 +440,7 @@ import org.apache.tools.ant.types.Path;
 class YetiTask extends MatchingTask
     genOpt = array [],
     options = array [],
-    types = array [],
+    modules = array [],
     var src = () as ~File,
     var classPath = () as ~Path,
     var docDir = undef_str,
@@ -458,7 +458,7 @@ class YetiTask extends MatchingTask
         for (strSplit ' +' option) (push options . JavaOption),
         
     void setDocDir(String dir)
-        push options (Type (push types));
+        push options (Type (push modules));
         docDir := dir,
 
     Path createClasspath()
@@ -489,8 +489,8 @@ class YetiTask extends MatchingTask
         this#log("Compiling \(length files) files.");
         try
             compileYetiFiles genOpt options files;
-            if not empty? types then
-                generateYetiDoc {directory = docDir, types, error = failWith}
+            if not empty? modules then
+                generateYetiDoc {directory = docDir, modules, error = failWith}
             fi
         catch CompileException ex:
             throw new BuildException(ex#getMessage())

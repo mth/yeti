@@ -34,7 +34,7 @@ load yeti.lang.compiler.showtype;
 var eval = undef_str;
 var exec = true;
 var compileErrorTrace = false;
-var types = array [];
+var modules = array [];
 var printType = false;
 var sandbox = false;
 var out = System#err;
@@ -96,11 +96,11 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
         "-type":
             printType := true;
             exec := false;
-            push compileOptions (Type (push types));
+            push compileOptions (Type (push modules));
         "-doc":
             doc_dir := shift argv;
             exec := false;
-            push compileOptions (Type (push types));
+            push compileOptions (Type (push modules));
         "-doc-format":
             doc_script := shift argv;
         "-javaver":
@@ -235,21 +235,21 @@ else
     catch java.lang.Throwable ex:
         printException ex
     yrt;
-    if not empty? types then
+    if not empty? modules then
         if defined? doc_dir then
-            generateYetiDoc {directory = doc_dir, types, error = println}
+            generateYetiDoc {directory = doc_dir, modules, error = println}
         else
-            for types do t:
-                if t.doc != "" then
-                    println "/*\n\(t.doc)\n*/"
+            for modules do m:
+                if m.doc != "" then
+                    println "/*\n\(m.doc)\n*/"
                 fi;
-                println "module \(t.name);\n";
-                for t.typedefs do {name, type, param}:
+                println "module \(m.name);\n";
+                for m.typedefs do {name, type, param}:
                     p = if not empty? param then "<\(strJoin ', ' param)>" fi;
                     println "typedef \(name)\(p) = \
                             "\(showType [CommentDoc ()] '' type)\n"
                 done;
-                println (showType [CommentDoc ()] '' t.type);
+                println (showType [CommentDoc ()] '' m.type);
             done
         fi
     fi
