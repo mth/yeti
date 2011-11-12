@@ -427,10 +427,10 @@ generateYetiDoc {directory, types, error} =
     {result = Result obj}:
         {moduleDoc, docIndex} = obj is ~Object unsafely_as 'a;
         createPath directory;
-        for types moduleDoc;
+        for (types is list?<module_description>) moduleDoc;
         docIndex ();
     {str}:
-        error str
+        error str is ()
     esac);
 
 import org.apache.tools.ant.BuildException;
