@@ -109,6 +109,7 @@ public class YetiC implements SourceReader {
     public static final int CF_NO_IMPORT        = 16;
     public static final int CF_EVAL_STORE       = 32;
     public static final int CF_EVAL_BIND        = 40;
+    public static final int CF_DOC              = 64;
 
     static String inCharset = "UTF-8";
     static final String[] PRELOAD =

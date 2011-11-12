@@ -1,8 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* YetiDoc to automatically generate html documentation
-  + Don't store yetidoc's in parsetree, when not generating docs
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,

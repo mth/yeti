@@ -213,6 +213,7 @@ compileYetiFiles genericOpt options files =
         /// is called after each module file given for compilation. 
         Type action:
             typeAction := action;
+            ctx#flags := ctx#flags b_or YetiC#CF_DOC;
 
         /// Execute main after compilation of the sources.
         /// The _argv will be set to the arg parameter.

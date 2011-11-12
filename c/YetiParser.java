@@ -605,6 +605,8 @@ interface YetiParser {
         }
 
         private void addDoc(int from, int to) {
+            if ((flags & YetiC.CF_DOC) == 0)
+                return;
             ++from;
             String str = new String(src, from, to - from);
             yetiDocStr = yetiDocStr == null || yetiDocReset
