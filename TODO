@@ -3,15 +3,15 @@
 
 * YetiDoc to automatically generate html documentation
   + Don't store yetidoc's in parsetree, when not generating docs
-* Rebuild modified dependencies when compiling
-* Fix full path script invocation (yeti /some/fubar/script.yeti)
-  + Use unique path identifiers (File? URL?) on module (re)compilation.
-  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
 * Better error messages
   + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.
   + class end something without ; after end gives confusing error message
+* Fix full path script invocation (yeti /some/fubar/script.yeti)
+  + Use unique path identifiers (File? URL?) on module (re)compilation.
+  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
+* Rebuild modified dependencies when compiling
 * v1.0
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
