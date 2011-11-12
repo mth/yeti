@@ -72,6 +72,7 @@ help =
     "  -icast           Generate superfluous casts for broken JVMs\n\
     "  -javaver version Forces specified Java version when compiling Java\n\
     "  -j option        Option for Javac (used when compiling Java sources)\n\
+    "  -doc directory   Generate module documentation into given directory\n\
     "  -type            Print type signature of given expression or module\n";
 
 splitPath = strSplit File#pathSeparator;
