@@ -112,13 +112,19 @@
     </jar>
 </target>
 
-
 <target name="yeti-lib" depends="jar"/>
 
-<target name="test" depends="jar">
+<target name="test" depends="jar,doc">
     <java classname="yeti.lang.compiler.yeti" classpath="${jar-name}">
         <arg value="${basedir}/tests/test.yeti"/>
     </java>
+</target>
+
+<target name="doc">
+    <taskdef name="yeti" classname="yeti.lang.compiler.YetiTask"
+        classpath="${basedir}/yeti.jar"/>
+    <yeti srcdir="${basedir}" includes="modules/*.yeti,c/*.yeti"
+          excludes="c/yeti.yeti" docdir="${basedir}/.build/doc"/>
 </target>
 
 <target name="noant">

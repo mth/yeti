@@ -417,6 +417,22 @@ evaluateYetiCode genericOpt =
         }
     done);
 
+generateYetiDoc {directory, types, error} =
+   (cl = classOf YetiEval#getClassLoader();
+    ctx = evaluateYetiCode [ICast (),
+            CodeWriter (new Loader(cl) as ~CodeWriter)];
+    case ctx [Bind (), Source 'doc.yeti', Exec (array [directory])]
+             ((inputHandle cl#getResourceAsStream('doc.yeti')
+                           'UTF-8').contents ()) of
+    {result = Result obj}:
+        {moduleDoc, docIndex} = obj is ~Object unsafely_as 'a;
+        createPath directory;
+        for types moduleDoc;
+        docIndex ();
+    {str}:
+        error str
+    esac);
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Path;
@@ -424,8 +440,10 @@ import org.apache.tools.ant.types.Path;
 class YetiTask extends MatchingTask
     genOpt = array [],
     options = array [],
+    types = array [],
     var src = () as ~File,
     var classPath = () as ~Path,
+    var docDir = undef_str,
 
     void setSrcDir(String dir)
         src := new File(dir),
@@ -438,6 +456,10 @@ class YetiTask extends MatchingTask
 
     void setJavaOpt(String option)
         for (strSplit ' +' option) (push options . JavaOption),
+        
+    void setDocDir(String dir)
+        push options (Type (push types));
+        docDir := dir,
 
     Path createClasspath()
         if nullptr? classPath then
@@ -466,8 +488,13 @@ class YetiTask extends MatchingTask
         options = JavaOption "-encoding" :: JavaOption "utf-8" :: options;
         this#log("Compiling \(length files) files.");
         try
-            compileYetiFiles genOpt options files
+            compileYetiFiles genOpt options files;
+            if not empty? types then
+                generateYetiDoc {directory = docDir, types, error = failWith}
+            fi
         catch CompileException ex:
+            throw new BuildException(ex#getMessage())
+        catch Failure ex:
             throw new BuildException(ex#getMessage())
         catch Exception ex:
             ex#printStackTrace();
@@ -476,5 +503,5 @@ class YetiTask extends MatchingTask
 end;
 
 {
-    compileYetiFiles, evaluateYetiCode
+    compileYetiFiles, evaluateYetiCode, generateYetiDoc
 }

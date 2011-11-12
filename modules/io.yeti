@@ -315,6 +315,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     deleteFile fn is string -> boolean = new File(fn)#delete(),
 
+    createPath path is string -> () = _ = new File(path)#mkdirs(),
+
     /**
      * Lists files in given directory.
      *

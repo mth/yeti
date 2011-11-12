@@ -61,6 +61,10 @@ class Loader extends ClassLoader implements CodeWriter {
         super(Thread.currentThread().getContextClassLoader());
     }
 
+    Loader(ClassLoader cl) {
+        super(cl);
+    }
+
     public void writeClass(String name, byte[] code) {
         // to a dotted classname used by loadClass
         classes.put(name.substring(0, name.length() - 6).replace('/', '.'),

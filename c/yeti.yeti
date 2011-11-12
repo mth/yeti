@@ -237,18 +237,7 @@ else
     yrt;
     if not empty? types then
         if defined? doc_dir then
-            ctx = evaluateYetiCode [ICast ()];
-            case ctx [Bind (), Source 'doc.yeti', Exec (array [doc_dir])]
-                     ((inputHandle classOf YetiEval#getClassLoader()
-                                    #getResourceAsStream('doc.yeti')
-                                   'UTF-8').contents ()) of
-            {result = Result obj}:
-                {moduleDoc, docIndex} = obj is ~Object unsafely_as 'a;
-                for types moduleDoc;
-                docIndex ();
-            {str}:
-                println str
-            esac
+            generateYetiDoc {directory = doc_dir, types, error = println}
         else
             for types do t:
                 if t.doc != "" then
