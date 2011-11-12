@@ -33,6 +33,4 @@
   It should allocate new type code and associate t with it in the scope.
 * Immutable tree map support - this seems to be popular feature. ;)
 * Optional Java generics support?
-* Direct double optimisation, when it can be deduced,
-  that there are always floats
 * Direct struct-ref optimisation, when only known structs are accessed
