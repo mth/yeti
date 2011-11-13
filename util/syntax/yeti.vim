@@ -59,7 +59,8 @@ syn keyword yetiStatement module program synchronized
 syn keyword yetiStorageClass var norec get set
 
 syn keyword yetiAnyVar _
-syn keyword yetiBoolean false true none undef_bool undef_str
+syn keyword yetiBoolean false true undef_bool
+syn keyword yetiConstant none undef_str utf8
 syn keyword yetiFunction array filter fold id mapHash number head reverse tail
 syn keyword yetiFunction any all find index const at on setHashDefault flip sum
 syn keyword yetiFunction nullptr? empty? min max maybe abs push sysExit shift

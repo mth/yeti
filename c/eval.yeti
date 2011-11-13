@@ -486,7 +486,7 @@ class YetiTask extends MatchingTask
         warn ex = this#log((ex is ~CompileException)#getMessage());
         push genOpt (Warn warn);
         push options (SourceDir src#getPath());
-        options = JavaOption "-encoding" :: JavaOption "utf-8" :: options;
+        options = JavaOption "-encoding" :: JavaOption utf8 :: options;
         this#log("Compiling \(length files) files.");
         try
             compileYetiFiles genOpt options files;

@@ -277,13 +277,13 @@ moduleDoc {type, name, doc, typedefs} =
         name, descr, moduleType,
         typedefs = strJoin '<p>' (map typedef_html typedefs)
     };
-    writeFile "\(doc_dir)/\(name).html" 'utf-8' (`putLines` [page]);
+    writeFile "\(doc_dir)/\(name).html" utf8 (`putLines` [page]);
     modules.[name] := head ((splitBy (!= '') raw_doc).snd ++ [undef_str]));
 
 docIndex () =
    (item name =
         "<dt><a href=\"\(name).html\">\(name)</a><dd>\(modules.[name])";
-    writeFile "\(doc_dir)/index.html" 'utf-8' (`putLines`
+    writeFile "\(doc_dir)/index.html" utf8 (`putLines`
        ["\(html_prelude)<title>Module index</title>\
         "<style type=\"text/css\">DD {margin-bottom: 0.8em}</style>\
         "<body><div><big>Module index</big><dl>\
