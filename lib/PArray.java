@@ -31,6 +31,7 @@
 package yeti.lang;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class PArray extends LList {
     int start;
@@ -69,7 +70,7 @@ public class PArray extends LList {
 
     public static AList wrap(byte[] array) {
         return array == null || array.length == 0
-            ? null : new PArray(0, array.length, array);
+            ? null : new ByteArray(array, 0, array.length);
     }
 
     public static AList wrap(short[] array) {
@@ -130,5 +131,88 @@ final class BooleanArray extends PArray {
     public AList rest() {
         int n;
         return (n = start + 1) >= length ? null : new BooleanArray(n, length, array);
+    }
+}
+
+final class ByteArray extends LList {
+    private final byte[] a;
+    private final int start;
+    private final int length;
+
+    ByteArray(byte[] a_, int start_, int length_) {
+        super(null, null);
+        a = a_;
+        start = start_;
+        length = length_;
+    }
+
+    public Object first() {
+        return new IntNum(a[start]);
+    }
+
+    public AList rest() {
+        if (length <= 1)
+            return null;
+        return new ByteArray(a, start + 1, length - 1);
+    }
+
+    public void forEach(Object f_) {
+        Fun f = (Fun) f_;
+        for (int i = start, e = i + length; i < e; ++i)
+            f.apply(new IntNum(a[i]));
+    }
+
+    public Object fold(Fun f_, Object v) {
+        Fun f = (Fun) f_;
+        for (int i = start, e = i + length; i < e; ++i)
+            v = f.apply(v, new IntNum(a[i]));
+        return v;
+    }
+
+    public AList reverse() {
+        byte[] tmp = new byte[length];
+        for (int i = 0; i < tmp.length; ++i)
+            tmp[tmp.length - i] = a[i + start];
+        return new ByteArray(tmp, 0, tmp.length);
+    }
+
+    public Num index(Object v) {
+        int b = ((IntNum) v).intValue();
+        for (int i = start, e = i + length; i < e; ++i)
+            if (a[i] == b)
+                return new IntNum(i - start);
+        return null;
+    }
+
+    public AList find(Fun pred) {
+        for (int i = start, e = i + length; i < e; ++i)
+            if (pred.apply(new IntNum(a[i])) == Boolean.TRUE)
+                return new ByteArray(a, i, e - i);
+        return null;
+    }
+
+    public AList sort() {
+        byte[] tmp = new byte[length];
+        System.arraycopy(a, start, tmp, 0, tmp.length);
+        Arrays.sort(tmp);
+        return new ByteArray(tmp, 0, tmp.length);
+    }
+
+    public long length() {
+        return length;
+    }
+
+    public Object copy() {
+        byte[] tmp = new byte[length];
+        System.arraycopy(a, start, tmp, 0, tmp.length);
+        return new ByteArray(tmp, 0, tmp.length);
+    }
+
+    public AList map(Fun f) {
+        return smap(f);
+    }
+
+    public AList sort(Fun isLess) {
+        return new MList(this).asort(isLess);
     }
 }

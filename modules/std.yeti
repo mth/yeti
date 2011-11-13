@@ -111,7 +111,7 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 peekObject object =
-   (o = object unsafely_as ~Object;
+   (o = object as ~Object;
     if nullptr? o then
         List []
     elif o instanceof String then
@@ -253,9 +253,9 @@ plus a b = a + b;
     /// List/array concatenation
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
-            b unsafely_as ~Object unsafely_as 'a
+            b as ~Object unsafely_as 'a
         elif empty? b then
-            a unsafely_as ~Object unsafely_as 'a
+            a as ~Object unsafely_as 'a
         else
             new ConcatList(a, b) unsafely_as list<'a>
         fi,
@@ -561,12 +561,12 @@ plus a b = a + b;
             var l = tail list;
             if sep == '' then
                 not nullptr? l loop
-                   (buf#append(head l unsafely_as ~Object);
+                   (buf#append(head l as ~Object);
                     l := tail l)
             else
                 not nullptr? l loop
                    (buf#append(sep unsafely_as ~String);
-                    buf#append(head l unsafely_as ~Object);
+                    buf#append(head l as ~Object);
                     l := tail l)
             fi;
             buf#toString()
