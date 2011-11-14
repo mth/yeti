@@ -11,6 +11,7 @@
 * Rebuild modified dependencies when compiling
 * v1.0
 * Typedefs in REPL
+* Effective byte list operations
 * Foreign structs (java dto -> struct?)
 * Compile modules required by load directly after parse, before type analyse
 * Support as in type definitions for recursive types
