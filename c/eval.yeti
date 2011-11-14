@@ -481,6 +481,8 @@ class YetiTask extends MatchingTask
             this#setIncludes("*.yeti")
         fi;
         files = this#getDirectoryScanner(src)#getIncludedFiles();
+        // XXX hack: force / separator for Win32, since something is broken
+        files = map (strReplace File#separator '/') files;
         cp = if nullptr? classPath then [] else map string classPath#list() fi;
         push genOpt (ClassPath cp);
         warn ex = this#log((ex is ~CompileException)#getMessage());
