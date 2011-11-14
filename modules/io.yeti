@@ -271,6 +271,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * A contents of file could be copied in the following way:
      * : data = binReadFile "test" (binReadAll 0);
      * : binWriteFile "test2" data;
+     *
+     * The read data (from previous example) can be also easily converted
+     * into list<byte>:
+     * : bytes = data byteList;
      */
     binReadAll limit handle
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
