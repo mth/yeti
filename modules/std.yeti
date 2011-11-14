@@ -660,15 +660,6 @@ plus a b = a + b;
     slice a start end is array<'a> -> number -> number -> array<'a> =
         (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
-    byteList bytes count is ~byte[] -> number -> list<number> =
-        if count <= 0 then
-            []
-        elif count > length bytes then
-            throw new NoSuchKeyException(count - 1, length bytes)
-        else
-            new ByteArray(bytes, 0, count) unsafely_as list<number>
-        fi,
-
     collect f a endPred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();
         (v = f a; not endPred v and (l#add(v); true)) loop;

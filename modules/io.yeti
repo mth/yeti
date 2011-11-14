@@ -274,7 +274,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      *
      * The read data (from previous example) can be also easily converted
      * into list<byte>:
-     * : bytes = data byteList;
+     * : bytes = data (_ a n = take n a);
      */
     binReadAll limit handle
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
