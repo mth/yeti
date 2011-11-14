@@ -272,7 +272,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * : data = binReadFile "test" (binReadAll 0);
      * : binWriteFile "test2" data;
      *
-     * The read data (from previous example) can be also easily converted
+     * The read data (from previous example) can be easily converted
      * into list<number>:
      * : bytes = data (_ a n = take n a);
      */
