@@ -8,7 +8,9 @@
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
   + Use unique path identifiers (File? URL?) on module (re)compilation.
   + Fix the circular dependency checking (TODO in CompileCtx.compile()).
+  + Look what's wrong with handling win32 paths
 * Rebuild modified dependencies when compiling
+  + In this case doc index should still include all module names.
 * v1.0
 * Typedefs in REPL
 * Effective byte list operations

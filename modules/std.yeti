@@ -255,7 +255,7 @@ plus a b = a + b;
     norec synchronized monitor block = synchronized monitor block,
 
     /// String concatenation
-    (^) a b = "\(a)\(b)",
+    (^) a b is string -> string -> string = "\(a)\(b)",
 
     /// List/array concatenation
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
