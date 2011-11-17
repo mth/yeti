@@ -212,7 +212,9 @@ public final class YetiAnalyzer extends YetiType {
             if (opop == "^" && opfun instanceof StaticRef &&
                     "yeti/lang/std$$v".equals(((StaticRef) opfun).className)) {
                 Code left = analyze(op.left, scope, depth);
+                unify(left.type, STR_TYPE, op.left, scope, "#0");
                 Code right = analyze(op.right, scope, depth);
+                unify(right.type, STR_TYPE, op.right, scope, "#0");
                 if (left instanceof StringConstant &&
                     right instanceof StringConstant) {
                     return new StringConstant(((StringConstant) left).str +
