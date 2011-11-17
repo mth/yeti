@@ -165,7 +165,7 @@ public final class YetiAnalyzer extends YetiType {
             BinOp op = (BinOp) node;
             String opop = op.op;
             if (opop == "")
-                return apply(node, analyze(op.left, scope, depth),
+                return apply(op, analyze(op.left, scope, depth),
                              op.right, scope, depth);
             if (opop == FIELD_OP) {
                 if (op.right.kind == "list")
@@ -222,7 +222,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (opop == "|>" && opfun instanceof StaticRef &&
                     "yeti/lang/std$$I$g".equals(((StaticRef) opfun).className))
-                return apply(node, analyze(op.right, scope, depth),
+                return apply(op, analyze(op.right, scope, depth),
                              op.left, scope, depth);
             return apply(op.right, apply(op, opfun, op.left, scope, depth),
                          op.right, scope, depth);
@@ -505,8 +505,9 @@ public final class YetiAnalyzer extends YetiType {
             if (where != arg && where instanceof BinOp) {
                 BinOp op = (BinOp) where;
                 String name;
-                if ((name = op.op) != "" || op.left instanceof Sym
-                        && (name = op.left.sym()) != null)
+                Node f = (name = op.op) == "" ? op.left :
+                         name == "|>" ? op.right : null;
+                if (f == null || f instanceof Sym && (name = f.sym()) != null)
                     s += " `" + name + '\'';
             }
             s += " to #2 argument\n    #0";
