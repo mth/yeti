@@ -565,6 +565,7 @@ interface YetiParser {
             { null }, // and or
             { "^" },
             { "::", ":.", "++" },
+            { "|>" },
             { "is" },
             { ":=" },
             { null }, // loop

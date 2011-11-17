@@ -89,7 +89,7 @@ syn keyword yetiOperator classOf instanceof skipempty skipwhite nextgroup=yetiCl
 syn match yetiOperator #[:;,=~!+\\\-*%<>^]\+#
 syn match yetiOperator #`[a-zA-Z_?]\+`#
 syn match yetiOperator #/[^/*]\@=#
-syn match yetiOperator #\.\.\.#
+syn match yetiOperator #\.\.\.\||>#
 
 syn match yetiConstant "(\s*)"
 syn match yetiConstant "\[\s*\]"

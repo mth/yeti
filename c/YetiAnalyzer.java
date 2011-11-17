@@ -220,6 +220,10 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 return new ConcatStrings(new Code[] { left, right });
             }
+            if (opop == "|>" && opfun instanceof StaticRef &&
+                    "yeti/lang/std$$I$g".equals(((StaticRef) opfun).className))
+                return apply(node, analyze(op.right, scope, depth),
+                             op.left, scope, depth);
             return apply(op.right, apply(op, opfun, op.left, scope, depth),
                          op.right, scope, depth);
         }
