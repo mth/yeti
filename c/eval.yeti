@@ -336,7 +336,7 @@ evaluateYetiCode genericOpt =
                     try
                         t = ctx#compile(sourceName, mainClass, code, ctx#flags);
                         type := if typeOf? then
-                                    TypeDescr#yetiType(t#type, ())
+                                    TypeDescr#yetiType(t#type, (), false)
                                 else
                                     t#yetiType()
                                 fi unsafely_as type;

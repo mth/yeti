@@ -380,7 +380,7 @@ class ModuleType {
     Tag yetiType() {
         return TypeDescr.yetiType(type, typeScope != null
                 ? TypePattern.toPattern(typeScope)
-                : TypePattern.toPattern(typeDefs));
+                : TypePattern.toPattern(typeDefs), false);
     }
 }
 

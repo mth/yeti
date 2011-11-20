@@ -71,12 +71,12 @@ class YType {
 
     public String toString() {
         return (String) new ShowTypeFun().apply("",
-                    TypeDescr.yetiType(this, null));
+                    TypeDescr.yetiType(this, null, false));
     }
  
-    public String toString(Scope scope) {
+    public String toString(Scope scope, boolean partial) {
         return (String) new ShowTypeFun().apply("",
-                    TypeDescr.yetiType(this, TypePattern.toPattern(scope)));
+            TypeDescr.yetiType(this, TypePattern.toPattern(scope), partial));
     }
 
     YType deref() {
@@ -140,6 +140,15 @@ class TypeException extends Exception {
         ext = ext_;
     }
 
+    boolean mark(boolean set) {
+        int m = set ? YetiType.FL_ERROR_PATH : 0;
+        if (a != null)
+            a.flags = a.flags & ~YetiType.FL_ERROR_PATH | m;
+        if (b != null)
+            b.flags = b.flags & ~YetiType.FL_ERROR_PATH | m;
+        return a != null || b != null;
+    }
+
     public String getMessage() {
         return getMessage(null);
     }
@@ -147,8 +156,8 @@ class TypeException extends Exception {
     public String getMessage(Scope scope) {
         if (a == null)
             return super.getMessage();
-        return "Type mismatch: " + a.toString(scope) +
-               sep + b.toString(scope) + ext;
+        return "Type mismatch: " + a.toString(scope, false) +
+               sep + b.toString(scope, false) + ext;
     }
 }
 
@@ -192,6 +201,7 @@ public class YetiType implements YetiParser {
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_TAINTED_VAR = 2;
     static final int FL_ERROR_IS_HERE = 0x100;
+    static final int FL_ERROR_PATH  = 0x200;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 

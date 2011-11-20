@@ -496,7 +496,8 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(where,
                                 "Too many arguments applied " +
                                 "to a function, maybe a missing `;'?" +
-                                "\n    (cannot apply " + funt.toString(scope) +
+                                "\n    (cannot apply " +
+                                funt.toString(scope, false) +
                                 " to an argument)");
                 }
                 throw new CompileException(where, scope, fun.type, null,
@@ -611,7 +612,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (t != STRUCT && t != VAR) {
                 throw new CompileException(member, "Cannot use " +
-                                src.type.toString(scope) +
+                                src.type.toString(scope, false) +
                                 " as a structure with ." + field + " field");
             }
             throw new CompileException(member, scope, src.type, null,
@@ -820,7 +821,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where,
                 "Expected module with struct or unit type here (" +
                 m.moduleName.replace('/', '.') + " has type " +
-                m.type.toString(scope) +
+                m.type.toString(scope, false) +
                 ", but only structs can be exploded)");
         }
         Iterator j = m.moduleType.typeDefs.entrySet().iterator();
@@ -1345,7 +1346,7 @@ public final class YetiAnalyzer extends YetiType {
                     t = t.deref();
                     if (t.type != VAR && t.type != VARIANT) {
                         throw new CompileException(node, "Variant " + variant +
-                                        " ... is not " + t.toString(scope));
+                                     " ... is not " + t.toString(scope, false));
                     }
                     t.type = VARIANT;
                     if (t.partialMembers == null) {

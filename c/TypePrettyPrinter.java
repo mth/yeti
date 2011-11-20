@@ -200,7 +200,7 @@ class TypeDescr extends YetiType {
         return new Tag(YetiC.pair("alias", alias, "type", res), "Alias");
     }
 
-    static Tag yetiType(YType t, TypePattern defs) {
+    static Tag yetiType(YType t, TypePattern defs, boolean partial) {
         return prepare(t, defs, new HashMap(), new HashMap()).force();
     }
 
