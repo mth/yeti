@@ -42,7 +42,12 @@ public class CompileException extends RuntimeException {
                          String s, TypeException ex, Scope scope) {
         StringBuffer result = new StringBuffer();
         int p = 0, i;
-        boolean msg = false, partial = ex != null && ex.mark(true);
+        boolean msg = false;
+        YType p1 = null, p2 = null;
+        if (ex != null) {
+            p1 = ex.a;
+            p2 = ex.b;
+        }
         while ((i = s.indexOf('#', p)) >= 0 && i < s.length() - 1) {
             result.append(s.substring(p, i));
             p = i + 2;
@@ -51,20 +56,18 @@ public class CompileException extends RuntimeException {
                     result.append(ex.getMessage(scope));
                     msg = true;
                     break;
-                case '1': result.append(param1.toString(scope, partial)); break;
-                case '2': result.append(param2.toString(scope, partial)); break;
+                case '1': result.append(param1.toString(scope, p1)); break;
+                case '2': result.append(param2.toString(scope, p2)); break;
                 case '~':
-                    result.append(param1.toString(scope, partial));
+                    result.append(param1.toString(scope, p1));
                     result.append(" is not ");
-                    result.append(param2.toString(scope, partial));
+                    result.append(param2.toString(scope, p2));
                     break;
                 default:
                     result.append('#');
                     --p;
             }
         }
-        if (ex != null)
-            ex.mark(false);
         result.append(s.substring(p));
         if (!msg && ex != null && ex.special) {
             result.append(" (");

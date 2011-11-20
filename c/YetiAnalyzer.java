@@ -497,7 +497,7 @@ public final class YetiAnalyzer extends YetiType {
                                 "Too many arguments applied " +
                                 "to a function, maybe a missing `;'?" +
                                 "\n    (cannot apply " +
-                                funt.toString(scope, false) +
+                                funt.toString(scope, null) +
                                 " to an argument)");
                 }
                 throw new CompileException(where, scope, fun.type, null,
@@ -612,7 +612,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (t != STRUCT && t != VAR) {
                 throw new CompileException(member, "Cannot use " +
-                                src.type.toString(scope, false) +
+                                src.type.toString(scope, null) +
                                 " as a structure with ." + field + " field");
             }
             throw new CompileException(member, scope, src.type, null,
@@ -821,7 +821,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(where,
                 "Expected module with struct or unit type here (" +
                 m.moduleName.replace('/', '.') + " has type " +
-                m.type.toString(scope, false) +
+                m.type.toString(scope, null) +
                 ", but only structs can be exploded)");
         }
         Iterator j = m.moduleType.typeDefs.entrySet().iterator();
@@ -1346,7 +1346,7 @@ public final class YetiAnalyzer extends YetiType {
                     t = t.deref();
                     if (t.type != VAR && t.type != VARIANT) {
                         throw new CompileException(node, "Variant " + variant +
-                                     " ... is not " + t.toString(scope, false));
+                                     " ... is not " + t.toString(scope, null));
                     }
                     t.type = VARIANT;
                     if (t.partialMembers == null) {

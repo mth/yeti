@@ -71,12 +71,12 @@ class YType {
 
     public String toString() {
         return (String) new ShowTypeFun().apply("",
-                    TypeDescr.yetiType(this, null, false));
+                    TypeDescr.yetiType(this, null, null));
     }
  
-    public String toString(Scope scope, boolean partial) {
+    public String toString(Scope scope, YType path) {
         return (String) new ShowTypeFun().apply("",
-            TypeDescr.yetiType(this, TypePattern.toPattern(scope), partial));
+                TypeDescr.yetiType(this, TypePattern.toPattern(scope), path));
     }
 
     YType deref() {
@@ -119,7 +119,7 @@ class YType {
 
 class TypeException extends Exception {
     boolean special;
-    private YType a, b;
+    YType a, b;
     String sep, ext;
 
     TypeException(String what) {
@@ -140,15 +140,6 @@ class TypeException extends Exception {
         ext = ext_;
     }
 
-    boolean mark(boolean set) {
-        int m = set ? YetiType.FL_ERROR_PATH : 0;
-        if (a != null)
-            a.flags = a.flags & ~YetiType.FL_ERROR_PATH | m;
-        if (b != null)
-            b.flags = b.flags & ~YetiType.FL_ERROR_PATH | m;
-        return a != null || b != null;
-    }
-
     public String getMessage() {
         return getMessage(null);
     }
@@ -156,8 +147,8 @@ class TypeException extends Exception {
     public String getMessage(Scope scope) {
         if (a == null)
             return super.getMessage();
-        return "Type mismatch: " + a.toString(scope, false) +
-               sep + b.toString(scope, false) + ext;
+        return "Type mismatch: " + a.toString(scope, null) +
+               sep + b.toString(scope, null) + ext;
     }
 }
 
