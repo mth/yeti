@@ -91,9 +91,9 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
         "-e":
             eval := shift argv;
         "-cp":
-            push options (ClassPath (splitPath (shift argv)));
+            shift argv |> splitPath |> ClassPath |> push options;
         "-preload":
-            push options (Preload (splitPath (shift argv)));
+            shift argv |> splitPath |> Preload |> push options;
         "-type":
             printType := true;
             exec := false;
