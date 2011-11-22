@@ -94,6 +94,11 @@ class ShowTypeFun extends Fun2 {
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
+            try {
+                if (field.get("strip") != null)
+                    to.append(sep).append("...");
+            } catch (Exception ex) {
+            }
         }
         if (useNL && !variant)
             to.append("\n").append(oldIndent);
@@ -162,6 +167,8 @@ class DescrCtx {
     TypePattern defs;
     Map vars = new HashMap();
     Map refs = new HashMap();
+    YType path;
+    boolean exists;
 
     String getVarName(YType t) {
         String v = (String) vars.get(t);
@@ -233,6 +240,7 @@ class TypeDescr extends YetiType {
     static Tag yetiType(YType t, TypePattern defs, YType path) {
         DescrCtx ctx = new DescrCtx();
         ctx.defs = defs;
+        ctx.path = path;
         return prepare(t, ctx).force();
     }
 
@@ -263,6 +271,7 @@ class TypeDescr extends YetiType {
             }
         }
         for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+            ctx.exists = false;
             Map.Entry e = (Map.Entry) i.next();
             Object name = e.getKey();
             YType t = (YType) e.getValue();
@@ -277,14 +286,25 @@ class TypeDescr extends YetiType {
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
                     ? "`" : "");
             TypeDescr field = prepare(t, ctx);
+            boolean strip = ctx.exists && (descr.value != null || i.hasNext());
+            it.put("strip", strip ? "" : null);
             field.properties = it;
             field.prev = descr.value;
             descr.value = field;
+            if (strip) {
+                System.err.println(name);
+                field.prev = null;
+                break;
+            }
         }
     }
     
     private static TypeDescr prepare(YType t, DescrCtx ctx) {
         final int type = t.type;
+        if (t == ctx.path) {
+            System.err.println("==> " + t);
+            ctx.exists = true;
+        }
         if (type == VAR) {
             if (t.ref != null)
                 return prepare(t.ref, ctx);
