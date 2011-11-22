@@ -287,7 +287,7 @@ docIndex () =
        ["\(html_prelude)<title>Module index</title>\
         "<style type=\"text/css\">DD {margin-bottom: 0.8em}</style>\
         "<body><div><big>Module index</big><dl>\
-        "\(strJoin '' (map item (sort (keys modules))))\
+        "\(keys modules |> sort |> map item |> strJoin '')\
         "</dl></div></body></html>"]));
 
 {moduleDoc, docIndex}

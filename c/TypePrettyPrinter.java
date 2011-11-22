@@ -158,6 +158,36 @@ class ShowTypeFun extends Fun2 {
     }
 }
 
+class DescrCtx {
+    TypePattern defs;
+    Map vars = new HashMap();
+    Map refs = new HashMap();
+
+    String getVarName(YType t) {
+        String v = (String) vars.get(t);
+        if (v == null) {
+            // 26^7 > 2^32, should be enough ;)
+            char[] buf = new char[10];
+            int p = buf.length;
+            if ((t.flags & YetiType.FL_ERROR_IS_HERE) != 0)
+                buf[--p] = '*';
+            int n = vars.size() + 1;
+            while (n > 26) {
+                buf[--p] = (char) ('a' + n % 26);
+                n /= 26;
+            }
+            buf[--p] = (char) (96 + n);
+            if ((t.flags & YetiType.FL_TAINTED_VAR) != 0)
+                buf[--p] = '_';
+            buf[--p] =
+                (t.flags & YetiType.FL_ORDERED_REQUIRED) == 0 ? '\'' : '^';
+            v = new String(buf, p, buf.length - p);
+            vars.put(t, v);
+        }
+        return v;
+    }
+}
+
 class TypeDescr extends YetiType {
     private int type;
     private String name;
@@ -201,22 +231,24 @@ class TypeDescr extends YetiType {
     }
 
     static Tag yetiType(YType t, TypePattern defs, YType path) {
-        return prepare(t, defs, new HashMap(), new HashMap()).force();
+        DescrCtx ctx = new DescrCtx();
+        ctx.defs = defs;
+        return prepare(t, ctx).force();
     }
 
     static Tag typeDef(YType[] def, MList param, TypePattern defs) {
-        Map vars = new HashMap();
+        DescrCtx ctx = new DescrCtx();
+        ctx.defs = defs;
         for (int i = 0, n = 0; i < def.length - 1; ++i) {
             String name = def[i].doc instanceof String
                 ? (String) def[i].doc : "t" + ++n;
-            vars.put(def[i].deref(), name);
+            ctx.vars.put(def[i].deref(), name);
             param.add(name);
         }
-        return prepare(def[def.length - 1], defs, vars, new HashMap()).force();
+        return prepare(def[def.length - 1], ctx).force();
     }
 
-    private static void hdescr(TypeDescr descr, YType tt,
-                               TypePattern defs, Map vars, Map refs) {
+    private static void hdescr(TypeDescr descr, YType tt, DescrCtx ctx) {
         Map m = new java.util.TreeMap();
         if (tt.partialMembers != null)
             m.putAll(tt.partialMembers);
@@ -244,63 +276,38 @@ class TypeDescr extends YetiType {
                     ? "." :
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
                     ? "`" : "");
-            TypeDescr field = prepare(t, defs, vars, refs);
+            TypeDescr field = prepare(t, ctx);
             field.properties = it;
             field.prev = descr.value;
             descr.value = field;
         }
     }
-
-    private static String getVarName(YType t, Map vars) {
-        String v = (String) vars.get(t);
-        if (v == null) {
-            // 26^7 > 2^32, should be enough ;)
-            char[] buf = new char[10];
-            int p = buf.length;
-            if ((t.flags & FL_ERROR_IS_HERE) != 0)
-                buf[--p] = '*';
-            int n = vars.size() + 1;
-            while (n > 26) {
-                buf[--p] = (char) ('a' + n % 26);
-                n /= 26;
-            }
-            buf[--p] = (char) (96 + n);
-            if ((t.flags & FL_TAINTED_VAR) != 0)
-                buf[--p] = '_';
-            buf[--p] = (t.flags & FL_ORDERED_REQUIRED) == 0 ? '\'' : '^';
-            v = new String(buf, p, buf.length - p);
-            vars.put(t, v);
-        }
-        return v;
-    }
     
-    private static TypeDescr prepare(YType t, TypePattern defs,
-                                     Map vars, Map refs) {
+    private static TypeDescr prepare(YType t, DescrCtx ctx) {
         final int type = t.type;
         if (type == VAR) {
             if (t.ref != null)
-                return prepare(t.ref, defs, vars, refs);
-            return new TypeDescr(getVarName(t, vars));
+                return prepare(t.ref, ctx);
+            return new TypeDescr(ctx.getVarName(t));
         }
         if (type < PRIMITIVES.length)
             return new TypeDescr(TYPE_NAMES[type]);
         if (type == JAVA)
             return new TypeDescr(t.javaType.str());
         if (type == JAVA_ARRAY)
-            return new TypeDescr(prepare(t.param[0], defs, vars, refs)
-                                    .name.concat("[]"));
-        TypeDescr descr = (TypeDescr) refs.get(t), item;
+            return new TypeDescr(prepare(t.param[0], ctx).name.concat("[]"));
+        TypeDescr descr = (TypeDescr) ctx.refs.get(t), item;
         if (descr != null) {
             if (descr.alias == null)
-                descr.alias = getVarName(t, vars);
+                descr.alias = ctx.getVarName(t);
             return new TypeDescr(descr.alias);
         }
-        refs.put(t, descr = new TypeDescr(null));
+        ctx.refs.put(t, descr = new TypeDescr(null));
         Map defVars = null;
         TypePattern def = null;
-        if (defs != null &&
-                (def = defs.match(t, defVars = new IdentityHashMap())) != null
-                && def.end != null) {
+        if (ctx.defs != null &&
+              (def = ctx.defs.match(t, defVars = new IdentityHashMap())) != null
+              && def.end != null) {
             descr.name = def.end.typename;
             if (def.end.defvars.length == 0)
                 return descr;
@@ -312,8 +319,7 @@ class TypeDescr extends YetiType {
             }
             for (int i = def.end.defvars.length; --i >= 0; ) {
                 t = (YType) param.get(Integer.valueOf(def.end.defvars[i]));
-                item = t != null ? prepare(t, defs, vars, refs)
-                                 : new TypeDescr("?");
+                item = t != null ? prepare(t, ctx) : new TypeDescr("?");
                 item.prev = descr.value;
                 descr.value = item;
             }
@@ -324,20 +330,20 @@ class TypeDescr extends YetiType {
         switch (type) {
             case FUN:
                 for (; t.type == FUN; param = t.param) {
-                    item = prepare(param[0], defs, vars, refs);
+                    item = prepare(param[0], ctx);
                     item.prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
                 }
-                (item = prepare(t, defs, vars, refs)).prev = descr.value;
+                (item = prepare(t, ctx)).prev = descr.value;
                 descr.value = item;
                 break;
             case STRUCT:
             case VARIANT:
-                hdescr(descr, t, defs, vars, refs);
+                hdescr(descr, t, ctx);
                 t = t.param[0].deref();
                 if ((t.flags & FL_ERROR_IS_HERE) != 0)
-                    descr.alias = getVarName(t, vars);
+                    descr.alias = ctx.getVarName(t);
                 break;
             case MAP:
                 int n = 1;
@@ -352,7 +358,7 @@ class TypeDescr extends YetiType {
                     n = 2;
                 }
                 while (--n >= 0) {
-                    item = prepare(param[n], defs, vars, refs);
+                    item = prepare(param[n], ctx);
                     item.prev = descr.value;
                     descr.value = item;
                 }
