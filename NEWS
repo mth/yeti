@@ -1,0 +1,80 @@
+9/2011 v0.9.1. Bugfix release.
+
+* Less/greater list/array cross-comparisions fixed.
+* Class-cast exception when constructing Java class closures
+  of method-optimised function bindings fixed.
+* Typing errors on hidden struct depth type variables fixed.
+* Old repl module removed.
+
+8/2011 v0.9. First versioned release.
+
+You should probably still use the development snapshots
+to get latest bug fixes, unless you need that nothing changes.
+
+* Using relaxed value restriction (sometimes it's safe to allow
+  application result to be polymorphic).
+* New yeti.lang.compiler.eval module replaces the old repl module.
+* Typedefs are used when printing type names in error messages (and it's
+  also useful for yetidoc). This should improve readability of type error
+  messages involving complex types, given that matching typedefs exist
+  in the code. Additionally typedefs are now shown in -type and -doc output.
+* Module type not fully defined message shows the offending type variables.
+* Support super references in Java classes defined in Yeti code.
+* Support module deprecation (<tt><b>module</b> foo: <b>deprecated</b>;</tt>).
+* Require typedef names to start with lower-case letter to avoid
+  conflict with variant constructors (you couldn't anyway use a
+  type whose name started with upper-case letter).
+* More constant value optimisations (static fields, constant bindings
+  in some closures).
+* Fix duplicate field naming errors.
+* Fix serialVersionUID declaration in classes.
+* Fix primitive array autoconversions.
+* Yeti string can be used now where ~java.lang.CharSequence is required.
+* Standard library fixes.
+* The yeti.http module is deprecated, and openTextUrl function
+  is merged into yeti.lang.io module.
+
+4/2011. Bunch of bugfixes and some new features.
+
+* Faster structures and structure related bugfixes. The with operator allows
+  extending existing structure object with additional fields and/or
+  overriding fields in the original. This can be used among other things to
+  do prototype style OO (and based on that also to emulate class-based OO).
+  Should write a HOWTO about that. ;)
+* Few additional constant optimisations.
+* Triple-quoted strings for longer string templates.
+* Some new documentation by Christian Essl.
+* Emacs syntax hilighting by Brian McKenna.
+* Some work on yetidoc support in the compiler (not here yet, but closer).
+
+4/2010. Bugfixes, like always. New features:
+
+* Verify regex constants at compile time.
+* Thread-local variable support in standard library.
+* Invoking Yeti compiler from in-memory compiled Yeti code works now.
+* Multiple Java classes can be imported from a package using one import
+  statement (like <tt>import java.io: File, FileInputStream;</tt>).
+* Renamed asm3 library packages included in yeti.jar
+  (to avoid conflicts with other asm library usage).
+* Optimize functions into simple static methods,
+  if there are no other references than full application.
+* Mixed Yeti/Java source compilation in Yeti compiler,
+  supports circular references between Yeti and Java source files.
+* Better type mismatch error messages and documentation generation
+  from comments are partially implemented (means doesn't work yet).
+
+8/2009. Bugfixes, case pattern matching should work now better.
+Mixed Java/Yeti build task enchasements.
+
+5/2009. Some bugfixes, allowed partial variant match in case,
+recursive type definitions.
+
+12/2008. Some bugfixes and .[] can now be used for accessing Java array
+elements too. Also added some smart auto-casting for Java arrays.
+
+10/2008. Java class definitions supported now. Additionally bunch of bugfixes
+and optimisations have been done.
+
+9/2008. Some bugfixes here and there have happened (you can read the git log).
+Java classes are probably next thing to be implemented
+(actually the syntax is decided and parser support already exists).
