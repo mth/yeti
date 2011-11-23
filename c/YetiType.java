@@ -473,19 +473,32 @@ public class YetiType implements YetiParser {
             return; // nothing to check
         }
         Object[] members = partial.partialMembers.entrySet().toArray();
-        for (int i = 0; i < members.length; ++i) {
-            Map.Entry entry = (Map.Entry) members[i];
-            YType ff = (YType) src.finalMembers.get(entry.getKey());
-            if (ff == null) {
-                throw new TypeException(src, " => ",
-                       partial, " (member missing: " + entry.getKey() + ")");
+        Object current = null;
+        try {
+            for (int i = 0; i < members.length; ++i) {
+                Map.Entry entry = (Map.Entry) members[i];
+                Object name = entry.getKey();
+                YType ff = (YType) src.finalMembers.get(name);
+                if (ff == null) {
+                    throw new TypeException(src, " => ",
+                           partial, " (member missing: " + name + ")");
+                }
+                YType partField = (YType) entry.getValue();
+                if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
+                    throw new TypeException("Field '" + name
+                        + "' constness mismatch: " + src + " => " + partial);
+                }
+                current = name;
+                unify(partField, ff);
+                current = null;
             }
-            YType partField = (YType) entry.getValue();
-            if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
-                throw new TypeException("Field '" + entry.getKey()
-                    + "' constness mismatch: " + src + " => " + partial);
+        } catch (TypeException ex) {
+            if (current != null) {
+                ex.trace.add(current);
+                ex.trace.add(partial);
+                ex.trace.add(src);
             }
-            unify(partField, ff);
+            throw ex;
         }
     }
 

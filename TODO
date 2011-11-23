@@ -2,7 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Better error messages
-  + filter out noise from deep struct-mismatch error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
