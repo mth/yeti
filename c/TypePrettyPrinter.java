@@ -65,7 +65,8 @@ class ShowTypeFun extends Fun2 {
             ? useNL ? "\n" + indent + "| " : " | "
             : useNL ? ",\n".concat(indent) : ", ";
 
-        for (i = fields; i != null; i = i.next()) {
+        i = fields;
+        while (i != null) {
             Struct field = (Struct) i.first();
             if (i != fields) // not first
                 to.append(sep);
@@ -94,8 +95,10 @@ class ShowTypeFun extends Fun2 {
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
+
+            i = i.next();
             try {
-                if (field.get("strip") != null)
+                if (i == null && field.get("strip") != null)
                     to.append(sep).append("...");
             } catch (Exception ex) {
             }
@@ -167,8 +170,7 @@ class DescrCtx {
     TypePattern defs;
     Map vars = new HashMap();
     Map refs = new HashMap();
-    YType path;
-    int exists;
+    List trace;
 
     String getVarName(YType t) {
         String v = (String) vars.get(t);
@@ -194,21 +196,6 @@ class DescrCtx {
         return v;
     }
 }
-
-/*
-FIXME.
-
-yeti -e 'f x = x.y == 1; f { x = "a", y = "b" }'
-==> number
-==> string
-x
-1:19: Cannot apply {.y is number} -> boolean function `f' to {x is string, ...} 
-
-Problem is that marking only "string" is not enough.
-#A parenting struct should be marked also with try-catch or temporary flagging
-#(on exception flag won't get cleared).
-No, marking parent won't help. Info about exact field is needed!
-*/
 
 class TypeDescr extends YetiType {
     private int type;
@@ -252,10 +239,11 @@ class TypeDescr extends YetiType {
         return new Tag(YetiC.pair("alias", alias, "type", res), "Alias");
     }
 
-    static Tag yetiType(YType t, TypePattern defs, YType path) {
+    static Tag yetiType(YType t, TypePattern defs, TypeException path) {
         DescrCtx ctx = new DescrCtx();
         ctx.defs = defs;
-        ctx.path = path;
+        if (path != null)
+            ctx.trace = path.trace;
         return prepare(t, ctx).force();
     }
 
@@ -285,10 +273,26 @@ class TypeDescr extends YetiType {
                     t.doc = v;
             }
         }
+        Object name;
+        // Stupid list is used, because normally it shouldn't ever contain
+        // over 1 or 2 elements, and it's faster than hash in this case.
+        List strip = null;
+        if (ctx.trace != null)
+            for (int i = 0, last = ctx.trace.size() - 3; i <= last; i += 3)
+                if (ctx.trace.get(i + 1) == tt || ctx.trace.get(i + 2) == tt) {
+                    if (strip == null)
+                        strip = new ArrayList();
+                    if (m.containsKey(name = ctx.trace.get(i)) &&
+                            !strip.contains(name))
+                        strip.add(name);
+                }
+        if (strip != null && strip.size() >= m.size())
+            strip = null; // everything is included, no stripping actually
         for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-            ctx.exists = 0;
             Map.Entry e = (Map.Entry) i.next();
-            Object name = e.getKey();
+            name = e.getKey();
+            if (strip != null && !strip.contains(name))
+                continue;
             YType t = (YType) e.getValue();
             Map it = new IdentityHashMap(5);
             String doc = t.doc();
@@ -300,36 +304,16 @@ class TypeDescr extends YetiType {
                     ? "." :
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
                     ? "`" : "");
+            it.put("strip", strip);
             TypeDescr field = prepare(t, ctx);
-//            if (ctx.exists == -1 && (tt.flags & FL_ERROR_STRUCT) != 0)
-//                ctx.exists = 1;
-            boolean strip =
-                ctx.exists == 1 && (descr.value != null || i.hasNext());
-            it.put("strip", strip ? "" : null);
             field.properties = it;
             field.prev = descr.value;
             descr.value = field;
-            if (strip) {
-                System.err.println(name);
-                field.prev = null;
-                break;
-            }
         }
     }
     
     private static TypeDescr prepare(YType t, DescrCtx ctx) {
         final int type = t.type;
-        /*
-         * FIXME.
-         * the mark SHALL not affect the inner structures.
-         * A state tracking is needed, like marking here
-         * "found path" and on return in the matching struct
-         * "activate path" (look the upper FIXME!).
-         */
-        if (t == ctx.path) {
-            System.err.println("==> " + t);
-            ctx.exists = 1;
-        }
         if (type == VAR) {
             if (t.ref != null)
                 return prepare(t.ref, ctx);

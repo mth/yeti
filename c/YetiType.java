@@ -74,9 +74,9 @@ class YType {
                     TypeDescr.yetiType(this, null, null));
     }
  
-    public String toString(Scope scope, YType path) {
+    public String toString(Scope scope, TypeException ex) {
         return (String) new ShowTypeFun().apply("",
-                TypeDescr.yetiType(this, TypePattern.toPattern(scope), path));
+                TypeDescr.yetiType(this, TypePattern.toPattern(scope), ex));
     }
 
     YType deref() {
@@ -121,9 +121,11 @@ class TypeException extends Exception {
     boolean special;
     YType a, b;
     String sep, ext;
+    List trace;
 
     TypeException(String what) {
         super(what);
+        trace = new ArrayList();
     }
 
     TypeException(YType a_, YType b_) {
@@ -131,6 +133,7 @@ class TypeException extends Exception {
         b = b_;
         sep = " is not ";
         ext = "";
+        trace = new ArrayList();
     }
 
     TypeException(YType a_, String sep_, YType b_, String ext_) {
@@ -488,6 +491,7 @@ public class YetiType implements YetiParser {
 
     static void unifyMembers(YType a, YType b) throws TypeException {
         YType oldRef = b.ref;
+        Object currentField = null;
         try {
             b.ref = a; // just fake ref now to avoid cycles...
             Map ff;
@@ -509,7 +513,8 @@ public class YetiType implements YetiParser {
                 ff = new HashMap(a.finalMembers);
                 for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
                     Map.Entry entry = (Map.Entry) i.next();
-                    YType f = (YType) b.finalMembers.get(entry.getKey());
+                    currentField = entry.getKey();
+                    YType f = (YType) b.finalMembers.get(currentField);
                     if (f != null) {
                         YType t = (YType) entry.getValue();
                         unify(f, t);
@@ -524,6 +529,7 @@ public class YetiType implements YetiParser {
                         i.remove();
                     }
                 }
+                currentField = null;
                 if (ff.isEmpty()) {
                     mismatch(a, b);
                 }
@@ -537,7 +543,8 @@ public class YetiType implements YetiParser {
                 Object[] aa = a.partialMembers.entrySet().toArray();
                 for (int i = 0; i < aa.length; ++i) {
                     Map.Entry entry = (Map.Entry) aa[i];
-                    YType f = (YType) b.partialMembers.get(entry.getKey());
+                    currentField = entry.getKey();
+                    YType f = (YType) b.partialMembers.get(currentField);
                     if (f != null) {
                         unify((YType) entry.getValue(), f);
                         // mutability spreads
@@ -546,6 +553,7 @@ public class YetiType implements YetiParser {
                         }
                     }
                 }
+                currentField = null;
                 a.partialMembers.putAll(b.partialMembers);
             }
             a.finalMembers = ff;
@@ -561,6 +569,11 @@ public class YetiType implements YetiParser {
             b.ref = a;
         } catch (TypeException ex) {
             b.ref = oldRef;
+            if (currentField != null) {
+                ex.trace.add(currentField);
+                ex.trace.add(a);
+                ex.trace.add(b);
+            }
             throw ex;
         }
     }
