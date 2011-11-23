@@ -192,7 +192,6 @@ public class YetiType implements YetiParser {
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_TAINTED_VAR = 2;
     static final int FL_ERROR_IS_HERE = 0x100;
-    static final int FL_ERROR_PATH  = 0x200;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 

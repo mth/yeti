@@ -168,7 +168,7 @@ class DescrCtx {
     Map vars = new HashMap();
     Map refs = new HashMap();
     YType path;
-    boolean exists;
+    int exists;
 
     String getVarName(YType t) {
         String v = (String) vars.get(t);
@@ -194,6 +194,21 @@ class DescrCtx {
         return v;
     }
 }
+
+/*
+FIXME.
+
+yeti -e 'f x = x.y == 1; f { x = "a", y = "b" }'
+==> number
+==> string
+x
+1:19: Cannot apply {.y is number} -> boolean function `f' to {x is string, ...} 
+
+Problem is that marking only "string" is not enough.
+#A parenting struct should be marked also with try-catch or temporary flagging
+#(on exception flag won't get cleared).
+No, marking parent won't help. Info about exact field is needed!
+*/
 
 class TypeDescr extends YetiType {
     private int type;
@@ -271,7 +286,7 @@ class TypeDescr extends YetiType {
             }
         }
         for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-            ctx.exists = false;
+            ctx.exists = 0;
             Map.Entry e = (Map.Entry) i.next();
             Object name = e.getKey();
             YType t = (YType) e.getValue();
@@ -286,7 +301,10 @@ class TypeDescr extends YetiType {
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
                     ? "`" : "");
             TypeDescr field = prepare(t, ctx);
-            boolean strip = ctx.exists && (descr.value != null || i.hasNext());
+//            if (ctx.exists == -1 && (tt.flags & FL_ERROR_STRUCT) != 0)
+//                ctx.exists = 1;
+            boolean strip =
+                ctx.exists == 1 && (descr.value != null || i.hasNext());
             it.put("strip", strip ? "" : null);
             field.properties = it;
             field.prev = descr.value;
@@ -301,9 +319,16 @@ class TypeDescr extends YetiType {
     
     private static TypeDescr prepare(YType t, DescrCtx ctx) {
         final int type = t.type;
+        /*
+         * FIXME.
+         * the mark SHALL not affect the inner structures.
+         * A state tracking is needed, like marking here
+         * "found path" and on return in the matching struct
+         * "activate path" (look the upper FIXME!).
+         */
         if (t == ctx.path) {
             System.err.println("==> " + t);
-            ctx.exists = true;
+            ctx.exists = 1;
         }
         if (type == VAR) {
             if (t.ref != null)
