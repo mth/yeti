@@ -65,9 +65,9 @@ class ShowTypeFun extends Fun2 {
             ? useNL ? "\n" + indent + "| " : " | "
             : useNL ? ",\n".concat(indent) : ", ";
 
-        i = fields;
-        while (i != null) {
-            Struct field = (Struct) i.first();
+        Struct field = null;
+        for (i = fields; i != null; i = i.next()) {
+            field = (Struct) i.first();
             if (i != fields) // not first
                 to.append(sep);
             else if (useNL && !variant)
@@ -95,13 +95,11 @@ class ShowTypeFun extends Fun2 {
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
-
-            i = i.next();
-            try {
-                if (i == null && field.get("strip") != null)
-                    to.append(sep).append("...");
-            } catch (Exception ex) {
-            }
+        }
+        try {
+            if (field != null && field.get("strip") != null)
+                to.append(sep).append("...");
+        } catch (Exception ex) {
         }
         if (useNL && !variant)
             to.append("\n").append(oldIndent);
