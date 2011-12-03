@@ -36,13 +36,55 @@ class FailureException(String what)
     extends RuntimeException(what)
 end;
 
-/// Identity function (I combinator).
+/// Identity function (I combinator). The argument value will be
+/// returned as is (id x = x).
 id x = x;
 
-/// struct inner bindings are non-polymorphic
+/**
+ * Creates a new array containing elements from the init list.
+ *
+ * Arguments:
+ *  init - Elements in this list will be added into the new array.
+ *
+ * Examples:
+ *
+ * Create an empty array and add some value.
+ * : someArray = array [];
+ * : push someArray "test";
+ * 
+ * Create an array containing some given elements.
+ * : numbers = array [1..5];
+ * : println numbers.[2]; 
+ */
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
+/**
+ * Takes value and first element of the list and applies those to the given
+ * function, then repeats with following list elements, using the result from
+ * previous application as the new value. Returns the result of last
+ * application (or initial value when empty list was given).
+ *
+ * Arguments:
+ *  function - Two-argument function used for folding.
+ *  value - Initial value.
+ *  list - List to fold.
+ *
+ * Examples:
+ *
+ * Calculate a sum of list:
+ * : sum l = fold (+) 0 l;
+ *
+ * Calculate a factorial:
+ * : factorial n = fold (*) 1 [1..n];
+ *
+ * The fold function could be implemented in the following way:
+ * : fold function value list =
+ * :     case list of
+ * :     x :: xs: fold function (function value x) xs;
+ * :     _: value;
+ * :     esac;
+ */
 fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
    (f2 v l is 'a -> list?<'b> -> 'a = // hack to get good code for gc
         if nullptr? l then
