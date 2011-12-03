@@ -429,12 +429,7 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
                 ctx.intConst(-2 - localVar);
                 ctx.insn(AALOAD);
                 if (wrapper != null && wrapper.captureType() != null)
-                {
-                    String cty = wrapper.captureType();
-                    if (cty.charAt(0) == 'L' && cty.charAt(cty.length() - 1) == ';')
-                        cty = cty.substring(1, cty.length() - 1);
-                    ctx.typeInsn(CHECKCAST, cty);
-                }
+                    ctx.captureCast(wrapper.captureType());
             } else {
                 ctx.fieldInsn(GETFIELD, ctx.className, id, captureType());
             }
