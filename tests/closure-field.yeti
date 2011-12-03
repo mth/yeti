@@ -1,0 +1,20 @@
+module hu.erdi.yeti.tests.Closure.Field.test;
+
+class Foo()
+  var bar = 19,
+
+  void test(int x)
+    f () = (
+      y = bar + x;
+      println "\(y)";
+    );
+    f ()
+end;    
+
+class Main
+  static void main(String[] args)
+    foo = new Foo();
+    foo#test(23),
+end;
+
+()

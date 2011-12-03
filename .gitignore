@@ -1,6 +1,7 @@
 .build
 tags
 yeti.jar
+yeti-lib.jar
 asm-3.1r.jar
 doc/intro.html
 doc/_intro.aux
