@@ -48,13 +48,12 @@ id x = x;
  *
  * Examples:
  *
- * Create an empty array and add some value.
+ * Create an empty array and add some value:
  * : someArray = array [];
  * : push someArray "test";
  * 
- * Create an array containing some given elements.
+ * Create an array containing some given elements:
  * : numbers = array [1..5];
- * : println numbers.[2]; 
  */
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
