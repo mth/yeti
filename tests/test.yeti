@@ -94,6 +94,17 @@ done,
     new Y()#test();
     new X(33)#test() == 33 and list received == ["test", "kala"] and wtf.[12];
 done,
+'closure fields': do:
+    class Foo()
+      var bar = 19,
+
+      int test(int x)
+        f () = bar + x;
+        f ()
+    end;
+    foo = new Foo();
+    foo#test(23) == 42
+done,
 'with': do:
     a = {x = 10};
     b = {x = 12};
