@@ -95,7 +95,7 @@ fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
 
 /**
  * Finds a list element, for which the predicate function returns true
- * and returns list tail starting from that element, or empty list
+ * and returns the list tail starting from that element, or empty list
  * when the given predicate isn't true for any list element.
  *
  * Arguments:
