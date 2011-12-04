@@ -70,6 +70,10 @@ array l is list?<'a> -> array<'a> =
  *  list - List to fold.
  *
  * Examples:
+ * : fold function value [a, b, c]
+ *
+ * is equivalent to:
+ * : ((value `function` a) `function` b) `function` c
  *
  * Calculate a sum of list:
  * : sum l = fold (+) 0 l;

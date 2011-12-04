@@ -122,7 +122,7 @@
     </java>
 </target>
 
-<target name="doc">
+<target name="doc" depends="prepare-build">
     <taskdef name="yeti" classname="yeti.lang.compiler.YetiTask"
         classpath="${basedir}/yeti.jar"/>
     <yeti srcdir="${basedir}" includes="modules/*.yeti,c/*.yeti"
