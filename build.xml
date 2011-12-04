@@ -2,8 +2,10 @@
 <project name="yeti" default="jar" basedir=".">
 
 <target name="prepare-build">
+    <property file="properties"/>
     <property name="asm" value="${basedir}/asm-3.1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
+    <property name="docdir" value="${basedir}/.build/doc"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
@@ -124,7 +126,7 @@
     <taskdef name="yeti" classname="yeti.lang.compiler.YetiTask"
         classpath="${basedir}/yeti.jar"/>
     <yeti srcdir="${basedir}" includes="modules/*.yeti,c/*.yeti"
-          excludes="c/yeti.yeti" docdir="${basedir}/.build/doc"/>
+          excludes="c/yeti.yeti" docdir="${docdir}"/>
 </target>
 
 <target name="noant">

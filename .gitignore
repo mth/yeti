@@ -1,4 +1,5 @@
 .build
+properties
 tags
 yeti.jar
 yeti-lib.jar

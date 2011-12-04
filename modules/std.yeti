@@ -93,6 +93,18 @@ fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
         fi;
     f2);
 
+/**
+ * Finds a list element, for which the predicate function returns true
+ * and returns list tail starting from that element, or empty list
+ * when the given predicate isn't true for any list element.
+ *
+ * Arguments:
+ *  predicate - function that returns true for the searched value
+ *  list      - list to be searched
+ *
+ * Examples:
+ *  : find (== 3) [1..5] // gives a list [3, 4, 5]
+ */
 find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
     if nullptr? l then
         []
