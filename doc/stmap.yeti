@@ -8,6 +8,9 @@ person query =
         age  = t.number "age"
     });
 
+// structOf { fobar is t -> string (fieldname) -> r }
+//   is t -> { fobar is r }
+
 // structOf person is db_record -> { name is string, age is number }
 db_get_all (structOf (person query));
 
