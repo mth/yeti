@@ -117,8 +117,8 @@ find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
     fi;
 
 /**
- * Returns 0-based index of first list element, which equals to the
- * given value (using == for equality).
+ * Returns 0-based index of the first list element, which equals
+ * to the given value (using == for equality).
  *
  * Arguments:
  *  value - value to search for
