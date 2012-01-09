@@ -116,6 +116,17 @@ find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         (l unsafely_as ~AList)#find(f) unsafely_as list<'a>
     fi;
 
+/**
+ * Returns 0-based index of first list element, which equals to the
+ * given value (using == for equality).
+ *
+ * Arguments:
+ *  value - value to search for
+ *  list  - list to be searched
+ *
+ * Examples:
+ *  : find (== 'apple') ['oranges', 'apples', 'rats'] // returns 1
+ */
 index v l is 'a -> list?<'a> -> number =
     if nullptr? l then
         -1
