@@ -2,6 +2,46 @@
 Yeti Macros
 ===========================
 
+New syntax.
+~~~~~~~~~~~~~~~~~~~
+
+Macro is a compile time function. It is typed.
+::
+
+        macrodef <name> <types...> of
+                pattern1: value1;
+                patterns...: values...;
+        end
+
+For example::
+
+        macrodef struct1 symbol value of
+                (id) v: { (id) = v }
+        end
+
+        (struct1 fish 33).fish == 33
+
+How macro argument will be parsed is determined by it's type.
+Macro arguments can generally contain symbol, value, seq, list and macro types.
+
+ value<type>             - normal runtime value of given type
+ symbol                  - identifier, parameter may be a list of allowed identifiers
+ seq<types...>           - sequence of parameters
+ macro<types..., result> - some macro
+
+
+Variable fields struct?
+::
+
+        macrodef struct list<seq<symbol, value<any>>> of
+                []: {};
+                (id) v :: rest: { (id) = v } with struct rest;
+        end
+
+        struct [fish 33, camel 'toe'].fish == 33;
+
+Old syntax.
+~~~~~~~~~~~~~~~~~~~
 Macro is a compile time code template function.
 ::
 

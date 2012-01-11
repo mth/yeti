@@ -44,7 +44,7 @@ id x = x;
  * Creates a new array containing elements from the init list.
  *
  * Arguments:
- *  init - Elements in this list will be added into the new array.
+ *  init - elements in this list will be added into the new array
  *
  * Examples:
  *
@@ -65,9 +65,9 @@ array l is list?<'a> -> array<'a> =
  * application (or initial value when empty list was given).
  *
  * Arguments:
- *  function - Two-argument function used for folding.
- *  value - Initial value.
- *  list - List to fold.
+ *  function - two-argument function used for folding
+ *  value - initial value
+ *  list - list to fold
  *
  * Examples:
  * : fold function value [a, b, c]
@@ -135,6 +135,12 @@ index v l is 'a -> list?<'a> -> number =
         if nullptr? res then -1 else res fi
     fi;
 
+/**
+ * Returns list of hash map keys.
+ *
+ * Arguments:
+ *  hash - the hash map
+ */
 keys h is hash<'a, 'b> -> list<'a> =
     if empty? h then
         []
@@ -143,6 +149,17 @@ keys h is hash<'a, 'b> -> list<'a> =
             unsafely_as list<'a>
     fi;
 
+/**
+ * Creates hash mapping keys from given list to unit values (you can
+ * think of it being a set). As the hash map is essentially unordered,
+ * the ordering that was present in the given list will be lost.
+ *
+ * Arguments:
+ *  list - values to use as hash keys
+ *
+ * Examples:
+ * : hash [11, 22] // returns [11: (), 22: ()]
+ */
 hash l is list?<'a> -> hash<'a, ()> =
    (h = [:];
     for l (_ i = h.[i] := ());
