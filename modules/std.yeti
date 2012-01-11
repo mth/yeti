@@ -150,7 +150,7 @@ keys h is hash<'a, 'b> -> list<'a> =
     fi;
 
 /**
- * Creates hash mapping keys from given list to unit values (you can
+ * Creates a hash mapping from given list elements to unit values (you can
  * think of it being a set). As the hash map is essentially unordered,
  * the ordering that was present in the given list will be lost.
  *
