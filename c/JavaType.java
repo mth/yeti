@@ -762,8 +762,10 @@ class JavaType implements Cloneable {
             try {
                 if (fromDesc.length() == 1) {
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
-                    YetiType.unify(to.param[0], fromDesc != "C"
-                            ? YetiType.NUM_TYPE : YetiType.STR_TYPE);
+                    YetiType.unify(to.param[0],
+                        fromDesc == "Z" ? YetiType.BOOL_TYPE :
+                        fromDesc == "C" ? YetiType.STR_TYPE :
+                        YetiType.NUM_TYPE);
                 } else if (tp.type == YetiType.VAR) {
                     if (fp != tp)
                         YetiType.unifyToVar(tp, fp);
