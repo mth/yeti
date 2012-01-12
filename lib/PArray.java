@@ -102,6 +102,26 @@ public class PArray extends LList {
         return array == null || array.length == 0
             ? null : new BooleanArray(0, array.length, array);
     }
+
+    public static AList wrap(char[] array) {
+        return array == null || array.length == 0
+            ? null : new CharArray(0, array.length, array);
+    }
+}
+
+final class CharArray extends PArray {
+    CharArray(int start, int length, Object array) {
+        super(start, length, array);
+    }
+
+    public Object first() {
+        return new String((char[]) array, start, 1);
+    }
+
+    public AList rest() {
+        int n;
+        return (n = start + 1) >= length ? null : new CharArray(n, length, array);
+    }
 }
 
 final class FloatArray extends PArray {
