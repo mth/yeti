@@ -165,6 +165,22 @@ hash l is list?<'a> -> hash<'a, ()> =
     for l (_ i = h.[i] := ());
     h);
 
+/**
+ * Iterates over hash map, calling the block function for each
+ * hash map entry with key and value as arguments.
+ *
+ * Arguments:
+ *  hash  - hash map to iterate
+ *  block - function to call
+ *
+ * Examples:
+ *
+ * Print each hash map key-value pair on separate line.
+ * : h = ['test': 54, 'that': 42];
+ * : forHash h do k v:
+ * :    println "\(k): \(v)\n";
+ * : done
+ */
 forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
     // warning: it's also used as forMap implementation
    (i = (h unsafely_as ~Map)#entrySet()#iterator();
