@@ -311,7 +311,7 @@ abstract class CaptureRef extends BindRef {
                 return super.apply(arg, res, line);
             if (depth == 1 && capturer.argCaptures == null) {
                 if (hasArgCaptures)
-                    throw new CompileException(null, 
+                    throw new CompileException(line, 0,
                         "Internal error - already has argCaptures");
                 hasArgCaptures = true;
                 // we have to resolve the captures lazyly later,
