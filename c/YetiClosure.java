@@ -323,26 +323,26 @@ abstract class CaptureRef extends BindRef {
     }
 
     Capture[] argCaptures() {
-        if (!hasArgCaptures || argCaptures != null)
-            return argCaptures;
-        /*
-         * All arguments have been applied, now we have to search
-         * their captures in the inner function (by looking for
-         * captures matching the function arguments).
-         * Resulting list will be also given to the inner function,
-         * so it could copy those captures into local registers
-         * to allow tail call.
-         *
-         * NB. To understand this, remember that this is self-apply,
-         * so current scope is also the scope of applied function.
-         */
-        argCaptures = new Capture[args.length];
-        for (Capture c = capturer.captures; c != null; c = c.next)
-            for (int i = args.length; --i >= 0;)
-                if (c.binder == args[i]) {
-                    argCaptures[i] = c;
-                    break;
-                }
+        if (hasArgCaptures && argCaptures == null) {
+            /*
+             * All arguments have been applied, now we have to search
+             * their captures in the inner function (by looking for
+             * captures matching the function arguments).
+             * Resulting list will be also given to the inner function,
+             * so it could copy those captures into local registers
+             * to allow tail call.
+             *
+             * NB. To understand this, remember that this is self-apply,
+             * so current scope is also the scope of applied function.
+             */
+            argCaptures = new Capture[args.length];
+            for (Capture c = capturer.captures; c != null; c = c.next)
+                for (int i = args.length; --i >= 0;)
+                    if (c.binder == args[i]) {
+                        argCaptures[i] = c;
+                        break;
+                    }
+        }
         return argCaptures;
     }
 
