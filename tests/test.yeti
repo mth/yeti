@@ -105,6 +105,21 @@ done,
     foo = new Foo();
     foo#test(23) == 42
 done,
+'tail recursion': do:
+    compile inStart tokens =
+       case tokens of
+        1 :: rest:
+            compile false rest;
+        _ :: rest:
+            if inStart then
+                compile true rest
+            else
+                true
+            fi;
+        _: false;
+        esac;
+    compile true [1, 2]
+done,
 'with': do:
     a = {x = 10};
     b = {x = 12};
