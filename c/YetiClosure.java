@@ -254,8 +254,9 @@ final class TryCatch extends CapturingClosure {
 abstract class CaptureRef extends BindRef {
     Function capturer;
     BindRef ref;
-    Binder[] args;
-    Capture[] argCaptures;
+    private Binder[] args;
+    private Capture[] argCaptures;
+    private boolean hasArgCaptures;
 
     final class SelfApply extends Apply {
         boolean tail;
@@ -280,7 +281,7 @@ abstract class CaptureRef extends BindRef {
 
         void gen(Ctx ctx) {
             if (!tail || depth != 0 ||
-                capturer.argCaptures != argCaptures ||
+                capturer.argCaptures != CaptureRef.this ||
                 capturer.restart == null) {
                 // regular apply, if tail call optimisation can't be done
                 super.gen(ctx);
@@ -288,7 +289,7 @@ abstract class CaptureRef extends BindRef {
             }
             // push all argument values into stack - they must be evaluated
             // BEFORE modifying any of the arguments for tail-"call"-jump.
-            genArg(ctx, argCaptures == null ? 0 : argCaptures.length);
+            genArg(ctx, argCaptures() == null ? 0 : argCaptures.length);
             ctx.varInsn(ASTORE, capturer.argVar);
             // Now assign the call argument values into argument registers.
             if (argCaptures != null)
@@ -309,28 +310,40 @@ abstract class CaptureRef extends BindRef {
             if (depth < 0)
                 return super.apply(arg, res, line);
             if (depth == 1 && capturer.argCaptures == null) {
-                /*
-                 * All arguments have been applied, now we have to search
-                 * their captures in the inner function (by looking for
-                 * captures matching the function arguments).
-                 * Resulting list will be also given to the inner function,
-                 * so it could copy those captures into local registers
-                 * to allow tail call.
-                 *
-                 * NB. To understand this, remember that this is self-apply,
-                 * so current scope is also the scope of applied function.
-                 */
-                argCaptures = new Capture[args.length];
-                for (Capture c = capturer.captures; c != null; c = c.next)
-                    for (int i = args.length; --i >= 0;)
-                        if (c.binder == args[i]) {
-                            argCaptures[i] = c;
-                            break;
-                        }
-                capturer.argCaptures = argCaptures;
+                if (hasArgCaptures)
+                    throw new CompileException(null, 
+                        "Internal error - already has argCaptures");
+                hasArgCaptures = true;
+                // we have to resolve the captures lazyly later,
+                // as here all might not yet be referenced
+                capturer.argCaptures = CaptureRef.this;
             }
             return new SelfApply(res, this, arg, line, depth - 1);
         }
+    }
+
+    Capture[] argCaptures() {
+        if (!hasArgCaptures || argCaptures != null)
+            return argCaptures;
+        /*
+         * All arguments have been applied, now we have to search
+         * their captures in the inner function (by looking for
+         * captures matching the function arguments).
+         * Resulting list will be also given to the inner function,
+         * so it could copy those captures into local registers
+         * to allow tail call.
+         *
+         * NB. To understand this, remember that this is self-apply,
+         * so current scope is also the scope of applied function.
+         */
+        argCaptures = new Capture[args.length];
+        for (Capture c = capturer.captures; c != null; c = c.next)
+            for (int i = args.length; --i >= 0;)
+                if (c.binder == args[i]) {
+                    argCaptures[i] = c;
+                    break;
+                }
+        return argCaptures;
     }
 
     Code apply(Code arg, YType res, int line) {
@@ -612,7 +625,7 @@ final class Function extends CapturingClosure implements Binder {
     Label restart; // used by tail-call optimizer
     Function outer; // outer function of directly-nested function
     // outer arguments to be saved in local registers (used for tail-call)
-    Capture[] argCaptures;
+    CaptureRef argCaptures;
     // argument value for inlined function
     private Code uncaptureArg;
     // register used by argument (2 for merged inner function)
@@ -911,8 +924,9 @@ final class Function extends CapturingClosure implements Binder {
         if (argCaptures != null) {
             // Tail recursion needs all args to be in local registers
             // - otherwise it couldn't modify them safely before restarting
-            for (int i = 0; i < argCaptures.length; ++i) {
-                Capture c = argCaptures[i];
+            Capture[] args = argCaptures.argCaptures();
+            for (int i = 0; i < args.length; ++i) {
+                Capture c = args[i];
                 if (c != null && !c.uncaptured) {
                     c.gen(apply);
                     c.localVar = apply.localVarCount;
