@@ -127,9 +127,14 @@ done,
 done,
 ];
 
+var bad = 0;
+
 forHash trueTests do name f:
     if not (f ()) then
-        println "\(name) failed."
+        println "\(name) failed.";
+        bad := bad + 1
     fi
 done;
-println "Testing done.";
+
+total = length trueTests;
+println "Testing done, \(total - bad)/\(total) OK.";
