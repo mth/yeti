@@ -105,6 +105,17 @@ done,
     foo = new Foo();
     foo#test(23) == 42
 done,
+'try-catch class closure': do: 
+    kill _ = ();
+    class Flush
+        void run()
+            try 
+            catch Exception ex:
+                kill ()
+            yrt;
+    end;
+    not nullptr? new Flush()
+done,
 'tail recursion': do:
     compile inStart tokens =
        case tokens of
