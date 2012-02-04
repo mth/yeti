@@ -11,6 +11,7 @@
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
 * v1.0
+* Non-polymorphic typedefs: typedef shared foo = 'a
 * Typedefs in REPL
 * Effective byte list operations
 * Foreign structs (java dto -> struct?)
