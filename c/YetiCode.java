@@ -764,7 +764,16 @@ abstract class Code implements Opcodes {
     // Comparision operators use this for some optimisation.
     static final int EMPTY_LIST = 0x10;
 
-    // no capturing
+    // Check for no capturing. XXX WARNING.
+    // You should really do DIRECT_BIND queries only BEFORE using those
+    // bindings (that's, at the start of closure gen or earlier) OR at
+    // least ensure having the capture set copied, as Capture instances
+    // mark themselves uncaptured when they discover being a direct binding
+    // during flagop. This could be a problem when the binding ref was
+    // generated as captured earlier AND the call site omits later
+    // the ones that became uncaptured by DIRECT_BIND flagop. If it should be
+    // discovered to be unavoidable, a special "almost-uncaptured" Capture
+    // state could be introduced that would affect only Capture.gen().
     static final int DIRECT_BIND = 0x20;
 
     // normal constant is also pure and don't need capturing
