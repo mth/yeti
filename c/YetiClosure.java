@@ -261,13 +261,21 @@ abstract class CaptureRef extends BindRef {
         boolean tail;
         int depth;
 
-        SelfApply(YType type, Code f, Code arg,
-                  int line, int depth) {
+        SelfApply(YType type, Code f, Code arg, int line, int depth) {
             super(type, f, arg, line);
             this.depth = depth;
             if (origin != null) {
                 this.arity = origin.arity = args.length - depth + 1;
                 this.ref = origin;
+            }
+            if (depth == 0 && capturer.argCaptures == null) {
+                if (hasArgCaptures)
+                    throw new CompileException(line, 0,
+                        "Internal error - already has argCaptures");
+                hasArgCaptures = true;
+                // we have to resolve the captures lazily later,
+                // as here all might not yet be referenced
+                capturer.argCaptures = CaptureRef.this;
             }
         }
 
@@ -279,9 +287,8 @@ abstract class CaptureRef extends BindRef {
         }
 
         void gen(Ctx ctx) {
-            if (!tail || depth != 0 ||
-                capturer.argCaptures != CaptureRef.this ||
-                capturer.restart == null) {
+            if (!tail || depth != 0 || capturer.argCaptures != CaptureRef.this
+                      || capturer.restart == null) {
                 // regular apply, if tail call optimisation can't be done
                 super.gen(ctx);
                 return;
@@ -293,7 +300,7 @@ abstract class CaptureRef extends BindRef {
             // Now assign the call argument values into argument registers.
             if (argCaptures != null) {
                 int i = argCaptures.length;
-                if (capturer.outer.merged && --i >= 0)
+                if (capturer.outer != null && capturer.outer.merged && --i >= 0)
                     ctx.varInsn(ASTORE, 1); // HACK - fixes merged argument
                 while (--i >= 0)
                     if (argCaptures[i] != null)
@@ -312,15 +319,6 @@ abstract class CaptureRef extends BindRef {
         Code apply(Code arg, YType res, int line) {
             if (depth < 0)
                 return super.apply(arg, res, line);
-            if (depth == 1 && capturer.argCaptures == null) {
-                if (hasArgCaptures)
-                    throw new CompileException(line, 0,
-                        "Internal error - already has argCaptures");
-                hasArgCaptures = true;
-                // we have to resolve the captures lazyly later,
-                // as here all might not yet be referenced
-                capturer.argCaptures = CaptureRef.this;
-            }
             return new SelfApply(res, this, arg, line, depth - 1);
         }
     }
