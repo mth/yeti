@@ -413,7 +413,13 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
          * (the variable doesn't (always) know that it will be
          * a direct binding when it's captured, as this determined
          * later using prepareConst())
+         * XXX An automatic uncapture is done on DIRECT_BIND, as it allows
+         * cascading uncaptures done by mergeCaptures into parent captures,
+         * avoiding attempts to generate parent capture wrappings in that case.
+         * This fixes 'try-catch class closure' test.
          */
+        if (fl == DIRECT_BIND && !uncaptured)
+            return uncaptured = ref.flagop(fl);
         return (fl & (PURE | ASSIGN | DIRECT_BIND)) != 0 && ref.flagop(fl);
     }
 
