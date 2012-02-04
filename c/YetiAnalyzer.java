@@ -68,20 +68,16 @@ public final class YetiAnalyzer extends YetiType {
     static Code analyze(Node node, Scope scope, int depth) {
         if (node instanceof Sym) {
             String sym = ((Sym) node).sym;
-            if (Character.isUpperCase(sym.charAt(0))) {
+            if (Character.isUpperCase(sym.charAt(0)))
                 return variantConstructor(sym, depth);
-            }
             return resolve(sym, node, scope, depth);
         }
-        if (node instanceof NumLit) {
+        if (node instanceof NumLit)
             return new NumericConstant(((NumLit) node).num);
-        }
-        if (node instanceof Str) {
+        if (node instanceof Str)
             return new StringConstant(((Str) node).str);
-        }
-        if (node instanceof Seq) {
+        if (node instanceof Seq)
             return analSeq((Seq) node, scope, depth);
-        }
         if (node instanceof Bind) {
             Bind bind = (Bind) node;
             Function r = singleBind(bind, scope, depth);
@@ -94,31 +90,23 @@ public final class YetiAnalyzer extends YetiType {
         String kind = node.kind;
         if (kind != null) {
             XNode x = (XNode) node;
-            if (kind == "()") {
+            if (kind == "()")
                 return new UnitConstant(null);
-            }
-            if (kind == "list") {
+            if (kind == "list")
                 return list(x, scope, depth);
-            }
-            if (kind == "lambda") {
+            if (kind == "lambda")
                 return lambda(new Function(null), x, scope, depth);
-            }
-            if (kind == "struct") {
+            if (kind == "struct")
                 return structType(x, scope, depth);
-            }
-            if (kind == "if") {
+            if (kind == "if")
                 return cond(x, scope, depth);
-            }
-            if (kind == "_") {
+            if (kind == "_")
                 return new Cast(analyze(x.expr[0], scope, depth),
                                 UNIT_TYPE, false, node.line);
-            }
-            if (kind == "concat") {
+            if (kind == "concat")
                 return concatStr(x, scope, depth);
-            }
-            if (kind == "case-of") {
+            if (kind == "case-of")
                 return caseType(x, scope, depth);
-            }
             if (kind == "new") {
                 String name = x.expr[0].sym();
                 Code[] args = mapArgs(1, x.expr, scope, depth);
@@ -128,12 +116,10 @@ public final class YetiAnalyzer extends YetiType {
                             .check(x, scope.ctx.packageName, 0),
                                    args, cb, x.line);
             }
-            if (kind == "rsection") {
+            if (kind == "rsection")
                 return rsection(x, scope, depth);
-            }
-            if (kind == "try") {
+            if (kind == "try")
                 return tryCatch(x, scope, depth);
-            }
             if (kind == "load") {
                 if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
@@ -829,7 +815,7 @@ public final class YetiAnalyzer extends YetiType {
             Map.Entry e = (Map.Entry) j.next();
             YType[] typeDef = (YType[]) e.getValue();
             scope = bind((String) e.getKey(), typeDef[typeDef.length - 1],
-                         null, RESTRICT_POLY, 0, scope);
+                         null, RESTRICT_POLY, -1, scope);
             scope.typeDef = typeDef;
         }
         return scope;
@@ -910,14 +896,14 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Scope bindTypeDef(TypeDef typeDef, Object seqKind, Scope scope) {
-        YType self = new YType(-1);
+        YType self = new YType(0);
         Scope defScope = new Scope(scope, typeDef.name, null);
         defScope.free = NO_PARAM;
         defScope.typeDef = new YType[] { self };
         YType[] def = new YType[typeDef.param.length + 1];
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
-            YType arg = new YType(-1);
+            YType arg = new YType(0);
             def[i] = arg;
             defScope = new Scope(defScope, typeDef.param[i], null);
             defScope.typeDef = new YType[] { arg };
@@ -933,7 +919,7 @@ public final class YetiAnalyzer extends YetiType {
         if (typeDef.shared)
             scope = new Scope(scope, typeDef.name, null);
         else
-            scope = bind(typeDef.name, type, null, RESTRICT_POLY, 0, scope);
+            scope = bind(typeDef.name, type, null, RESTRICT_POLY, -1, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
