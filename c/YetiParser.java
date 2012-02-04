@@ -360,6 +360,7 @@ interface YetiParser {
         String name;
         String[] param;
         TypeNode type;
+        boolean shared;
 
         String str() {
             StringBuffer buf =
@@ -1530,6 +1531,10 @@ interface YetiParser {
                 if (!(node instanceof BinOp) || ((BinOp) node).op != ">")
                     throw new CompileException(node,
                                  "Expected '>', not a " + node);
+                node = fetch();
+            } else if (def.name == "shared" && node instanceof Sym) {
+                def.shared = true;
+                def.name = getTypename(node);
                 node = fetch();
             }
             if (node.kind != "=")

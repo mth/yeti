@@ -1009,6 +1009,8 @@ public class YetiType implements YetiParser {
                             : (scope.typeDef.length - 1) + " parameters")
                         + ", not " + param.length);
                 }
+                if (scope.free == null) // shared typedef
+                    return scope.typeDef[0];
                 Map vars = createFreeVars(scope.free, depth);
                 for (int i = param.length; --i >= 0;)
                     vars.put(scope.typeDef[i], param[i]);

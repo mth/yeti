@@ -936,6 +936,10 @@ public final class YetiAnalyzer extends YetiType {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
             ((TopLevel) seqKind).typeScope = scope;
         }
+        if (typeDef.shared) {
+            scope = new Scope(scope.outer, typeDef.name, null);
+            scope.typeDef = def;
+        }
         return scope;
     }
 
