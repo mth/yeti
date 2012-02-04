@@ -91,8 +91,7 @@ class Apply extends Code {
             }
             sig.append(")Ljava/lang/Object;");
             ctx.visitLine(line);
-            ctx.methodInsn(INVOKESTATIC, f.name,
-                                f.bindName, sig.toString());
+            ctx.methodInsn(INVOKESTATIC, f.name, f.bindName, sig.toString());
             return;
         }
 
@@ -292,12 +291,16 @@ abstract class CaptureRef extends BindRef {
             genArg(ctx, argCaptures() == null ? 0 : argCaptures.length);
             ctx.varInsn(ASTORE, capturer.argVar);
             // Now assign the call argument values into argument registers.
-            if (argCaptures != null)
-                for (int i = argCaptures.length; --i >= 0;)
+            if (argCaptures != null) {
+                int i = argCaptures.length;
+                if (capturer.outer.merged && --i >= 0)
+                    ctx.varInsn(ASTORE, 1); // HACK - fixes merged argument
+                while (--i >= 0)
                     if (argCaptures[i] != null)
                         ctx.varInsn(ASTORE, argCaptures[i].localVar);
                     else
                         ctx.insn(POP);
+            }
             // And just jump into the start of the function...
             ctx.jumpInsn(GOTO, capturer.restart);
         }
@@ -398,9 +401,8 @@ final class Capture extends CaptureRef implements CaptureWrapper, CodeGen {
     }
 
     String getId(Ctx ctx) {
-        if (id == null) {
+        if (id == null)
             id = "_".concat(Integer.toString(ctx.fieldCounter++));
-        }
         return id;
     }
 
@@ -639,7 +641,7 @@ final class Function extends CapturingClosure implements Binder {
     // Marks function optimised as method and points to it's inner-most lambda
     Function methodImpl;
     // Function has been merged with its inner function.
-    private boolean merged; 
+    boolean merged;
     // How many times the argument has been used.
     // This counter is also used by argument nulling to determine
     // when it safe to assume that argument value is no more needed.
