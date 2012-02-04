@@ -930,15 +930,14 @@ public final class YetiAnalyzer extends YetiType {
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
-        scope = bind(typeDef.name, type, null, RESTRICT_POLY, 0, scope);
+        if (typeDef.shared)
+            scope = new Scope(scope, typeDef.name, null);
+        else
+            scope = bind(typeDef.name, type, null, RESTRICT_POLY, 0, scope);
         scope.typeDef = def;
         if (seqKind instanceof TopLevel) {
             ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
             ((TopLevel) seqKind).typeScope = scope;
-        }
-        if (typeDef.shared) {
-            scope = new Scope(scope.outer, typeDef.name, null);
-            scope.typeDef = def;
         }
         return scope;
     }
