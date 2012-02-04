@@ -774,6 +774,7 @@ abstract class Code implements Opcodes {
     // the ones that became uncaptured by DIRECT_BIND flagop. If it should be
     // discovered to be unavoidable, a special "almost-uncaptured" Capture
     // state could be introduced that would affect only Capture.gen().
+    // Note that most closures will do DIRECT_BIND query by mergeCaptures.
     static final int DIRECT_BIND = 0x20;
 
     // normal constant is also pure and don't need capturing
