@@ -119,7 +119,8 @@ syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" cont
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
-syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=NOTHING
+syn keyword yetiTypeMod shared contained
+syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=yetiTypeMod
 syn keyword yetiType is skipempty skipwhite nextgroup=@yetiTypeDecls
 syn keyword yetiCast as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/
@@ -204,6 +205,7 @@ if version >= 508 || !exists("did_yeti_syntax_inits")
   HiLink yetiTypeDelimiter Delimiter
   HiLink yetiType	Type
   HiLink yetiTypeDef	TypeDef
+  HiLink yetiTypeMod	yetiTypeDef
   HiLink yetiClassType	Type
   HiLink yetiClass	Structure
   HiLink yetiExtends	Structure
