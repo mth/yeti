@@ -189,10 +189,24 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
         f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
 /**
- * Returns [f(a), f(b), ...] for list l [a, b, ...]
+ * Returns [function(a), function(b), ...] for list [a, b, ...]
+ * by applying function to each element of the list (either
+ * lazily or strictly).
  *
- * This map function returns lazy list when used on normal lists.
- * Arrays and lists backed by arrays are mapped strictly.
+ * Arguments:
+ *  function - function applied to list elements
+ *  list - list to be processed
+ *
+ * Description:
+ * A lazy list is returned when applied on normal list. Full result
+ * is not calculated in this case on application, but lazily as the
+ * result is consumed by caller. Arrays and lists backed by arrays
+ * are mapped strictly.
+ *
+ * You should ALWAYS use the strict map' instead, if the mapping function
+ * has side effects, as it's not determined whether function is applied
+ * by map on some list element when map was called, some time later or
+ * even never at all (if the result list was not consumed).
  */
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
@@ -201,9 +215,20 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         (l unsafely_as ~AList)#map(f) unsafely_as list<'b>
     fi;
 
-/// Strict mapping of list. map' is usually faster than map on lists,
-/// unless huge streams are processed or most of the resulting list is
-/// not used. They work identically on arrays.
+/**
+ * Returns strict [function(a), function(b), ...] for list [a, b, ...]
+ * by applying function to each element of the list.
+ *
+ * Arguments:
+ *  function - function applied to list elements
+ *  list - list to be processed
+ *
+ * Description:
+ * It is similarly to map function, but never creates a lazy list.
+ * The map' is usually faster than map on lists, unless huge streams
+ * are processed or most of the resulting list is not used. It works
+ * identically to map on arrays.
+ */
 map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
         []
