@@ -236,6 +236,18 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
         (l unsafely_as ~AList)#smap(f) unsafely_as list<'b>
     fi;
 
+/**
+ * Returns count of elements in container.
+ *
+ * Arguments:
+ *   container - a list, array or hash map
+ *
+ * Description:
+ * For list or array it's length is returned, and for hash map the number of
+ * key-value pairs in that hash map. The length function can also be applied
+ * to Java arrays (for example length new int[10]), as Yeti compiler wraps
+ * these automatically into lists on function arguments.
+ */
 length l is map<'a, 'b> -> number =
     if nullptr? l then
         0
