@@ -255,6 +255,18 @@ length l is map<'a, 'b> -> number =
         (l unsafely_as ~Coll)#length()
     fi;
 
+/**
+ * Access any value at runtime. Returns variant tagged with values
+ * runtime type.
+ *
+ * The peekObject function may not be always accurate, as full type
+ * information is not available at runtime (for example empty list is
+ * indistinguishable from (), element types of empty collections
+ * remain unknown and function types cannot be determined).
+ *
+ * Arguments:
+ *   value - value to peek into
+ */
 peekObject object =
    (o = object as ~Object;
     if nullptr? o then
@@ -281,7 +293,7 @@ peekObject object =
         Struct {
             fields,
             value name =
-                i = (fields unsafely_as ~AList)#index(name);
+                i = (fields unsafely_as ~AList)#index(name is string);
                 if nullptr? i then
                     throw new NoSuchKeyException("No such field (\(name))")
                 fi;
