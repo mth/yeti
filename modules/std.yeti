@@ -224,7 +224,7 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
  *  list - list to be processed
  *
  * Description:
- * It is similarly to map function, but never creates a lazy list.
+ * It is similar to map function, but never creates a lazy list.
  * The map' is usually faster than map on lists, unless huge streams
  * are processed or most of the resulting list is not used. It works
  * identically to map on arrays.
