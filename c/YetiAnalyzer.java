@@ -647,7 +647,15 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code assignOp(BinOp op, Scope scope, int depth) {
-        Code left = analyze(op.left, scope, depth);
+        Code left;
+        try {
+            left = analyze(op.left, scope, depth);
+        } catch (CompileException ex) {
+            if (ex.cause == null || ex.cause.kind != "var")
+                throw ex;
+            throw new CompileException(op, "Assignment operator := " +
+                    "not expected in variable binding (use = instead)");
+        }
         Code right = analyze(op.right, scope, depth);
         unify(left.type, right.type, op, scope, "#0");
         Code assign = left.assign(right);

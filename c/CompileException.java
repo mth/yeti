@@ -37,6 +37,7 @@ public class CompileException extends RuntimeException {
     int line;
     int col;
     String what;
+    YetiParser.Node cause;
 
     static String format(YType param1, YType param2,
                          String s, TypeException ex, Scope scope) {
@@ -94,6 +95,7 @@ public class CompileException extends RuntimeException {
             col = pos.col;
         }
         this.what = what;
+        this.cause = pos;
     }
 
     public CompileException(YetiParser.Node pos, Scope scope,
