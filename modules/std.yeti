@@ -309,11 +309,43 @@ peekObject object =
 plus a b = a + b;
 
 {
+    /**
+     * None () value short-hand constant.
+     */
     none = None (),
 
-    /// Constant function (K combinator).
-    const x _ = x,
+    /**
+     * K combinator - returns constant function \x (which returns value
+     * of the (first) argument x).
+     *
+     * Arguments:
+     * x - value to be returned by resulting function (const x () is same as x).
+     */
+    const x = (_ = (); \x),
 
+    /**
+     * Application in reverse order. Expression (value |> function)
+     * is equivalent to (function value).
+     *
+     * Arguments:
+     * function - function to apply
+     * value - value given as argument to the function
+     *
+     * Description:
+     * The |> operator can be used to pipe value of expression through multiple
+     * functions. Call to |> is usually inlined into direct application by Yeti
+     * compiler if possible. Due to low priority (just above type operators is
+     * and as) the parenthesis around function and argument expressions can be
+     * usually omitted.
+     *
+     * Examples:
+     * : a = iterate (+ 1) 0 |> take 5 |> map (*2);
+     *
+     * is same as:
+     * : a = map (*2) (take 5 (iterate (+ 1) 0));
+     *
+     * both resulting with a = [0,2,4.6,8]
+     */
     (|>) arg f = f arg,
     at h k = h.[k],
 
