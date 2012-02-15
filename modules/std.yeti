@@ -344,7 +344,7 @@ plus a b = a + b;
      * is same as:
      * : a = map (*2) (take 5 (iterate (+ 1) 0));
      *
-     * both resulting with a = [0,2,4.6,8]
+     * both resulting with a = [0,2,4.6,8].
      */
     (|>) arg f = f arg,
     at h k = h.[k],
