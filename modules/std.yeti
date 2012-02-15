@@ -328,8 +328,8 @@ plus a b = a + b;
      * is equivalent to (function value).
      *
      * Arguments:
-     * function - function to apply
      * value - value given as argument to the function
+     * function - function to apply
      *
      * Description:
      * The |> operator can be used to pipe value of expression through multiple
