@@ -860,6 +860,7 @@ interface YetiParser {
                         partial instanceof TypeOp)
                     throw new CompileException(partial, "Special operator `" +
                                     s + "` cannot be used as a function");
+                //yetiDocStr = doc;
                 return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
