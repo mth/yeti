@@ -860,7 +860,6 @@ interface YetiParser {
                         partial instanceof TypeOp)
                     throw new CompileException(partial, "Special operator `" +
                                     s + "` cannot be used as a function");
-                //yetiDocStr = doc;
                 return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
@@ -1352,8 +1351,11 @@ interface YetiParser {
         }
 
         private Node readSeq(char end, Object kind) {
+            String doc = yetiDocStr;
             Node[] list = readMany(";", end);
             if (list.length == 1 && kind != Seq.EVAL) {
+                if (doc != null && list[0] instanceof Sym)
+                    yetiDocStr = doc;
                 return list[0];
             }
             if (list.length == 0) {
