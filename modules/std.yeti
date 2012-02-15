@@ -333,10 +333,10 @@ plus a b = a + b;
      *
      * Description:
      * The |> operator can be used to pipe value of expression through multiple
-     * functions. Call to |> is usually inlined into direct application by Yeti
-     * compiler if possible. Due to low priority (just above type operators is
+     * functions. Calls to |> are usually inlined into direct application by Yeti
+     * compiler (if possible). Due to low priority (just above type operators is
      * and as) the parenthesis around function and argument expressions can be
-     * usually omitted.
+     * omitted usually.
      *
      * Examples:
      * : a = iterate (+ 1) 0 |> take 5 |> map (*2);
