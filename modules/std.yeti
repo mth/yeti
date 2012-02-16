@@ -360,8 +360,8 @@ plus a b = a + b;
      * NoSuchKey - if the key doesn't exist in given collection
      *
      * Examples:
-     * : numbers = [1: 'one', 2: 'two', 3: 'three'];
-     * : println (map (at numbers) [3, 1]); // ['three','one']
+     * : numbers = [1: "one", 2: "two", 3: "three"];
+     * : println (map (at numbers) [3, 1]); // ["three","one"]
      */
     at h k = h.[k],
 
