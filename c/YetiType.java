@@ -141,6 +141,7 @@ class TypeException extends Exception {
         b = b_;
         sep = sep_;
         ext = ext_;
+        trace = new ArrayList();
     }
 
     public String getMessage() {
