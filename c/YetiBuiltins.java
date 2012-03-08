@@ -1156,7 +1156,7 @@ final class StrOp extends StaticRef implements Binder {
             }
             if (argv.size() != argTypes.length) {
                 StrOp.this.gen(ctx);
-                for (int i = argv.size() - 1; --i >= 0;)
+                for (int i = argv.size(); --i >= 0;)
                     ((StrApply) argv.get(i)).genApply(ctx);
                 return;
             }
