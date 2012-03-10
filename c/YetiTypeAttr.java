@@ -147,6 +147,12 @@ class YetiTypeAttr extends Attribute {
                 writeArray(type.param);
             } else if (type.type == YetiType.STRUCT ||
                        type.type == YetiType.VARIANT) {
+                if ((type.finalMembers == null || type.finalMembers.isEmpty())
+                    && (type.partialMembers == null ||
+                        type.partialMembers.isEmpty()))
+                    throw new RuntimeException(type.type == YetiType.STRUCT
+                                ? "Internal error: empty struct"
+                                : "Internal error: empty variant");
                 writeMap(type.finalMembers);
                 writeMap(type.partialMembers);
             } else if (type.type == YetiType.JAVA) {
