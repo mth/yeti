@@ -150,7 +150,8 @@ class YetiTypeAttr extends Attribute {
                 if ((type.finalMembers == null || type.finalMembers.isEmpty())
                     && (type.partialMembers == null ||
                         type.partialMembers.isEmpty()))
-                    throw new RuntimeException(type.type == YetiType.STRUCT
+                    throw new CompileException(0, 0,
+                                type.type == YetiType.STRUCT
                                 ? "Internal error: empty struct"
                                 : "Internal error: empty variant");
                 writeMap(type.finalMembers);
