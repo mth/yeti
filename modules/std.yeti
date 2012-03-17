@@ -365,9 +365,22 @@ plus a b = a + b;
      */
     at h k = h.[k],
 
-    /** f g x y = f (g x) (g y)
+    /**
+     * Binary function composition. Composes binary f and
+     * unary g so that arguments to f are transformed by appling g.
      *
-     * For example: sort (on (<) (.name)) list
+     * Arguments:
+     * f - binary function
+     * g - unary function used to transform arguments to f
+     *
+     * Description:
+     * : on f g x y = f (g x) (g y)
+     *
+     * Examples:
+     * : list = [{name="X",v=6},{name="A",v=33}];
+     * : sorted = sort (on (<) (.name)) list;
+     *
+     * The list is sorted by name structure field.
      */
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
         new On(f, g) unsafely_as 'a, 
