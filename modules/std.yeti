@@ -385,8 +385,6 @@ plus a b = a + b;
     on f g is ('a -> 'a -> 'b) -> ('c -> 'a) -> 'c -> 'c -> 'b =
         new On(f, g) unsafely_as 'a, 
 
-    /// functions for standard operators
-
     /**
      * Logical negation of the value.
      *
@@ -413,7 +411,24 @@ plus a b = a + b;
      */
     norec (or) a b = a or b,
 
-    /// Element a in hash b
+    /**
+     * Checks whether a key exists in the hash map.
+     *
+     * Arguments:
+     * key - key value to search for
+     * hash - hash map to be checked
+     *
+     * Examples:
+     * : h = ['a': 11, 'b': 22];
+     * : printKey k =
+     * :     if k in h then
+     * :         println "h.[\(k)] = \(h.[k])"
+     * :     else
+     * :         println "\(k) doesn't exist"
+     * :     fi;
+     * : printKey 'b'; // prints h.[b] = 22
+     * : printKey 'c'; // prints c doesn't exist
+     */
     norec (in) a b = a in b,
 
     /// Comparision operators
