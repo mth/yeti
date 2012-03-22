@@ -387,9 +387,30 @@ plus a b = a + b;
 
     /// functions for standard operators
 
-    /// boolean logic
+    /**
+     * Logical negation of the value.
+     *
+     * Arguments:
+     * value - logical value
+     */
     norec (not) v = not v,
+
+    /**
+     * Logical conjunction of a and b.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (and) a b = a and b,
+
+    /**
+     * Logical disjunction of a or b.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (or) a b = a or b,
 
     /// Element a in hash b
