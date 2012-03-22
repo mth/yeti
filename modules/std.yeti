@@ -431,12 +431,78 @@ plus a b = a + b;
      */
     norec (in) a b = a in b,
 
-    /// Comparision operators
+    /**
+     * Returns true when a and b values are equal (and false otherwise).
+     *
+     * It is internally implemented on most data types using .equals()
+     * method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (==) a b = a == b,
+
+    /**
+     * Returns true when a and b values are not equal (and false otherwise).
+     *
+     * It is internally implemented on most data types using .equals()
+     * method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (!=) a b = a != b,
+
+    /**
+     * Returns true when a value is less than b value (and false otherwise).
+     *
+     * It is internally implemented on most data types using
+     * Comparable.compareTo() method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (<)  a b = a <  b,
+
+    /**
+     * Returns true when a value is less than or equal to b value
+     * (and false otherwise).
+     *
+     * It is internally implemented on most data types using
+     * Comparable.compareTo() method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (<=) a b = a <= b,
+
+    /**
+     * Returns true when a value is greater than b value (and false otherwise).
+     *
+     * It is internally implemented on most data types using
+     * Comparable.compareTo() method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (>)  a b = a >  b,
+
+    /**
+     * Returns true when a value is greater than or equal to b value
+     * (and false otherwise).
+     *
+     * It is internally implemented on most data types using
+     * Comparable.compareTo() method on the corresponding JVM value.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     norec (>=) a b = a >= b,
 
     /// Arithmetic operators
