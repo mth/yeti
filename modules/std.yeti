@@ -505,11 +505,69 @@ plus a b = a + b;
      */
     norec (>=) a b = a >= b,
 
-    /// Arithmetic operators
+    /**
+     * Arithmetic sum of the values a and b.
+     *
+     * The result may not be accurate when applied to rational numbers
+     * with very big numerator or denominator part as these overflow into
+     * double-precision floating point numbers.
+     *
+     * Arguments:
+     * a - first number
+     * b - second number
+     */
     norec (+)      = plus,
+
+    /**
+     * Substracts subtrahend from minuend and returns the difference.
+     *
+     * The result may not be accurate when applied to rational numbers
+     * with very big numerator or denominator part as these overflow into
+     * double-precision floating point numbers.
+     *
+     * Arguments:
+     * minuend    - number to substract from
+     * subtrahend - number to substract
+     */
     norec (-)  a b = a - b,
+
+    /**
+     * Arithmetic product of the values a and b.
+     *
+     * The result may not be accurate when applied to rational numbers
+     * with very big numerator or denominator part as these overflow into
+     * double-precision floating point numbers.
+     *
+     * Arguments:
+     * a - first number
+     * b - second number
+     */
     norec (*)  a b = a * b,
+
+    /**
+     * Divides dividend with divisor and returns the quotient.
+     *
+     * The result is rational number, when integer values fitting into
+     * 32 bits are divided.
+     *
+     * The result may not be accurate when applied to big integers or
+     * rational numbers with very big numerator or denominator part as
+     * these overflow into double-precision floating point numbers.
+     *
+     * Arguments:
+     * dividend - the number to divide
+     * divisor  - dividend is divided by divisor
+     */
     norec (/)  a b = a / b,
+
+    /**
+     * Remainder of division of the integer part of dividend
+     * with integer part of divisor.
+     *
+     * Arguments:
+     * dividend - the number to divide
+     * divisor  - dividend is divided by divisor
+     */
     norec (%)  a b = a % b,
 
     /// Function composition - (f . g) x is same as f (g x)
