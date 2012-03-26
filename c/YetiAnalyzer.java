@@ -281,7 +281,7 @@ public final class YetiAnalyzer extends YetiType {
             }
         }
         if (name == "") {
-            if (node.param.lengeth == 0)
+            if (node.param.length == 0)
                 throw new CompileException(node,
                                            "Empty structure type not allowed");
             return nodeToMembers(STRUCT, node.param, free, scope, depth);
