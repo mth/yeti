@@ -278,7 +278,8 @@ class YetiTypeAttr extends Attribute {
                 t.partialMembers = readMap();
                 Map param;
                 if (t.finalMembers == null) {
-                    param = t.partialMembers;
+                    if ((param = t.partialMembers) == null)
+                        param = new HashMap();
                 } else if (t.partialMembers == null) {
                     param = t.finalMembers;
                 } else {
