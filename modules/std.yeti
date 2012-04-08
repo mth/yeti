@@ -570,7 +570,23 @@ plus a b = a + b;
      */
     norec (%)  a b = a % b,
 
-    /// Function composition - (f . g) x is same as f (g x)
+    /**
+     * Function composition - (f . g) x is same as f (g x).
+     * Composes unary f and g into single function, where f is
+     * applied to the result of application of g (to argument).
+     *
+     * Arguments:
+     * f - first function
+     * g - second function
+     *
+     * Examples:
+     * : printLength = print . length;
+     * : printLength [4,5,6]; // prints 3
+     *
+     * This is equivalent to:
+     * : printLength x = print (length x);
+     * : printLength [4,5,6]; // prints 3
+     */
     norec (.)  a b = a . b,
 
     /// List constructor a :: [b, c] is same as [a, b, c]
