@@ -940,11 +940,11 @@ plus a b = a + b;
 
     strLeftOf subString s is string -> string -> string =
         i = strIndexOf s subString 0;
-        if i < 0 then '' else strSlice s 0 i fi,
+        if i < 0 then undef_str else strSlice s 0 i fi,
 
     strRightOf subString s is string -> string -> string =
-        i = strLastIndexOf s subString 0;
-        if i < 0 then '' else strRight s (i + strLength subString) fi,
+        i = strLastIndexOf' s subString;
+        if i < 0 then undef_str else strRight s (i + strLength subString) fi,
 
     strJoin sep list is string -> list?<'a> -> string =
         if empty? list then
