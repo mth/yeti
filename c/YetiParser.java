@@ -623,7 +623,8 @@ interface YetiParser {
             char c;
             yetiDocReset = true;
             for (;;) {
-                while (i < src.length && (c = src[i]) >= '\000' && c <= ' ') {
+                while (i < src.length &&
+                       ((c = src[i]) >= '\000' && c <= ' ' || c == 0xa0)) {
                     ++i;
                     if (c == '\n') {
                         ++line;
