@@ -1,0 +1,11 @@
+diff -ur asm-3.1-orig/src/org/objectweb/asm/ClassReader.java asm-3.1/src/org/objectweb/asm/ClassReader.java
+--- asm-3.1-orig/src/org/objectweb/asm/ClassReader.java	2007-10-27 13:32:44.000000000 +0300
++++ asm-3.1/src/org/objectweb/asm/ClassReader.java	2012-05-09 13:00:09.651877641 +0300
+@@ -1800,6 +1800,7 @@
+         final int codeOff,
+         final Label[] labels)
+     {
++        if (attrs != null)
+         for (int i = 0; i < attrs.length; ++i) {
+             if (attrs[i].type.equals(type)) {
+                 return attrs[i].read(this, off, len, buf, codeOff, labels);

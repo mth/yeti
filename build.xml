@@ -3,16 +3,17 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-3.1r.jar"/>
+    <property name="asm" value="${basedir}/asm-3.1-p1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
     <property name="docdir" value="${basedir}/.build/doc"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${basedir}/.build/asm-3.1.jar"/>
+    <property name="asmt" value="${basedir}/.build/asm-3.1-p1.jar"/>
     <mkdir dir="${basedir}/.build/util"/>
-    <get src="http://linux.ee/~mzz/asm-3.1.jar" dest="${asmt}" verbose="true"/>
+    <get src="http://linux.ee/~mzz/yeti/asm-3.1-p1.jar"
+         dest="${asmt}" verbose="true"/>
     <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
            includes="Rename.java" encoding="UTF-8"
            includeantruntime="false"/>
