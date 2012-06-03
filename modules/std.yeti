@@ -589,11 +589,30 @@ plus a b = a + b;
      */
     norec (.)  a b = a . b,
 
-    /// List constructor a :: [b, c] is same as [a, b, c]
+    /**
+     * Constructs a new list by prepending value to tail list.
+     *
+     * Arguments:
+     * value - value to be prepended
+     * list  - list used as tail of the constructed list
+     *
+     * Examples:
+     * The following expressions result in equivalent lists.
+     * : a :: [b, c] == [a, b, c]
+     */
     norec (::) v l = v :: l,
 
-    /// Lazy list constructor a :. \[b] is same as [a, b], but the second
-    /// lambda is invoked only when the tail is accessed for the first time.
+    /**
+     * Constructs a new list from head value and function that would return
+     * the tail list. The function will be applied once, when the list
+     * tail is requested for the first time. This allows creating lazy and
+     * possibly infinite lists or streams.
+     *
+     * Arguments:
+     * value    - value used as new list head
+     * function - function that would return the list tail, when applied
+     *            to unit value
+     */
     norec (:.) v l = v :. l,
 
     /// Regex match, like s =~ '\d' to check whether string s contains number
