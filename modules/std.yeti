@@ -615,10 +615,53 @@ plus a b = a + b;
      */
     norec (:.) v l = v :. l,
 
-    /// Regex match, like s =~ '\d' to check whether string s contains number
+    /**
+     * Returns true when regular expression has a match in the haystack string
+     * (and false otherwise).
+     *
+     * Arguments:
+     * haystack - string where to search the given regex match
+     * regex    - string representing a regular expression
+     *
+     * Description:
+     * The regular expression is compiled and matched using the java.util.regex
+     * implementation, and therefore uses the same (Perl regular expression
+     * compatible) syntax. Yeti compiler optimises usage of this operator
+     * when literal string is used as regex argument, so that the regex will
+     * be compiled only once into the java.util.regex.Pattern instance.
+     *
+     * Examples:
+     * : if str =~ '\d' then
+     * :     println "'\(str)' contains a number in it."
+     * : fi
+     */
     norec (=~) s p = s =~ p,
 
-    /// Negated regex match: s !~ p is same as not (s =~ p)
+    /**
+     * Returns true when regular expression has no match in the haystack string
+     * (and false if it has).
+     *
+     * Arguments:
+     * haystack - string where to search the given regex match
+     * regex    - string representing a regular expression
+     *
+     * Description:
+     *
+     * This operator is negation of the =~ operator and could be defined in the
+     * following way:
+     * : (!~) haystack regex = not (haystack =~ regex)
+     *
+     * The regular expression is compiled and matched using the java.util.regex
+     * implementation, and therefore uses the same (Perl regular expression
+     * compatible) syntax. Yeti compiler optimises usage of this operator
+     * when literal string is used as regex argument, so that the regex will
+     * be compiled only once into the java.util.regex.Pattern instance.
+     *
+     * Examples:
+     * : if str !~ '\d' then
+     * :     println "'\(str)' has no number in it."
+     * : fi
+     */
     norec (!~) s p = s !~ p,
 
     /// Integer operations (when arguments are rational or floating numbers,
