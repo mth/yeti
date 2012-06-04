@@ -1,3 +1,4 @@
+import java.net.URLEncoder;
 load yeti.lang.compiler.showtype;
 
 doc_dir = _argv.[0];
@@ -207,6 +208,9 @@ em { color: #000080; font: bold 13pt sans-serif }
 .doc { background: #ffffa8;
     padding: 0.5em 0.5em 0.5em 2em;
     font-size: 12pt; }
+.contents { background: #cccccc; padding: 0.5em; font-size: 10pt }
+.contents a { text-decoration: none }
+.contents a:hover { text-decoration: underline }
 .doc p { margin: 0.6em 0px 1px; font-weight: bold }
 .doc pre { background: #ffffc8;
     border: 1px dashed black;
@@ -224,19 +228,30 @@ em { color: #000080; font: bold 13pt sans-serif }
 
 complexType what before sep after f {big, docs, top, fields} =
    (style = if docs then '"field wdoc"' else 'field' fi;
-    str sep field =
-       (descr = f sep field;
-        var s = strJoin '' (tail descr);
+    contents = array [];
+    str sep field' =
+       ({descr, name, type} = f sep field';
+        var s = strJoin '' type;
         if big then
-            "<div class=\(style)>\(s)\(head descr)</div>\n"
+            idattr = if name != '' then
+                         ref = URLEncoder#encode(name, 'UTF-8');
+                         push contents "<a href=\"#\(ref)\">\(name)</a>";
+                         "id=\"\(name@)\" "
+                     fi;
+            "<div \(idattr)class=\(style)>\(s)\(descr)</div>\n"
         else
             s
         fi);
     last = pop fields;
     var fields = map (str sep) fields ++ [str '' last];
+    contents =
+        if big and length fields > 10 and not empty? contents then
+            "<div class=\"contents\">\(strJoin ' ' contents)</div>"
+        fi;
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
-        fields := "<div class=\"box \(what)\"\(block)>" :: fields ++ ["</div>"]
+        fields := "<div class=\"box \(what)\"\(block)>"
+                    :: contents :: fields ++ ["</div>"]
     fi;
     strJoin '' (before :: fields ++ [after]));
 
@@ -244,16 +259,18 @@ to_html = formatType {
     struct = complexType 'struct' '<em>{</em>' ', ' '<em>}</em>' do sep f:
         {descr, args} = parseDoc f.description;
         args = map (_ arg = " <var>\(arg)</var>") args;
-        concat [[descr, if f.mutable then '<em>var </em>' fi,
-                 '<span class=sn>', f.tag, f.nameStr@, '</span>'],
-                args, ['<em> is </em>', f.typeStr, sep]]
+        type = concat [[if f.mutable then '<em>var </em>' fi,
+                        '<span class=sn>', f.tag, f.nameStr@, '</span>'],
+                       args, ['<em> is </em>', f.typeStr, sep]];
+        {descr, type, name = f.name}
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
         {descr} = parseDoc m.description;
-        [descr, '<span class=vn>', m.name, '</span> ', m.typeStr, sep]
+        type = ['<span class=vn>', m.name, '</span> ', m.typeStr, sep];
+        {descr, type, name = ''}
     done,
     function = complexType 'function' '' ' &rarr; ' ''
-                           (_ sep t = ['', t, sep]),
+                           (_ sep t = {descr = '', type = [t, sep], name = ''}),
     alias alias type = "\(alias)<em> is </em>\(type)",
     other descr = "<div class=\"other\">\(descr)</div>",
     escape s =
