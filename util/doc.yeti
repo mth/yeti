@@ -43,8 +43,12 @@ formatType template =
             big := docs or flag or length l >= 3;
             cur := if variant then 'variant' else 'struct' fi;
             fieldDesc f =
-                f is typeitem<type> with { typeStr = types.[f.name] };
-            { big, docs, fields = array (map fieldDesc l), top = depth == 1 });
+               (fn = f.name;
+                nameStr = if variant or fn =~ '^\w' then fn else "(\(fn))" fi;
+                f is typeitem<type> with { typeStr = types.[fn], nameStr });
+            fields = if variant then id else sortBy (on (<) (.nameStr)) fi
+                        (map fieldDesc l);
+            { big, docs, fields = array fields, top = depth == 1 });
 
         other s =
             if cur != '' then
@@ -241,7 +245,7 @@ to_html = formatType {
         {descr, args} = parseDoc f.description;
         args = map (_ arg = " <var>\(arg)</var>") args;
         concat [[descr, if f.mutable then '<em>var </em>' fi,
-                 '<span class=sn>', f.tag, f.name@, '</span>'],
+                 '<span class=sn>', f.tag, f.nameStr@, '</span>'],
                 args, ['<em> is </em>', f.typeStr, sep]]
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
