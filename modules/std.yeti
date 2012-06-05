@@ -772,10 +772,32 @@ plus a b = a + b;
      */
     norec empty? a = empty? a,
 
-    /// First element of list or array.
+    /**
+     * Returns the first element of list or array (which must be non-empty).
+     *
+     * Arguments:
+     * list - the list or array from which to extract the first element
+     *
+     * Exceptions:
+     * java.lang.NullPointerException - when used on empty list
+     * yeti.lang.EmptyArrayException  - when used on empty array
+     */
     norec head a = head a,
 
-    /// Rest of the list or array.
+    /**
+     * Returns the tail of list consisting of all elements except
+     * the first (head) one. Using tail is equivalent to using drop 1.
+     *
+     * Arguments:
+     * list - the list or array to use
+     *
+     * Notes:
+     * The tail function can be used on array. In this case a list view
+     * of array is returned, consisting of all elements starting from
+     * index 1 (subsequent applications of tail give views with increased
+     * start index). As the list view still references to the original
+     * array, it will change when the array is modified.
+     */
     norec tail a = tail a,
 
     /// Identity check - whether a and b are reference to same object.
