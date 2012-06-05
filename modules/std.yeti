@@ -800,7 +800,18 @@ plus a b = a + b;
      */
     norec tail a = tail a,
 
-    /// Identity check - whether a and b are reference to same object.
+    /**
+     * Identity check - returns true when a and b reference to the same
+     * object instance (and false otherwise).
+     *
+     * Arguments:
+     * a - first value reference
+     * b - second value reference
+     *
+     * Notes:
+     * It is equivalent to Java == operator (barring primitive values,
+     * which don't exist in Yeti anyway).
+     */
     norec same? a b = same? a b,
 
     /// For every element of l call f with given element as argument.
