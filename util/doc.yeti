@@ -122,6 +122,7 @@ parseDoc' doc =
     exceptions = array [];
     examples = array [];
     seeAlso = array [];
+    notes = array [];
     var prev = '';
     var state = push about;
     for doc do line:
@@ -134,6 +135,7 @@ parseDoc' doc =
                             (like '^([\w.]++)\s++-(?:\s++(.*))?$');
             'Examples:': state := withCode examples;
             'See also:': state := push seeAlso;
+            'Notes:': state := withCode notes;
             _: state line
             esac
         else
@@ -152,7 +154,7 @@ parseDoc' doc =
     show pre post f v = if not empty? v then "\(pre)\(f v)\(post)" fi;
     text what = show "<p>\(what)</p>" '' (lines . join);
     descr = if not all empty? [args, exceptions] or
-               not all empty? [about, description, examples, seeAlso] then
+              not all empty? [about, description, examples, seeAlso, notes] then
         state ''; // </pre> if needed
         arg {arg, text} =
             "<tr><td><var>\(arg)</var><td>-<td>\(lines (join text))";
@@ -162,7 +164,8 @@ parseDoc' doc =
                 '</table>' (strJoin '' . map arg) exceptions)\
         "\(text 'Description' description)\
         "\(text 'Examples' examples)\
-        "\(text 'See also' seeAlso)</div>"
+        "\(text 'See also' seeAlso)\
+        "\(text 'Notes' notes)</div>"
     fi;
     {descr, args = arg_list, raw_doc = doc});
 

@@ -664,16 +664,69 @@ plus a b = a + b;
      */
     norec (!~) s p = s !~ p,
 
-    /// Integer operations (when arguments are rational or floating numbers,
-    /// then only the integer part of argument is used))
+    /**
+     * Divides integer part of dividend with integer part of divisor
+     * and returns the integer part of quotient.
+     *
+     * Arguments:
+     * dividend - the number to divide
+     * divisor  - dividend is divided by integer part of divisor
+     */
     norec (div) a b = a div b,
+
+    /**
+     * Shifts bit representation of integer part of the value
+     * to left by given count of bits and returns the result.
+     *
+     * Arguments:
+     * value - the value to shift
+     * count - how much shift
+     */
     norec (shl) a b = a shl b,
+
+    /**
+     * Shifts bit representation of integer part of the value
+     * to right by given count of bits and returns the result.
+     *
+     * Arguments:
+     * value - the value to shift
+     * count - how much shift
+     */
     norec (shr) a b = a shr b,
+
+    /**
+     * Returns bitwise XOR of integer parts of arguments a and b.
+     *
+     * Arguments:
+     * a - first number
+     * b - second number
+     */
     norec (xor) a b = a xor b,
+
+    /**
+     * Returns bitwise OR of integer parts of arguments a and b.
+     *
+     * Arguments:
+     * a - first number
+     * b - second number
+     */
     norec (b_or) a b = a b_or b,
+
+    /**
+     * Returns bitwise AND of integer parts of arguments a and b.
+     *
+     * Arguments:
+     * a - first number
+     * b - second number
+     */
     norec (b_and) a b = a b_and b,
 
-    /// Negate a = -a
+    /**
+     * Returns algebralic negation of argument value (negate value = -value).
+     *
+     * Arguments:
+     * value - value to negate
+     */
     norec negate a = negate a,
 
     /// Low-level nullpointer check.
