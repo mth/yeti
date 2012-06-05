@@ -729,15 +729,47 @@ plus a b = a + b;
      */
     norec negate a = negate a,
 
-    /// Low-level nullpointer check.
-    /// Use defined? instead, as nullptr? may behave unexpectedly together
-    /// with some conversions done by yeti.
+    /**
+     * Check whether given value is a JVM null pointer, and returns true
+     * when it is.
+     *
+     * Arguments:
+     * value - value to check
+     *
+     * Notes:
+     * Use defined? instead, unless you really know what you're doing.
+     * The low-level check done by nullptr? may behave unexpectedly
+     * together with some conversions done by Yeti compiler (for example
+     * nullptr? (System#getenv('???')) is always false).
+     */
     norec nullptr? a = nullptr? a,
 
-    /// Checks whether value is defined
+    /**
+     * Checks whether given value is defined, and returns true when it is.
+     * Undefined values are JVM null pointer, undef_str and undef_bool.
+     *
+     * Arguments:
+     * value - value to check
+     *
+     * Notes:
+     * The unit value () is internally represented by JVM null pointer,
+     * and therefore defined? () is false.
+     *
+     * Empty lists are often also considered to be undefined because
+     * of being represented by null pointer (but empty arrays are not).
+     * You should use empty? to detect empty lists.
+     */
     norec defined? a = defined? a,
 
-    /// Check whether a collection is empty one.
+    /**
+     * Checks whether a collection is empty, and returns true when it is.
+     *
+     * This function works on all kinds of standard collections - lists,
+     * arrays and hashes implement the map<> interface.
+     *
+     * Arguments:
+     * collection - collection to check
+     */
     norec empty? a = empty? a,
 
     /// First element of list or array.
