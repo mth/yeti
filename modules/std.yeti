@@ -773,10 +773,10 @@ plus a b = a + b;
     norec empty? a = empty? a,
 
     /**
-     * Returns the first element of list or array (which must be non-empty).
+     * Returns the first element of sequence (which must be non-empty).
      *
      * Arguments:
-     * list - the list or array from which to extract the first element
+     * sequence - the list or array from which to extract the first element
      *
      * Exceptions:
      * java.lang.NullPointerException - when used on empty list
@@ -785,11 +785,11 @@ plus a b = a + b;
     norec head a = head a,
 
     /**
-     * Returns the tail of list consisting of all elements except
+     * Returns the tail of sequence consisting of all elements except
      * the first (head) one. Using tail is equivalent to using drop 1.
      *
      * Arguments:
-     * list - the list or array to use
+     * sequence - the list or array to use
      *
      * Notes:
      * The tail function can be used on array. In this case a list view
@@ -814,7 +814,21 @@ plus a b = a + b;
      */
     norec same? a b = same? a b,
 
-    /// For every element of l call f with given element as argument.
+    /**
+     * Iterates over sequence, appling the block function to the element
+     * value for each sequence element.
+     *
+     * Arguments:
+     *  sequence - list or array to iterate
+     *  block    - function to call
+     *
+     * Examples:
+     *
+     * Print numbers from 1 to 100, using for on range list.
+     * : for [1..100] do i:
+     * :     println i
+     * : done
+     */
     norec for l f = for l f,
 
     /// Acquires a mutual-exclusion lock on behalf of the executing thread,
