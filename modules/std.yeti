@@ -831,8 +831,31 @@ plus a b = a + b;
      */
     norec for l f = for l f,
 
-    /// Acquires a mutual-exclusion lock on behalf of the executing thread,
-    /// applies block to (), then releases the lock.
+    /**
+     * Acquires an intrinsic monitor lock on behalf of the executing thread,
+     * applies the block to (), then releases the lock. It is equivalent to
+     * executing the block in Java synchronized block.
+     * 
+     * Arguments:
+     *  monitor - object that is used for the lock (value of any type can
+     *            be use as long as nullptr? monitor is false)
+     *  block   - function that is applied while the monitor lock is hold
+     *
+     * Exceptions:
+     *  java.lang.NullPointerException - when monitor is a JVM null pointer
+     *
+     * Examples:
+     * : var nameCount = 0;
+     * : var lastName = '';
+     * :
+     * : addName name =
+     * :     synchronized addName do:
+     * :          lastName := name;
+     * :          nameCount := nameCount + 1;
+     * :     done;
+     *
+     * The addName function is used as a monitor here.
+     */
     norec synchronized monitor block = synchronized monitor block,
 
     /// String concatenation
