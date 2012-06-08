@@ -211,7 +211,7 @@ em { color: #000080; font: bold 13pt sans-serif }
 .doc { background: #ffffa8;
     padding: 0.5em 0.5em 0.5em 2em;
     font-size: 12pt; }
-.contents { background: #cccccc; padding: 0.5em; font-size: 10pt }
+.contents { background: #dddddd; padding: 0.5em; font-size: 10pt }
 .contents a { text-decoration: none }
 .contents a:hover { text-decoration: underline }
 .doc p { margin: 0.6em 0px 1px; font-weight: bold }
