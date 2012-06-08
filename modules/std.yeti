@@ -866,7 +866,7 @@ plus a b = a + b;
      * b - second string
      *
      * Notes:
-     * Using this operator is equivalent to embedded string expression
+     * Using this operator is equivalent to the embedded string expression
      * "\(a)\(b)" except for requiring the arguments to be of string type.
      */
     (^) a b is string -> string -> string = "\(a)\(b)",
