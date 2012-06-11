@@ -796,7 +796,8 @@ plus a b = a + b;
      * of array is returned, consisting of all elements starting from
      * index 1 (subsequent applications of tail give views with increased
      * start index). As the list view still references to the original
-     * array, it will change when the array is modified.
+     * array, it will change when the array is modified (use copy function
+     * to get an independent copy).
      */
     norec tail a = tail a,
 
@@ -871,7 +872,31 @@ plus a b = a + b;
      */
     (^) a b is string -> string -> string = "\(a)\(b)",
 
-    /// List/array concatenation
+    /**
+     * Appends two sequences a and b lazily, returns the resulting list.
+     *
+     * Arguments:
+     * a - first sequence (list or array)
+     * b - second sequence (list or array)
+     *
+     * Description:
+     * The list append operator creates a lazy list, which copies
+     * the first sequence on the fly (as elements are requested),
+     * and when it ends, gives the second sequence as the list tail.
+     *
+     * If first sequence (a) is an infinite list, then the result is
+     * equivalent to it.
+     *
+     * If the second sequence (b) is an array, and is later mutated,
+     * then the resulting list will see the modified array as its tail
+     * (use copy function to get an independent copy).
+     *
+     * Examples:
+     * : for ([1..4] ++ [13..15]) println;
+     *
+     * Prints numbers 1, 2, 3, 4, 13, 14, 15. No list containing those
+     * numbers is never allocated (as lazy ranges are lazily appended).
+     */
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
             b as ~Object unsafely_as 'a
@@ -881,7 +906,7 @@ plus a b = a + b;
             new ConcatList(a, b) unsafely_as list<'a>
         fi,
 
-    /// damn struct polymorphism restriction. is it really needed?
+    // damn struct polymorphism restriction. is it really needed?
     array, fold, find, id, index, keys, hash, map, map',
     forHash, length, peekObject,
 
