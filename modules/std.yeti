@@ -190,7 +190,7 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
 
 /**
  * Returns [function(a), function(b), ...] for list [a, b, ...]
- * by applying function to each element of the list (either
+ * by applying the function to each element of the list (either
  * lazily or strictly).
  *
  * Arguments:
@@ -217,7 +217,7 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
 
 /**
  * Returns strict [function(a), function(b), ...] for list [a, b, ...]
- * by applying function to each element of the list.
+ * by applying the function to each element of the list.
  *
  * Arguments:
  *  function - function applied to list elements
@@ -357,7 +357,7 @@ plus a b = a + b;
      * key - array index or hash table key
      *
      * Exceptions:
-     * NoSuchKey - if the key doesn't exist in given collection
+     * NoSuchKey - if the key doesn't exist in the given collection
      *
      * Examples:
      * : numbers = [1: "one", 2: "two", 3: "three"];
@@ -913,6 +913,15 @@ plus a b = a + b;
     /// Wraps Java array object into Yeti array type.
     wrapArray is 'a[] -> array<'a> = id,
 
+    /**
+     * Returns a list of elements obtained by applying the function
+     * to each element of the Java collection.
+     *
+     * Arguments:
+     *  function - function applied to list elements
+     *  collection - java.util.Collection instance (may be null,
+     *               empty list is returned in this case)
+     */
     mapJavaList f l is (~Object -> 'a) -> ~java.util.Collection -> list<'a> =
         if nullptr? l then
             []
@@ -920,6 +929,20 @@ plus a b = a + b;
             map f l#toArray()
         fi,
 
+    /**
+     * Iterates over Java map, calling the block function for each
+     * map entry with key and value as arguments.
+     *
+     * Arguments:
+     *  map   - java.util.Map instance to iterate
+     *  block - function to call
+     *
+     * Examples:
+     * : forJavaMap System#getProperties() do name value:
+     * :    println {name, value}
+     * : done
+     * Prints system properties.
+     */
     forJavaMap = forHash unsafely_as ~yeti.lang.Fun unsafely_as
         ~java.util.Map -> (~Object -> ~Object -> ()) -> (),
 

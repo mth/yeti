@@ -153,6 +153,9 @@ public final class Core {
                     c = "\\r";
                 } else if (s[i] == '\t') {
                     c = "\\t";
+                } else if (s[i] >= '\u0000' && s[i] < ' ') {
+                    c = "000".concat(Integer.toHexString(s[i]));
+                    c = "\\u".concat(c.substring(c.length() - 4));
                 } else {
                     continue;
                 }
