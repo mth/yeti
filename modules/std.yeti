@@ -974,7 +974,21 @@ plus a b = a + b;
             (a unsafely_as ~Coll)#asList() unsafely_as list<'a>
         fi,
 
-    /// Swaps elements with keys i and j in mapping a
+    /**
+     * Swaps two array/hash map element values stored at indexes i and j.
+     *
+     * Arguments:
+     *  map - array or hash table
+     *  i   - index/key
+     *  j   - index/key
+     *
+     * Description:
+     * The canonical implementation is following:
+     * : swapAt map i j = 
+     * :    (tmp = map.[i];
+     * :     map.[i] := map.[j];
+     * :     map.[j] := tmp);
+     */
     swapAt a i j =
         x = a.[i];
         a.[i] := a.[j];
