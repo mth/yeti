@@ -946,7 +946,27 @@ plus a b = a + b;
     forJavaMap = forHash unsafely_as ~yeti.lang.Fun unsafely_as
         ~java.util.Map -> (~Object -> ~Object -> ()) -> (),
 
-    /// Gives values from collection a as a list.
+    /**
+     * Gives values from collection as a list.
+     *
+     * Arguments:
+     * collection - a list, array or hash map
+     *
+     * Description:
+     * List is returned as is. A list view is returned for an array
+     * (implementation wise just a type cast), so it will change when the
+     * original array is modified. Differently from array, an independent
+     * list consisting of values from the key-value pairs is created and
+     * returned when the collection is a hash map.
+     *
+     * Either returned list or collection given as argument should be
+     * explicitly copied (using copy function), if you want to store the
+     * result for later usage and the original collection might change.
+     *
+     * Relying on the mutating list-view of an array is best
+     * to be avoided - having direct reference to the original
+     * collection is more straight-forward solution.
+     */
     list a is map<'k, 'a> -> list<'a> =
         if empty? a then
             []
