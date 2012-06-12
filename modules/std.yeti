@@ -996,8 +996,25 @@ plus a b = a + b;
         a.[i] := a.[j];
         a.[j] := x,
 
-    /// Applies function to two arguments in reversed order.
-    /// Useful for swapping binary functions arguments.
+    /**
+     * Applies function to two arguments in reverse order.
+     * Useful for swapping binary functions arguments.
+     *
+     * Arguments:
+     * function - function to apply
+     * x        - second argument to give to the function
+     * y        - first argument to give to the function
+     *
+     * Description:
+     * : flip function x y = function y x;
+     *
+     * The result of appling flip to binary function is a function that takes
+     * its two arguments in the reverse order of the original function.
+     *
+     * Examples:
+     * The (>) operator could be defined in the terms of (<) using flip.
+     * : (>) = flip (<);
+     */
     flip f x y =
         f y x,
 
