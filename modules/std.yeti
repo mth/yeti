@@ -204,7 +204,7 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
  * are mapped strictly.
  *
  * You should ALWAYS use the strict map' instead, if the mapping function
- * has side effects, as it's not determined whether function is applied
+ * has side effects, as it's not determined whether the function is applied
  * by map on some list element when map was called, some time later or
  * even never at all (if the result list was not consumed).
  */
