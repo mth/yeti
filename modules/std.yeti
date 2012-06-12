@@ -910,7 +910,9 @@ plus a b = a + b;
     array, fold, find, id, index, keys, hash, map, map',
     forHash, length, peekObject,
 
-    /// Wraps Java array object into Yeti array type.
+    /// Deprecated - it doesn't do anything useful, and if you want to
+    /// wrap a Java array, then either use implicit cast or explicit
+    /// value as array<'a> cast.
     wrapArray is 'a[] -> array<'a> = id,
 
     /**
