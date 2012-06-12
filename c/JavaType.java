@@ -594,8 +594,6 @@ class JavaType implements Cloneable {
         "Ljava/math/BigDecimal;"
     };
 
-    //static final String[] NUMBER_X = { "B", "S", "F", "D", "I", "J", "i", "d" };
-
     int isAssignable(JavaType from) throws JavaClassNotFoundException {
         from.resolve();
         if (this == from) {
@@ -623,7 +621,7 @@ class JavaType implements Cloneable {
         { YetiType.BOOL_TYPE, YetiType.STR_TYPE, YetiType.NUM_TYPE };
 
     // -1 not assignable. 0 - perfect match. > 0 convertable.
-    int isAssignableJT(YType to, YType from, boolean smart)
+    private int isAssignableJT(YType to, YType from, boolean smart)
             throws JavaClassNotFoundException, TypeException {
         int ass;
         if (from.type != YetiType.JAVA && description == "Ljava/lang/Object;") {
@@ -701,7 +699,7 @@ class JavaType implements Cloneable {
         return description == "Ljava/lang/Object;" ? 10 : -1;
     }
 
-    static int isAssignable(YType to, YType from, boolean smart)
+    private static int isAssignable(YType to, YType from, boolean smart)
             throws JavaClassNotFoundException, TypeException {
         int ass;
 //        System.err.println(" --> isAssignable(" + to + ", " + from + ")");
@@ -748,7 +746,7 @@ class JavaType implements Cloneable {
     }
 
     static boolean isSafeCast(YetiParser.Node where,
-                              YType to, YType from) {
+                              YType to, YType from, boolean explicit) {
         to = to.deref();
         from = from.deref();
         // automatic array wrapping
@@ -784,6 +782,8 @@ class JavaType implements Cloneable {
             }
             return true;
         }
+        if (explicit)
+            return isAssignable(where, to, from, true) >= 0;
         boolean smart = true;
         boolean mayExact = false;
         while (from.type == YetiType.MAP &&

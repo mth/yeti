@@ -369,8 +369,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (s == "unsafely_as" && (vt.type != VAR || t.type != VAR)) {
                 JavaType.checkUnsafeCast(is, vt, t);
-            } else if (s == "as" &&
-                       JavaType.isAssignable(is, t, vt, true) < 0) {
+            } else if (s == "as" && !JavaType.isSafeCast(is, t, vt, true)) {
                 throw new CompileException(is, scope, vt, t,
                                 "impossible cast from #1 to #2", null);
             }
@@ -468,7 +467,7 @@ public final class YetiAnalyzer extends YetiType {
                 ? lambda(new Function(funarg), lambdaArg, scope, depth)
                 : analyze(arg, scope, depth);
         if (funarg != null &&
-            JavaType.isSafeCast(where, funarg, argCode.type)) {
+            JavaType.isSafeCast(where, funarg, argCode.type, false)) {
             argCode = new Cast(argCode, funarg, true, where.line);
         }
         YType[] applyFun = { argCode.type, new YType(depth) };
@@ -1097,7 +1096,7 @@ public final class YetiAnalyzer extends YetiType {
             YType res; // try casting to expected type
             if (expected != null && expected.type == FUN &&
                 JavaType.isSafeCast(lambda, res = expected.param[1].deref(),
-                                    body.type)) {
+                                    body.type, false)) {
                 body = new Cast(body, res, true, lambda.expr[1].line);
             }
             to.setBody(wrapSeq(body, seq));
