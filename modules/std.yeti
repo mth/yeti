@@ -680,7 +680,7 @@ plus a b = a + b;
      *
      * Arguments:
      * value - the value to shift
-     * count - how much shift
+     * count - how much to shift
      */
     norec (shl) a b = a shl b,
 
@@ -690,7 +690,7 @@ plus a b = a + b;
      *
      * Arguments:
      * value - the value to shift
-     * count - how much shift
+     * count - how much to shift
      */
     norec (shr) a b = a shr b,
 
