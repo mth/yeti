@@ -237,10 +237,10 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 /**
- * Returns count of elements in container.
+ * Returns count of elements in collection.
  *
  * Arguments:
- *   container - a list, array or hash map
+ *   collection - a list, array or hash map
  *
  * Description:
  * For list or array it's length is returned, and for hash map the number of
