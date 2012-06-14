@@ -1018,7 +1018,39 @@ plus a b = a + b;
     flip f x y =
         f y x,
 
-    /// Make function f to be memoizing.
+    /**
+     * Memoizes the promise function with unit argument and returns the
+     * memoized function.
+     *
+     * Arguments:
+     * promise - a function taking () as argument, used as encapsulation
+     *           of an expression
+     *
+     * Description:
+     * The application of lazy results in memoized promise, which in essence
+     * is a suspension of lazily evaluated expression. The evaluation can
+     * be forced by appling this memoized promise to unit value (). The result
+     * of evaluation is saved and returned, when it is forced and successfully
+     * evaluated first time, and later applications of the memoized function
+     * will return the saved result.
+     *
+     * If the evaluation fails to return a result, throwing an exception
+     * instead, then subsequent attempt to force evaluation by appling the
+     * memoized promise will cause a re-evaluation of the promise function
+     * (by appling it again to the ()).
+     *
+     * Successful evaluation of the original promise may happen multiple times,
+     * if done concurrently as a race in multiple threads.
+     *
+     * Examples:
+     * : lazy_sum = lazy \(sum [1..100000000]);
+     * : println (lazy_sum ());
+     * : println (lazy_sum ());
+     *
+     * Here the sum of the large range will be calculated only on the first
+     * application of lazy_sum. The second application returns the result
+     * from first application.
+     */
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> 'a),
 
