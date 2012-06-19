@@ -1054,7 +1054,13 @@ plus a b = a + b;
     lazy f is (() -> 'a) -> (() -> 'a) =
         new Lazy(f) unsafely_as (() -> 'a),
 
-    /// Construct a pair structure.
+    /**
+     * Constructs a pair structure containing arguments fst and snd as fields.
+     *
+     * Arguments:
+     * fst - first field (fst) to the structure
+     * snd - second field (snd) to the structure
+     */
     pair fst snd =
         {fst, snd},
 
