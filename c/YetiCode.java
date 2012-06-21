@@ -1200,13 +1200,13 @@ final class ConcatStrings extends Code {
                 ctx.intConst(i);
             }
             param[i].gen(ctx);
-            if (param[i].type.deref().type != YetiType.STR) {
+            boolean valueOf = param[i].type.deref().type != YetiType.STR;
+            if (valueOf)
                 ctx.methodInsn(INVOKESTATIC, "java/lang/String",
                     "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;");
-            }
             if (arr)
                 ctx.insn(AASTORE);
-            else
+            else if (!valueOf)
                 ctx.typeInsn(CHECKCAST, "java/lang/String");
         }
         if (arr) {

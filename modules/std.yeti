@@ -1064,7 +1064,27 @@ plus a b = a + b;
     pair fst snd =
         {fst, snd},
 
-    /// Convert any value into string representation
+    /**
+     * Gives string representation of value.
+     *
+     * Arguments:
+     * value - value of any type
+     *
+     * Description:
+     * Returns string representation that is obtained by calling the Java
+     * String#valueOf(value) method. The library implementation uses
+     * string literal embedded expression:
+     * : string value =
+     * :     "\(value)";
+     * This gets compiled down into the String#valueOf() call (as that
+     * is used by compiler on all embedded string expressions unless
+     * the expression type is already known to be string).
+     *
+     * Examples:
+     * num_strs = map string [1..10];
+     *
+     * Gets list of numbers 1 to 10 as strings.
+     */
     string x =
         "\(x)",
 
