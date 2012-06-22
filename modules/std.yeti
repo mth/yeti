@@ -1071,14 +1071,43 @@ plus a b = a + b;
      * value - value of any type
      *
      * Description:
-     * Returns string representation that is obtained by calling the Java
+     * String values are returned unmodified. Numbers are formatted into
+     * decimal numbers. Rational and floating-point numbers are formatted
+     * using Double#toString(), which uses dot as decimal separator and
+     * uses scientific exponent notation for very small and big values,
+     * like 1.3E20.
+     *
+     * Empty lists and the unit value can be internally represented by JVM
+     * null pointer, which is shown as null. Empty arrays are always shown
+     * as [].
+     *
+     * Lists, hash maps, structures and variant values are formatted using
+     * Yeti syntax for them. The values of list/hash elements, structure
+     * fields and variant tag parameters are formatted in the same style
+     * recursively, with an exception for string values and null pointers.
+     * String element/field values are formatted as double-quoted ("string")
+     * Yeti string literals, and null pointers as [] (because empty list can
+     * be internally a null pointer). Arrays are formatted exactly like lists.
+     *
+     * : string ()       // () is null pointer in runtime, result is "null"
+     * : string {x = ()} // result is {x=[]}, as here () is a field value
+     *
+     * Following the Yeti syntax, lists have comma-separated values
+     * surrounded by [] brackets, for example string list ["Hello", "World\n"].
+     * Hash maps are similar, shown as a list of key: value pairs.
+     * Structures are shown as comma-separated list of field=value bindings
+     * surrounded by {} brackets, for example {a=33, s="something"}.
+     *
+     * The string representation is obtained by calling the Java
      * String#valueOf(value) method. The library implementation uses
      * string literal embedded expression:
      * : string value =
      * :     "\(value)";
      * This gets compiled down into the String#valueOf() call (as that
      * is used by compiler on all embedded string expressions unless
-     * the expression type is already known to be string).
+     * the expression type is already known to be string). The actual
+     * formatting described above is done by #toString() methods in the
+     * internal implementations of those data types.
      *
      * Examples:
      * num_strs = map string [1..10];
