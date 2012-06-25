@@ -109,10 +109,22 @@ public final class Core {
             s = s.substring(0, dot) + s.substring(dot + 1, l + 1);
             return new RatNum(Integer.parseInt(s), shift);
         } while (false);
-        if ((l - st) <= 19) {
-            return new IntNum(Long.parseLong(s));
+        n = 10; // radix
+        if (l > 2 && s.charAt(st) == '0') {
+            switch (s.charAt(st + 1)) {
+                case 'o': case 'O':
+                    n = 2;
+                case 'x': case 'X':
+                    s = s.substring(st += 2);
+                    if (st != 2)
+                        s = "-".concat(s);
+                    n += 6;
+            }
         }
-        return new BigNum(s);
+        if ((l - st) < 96 / n + 10) { // 22, 19, 16
+            return new IntNum(Long.parseLong(s, n));
+        }
+        return new BigNum(s, n);
     }
 
     public static String concat(String[] param) {

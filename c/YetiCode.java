@@ -1056,6 +1056,9 @@ final class NumericConstant extends Code implements CodeGen {
             ctx.typeInsn(NEW, jtype);
             ctx.insn(DUP);
             ctx.ldcInsn(val);
+            if (val instanceof String) {
+                ctx.intConst(10);
+            }
             ctx.visitInit(jtype, sig);
         }
     }
@@ -1095,7 +1098,7 @@ final class NumericConstant extends Code implements CodeGen {
         } else if (num instanceof BigNum) {
             v.jtype = "yeti/lang/BigNum";
             v.val = num.toString();
-            v.sig = "(Ljava/lang/String;)V";
+            v.sig = "(Ljava/lang/String;I)V";
         } else {
             v.jtype = "yeti/lang/FloatNum";
             v.val = new Double(num.doubleValue());

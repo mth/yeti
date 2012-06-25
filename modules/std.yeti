@@ -1117,7 +1117,48 @@ plus a b = a + b;
     string x =
         "\(x)",
 
-    /// Convert string into number
+    /**
+     * Converts the given string into a number and returns the result.
+     *
+     * Arguments:
+     *  string - a string to parse as a number
+     *
+     * Description:
+     * The string argument must be in one of the following formats:
+     *
+     * 1. Decimal integer of arbitrary size. The result will be
+     *    integer number, values not fitting into 64-bit signed integer
+     *    are internally stored using the BigInteger class.
+     *
+     * 2. Octal integer of arbitrary size with "0o" or "0O" as prefix.
+     *    The result will be integer number.
+     *
+     * 3. Hexadecimal integer of arbitrary size with "0x" or "0X" as prefix.
+     *    The result will be integer number.
+     *
+     * 4. Decimal number with fractional part after dot (for example 17.52).
+     *    The result will rational number, if both numerator and denominator
+     *    parts of decimal fraction can be expressed as 32-bit signed integers
+     *    (exact value). Otherwise the result will be double-precision
+     *    floating-point number (possibly inexact value).
+     *
+     * 5. Decimal number with exponent after 'e' or 'E' (for example 1.23e-3).
+     *    Optional fractional part is separated with dot.
+     *    The result will be double-precision floating-point number.
+     *
+     * 6. Decimal number with optional fractional part after dot and 'e' or
+     *    'E' at the end (for example 1e). The result will be double-precision
+     *    floating-point number. This can be used to force creating a
+     *    floating-point number instead of rational or integer number.
+     *
+     * This set of formats is identical to the format of numeric literals
+     * in the Yeti source code. Preceding and trailing whitespace characters
+     * are removed before parsing.
+     *
+     * Exceptions:
+     * java.lang.NumberFormatException - when the argument string is not in
+     *                                   a recognized numeric format
+     */
     number x =
         Core#parseNum(x is string unsafely_as ~String),
 
