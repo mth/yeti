@@ -1162,13 +1162,39 @@ plus a b = a + b;
     number x =
         Core#parseNum(x is string unsafely_as ~String),
 
-    /// Numeric functions
+    /**
+     * Returns the smaller of the two ordered values a and b (the ordering is
+     * as defined by the (<) operator). The result is unspecified if one of
+     * the argument values is floating-point number NaN.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     min a b =
         if a < b then a else b fi,
+
+    /**
+     * Returns the greater of the two ordered values a and b (the ordering is
+     * as defined by the (<) operator). The result is unspecified if one of
+     * the argument values is NaN.
+     *
+     * Arguments:
+     * a - first value
+     * b - second value
+     */
     max a b =
         if a > b then a else b fi,
+
+    /**
+     * Returns the absolute value of the given numeric value.
+     *
+     * Arguments:
+     * value - a numeric value
+     */
     abs a =
         if a < 0 then -a else a fi,
+
     sum l =
         fold plus 0 l,
 
