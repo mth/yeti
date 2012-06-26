@@ -189,13 +189,13 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
         f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
 /**
- * Returns [function(a), function(b), ...] for list [a, b, ...]
- * by applying the function to each element of the list (either
+ * Returns a list [function(a), function(b), ...] for sequence [a, b, ...]
+ * by applying the function to each element of the sequence (either
  * lazily or strictly).
  *
  * Arguments:
- *  function - function applied to list elements
- *  list - list to be processed
+ *  function - function applied to the sequence elements
+ *  sequence - list or array to be processed
  *
  * Description:
  * A lazy list is returned when applied on normal list. Full result
@@ -205,7 +205,7 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
  *
  * You should ALWAYS use the strict map' instead, if the mapping function
  * has side effects, as it's not determined whether the function is applied
- * by map on some list element when map was called, some time later or
+ * by map on some sequence element when map was called, some time later or
  * even never at all (if the result list was not consumed).
  */
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
@@ -216,12 +216,12 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 /**
- * Returns strict [function(a), function(b), ...] for list [a, b, ...]
- * by applying the function to each element of the list.
+ * Returns strict list [function(a), function(b), ...] for sequence
+ * [a, b, ...] by applying the function to each element of the sequence.
  *
  * Arguments:
- *  function - function applied to list elements
- *  list - list to be processed
+ *  function - function applied to the sequence elements
+ *  sequence - list or array to be processed
  *
  * Description:
  * It is similar to map function, but never creates a lazy list.
@@ -1203,7 +1203,7 @@ plus a b = a + b;
      * sequence - list or array of numbers
      *
      * Description:
-     * : sum = fold (+) 0
+     * : sum = fold (+) 0;
      *
      * For example, sum [1, 2, 3] is computed as 0 + 1 + 2 + 3.
      */
