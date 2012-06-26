@@ -58,7 +58,27 @@ id x = x;
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
-/// Flatten a list of lists.
+/**
+ * Creates and returns a lazy list concatenating a sequence of sequences
+ * (flattening it).
+ *
+ * Arguments:
+ * sequence - a sequence of sequences
+ *
+ * Description:
+ * The elements of sequences in the given sequence argument are all concanated
+ * together in the same order. The resulting list is created lazily,
+ * as consumed (and the concat argument is also consumed lazyly, as needed).
+ *
+ * The result is affected (and unspecified), when array(s) are given as
+ * concat argument and mutated before consuming the resulting list. A strict
+ * result list or array can be created by appling copy or array function
+ * to the lazy list returned by concat (for example (copy . concat)).
+ *
+ * Examples:
+ * : concat [[3..6], [5..7], [4]]
+ * The result is [3, 4, 5, 6, 5, 6, 7, 4].
+ */
 concat l is list?<list?<'a>> -> list<'a> =
     if empty? l then
         []
