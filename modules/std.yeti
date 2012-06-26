@@ -59,15 +59,15 @@ array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
 /**
- * Takes value and first element of the list and applies those to the given
- * function, then repeats with following list elements, using the result from
+ * Takes value and first element of the sequence and applies those to the given
+ * function, then repeats with following sequence elements, using the result from
  * previous application as the new value. Returns the result of last
- * application (or initial value when empty list was given).
+ * application (or initial value when empty sequence was given).
  *
  * Arguments:
  *  function - two-argument function used for folding
  *  value - initial value
- *  list - list to fold
+ *  sequence - list or array to fold
  *
  * Examples:
  * : fold function value [a, b, c]
@@ -75,15 +75,15 @@ array l is list?<'a> -> array<'a> =
  * is equivalent to:
  * : ((value `function` a) `function` b) `function` c
  *
- * Calculate a sum of list:
+ * Calculate a sum of sequence:
  * : sum l = fold (+) 0 l;
  *
  * Calculate a factorial:
  * : factorial n = fold (*) 1 [1..n];
  *
  * The fold function could be implemented in the following way:
- * : fold function value list =
- * :     case list of
+ * : fold function value sequence =
+ * :     case sequence of
  * :     x :: xs: fold function (function value x) xs;
  * :     _: value;
  * :     esac;
@@ -1195,6 +1195,18 @@ plus a b = a + b;
     abs a =
         if a < 0 then -a else a fi,
 
+    /**
+     * Returns the arithmetic sum of a finite sequence of numbers.
+     * Zero is returned for an empty sequence.
+     *
+     * Arguments:
+     * sequence - list or array of numbers
+     *
+     * Description:
+     * : sum = fold (+) 0
+     *
+     * For example, sum [1, 2, 3] is computed as 0 + 1 + 2 + 3.
+     */
     sum l =
         fold plus 0 l,
 
