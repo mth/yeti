@@ -58,6 +58,14 @@ id x = x;
 array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
+/// Flatten a list of lists.
+concat l is list?<list?<'a>> -> list<'a> =
+    if empty? l then
+        []
+    else
+        ConcatLists#concat(l) unsafely_as list<'a>
+    fi;
+
 /**
  * Takes value and first element of the sequence and applies those to the given
  * function, then repeats with following sequence elements, using the result from
@@ -907,7 +915,7 @@ plus a b = a + b;
         fi,
 
     // damn struct polymorphism restriction. is it really needed?
-    array, fold, find, id, index, keys, hash, map, map',
+    array, concat, fold, find, id, index, keys, hash, map, map',
     forHash, length, peekObject,
 
     /// Deprecated - it doesn't do anything useful, and if you want to
@@ -1209,14 +1217,6 @@ plus a b = a + b;
      */
     sum l =
         fold plus 0 l,
-
-    /// Flatten a list of lists.
-    concat l is list?<list?<'a>> -> list<'a> =
-        if empty? l then
-            []
-        else
-            ConcatLists#concat(l) unsafely_as list<'a>
-        fi,
 
     /// Basically concat . map, but more effective.
     concatMap f l is ('a -> list?<'b>) -> list?<'a> -> list<'b> =
