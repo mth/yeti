@@ -1238,7 +1238,14 @@ plus a b = a + b;
     sum l =
         fold plus 0 l,
 
-    /// Basically concat . map, but more effective.
+    /**
+     * Maps a function over the sequence and concatenates the results.
+     * Shorthand for (concat . map function).
+     *
+     * Arguments:
+     *  function - function applied to the sequence elements
+     *  sequence - list or array to be processed
+     */
     concatMap f l is ('a -> list?<'b>) -> list?<'a> -> list<'b> =
         if empty? l then
             []
