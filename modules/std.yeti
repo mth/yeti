@@ -1253,11 +1253,25 @@ plus a b = a + b;
             concat ((l unsafely_as ~AList)#map(f) unsafely_as list<'a>)
         fi,
 
-    /// Is predicate f true for any element of list l?
+    /**
+     * Returns true, if the predicate function returns true
+     * for any element of the given sequence (and false otherwise).
+     *
+     * Arguments:
+     * predicate - function that returns true or false for list element
+     * sequence  - list or array to be scanned
+     */
     any f l =
         not nullptr? (find f l),
 
-    /// Is predicate f true for all elements of list l?
+    /**
+     * Returns true only, if the predicate function returns true
+     * for all elements of the given sequence (and false otherwise).
+     *
+     * Arguments:
+     * predicate - function that returns true or false for list element
+     * sequence  - list or array to be scanned
+     */
     all f l =
         nullptr? (find (_ x = not f x) l),
 
