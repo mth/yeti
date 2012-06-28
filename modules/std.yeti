@@ -1254,8 +1254,9 @@ plus a b = a + b;
         fi,
 
     /**
-     * Returns true, if the predicate function returns true
-     * for any element of the given sequence (and false otherwise).
+     * Returns true only, if there exists a sequence element, for which the
+     * predicate function returns true. A false value is returned otherwise
+     * (empty sequence or predicate is false for all sequence elements).
      *
      * Arguments:
      * predicate - function that returns true or false for list element
@@ -1265,8 +1266,10 @@ plus a b = a + b;
         not nullptr? (find f l),
 
     /**
-     * Returns true only, if the predicate function returns true
-     * for all elements of the given sequence (and false otherwise).
+     * Returns true, if the predicate function returns true for
+     * all elements of the given sequence or the sequence is empty.
+     * The false value is returned otherwise (predicate is false
+     * for one or more sequence elements).
      *
      * Arguments:
      * predicate - function that returns true or false for list element
@@ -1275,11 +1278,24 @@ plus a b = a + b;
     all f l =
         nullptr? (find (_ x = not f x) l),
 
-    /// Returns first element of l for which predicate f is false
-    /// or last element, when f returns false for all elements of l.
+    /**
+     * Returns first element of the sequence, for which the predicate
+     * returns false, or the last element, when the predicate is
+     * true for all elements of the sequence.
+     *
+     * Arguments:
+     * predicate - function that returns true for elements to avoid
+     * sequence  - sequence of values (array or list)
+     *
+     * Exceptions:
+     * java.lang.IllegalArgumentException - if the given sequence is empty
+     *
+     * Examples:
+     * : avoid (== '') [userOpt, systemOpt, defaultOpt]
+     */
     avoid f l is ('a -> boolean) -> list?<'a> -> 'a =
         if empty? l then
-            throw new IllegalArgumentException("prefer: empty list")
+            throw new IllegalArgumentException("avoid: empty list")
         fi;
         var i = l unsafely_as ~AIter;
         var value = () as ~Object;
