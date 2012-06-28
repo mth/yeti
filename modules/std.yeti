@@ -1254,8 +1254,8 @@ plus a b = a + b;
         fi,
 
     /**
-     * Returns true only, if there exists a sequence element, for which the
-     * predicate function returns true. A false value is returned otherwise
+     * Returns true if and only if there exists a sequence element, for which
+     * the predicate function returns true. A false value is returned otherwise
      * (empty sequence or predicate is false for all sequence elements).
      *
      * Arguments:
@@ -1304,12 +1304,17 @@ plus a b = a + b;
          not nullptr? i and f (value unsafely_as 'a)) loop;
         value unsafely_as 'a,
 
-    /// Whether l contains element equal (as defined by (==)) to v
+    /**
+     * Returns true if and only if the sequence contains element equal
+     * to the given value. If there is no such element, false is returned.
+     * Equality is checked as defined by the (==) operator.
+     *
+     * Arguments:
+     * value    - value to search from the sequence
+     * sequence - list or array to be searched
+     */
     contains? v l is 'a -> list?<'a> -> boolean =
         not (nullptr? l or nullptr? (l unsafely_as ~AList)#index(v)),
-
-    /// deprecated!!!
-    contains v l = contains? v l,
 
     /// Returns default when opt == None () and f x when opt == Some x
     maybe default f opt =
