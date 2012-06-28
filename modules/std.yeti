@@ -72,7 +72,7 @@ array l is list?<'a> -> array<'a> =
  *
  * The result is affected (and unspecified), when array(s) are given as
  * concat argument and mutated before consuming the resulting list. A strict
- * result list or array can be created by appling copy or array function
+ * result list or array can be created by applying copy or array function
  * to the lazy list returned by concat (for example (copy . concat)).
  *
  * Examples:
@@ -395,7 +395,7 @@ plus a b = a + b;
 
     /**
      * Binary function composition. Composes binary f and
-     * unary g so that arguments to f are transformed by appling g.
+     * unary g so that arguments to f are transformed by applying g.
      *
      * Arguments:
      * f - binary function
@@ -844,7 +844,7 @@ plus a b = a + b;
     norec same? a b = same? a b,
 
     /**
-     * Iterates over sequence, appling the block function to the element
+     * Iterates over sequence, applying the block function to the element
      * value for each sequence element.
      *
      * Arguments:
@@ -1036,7 +1036,7 @@ plus a b = a + b;
      * Description:
      * : flip function x y = function y x;
      *
-     * The result of appling flip to binary function is a function that takes
+     * The result of applying flip to binary function is a function that takes
      * its two arguments in the reverse order of the original function.
      *
      * Examples:
@@ -1057,15 +1057,15 @@ plus a b = a + b;
      * Description:
      * The application of lazy results in memoized promise, which in essence
      * is a suspension of lazily evaluated expression. The evaluation can
-     * be forced by appling this memoized promise to unit value (). The result
+     * be forced by applying this memoized promise to unit value (). The result
      * of evaluation is saved and returned, when it is forced and successfully
      * evaluated first time, and later applications of the memoized function
      * will return the saved result.
      *
      * If the evaluation fails to return a result, throwing an exception
-     * instead, then subsequent attempt to force evaluation by appling the
+     * instead, then subsequent attempt to force evaluation by applying the
      * memoized promise will cause a re-evaluation of the promise function
-     * (by appling it again to the ()).
+     * (by applying it again to the ()).
      *
      * Successful evaluation of the original promise may happen multiple times,
      * if done concurrently as a race in multiple threads.
@@ -1316,7 +1316,17 @@ plus a b = a + b;
     contains? v l is 'a -> list?<'a> -> boolean =
         not (nullptr? l or nullptr? (l unsafely_as ~AList)#index(v)),
 
-    /// Returns default when opt == None () and f x when opt == Some x
+    /**
+     * Returns the default value, when the option is None _, and
+     * result of applying the function to the Some parameter value,
+     * when the option is Some value.
+     *
+     * Arguments:
+     * default  - value to return, when the option argument is None _
+     * function - function to apply to value,
+     *            when the option argument is Some value
+     * option   - a variant Some value | None _
+     */
     maybe default f opt =
         case opt of
         Some v: f v;
