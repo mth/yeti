@@ -1334,7 +1334,7 @@ plus a b = a + b;
         esac,
 
     /**
-     * Splits given sequence into two parts, putting elements from the start
+     * Splits a given sequence into two parts, putting elements from the start
      * of the sequence into fst as long as the predicate function is false
      * for a given element. The rest of the sequence is returned as snd.
      *
