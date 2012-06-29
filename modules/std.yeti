@@ -1333,21 +1333,31 @@ plus a b = a + b;
         None _: default;
         esac,
 
-    /// Splits given list into two parts, putting elements from the start of the
-    /// list into fst as long as predicate function pred is false for the given
-    /// element. The rest of the list is returned as snd.
-    splitBy pred list is ('a -> boolean) -> list<'a>
+    /**
+     * Splits given sequence into two parts, putting elements from the start
+     * of the sequence into fst as long as the predicate function is false
+     * for a given element. The rest of the sequence is returned as snd.
+     *
+     * Arguments:
+     * predicate - predicate function 
+     * sequence  - a list or array to split
+     */
+    splitBy pred seq is ('a -> boolean) -> list?<'a>
                           -> { fst is list<'a>, snd is list<'a> } = 
         a = new MList();
-        var l = list; // over-optimized loop from hell. don't code like that.
+        var l = seq unsafely_as ~AList unsafely_as list<'a>;
+        // over-optimized loop from hell. don't code like that.
         not empty? l and (h = head l; not pred h and (a#add(h); true)) loop
             l := tail l;
-        { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
+        { /// Elements from start of the sequence that
+          /// do not satisfy the predicate.
+          fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
+          /// Reminder of the sequence.
           snd = l },
 
     /// Splits given list into two parts, returning first n elements as fst
     /// and the rest as snd.
-    splitAt n list is number -> list<'a>
+    splitAt n list is number -> list?<'a>
                       -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
         var l = list;
