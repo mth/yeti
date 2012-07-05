@@ -1371,10 +1371,10 @@ plus a b = a + b;
      * :     snd = drop n sequence
      * : }
      */
-    splitAt n list is number -> list?<'a>
+    splitAt n seq is number -> list?<'a>
                       -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
-        var l = list;
+        var l = seq unsafely_as ~AList unsafely_as list<'a>;
         var n = n;
         if n < 256 then
             a#reserve(n)
