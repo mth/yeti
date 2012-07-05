@@ -1336,7 +1336,7 @@ plus a b = a + b;
     /**
      * Splits a given sequence into two parts, putting elements from the start
      * of the sequence into fst as long as the predicate function is false
-     * for a given element. The rest of the sequence is returned as snd.
+     * for a given element. The rest of the sequence is returned as snd field.
      *
      * Arguments:
      * predicate - predicate function 
@@ -1355,8 +1355,22 @@ plus a b = a + b;
           /// Reminder of the sequence.
           snd = l },
 
-    /// Splits given list into two parts, returning first n elements as fst
-    /// and the rest as snd.
+    /**
+     * Splits a given sequence into two parts, returning first n elements
+     * as fst and the rest as snd field. Full sequence is returned as list
+     * in the fst field, if n is equal or greater than the length of the
+     * sequence (and snd will be empty list in this case).
+     *
+     * Arguments:
+     * n        - position of the split
+     * sequence - list or array to split
+     *
+     * Description:
+     * : splitAt n sequence = {
+     * :     fst = take n sequence,
+     * :     snd = drop n sequence
+     * : }
+     */
     splitAt n list is number -> list?<'a>
                       -> { fst is list<'a>, snd is list<'a> } =
         a = new MList();
@@ -1369,7 +1383,9 @@ plus a b = a + b;
            (a#add(head l);
             l := tail l;
             n := n - 1);
-        { fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
+        { /// The sequence prefix of length n.
+          fst = if a#isEmpty() then [] else a unsafely_as list<'a> fi,
+          /// Elements of the sequence starting from the nth element.
           snd = l },
 
     /// Take first n elements from list l
