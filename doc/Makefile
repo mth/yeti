@@ -12,7 +12,7 @@ intro.pdf: _intro.latex
 _intro.latex: intro.rst
 	#rst2latex $< $@
 	#rst2newlatex --no-toc-backlinks $< $@
-	rst2newlatex $< $@
+	rst2latex $< $@
 
 clean:
 	rm -f _intro.toc _intro.latex _intro.aux _intro.out _intro.log intro.html intro.pdf

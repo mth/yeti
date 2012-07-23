@@ -402,6 +402,8 @@ that any value may be given and it will be ignored.
 The ``'a`` in the argument type is a free type variable - meaning any
 argument type is allowed.
 
+.. _shorthand function literal:
+
 There is also a shorthand notation for defining function literals that
 ignore the argument::
 
@@ -1954,6 +1956,36 @@ Partial matches are not allowed::
 
 Here the compiler deduces, that no meaningful result value was given
 to the case, when ``n != 1``.
+
+Function pattern matching
+++++++++++++++++++++++++++++
+
+The `shorthand function literal`_ syntax using ``\`` can be combined
+with case pattern matching. This can be used to write the previous carrots
+example in a bit shorter form::
+
+    > carrots = \case of 1: "1 carrot"; n: "\(n) carrots" esac
+    carrots is number -> string = <code$carrots>
+    > carrots 1
+    "1 carrot" is string
+
+The implicit argument of the function literal defined by ``\`` is used
+as the argument of the case expression, if there is no expression given
+between the **case** and **of** keywords. Therefore the general form of
+function pattern matching::
+
+    \case of
+     patterns...
+     esac
+
+is equivalent to the longer combination of case expression nested in the
+do block::
+
+    do argument:
+        case argument of
+        patterns...
+        esac
+    done
 
 Type declarations
 ~~~~~~~~~~~~~~~~~~~~
