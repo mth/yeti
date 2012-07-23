@@ -1,5 +1,5 @@
-showObj descr =
-    case descr of
+showObj =
+   \case of
     Number num:
         "number \(num)";
     String str:

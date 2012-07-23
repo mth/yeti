@@ -306,12 +306,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                 f ()
         end;
         th = new FunThread();
-        for options do i:
-            case i of
-                Daemon (): th#setDaemon(true);
-                ClassLoader cl: th#setContextClassLoader(cl);
-            esac
-        done;
+        for options
+           \case of
+            Daemon (): th#setDaemon(true);
+            ClassLoader cl: th#setContextClassLoader(cl);
+            esac;
         th#start();
         th,
 

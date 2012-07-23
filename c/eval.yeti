@@ -101,8 +101,8 @@ createCtx reader genericOpt =
     ctx = new CompileCtx(reader is ~YetiC, ());
     java = array [];
 
-    for genericOpt do opt:
-        case opt of
+    for genericOpt
+       \case of
 
         /// Set destination directory, where to write class files.
         /// Disables execution on evaluateYetiCode as side effect.
@@ -148,8 +148,7 @@ createCtx reader genericOpt =
         /// Disable generation of Java 1.6 frames to class files (mainly useful
         /// for debugging, this option is not needed to run on older JVMs).
         NoFrames (): ctx#classWriterFlags := 0
-        esac
-    done;
+        esac;
     ctx#classPath := new ClassFinder(classPath);
     if nullptr? ctx#writer then
         ctx#writer := new Loader() as ~CodeWriter;
@@ -206,8 +205,8 @@ compileYetiFiles genericOpt options files =
     {ctx, warn, java = javaOptions} = createCtx reader genericOpt;
 
     sourcePath = array [];
-    for options do opt:
-        case opt of
+    for options
+       \case of
 
         /// Get module types. The action ({type is type, doc is string} -> ())
         /// is called after each module file given for compilation. 
@@ -234,8 +233,8 @@ compileYetiFiles genericOpt options files =
         /// when .java files were in source file set.
         JavaOption option:
             push javaOptions option;
-        esac
-    done;
+        esac;
+
     // TODO use null writer when no Exec and no To,
     // for signaling to skip the bytecode generation.
     reader#basedirs := sourcePath as ~String[];
@@ -283,8 +282,8 @@ evaluateYetiCode genericOpt =
         {ctx, warn} = createCtx new YetiC() genericOpt;
         ctx#flags := ctx#flags b_or YetiC#CF_EVAL b_or YetiC#CF_EVAL_RESOLVE;
 
-        for options do opt:
-            case opt of
+        for options
+           \case of
             /// Store top-level bindings in the evaluation environment,
             /// so they could be accessed by later evaluations with
             /// the same context..
@@ -304,7 +303,6 @@ evaluateYetiCode genericOpt =
             /// Source "filename"
             Source name: sourceName := name;
             esac;
-        done;
 
         typeOf? = code =~ '\Wis$';
 

@@ -1327,8 +1327,8 @@ plus a b = a + b;
      *            when the option argument is Some value
      * option   - a variant Some value | None _
      */
-    maybe default f opt =
-        case opt of
+    maybe default f =
+       \case of
         Some v: f v;
         None _: default;
         esac,

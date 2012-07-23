@@ -13,8 +13,8 @@
         fi
 };
 
-trampoline v =
-    case v of
+trampoline =
+   \case of
     Call f: trampoline (f ());
     Done v: v;
     esac;

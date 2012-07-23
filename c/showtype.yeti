@@ -30,8 +30,8 @@ typedef showType_param =
     // Core of it is implemented in Java to avoid self-compile issues.
     showType param is list<showType_param> -> showType_fun =
        (fun = new ShowTypeFun();
-        for param do i:
-            case i of
+        for param
+           \case of
             Indent s:
                 fun#indentStep := s;
             ShowType f:
@@ -41,7 +41,6 @@ typedef showType_param =
                     f is string -> string -> string unsafely_as ~yeti.lang.Fun;
             CommentDoc _:
                 fun#formatDoc := fun as ~yeti.lang.Fun; // magic
-            esac
-        done;
+            esac;
         fun unsafely_as showType_fun),
 }

@@ -1,8 +1,8 @@
-bottles n =
-    case n of
+bottles =
+   \case of
     0: "no more bottles of beer";
     1: "1 bottle of beer";
-    _: "\(n) bottles of beer";
+    n: "\(n) bottles of beer";
     esac;
 
 for (reverse [1 .. 99]) do n:

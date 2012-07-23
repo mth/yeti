@@ -55,7 +55,16 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static XNode shortLambda(BinOp op) {
-        return XNode.lambda(new Sym("_").pos(op.line, op.col), op.right, null);
+        Sym arg;
+        Node[] cases;
+        if (op.right.kind == "case-of" &&
+            (cases = ((XNode) op.right).expr)[0].kind == "()" &&
+            ((XNode) cases[0]).expr != null) {
+            cases[0] = arg = new Sym(String.valueOf(cases.hashCode()));
+        } else {
+            arg = new Sym("_");
+        }
+        return XNode.lambda(arg.pos(op.line, op.col), op.right, null);
     }
 
     static XNode asLambda(Node node) {
@@ -967,7 +976,9 @@ public final class YetiAnalyzer extends YetiType {
             if (nodes[i] instanceof Bind) {
                 Bind bind = (Bind) nodes[i];
                 BindExpr binder;
-                if (bind.expr.kind == "lambda") {
+                XNode lambda;
+                if ((lambda = asLambda(bind.expr)) != null) {
+                    bind.expr = lambda;
                     binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
                 } else {
                     Code code = analyze(bind.expr, scope, depth + 1);

@@ -1360,7 +1360,8 @@ interface YetiParser {
                 return list[0];
             }
             if (list.length == 0) {
-                return new XNode("()").pos(line, p - lineStart);
+                return new XNode("()", end == ')' ? null : new Node[0])
+                            .pos(line, p - lineStart);
             }
             // find last element for line/col position
             Node w = list[list.length - 1];
