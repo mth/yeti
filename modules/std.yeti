@@ -1408,7 +1408,22 @@ plus a b = a + b;
             TakeList#take(l, n) unsafely_as list<'a>
         fi,
 
-    /// Drop first n elements from list l. Won't copy the returned tail.
+    /**
+     * Returns the suffix of the sequence (as list) omitting first n
+     * sequence elements. An empty list is returned, if n is equal or
+     * greater than the length of the sequence.
+     *
+     * Arguments:
+     * n        - how many elements to drop from the start of the sequence
+     * sequence - initial list or array
+     *
+     * Notes:
+     * The suffix is returned without copying it. When the drop function
+     * is used on an array, a list view of the array is returned, consisting
+     * of all elements starting from index n. As the list view still references
+     * to the original array, it will change when the array is modified (use
+     * copy function to get an independent copy).
+     */
     drop n l =
         if n <= 0 then
             l
