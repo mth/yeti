@@ -1388,7 +1388,19 @@ plus a b = a + b;
           /// Elements of the sequence starting from the nth element.
           snd = l },
 
-    /// Take first n elements from list l
+    /**
+     * Returns first n elements of the sequence as a lazy list. All elements
+     * are returned, if n is equal or greater than the length of the sequence.
+     *
+     * Arguments:
+     * n        - how many elements to take
+     * sequence - initial list or array
+     *
+     * Notes:
+     * The given sequence is lazily consumed as the result returned by take
+     * is consumed. If the sequence is a mutable array, and modified after
+     * appling the take function, the result of application is undefined.
+     */
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l then
             []
