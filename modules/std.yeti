@@ -1433,9 +1433,21 @@ plus a b = a + b;
             drop (n - 1) (tail l)
         fi,
 
-    /// Take elements from the start of list l while predicate pred
-    /// is true on the element.
-    takeWhile pred l is ('a -> boolean) -> list<'a> -> list<'a> =
+    /**
+     * Returns a lazy list containing longest prefix of the sequence,
+     * where the predicate function is true for all elements.
+     *
+     * Arguments:
+     * predicate - function used to check the sequence elements
+     * sequence  - list or array to use
+     *
+     * Notes:
+     * The given sequence is lazily consumed as the result returned by
+     * takeWhile is consumed. If the sequence is a mutable array, and
+     * modified after appling the takeWhile function, the result of
+     * application is undefined.
+     */
+    takeWhile pred l is ('a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
         else
