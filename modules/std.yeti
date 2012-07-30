@@ -1473,8 +1473,15 @@ plus a b = a + b;
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<'a>,
 
-    /// Removes duplicate elements from the list.
-    /// The ordering of list is not preserved.
+    /**
+     * Returns non-duplicate elements of the sequence as a list.
+     * This means that no element in the returned list is equal to
+     * some other element (as defined by ==) in this list.
+     * The original ordering of the sequence is not preserved.
+     *
+     * Arguments:
+     * sequence - list or array to be processed
+     */
     nub is list?<'a> -> list<'a> =
         keys . hash,
 
