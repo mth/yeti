@@ -338,7 +338,7 @@ plus a b = a + b;
 
 {
     /**
-     * None () value short-hand constant.
+     * Short-hand constant for None () value.
      */
     none = None (),
 
