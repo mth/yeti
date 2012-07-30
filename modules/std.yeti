@@ -1454,7 +1454,22 @@ plus a b = a + b;
             TakeWhile#take(l, pred) unsafely_as list<'a>
         fi,
 
-    /// Returns infinite list [x, f(x), f(f(x)), f(f(f(x))), ...]
+    /**
+     * Returns an infinite lazy list, where each following element is result
+     * of appling the function to the value of the element before it. The
+     * first element value is given.
+     *
+     * Arguments:
+     * first    - value of the first element in the returned list
+     * function - function to apply to derive the next element value
+     *
+     * Examples:
+     * The result of iterate f x is the following infinite list:
+     * : [x, f x, f (f x), f (f (f x)), ...]
+     *
+     * If addition is used as the function, the result is incrementing sequence:
+     * : take 10 (iterate (+1) 0) == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+     */
     iterate f x is ('a -> 'a) -> 'a -> list<'a> =
         new Iterate(x, f) unsafely_as list<'a>,
 
