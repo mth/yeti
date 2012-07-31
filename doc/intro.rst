@@ -2155,9 +2155,6 @@ type-parameters in type-declarations.
  
 Multiple type parameters are separated by comma like ie in hash<'a, 'b>.
 
-Type-aliases have to be defined at the top-level in a module and therefore can
-not be defined in the REPL.
-
 They can only be used in the module in which they are defined.
 
 Type-aliases are used in type declarations like any of the build in types of
@@ -2187,6 +2184,19 @@ name - to the compiler it is always the same::
     <code$fun2> is string -> string
     > fun2
     <code$fun3> is string -> string
+
+It is possible to see typedef definitions in REPL by typing the alias name
+followed by ``is``::
+
+    > openOutFile
+    <yeti.lang.io$openOutFile> is string -> string -> output_handle
+    > output_handle is
+    {
+       close is () -> (),
+       flush is () -> (),
+       write is string -> (),
+       writeln is string -> ()
+    }
 
 
 Running and compiling source files
