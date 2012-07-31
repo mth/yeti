@@ -1545,7 +1545,9 @@ interface YetiParser {
             if (node.kind != "=")
                 throw new CompileException(node, "Expected '=', not a " + node);
             def.param = (String[]) param.toArray(new String[param.size()]);
-            def.type = readType(true);
+            if ((def.type = readType(true)) == null)
+                throw new CompileException(node,
+                            "Missing type in typedef declaration");
             return def;
         }
 
