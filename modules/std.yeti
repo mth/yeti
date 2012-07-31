@@ -186,7 +186,7 @@ keys h is hash<'a, 'b> -> list<'a> =
  *  list - values to use as hash keys
  *
  * Examples:
- * : hash [11, 22] // returns [11: (), 22: ()]
+ * : hash [11, 22] == [11: (), 22: ()]
  */
 hash l is list?<'a> -> hash<'a, ()> =
    (h = [:];
@@ -1485,10 +1485,19 @@ plus a b = a + b;
     nub is list?<'a> -> list<'a> =
         keys . hash,
 
-    /// Returns a list of lists, where each sublist contains only equal elements
-    /// and the concatenation of the result is equal to the original list l.
-    /// Elements are considered equal when the given predicate function
-    /// eq is true for them.
+    /**
+     * Returns a list of lists, where each sublist contains only equal elements,
+     * and the concatenation of the result is equal to the original sequence.
+     * Elements are considered equal, when the given predicate function
+     * is true for them.
+     *
+     * Arguments:
+     * predicate - function that returns true for values considered equal
+     * sequence  - list or array to be processed
+     *
+     * Examples:
+     * : groupBy (==) [1,1,0,2,0,0,0,3] == [[1,1],[0],[2],[0,0,0],[3]]
+     */
     groupBy eq l is ('a -> 'a -> boolean) -> list?<'a> -> list<list<'a>> =
         if empty? l then
             []
