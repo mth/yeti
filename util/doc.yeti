@@ -157,7 +157,7 @@ parseDoc' doc =
               not all empty? [about, description, examples, seeAlso, notes] then
         state ''; // </pre> if needed
         arg {arg, text} =
-            "<tr><td><var>\(arg)</var><td>-<td>\(lines (join text))";
+            "<tr><td><var>\(arg)</var><td>-<td class=arg>\(lines (join text))";
         "<div class=\"doc\">\(lines (map mark_args (join about)))\
         "\(show '<table class="args">' '</table>' (strJoin '' . map arg) args)\
         "\(show '<p>Exceptions thrown</p><table class="args">'
@@ -195,6 +195,7 @@ html_page {name, descr, moduleType, typedefs} =
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 var { font: 11pt monospace }
 .args { padding-left: 1.4em }
+td.arg { width: 100% }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box { border: 1px solid black;
     /* top/bottom right/left | top right/left bottom | top right bottom left */

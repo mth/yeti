@@ -1519,7 +1519,22 @@ plus a b = a + b;
             result unsafely_as 'l
         fi,
 
-    /// Sorts list. Same as sortBy (<)
+    /**
+     * Returns as list the sequence sorted in ascending order according
+     * to the order defined by the (<) comparision operator.
+     *
+     * Arguments:
+     * sequence - list or array to be sorted (not modified by sort function)
+     *
+     * Description:
+     * The original sequence is copied and sorted using
+     * java.util.Arrays#sort(Object[]) method. The sequence elements
+     * are required to be of ordered type (^a). The result should be similar
+     * to using sortBy (<), although the sort function works usually faster.
+     *
+     * Examples:
+     * sort [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
+     */
     sort l is list?<^a> -> list<^a> =
         if empty? l then
             []
@@ -1527,8 +1542,24 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort() unsafely_as list<^a>
         fi,
 
-    /// Sorts list using given less? predicate function to determine the order.
-    /// Merge sort algorithm is used.
+    /**
+     * Returns as list the sequence sorted according to the compare function.
+     * The returned list will be ordered in such manner, that compare x y
+     * returns false for any list elements x and y, where y is before x.
+     * The behaviour of sortBy is undefined, if the compare function doesn't
+     * define total ordering.
+     *
+     * Arguments:
+     * compare  - function to compare two elements ((<) gives ascending order)
+     * sequence - list or array to be sorted (not modified by sortBy function)
+     *
+     * Examples:
+     * sortBy (<) [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
+     *
+     * Notes:
+     * Current implementation uses merge sort algorithm.
+     * Stable sorting is not guaranteed.
+     */
     sortBy less? l is ('a -> 'a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
