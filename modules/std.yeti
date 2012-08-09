@@ -1567,17 +1567,104 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort(less?) unsafely_as list<'a>
         fi,
 
-    // few math functions
+    /// Mathematical constant pi (nearest value to pi expressable
+    /// as double precision floating point number).
     pi = Math#PI,
+
+    /**
+     * Returns natural logaritm (base e) of the given value.
+     * Implemented using Math#log(value).
+     *
+     * Arguments:
+     * value - a positive number (NaN is returned for negative values)
+     */
     ln a = Math#log(a),
+
+    /**
+     * Returns constant e raised to the given power.
+     * Implemented using Math#exp(power).
+     *
+     * Arguments:
+     * power - a numeric value
+     */
     exp a = Math#exp(a),
+
+    /**
+     * Returns the trigonometric cosine of the given angle.
+     * Implemented using Math#cos(angle).
+     *
+     * Arguments:
+     * angle - an angle in radians
+     */
     cos a = Math#cos(a),
+
+    /**
+     * Returns the trigonometric sine of the given angle.
+     * Implemented using Math#sin(angle).
+     *
+     * Arguments:
+     * angle - an angle in radians
+     */
     sin a = Math#sin(a),
+
+    /**
+     * Returns the trigonometric tangent of the given angle.
+     * Implemented using Math#tan(angle).
+     *
+     * Arguments:
+     * angle - an angle in radians
+     */
     tan a = Math#tan(a),
+
+    /**
+     * Returns the arc cosine of the given value in radians.
+     * The returned angle is in the range 0.0..pi.
+     * Implemented using Math#acos(value).
+     *
+     * Arguments:
+     * value - a numeric value
+     */
     acos a = Math#acos(a),
+
+    /**
+     * Returns the arc sine of the given value in radians.
+     * The returned angle is in the range -pi/2..pi/2.
+     * Implemented using Math#asin(value).
+     *
+     * Arguments:
+     * value - a numeric value
+     */
     asin a = Math#asin(a),
+
+    /**
+     * Returns the arc tangent of the given value in radians.
+     * The returned angle is in the range -pi/2..pi/2.
+     * Implemented using Math#atan(value).
+     *
+     * Arguments:
+     * value - a numeric value
+     */
     atan a = Math#atan(a),
+
+    /**
+     * Returns the positive square root of the given value.
+     * Implemented using Math#sqrt(value).
+     *
+     * Arguments:
+     * value - a positive number or zero (NaN is returned for negative values)
+     */
     sqrt a = Math#sqrt(a),
+
+    /**
+     * Returns the integer part of the given value.
+     *
+     * Arguments:
+     * value - a numeric value
+     *
+     * Notes:
+     * Current implementation expects that result fits into
+     * 64-bit signed integer (Long#MIN_VALUE..Long#MAX_VALUE).
+     */
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
     /// Replaces occurences of needle in the haystack with replacement
