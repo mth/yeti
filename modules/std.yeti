@@ -1667,55 +1667,245 @@ plus a b = a + b;
      */
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
-    /// Replaces occurences of needle in the haystack with replacement
+    /**
+     * Returns a copy of the string, with all occurences of the needle
+     * substring replaced with replacement string in the given haystack string.
+     *
+     * Description:
+     * The needle and replacement strings are treated as literal substring,
+     * with no metacharacters. All strings represent UTF-16 code unit sequences
+     * (internally java.lang.String instances). All occurences of the needle
+     * subsequence starting from beginning of the string are replaced
+     * sequentially and the resulting string is returned.
+     *
+     * Arguments:
+     * needle      - a string to search
+     * replacement - a string to use as replacement
+     * haystack    - a original string to process
+     *
+     * Examples:
+     * strReplace "aba" "+" "xabaabababax" == "x++b+x" 
+     */
     strReplace needle replacement haystack
             is string -> string -> string -> string =
         Core#replace(needle unsafely_as ~String,
                      replacement unsafely_as ~String,
                      haystack unsafely_as ~String),
 
-    /// String length
+    /**
+     * Returns the length (number of UTF-16 code units) of string.
+     *
+     * Arguments:
+     * string - an UTF-16 encoded string (internally stored as java.lang.String)
+     *
+     * Notes:
+     * The basic multilingual (first) plane of unicode characters are
+     * represented as single code units in UTF-16, therefore strLength returns
+     * the count of unicode characters for strings containing only those
+     * characters. The java.lang.String length method works in the same way,
+     * and compiler optimizes strLength applications into String#length() calls.
+     */
     norec strLength s = strLength s,
 
-    /// String to upper case
+    /**
+     * Returns a copy of the string, with all lowercase letters translated
+     * to uppercase using the rules of the default locale.
+     *
+     * Arguments:
+     * string - a string value (internally stored as java.lang.String)
+     *
+     * Notes:
+     * Compiler optimizes strUpper applications into String#toUpperCase() calls.
+     */
     norec strUpper s = strUpper s,
 
-    /// String to lower case
+    /**
+     * Returns a copy of the string, with all lowercase letters translated
+     * to uppercase using the rules of the default locale.
+     *
+     * Arguments:
+     * string - a string value (internally stored as java.lang.String)
+     *
+     * Notes:
+     * Compiler optimizes strLower applications into String#toLowerCase() calls.
+     */
     norec strLower s = strLower s,
 
-    /// Remove whitespace from start and end of the string
+    /**
+     * Returns a copy of the string, with leading and trailing whitespace
+     * removed.
+     *
+     * Arguments:
+     * string - a string value (internally stored as java.lang.String)
+     *
+     * Notes:
+     * Compiler optimizes strTrim applications into String#trim() calls.
+     * The argument instance is directly returned, if there is no whitespace
+     * to remove.
+     */
     norec strTrim s = strTrim s,
 
-    /// Slice of the string
+    /**
+     * Returns the substring of given string, from code unit at start index
+     * until code unit at end index. The start and end indexes are 0-based.
+     *
+     * Arguments:
+     * string - an UTF-16 encoded string (internally stored as java.lang.String)
+     * start  - index of the code unit starting returned slice (inclusive)
+     * end    - index of the code unit ending returned slice (exclusive)
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if start or end index is negative or > to
+     *                             the length of string, or start index is
+     *                             is greater than the end index
+     *
+     * Notes:
+     * The basic multilingual (first) plane of unicode characters are
+     * represented as single code units in UTF-16.
+     * Compiler optimises strSlice applications into String#substring() calls.
+     */
     norec strSlice s start end = strSlice s start end,
 
-    /// Same as strSlice s pos (strLength s)
+    /**
+     * Returns the substring of given string, from code unit at start index
+     * until to the end of string.
+     * Same as strSlice string start (strLength string).
+     *
+     * Arguments:
+     * string - an UTF-16 encoded string (internally stored as java.lang.String)
+     * start  - 0-based index of the code unit starting returned slice
+     *          (inclusive)
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if the start index is negative or greater
+     *                             than the length of string
+     *
+     * Notes:
+     * The basic multilingual (first) plane of unicode characters are
+     * represented as single code units in UTF-16.
+     * Compiler optimises strRight applications into String#substring() calls.
+     */
     norec strRight s pos = strRight s pos,
 
-    /// Does the string s starts with string start?
+    /**
+     * Returns true when the given string starts with the specified prefix
+     * (and false otherwise).
+     *
+     * Arguments:
+     * string - a string value to test
+     * prefix - the expected prefix string for the tested string value
+     *
+     * Notes:
+     * Compiler optimises strStarts? applications into
+     * String#startsWith() calls.
+     */
     norec strStarts? s start = strStarts? s start,
 
-    /// Does the string s ends with string end?
+    /**
+     * Returns true when the given string ends with the specified suffix
+     * (and false otherwise).
+     *
+     * Arguments:
+     * string - a string value to test
+     * suffix - the expected prefix suffix for the tested string value
+     *
+     * Notes:
+     * Compiler optimises strEnds? applications into String#endsWith() calls.
+     */
     norec strEnds? s end = strEnds? s end,
 
-    /// Get an index of the needle substring in the haystack.
-    /// Starts searching from index from
+    /**
+     * Finds the start position of the first occurrence of the substring in
+     * the given string, that is not before the from index.
+     *
+     * Arguments:
+     * string    - the string to be searched
+     * substring - the substring to search
+     * from      - the search starts from this index
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if the from index is negative or greater
+     *                             than the length of string
+     *
+     * Notes:
+     * The strings are UTF-16 encoded code unit sequences (internally stored as
+     * java.lang.String) with 0-based indexing. Compiler optimises
+     * strIndexOf applications into String#indexOf() calls.
+     */
     norec strIndexOf haystack needle from = strIndexOf haystack needle from,
 
-    /// Get an index of the needle substring in the haystack.
-    /// Starts searching backwards from index from
+    /**
+     * Finds the start position of the last occurrence of the substring in
+     * the given string, that is not after the from index.
+     *
+     * Arguments:
+     * string    - the string to be searched
+     * substring - the substring to search
+     * from      - the search starts from this index
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if the from index is negative or greater
+     *                             than the length of string
+     *
+     * Notes:
+     * The strings are UTF-16 encoded code unit sequences (internally stored as
+     * java.lang.String) with 0-based indexing. Compiler optimises
+     * strLastIndexOf applications into String#lastIndexOf() calls.
+     */
     norec strLastIndexOf haystack needle from =
             strLastIndexOf haystack needle from,
 
-    /// Same as strLastIndexOf haystack needle (strLength haystack)
+    /**
+     * Finds the start position of the last occurrence of the substring in
+     * the given string.
+     * Same as strLastIndexOf string substring (strLength string).
+     *
+     * Arguments:
+     * string    - the string to be searched
+     * substring - the substring to search
+     *
+     * Notes:
+     * The strings are UTF-16 encoded code unit sequences (internally stored as
+     * java.lang.String) with 0-based indexing, and compiler optimises
+     * strLastIndexOf applications into String#lastIndexOf() calls.
+     */
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     norec strSplit re = strSplit re,
     norec substAll re = substAll re,
     norec matchAll re = matchAll re,
     norec like re = like re,
+
+    /**
+     * Returns one UTF-16 code unit (Java char) from the string at the given
+     * index.
+     *
+     * Arguments:
+     * string - an UTF-16 encoded string (internally stored as java.lang.String)
+     * index  - a 0-based index of the code unit
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if the index is negative or >= to the length
+     *                             of string
+     */
     norec strChar s pos = strChar s pos,
 
+    /**
+     * Returns the substring of given string, from the start of string
+     * until code unit at end index. Same as strSlice string 0 end.
+     *
+     * Arguments:
+     * string - an UTF-16 encoded string (internally stored as java.lang.String)
+     * end    - 0-based index of the code unit ending returned slice (exclusive)
+     *
+     * Notes:
+     * The basic multilingual (first) plane of unicode characters are
+     * represented as single code units in UTF-16.
+     *
+     * Exceptions:
+     * IndexOutOfBoundsException - if the end index is negative or greater
+     *                             than the length of string
+     */
     strLeft s end = strSlice s 0 end,
 
     strLeftOf subString s is string -> string -> string =
