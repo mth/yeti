@@ -32,8 +32,30 @@ package yeti.lang;
 
 /** Yeti core library - a collection. */
 public interface Coll {
+    /**
+     * List of collection values.
+     */
     AList asList();
+
+    /**
+     * Count collection values.
+     */
     long length();
+
+    /**
+     * Test that collection is empty.
+     */
     boolean isEmpty();
+
+    /**
+     * Copy collection.
+     */
     Object copy();
+
+    /**
+     * Remove object by key.
+     * This function is member of Coll and not ByKey, because deleteAll
+     * can be called on lists, if the keys argument is an empty list.
+     */
+    void removeAll(AList keys);
 }

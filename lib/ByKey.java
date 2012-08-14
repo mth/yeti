@@ -48,11 +48,6 @@ public interface ByKey {
     Object remove(Object key);
 
     /**
-     * Remove object by key.
-     */
-    void removeAll(AList keys);
-
-    /**
      * Has a given key.
      */
     boolean containsKey(Object key);

@@ -2058,7 +2058,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~ByKey)#remove(k),
 
     deleteAll h ks is map<'a, 'b> -> list?<'a> -> () =
-        _ = (h unsafely_as ~ByKey)#removeAll(ks),
+        _ = (h unsafely_as ~Coll)#removeAll(ks),
 
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~ByKey)#setDefault(f),
