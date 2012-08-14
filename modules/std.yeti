@@ -1684,7 +1684,7 @@ plus a b = a + b;
      * haystack    - a original string to process
      *
      * Examples:
-     * strReplace "aba" "+" "xabaabababax" == "x++b+x" 
+     * strReplace 'aba' '+' 'xabaabababax' == 'x++b+x' 
      */
     strReplace needle replacement haystack
             is string -> string -> string -> string =
@@ -1908,14 +1908,55 @@ plus a b = a + b;
      */
     strLeft s end = strSlice s 0 end,
 
+    /**
+     * Returns the string prefix until the start of first occurrence of the
+     * specified substring in the given string (or undef_str, if the substring
+     * isn't part of the given string).
+     *
+     * Arguments:
+     * string    - the string to be searched
+     * substring - the substring to search
+     *
+     * Examples:
+     * : strLeftOf 'at' 'potatos' == 'pot'
+     */
     strLeftOf subString s is string -> string -> string =
         i = strIndexOf s subString 0;
         if i < 0 then undef_str else strSlice s 0 i fi,
 
+    /**
+     * Returns the string suffix starting from the end of last occurrence of
+     * the specified substring in the given string (or undef_str, if the
+     * substring isn't part of the given string).
+     *
+     * Arguments:
+     * string    - the string to be searched
+     * substring - the substring to search
+     *
+     * Examples:
+     * : strRightOf 'at' 'potatos' == 'os'
+     */
     strRightOf subString s is string -> string -> string =
         i = strLastIndexOf' s subString;
         if i < 0 then undef_str else strRight s (i + strLength subString) fi,
 
+    /**
+     * Joins string representations of list elements into a single string,
+     * with separator string insterted between each list element.
+     * The resulting string is returned.
+     *
+     * Arguments:
+     * separator - a string to be inserted between list elements
+     * list      - a list to be joined
+     *
+     * Examples:
+     * : strJoin '; ' [1..5] == '1; 2; 3; 4; 5'
+     *
+     * Notes:
+     * The string representations of list elements are idententical to those
+     * that would be returned by the string function.
+     * : strJoin separator (map string list) == strJoin separator list
+     */
     strJoin sep list is string -> list?<'a> -> string =
         if empty? list then
             ""
@@ -1937,6 +1978,21 @@ plus a b = a + b;
             buf#toString()
         fi,
 
+    /**
+     * Returns string with padding added at the end, if the string length
+     * is shorter than the desired length. The padding is added as many times
+     * as required (but not more) to get result with length that is not
+     * shorter from the requested one. The original string is returned
+     * unmodified, if its length is greater or equal to the requested one.
+     *
+     * Arguments:
+     * padding - a padding string to append
+     * string  - a string to be padded
+     * length  - desired result length
+     *
+     * Examples:
+     * : strPad '.' 10 'test' == 'test......'
+     */
     strPad pad n str is string -> number -> string -> string =
         if strLength str >= n then
             str
@@ -1946,9 +2002,23 @@ plus a b = a + b;
             buf#toString()
         fi,
 
+    /**
+     * Returns a copy of the string, with first character translated to
+     * uppercase. The string is returned unmodified, if this is not possible.
+     *
+     * Arguments:
+     * string - a string value
+     */
     strCapitalize str is string -> string =
         Core#capitalize(str unsafely_as ~String),
 
+    /**
+     * Returns a copy of the string, with first character translated to
+     * lowercase. The string is returned unmodified, if this is not possible.
+     *
+     * Arguments:
+     * string - a string value
+     */
     strUncapitalize str is string -> string =
         Core#uncapitalize(str unsafely_as ~String),
 
