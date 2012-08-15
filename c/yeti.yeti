@@ -134,7 +134,7 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             push options (NoFrames ());
         "-v":
             println "Yeti \(yetiRuntimeVersion)";
-            sysExit 0;
+            threadExit 0;
         _:
             case arg of
             "-h": ();
@@ -142,10 +142,10 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             "--help": ();
             _:
                 println "Unexpected option: \(arg)";
-                sysExit 1;
+                threadExit 1;
             esac;
             println help;
-            sysExit 0
+            threadExit 0
         esac
     else
         push srcs arg
@@ -196,7 +196,7 @@ if defined? eval then
         printException ex;
     CompileException ex:
         printMessage ex;
-        sysExit 1;
+        threadExit 1;
     Result val: 
         if printType then
             println (showType [] '' type)
@@ -220,7 +220,7 @@ else
     for srcs do src:
         if not scan src '' (push sourcePath) files then
             println "Don't know what to do with `\(src)'";
-            sysExit 1
+            threadExit 1
         fi
     done;
     try
@@ -230,7 +230,7 @@ else
             ex#printStackTrace()
         fi;
         printMessage ex;
-        sysExit 1
+        threadExit 1
     catch java.lang.reflect.InvocationTargetException ex:
         printException ex#getCause()
     catch java.lang.Throwable ex:

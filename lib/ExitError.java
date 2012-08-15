@@ -30,11 +30,10 @@
  */
 package yeti.lang;
 
-public class ExitError extends Error {
+public class ExitError extends ThreadDeath {
     private int exitCode;
 
     public ExitError(int exitCode) {
-        super("sysExit " + exitCode);
     	this.exitCode = exitCode;
     }
 

@@ -223,6 +223,9 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
         System#err#println(v),
 
     sysExit exitCode =
+        System#exit(exitCode),
+
+    threadExit exitCode =
         throw new ExitError(exitCode),
 
     readerHandle,
