@@ -1873,7 +1873,58 @@ plus a b = a + b;
 
     norec strSplit re = strSplit re,
     norec substAll re = substAll re,
+
+    /**
+     * Generates a lazy list by searching matches of given regex in the string.
+     *
+     * Arguments:
+     * regex   - string representing a regular expression
+     * onMatch - function to apply to the captured groups from matches
+     * onText  - function to apply to the non-matching substrings
+     * string  - string where to search the given regex matches
+     *
+     * Description:
+     * When a match is found, the onText function is applied to the text
+     * between previous match (or start of the string for first match) and
+     * matched substring, if this text isn't zero-length. The onMatch
+     * function is applied to an array composed of captured groups in the
+     * regex (implicit capture of whole matched substring is given as 0th
+     * element in the capture group array). The onText function is also
+     * applied to the end of the string after last match found, if the last
+     * match ends before.
+     *
+     * The results of onText and onMatch applications are added to the
+     * resulting list in the same order as the corresponding substrings were
+     * in the processed string. This regex match searching and list
+     * construction is done lazily, as the returned list is consumed
+     * (so if you apply matchAll to long string containing many matches of
+     * the substring and use only head of the result, only the first match
+     * will be actually searched).
+     *
+     * The regex is compiled and matched using the java.util.regex
+     * implementation, and therefore uses the same (Perl regular expression
+     * compatible) syntax. Yeti compiler optimises usage of this function
+     * when literal string is used as regex argument, so that the regex will
+     * be compiled only once into the java.util.regex.Pattern instance.
+     *
+     * Examples:
+     * : for (matchAll '\d+' M T '2012-08-23T04:11Z') println;
+     *
+     * Prints the following parts of this ISO 8601 date by matching
+     * number sequences:
+     * : M ["2012"]
+     * : T "-"
+     * : M ["08"]
+     * : T "-"
+     * : M ["23"]
+     * : T "T"
+     * : M ["04"]
+     * : T ":"
+     * : M ["11"]
+     * : T "Z"
+     */
     norec matchAll re = matchAll re,
+
     norec like re = like re,
 
     /**
