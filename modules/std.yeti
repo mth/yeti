@@ -1878,7 +1878,7 @@ plus a b = a + b;
      * Generates a lazy list by searching matches of given regex in the string.
      *
      * Arguments:
-     * regex   - string representing a regular expression
+     * regex   - string representation of regular expression
      * onMatch - function to apply to the captured groups from matches
      * onText  - function to apply to the non-matching substrings
      * string  - string where to search the given regex matches
