@@ -1367,12 +1367,12 @@ public final class YetiAnalyzer extends YetiType {
                     }
                     YType argt = new YType(depth);
                     argt.doc = doc;
-                    CasePattern arg = toPattern(pat.right, argt, null);
                     YType old = (YType) t.partialMembers.put(variant, argt);
                     if (old != null) {
-                        // same constructor already. shall be same type.
-                        unify(old, argt, pat.right, scope, "#0");
+                        argt = withDoc(old, doc);
+                        t.partialMembers.put(variant, argt);
                     }
+                    CasePattern arg = toPattern(pat.right, argt, null);
                     structParam(t, t.partialMembers, new YType(depth));
                     return new VariantPattern(variant, arg);
                 }
@@ -1403,7 +1403,7 @@ public final class YetiAnalyzer extends YetiType {
                 String[] names = new String[fields.length];
                 CasePattern[] patterns = new CasePattern[fields.length];
                 HashMap uniq = new HashMap(fields.length);
-                ++submatch;
+                //++submatch;
                 for (int i = 0; i < fields.length; ++i) {
                     Bind field = getField(fields[i]);
                     if (uniq.containsKey(field.name))
@@ -1419,7 +1419,19 @@ public final class YetiAnalyzer extends YetiType {
                     names[i] = field.name;
                     patterns[i] = toPattern(field.expr, ft, null);
                 }
-                --submatch;
+                //--submatch;
+                Map tm = t.deref().partialMembers;
+                // The submatch hack was broken by allowing non-matcing matches
+                // to be given. So, force ANY for missing structure fields - it
+                // seems at least a sensible thing to do. This might be alsa
+                // broken, but i can't fix it better with this design - the
+                // case compilation should be rewritten to DFA generation.
+                if (tm != null)
+                    for (Iterator j = tm.keySet().iterator(); j.hasNext(); ) {
+                        Object k = j.next();
+                        if (!uniq.containsKey(k))
+                            ((YType) tm.get(k)).deref().flags |= FL_ANY_PATTERN;
+                    }
                 return new StructPattern(names, patterns);
             }
             throw new CompileException(node, "Bad case pattern: " + node);
