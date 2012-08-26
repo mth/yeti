@@ -1403,6 +1403,7 @@ public final class YetiAnalyzer extends YetiType {
                 String[] names = new String[fields.length];
                 CasePattern[] patterns = new CasePattern[fields.length];
                 HashMap uniq = new HashMap(fields.length);
+                int allAny = FL_ANY_PATTERN;
                 //++submatch;
                 for (int i = 0; i < fields.length; ++i) {
                     Bind field = getField(fields[i]);
@@ -1417,7 +1418,9 @@ public final class YetiAnalyzer extends YetiType {
                     part.partialMembers = tm;
                     unify(t, part, field, scope, "#0");
                     names[i] = field.name;
+                    ft.flags &= ~FL_ANY_PATTERN;
                     patterns[i] = toPattern(field.expr, ft, null);
+                    allAny &= ft.flags;
                 }
                 //--submatch;
                 Map tm = t.deref().partialMembers;
@@ -1427,10 +1430,13 @@ public final class YetiAnalyzer extends YetiType {
                 // broken, but i can't fix it better with this design - the
                 // case compilation should be rewritten to DFA generation.
                 if (tm != null)
-                    for (Iterator j = tm.keySet().iterator(); j.hasNext(); ) {
-                        Object k = j.next();
-                        if (!uniq.containsKey(k))
-                            ((YType) tm.get(k)).deref().flags |= FL_ANY_PATTERN;
+                    for (Iterator j = tm.values().iterator(); j.hasNext(); ) {
+                        YType ft = ((YType) j.next()).deref();
+                        if (allAny == 0) { // may not much, don't give any
+                            ft.flags &= ~FL_ANY_PATTERN;
+                        } else { // all are any, force it
+                            ft.flags |= FL_ANY_PATTERN;
+                        }
                     }
                 return new StructPattern(names, patterns);
             }
