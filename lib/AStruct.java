@@ -62,6 +62,15 @@ public abstract class AStruct implements Struct, Serializable {
         Unsafe.unsafeThrow(new NoSuchFieldException(name));
     }
 
+    public int hashCode() {
+        int h = 0;
+        for (int i = 0, cnt = count(); i < cnt; ++i) {
+            Object v = get(i);
+            h += name(i).hashCode() ^ (v == null ? 0 : v.hashCode());
+        }
+        return h;
+    }
+
     public boolean equals(Object o) {
         Struct st = (Struct) o;
         int acnt = count(), bcnt = st.count(), i = 0, j = 0;
