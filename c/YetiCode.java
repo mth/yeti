@@ -1393,6 +1393,7 @@ final class ClassField extends JavaExpr implements CodeGen {
         if ((field.access & ACC_PROTECTED) != 0
                 && classType.implementation != null
                 && !object.flagop(DIRECT_THIS)) {
+            // XXX WTF: object can't be null - !object.flagop in condition
             descr = (object == null ? "()" : '(' + classType.description + ')')
                     + descr;
             String name = classType.implementation
@@ -1424,6 +1425,7 @@ final class ClassField extends JavaExpr implements CodeGen {
         if ((field.access & ACC_PROTECTED) != 0
                 && classType.implementation != null
                 && !object.flagop(DIRECT_THIS)) {
+            // XXX WTF: object can't be null - !object.flagop in condition
             descr = (object != null ? "(".concat(classType.description)
                                     : "(") + descr + ")V";
             String name = classType.implementation

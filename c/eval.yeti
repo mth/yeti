@@ -445,7 +445,7 @@ class YetiTask extends MatchingTask
     var docDir = undef_str,
 
     void setSrcDir(String dir)
-        src := new File(dir),
+        src := new File(dir unsafely_as ~String),
 
     void setDestDir(String dir)
         push genOpt (To dir),

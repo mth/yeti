@@ -158,9 +158,9 @@ inputHandle stream encoding is ~InputStream -> string -> 'a =
 
 writerHandle writer is ~BufferedWriter -> 'a = {
         write s is string -> () =
-            writer#write(s),
+            writer#write(s unsafely_as ~String),
         writeln s is string -> () =
-            writer#write(s);
+            writer#write(s unsafely_as ~String);
             writer#newLine(),
         flush () = writer#flush(),
         close () = writer#close(),
@@ -286,7 +286,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     // Example: getContents (openTextUrl [] 'http://example.com/')
     openTextUrl options url
             is list<CharSet (string -> string)> -> string -> 'a =
-        conn = new java.net.URL(url)#openConnection();
+        conn = new java.net.URL(url unsafely_as ~String)#openConnection();
         stream = conn#getInputStream();
         cs = try
                 contentType = conn#getContentType();
@@ -319,9 +319,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     sleep time = Thread#sleep(time * 1000),
 
-    deleteFile fn is string -> boolean = new File(fn)#delete(),
+    deleteFile fn is string -> boolean =
+        new File(fn unsafely_as ~String)#delete(),
 
-    createPath path is string -> () = _ = new File(path)#mkdirs(),
+    createPath path is string -> () = _ =
+        new File(path unsafely_as ~String)#mkdirs(),
 
     /**
      * Lists files in given directory.
@@ -334,7 +336,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             -> list<{name is string, path is string,
                      file? is boolean, directory? is boolean}> =
        (res = array [];
-        for new File(directory)#listFiles() do f:
+        for new File(directory unsafely_as ~String)#listFiles() do f:
             if hidden or not f#isHidden() then
                 var path = f#getPath();
                 if File#separator == '\' then

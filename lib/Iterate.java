@@ -32,7 +32,7 @@ package yeti.lang;
 
 /** Yeti core library - Iterate function. */
 final class Iterate extends LList {
-    private Fun f;
+    private volatile Fun f;
 
     Iterate(Object v, Fun f) {
         super(v, null);
