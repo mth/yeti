@@ -1925,6 +1925,56 @@ plus a b = a + b;
      */
     norec matchAll re = matchAll re,
 
+    /**
+     * Returns a function that searches for a match of regex in the given string.
+     *
+     * Arguments:
+     * regex  - string representing a regular expression
+     * string - string where to search the given regex match
+     *
+     * Description:
+     * The returned function attempts to find next substring that matches the
+     * regex pattern, when applied to the unit value (). It returns array of
+     * captured groups from the regex match (including the whole matched substring
+     * as zeroth array element), or empty array, if no match could be found.
+     *
+     * The regular expression is compiled and matched using the java.util.regex
+     * implementation, and therefore uses the same (Perl regular expression
+     * compatible) syntax. Yeti compiler optimises usage of this function
+     * when literal string is used as regex argument, so that the regex will
+     * be compiled only once into the java.util.regex.Pattern instance.
+     *
+     * Examples:
+     * Repeated application of the returned function can be used to find all
+     * substrings matching the regex pattern in the given string:
+     * : printMatches matcher =
+     * :     case matcher () of
+     * :     matched :: _:
+     * :         println matched;
+     * :         printMatches matcher;
+     * :     _: ()
+     * :     esac;
+     * : printMatches (like '\d+' '2012-08-23T04:11Z');
+     *
+     * This will print all numbers from the ISO 8601 date:
+     * : 2012
+     * : 08
+     * : 23
+     * : 04
+     * : 11
+     *
+     * The matches could be collected into list using the collect function:
+     * : matches = collect (like '\d+' '2012-08-23T04:11Z') () empty?);
+     * : println matches; // [["2012"], ["08"], ["23"], ["04"], ["11"]]
+     *
+     * The returned function can be applied right away,
+     * if only first match is needed:
+     * : date = '2012-08-23T04:11Z';
+     * : case like '(\d+):(\d+)' date () of
+     * : [_, hour, min]: println "Hour: \(hour), minutes: \(min)";
+     * : _: println "No time found in the date string.";
+     * : esac;
+     */
     norec like re = like re,
 
     /**
