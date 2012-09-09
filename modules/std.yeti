@@ -1926,7 +1926,7 @@ plus a b = a + b;
     norec matchAll re = matchAll re,
 
     /**
-     * Returns a function that searches for a match of regex in the given string.
+     * Returns a function that searches for a regex match in the given string.
      *
      * Arguments:
      * regex  - string representing a regular expression
@@ -1948,12 +1948,11 @@ plus a b = a + b;
      * Repeated application of the returned function can be used to find all
      * substrings matching the regex pattern in the given string:
      * : printMatches matcher =
-     * :     case matcher () of
-     * :     matched :: _:
-     * :         println matched;
+     * :    (match = matcher ();
+     * :     if not empty? match then
+     * :         println match.[0];
      * :         printMatches matcher;
-     * :     _: ()
-     * :     esac;
+     * :     fi);
      * : printMatches (like '\d+' '2012-08-23T04:11Z');
      *
      * This will print all numbers from the ISO 8601 date:
