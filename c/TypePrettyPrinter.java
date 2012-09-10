@@ -329,7 +329,9 @@ class TypeDescr extends YetiType {
                 descr.alias = ctx.getVarName(t);
             return new TypeDescr(descr.alias);
         }
-        ctx.refs.put(t, descr = new TypeDescr(null));
+        final YType tt = t;
+        ctx.refs.put(tt, descr = new TypeDescr(null));
+        int varcount = ctx.vars.size();
         Map defVars = null;
         TypePattern def = null;
         if (ctx.defs != null &&
@@ -394,6 +396,9 @@ class TypeDescr extends YetiType {
                 descr.name = "?" + type + '?';
                 break;
         }
+        // don't create ('foo is ...) when there is no free variables in ...
+        if (varcount == ctx.vars.size())
+            ctx.refs.remove(tt);
         return descr;
     }
 }

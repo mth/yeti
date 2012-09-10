@@ -1871,7 +1871,32 @@ plus a b = a + b;
      */
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
+    /**
+     * Splits the string into substrings separated by matches of the regex,
+     * and returns array of the resulting substrings.
+     *
+     * Arguments:
+     * regex  - string representing a regular expression
+     * string - string to split
+     *
+     * Description:
+     * The matches of the regex are used as delimiters, and the substrings
+     * not matching the regex are returned in array in the order they were
+     * in the initial string. Empty substrings before matches are included
+     * in the returned array. Matches at the end of the given string won't
+     * add empty strings to the result.
+     *
+     * The regex is compiled and matched using the java.util.regex
+     * implementation, and therefore uses the same (Perl regular expression
+     * compatible) syntax. Yeti compiler optimises usage of this function
+     * when literal string is used as regex argument, so that the regex will
+     * be compiled only once into the java.util.regex.Pattern instance.
+     *
+     * Examples:
+     * : strSplit ';' ';a;foo;;;bar;;' == ["","a","foo","","","bar"]
+     */
     norec strSplit re = strSplit re,
+
     norec substAll re = substAll re,
 
     /**
