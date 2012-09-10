@@ -1897,6 +1897,37 @@ plus a b = a + b;
      */
     norec strSplit re = strSplit re,
 
+    /**
+     * Returns a copy of the string, with each substring matching the regex
+     * substituded with the replacement string in the given haystack string.
+     *
+     * Arguments:
+     * regex       - string representing a regular expression
+     * replacement - a string to use as replacement
+     * haystack    - a original string to process
+     *
+     * Description:
+     * Matches of the given regex are searched sequentially from the beginning
+     * of haystack string and replaced with the given replacement string.
+     *
+     * The replacement string can contain dollar signs ($) followed by decimal
+     * number (like $1, $2 etc), these will be replaced with text matched by
+     * corresponding group in the regex. $0 will be replaced with whole
+     * matched substring. Backslashes in replacement string escape the
+     * following code unit as a literal code unit (all occurrences of $ and
+     * \ meant to be literal symbols must be escaped this way).
+     *
+     * The regex is compiled and matched using the java.util.regex
+     * implementation (Matcher#replaceAll() is used for substitution), and
+     * therefore uses the same (Perl regular expression compatible) syntax.
+     * Yeti compiler optimises usage of this function when literal string is
+     * used as regex argument, so that the regex will be compiled only once
+     * into the java.util.regex.Pattern instance. All strings represent
+     * UTF-16 code unit sequences (internally java.lang.String instances).
+     *
+     * Examples:
+     * : substAll 'a(b*)' '$1' 'an abacus' == 'n bcus'
+     */
     norec substAll re = substAll re,
 
     /**

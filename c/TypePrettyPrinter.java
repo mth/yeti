@@ -397,7 +397,7 @@ class TypeDescr extends YetiType {
                 break;
         }
         // don't create ('foo is ...) when there is no free variables in ...
-        if (varcount == ctx.vars.size())
+        if (varcount == ctx.vars.size() && descr.alias == null)
             ctx.refs.remove(tt);
         return descr;
     }
