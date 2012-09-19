@@ -862,7 +862,7 @@ interface YetiParser {
                     throw new CompileException(partial, "Special operator `" +
                                     s + "` cannot be used as a function");
                 if (partial instanceof TypeOp) {
-                    partial.right = new Sym(partial.hashCode() + partial.kind);
+                    partial.right = new Sym(partial.hashCode() + partial.op);
                     partial.right.pos(partial.line, partial.col);
                     return XNode.lambda(partial.right, partial, null);
                 }
