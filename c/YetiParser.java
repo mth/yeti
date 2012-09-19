@@ -858,9 +858,14 @@ interface YetiParser {
             }
             if (s != null && i >= cnt) {
                 if (s == "loop" || s == "with" || s == "throw" ||
-                        partial instanceof TypeOp)
+                        partial instanceof IsOp)
                     throw new CompileException(partial, "Special operator `" +
                                     s + "` cannot be used as a function");
+                if (partial instanceof TypeOp) {
+                    partial.right = new Sym(partial.hashCode() + partial.kind);
+                    partial.right.pos(partial.line, partial.col);
+                    return XNode.lambda(partial.right, partial, null);
+                }
                 return new Sym(s).pos(partial.line, partial.col);
             }
             ParseExpr parseExpr = new ParseExpr();
