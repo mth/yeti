@@ -816,7 +816,7 @@ interface YetiParser {
                     throw new CompileException(line, col, "Syntax error");
                 } else if (s.length() == 1) {
                     do {
-                        if (++p >= src.length)
+                        if (++p >= src.length || src[p] == '\n')
                             throw new CompileException(line, col,
                                         "Unterminated ``identifier");
                     } while (src[p - 1] != '`' || src[p] != '`');
