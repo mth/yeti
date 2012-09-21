@@ -136,6 +136,16 @@ done,
     b = {x = 12};
     a with b == b
 done,
+'escaped symbols' : do:
+    import yeti.lang.Struct;
+    
+    ``some @symb`` = 2; 
+    stru = {``one-var test`` = 'foo-text'};
+    
+    ``some @symb`` == 2 and
+    'foo-text' == stru.``one-var test``
+    and ((stru as ~Object) unsafely_as ~Struct)#get('one-var test')#equals("foo-text");
+done,
 ];
 
 var bad = 0;

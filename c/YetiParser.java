@@ -753,79 +753,106 @@ interface YetiParser {
                         "Bad number literal '" + s + "'");
                 }
             }
-            if (src[i] == '`' && i + 1 < src.length)
-                ++i;
-            while (++i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'));
-            String s = new String(src, p, i - p);
-            p = i;
-            s = s.intern(); // Sym's are expected to have interned strings
-            Node res;
-            if (s == "if") {
-                res = readIf();
-            } else if (s == "do") {
-                res = readDo();
-            } else if (s == "and" || s == "or") {
-                res = new BinOp(s, NOT_OP_LEVEL + 1, true);
-            } else if (s == "not") {
-                res = new BinOp(s, NOT_OP_LEVEL, true);
-            } else if (s == "then" || s == "elif" || s == "else" ||
-                       s == "fi" || s == "of" || s == "esac" || s == "done" ||
-                       s == "catch" || s == "finally" || s == "yrt") {
-                res = new Eof(s);
-            } else if (s == "case") {
-                res = readCase();
-            } else if (s == "in") {
-                res = new BinOp(s, COMP_OP_LEVEL, true);
-            } else if (s == "div" || s == "shr" || s == "shl" ||
-                       s == "b_and" || s == "with") {
-                res = new BinOp(s, FIRST_OP_LEVEL, true);
-            } else if (s == "b_or" || s == "xor") {
-                res = new BinOp(s, FIRST_OP_LEVEL + 1, true);
-            } else if (s == "is" || s == "unsafely_as" || s == "as") {
-                TypeNode t = readType(true);
-                if (t == null) {
-                    throw new CompileException(line, col,
-                                "Expecting type expression");
+            
+            //escape symbols with `` (double-back-tick)
+            if (src[i] == '`' && i + 1 < src.length && src[i+1] == '`') {
+                i = i + 2;
+                p = i;
+                int sline = line, scol = i - lineStart;
+                for (; (i+1) < src.length && !(src[i] == '`' && src[i+1] == '`'); ++i) {
+                    if (src[i] == '\n') {
+                        lineStart = i + 1;
+                        ++line;
+                    }
                 }
-                return (s == "is" ? new IsOp(t) : new TypeOp(s, t))
-                            .pos(line, col);
-            } else if (s == "new") {
-                res = readNew();
-            } else if (s == "var" || s == "norec") {
-                res = new XNode(s);
-            } else if (s == "throw") {
-                res = new BinOp("throw", 1, false);
-            } else if (s == "loop") {
-                res = new BinOp(s, IS_OP_LEVEL + 2, false);
-            } else if (s == "import") {
-                res = readImport();
-            } else if (s == "load") {
-                res = new XNode(s,
-                    readDotted("Expected module name after 'load', not a "));
-            } else if (s == "classOf") {
-                res = new XNode(s,
-                            readDottedType("Expected class name, not a "));
-            } else if (s == "typedef") {
-                res = readTypeDef();
-            } else if (s == "try") {
-                res = readTry();
-            } else if (s == "instanceof") {
-                res = new InstanceOf(
-                            readDotted("Expected class name, not a ").sym);
-            } else if (s == "class") {
-                res = readClassDef();
+                if( i >= src.length) {
+                    throw new CompileException(sline, scol, "Unclosed ``");
+                }
+                String s = new String(src,p,i-p);
+                s = s.intern();
+                i = i + 2;
+                p = i;
+ 
+                return (new Sym(s)).pos(sline,scol);
+ 
+
             } else {
-                if (s.charAt(0) != '`') {
-                    res = new Sym(s);
-                } else if (s.length() > 1 && p < src.length && src[p] == '`') {
-                    ++p;
-                    res = new BinOp(s.substring(1).intern(),
-                                    FIRST_OP_LEVEL + 2, true);
+                //normal symbol parse code
+                if (src[i] == '`' && i + 1 < src.length)
+                    ++i;
+                
+                while (++i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'));
+                String s = new String(src, p, i - p);
+                p = i;
+                s = s.intern(); // Sym's are expected to have interned strings
+                Node res;
+                if (s == "if") {
+                    res = readIf();
+                } else if (s == "do") {
+                    res = readDo();
+                } else if (s == "and" || s == "or") {
+                    res = new BinOp(s, NOT_OP_LEVEL + 1, true);
+                } else if (s == "not") {
+                    res = new BinOp(s, NOT_OP_LEVEL, true);
+                } else if (s == "then" || s == "elif" || s == "else" ||
+                           s == "fi" || s == "of" || s == "esac" || s == "done" ||
+                           s == "catch" || s == "finally" || s == "yrt") {
+                    res = new Eof(s);
+                } else if (s == "case") {
+                    res = readCase();
+                } else if (s == "in") {
+                    res = new BinOp(s, COMP_OP_LEVEL, true);
+                } else if (s == "div" || s == "shr" || s == "shl" ||
+                           s == "b_and" || s == "with") {
+                    res = new BinOp(s, FIRST_OP_LEVEL, true);
+                } else if (s == "b_or" || s == "xor") {
+                    res = new BinOp(s, FIRST_OP_LEVEL + 1, true);
+                } else if (s == "is" || s == "unsafely_as" || s == "as") {
+                    TypeNode t = readType(true);
+                    if (t == null) {
+                        throw new CompileException(line, col,
+                                    "Expecting type expression");
+                    }
+                    return (s == "is" ? new IsOp(t) : new TypeOp(s, t))
+                                .pos(line, col);
+                } else if (s == "new") {
+                    res = readNew();
+                } else if (s == "var" || s == "norec") {
+                    res = new XNode(s);
+                } else if (s == "throw") {
+                    res = new BinOp("throw", 1, false);
+                } else if (s == "loop") {
+                    res = new BinOp(s, IS_OP_LEVEL + 2, false);
+                } else if (s == "import") {
+                    res = readImport();
+                } else if (s == "load") {
+                    res = new XNode(s,
+                        readDotted("Expected module name after 'load', not a "));
+                } else if (s == "classOf") {
+                    res = new XNode(s,
+                                readDottedType("Expected class name, not a "));
+                } else if (s == "typedef") {
+                    res = readTypeDef();
+                } else if (s == "try") {
+                    res = readTry();
+                } else if (s == "instanceof") {
+                    res = new InstanceOf(
+                                readDotted("Expected class name, not a ").sym);
+                } else if (s == "class") {
+                    res = readClassDef();
                 } else {
-                    throw new CompileException(line, col, "Syntax error");
+                    if (s.charAt(0) != '`') {
+                        res = new Sym(s);
+                    } else if (s.length() > 1 && p < src.length && src[p] == '`') {
+                        ++p;
+                        res = new BinOp(s.substring(1).intern(),
+                                        FIRST_OP_LEVEL + 2, true);
+                    } else {
+                        throw new CompileException(line, col, "Syntax error");
+                    }
                 }
+                return res.pos(line, col);
             }
-            return res.pos(line, col);
         }
 
         private Node def(List args, List expr, boolean structDef, String doc) {
