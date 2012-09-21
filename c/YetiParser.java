@@ -180,13 +180,12 @@ interface YetiParser {
             while (first < args.size()) {
                 nameNode = (Node) args.get(first);
                 ++first;
-                if (nameNode.kind == "var") {
+                if (nameNode.kind == "var")
                     var = true;
-                } else if (nameNode.kind == "norec") {
+                else if (nameNode.kind == "norec")
                     noRec = true;
-                } else {
+                else
                     break;
-                }
             }
             if (!var && nameNode instanceof Sym) {
                 String s = ((Sym) nameNode).sym;
@@ -201,33 +200,31 @@ interface YetiParser {
                     }
                 }
             }
-            if (first == 0 || first > args.size()) {
+            if (first == 0 || first > args.size())
                 throw new CompileException(nameNode,
                         "Variable name is missing");
-            }
-            if (!(nameNode instanceof Sym)) {
+            if (inStruct && nameNode.kind == "``")
+                nameNode = ((XNode) nameNode).expr[0];
+            if (!(nameNode instanceof Sym))
                 throw new CompileException(nameNode, nameNode.kind == "class"
                             ? "Missing ; after class definition"
                             : "Illegal binding name: " + nameNode
                               + " (missing ; after expression?)");
-            }
             line = nameNode.line;
             col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
             if (first < args.size() && args.get(first) instanceof BinOp &&
-                    ((BinOp) args.get(first)).op == FIELD_OP) {
+                    ((BinOp) args.get(first)).op == FIELD_OP)
                 throw new CompileException((BinOp) args.get(first),
                     "Bad argument on binding (use := for assignment, not =)");
-            }
             int i = args.size() - 1;
             if (i >= first && args.get(i) instanceof IsOp) {
                 type = ((IsOp) args.get(i)).type;
                 --i;
             }
-            for (; i >= first; --i) {
+            for (; i >= first; --i)
                 expr = XNode.lambda((Node) args.get(i), expr,
                         i == first ? nameNode : null);
-            }
             this.expr = expr;
         }
 
@@ -753,8 +750,6 @@ interface YetiParser {
                         "Bad number literal '" + s + "'");
                 }
             }
-            if (src[i] == '`' && i + 1 < src.length)
-                ++i;
             while (++i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'));
             String s = new String(src, p, i - p);
             p = i;
@@ -817,12 +812,21 @@ interface YetiParser {
             } else {
                 if (s.charAt(0) != '`') {
                     res = new Sym(s);
-                } else if (s.length() > 1 && p < src.length && src[p] == '`') {
+                } else if (p >= src.length || src[p] != '`') {
+                    throw new CompileException(line, col, "Syntax error");
+                } else if (s.length() == 1) {
+                    do {
+                        if (++p >= src.length)
+                            throw new CompileException(line, col,
+                                        "Unterminated ``identifier");
+                    } while (src[p - 1] != '`' || src[p] != '`');
+                    s = new String(src, i + 1, p - i - 2).intern();
+                    res = new XNode("``", new Sym(s));
+                    ++p;
+                } else {
                     ++p;
                     res = new BinOp(s.substring(1).intern(),
                                     FIRST_OP_LEVEL + 2, true);
-                } else {
-                    throw new CompileException(line, col, "Syntax error");
                 }
             }
             return res.pos(line, col);

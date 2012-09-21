@@ -166,8 +166,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (op.right.kind == "list")
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (XNode) op.right, scope, depth);
-                checkSelectorSym(op, op.right);
-                return selectMember(op, (Sym) op.right,
+                return selectMember(op, getSelectorSym(op, op.right),
                         analyze(op.left, scope, depth), scope, depth);
             }
             if (opop == ":=")
@@ -536,11 +535,10 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(op,
                         "Unexpected " + op.op + " in field selector");
                 }
-                checkSelectorSym(op, op.right);
-                parts.addFirst(op.right.sym());
+                parts.addFirst(getSelectorSym(op, op.right).sym);
             }
-            checkSelectorSym(section, x);
-            parts.addFirst(x.sym());
+            
+            parts.addFirst(getSelectorSym(section, x).sym);
             String[] fields =
                 (String[]) parts.toArray(new String[parts.size()]);
             YType res = new YType(depth), arg = res;
@@ -568,13 +566,15 @@ public final class YetiAnalyzer extends YetiType {
         return new VariantConstructor(new YType(FUN, fun), name);
     }
 
-    static void checkSelectorSym(Node op, Node sym) {
+    static Sym getSelectorSym(Node op, Node sym) {
         if (!(sym instanceof Sym)) {
-            if (sym == null) {
+            if (sym == null)
                 throw new CompileException(op, "What's that dot doing here?");
-            }
-            throw new CompileException(sym, "Illegal ." + sym);
+            if (sym.kind != "``")
+                throw new CompileException(sym, "Illegal ." + sym);
+            sym = ((XNode) sym).expr[0];
         }
+        return (Sym) sym;
     }
 
     static YType selectMemberType(YType res, String field, int depth) {
