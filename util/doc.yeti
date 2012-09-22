@@ -129,7 +129,7 @@ parseDoc' doc =
         if prev == '' then
             case line of
             'Arguments:': state := listState args
-                            (like '^(\w++)\s++-(?:\s++(.*))?$');
+                            (like '^(\w++|\(\))\s++-(?:\s++(.*))?$');
             'Description:': state := withCode description;
             'Exceptions:': state := listState exceptions
                             (like '^([\w.]++)\s++-(?:\s++(.*))?$');

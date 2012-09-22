@@ -2178,6 +2178,20 @@ plus a b = a + b;
     strUncapitalize str is string -> string =
         Core#uncapitalize(str unsafely_as ~String),
 
+    /**
+     * Applies the function to each key-value pair in the given hash map,
+     * and returns a list of the values returned by these applications.
+     * The order of elements in the returned list is undefined.
+     *
+     * Arguments:
+     *  function - function to apply to the hash map key-value pairs
+     *  hash     - a hash map
+     *
+     * Examples:
+     * : mapHash (_ k v = "\(k):\(v)") ['a':1,'b': 3,'c': 5]
+     * May have the following result:
+     * : ["b:3","c:5","a:1"] is list?<string>
+     */
     mapHash f h is ('a -> 'b -> 'c) -> hash<'a, 'b> -> list?<'c> =
         a = new MList();
         a#reserve((h unsafely_as ~Map)#size());
@@ -2188,9 +2202,22 @@ plus a b = a + b;
                     (e#getValue() unsafely_as 'b)));
         a unsafely_as list?<'c>,
 
+    /**
+     * Creates an identity hash map, where keys are compared by their
+     * object instance identies (like the same? function does).
+     *
+     * Arguments:
+     * () - an unit value
+     */
     identityHash () is () -> hash<'a, 'b> =
         new IdentityHash() unsafely_as hash<'a, 'b>,
 
+    /**
+     * Returns a new copy of the given collection.
+     *
+     * Arguments:
+     * collection - a list, array or hash map
+     */
     copy h is 'a -> 'a =
         if nullptr? h then
             () as ~Object unsafely_as 'a
