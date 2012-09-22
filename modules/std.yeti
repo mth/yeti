@@ -440,11 +440,11 @@ plus a b = a + b;
     norec (or) a b = a or b,
 
     /**
-     * Checks whether a key exists in the hash map.
+     * Checks whether a key exists in the given hash map or array.
      *
      * Arguments:
-     * key - key value to search for
-     * hash - hash map to be checked
+     * key - key value (or array index) to search for
+     * map - hash map or array to be checked
      *
      * Examples:
      * : h = ['a': 11, 'b': 22];
@@ -2237,6 +2237,14 @@ plus a b = a + b;
     failWith message =
         throw new FailureException(message),
 
+    /**
+     * Deletes a value binding for the given index/key from the
+     * array or hash map.
+     *
+     * Arguments:
+     * map - array or hash map
+     * key - array index or hash map key
+     */
     delete h k is map<'a, 'b> -> 'a -> () =
         _ = (h unsafely_as ~ByKey)#remove(k),
 
