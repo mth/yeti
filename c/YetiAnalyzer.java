@@ -935,7 +935,7 @@ public final class YetiAnalyzer extends YetiType {
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
-        if (typeDef.shared)
+        if (typeDef.kind == TypeDef.SHARED)
             scope = new Scope(scope, typeDef.name, null);
         else
             scope = bind(typeDef.name, type, null, RESTRICT_POLY, -1, scope);

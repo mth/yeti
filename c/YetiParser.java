@@ -354,10 +354,12 @@ interface YetiParser {
     }
 
     final class TypeDef extends Node {
+        static final int SHARED = 1;
+        static final int OPAQUE = 2;
         String name;
         String[] param;
         TypeNode type;
-        boolean shared;
+        int kind;
 
         String str() {
             StringBuffer buf =
@@ -1538,17 +1540,22 @@ interface YetiParser {
             def.name = getTypename(fetch());
             List param = new ArrayList();
             Node node = fetch();
-            if (node instanceof BinOp && ((BinOp) node).op == "<") {
+            if (def.name == "opaque")
+                def.kind = TypeDef.OPAQUE;
+            else if (def.name == "shared" && node instanceof Sym)
+                def.kind = TypeDef.SHARED;
+            if (def.kind != 0) {
+                def.name = getTypename(node);
+                node = fetch();
+            }
+            if (node instanceof BinOp && ((BinOp) node).op == "<" &&
+                def.kind != TypeDef.SHARED) {
                 do {
                     param.add(getTypename(fetch()));
                 } while ((node = fetch()).kind == ",");
                 if (!(node instanceof BinOp) || ((BinOp) node).op != ">")
                     throw new CompileException(node,
                                  "Expected '>', not a " + node);
-                node = fetch();
-            } else if (def.name == "shared" && node instanceof Sym) {
-                def.shared = true;
-                def.name = getTypename(node);
                 node = fetch();
             }
             if (node.kind != "=")
