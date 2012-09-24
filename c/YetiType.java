@@ -442,7 +442,7 @@ public class YetiType implements YetiParser {
     static final class ScopeCtx {
         String packageName;
         String className;
-        int lastOpaqueType = OPAQUE_TYPES;
+        Map opaqueTypes;
     }
 
     static YType orderedVar(int maxDepth) {
@@ -1066,9 +1066,7 @@ public class YetiType implements YetiParser {
 
     static void opaqueCast(YType from, YType to, Scope scope, int depth)
             throws TypeException {
-
-        boolean[] allow_opaque =
-            new boolean[scope.ctx.lastOpaqueType - OPAQUE_TYPES + 1];
+        boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size()];
         for (; scope != null; scope = scope.outer)
             if (scope.typeDef != null) {
                 YType t = scope.typeDef[scope.typeDef.length - 1];

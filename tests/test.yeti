@@ -136,7 +136,7 @@ done,
     b = {x = 12};
     a with b == b
 done,
-'escaped symbols' : do:
+'escaped symbols': do:
     import yeti.lang.Struct;
     
     stru = {``one-var test`` = 'foo-text'};
@@ -144,6 +144,18 @@ done,
     'foo-text' == stru.``one-var test``
     and ((stru as ~Object) unsafely_as ~Struct)#get('one-var test')#equals("foo-text");
 done,
+'opaque types': do:
+    typedef opaque magic<x> = list<x>
+    m = {
+        create l = l,
+        values v is list<'a> -> list<'a> = v,
+    } as {
+        create is list<'a> -> magic<'a>,
+        values is magic<'b> -> list<'b>,
+    };
+    v = m.create [5..7];
+    values v == [5..7]
+done
 ];
 
 var bad = 0;

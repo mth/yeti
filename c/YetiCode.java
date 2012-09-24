@@ -161,10 +161,11 @@ final class CompileCtx implements Opcodes {
     private String currentSrc;
     private Map definedClasses = new HashMap();
     private List unstoredClasses;
-    List postGen = new ArrayList();
+    final List postGen = new ArrayList();
     boolean isGCJ;
     ClassFinder classPath;
-    Map types = new HashMap();
+    final Map types = new HashMap();
+    final Map opaqueTypes = new HashMap();
     String[] preload = new String[] { "yeti/lang/std", "yeti/lang/io" };
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;

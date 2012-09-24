@@ -50,6 +50,7 @@ import java.io.InputStream;
  * 0C <partialMembers...> FF <finalMembers...> FF - Variant
  * 0D XX XX <param...> FF - java type
  * 0E e.. FF - java array e[]
+ * FA XX XX <parameters...> FF - opaque type instance (X is "module:name")
  * FB XX XX - non-free type variable XXXX
  * FC ... - mutable field type
  * FD ... - the following type variable is ORDERED
@@ -70,6 +71,7 @@ class YetiTypeAttr extends Attribute {
     static final byte ORDERED = -3;
     static final byte MUTABLE = -4;
     static final byte TAINTED = -5;
+    static final byte OPAQUE  = -6;
 
     ModuleType moduleType;
     private ByteVector encoded;
@@ -84,6 +86,7 @@ class YetiTypeAttr extends Attribute {
         ByteVector buf = new ByteVector();
         Map refs = new HashMap();
         Map vars = new HashMap();
+        Map opaque = new HashMap();
 
         void writeMap(Map m) {
             if (m != null) {
@@ -139,6 +142,15 @@ class YetiTypeAttr extends Attribute {
                 return;
             }
             refs.put(type, new Integer(refs.size()));
+            if (type.type >= YetiType.OPAQUE_TYPES) {
+                Object idstr = opaque.get(new Integer(type.type));
+                if (idstr == null)
+                    idstr = type.partialMembers.keySet().toArray()[0];
+                buf.putByte(OPAQUE);
+                buf.putShort(cw.newUTF8(idstr.toString()));
+                writeArray(type.param);
+                return;
+            }
             buf.putByte(type.type);
             if (type.type == YetiType.FUN) {
                 write(type.param[0]);
@@ -195,6 +207,7 @@ class YetiTypeAttr extends Attribute {
         int p, end;
         Map vars = new HashMap();
         List refs = new ArrayList();
+        Map opaqueTypes = CompileCtx.current().opaqueTypes;
 
         DecodeType(ClassReader cr, int off, int len, char[] buf) {
             this.cr = cr;
@@ -297,6 +310,21 @@ class YetiTypeAttr extends Attribute {
                 t.param = readArray();
             } else if (tv == YetiType.JAVA_ARRAY) {
                 t.param = new YType[] { read() };
+            } else if (tv == OPAQUE) {
+                String idstr = cr.readUTF8(p, buf);
+                p += 2;
+                synchronized (opaqueTypes) {
+                    YType old = (YType) opaqueTypes.get(idstr);
+                    if (old != null) {
+                        t.type = old.type;
+                    } else {
+                        t.type = opaqueTypes.size() + YetiType.OPAQUE_TYPES;
+                        opaqueTypes.put(idstr, t);
+                    }
+                }
+                t.partialMembers =
+                    Collections.singletonMap(idstr, YetiType.NO_TYPE);
+                t.param = readArray();
             } else {
                 throw new RuntimeException("Unknown type id: " + tv);
             }
@@ -346,6 +374,15 @@ class YetiTypeAttr extends Attribute {
             return encoded;
         }
         EncodeType enc = new EncodeType();
+        Iterator i = moduleType.typeDefs.entrySet().iterator();
+        while (i.hasNext()) {
+            Map.Entry e = (Map.Entry) i.next();
+            YType[] def = (YType[]) e.getValue();
+            YType t = def[def.length - 1];
+            if (t.type >= YetiType.OPAQUE_TYPES && t.partialMembers == null)
+                enc.opaque.put(new Integer(t.type),
+                               moduleType.name + ':' + e.getKey());
+        }
         enc.cw = cw;
         enc.buf.putByte(0); // encoding version
         enc.write(moduleType.type);

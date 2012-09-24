@@ -941,13 +941,18 @@ public final class YetiAnalyzer extends YetiType {
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
-        if (typeDef.kind == TypeDef.OPAQUE) {
-            self = type;
-            type = new YType(++scope.ctx.lastOpaqueType,
-                             new YType[def.length - 1]);
-            System.arraycopy(def, 0, type.param, 0, type.param.length);
-            type.finalMembers = Collections.singletonMap("", self);
-        }
+        if (typeDef.kind == TypeDef.OPAQUE)
+            synchronized (scope.ctx.opaqueTypes) {
+                self = type;
+                type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
+                                 new YType[def.length - 1]);
+                System.arraycopy(def, 0, type.param, 0, type.param.length);
+                String idstr = scope.ctx.className +
+                    ':' + typeDef.name + '#' + (type.type - OPAQUE_TYPES);
+                type.finalMembers = Collections.singletonMap("", self);
+                type.partialMembers = Collections.singletonMap(idstr, NO_TYPE);
+                scope.ctx.opaqueTypes.put(idstr, type);
+            }
 
         if (typeDef.kind == TypeDef.SHARED)
             scope = new Scope(scope, typeDef.name, null);
@@ -1701,6 +1706,7 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx = new ScopeCtx();
             scope.ctx.packageName = JavaType.packageOfClass(className);
             scope.ctx.className = className;
+            scope.ctx.opaqueTypes = ctx.opaqueTypes;
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
             root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
