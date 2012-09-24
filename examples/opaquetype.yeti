@@ -1,6 +1,6 @@
 /**
  * Examples:
- * : load test;
+ * : load opaquelist;
  * :
  * : v = create ["foo", "bar"];
  * :
@@ -9,7 +9,7 @@
  *
  * The commented out line trying to use v directly as a list would not compile.
  */
-module opaquetype;
+module opaquelist;
 
 typedef opaque magic<x> = list<x>
 
