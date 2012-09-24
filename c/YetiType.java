@@ -938,7 +938,6 @@ public class YetiType implements YetiParser {
     private static final int RESTRICT_CONTRA  = 2;
     static final int RESTRICT_ALL  = 4;
     static final int RESTRICT_POLY = 8;
-    static final int DONT_RESTRICT_OPAQUE = 16;
 
     static void getFreeVar(List vars, List deny, YType type,
                            int flags, int depth) {
@@ -953,10 +952,6 @@ public class YetiType implements YetiParser {
             if (tt == FUN)
                 flags |= RESTRICT_PROTECT;
             type.seen = true;
-            if (tt >= OPAQUE_TYPES && (flags & DONT_RESTRICT_OPAQUE) != 0
-                                   && t.finalMembers != null)
-                getFreeVar(vars, deny, (YType)
-                           t.finalMembers.values().toArray()[0], flags, depth);
             for (int i = t.param.length; --i >= 0;) {
                 // array/hash value is in mutable store and evil
                 if (i == 0 && tt == FUN)
@@ -1054,18 +1049,15 @@ public class YetiType implements YetiParser {
             type.seen = true;
             if (t.type >= OPAQUE_TYPES && known[t.type - OPAQUE_TYPES])
                 t.flags |= FL_AMBIGUOUS_OPAQUE;
-            for (int i = t.param.length; --i >= 0;) {
+            for (int i = t.param.length; --i >= 0;)
                 prepareOpaqueCast(t.param[i], known);
-            }
             type.seen = false;
         }
     }
 
     static void opaqueCast(YType from, YType to, Scope scope, int depth)
             throws TypeException {
-        to = copyType(to, createFreeVars(bind(null, to, null, RESTRICT_POLY |
-                            DONT_RESTRICT_OPAQUE, depth, null).free, depth),
-                      new IdentityHashMap());
+
         boolean[] allow_opaque =
             new boolean[scope.ctx.lastOpaqueType - OPAQUE_TYPES + 1];
         for (; scope != null; scope = scope.outer)
@@ -1074,6 +1066,7 @@ public class YetiType implements YetiParser {
                 if (t.type >= OPAQUE_TYPES && t.finalMembers != null)
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
+        to = copyType(to, new IdentityHashMap(), new IdentityHashMap());
         prepareOpaqueCast(to, allow_opaque);
         unify(from, to);
     }
