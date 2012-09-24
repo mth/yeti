@@ -28,9 +28,6 @@
   being exhaustive.
 * Review the Java<->Yeti type autoconversions?
 * Avoid upper/lowercase dups on generated classes
-* typedef opaque fobar<> = t and support using as to cast t to fobar<>
-  (in the scope of the typedef), to allow hiding implementation types.
-  It should allocate new type code and associate t with it in the scope.
 * Immutable tree map support - this seems to be popular feature. ;)
 * Optional Java generics support?
 * Direct struct-ref optimisation, when only known structs are accessed

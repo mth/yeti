@@ -147,7 +147,7 @@ done,
 'opaque types': do:
     typedef opaque magic<x> = list<x>
     m = {
-        create l = l,
+        create l is list<'a> -> list<'a> = l,
         values v is list<'a> -> list<'a> = v,
     } as {
         create is list<'a> -> magic<'a>,

@@ -389,7 +389,7 @@ class TypeDescr extends YetiType {
             default:
                 if (type >= OPAQUE_TYPES) {
                     descr.type = MAP;
-                    descr.name = "opaque" + (type - OPAQUE_TYPES);
+                    descr.name = t.partialMembers.keySet().toString();
                     n = param.length;
                 } else if (type != MAP) {
                     descr.name = "?" + type + '?';

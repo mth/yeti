@@ -1,0 +1,22 @@
+/**
+ * Examples:
+ * : load test;
+ * :
+ * : v = create ["foo", "bar"];
+ * :
+ * : // for v println;
+ * : for (values v) println;
+ *
+ * The commented out line trying to use v directly as a list would not compile.
+ */
+module opaquetype;
+
+typedef opaque magic<x> = list<x>
+
+{
+    create l is list<'a> -> list<'a> = l,
+    values v is list<'a> -> list<'a> = v,
+} as {
+    create is list<'a> -> magic<'a>,
+    values is magic<'b> -> list<'b>,
+}
