@@ -385,6 +385,7 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(is, scope, vt, t,
                                 "impossible cast from #1 to #2\n    #0", ex);
                 }
+                s = "is"; // don't convert
             }
             return new Cast(value, t, s == "as", is.line);
         }
