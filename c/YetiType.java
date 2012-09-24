@@ -711,7 +711,7 @@ public class YetiType implements YetiParser {
             if (a.type >= OPAQUE_TYPES && (a.flags & FL_AMBIGUOUS_OPAQUE) != 0)
                 opaque = a;
             else if (b.type >= OPAQUE_TYPES &&
-                     (a.flags & FL_AMBIGUOUS_OPAQUE) != 0)
+                     (b.flags & FL_AMBIGUOUS_OPAQUE) != 0)
                 opaque = b;
             if (opaque == null)
                 mismatch(a, b);
