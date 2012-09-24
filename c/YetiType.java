@@ -723,7 +723,8 @@ public class YetiType implements YetiParser {
         } else {
             for (int i = 0, cnt = a.param.length; i < cnt; ++i)
                 unify(a.param[i], b.param[i]);
-            if (a.type >= OPAQUE_TYPES) {
+            if (a.type >= OPAQUE_TYPES &&
+                (a.flags & b.flags & FL_AMBIGUOUS_OPAQUE) == 0) {
                 a.flags &= ~FL_AMBIGUOUS_OPAQUE;
                 b.flags &= ~FL_AMBIGUOUS_OPAQUE;
             }
