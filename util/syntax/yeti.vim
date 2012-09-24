@@ -120,7 +120,7 @@ syn region yetiMethodDef matchgroup=yetiClassDef start=")" end=",\|\<end\>" cont
 syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDef end=",\|\<end\>" contains=TOP contained
 
 " Yeti type definition syntax
-syn keyword yetiTypeMod shared contained
+syn keyword yetiTypeMod shared opaque contained
 syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=yetiTypeMod
 syn keyword yetiType is skipempty skipwhite nextgroup=@yetiTypeDecls
 syn keyword yetiCast as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
