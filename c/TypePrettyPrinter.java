@@ -356,6 +356,7 @@ class TypeDescr extends YetiType {
         }
         descr.type = type;
         YType[] param = t.param;
+        int n = 1;
         switch (type) {
             case FUN:
                 for (; t.type == FUN; param = t.param) {
@@ -375,7 +376,6 @@ class TypeDescr extends YetiType {
                     descr.alias = ctx.getVarName(t);
                 break;
             case MAP:
-                int n = 1;
                 YType p1 = param[1].deref();
                 YType p2 = param[2].deref();
                 if (p2.type == LIST_MARKER) {
@@ -386,15 +386,20 @@ class TypeDescr extends YetiType {
                                     && p1.type != VAR ? "hash" : "map";
                     n = 2;
                 }
+            default:
+                if (type >= OPAQUE_TYPES) {
+                    descr.type = MAP;
+                    descr.name = "opaque" + (type - OPAQUE_TYPES);
+                    n = param.length;
+                } else if (type != MAP) {
+                    descr.name = "?" + type + '?';
+                    break;
+                }
                 while (--n >= 0) {
                     item = prepare(param[n], ctx);
                     item.prev = descr.value;
                     descr.value = item;
                 }
-                break;
-            default:
-                descr.name = "?" + type + '?';
-                break;
         }
         // don't create ('foo is ...) when there is no free variables in ...
         if (varcount == ctx.vars.size() && descr.alias == null)

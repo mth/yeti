@@ -30,6 +30,7 @@
 
 package yeti.lang.compiler;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -931,10 +932,21 @@ public final class YetiAnalyzer extends YetiType {
         }
         YType type =
             nodeToType(typeDef.type, new HashMap(), defScope, 1).deref();
-        def[def.length - 1] = type;
+
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
+
+        if (typeDef.kind == TypeDef.OPAQUE) {
+            self = type;
+            type = new YType(++scope.ctx.lastOpaqueType,
+                             new YType[def.length - 1]);
+            System.arraycopy(def, 0, type.param, 0, type.param.length);
+            type.finalMembers = Collections.singletonMap("", self);
+        }
+
+        def[def.length - 1] = type;
+
         if (typeDef.kind == TypeDef.SHARED)
             scope = new Scope(scope, typeDef.name, null);
         else

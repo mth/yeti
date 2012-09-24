@@ -192,6 +192,7 @@ public class YetiType implements YetiParser {
     static final int VARIANT = 12;
     static final int JAVA = 13;
     static final int JAVA_ARRAY = 14;
+    static final int OPAQUE_TYPES = 0x10000;
 
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_TAINTED_VAR = 2;
@@ -440,6 +441,7 @@ public class YetiType implements YetiParser {
     static final class ScopeCtx {
         String packageName;
         String className;
+        int lastOpaqueType = OPAQUE_TYPES;
     }
 
     static YType orderedVar(int maxDepth) {
