@@ -1041,26 +1041,17 @@ public class YetiType implements YetiParser {
 
     // Used by as cast to mark opaque types as ambigous, allowing them
     // to later unify with their hidden (wrapped) type.
-    static void prepareOpaqueCast(YType type, boolean[] known,
-                                  List free, List deny, int depth) {
+    static void prepareOpaqueCast(YType type, boolean[] known) {
         if (type.seen)
             return;
         YType t = type.deref();
         if (t.type != VAR) {
             type.seen = true;
-            if (t.type >= OPAQUE_TYPES && known[t.type - OPAQUE_TYPES]) {
-                if (free == null)
-                    t.flags |= FL_AMBIGUOUS_OPAQUE;
-                else
-                    getFreeVar(free, deny,
-                               (YType) t.finalMembers.values().toArray()[0],
-                               RESTRICT_POLY, depth);
-            }
+            if (t.type >= OPAQUE_TYPES && known[t.type - OPAQUE_TYPES])
+                t.flags |= FL_AMBIGUOUS_OPAQUE;
             for (int i = t.param.length; --i >= 0;)
-                prepareOpaqueCast(t.param[i], known, free, deny, depth);
+                prepareOpaqueCast(t.param[i], known);
             type.seen = false;
-        } else if (deny != null) {
-            deny.add(t);
         }
     }
 
@@ -1073,12 +1064,8 @@ public class YetiType implements YetiParser {
                 if (t.type >= OPAQUE_TYPES && t.finalMembers != null)
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
-        List free = new ArrayList(), deny = new ArrayList();
-        prepareOpaqueCast(to, allow_opaque, free, deny, depth);
-        free.removeAll(deny);
-        to = copyType(to, createFreeVars((YType[]) free.toArray(
-                        new YType[free.size()]), depth), new IdentityHashMap());
-        prepareOpaqueCast(to, allow_opaque, null, null, 0);
+        to = copyType(to, new IdentityHashMap(), new IdentityHashMap());
+        prepareOpaqueCast(to, allow_opaque);
         unify(from, to);
     }
 

@@ -941,9 +941,22 @@ public final class YetiAnalyzer extends YetiType {
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
-        if (typeDef.kind == TypeDef.OPAQUE)
+        if (typeDef.kind == TypeDef.SHARED)
+            scope = new Scope(scope, typeDef.name, null);
+        else
+            scope = bind(typeDef.name, type, null, RESTRICT_POLY, -1, scope);
+
+        if (typeDef.kind == TypeDef.OPAQUE) {
+            self = type;
+            for (int i = scope.free.length; --i >= 0; ) {
+                int j = def.length - 1;
+                while (--j >= 0 && scope.free[i] != def[j]);
+                if (j < 0)
+                    throw new CompileException(typeDef, scope, self, null,
+                        "typedef opaque " + typeDef.name +
+                        " contains free type variable in #1", null);
+            }
             synchronized (scope.ctx.opaqueTypes) {
-                self = type;
                 type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
                                  new YType[def.length - 1]);
                 System.arraycopy(def, 0, type.param, 0, type.param.length);
@@ -953,11 +966,8 @@ public final class YetiAnalyzer extends YetiType {
                 type.partialMembers = Collections.singletonMap(idstr, NO_TYPE);
                 scope.ctx.opaqueTypes.put(idstr, type);
             }
-
-        if (typeDef.kind == TypeDef.SHARED)
-            scope = new Scope(scope, typeDef.name, null);
-        else
-            scope = bind(typeDef.name, type, null, RESTRICT_POLY, -1, scope);
+            scope.free = type.param;
+        }
 
         def[def.length - 1] = type;
         scope.typeDef = def;

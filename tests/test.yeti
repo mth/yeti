@@ -154,7 +154,7 @@ done,
         values is magic<'b> -> list<'b>,
     };
     v = m.create [5..7];
-    values v == [5..7]
+    m.values v == [5..7]
 done
 ];
 
