@@ -1052,13 +1052,30 @@ public class YetiType implements YetiParser {
         YType t = type.deref();
         if (t.type != VAR) {
             type.seen = true;
-            if (t.type >= OPAQUE_TYPES)
+            if (t.type >= OPAQUE_TYPES && known[t.type - OPAQUE_TYPES])
                 t.flags |= FL_AMBIGUOUS_OPAQUE;
             for (int i = t.param.length; --i >= 0;) {
                 prepareOpaqueCast(t.param[i], known);
             }
             type.seen = false;
         }
+    }
+
+    static void opaqueCast(YType from, YType to, Scope scope, int depth)
+            throws TypeException {
+        to = copyType(to, createFreeVars(bind(null, to, null, RESTRICT_POLY |
+                            DONT_RESTRICT_OPAQUE, depth, null).free, depth),
+                      new IdentityHashMap());
+        boolean[] allow_opaque =
+            new boolean[scope.ctx.lastOpaqueType - OPAQUE_TYPES + 1];
+        for (; scope != null; scope = scope.outer)
+            if (scope.typeDef != null) {
+                YType t = scope.typeDef[scope.typeDef.length - 1];
+                if (t.type >= OPAQUE_TYPES && t.finalMembers != null)
+                    allow_opaque[t.type - OPAQUE_TYPES] = true;
+            }
+        prepareOpaqueCast(to, allow_opaque);
+        unify(from, to);
     }
 
     static YType withDoc(YType t, String doc) {
