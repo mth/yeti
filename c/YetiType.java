@@ -196,6 +196,7 @@ public class YetiType implements YetiParser {
 
     static final int FL_ORDERED_REQUIRED = 1;
     static final int FL_TAINTED_VAR = 2;
+    static final int FL_AMBIGUOUS_OPAQUE = 4;
     static final int FL_ERROR_IS_HERE = 0x100;
     static final int FL_ANY_PATTERN = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
@@ -706,12 +707,26 @@ public class YetiType implements YetiParser {
         } else if (b.type == JAVA) {
             unifyJava(b, a);
         } else if (a.type != b.type) {
-            mismatch(a, b);
+            YType opaque = null;
+            if (a.type >= OPAQUE_TYPES && (a.flags & FL_AMBIGUOUS_OPAQUE) != 0)
+                opaque = a;
+            else if (b.type >= OPAQUE_TYPES &&
+                     (a.flags & FL_AMBIGUOUS_OPAQUE) != 0)
+                opaque = b;
+            if (opaque == null)
+                mismatch(a, b);
+            opaque.ref = (YType) opaque.finalMembers.values().toArray()[0];
+            opaque.type = 0;
+            unify(a, b);
         } else if (a.type == STRUCT || a.type == VARIANT) {
             unifyMembers(a, b);
         } else {
             for (int i = 0, cnt = a.param.length; i < cnt; ++i)
                 unify(a.param[i], b.param[i]);
+            if (a.type >= OPAQUE_TYPES) {
+                a.flags &= ~FL_AMBIGUOUS_OPAQUE;
+                b.flags &= ~FL_AMBIGUOUS_OPAQUE;
+            }
         }
     }
 
@@ -923,6 +938,7 @@ public class YetiType implements YetiParser {
     private static final int RESTRICT_CONTRA  = 2;
     static final int RESTRICT_ALL  = 4;
     static final int RESTRICT_POLY = 8;
+    static final int DONT_RESTRICT_OPAQUE = 16;
 
     static void getFreeVar(List vars, List deny, YType type,
                            int flags, int depth) {
@@ -937,6 +953,10 @@ public class YetiType implements YetiParser {
             if (tt == FUN)
                 flags |= RESTRICT_PROTECT;
             type.seen = true;
+            if (tt >= OPAQUE_TYPES && (flags & DONT_RESTRICT_OPAQUE) != 0
+                                   && t.finalMembers != null)
+                getFreeVar(vars, deny, (YType)
+                           t.finalMembers.values().toArray()[0], flags, depth);
             for (int i = t.param.length; --i >= 0;) {
                 // array/hash value is in mutable store and evil
                 if (i == 0 && tt == FUN)
@@ -1022,6 +1042,23 @@ public class YetiType implements YetiParser {
             }
         }
         throw new CompileException(where, "Unknown type: " + name);
+    }
+
+    // Used by as cast to mark opaque types as ambigous, allowing them
+    // to later unify with their hidden (wrapped) type.
+    static void prepareOpaqueCast(YType type, boolean[] known) {
+        if (type.seen)
+            return;
+        YType t = type.deref();
+        if (t.type != VAR) {
+            type.seen = true;
+            if (t.type >= OPAQUE_TYPES)
+                t.flags |= FL_AMBIGUOUS_OPAQUE;
+            for (int i = t.param.length; --i >= 0;) {
+                prepareOpaqueCast(t.param[i], known);
+            }
+            type.seen = false;
+        }
     }
 
     static YType withDoc(YType t, String doc) {
