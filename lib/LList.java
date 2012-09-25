@@ -111,10 +111,13 @@ public class LList extends AList implements Serializable {
     }
 
     public AList reverse() {
-        AList l = null;
-        for (AIter i = this; i != null; i = i.next()) {
+        AIter i;
+        if ((i = next()) == null)
+            return this;
+        AList l = new LList(first(), null);
+        do {
             l = new LList(i.first(), l);
-        }
+        } while ((i = i.next()) != null);
         return l;
     }
 

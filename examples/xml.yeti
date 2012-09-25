@@ -1,51 +1,85 @@
 //module yeti.xml;
 module xml;
 
-import javax.xml.stream: XMLInputFactory, XMLStreamReader, XMLStreamConstants;
+import javax.xml.stream: XMLInputFactory, XMLOutputFactory, XMLStreamReader,
+                         XMLStreamWriter, XMLStreamConstants;
 
+typedef xml_value =
+    PCData string | CData string | Comment string | DTD string
+
+// XXX somehow namespaces would also need to be represented
 typedef xml_element = {
     name is string,
     attributes is hash<string, string>, // empty for text node
     elements is array<xml_element>, // child elements (empty for text node)
-    var text is string,      // all text concatenated in this element
-    var textFirst is string, // first text in this element
-    var textAfter is string, // text after this element in parent element
+    var text is string,             // all text concatenated in this element
+    var values is list<xml_value>,  // non-element nodes after opening tag
+    var tailValues is list<xml_value>,  // non-elements after closing tag
     var xparent is string -> xml_element
-};
+}
 
 xmlElement name is string -> xml_element = {
     name,
     attributes = [:],
     elements = array [],
-    var textFirst = undef_str,
-    var textAfter = undef_str,
+    var values = [],
+    var tailValues = [],
     get text () =
-        strJoin '' (textFirst :: map (.textAfter) elements),
+        var res = () as ~java.lang.StringBuilder;
+        var str = '';
+        for (values :: map (.tailValues) elements) do vl:
+            for vl do v:
+                if str == '' then
+                elif nullptr? res then
+                    res := new java.lang.StringBuilder(str)
+                else
+                    _ = res#append(str unsafely_as ~String)
+                fi;
+                str := case v of
+                       PCData s: s; 
+                       CData  s: s;
+                       _: "";
+                       esac;
+            done
+        done;
+        if nullptr? res then str else "\(res#append(str))" fi,
     set text str =
         for elements do element:
-            element.textAfter := undef_str
+            element.tailValues := []
         done;
-        textFirst := str,
+        values := [PCData str],
     var xparent = failWith
 };
+
+add_value e v =
+   (l = e.elements;
+    if empty? l then
+        e.values := v :: e.values
+    else
+        e = l.[length l - 1];
+        e.tailValues := v :: e.tailValues
+    fi);
 
 xmlParse source =
    (var r = () as ~XMLStreamReader;
     var skipWS = false;
     f = XMLInputFactory#newFactory();
-    for source \case of
-    InputStream s:
-        r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
-    Reader ir:
-        r := f#createXMLStreamReader(ir is ~java.io.Reader);
-    Str s:
-        r := f#createXMLStreamReader(new java.io.StringReader(s));
-    File fn:
-        r := f#createXMLStreamReader(new java.io.FileInputStream(fn is string),
-                                     'UTF-8');
-    SkipWS ():
-        skipWS := true;
-    esac;
+    for source
+       \case of
+        InputStream s:
+            r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
+        Reader ir:
+            r := f#createXMLStreamReader(ir is ~java.io.Reader);
+        Str s:
+            r := f#createXMLStreamReader(new java.io.StringReader(s));
+        File fn:
+            r := f#createXMLStreamReader(new java.io.FileInputStream(
+                    fn is string unsafely_as ~String), 'UTF-8');
+        SkipWS ():
+            skipWS := true;
+        esac;
+    r = r;
+    skipWS = skipWS;
     if nullptr? r then
         failWith "No input source given"
     fi;
@@ -61,7 +95,6 @@ xmlParse source =
             push old.elements cur;
             attr = cur.attributes;
             var i = r#getAttributeCount();
-            println "attribute count: \(i)";
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
                 v = r#getAttributeValue(i);
@@ -69,28 +102,103 @@ xmlParse source =
                 attr.[qn#toString()] := v);
         // TODO XmlStreamReader#NAMESPACE:
         XMLStreamConstants#END_ELEMENT:
+            cur.values := reverse cur.values;
+            for cur.elements do e:
+                e.tailValues := reverse e.tailValues
+            done;
             cur := cur.xparent "\(r#getName())";
-        // TODO XmlStreamReader#COMMENT:
+        XMLStreamConstants#CDATA:
+            add_value cur (CData r#getText());
+        XMLStreamConstants#COMMENT:
+            add_value cur (Comment r#getText());
         XMLStreamConstants#DTD:
             dtd := r#getText();
         _:
             if r#hasText() and not (skipWS and r#isWhiteSpace()) then
-                if not empty? cur.elements then
-                    n = length cur.elements - 1;
-                    cur.elements.[n].textAfter :=
-                        "\(cur.elements.[n].textAfter)\(r#getText())"
-                elif cur.textFirst == '' then
-                    cur.textFirst := r#getText()
-                else
-                    cur.textFirst := "\(cur.textFirst)\(r#getText())"
-                fi
+                add_value cur (PCData r#getText())
             fi
         esac);
     r#close();
     if empty? root.elements then
         failWith "No document element"
     fi;
-    root.elements.[0]);
+    cur := root.elements.[0];
+    if dtd != '' then
+        cur.tailValues := [DTD dtd]
+    fi;
+    cur);
+
+write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
+    for values
+       \case of
+        PCData  str: w#writeCharacters(str);
+        CData   str: w#writeCData(str);
+        Comment str: w#writeComment(str);
+        _: ();
+        esac;
+
+xmlWrite element to =
+   (f = XMLOutputFactory#newInstance();
+    var indent = undef_str;
+    var w = () as ~XMLStreamWriter;
+    var buf = () as ~java.io.StringWriter;
+    var cb = \();
+    for to
+       \case of
+        OutputStream os:
+            w := f#createXMLStreamWriter(os is ~java.io.OutputStream, 'UTF-8');
+        Writer ow:
+            w := f#createXMLStreamWriter(ow is ~java.io.Writer);
+        File fn:
+            w := f#createXMLStreamWriter(new java.io.FileOutputStream(
+                    fn is string unsafely_as ~String), 'UTF-8');
+        Str callback:
+            cb := callback;
+            buf := new java.io.StringWriter();
+            w := f#createXMLStreamWriter(buf);
+        Format indent_str:
+            indent := indent_str;
+        esac;
+    w = w;
+    indent = indent;
+    w#writeStartDocument();
+    for element.tailValues
+       \case of
+        DTD dtd: if dtd != '' then w#writeDTD(dtd) fi;
+        _: ()
+        esac;
+    iter cur_indent element =
+       (new_indent =
+            if defined? indent then
+                w#writeCharacters(cur_indent);
+                cur_indent ^ indent
+            else
+                ""
+            fi;
+        empty = empty? element.elements and empty? element.values;
+        if empty then
+            w#writeEmptyElement(element.name is string unsafely_as ~String)
+        else
+            w#writeStartElement(element.name unsafely_as ~String)
+        fi;
+        forHash element.attributes do k v:
+            w#writeAttribute(k, v)
+        done;
+        if not empty then
+            write_values w element.values;
+            for element.elements (iter new_indent);
+            if defined? indent then
+                w#writeCharacters(cur_indent)
+            fi;
+            w#writeEndElement();
+        fi;
+        write_values w element.tailValues);
+    iter "\n" element;
+    w#writeEndDocument();
+    w#flush();
+    if not nullptr? buf then
+        cb "\(buf)"
+    fi);
 
 xmlByPath element path =
    (var elem = [element];
@@ -107,5 +215,5 @@ xmlByPath element path =
     done;
     elem);
 
-{ xmlElement, xmlParse, xmlByPath }
+{ xmlElement, xmlParse, xmlWrite, xmlByPath }
 //println (xmlParse [File '../build.xml', SkipWS ()]);
