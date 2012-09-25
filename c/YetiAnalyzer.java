@@ -1344,18 +1344,22 @@ public final class YetiAnalyzer extends YetiType {
                 unify(t, UNIT_TYPE, node, scope, "#0");
                 return CasePattern.ANY_PATTERN;
             }
-            if (node instanceof NumLit || node instanceof Str) {
+            if (node instanceof NumLit || node instanceof Str ||
+                    node instanceof ObjectRefOp) {
                 Code c = analyze(node, scope, depth);
-                t = t.deref();
-                if (t.type == VAR) {
-                    t.type = c.type.type;
-                    t.param = NO_PARAM;
-                    t.flags = FL_PARTIAL_PATTERN;
-                } else if (t.type != c.type.type) {
-                    throw new CompileException(node, scope, c.type, t,
+                if (!(node instanceof ObjectRefOp) ||
+                    c instanceof NumericConstant) {
+                    t = t.deref();
+                    if (t.type == VAR) {
+                        t.type = c.type.type;
+                        t.param = NO_PARAM;
+                        t.flags = FL_PARTIAL_PATTERN;
+                    } else if (t.type != c.type.type) {
+                        throw new CompileException(node, scope, c.type, t,
                                             "Pattern type mismatch: #~", null);
+                    }
+                    return new ConstPattern(c);
                 }
-                return new ConstPattern(c);
             }
             if (node.kind == "list") {
                 XNode list = (XNode) node;
