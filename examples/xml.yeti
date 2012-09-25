@@ -1,0 +1,111 @@
+//module yeti.xml;
+module xml;
+
+import javax.xml.stream: XMLInputFactory, XMLStreamReader, XMLStreamConstants;
+
+typedef xml_element = {
+    name is string,
+    attributes is hash<string, string>, // empty for text node
+    elements is array<xml_element>, // child elements (empty for text node)
+    var text is string,      // all text concatenated in this element
+    var textFirst is string, // first text in this element
+    var textAfter is string, // text after this element in parent element
+    var xparent is string -> xml_element
+};
+
+xmlElement name is string -> xml_element = {
+    name,
+    attributes = [:],
+    elements = array [],
+    var textFirst = undef_str,
+    var textAfter = undef_str,
+    get text () =
+        strJoin '' (textFirst :: map (.textAfter) elements),
+    set text str =
+        for elements do element:
+            element.textAfter := undef_str
+        done;
+        textFirst := str,
+    var xparent = failWith
+};
+
+xmlParse source =
+   (var r = () as ~XMLStreamReader;
+    var skipWS = false;
+    f = XMLInputFactory#newFactory();
+    for source \case of
+    InputStream s:
+        r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
+    Reader ir:
+        r := f#createXMLStreamReader(ir is ~java.io.Reader);
+    Str s:
+        r := f#createXMLStreamReader(new java.io.StringReader(s));
+    File fn:
+        r := f#createXMLStreamReader(new java.io.FileInputStream(fn is string),
+                                     'UTF-8');
+    SkipWS ():
+        skipWS := true;
+    esac;
+    if nullptr? r then
+        failWith "No input source given"
+    fi;
+    root = xmlElement "";
+    var dtd = '';
+    var cur = root;
+    r#hasNext() loop
+       (case r#next() of
+        XMLStreamConstants#START_ELEMENT:
+            old = cur;
+            cur := xmlElement "\(r#getName())";
+            cur.xparent := \old;
+            push old.elements cur;
+            attr = cur.attributes;
+            var i = r#getAttributeCount();
+            println "attribute count: \(i)";
+            (i := i - 1; i >= 0) loop
+               (qn = r#getAttributeName(i);
+                v = r#getAttributeValue(i);
+                attr.[qn#getLocalPart()] := v;
+                attr.[qn#toString()] := v);
+        // TODO XmlStreamReader#NAMESPACE:
+        XMLStreamConstants#END_ELEMENT:
+            cur := cur.xparent "\(r#getName())";
+        // TODO XmlStreamReader#COMMENT:
+        XMLStreamConstants#DTD:
+            dtd := r#getText();
+        _:
+            if r#hasText() and not (skipWS and r#isWhiteSpace()) then
+                if not empty? cur.elements then
+                    n = length cur.elements - 1;
+                    cur.elements.[n].textAfter :=
+                        "\(cur.elements.[n].textAfter)\(r#getText())"
+                elif cur.textFirst == '' then
+                    cur.textFirst := r#getText()
+                else
+                    cur.textFirst := "\(cur.textFirst)\(r#getText())"
+                fi
+            fi
+        esac);
+    r#close();
+    if empty? root.elements then
+        failWith "No document element"
+    fi;
+    root.elements.[0]);
+
+xmlByPath element path =
+   (var elem = [element];
+    for path do name:
+        result = array [];
+        for elem do ee:
+            for ee.elements do e:
+                if e.name == name then
+                    push result e
+                fi
+            done
+        done;
+        elem := list result
+    done;
+    elem);
+
+{ xmlElement, xmlParse, xmlByPath }
+//println (xmlParse [File '../build.xml', SkipWS ()]);
