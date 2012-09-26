@@ -47,8 +47,7 @@ xmlElement name is string -> xml_element = {
         for elements do element:
             element.tailValues := []
         done;
-        values := [PCData str],
-    var xparent = failWith
+        values := [PCData str]
 };
 
 add_value e v =
