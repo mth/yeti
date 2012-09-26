@@ -311,7 +311,7 @@ class JavaExpr extends Code {
                 "java/lang/String", "toCharArray", "()[C");
             return false;
         }
-        if (arg instanceof StringConstant)
+        if (arg instanceof StringConstant || arg instanceof ConcatStrings)
             return false;
         // conversion from array to list
         if (argType.type == YetiType.MAP && given.type == YetiType.JAVA_ARRAY) {

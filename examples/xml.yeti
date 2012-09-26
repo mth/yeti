@@ -14,8 +14,7 @@ typedef xml_element = {
     elements is array<xml_element>, // child elements (empty for text node)
     var text is string,             // all text concatenated in this element
     var values is list<xml_value>,  // non-element nodes after opening tag
-    var tailValues is list<xml_value>,  // non-elements after closing tag
-    var xparent is string -> xml_element
+    var tailValues is list<xml_value> // non-elements after closing tag
 }
 
 xmlElement name is string -> xml_element = {
@@ -25,6 +24,7 @@ xmlElement name is string -> xml_element = {
     var values = [],
     var tailValues = [],
     get text () =
+        // speed hack
         var res = () as ~java.lang.StringBuilder;
         var str = '';
         for (values :: map (.tailValues) elements) do vl:
@@ -78,20 +78,19 @@ xmlParse source =
         SkipWS ():
             skipWS := true;
         esac;
-    r = r;
-    skipWS = skipWS;
     if nullptr? r then
         failWith "No input source given"
     fi;
-    root = xmlElement "";
+    root = xmlElement '';
     var dtd = '';
     var cur = root;
+    stack = array [];
     r#hasNext() loop
        (case r#next() of
         XMLStreamConstants#START_ELEMENT:
             old = cur;
+            push stack old;
             cur := xmlElement "\(r#getName())";
-            cur.xparent := \old;
             push old.elements cur;
             attr = cur.attributes;
             var i = r#getAttributeCount();
@@ -99,14 +98,14 @@ xmlParse source =
                (qn = r#getAttributeName(i);
                 v = r#getAttributeValue(i);
                 attr.[qn#getLocalPart()] := v;
-                attr.[qn#toString()] := v);
+                attr.["\(qn)"] := v);
         // TODO XmlStreamReader#NAMESPACE:
         XMLStreamConstants#END_ELEMENT:
             cur.values := reverse cur.values;
             for cur.elements do e:
                 e.tailValues := reverse e.tailValues
             done;
-            cur := cur.xparent "\(r#getName())";
+            cur := pop stack;
         XMLStreamConstants#CDATA:
             add_value cur (CData r#getText());
         XMLStreamConstants#COMMENT:
@@ -136,6 +135,12 @@ write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
         Comment str: w#writeComment(str);
         _: ();
         esac;
+
+write_attr w attr is ~XMLStreamWriter -> hash<string, string> -> () =
+   (var i = (attr unsafely_as ~java.util.Map)#entrySet()#iterator();
+    i#hasNext() loop
+       (e = i#next() unsafely_as ~java.util.Map$Entry;
+        w#writeAttribute("\(e#getKey())", "\(e#getValue())")));
 
 xmlWrite element to =
    (f = XMLOutputFactory#newInstance();
@@ -175,18 +180,16 @@ xmlWrite element to =
             else
                 ""
             fi;
-        empty = empty? element.elements and empty? element.values;
-        if empty then
-            w#writeEmptyElement(element.name is string unsafely_as ~String)
+        if empty? element.elements and empty? element.values then
+            w#writeEmptyElement(element.name is string unsafely_as ~String);
+            write_attr w element.attributes
         else
-            w#writeStartElement(element.name unsafely_as ~String)
-        fi;
-        forHash element.attributes do k v:
-            w#writeAttribute(k, v)
-        done;
-        if not empty then
+            w#writeStartElement(element.name unsafely_as ~String);
+            write_attr w element.attributes;
             write_values w element.values;
-            for element.elements (iter new_indent);
+            for element.elements do e:
+                iter new_indent e
+            done;
             if defined? indent then
                 w#writeCharacters(cur_indent)
             fi;
