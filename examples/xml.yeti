@@ -19,16 +19,18 @@ typedef xml_element = {
     var text is string,             // all text concatenated in this element
     var values is list<xml_value>,  // non-element nodes after opening tag
     var tailValues is list<xml_value>,  // non-elements after closing tag
+    var uri is string,              // namespace uri
     var xmlns is list<xmlns_declaration>
 }
 
-xmlElement name is string -> xml_element =
+xmlElement' name uri attr 
+        is string -> string -> hash<string, string> ->  xml_element =
    (if name == '' then
         failWith "Element must have a name"
     fi;
     {
         name,
-        attributes = [:],
+        attributes = attr,
         elements = array [],
         var values = [],
         var tailValues = [],
@@ -57,8 +59,11 @@ xmlElement name is string -> xml_element =
                 element.tailValues := []
             done;
             values := [PCData str],
+        var uri = uri,
         var xmlns = []
     });
+
+xmlElement name = xmlElement' name undef_str [:];
 
 add_value e v =
    (l = e.elements;
@@ -71,8 +76,7 @@ add_value e v =
 
 xmlParse source =
    (var r = () as ~XMLStreamReader;
-    var stripWS = false;
-    var stripNS = false;
+    var skipWS = false;
     f = XMLInputFactory#newFactory();
     for source
        \case of
@@ -94,36 +98,28 @@ xmlParse source =
         /// Coalescing can eat CDATA living between PCDATA.
         Coalescing flag:
             f#setProperty(XMLInputFactory#IS_COALESCING, flag is boolean);
-        StripWS ():
-            stripWS := true;
-        StripNS ():
-            stripNS := true;
         Strip ():
-            stripWS := true;
-            stripNS := true;
+            skipWS := true;
         esac;
     if nullptr? r then
         failWith "No input source given"
     fi;
     root = xmlElement 'UTF-8';
-    var dtd = '';
     var cur = root;
     stack = array [];
     r#hasNext() loop
        (case r#next() of
         XMLStreamConstants#START_ELEMENT:
-            old = cur;
-            push stack old;
-            cur := xmlElement if stripNS then r#getLocalName()
-                                         else: "\(r#getName())";
-            push old.elements cur;
-            attr = cur.attributes;
+            attr = [:];
             var i = r#getAttributeCount();
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
                 v = r#getAttributeValue(i);
-                attr.[qn#getLocalPart()] := v;
-                attr.["\(qn)"] := v);
+                attr.[qn#getLocalPart()] := v);
+            old = cur;
+            push stack old;
+            cur := xmlElement' r#getLocalName() r#getNamespaceURI() attr;
+            push old.elements cur;
             i := r#getNamespaceCount();
             (i := i - 1; i >= 0) loop
                 cur.xmlns := {
@@ -141,9 +137,9 @@ xmlParse source =
         XMLStreamConstants#COMMENT:
             add_value cur (Comment r#getText());
         XMLStreamConstants#DTD:
-            dtd := r#getText();
+            add_value cur (DTD r#getText());
         _:
-            if r#hasText() and not (stripWS and r#isWhiteSpace()) then
+            if r#hasText() and not (skipWS and r#isWhiteSpace()) then
                 add_value cur (PCData r#getText())
             fi
         esac);
@@ -152,9 +148,7 @@ xmlParse source =
         failWith "No document element"
     fi;
     cur := root.elements.[0];
-    if dtd != '' then
-        cur.tailValues := [DTD dtd]
-    fi;
+    cur.tailValues := root.values;
     cur);
 
 write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
@@ -175,7 +169,7 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
        (e = i#next() unsafely_as ~java.util.Map$Entry;
         w#writeAttribute("\(e#getKey())", "\(e#getValue())")));
 
-xmlWrite element to =
+xmlWrite to root is 'a -> xml_element -> () =
    (f = XMLOutputFactory#newInstance();
     var indent = undef_str;
     var w = () as ~XMLStreamWriter;
@@ -202,9 +196,14 @@ xmlWrite element to =
     w = w;
     indent = indent;
     w#writeStartDocument();
-    for element.tailValues
+    for root.tailValues
        \case of
-        DTD dtd: if dtd != '' then w#writeDTD(dtd) fi;
+        DTD dtd:
+            if dtd != '' then
+                w#writeDTD(dtd)
+            fi;
+        Comment str:
+            w#writeComment(str);
         _: ()
         esac;
     iter cur_indent element =
@@ -215,11 +214,28 @@ xmlWrite element to =
             else
                 ""
             fi;
+        for element.xmlns do ns:
+            if defined? ns.prefix then
+                w#setPrefix(ns.prefix, ns.uri)
+            else
+                w#setDefaultNamespace(ns.uri)
+            fi
+        done;
+        uri = element.uri;
         if empty? element.elements and empty? element.values then
-            w#writeEmptyElement(element.name is string unsafely_as ~String);
+            if defined? uri then
+                w#writeEmptyElement(uri,
+                    element.name is string unsafely_as ~String)
+            else
+                w#writeEmptyElement(element.name unsafely_as ~String)
+            fi;
             write_attr w element
         else
-            w#writeStartElement(element.name unsafely_as ~String);
+            if defined? uri then
+                w#writeStartElement(uri, element.name unsafely_as ~String)
+            else
+                w#writeStartElement(element.name unsafely_as ~String)
+            fi;
             write_attr w element;
             write_values w element.values;
             for element.elements do e:
@@ -230,8 +246,10 @@ xmlWrite element to =
             fi;
             w#writeEndElement();
         fi;
-        write_values w element.tailValues);
-    iter "\n" element;
+        if not same? element root then
+            write_values w element.tailValues
+        fi);
+    iter "\n" root;
     w#writeEndDocument();
     w#flush();
     if not nullptr? buf then
