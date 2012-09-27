@@ -800,10 +800,10 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Function singleBind(Bind bind, Scope scope, int depth) {
-        if (bind.expr.kind != "lambda") {
-            throw new CompileException(bind,
-                "Closed binding must be a function binding");
-        }
+        if (bind.expr.kind != "lambda")
+            throw new CompileException(bind, "Closed binding must be a" +
+                " function binding.\n    Maybe you meant := or ==" +
+                " instead of =, or have missed ; somewhere.");
         // recursive binding
         Function lambda = new Function(new YType(depth + 1));
         BindExpr binder = new BindExpr(lambda, bind.var);

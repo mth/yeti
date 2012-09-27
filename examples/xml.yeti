@@ -7,48 +7,58 @@ import javax.xml.stream: XMLInputFactory, XMLOutputFactory, XMLStreamReader,
 typedef xml_value =
     PCData string | CData string | Comment string | DTD string
 
-// XXX somehow namespaces would also need to be represented
+typedef xmlns_declaration = {
+    prefix is string,
+    uri is string
+}
+
 typedef xml_element = {
     name is string,
     attributes is hash<string, string>, // empty for text node
     elements is array<xml_element>, // child elements (empty for text node)
     var text is string,             // all text concatenated in this element
     var values is list<xml_value>,  // non-element nodes after opening tag
-    var tailValues is list<xml_value> // non-elements after closing tag
+    var tailValues is list<xml_value>,  // non-elements after closing tag
+    var xmlns is list<xmlns_declaration>
 }
 
-xmlElement name is string -> xml_element = {
-    name,
-    attributes = [:],
-    elements = array [],
-    var values = [],
-    var tailValues = [],
-    get text () =
-        // speed hack
-        var res = () as ~java.lang.StringBuilder;
-        var str = '';
-        for (values :: map (.tailValues) elements) do vl:
-            for vl do v:
-                if str == '' then
-                elif nullptr? res then
-                    res := new java.lang.StringBuilder(str)
-                else
-                    _ = res#append(str unsafely_as ~String)
-                fi;
-                str := case v of
-                       PCData s: s; 
-                       CData  s: s;
-                       _: "";
-                       esac;
-            done
-        done;
-        if nullptr? res then str else "\(res#append(str))" fi,
-    set text str =
-        for elements do element:
-            element.tailValues := []
-        done;
-        values := [PCData str]
-};
+xmlElement name is string -> xml_element =
+   (if name == '' then
+        failWith "Element must have a name"
+    fi;
+    {
+        name,
+        attributes = [:],
+        elements = array [],
+        var values = [],
+        var tailValues = [],
+        get text () =
+            // speed hack
+            var res = () as ~java.lang.StringBuilder;
+            var str = '';
+            for (values :: map (.tailValues) elements) do vl:
+                for vl do v:
+                    if str == '' then
+                    elif nullptr? res then
+                        res := new java.lang.StringBuilder(str)
+                    else
+                        _ = res#append(str unsafely_as ~String)
+                    fi;
+                    str := case v of
+                           PCData s: s; 
+                           CData  s: s;
+                           _: "";
+                           esac;
+                done
+            done;
+            if nullptr? res then str else "\(res#append(str))" fi,
+        set text str =
+            for elements do element:
+                element.tailValues := []
+            done;
+            values := [PCData str],
+        var xmlns = []
+    });
 
 add_value e v =
    (l = e.elements;
@@ -61,7 +71,8 @@ add_value e v =
 
 xmlParse source =
    (var r = () as ~XMLStreamReader;
-    var skipWS = false;
+    var stripWS = false;
+    var stripNS = false;
     f = XMLInputFactory#newFactory();
     for source
        \case of
@@ -69,18 +80,32 @@ xmlParse source =
             r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
         Reader ir:
             r := f#createXMLStreamReader(ir is ~java.io.Reader);
+        Source s:
+            r := f#createXMLStreamReader(s is ~javax.xml.transform.Source);
         Str s:
             r := f#createXMLStreamReader(new java.io.StringReader(s));
         File fn:
             r := f#createXMLStreamReader(new java.io.FileInputStream(
                     fn is string unsafely_as ~String), 'UTF-8');
-        SkipWS ():
-            skipWS := true;
+        NSAware flag:
+            f#setProperty(XMLInputFactory#IS_NAMESPACE_AWARE, flag is boolean);
+        Validate ():
+            f#setProperty(XMLInputFactory#IS_VALIDATING, true);
+        /// Coalescing can eat CDATA living between PCDATA.
+        Coalescing flag:
+            f#setProperty(XMLInputFactory#IS_COALESCING, flag is boolean);
+        StripWS ():
+            stripWS := true;
+        StripNS ():
+            stripNS := true;
+        Strip ():
+            stripWS := true;
+            stripNS := true;
         esac;
     if nullptr? r then
         failWith "No input source given"
     fi;
-    root = xmlElement '';
+    root = xmlElement 'UTF-8';
     var dtd = '';
     var cur = root;
     stack = array [];
@@ -89,7 +114,8 @@ xmlParse source =
         XMLStreamConstants#START_ELEMENT:
             old = cur;
             push stack old;
-            cur := xmlElement "\(r#getName())";
+            cur := xmlElement if stripNS then r#getLocalName()
+                                         else: "\(r#getName())";
             push old.elements cur;
             attr = cur.attributes;
             var i = r#getAttributeCount();
@@ -98,7 +124,12 @@ xmlParse source =
                 v = r#getAttributeValue(i);
                 attr.[qn#getLocalPart()] := v;
                 attr.["\(qn)"] := v);
-        // TODO XmlStreamReader#NAMESPACE:
+            i := r#getNamespaceCount();
+            (i := i - 1; i >= 0) loop
+                cur.xmlns := {
+                    prefix = r#getNamespacePrefix(i),
+                    uri = r#getNamespaceURI(i)
+                } :: cur.xmlns;
         XMLStreamConstants#END_ELEMENT:
             cur.values := reverse cur.values;
             for cur.elements do e:
@@ -112,7 +143,7 @@ xmlParse source =
         XMLStreamConstants#DTD:
             dtd := r#getText();
         _:
-            if r#hasText() and not (skipWS and r#isWhiteSpace()) then
+            if r#hasText() and not (stripWS and r#isWhiteSpace()) then
                 add_value cur (PCData r#getText())
             fi
         esac);
@@ -135,8 +166,11 @@ write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
         _: ();
         esac;
 
-write_attr w attr is ~XMLStreamWriter -> hash<string, string> -> () =
-   (var i = (attr unsafely_as ~java.util.Map)#entrySet()#iterator();
+write_attr w e is ~XMLStreamWriter -> xml_element -> () =
+   (for e.xmlns do ns:
+        w#writeNamespace(ns.prefix, ns.uri)
+    done;
+    var i = (e.attributes unsafely_as ~java.util.Map)#entrySet()#iterator();
     i#hasNext() loop
        (e = i#next() unsafely_as ~java.util.Map$Entry;
         w#writeAttribute("\(e#getKey())", "\(e#getValue())")));
@@ -156,11 +190,13 @@ xmlWrite element to =
         File fn:
             w := f#createXMLStreamWriter(new java.io.FileOutputStream(
                     fn is string unsafely_as ~String), 'UTF-8');
+        Result res:
+            w := f#createXMLStreamWriter(res is ~javax.xml.transform.Result);
         Str callback:
             cb := callback;
             buf := new java.io.StringWriter();
             w := f#createXMLStreamWriter(buf);
-        Format indent_str:
+        Indent indent_str:
             indent := indent_str;
         esac;
     w = w;
@@ -181,10 +217,10 @@ xmlWrite element to =
             fi;
         if empty? element.elements and empty? element.values then
             w#writeEmptyElement(element.name is string unsafely_as ~String);
-            write_attr w element.attributes
+            write_attr w element
         else
             w#writeStartElement(element.name unsafely_as ~String);
-            write_attr w element.attributes;
+            write_attr w element;
             write_values w element.values;
             for element.elements do e:
                 iter new_indent e
