@@ -1347,8 +1347,7 @@ public final class YetiAnalyzer extends YetiType {
             if (node instanceof NumLit || node instanceof Str ||
                     node instanceof ObjectRefOp) {
                 Code c = analyze(node, scope, depth);
-                if (!(node instanceof ObjectRefOp) ||
-                    c instanceof NumericConstant) {
+                if (!(node instanceof ObjectRefOp) || c.flagop(Code.CONST)) {
                     t = t.deref();
                     if (t.type == VAR) {
                         t.type = c.type.type;

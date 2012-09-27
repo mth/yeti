@@ -1444,6 +1444,10 @@ final class ClassField extends JavaExpr implements CodeGen {
             return null;
         return new SimpleCode(this, setValue, null, 0);
     }
+
+    boolean flagop(int fl) {
+        return (fl & STD_CONST) != 0 && field.constValue != null;
+    }
 }
 
 final class Cast extends JavaExpr {
