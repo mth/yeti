@@ -147,6 +147,7 @@ parseDoc' doc =
     join = map (strJoin "\n") . filter ((not) . ('' ==) . head)
                               . groupBy (on (==) ('' ==));
     arg_set = hash arg_list;
+    map strCapitalize arg_list |> hash |> insertHash arg_set;
     mark_arg a =
         if a.[0] in arg_set then "<var>\(a.[0])</var>" else a.[0] fi;
     mark_args = strJoin '' . matchAll '\w+' mark_arg id;

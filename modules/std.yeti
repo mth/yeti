@@ -2238,16 +2238,31 @@ plus a b = a + b;
         throw new FailureException(message),
 
     /**
-     * Deletes a value binding for the given index/key from the
-     * array or hash map.
+     * Deletes the index/key and it's associated value from the
+     * collection. Does nothing if the given key/index doesn't belong
+     * to the collection.
      *
      * Arguments:
-     * map - array or hash map
+     * collection - array or hash map
      * key - array index or hash map key
      */
     delete h k is map<'a, 'b> -> 'a -> () =
         _ = (h unsafely_as ~ByKey)#remove(k),
 
+    /**
+     * Deletes from the collection all keys/indexes (together with their
+     * associated values) existing in the given keylist. Keylist
+     * elements that are not collection keys are ignored.
+     *
+     * Arguments:
+     * collection - array or hash map
+     * keylist    - list of indexes/keys to be removed from the collection
+     *
+     * Examples:
+     * : a = array ['a', 'b', 'c', 'd', 'e'];
+     * : deleteAll a [1, 3];
+     * : println a; // outputs ["a","c","e"]
+     */
     deleteAll h ks is map<'a, 'b> -> list?<'a> -> () =
         _ = (h unsafely_as ~Coll)#removeAll(ks),
 
