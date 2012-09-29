@@ -182,9 +182,9 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
         name = "\(e#getKey())";
         value = "\(e#getValue())";
         if name `strStarts?` '{' then
-            local = strLeftOf name '}';
-            w#writeAttribute(local,
-                strSlice name 1 (strLength name - strLength local), value)
+            local = strRightOf '}' name;
+            uri = strSlice name 1 (strLength name - strLength local - 1);
+            w#writeAttribute('xml', uri, local, value)
         else
             w#writeAttribute(name, value)
         fi));
@@ -226,6 +226,7 @@ xmlWrite to root is 'a -> xml_element -> () =
             w#writeComment(str);
         _: ()
         esac;
+    w#setPrefix("xml", "http://www.w3.org/XML/1998/namespace");
     iter cur_indent element =
        (new_indent =
             if defined? indent then
@@ -236,6 +237,7 @@ xmlWrite to root is 'a -> xml_element -> () =
             fi;
         for element.xmlns do ns:
             if defined? ns.prefix then
+                println "setPrefix('\(ns.prefix)', '\(ns.uri)')";
                 w#setPrefix(ns.prefix, ns.uri)
             else
                 w#setDefaultNamespace(ns.uri)
@@ -258,10 +260,11 @@ xmlWrite to root is 'a -> xml_element -> () =
             fi;
             write_attr w element;
             write_values w element.values;
-            for element.elements do e:
+            elements = element.elements;
+            for elements do e:
                 iter new_indent e
             done;
-            if defined? indent then
+            if defined? indent and not empty? elements then
                 w#writeCharacters(cur_indent)
             fi;
             w#writeEndElement();

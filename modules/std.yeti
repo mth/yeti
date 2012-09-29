@@ -2070,8 +2070,8 @@ plus a b = a + b;
      * isn't part of the given string).
      *
      * Arguments:
-     * string    - the string to be searched
      * substring - the substring to search
+     * string    - the string to be searched
      *
      * Examples:
      * : strLeftOf 'at' 'potatos' == 'pot'
@@ -2086,8 +2086,8 @@ plus a b = a + b;
      * substring isn't part of the given string).
      *
      * Arguments:
-     * string    - the string to be searched
      * substring - the substring to search
+     * string    - the string to be searched
      *
      * Examples:
      * : strRightOf 'at' 'potatos' == 'os'
