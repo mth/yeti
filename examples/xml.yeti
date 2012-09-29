@@ -1,25 +1,84 @@
-//module yeti.xml;
-module xml;
+/**
+ * Simple DOM like XML API for Yeti.
+ *
+ * This module uses internally Streaming API for XML (StAX) for parsing
+ * and generating XML. If you have JDK 1.6 or later, then StAX implementation
+ * comes with the JRE. Otherwise you need to include StAX implementation in
+ * the classpath.
+ */
+module yeti.xml;
 
 import javax.xml.stream: XMLInputFactory, XMLOutputFactory, XMLStreamReader,
                          XMLStreamWriter, XMLStreamConstants;
 
 typedef xml_value =
+    PCData string | CData string | Comment string
+
+typedef xml_value_or_dtd =
     PCData string | CData string | Comment string | DTD string
 
 typedef xmlns_declaration = {
+    /// Namespace prefix for XML elements and attributes.
     prefix is string,
+
+    /// Namespace URI.
     uri is string
 }
 
 typedef xml_element = {
+    /// XML element local name.
     name is string,
-    attributes is hash<string, string>, // empty for text node
-    elements is array<xml_element>, // child elements (empty for text node)
-    var text is string,             // all text concatenated in this element
-    var values is list<xml_value>,  // non-element nodes after opening tag
-    var tailValues is list<xml_value>,  // non-elements after closing tag
-    var uri is string,              // namespace uri
+
+    /**
+     * XML element attributes in hash map.
+     * The map keys may be either attribute local names (if no prefix is
+     * intended) or in the form "{namespace-URI}local-name".
+     *
+     * The xmlParse function inserts {namespace-URI} prefix only when
+     * the KeepNS () option was given and the attribute had a prefix.
+     *
+     * The xmlWrite function requires that xmlns prefixes are defined for
+     * used namespace URIs.
+     */
+    attributes is hash<string, string>,
+
+    /// Nested XML child elements.
+    elements is array<xml_element>,
+
+    /**
+     * Text contained in this XML element. When read, this property is
+     * a result of concatenating all PCData and CData sections from this
+     * elements values and nested elements tailValues fields.
+     *
+     * When written, the values field will be assigned [PCData value],
+     * and all nested elements tailValues will be assigned empty list []
+     * (removing all non-element sections from this XML element).
+     *
+     * This property is only for convenience (the xmlWrite function ignores it).
+     */
+    var text is string,
+
+    /// List of non-element XML sections directly after this elements starting
+    /// tag (and before any nested element), including XML comments.
+    var values is list<xml_value>,
+
+    /**
+     * List of non-element XML sections directly after this elements closing
+     * tag (including XML comments).
+     *
+     * Root element can also have the DTD (document type definition) and
+     * preceding comments here.
+     */
+    var tailValues is list<xml_value>,
+
+    /**
+     * Namespace URI for the XML elements name.
+     * Value undef_str is used, when namespace prefix is not present.
+     */
+    var uri is string,
+    
+    /// List of xmlns namespaces declared with this element
+    /// (these use the xmlns:prefix="uri" form in the actual XML).
     var xmlns is list<xmlns_declaration>
 }
 
@@ -63,6 +122,12 @@ xmlElement' name uri attr
         var xmlns = []
     });
 
+/**
+ * Creates a new empty XML element structure.
+ *
+ * Arguments:
+ * name - local name for the XML element
+ */
 xmlElement name = xmlElement' name undef_str [:];
 
 add_value e v =
@@ -74,44 +139,85 @@ add_value e v =
         e.tailValues := v :: e.tailValues
     fi);
 
+/**
+ * Parses XML from specified source into xml_element structure.
+ * The options list must contain one of the following source
+ * options: InputStream, Reader, Source, Str or File.
+ *
+ * Arguments:
+ * options - XML source and parsing options
+ */
 xmlParse source =
-   (var r = () as ~XMLStreamReader;
+   (var r_was = () as ~XMLStreamReader;
+    var r = () as ~XMLStreamReader;
     var keepWS = false;
     var keepNS = false;
     f = XMLInputFactory#newFactory();
     for source
        \case of
+        /// Read XML from this InputStream instance (expects UTF-8 encoding).
         InputStream s:
+            r_was := r;
             r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
+
+        /// Read XML from this Reader instance.
         Reader ir:
+            r_was := r;
             r := f#createXMLStreamReader(ir is ~java.io.Reader);
+
+        /// Read XML from  this Source instance.
         Source s:
+            r_was := r;
             r := f#createXMLStreamReader(s is ~javax.xml.transform.Source);
+
+        /// Parse this string as XML.
         Str s:
+            r_was := r;
             r := f#createXMLStreamReader(new java.io.StringReader(s));
+
+        /// Read XML from a file with this name.
         File fn:
+            r_was := r;
             r := f#createXMLStreamReader(new java.io.FileInputStream(
                     fn is string unsafely_as ~String), 'UTF-8');
+
         /// Turns on/off namespace processing for XML 1.0 support.
+        /// Default is true (for conforming XML Streaming API implementations).
         NSAware flag:
             f#setProperty(XMLInputFactory#IS_NAMESPACE_AWARE, flag is boolean);
+
         /// Turns on implementation specific DTD validation.
         Validate ():
             f#setProperty(XMLInputFactory#IS_VALIDATING, true);
-        /// Requires the processor to coalesce adjacent character data.
-        /// Coalescing can eat CDATA living between PCDATA.
+
+        /// Whether to require the processor to coalesce adjacent character
+        /// data. Coalescing can eat CDATA living between PCDATA.
+        /// Default is false (for conforming XML Streaming API implementations).
         Coalescing flag:
             f#setProperty(XMLInputFactory#IS_COALESCING, flag is boolean);
+
+        /// Element attribute names (in .attributes hash) will be in the form
+        /// '{namespace-URI}attribute-name' for attributes that had
+        /// a namespace prefix in XML.
         KeepNS ():
             keepNS := true;
+
+        /// Keep ignorable whitespace (as defined in the
+        /// XML 1.1 recommendation).
         KeepWS ():
             keepWS := true;
+
+        /// Turns on both KeepNS (preserving attribute namespaces) and
+        /// KeepWS (preserving ignorable whitespace).
         KeepAll ():
             keepNS := true;
             keepWS := true;
         esac;
     if nullptr? r then
-        failWith "No input source given"
+        failWith "No input source given to xmlParse"
+    fi;
+    if not nullptr? r_was then
+        failWith "Multiple input sources are not allowed for xmlParse"
     fi;
     root = xmlElement 'UTF-8';
     var current = root;
@@ -189,30 +295,68 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
             w#writeAttribute(name, value)
         fi));
 
+/**
+ * Generates textual representation of the XML document and writes
+ * it to the specified destination.
+ * The options list must contain one of the following
+ * destination options: OutputStream, Writer, File, Result or Out.
+ *
+ * Arguments:
+ * options - destination and formatting options
+ * document - XML root element representing a document
+ */
 xmlWrite to root is 'a -> xml_element -> () =
    (f = XMLOutputFactory#newInstance();
     var indent = undef_str;
+    var w_was = () as ~XMLStreamWriter;
     var w = () as ~XMLStreamWriter;
     var buf = () as ~java.io.StringWriter;
     var cb = \();
     for to
        \case of
+        /// Write XML to this OutputStream instance in UTF-8 encoding.
         OutputStream os:
+            w_was := w;
             w := f#createXMLStreamWriter(os is ~java.io.OutputStream, 'UTF-8');
+
+        /// Write XML to this Writer instance.
         Writer ow:
+            w_was := w;
             w := f#createXMLStreamWriter(ow is ~java.io.Writer);
+        
+        /// Write UTF-8 encoded XML to file with this name.
         File fn:
+            w_was := w;
             w := f#createXMLStreamWriter(new java.io.FileOutputStream(
                     fn is string unsafely_as ~String), 'UTF-8');
+
+        /// Write XML to this Result instance.
         Result res:
+            w_was := w;
             w := f#createXMLStreamWriter(res is ~javax.xml.transform.Result);
+
+        /// Apply this function to genereted XML (string).
+        /// Examples:
+        /// Print XML to standard output:
+        /// : xmlWrite [Out println] document;
         Out callback:
             cb := callback;
             buf := new java.io.StringWriter();
+            w_was := w;
             w := f#createXMLStreamWriter(buf);
+
+        /// Format generated XML by inserting "\n" before each start element,
+        /// and indenting the lines with this string (repeated by element
+        /// nesting depth).
         Indent indent_str:
             indent := indent_str;
         esac;
+    if nullptr? w then
+        failWith "No output destination given to xmlWrite"
+    fi;
+    if not nullptr? w_was then
+        failWith "Multiple output destinations are not allowed for xmlWrite"
+    fi;
     w = w;
     indent = indent;
     w#writeStartDocument();
