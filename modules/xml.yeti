@@ -12,9 +12,6 @@ import javax.xml.stream: XMLInputFactory, XMLOutputFactory, XMLStreamReader,
                          XMLStreamWriter, XMLStreamConstants;
 
 typedef xml_value =
-    PCData string | CData string | Comment string
-
-typedef xml_value_or_dtd =
     PCData string | CData string | Comment string | DTD string
 
 typedef xmlns_declaration = {
@@ -69,7 +66,7 @@ typedef xml_element = {
      * Root element can also have the DTD (document type definition) and
      * preceding comments here.
      */
-    var tailValues is list<xml_value_or_dtd>,
+    var tailValues is list<xml_value>,
 
     /**
      * Namespace URI for the XML elements name.
@@ -90,8 +87,8 @@ xmlElement' name uri attr
     {
         name,
         attributes = attr,
-        elements = array [],
-        var values = [],
+        elements = array [] is array<xml_element>,
+        var values = [] is list<xml_value>,
         var tailValues = [],
         get text () =
             // speed hack
@@ -268,7 +265,7 @@ xmlParse source is 'a -> xml_element =
     fi;
     current := root.elements.[0];
     current.tailValues := root.values;
-    current);
+    current is xml_element);
 
 write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
     for values
