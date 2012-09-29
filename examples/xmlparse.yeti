@@ -1,0 +1,16 @@
+load yeti.xml;
+
+xml = xmlParse [Str """
+   <foo>
+       <nothing>???</nothing>
+       <something>
+          <bar>33</bar>
+          <baz>whatever</baz>
+          <bar>42</bar>
+       </something>
+   </foo>"""];
+
+bars = xmlByPath ["something", "bar"] xml;
+bar_values = map (.text) bars;
+
+for bar_values println;

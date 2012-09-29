@@ -69,7 +69,7 @@ typedef xml_element = {
      * Root element can also have the DTD (document type definition) and
      * preceding comments here.
      */
-    var tailValues is list<xml_value>,
+    var tailValues is list<xml_value_or_dtd>,
 
     /**
      * Namespace URI for the XML elements name.
@@ -83,7 +83,7 @@ typedef xml_element = {
 }
 
 xmlElement' name uri attr 
-        is string -> string -> hash<string, string> ->  xml_element =
+        is string -> string -> hash<string, string> -> xml_element =
    (if name == '' then
         failWith "Element must have a name"
     fi;
@@ -128,7 +128,8 @@ xmlElement' name uri attr
  * Arguments:
  * name - local name for the XML element
  */
-xmlElement name = xmlElement' name undef_str [:];
+xmlElement name is string -> xml_element =
+    xmlElement' name undef_str [:];
 
 add_value e v =
    (l = e.elements;
@@ -147,7 +148,7 @@ add_value e v =
  * Arguments:
  * options - XML source and parsing options
  */
-xmlParse source =
+xmlParse source is 'a -> xml_element =
    (var r_was = () as ~XMLStreamReader;
     var r = () as ~XMLStreamReader;
     var keepWS = false;
@@ -381,7 +382,6 @@ xmlWrite to root is 'a -> xml_element -> () =
             fi;
         for element.xmlns do ns:
             if defined? ns.prefix then
-                println "setPrefix('\(ns.prefix)', '\(ns.uri)')";
                 w#setPrefix(ns.prefix, ns.uri)
             else
                 w#setDefaultNamespace(ns.uri)
@@ -423,7 +423,42 @@ xmlWrite to root is 'a -> xml_element -> () =
         cb "\(buf)"
     fi);
 
-xmlByPath element path =
+/**
+ * Finds all child elements by the given path.
+ *
+ * Arguments:
+ * element - element where to start
+ * path    - list of element names forming the path
+ *
+ * Description:
+ * First finds all child elements with the name matching the first
+ * path element. Then their child elements matching the next path
+ * element, repeating for each path element, and finally returns
+ * the child elements matching the last path element.
+ *
+ * Examples:
+ * : load yeti.xml;
+ * : xml = xmlParse [Str """
+ * :    <foo>
+ * :        <nothing>???</nothing>
+ * :        <something>
+ * :           <bar>33</bar>
+ * :           <baz>whatever</baz>
+ * :           <bar>42</bar>
+ * :        </something>
+ * :    </foo>"""];
+ * A XML tree is obtained by parsing the above XML. The root element
+ * (in xml) is the <foo> element. The bar elements can be found using
+ * the following query:
+ * : bars = xmlByPath ["something", "bar"] xml;
+ * The contents of bars could be obtained by mapping (.text) field:
+ * : bar_values = map (.text) bars;
+ * : for bar_values println;
+ * The for loop prints in this case the values 33 and 42.
+ * : 33
+ * : 42
+ */
+xmlByPath path element is list<string> -> xml_element -> list<xml_element> =
    (var elem = [element];
     for path do name:
         result = array [];
@@ -438,5 +473,9 @@ xmlByPath element path =
     done;
     elem);
 
-{ xmlElement, xmlParse, xmlWrite, xmlByPath }
-//println (xmlParse [File '../build.xml', SkipWS ()]);
+{
+    xmlElement is string -> xml_element,
+    xmlParse is 'a -> xml_element,
+    xmlWrite is 'a -> xml_element -> (),
+    xmlByPath is list<string> -> xml_element -> list<xml_element>
+}
