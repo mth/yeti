@@ -40,7 +40,7 @@ typedef xml_element = {
     attributes is hash<string, string>,
 
     /// Nested XML child elements.
-    elements is array<xml_element>,
+    elements is list?<xml_element>,
 
     /**
      * Text contained in this XML element. When read, this property is
@@ -276,11 +276,12 @@ write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
         _: ();
         esac;
 
-write_attr w e is ~XMLStreamWriter -> xml_element -> () =
+write_attr w e is ~XMLStreamWriter -> 'a -> () =
    (for e.xmlns do ns:
         w#writeNamespace(ns.prefix, ns.uri)
     done;
-    var i = (e.attributes unsafely_as ~java.util.Map)#entrySet()#iterator();
+    var i = (e.attributes is hash<string, string>
+        unsafely_as ~java.util.Map)#entrySet()#iterator();
     i#hasNext() loop
        (e = i#next() unsafely_as ~java.util.Map$Entry;
         name = "\(e#getKey())";
@@ -307,7 +308,7 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
  * Print XML to standard output:
  * : xmlWrite [Out println, Indent '  '] document;
  */
-xmlWrite to root is 'a -> xml_element -> () =
+xmlWrite to root =
    (f = XMLOutputFactory#newInstance();
     var indent = undef_str;
     var w_was = () as ~XMLStreamWriter;
@@ -474,6 +475,6 @@ xmlByPath path element is list<string> -> xml_element -> list<xml_element> =
 {
     xmlElement is string -> xml_element,
     xmlParse is 'a -> xml_element,
-    xmlWrite is 'a -> xml_element -> (),
+    xmlWrite,
     xmlByPath is list<string> -> xml_element -> list<xml_element>
 }
