@@ -114,10 +114,11 @@ xmlParse source =
         failWith "No input source given"
     fi;
     root = xmlElement 'UTF-8';
-    var cur = root;
+    var current = root;
     stack = array [];
     r#hasNext() loop
-       (case r#next() of
+       (cur = current;
+        case r#next() of
         XMLStreamConstants#START_ELEMENT:
             var i = r#getAttributeCount();
             attr = new yeti.lang.Hash(i) unsafely_as hash<string, string>;
@@ -128,22 +129,21 @@ xmlParse source =
                       else
                          qn#getLocalPart()
                       fi] := r#getAttributeValue(i));
-            old = cur;
-            push stack old;
-            cur := xmlElement' r#getLocalName() r#getNamespaceURI() attr;
-            push old.elements cur;
+            push stack cur;
+            current := xmlElement' r#getLocalName() r#getNamespaceURI() attr;
+            push cur.elements current;
             i := r#getNamespaceCount();
             (i := i - 1; i >= 0) loop
-                cur.xmlns := {
+                current.xmlns := {
                     prefix = r#getNamespacePrefix(i),
                     uri = r#getNamespaceURI(i)
-                } :: cur.xmlns;
+                } :: current.xmlns;
         XMLStreamConstants#END_ELEMENT:
             cur.values := reverse cur.values;
             for cur.elements do e:
                 e.tailValues := reverse e.tailValues
             done;
-            cur := pop stack;
+            current := pop stack;
         XMLStreamConstants#CDATA:
             add_value cur (CData r#getText());
         XMLStreamConstants#COMMENT:
@@ -159,9 +159,9 @@ xmlParse source =
     if empty? root.elements then
         failWith "No document element"
     fi;
-    cur := root.elements.[0];
-    cur.tailValues := root.values;
-    cur);
+    current := root.elements.[0];
+    current.tailValues := root.values;
+    current);
 
 write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
     for values
