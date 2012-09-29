@@ -330,7 +330,7 @@ class TypeDescr extends YetiType {
             return new TypeDescr(descr.alias);
         }
         final YType tt = t;
-        ctx.refs.put(tt, descr = new TypeDescr(null));
+        descr = new TypeDescr(null);
         int varcount = ctx.vars.size();
         Map defVars = null;
         TypePattern def = null;
@@ -354,6 +354,7 @@ class TypeDescr extends YetiType {
             }
             return descr;
         }
+        ctx.refs.put(tt, descr);
         descr.type = type;
         YType[] param = t.param;
         int n = 1;
