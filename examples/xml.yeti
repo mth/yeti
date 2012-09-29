@@ -110,8 +110,8 @@ xmlParse source =
     r#hasNext() loop
        (case r#next() of
         XMLStreamConstants#START_ELEMENT:
-            attr = [:];
             var i = r#getAttributeCount();
+            attr = new yeti.lang.Hash(i) unsafely_as hash<string, string>;
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
                 v = r#getAttributeValue(i);
