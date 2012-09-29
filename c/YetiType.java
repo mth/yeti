@@ -778,7 +778,7 @@ public class YetiType implements YetiParser {
             YType var = (YType) free.get(type);
             return var == null ? type : var;
         }
-        if (type.param.length == 0) {
+        if (type.param.length == 0 && type.type < OPAQUE_TYPES) {
             return type_;
         }
         YType copy = (YType) known.get(type);
