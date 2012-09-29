@@ -76,7 +76,8 @@ add_value e v =
 
 xmlParse source =
    (var r = () as ~XMLStreamReader;
-    var skipWS = false;
+    var keepWS = false;
+    var keepNS = false;
     f = XMLInputFactory#newFactory();
     for source
        \case of
@@ -91,15 +92,23 @@ xmlParse source =
         File fn:
             r := f#createXMLStreamReader(new java.io.FileInputStream(
                     fn is string unsafely_as ~String), 'UTF-8');
+        /// Turns on/off namespace processing for XML 1.0 support.
         NSAware flag:
             f#setProperty(XMLInputFactory#IS_NAMESPACE_AWARE, flag is boolean);
+        /// Turns on implementation specific DTD validation.
         Validate ():
             f#setProperty(XMLInputFactory#IS_VALIDATING, true);
+        /// Requires the processor to coalesce adjacent character data.
         /// Coalescing can eat CDATA living between PCDATA.
         Coalescing flag:
             f#setProperty(XMLInputFactory#IS_COALESCING, flag is boolean);
-        Strip ():
-            skipWS := true;
+        KeepNS ():
+            keepNS := true;
+        KeepWS ():
+            keepWS := true;
+        KeepAll ():
+            keepNS := true;
+            keepWS := true;
         esac;
     if nullptr? r then
         failWith "No input source given"
@@ -114,8 +123,11 @@ xmlParse source =
             attr = new yeti.lang.Hash(i) unsafely_as hash<string, string>;
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
-                v = r#getAttributeValue(i);
-                attr.[qn#getLocalPart()] := v);
+                attr.[if keepNS and qn#getNamespaceURI() != '' then
+                         "{\(qn#getNamespaceURI())}\(qn#getLocalPart())"
+                      else
+                         qn#getLocalPart()
+                      fi] := r#getAttributeValue(i));
             old = cur;
             push stack old;
             cur := xmlElement' r#getLocalName() r#getNamespaceURI() attr;
@@ -139,7 +151,7 @@ xmlParse source =
         XMLStreamConstants#DTD:
             add_value cur (DTD r#getText());
         _:
-            if r#hasText() and not (skipWS and r#isWhiteSpace()) then
+            if r#hasText() and (not r#isWhiteSpace() or keepWS) then
                 add_value cur (PCData r#getText())
             fi
         esac);
@@ -167,7 +179,15 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
     var i = (e.attributes unsafely_as ~java.util.Map)#entrySet()#iterator();
     i#hasNext() loop
        (e = i#next() unsafely_as ~java.util.Map$Entry;
-        w#writeAttribute("\(e#getKey())", "\(e#getValue())")));
+        name = "\(e#getKey())";
+        value = "\(e#getValue())";
+        if name `strStarts?` '{' then
+            local = strLeftOf name '}';
+            w#writeAttribute(local,
+                strSlice name 1 (strLength name - strLength local), value)
+        else
+            w#writeAttribute(name, value)
+        fi));
 
 xmlWrite to root is 'a -> xml_element -> () =
    (f = XMLOutputFactory#newInstance();
@@ -186,7 +206,7 @@ xmlWrite to root is 'a -> xml_element -> () =
                     fn is string unsafely_as ~String), 'UTF-8');
         Result res:
             w := f#createXMLStreamWriter(res is ~javax.xml.transform.Result);
-        Str callback:
+        Out callback:
             cb := callback;
             buf := new java.io.StringWriter();
             w := f#createXMLStreamWriter(buf);
