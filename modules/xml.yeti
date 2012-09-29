@@ -302,6 +302,10 @@ write_attr w e is ~XMLStreamWriter -> xml_element -> () =
  * Arguments:
  * options - destination and formatting options
  * document - XML root element representing a document
+ *
+ * Examples:
+ * Print XML to standard output:
+ * : xmlWrite [Out println, Indent '  '] document;
  */
 xmlWrite to root is 'a -> xml_element -> () =
    (f = XMLOutputFactory#newInstance();
@@ -334,9 +338,6 @@ xmlWrite to root is 'a -> xml_element -> () =
             w := f#createXMLStreamWriter(res is ~javax.xml.transform.Result);
 
         /// Apply this function to genereted XML (string).
-        /// Examples:
-        /// Print XML to standard output:
-        /// : xmlWrite [Out println] document;
         Out callback:
             cb := callback;
             buf := new java.io.StringWriter();
