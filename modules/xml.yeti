@@ -31,7 +31,7 @@ typedef xml_element = {
      * The map keys may be either attribute local names (if no prefix is
      * intended) or in the form "{namespace-URI}local-name".
      *
-     * The xmlParse function inserts {namespace-URI} prefix only when
+     * The xmlParse function inserts the {namespace-URI} prefix only when
      * the KeepNS () option was given and the attribute had a prefix.
      *
      * The xmlWrite function requires that xmlns prefixes are defined for
