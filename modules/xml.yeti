@@ -88,9 +88,9 @@ xmlElement' name uri attr
     {
         name,
         attributes = attr,
-        elements = array [] is array<xml_element>,
-        var values = [] is list<xml_value>,
-        var tailValues = [] is list<xml_value>,
+        elements = array [],
+        var values = [],
+        var tailValues = [],
         get text () =
             // speed hack
             var res = () as ~java.lang.StringBuilder;
