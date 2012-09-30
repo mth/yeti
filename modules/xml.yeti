@@ -79,7 +79,7 @@ typedef a_xml_element<child_type> = {
     var xmlns is list<xmlns_declaration>
 }
 
-typedef new_xml_element = a_xml_element<array<xml_element>>;
+typedef new_xml_element = a_xml_element<array<new_xml_element>>;
 typedef xml_element = a_xml_element<list?<xml_element>>;
 
 xmlElement' name uri attr 

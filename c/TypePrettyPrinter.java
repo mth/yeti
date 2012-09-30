@@ -249,8 +249,10 @@ class TypeDescr extends YetiType {
         DescrCtx ctx = new DescrCtx();
         ctx.defs = defs;
         for (int i = 0, n = 0; i < def.length - 1; ++i) {
-            String name = def[i].doc instanceof String
-                ? (String) def[i].doc : "t" + ++n;
+            // the .doc don't work
+            //String name = def[i].doc instanceof String
+            //    ? (String) def[i].doc : "t" + ++n;
+            String name = "t" + ++n;
             ctx.vars.put(def[i].deref(), name);
             param.add(name);
         }
