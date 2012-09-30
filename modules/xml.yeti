@@ -22,7 +22,7 @@ typedef xmlns_declaration = {
     uri is string
 }
 
-typedef xml_element = {
+typedef a_xml_element<child_type> = {
     /// XML element local name.
     name is string,
 
@@ -40,7 +40,7 @@ typedef xml_element = {
     attributes is hash<string, string>,
 
     /// Nested XML child elements.
-    elements is list?<xml_element>,
+    elements is child_type,
 
     /**
      * Text contained in this XML element. When read, this property is
@@ -79,16 +79,19 @@ typedef xml_element = {
     var xmlns is list<xmlns_declaration>
 }
 
+typedef new_xml_element = a_xml_element<array<xml_element>>;
+typedef xml_element = a_xml_element<list?<xml_element>>;
+
 xmlElement' name uri attr 
-        is string -> string -> hash<string, string> -> xml_element =
+        is string -> string -> hash<string, string> -> new_xml_element =
    (if name == '' then
         failWith "Element must have a name"
     fi;
     {
         name,
         attributes = attr,
-        elements = array [] is array<xml_element>,
-        var values = [] is list<xml_value>,
+        elements = array [],
+        var values = [],
         var tailValues = [],
         get text () =
             // speed hack
@@ -125,7 +128,7 @@ xmlElement' name uri attr
  * Arguments:
  * name - local name for the XML element
  */
-xmlElement name is string -> xml_element =
+xmlElement name is string -> new_xml_element =
     xmlElement' name undef_str [:];
 
 add_value e v =
@@ -145,7 +148,7 @@ add_value e v =
  * Arguments:
  * options - XML source and parsing options
  */
-xmlParse source is 'a -> xml_element =
+xmlParse source is 'a -> new_xml_element =
    (var r_was = () as ~XMLStreamReader;
     var r = () as ~XMLStreamReader;
     var keepWS = false;
@@ -265,7 +268,7 @@ xmlParse source is 'a -> xml_element =
     fi;
     current := root.elements.[0];
     current.tailValues := root.values;
-    current is xml_element);
+    current);
 
 write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
     for values

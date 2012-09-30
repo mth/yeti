@@ -944,10 +944,12 @@ public final class YetiAnalyzer extends YetiType {
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
-        if (typeDef.kind == TypeDef.SHARED)
-            scope = new Scope(scope, typeDef.name, null);
-        else
-            scope = bind(typeDef.name, type, null, RESTRICT_POLY, -1, scope);
+        scope = new Scope(scope, typeDef.name, null);
+        if (typeDef.kind != TypeDef.SHARED) {
+            ArrayList vars = new ArrayList();
+            getAllTypeVar(vars, type); // nothing mutable in typedef
+            scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
+        }
 
         if (typeDef.kind == TypeDef.OPAQUE) {
             self = type;

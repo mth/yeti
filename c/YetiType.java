@@ -979,6 +979,19 @@ public class YetiType implements YetiParser {
         }
     }
 
+    static void getAllTypeVar(List vars, YType type) {
+        if (type.seen)
+            return;
+        YType t = type.deref();
+        if (t.type != VAR) {
+            type.seen = true;
+            for (int i = 0; i < t.param.length; ++i)
+                getAllTypeVar(vars, t.param[i]);
+            type.seen = false;
+        } else if (vars.indexOf(t) < 0)
+            vars.add(t);
+    }
+
     static void removeStructs(YType t, List vars) {
         if (!t.seen) {
             if (t.type != VAR) {
