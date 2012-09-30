@@ -552,7 +552,7 @@ class TypePattern {
                     return null;
                 type = (YType) m.get(pat.field);
                 if (type != null &&
-                        type.field == YetiType.FIELD_MUTABLE == mutable) {
+                        type.field == YetiType.FIELD_MUTABLE == pat.mutable) {
                     pat = pat.match(type, typeVars);
                 } else {
                     pat = pat.next[pat.idx.length];

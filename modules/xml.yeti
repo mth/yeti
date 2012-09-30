@@ -22,7 +22,8 @@ typedef xmlns_declaration = {
     uri is string
 }
 
-typedef a_xml_element<child_type> = {
+/// XML element structure returned by xmlElement and xmlParse.
+typedef xml_element = {
     /// XML element local name.
     name is string,
 
@@ -40,7 +41,7 @@ typedef a_xml_element<child_type> = {
     attributes is hash<string, string>,
 
     /// Nested XML child elements.
-    elements is child_type,
+    elements is array<xml_element>,
 
     /**
      * Text contained in this XML element. When read, this property is
@@ -79,20 +80,17 @@ typedef a_xml_element<child_type> = {
     var xmlns is list<xmlns_declaration>
 }
 
-typedef new_xml_element = a_xml_element<array<new_xml_element>>;
-typedef xml_element = a_xml_element<list?<xml_element>>;
-
 xmlElement' name uri attr 
-        is string -> string -> hash<string, string> -> new_xml_element =
+        is string -> string -> hash<string, string> -> xml_element =
    (if name == '' then
         failWith "Element must have a name"
     fi;
     {
         name,
         attributes = attr,
-        elements = array [],
-        var values = [],
-        var tailValues = [],
+        elements = array [] is array<xml_element>,
+        var values = [] is list<xml_value>,
+        var tailValues = [] is list<xml_value>,
         get text () =
             // speed hack
             var res = () as ~java.lang.StringBuilder;
@@ -128,7 +126,7 @@ xmlElement' name uri attr
  * Arguments:
  * name - local name for the XML element
  */
-xmlElement name is string -> new_xml_element =
+xmlElement name is string -> xml_element =
     xmlElement' name undef_str [:];
 
 add_value e v =
@@ -148,7 +146,7 @@ add_value e v =
  * Arguments:
  * options - XML source and parsing options
  */
-xmlParse source is 'a -> new_xml_element =
+xmlParse source is 'a -> xml_element =
    (var r_was = () as ~XMLStreamReader;
     var r = () as ~XMLStreamReader;
     var keepWS = false;
@@ -279,7 +277,7 @@ write_values w values is ~XMLStreamWriter -> list<xml_value> -> () =
         _: ();
         esac;
 
-write_attr w e is ~XMLStreamWriter -> 'a -> () =
+write_attr w e is ~XMLStreamWriter -> xml_element -> () =
    (for e.xmlns do ns:
         w#writeNamespace(ns.prefix, ns.uri)
     done;
@@ -460,7 +458,7 @@ xmlWrite to root =
  * : 33
  * : 42
  */
-xmlByPath path element is list<string> -> xml_element -> list<xml_element> =
+xmlByPath path element =
    (var elem = [element];
     for path do name:
         result = array [];
@@ -475,9 +473,4 @@ xmlByPath path element is list<string> -> xml_element -> list<xml_element> =
     done;
     elem);
 
-{
-    xmlElement is string -> xml_element,
-    xmlParse is 'a -> xml_element,
-    xmlWrite,
-    xmlByPath is list<string> -> xml_element -> list<xml_element>
-}
+{ xmlElement, xmlParse, xmlWrite, xmlByPath }
