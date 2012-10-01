@@ -12,7 +12,15 @@ import javax.xml.stream: XMLInputFactory, XMLOutputFactory, XMLStreamReader,
                          XMLStreamWriter, XMLStreamConstants;
 
 typedef xml_value =
-    PCData string | CData string | Comment string | DTD string
+    /// Character data section.
+    PCData string |
+    /// CData section.
+    CData string |
+    /// XML comment string.
+    Comment string |
+    /// Document Type Definition.
+    /// May exists only in root elements valuesAfter list.
+    DTD string
 
 typedef xmlns_declaration = {
     /// Namespace prefix for XML elements and attributes.

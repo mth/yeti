@@ -1569,6 +1569,7 @@ interface YetiParser {
 
         // ugly all-in-one bastard type expression parser
         TypeNode readType(boolean checkVariant) {
+            yetiDocStr = null;
             int i = skipSpace();
             if (p >= src.length || src[i] == ')' || src[i] == '>') {
                 p = i;
@@ -1661,11 +1662,13 @@ interface YetiParser {
                 String sym = new String(src, start, i - start).intern();
                 ArrayList param = new ArrayList();
                 if (Character.isUpperCase(src[start])) {
+                    String doc = yetiDocStr;
                     TypeNode node = readType(false);
                     if (node == null)
                         throw new CompileException(line, p - lineStart,
                                         "Expecting variant argument");
-                    node =  new TypeNode(sym, new TypeNode[] { node });
+                    node = new TypeNode(sym, new TypeNode[] { node });
+                    node.doc = doc;
                     node.pos(sline, scol);
                     if (!checkVariant) {
                         return node;
