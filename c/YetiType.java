@@ -419,6 +419,7 @@ public class YetiType implements YetiParser {
         YType t = new YType(depth);
         t.ref = ref.deref();
         t.field = kind;
+        t.doc = ref.doc;
         return t;
     }
 
