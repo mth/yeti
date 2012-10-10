@@ -2301,27 +2301,113 @@ plus a b = a + b;
     setHashDefault h f is hash<'a, 'b> -> ('a -> 'b) -> () =
         (h unsafely_as ~ByKey)#setDefault(f),
 
+    /**
+     * Removes all entries from the hash map.
+     * 
+     * Arguments:
+     * map - the hash map to clear
+     */
     clearHash h is hash<'a, 'b> -> () =
         (h unsafely_as ~Map)#clear(),
 
+    /**
+     * Inserts all source map entries to the destination hash map.
+     * Entries with matching key in both maps will be replaced in
+     * the destination (with ones from the source).
+     *
+     * Arguments:
+     * destination - hash map where to insert the source entries
+     * source      - hash map where to take the entries
+     *
+     * Description:
+     * The insertHash function could be implemented with following code:
+     * : insertHash destination source =
+     * :     forHash source do key value:
+     * :         destination.[key] := value
+     * :     done;
+     *
+     * The library implementation uses internally java.util.Map#putAll().
+     */
     insertHash h h' is hash<'a, 'b> -> hash<'a, 'b> -> () =
         _ = (h unsafely_as ~Map)#putAll(h' unsafely_as ~Map),
 
+    /**
+     * Preallocates the array storage for at least given element count,
+     * so pushing elements later would not cause reallocating and coping
+     * the internal storage. Does nothing, if the storage already has
+     * capacity for the required number of elements.
+     *
+     * Arguments:
+     * array - array where to set the capacity
+     * count - the maximum number of total elements that the array should
+     *         be able to store without further reallocations
+     */
     setArrayCapacity a n is array<'a> -> number -> () =
         (a unsafely_as ~MList)#reserve(n),
 
+    /**
+     * Removes all elements from the array.
+     *
+     * Arguments:
+     * array - the array to clear
+     */
     clearArray a is array<'a> -> () =
         (a unsafely_as ~MList)#clear(),
 
+    /**
+     * Shifts the first value off from the array and returns it, moving all
+     * other elements towards the start.
+     *
+     * Arguments:
+     * array - an array to be shifted
+     *
+     * Exceptions:
+     * yeti.lang.EmptyArrayException - if the array is empty
+     *
+     * Notes:
+     * The contents of array is internally not moved. Instead of it the
+     * first element is just hidden. This makes the shift operation O(1) fast,
+     * but leaves the entry internally used. Therefore the shift function
+     * is unsuitable for implementing fifo buffers (the internal storage
+     * would only grow unless the array becomes empty sometime).
+     */
     shift a is array<'a> -> 'a =
         (a unsafely_as ~MList)#shift() unsafely_as 'a,
 
+    /**
+     * Pops and returns the last value from the array, like removing the
+     * top element from stack.
+     *
+     * Arguments:
+     * array - an array to be popped
+     *
+     * Exceptions:
+     * yeti.lang.EmptyArrayException - if the array is empty
+     */
     pop a is array<'a> -> 'a =
         (a unsafely_as ~MList)#pop() unsafely_as 'a,
 
+    /**
+     * Pushes a value to the array behind last element, increasing the
+     * array size by one. Together with the pop function it allows
+     * treating the array like a stack.
+     *
+     * Arguments:
+     * array - an array where to push the value
+     * value - value to be added to the array
+     */
     push a v is array<'a> -> 'a -> () =
         (a unsafely_as ~MList)#add(v),
 
+    /**
+     * Returns copy of slice of the given array, from start index
+     * to the end index.
+     *
+     * Arguments:
+     * array - an array to be used
+     * start - the slice start index (inclusive) in the array
+     * end   - the slice end index (exclusive) in the array
+     */
     slice a start end is array<'a> -> number -> number -> array<'a> =
         (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
