@@ -303,12 +303,22 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     trace msg a = (System#err#println(msg); a),
 
-    runThread options f is list?<'a> -> (() -> ()) -> ~Thread =
-        class FunThread extends Thread
+    /**
+     * Create java.lang.Runnable instance that applies the given function
+     * to (), when its run method is invoked.
+     *
+     * Arguments:
+     * function - function to apply, when run method is invoked
+     */
+    runnable f is (() -> ()) -> ~java.lang.Runnable =
+        class Run extends java.lang.Runnable
             void run()
                 f ()
         end;
-        th = new FunThread();
+        new Run(),
+
+    runThread options f is list?<'a> -> (() -> ()) -> ~Thread =
+        th = new Thread(runnable f);
         for options
            \case of
             Daemon (): th#setDaemon(true);
