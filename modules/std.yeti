@@ -2332,7 +2332,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~Map)#putAll(h' unsafely_as ~Map),
 
     /**
-     * Preallocates the array storage for at least given element count,
+     * Preallocates the array storage for at least the given element count,
      * so pushing elements later would not cause reallocating and coping
      * the internal storage. Does nothing, if the storage already has
      * capacity for the required number of elements.
@@ -2365,7 +2365,7 @@ plus a b = a + b;
      * yeti.lang.EmptyArrayException - if the array is empty
      *
      * Notes:
-     * The contents of array is internally not moved. Instead of it the
+     * The contents of array is not moved internally. Instead of it the
      * first element is just hidden. This makes the shift operation O(1) fast,
      * but leaves the entry internally used. Therefore the shift function
      * is unsuitable for implementing fifo buffers (the internal storage
@@ -2388,7 +2388,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#pop() unsafely_as 'a,
 
     /**
-     * Pushes a value to the array behind last element, increasing the
+     * Pushes a value into the array behind last element, increasing the
      * array size by one. Together with the pop function it allows
      * treating the array like a stack.
      *
@@ -2400,7 +2400,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#add(v),
 
     /**
-     * Returns copy of slice of the given array, from start index
+     * Returns a copy of slice of the given array, from start index
      * to the end index.
      *
      * Arguments:
