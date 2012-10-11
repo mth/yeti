@@ -2367,9 +2367,9 @@ plus a b = a + b;
      * Notes:
      * The contents of array is not moved internally. Instead of it the
      * first element is just hidden. This makes the shift operation O(1) fast,
-     * but leaves the entry internally used. Therefore the shift function
-     * is unsuitable for implementing fifo buffers (the internal storage
-     * would only grow unless the array becomes empty sometime).
+     * but leaves the shifted entries internally used (at least until the
+     * internal storage is resized, for example by push having insufficient
+     * space available).
      */
     shift a is array<'a> -> 'a =
         (a unsafely_as ~MList)#shift() unsafely_as 'a,

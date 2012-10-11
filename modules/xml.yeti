@@ -441,8 +441,8 @@ xmlWrite to root =
  * Description:
  * First finds all child elements with the name matching the first
  * path element. Then their child elements matching the next path
- * element, repeating for each path element, and finally returns
- * the child elements matching the last path element.
+ * element, and so on repeating for each path element, and finallyi
+ * returns the child elements matching the last path element.
  *
  * Examples:
  * : load yeti.xml;
