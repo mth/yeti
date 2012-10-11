@@ -10,6 +10,7 @@
   + Look what's wrong with handling win32 paths
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
+* jedit mode/syntax file? http://gstaff.org/colorEditor/
 * v1.0
 * Typedefs in REPL
 * Effective byte list operations
