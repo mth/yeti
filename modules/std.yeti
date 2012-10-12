@@ -1259,7 +1259,7 @@ plus a b = a + b;
      * (empty sequence or predicate is false for all sequence elements).
      *
      * Arguments:
-     * predicate - function that returns true or false for list element
+     * predicate - function that returns true or false for sequence element
      * sequence  - list or array to be scanned
      */
     any f l =
@@ -1272,7 +1272,7 @@ plus a b = a + b;
      * for one or more sequence elements).
      *
      * Arguments:
-     * predicate - function that returns true or false for list element
+     * predicate - function that returns true or false for sequence element
      * sequence  - list or array to be scanned
      */
     all f l =
@@ -2440,6 +2440,22 @@ plus a b = a + b;
             l unsafely_as list<'a>
         fi),
 
+    /**
+     * Returns a lazy list containing all those sequence elements,
+     * for which the predicate function returns true.
+     *
+     * Arguments:
+     * predicate - function that returns true or false for sequence element
+     * sequence - list or array to filter
+     *
+     * Examples:
+     * : filter (_ v = v % 2 == 1) [1..10] // gives odd numbers [1, 3, 5, 7, 9]
+     *
+     * Notes:
+     * The resulting list is created lazily, when consumed, and the sequence
+     * given as argument is lazily consumed as needed for producing the result
+     * list. The order of sequence elements is preserved in the result.
+     */
     filter f l is ('a -> boolean) -> list?<'a> -> list<'a> =
         if empty? l then
             []
