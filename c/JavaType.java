@@ -780,7 +780,7 @@ class JavaType implements Cloneable {
                 CompileCtx.current().warn(new CompileException(where,
                     "Cast `as array<string>' is dangerous and deprecated." +
                     "\n    Please use either `as list<string>' or" +
-                    " `as array<~String>"));
+                    " `as array<~String>'"));
             }
             if (index.type == YetiType.VAR) {
                 index.type = YetiType.NUM;
