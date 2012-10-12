@@ -776,6 +776,12 @@ class JavaType implements Cloneable {
             mapKind.type = YetiType.LIST_MARKER;
             mapKind.param = YetiType.NO_PARAM;
             YType index = to.param[1].deref();
+            if (index.type == YetiType.NUM && tp.type == YetiType.STR) {
+                CompileCtx.current().warn(new CompileException(where,
+                    "Cast `as array<string>' is dangerous and deprecated." +
+                    "\n    Please use either `as list<string>' or" +
+                    " `as array<~String>"));
+            }
             if (index.type == YetiType.VAR) {
                 index.type = YetiType.NUM;
                 index.param = YetiType.NO_PARAM;
