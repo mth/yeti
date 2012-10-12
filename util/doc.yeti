@@ -196,6 +196,7 @@ html_page {name, descr, moduleType, typedefs} =
 .wdoc { padding-top: 0.5em; padding-bottom: 0.4em; }
 var { font: 11pt monospace }
 .args { padding-left: 1.4em }
+.args tr td { vertical-align: text-top }
 td.arg { width: 100% }
 /*.wdoc { margin-top: 0.6em; margin-bottom: 0.6em; } */
 .box { border: 1px solid black;
