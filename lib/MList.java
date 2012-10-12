@@ -542,4 +542,11 @@ public class MList extends AMList implements ByKey {
     public void setDefault(Fun fun) {
         throw new UnsupportedOperationException();
     }
+
+    public static MList ofStrArray(Object[] array) {
+        Object[] tmp = new Object[array.length];
+        for (int i = 0; i < tmp.length; ++i)
+            tmp[i] = array[i] == null ? Core.UNDEF_STR : array[i];
+        return new MList(tmp);
+    }
 }

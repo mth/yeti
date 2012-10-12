@@ -320,26 +320,33 @@ class JavaExpr extends Code {
                 String arrayType = "[".concat(javaItem);
                 ctx.typeInsn(CHECKCAST, arrayType);
                 ctx.methodInsn(INVOKESTATIC, "yeti/lang/PArray",
-                                    "wrap", "(" + arrayType + ")Lyeti/lang/AList;");
+                               "wrap", "(" + arrayType + ")Lyeti/lang/AList;");
                 return false;
             }
             Label isNull = new Label(), end = new Label();
             ctx.typeInsn(CHECKCAST, "[Ljava/lang/Object;");
             ctx.insn(DUP);
             ctx.jumpInsn(IFNULL, isNull);
-            if (argType.param[1].deref().type == YetiType.NONE) {
+            boolean toList = argType.param[1].deref().type == YetiType.NONE;
+            if (toList) {
                 ctx.insn(DUP);
                 ctx.insn(ARRAYLENGTH);
                 ctx.jumpInsn(IFEQ, isNull);
             }
-            ctx.typeInsn(NEW, "yeti/lang/MList");
-            ctx.insn(DUP_X1);
-            ctx.insn(SWAP);
-            ctx.visitInit("yeti/lang/MList", "([Ljava/lang/Object;)V");
+            if (toList && argType.param[0].deref().type == YetiType.STR) {
+                // convert null's to undef_str's
+                ctx.methodInsn(INVOKESTATIC, "yeti/lang/MList", "ofStrArray",
+                               "([Ljava/lang/Object;)Lyeti/lang/MList;");
+            } else {
+                ctx.typeInsn(NEW, "yeti/lang/MList");
+                ctx.insn(DUP_X1);
+                ctx.insn(SWAP);
+                ctx.visitInit("yeti/lang/MList", "([Ljava/lang/Object;)V");
+            }
             ctx.jumpInsn(GOTO, end);
             ctx.visitLabel(isNull);
             ctx.insn(POP);
-            if (argType.param[1].deref().type == YetiType.NONE) {
+            if (toList) {
                 ctx.insn(ACONST_NULL);
             } else {
                 ctx.typeInsn(NEW, "yeti/lang/MList");
