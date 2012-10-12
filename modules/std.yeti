@@ -87,10 +87,10 @@ concat l is list?<list?<'a>> -> list<'a> =
     fi;
 
 /**
- * Takes value and first element of the sequence and applies those to the given
- * function, then repeats with following sequence elements, using the result from
- * previous application as the new value. Returns the result of last
- * application (or initial value when empty sequence was given).
+ * Takes value and first element of the sequence and applies the given
+ * function to them, then repeats with following sequence elements, using
+ * the result from previous application as the new value. Returns the result
+ * of last application (or initial value when empty sequence was given).
  *
  * Arguments:
  *  function - two-argument function used for folding
@@ -2411,6 +2411,26 @@ plus a b = a + b;
     slice a start end is array<'a> -> number -> number -> array<'a> =
         (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
+    /**
+     * Collects values from applications of the generator function to the
+     * given argument, until application of the end predicate to generated
+     * value yields true. The collected values are returned as a list.
+     *
+     * Arguments:
+     * generator - a function returning a new value on each application
+     * argument  - argument to give to the generator function
+     * end       - a predicate function, which on application to a generated
+     *             value returns true, if no more values should be collected
+     *
+     * Examples:
+     * Collect lines from standard input strictly to list:
+     * : input = collect readln () ((not) . defined?);
+     *
+     * Collect words from string using like pattern match function:
+     * : str = 'A lot of weird functions.';
+     * : words = collect (like '\w+' str) () empty? |> map head;
+     * : println words; // ["A","lot","of","weird","functions"]
+     */
     collect f a endPred is ('a -> 'b) -> 'a -> ('b -> boolean) -> list<'b> =
        (l = new MList();
         (v = f a; not endPred v and (l#add(v); true)) loop;
