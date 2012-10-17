@@ -252,17 +252,13 @@ public final class YetiAnalyzer extends YetiType {
                                     + name + " in structure type");
         }
         YType result = new YType(type, tp);
-        if (type == STRUCT) {
-            if (members.isEmpty()) {
-                members = null;
-            } else if (members_.isEmpty()) {
-                members_ = null;
-            }
-            result.finalMembers = members;
-            result.partialMembers = members_;
-        } else {
-            result.partialMembers = members;
+        if (members.isEmpty()) {
+            members = null;
+        } else if (members_.isEmpty()) {
+            members_ = null;
         }
+        result.finalMembers = members;
+        result.partialMembers = members_;
         return result;
     }
 
@@ -516,7 +512,7 @@ public final class YetiAnalyzer extends YetiType {
                 Node f = (name = op.op) == "" ? op.left :
                          name == "|>" ? op.right : null;
                 if (f == null || f instanceof Sym && (name = f.sym()) != null)
-                    s += " `" + name + '\'';
+                    s += " (" + name + ')';
             }
             s += " to #2 argument\n    #0";
             if (funarg != null && funarg.type != FUN && argt.type == FUN) {

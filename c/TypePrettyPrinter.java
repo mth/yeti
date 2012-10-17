@@ -88,7 +88,10 @@ class ShowTypeFun extends Fun2 {
                     to.append("var ");
                 to.append(field.get("tag"));
             }
-            to.append(field.get("name")).append(variant ? " " : " is ");
+            to.append(field.get("name"));
+            if (variant)
+                to.append(field.get("tag"));
+            to.append(variant ? " " : " is ");
             Tag fieldType = (Tag) field.get("type");
             Object tstr = showType.apply(indent_, fieldType);
             if (variant && fieldType.name == "Function")
@@ -301,9 +304,9 @@ class TypeDescr extends YetiType {
             it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
             it.put("tag",
                 tt.finalMembers == null || !tt.finalMembers.containsKey(name)
-                    ? "." :
+                    ? tt.type == STRUCT ? "." : "" :
                 tt.partialMembers != null && tt.partialMembers.containsKey(name)
-                    ? "`" : "");
+                    ? "`" : tt.type == STRUCT ? "" : ".");
             it.put("strip", strip);
             TypeDescr field = prepare(t, ctx);
             field.properties = it;

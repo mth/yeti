@@ -2463,7 +2463,17 @@ plus a b = a + b;
             FilterList#filter(l, f) unsafely_as list<'a>
         fi,
 
-    catSome l is list?<Some 'a | None 'b> -> list<'a> =
+    /**
+     * Returns a lazy list containing values from Some elements in the given
+     * sequence.
+     *
+     * Arguments:
+     * sequence - list or array of Some or None variants.
+     *
+     * Examples:
+     * : catSome [Just 3, None (), Just 1, Just 4, None ()] // gives [3, 1, 4]
+     */
+    catSome l is list?<Some. 'a | None. 'b> -> list<'a> =
         if empty? l then
             []
         else

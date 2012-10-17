@@ -1663,6 +1663,10 @@ interface YetiParser {
                 ArrayList param = new ArrayList();
                 if (Character.isUpperCase(src[start])) {
                     String doc = yetiDocStr;
+                    if (i < src.length && src[i] == '.')
+                        ++p;
+                    else
+                        sym = ".".concat(sym);
                     TypeNode node = readType(false);
                     if (node == null)
                         throw new CompileException(line, p - lineStart,

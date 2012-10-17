@@ -272,7 +272,7 @@ to_html = formatType {
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
         {descr} = parseDoc m.description;
-        type = ['<span class=vn>', m.name, '</span> ', m.typeStr, sep];
+        type = ['<span class=vn>', m.name, m.tag, '</span> ', m.typeStr, sep];
         {descr, type, name = ''}
     done,
     function = complexType 'function' '' ' &rarr; ' ''
