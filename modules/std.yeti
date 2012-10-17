@@ -2464,14 +2464,19 @@ plus a b = a + b;
         fi,
 
     /**
-     * Returns a lazy list containing values from Some elements in the given
-     * sequence.
+     * Returns a lazy list containing values without variant tags from the
+     * Some elements in the given sequence.
      *
      * Arguments:
-     * sequence - list or array of Some or None variants.
+     * sequence - list or array of Some or None variants
      *
      * Examples:
      * : catSome [Just 3, None (), Just 1, Just 4, None ()] // gives [3, 1, 4]
+     *
+     * Notes:
+     * The resulting list is created lazily, when consumed, and the sequence
+     * given as argument is lazily consumed as needed for producing the result
+     * list. The order of sequence elements is preserved in the result.
      */
     catSome l is list?<Some. 'a | None. 'b> -> list<'a> =
         if empty? l then
