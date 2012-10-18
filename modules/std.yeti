@@ -36,11 +36,13 @@ class FailureException(String what)
     extends RuntimeException(what)
 end;
 
+/// Group: zmisc (Miscellaneous functions)
 /// Identity function (I combinator). The argument value will be
 /// returned as is (id x = x).
 id x = x;
 
 /**
+ * Group: array (Array functions)
  * Creates a new array containing elements from the init list.
  *
  * Arguments:
@@ -59,6 +61,7 @@ array l is list?<'a> -> array<'a> =
     new MList(l) unsafely_as array<'a>;
 
 /**
+ * Group: list (List and sequence functions)
  * Creates and returns a lazy list concatenating a sequence of sequences
  * (flattening it).
  *
@@ -87,6 +90,7 @@ concat l is list?<list?<'a>> -> list<'a> =
     fi;
 
 /**
+ * Group: list
  * Takes value and first element of the sequence and applies the given
  * function to them, then repeats with following sequence elements, using
  * the result from previous application as the new value. Returns the result
@@ -126,13 +130,14 @@ fold f is ('a -> 'b -> 'a) -> 'a -> list?<'b> -> 'a =
     f2);
 
 /**
- * Finds a list element, for which the predicate function returns true
- * and returns the list tail starting from that element, or empty list
+ * Group: list
+ * Finds a sequence element, for which the predicate function returns true
+ * and returns the sequence tail starting from that element, or empty list
  * when the given predicate isn't true for any list element.
  *
  * Arguments:
  *  predicate - function that returns true for the searched value
- *  list      - list to be searched
+ *  sequence  - list or array to be searched
  *
  * Examples:
  *  : find (== 3) [1..5] // gives a list [3, 4, 5]
@@ -145,6 +150,7 @@ find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
     fi;
 
 /**
+ * Group: list
  * Returns 0-based index of the first list element, which equals
  * to the given value (using == for equality).
  *
@@ -164,6 +170,7 @@ index v l is 'a -> list?<'a> -> number =
     fi;
 
 /**
+ * Group: hash (Hash map functions)
  * Returns list of hash map keys.
  *
  * Arguments:
@@ -178,6 +185,7 @@ keys h is hash<'a, 'b> -> list<'a> =
     fi;
 
 /**
+ * Group: hash
  * Creates a hash mapping from given list elements to unit values (you can
  * think of it being a set). As the hash map is essentially unordered,
  * the ordering that was present in the given list will be lost.
@@ -194,6 +202,7 @@ hash l is list?<'a> -> hash<'a, ()> =
     h);
 
 /**
+ * Group: hash
  * Iterates over hash map, calling the block function for each
  * hash map entry with key and value as arguments.
  *
@@ -217,6 +226,7 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
         f (e#getKey() unsafely_as 'a) (e#getValue() unsafely_as 'b)));
 
 /**
+ * Group: list
  * Returns a list [function(a), function(b), ...] for sequence [a, b, ...]
  * by applying the function to each element of the sequence (either
  * lazily or strictly).
@@ -244,6 +254,7 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 /**
+ * Group: list
  * Returns strict list [function(a), function(b), ...] for sequence
  * [a, b, ...] by applying the function to each element of the sequence.
  *
@@ -265,6 +276,7 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 /**
+ * Group: 1_collections (Generic collection functions)
  * Returns count of elements in collection.
  *
  * Arguments:
@@ -284,6 +296,7 @@ length l is map<'a, 'b> -> number =
     fi;
 
 /**
+ * Group: zmisc
  * Access any value at runtime. Returns variant tagged with values
  * runtime type.
  *
@@ -338,11 +351,13 @@ plus a b = a + b;
 
 {
     /**
+     * Group: zmisc
      * Short-hand constant for None () value.
      */
     none = None (),
 
     /**
+     * Group: zmisc
      * K combinator - returns constant function \x (which returns value
      * of the (first) argument x).
      *
@@ -352,6 +367,7 @@ plus a b = a + b;
     const x = (_ = (); \x),
 
     /**
+     * Group: zmisc
      * Application in reverse order. Expression (value |> function)
      * is equivalent to (function value).
      *
@@ -377,6 +393,7 @@ plus a b = a + b;
     (|>) arg f = f arg,
 
     /**
+     * Group: 1_collections
      * Array/hash subscription operator collection.[key] as function.
      * Returns element at corresponding key (index).
      *
@@ -394,6 +411,7 @@ plus a b = a + b;
     at h k = h.[k],
 
     /**
+     * Group: zmisc
      * Binary function composition. Composes binary f and
      * unary g so that arguments to f are transformed by applying g.
      *
@@ -414,6 +432,7 @@ plus a b = a + b;
         new On(f, g) unsafely_as 'a, 
 
     /**
+     * Group: 0_logic (Logical and equality operators)
      * Logical negation of the value.
      *
      * Arguments:
@@ -422,6 +441,7 @@ plus a b = a + b;
     norec (not) v = not v,
 
     /**
+     * Group: 0_logic
      * Logical conjunction of a and b.
      *
      * Arguments:
@@ -431,6 +451,7 @@ plus a b = a + b;
     norec (and) a b = a and b,
 
     /**
+     * Group: 0_logic
      * Logical disjunction of a or b.
      *
      * Arguments:
@@ -440,6 +461,7 @@ plus a b = a + b;
     norec (or) a b = a or b,
 
     /**
+     * Group: 1_collections
      * Checks whether a key exists in the given hash map or array.
      *
      * Arguments:
@@ -460,6 +482,7 @@ plus a b = a + b;
     norec (in) a b = a in b,
 
     /**
+     * Group: 0_logic
      * Returns true when a and b values are equal (and false otherwise).
      *
      * It is internally implemented on most data types using .equals()
@@ -472,6 +495,7 @@ plus a b = a + b;
     norec (==) a b = a == b,
 
     /**
+     * Group: 0_logic
      * Returns true when a and b values are not equal (and false otherwise).
      *
      * It is internally implemented on most data types using .equals()
@@ -484,6 +508,7 @@ plus a b = a + b;
     norec (!=) a b = a != b,
 
     /**
+     * Group: 0_logic
      * Returns true when a value is less than b value (and false otherwise).
      *
      * It is internally implemented on most data types using
@@ -496,6 +521,7 @@ plus a b = a + b;
     norec (<)  a b = a <  b,
 
     /**
+     * Group: 0_logic
      * Returns true when a value is less than or equal to b value
      * (and false otherwise).
      *
@@ -509,6 +535,7 @@ plus a b = a + b;
     norec (<=) a b = a <= b,
 
     /**
+     * Group: 0_logic
      * Returns true when a value is greater than b value (and false otherwise).
      *
      * It is internally implemented on most data types using
@@ -521,6 +548,7 @@ plus a b = a + b;
     norec (>)  a b = a >  b,
 
     /**
+     * Group: 0_logic
      * Returns true when a value is greater than or equal to b value
      * (and false otherwise).
      *
@@ -534,6 +562,7 @@ plus a b = a + b;
     norec (>=) a b = a >= b,
 
     /**
+     * Group: num (Numeric functions)
      * Arithmetic sum of the values a and b.
      *
      * The result may not be accurate when applied to rational numbers
@@ -547,6 +576,7 @@ plus a b = a + b;
     norec (+)      = plus,
 
     /**
+     * Group: num
      * Substracts subtrahend from minuend and returns the difference.
      *
      * The result may not be accurate when applied to rational numbers
@@ -560,6 +590,7 @@ plus a b = a + b;
     norec (-)  a b = a - b,
 
     /**
+     * Group: num
      * Arithmetic product of the values a and b.
      *
      * The result may not be accurate when applied to rational numbers
@@ -573,6 +604,7 @@ plus a b = a + b;
     norec (*)  a b = a * b,
 
     /**
+     * Group: num
      * Divides dividend with divisor and returns the quotient.
      *
      * The result is rational number, when integer values fitting into
@@ -589,6 +621,7 @@ plus a b = a + b;
     norec (/)  a b = a / b,
 
     /**
+     * Group: num
      * Remainder of division of the integer part of dividend
      * with integer part of divisor.
      *
@@ -599,6 +632,7 @@ plus a b = a + b;
     norec (%)  a b = a % b,
 
     /**
+     * Group: zmisc
      * Function composition - (f . g) x is same as f (g x).
      * Composes unary f and g into single function, where f is
      * applied to the result of application of g (to argument).
@@ -618,6 +652,7 @@ plus a b = a + b;
     norec (.)  a b = a . b,
 
     /**
+     * Group: list
      * Constructs a new list by prepending value to tail list.
      *
      * Arguments:
@@ -631,6 +666,7 @@ plus a b = a + b;
     norec (::) v l = v :: l,
 
     /**
+     * Group: list
      * Constructs a new list from head value and function that would return
      * the tail list. The function will be applied once, when the list
      * tail is requested for the first time. This allows creating lazy and
@@ -644,6 +680,7 @@ plus a b = a + b;
     norec (:.) v l = v :. l,
 
     /**
+     * Group: str (String functions)
      * Returns true when regular expression has a match in the haystack string
      * (and false otherwise).
      *
@@ -666,6 +703,7 @@ plus a b = a + b;
     norec (=~) s p = s =~ p,
 
     /**
+     * Group: str
      * Returns true when regular expression has no match in the haystack string
      * (and false if it has).
      *
@@ -693,6 +731,7 @@ plus a b = a + b;
     norec (!~) s p = s !~ p,
 
     /**
+     * Group: num
      * Divides integer part of dividend with integer part of divisor
      * and returns the integer part of quotient.
      *
@@ -703,6 +742,7 @@ plus a b = a + b;
     norec (div) a b = a div b,
 
     /**
+     * Group: num
      * Shifts bit representation of integer part of the value
      * to left by given count of bits and returns the result.
      *
@@ -713,6 +753,7 @@ plus a b = a + b;
     norec (shl) a b = a shl b,
 
     /**
+     * Group: num
      * Shifts bit representation of integer part of the value
      * to right by given count of bits and returns the result.
      *
@@ -723,6 +764,7 @@ plus a b = a + b;
     norec (shr) a b = a shr b,
 
     /**
+     * Group: num
      * Returns bitwise XOR of integer parts of arguments a and b.
      *
      * Arguments:
@@ -732,6 +774,7 @@ plus a b = a + b;
     norec (xor) a b = a xor b,
 
     /**
+     * Group: num
      * Returns bitwise OR of integer parts of arguments a and b.
      *
      * Arguments:
@@ -741,6 +784,7 @@ plus a b = a + b;
     norec (b_or) a b = a b_or b,
 
     /**
+     * Group: num
      * Returns bitwise AND of integer parts of arguments a and b.
      *
      * Arguments:
@@ -750,6 +794,7 @@ plus a b = a + b;
     norec (b_and) a b = a b_and b,
 
     /**
+     * Group: num
      * Returns algebralic negation of argument value (negate value = -value).
      *
      * Arguments:
@@ -758,6 +803,7 @@ plus a b = a + b;
     norec negate a = negate a,
 
     /**
+     * Group: zmisc
      * Check whether given value is a JVM null pointer, and returns true
      * when it is.
      *
@@ -773,6 +819,7 @@ plus a b = a + b;
     norec nullptr? a = nullptr? a,
 
     /**
+     * Group: zmisc
      * Checks whether given value is defined, and returns true when it is.
      * Undefined values are JVM null pointer, undef_str and undef_bool.
      *
@@ -790,6 +837,7 @@ plus a b = a + b;
     norec defined? a = defined? a,
 
     /**
+     * Group: list
      * Checks whether a collection is empty, and returns true when it is.
      *
      * This function works on all kinds of standard collections - lists,
@@ -801,6 +849,7 @@ plus a b = a + b;
     norec empty? a = empty? a,
 
     /**
+     * Group: list
      * Returns the first element of sequence (which must be non-empty).
      *
      * Arguments:
@@ -813,6 +862,7 @@ plus a b = a + b;
     norec head a = head a,
 
     /**
+     * Group: list
      * Returns the tail of sequence consisting of all elements except
      * the first (head) one. Using tail is equivalent to using drop 1.
      *
@@ -830,6 +880,7 @@ plus a b = a + b;
     norec tail a = tail a,
 
     /**
+     * Group: 0_logic
      * Identity check - returns true when a and b reference to the same
      * object instance (and false otherwise).
      *
@@ -844,6 +895,7 @@ plus a b = a + b;
     norec same? a b = same? a b,
 
     /**
+     * Group: list
      * Iterates over sequence, applying the block function to the element
      * value for each sequence element.
      *
@@ -861,6 +913,7 @@ plus a b = a + b;
     norec for l f = for l f,
 
     /**
+     * Group: zmisc
      * Acquires an intrinsic monitor lock on behalf of the executing thread,
      * applies the block to (), then releases the lock. It is equivalent to
      * executing the block in Java synchronized block.
@@ -888,6 +941,7 @@ plus a b = a + b;
     norec synchronized monitor block = synchronized monitor block,
 
     /**
+     * Group: str
      * Returns the result of concatenating strings a and b.
      *
      * Arguments:
@@ -901,6 +955,7 @@ plus a b = a + b;
     (^) a b is string -> string -> string = "\(a)\(b)",
 
     /**
+     * Group: list
      * Appends two sequences a and b lazily, returns the resulting list.
      *
      * Arguments:
@@ -938,12 +993,14 @@ plus a b = a + b;
     array, concat, fold, find, id, index, keys, hash, map, map',
     forHash, length, peekObject,
 
+    /// Group: array
     /// Deprecated - it doesn't do anything useful, and if you want to
     /// wrap a Java array, then either use implicit cast or explicit
     /// value as array<'a> cast.
     wrapArray is 'a[] -> array<'a> = id,
 
     /**
+     * Group: list
      * Returns a list of elements obtained by applying the function
      * to each element of the Java collection.
      *
@@ -960,6 +1017,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: hash
      * Iterates over Java map, calling the block function for each
      * map entry with key and value as arguments.
      *
@@ -977,6 +1035,7 @@ plus a b = a + b;
         ~java.util.Map -> (~Object -> ~Object -> ()) -> (),
 
     /**
+     * Group: list
      * Gives values from collection as a list.
      *
      * Arguments:
@@ -1005,6 +1064,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: 1_collections
      * Swaps two array/hash map element values stored at indexes i and j.
      *
      * Arguments:
@@ -1025,6 +1085,7 @@ plus a b = a + b;
         a.[j] := x,
 
     /**
+     * Group: zmisc
      * Applies function to two arguments in reverse order.
      * Useful for swapping binary functions arguments.
      *
@@ -1047,6 +1108,7 @@ plus a b = a + b;
         f y x,
 
     /**
+     * Group: zmisc
      * Memoizes the promise function with unit argument and returns the
      * memoized function.
      *
@@ -1083,6 +1145,7 @@ plus a b = a + b;
         new Lazy(f) unsafely_as (() -> 'a),
 
     /**
+     * Group: zmisc
      * Constructs a pair structure containing arguments fst and snd as fields.
      *
      * Arguments:
@@ -1093,6 +1156,7 @@ plus a b = a + b;
         {fst, snd},
 
     /**
+     * Group: str
      * Gives string representation of value.
      *
      * Arguments:
@@ -1146,6 +1210,7 @@ plus a b = a + b;
         "\(x)",
 
     /**
+     * Group: num
      * Converts the given string into a number and returns the result.
      *
      * Arguments:
@@ -1191,6 +1256,7 @@ plus a b = a + b;
         Core#parseNum(x is string unsafely_as ~String),
 
     /**
+     * Group: num
      * Returns the smaller of the two ordered values a and b (the ordering is
      * as defined by the (<) operator). The result is unspecified if one of
      * the argument values is floating-point number NaN.
@@ -1203,6 +1269,7 @@ plus a b = a + b;
         if a < b then a else b fi,
 
     /**
+     * Group: num
      * Returns the greater of the two ordered values a and b (the ordering is
      * as defined by the (<) operator). The result is unspecified if one of
      * the argument values is NaN.
@@ -1215,6 +1282,7 @@ plus a b = a + b;
         if a > b then a else b fi,
 
     /**
+     * Group: num
      * Returns the absolute value of the given numeric value.
      *
      * Arguments:
@@ -1224,6 +1292,7 @@ plus a b = a + b;
         if a < 0 then -a else a fi,
 
     /**
+     * Group: list
      * Returns the arithmetic sum of a finite sequence of numbers.
      * Zero is returned for an empty sequence.
      *
@@ -1239,6 +1308,7 @@ plus a b = a + b;
         fold plus 0 l,
 
     /**
+     * Group: list
      * Maps a function over the sequence and concatenates the results.
      * Shorthand for (concat . map function).
      *
@@ -1254,6 +1324,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns true if and only if there exists a sequence element, for which
      * the predicate function returns true. A false value is returned otherwise
      * (empty sequence or predicate is false for all sequence elements).
@@ -1266,6 +1337,7 @@ plus a b = a + b;
         not nullptr? (find f l),
 
     /**
+     * Group: list
      * Returns true, if the predicate function returns true for
      * all elements of the given sequence or the sequence is empty.
      * The false value is returned otherwise (predicate is false
@@ -1279,6 +1351,7 @@ plus a b = a + b;
         nullptr? (find (_ x = not f x) l),
 
     /**
+     * Group: list
      * Returns first element of the sequence, for which the predicate
      * returns false, or the last element, when the predicate is
      * true for all elements of the sequence.
@@ -1305,6 +1378,7 @@ plus a b = a + b;
         value unsafely_as 'a,
 
     /**
+     * Group: list
      * Returns true if and only if the sequence contains element equal
      * to the given value. If there is no such element, false is returned.
      * Equality is checked as defined by the (==) operator.
@@ -1317,6 +1391,7 @@ plus a b = a + b;
         not (nullptr? l or nullptr? (l unsafely_as ~AList)#index(v)),
 
     /**
+     * Group: zmisc
      * Returns the default value, when the option is None _, and
      * result of applying the function to the Some parameter value,
      * when the option is Some value.
@@ -1334,6 +1409,7 @@ plus a b = a + b;
         esac,
 
     /**
+     * Group: list
      * Splits a given sequence into two parts, putting elements from the start
      * of the sequence into fst as long as the predicate function is false
      * for a given element. The rest of the sequence is returned as snd field.
@@ -1356,6 +1432,7 @@ plus a b = a + b;
           snd = l },
 
     /**
+     * Group: list
      * Splits a given sequence into two parts, returning first n elements
      * as fst and the rest as snd field. Full sequence is returned as list
      * in the fst field, if n is equal or greater than the length of the
@@ -1389,6 +1466,7 @@ plus a b = a + b;
           snd = l },
 
     /**
+     * Group: list
      * Returns first n elements of the sequence as a lazy list. All elements
      * are returned, if n is equal or greater than the length of the sequence.
      *
@@ -1409,6 +1487,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns the suffix of the sequence (as list) omitting first n
      * sequence elements. An empty list is returned, if n is equal or
      * greater than the length of the sequence.
@@ -1434,6 +1513,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns a lazy list containing longest prefix of the sequence,
      * where the predicate function is true for all elements.
      *
@@ -1455,6 +1535,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns an infinite lazy list, where each following element is result
      * of appling the function to the value of the element before it. The
      * first element value is given.
@@ -1474,6 +1555,7 @@ plus a b = a + b;
         new Iterate(x, f) unsafely_as list<'a>,
 
     /**
+     * Group: list
      * Returns non-duplicate elements of the sequence as a list.
      * This means that no element in the returned list is equal to
      * some other element (as defined by ==) in this list.
@@ -1486,6 +1568,7 @@ plus a b = a + b;
         keys . hash,
 
     /**
+     * Group: list
      * Returns a list of lists, where each sublist contains only equal elements,
      * and the concatenation of the result is equal to the original sequence.
      * Elements are considered equal, when the given predicate function
@@ -1520,6 +1603,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns as list the sequence sorted in ascending order according
      * to the order defined by the (<) comparision operator.
      *
@@ -1543,6 +1627,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns as list the sequence sorted according to the compare function.
      * The returned list will be ordered in such manner, that compare x y
      * returns false for any list elements x and y, where y is before x.
@@ -1567,11 +1652,13 @@ plus a b = a + b;
             (l unsafely_as ~AList)#sort(less?) unsafely_as list<'a>
         fi,
 
+    /// Group: num
     /// Mathematical constant pi (nearest value to pi expressable
     /// as double precision floating point number).
     pi = Math#PI,
 
     /**
+     * Group: num
      * Returns natural logaritm (base e) of the given value.
      * Implemented using Math#log(value).
      *
@@ -1581,6 +1668,7 @@ plus a b = a + b;
     ln a = Math#log(a),
 
     /**
+     * Group: num
      * Returns constant e raised to the given power.
      * Implemented using Math#exp(power).
      *
@@ -1590,6 +1678,7 @@ plus a b = a + b;
     exp a = Math#exp(a),
 
     /**
+     * Group: num
      * Returns the trigonometric cosine of the given angle.
      * Implemented using Math#cos(angle).
      *
@@ -1599,6 +1688,7 @@ plus a b = a + b;
     cos a = Math#cos(a),
 
     /**
+     * Group: num
      * Returns the trigonometric sine of the given angle.
      * Implemented using Math#sin(angle).
      *
@@ -1608,6 +1698,7 @@ plus a b = a + b;
     sin a = Math#sin(a),
 
     /**
+     * Group: num
      * Returns the trigonometric tangent of the given angle.
      * Implemented using Math#tan(angle).
      *
@@ -1617,6 +1708,7 @@ plus a b = a + b;
     tan a = Math#tan(a),
 
     /**
+     * Group: num
      * Returns the arc cosine of the given value in radians.
      * The returned angle is in the range 0.0..pi.
      * Implemented using Math#acos(value).
@@ -1627,6 +1719,7 @@ plus a b = a + b;
     acos a = Math#acos(a),
 
     /**
+     * Group: num
      * Returns the arc sine of the given value in radians.
      * The returned angle is in the range -pi/2..pi/2.
      * Implemented using Math#asin(value).
@@ -1637,6 +1730,7 @@ plus a b = a + b;
     asin a = Math#asin(a),
 
     /**
+     * Group: num
      * Returns the arc tangent of the given value in radians.
      * The returned angle is in the range -pi/2..pi/2.
      * Implemented using Math#atan(value).
@@ -1647,6 +1741,7 @@ plus a b = a + b;
     atan a = Math#atan(a),
 
     /**
+     * Group: num
      * Returns the positive square root of the given value.
      * Implemented using Math#sqrt(value).
      *
@@ -1656,6 +1751,7 @@ plus a b = a + b;
     sqrt a = Math#sqrt(a),
 
     /**
+     * Group: num
      * Returns the integer part of the given value.
      *
      * Arguments:
@@ -1668,6 +1764,7 @@ plus a b = a + b;
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
     /**
+     * Group: str
      * Returns a copy of the string, with all occurences of the needle
      * substring replaced with replacement string in the given haystack string.
      *
@@ -1693,6 +1790,7 @@ plus a b = a + b;
                      haystack unsafely_as ~String),
 
     /**
+     * Group: str
      * Returns the length (number of UTF-16 code units) of string.
      *
      * Arguments:
@@ -1708,6 +1806,7 @@ plus a b = a + b;
     norec strLength s = strLength s,
 
     /**
+     * Group: str
      * Returns a copy of the string, with all lowercase letters translated
      * to uppercase using the rules of the default locale.
      *
@@ -1720,6 +1819,7 @@ plus a b = a + b;
     norec strUpper s = strUpper s,
 
     /**
+     * Group: str
      * Returns a copy of the string, with all lowercase letters translated
      * to uppercase using the rules of the default locale.
      *
@@ -1732,6 +1832,7 @@ plus a b = a + b;
     norec strLower s = strLower s,
 
     /**
+     * Group: str
      * Returns a copy of the string, with leading and trailing whitespace
      * removed.
      *
@@ -1746,6 +1847,7 @@ plus a b = a + b;
     norec strTrim s = strTrim s,
 
     /**
+     * Group: str
      * Returns the substring of given string, from code unit at start index
      * until code unit at end index. The start and end indexes are 0-based.
      *
@@ -1767,6 +1869,7 @@ plus a b = a + b;
     norec strSlice s start end = strSlice s start end,
 
     /**
+     * Group: str
      * Returns the substring of given string, from code unit at start index
      * until to the end of string.
      * Same as strSlice string start (strLength string).
@@ -1788,6 +1891,7 @@ plus a b = a + b;
     norec strRight s pos = strRight s pos,
 
     /**
+     * Group: str
      * Returns true when the given string starts with the specified prefix
      * (and false otherwise).
      *
@@ -1802,6 +1906,7 @@ plus a b = a + b;
     norec strStarts? s start = strStarts? s start,
 
     /**
+     * Group: str
      * Returns true when the given string ends with the specified suffix
      * (and false otherwise).
      *
@@ -1815,6 +1920,7 @@ plus a b = a + b;
     norec strEnds? s end = strEnds? s end,
 
     /**
+     * Group: str
      * Finds the start position of the first occurrence of the substring in
      * the given string, that is not before the from index.
      *
@@ -1835,6 +1941,7 @@ plus a b = a + b;
     norec strIndexOf haystack needle from = strIndexOf haystack needle from,
 
     /**
+     * Group: str
      * Finds the start position of the last occurrence of the substring in
      * the given string, that is not after the from index.
      *
@@ -1856,6 +1963,7 @@ plus a b = a + b;
             strLastIndexOf haystack needle from,
 
     /**
+     * Group: str
      * Finds the start position of the last occurrence of the substring in
      * the given string.
      * Same as strLastIndexOf string substring (strLength string).
@@ -1872,6 +1980,7 @@ plus a b = a + b;
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     /**
+     * Group: str
      * Splits the string into substrings separated by matches of the regex,
      * and returns array of the resulting substrings.
      *
@@ -1898,6 +2007,7 @@ plus a b = a + b;
     norec strSplit re = strSplit re,
 
     /**
+     * Group: str
      * Returns a copy of the string, with each substring matching the regex
      * substituded with the replacement string in the given haystack string.
      *
@@ -1931,6 +2041,7 @@ plus a b = a + b;
     norec substAll re = substAll re,
 
     /**
+     * Group: str
      * Generates a lazy list by searching matches of given regex in the string.
      *
      * Arguments:
@@ -1982,6 +2093,7 @@ plus a b = a + b;
     norec matchAll re = matchAll re,
 
     /**
+     * Group: str
      * Returns a function that searches for a regex match in the given string.
      *
      * Arguments:
@@ -2033,6 +2145,7 @@ plus a b = a + b;
     norec like re = like re,
 
     /**
+     * Group: str
      * Returns one UTF-16 code unit (Java char) from the string at the given
      * index.
      *
@@ -2047,6 +2160,7 @@ plus a b = a + b;
     norec strChar s pos = strChar s pos,
 
     /**
+     * Group: str
      * Returns the substring of given string, from the start of string
      * until code unit at end index. Same as strSlice string 0 end.
      *
@@ -2065,6 +2179,7 @@ plus a b = a + b;
     strLeft s end = strSlice s 0 end,
 
     /**
+     * Group: str
      * Returns the string prefix until the start of first occurrence of the
      * specified substring in the given string (or undef_str, if the substring
      * isn't part of the given string).
@@ -2081,6 +2196,7 @@ plus a b = a + b;
         if i < 0 then undef_str else strSlice s 0 i fi,
 
     /**
+     * Group: str
      * Returns the string suffix starting from the end of last occurrence of
      * the specified substring in the given string (or undef_str, if the
      * substring isn't part of the given string).
@@ -2097,6 +2213,7 @@ plus a b = a + b;
         if i < 0 then undef_str else strRight s (i + strLength subString) fi,
 
     /**
+     * Group: str
      * Joins string representations of list elements into a single string,
      * with separator string insterted between each list element.
      * The resulting string is returned.
@@ -2135,6 +2252,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: str
      * Returns string with padding added at the end, if the string length
      * is shorter than the desired length. The padding is added as many times
      * as required (but not more) to get result with length that is not
@@ -2159,6 +2277,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: str
      * Returns a copy of the string, with first character translated to
      * uppercase. The string is returned unmodified, if this is not possible.
      *
@@ -2169,6 +2288,7 @@ plus a b = a + b;
         Core#capitalize(str unsafely_as ~String),
 
     /**
+     * Group: str
      * Returns a copy of the string, with first character translated to
      * lowercase. The string is returned unmodified, if this is not possible.
      *
@@ -2179,6 +2299,7 @@ plus a b = a + b;
         Core#uncapitalize(str unsafely_as ~String),
 
     /**
+     * Group: hash
      * Applies the function to each key-value pair in the given hash map,
      * and returns a list of the values returned by these applications.
      * The order of elements in the returned list is undefined.
@@ -2203,6 +2324,7 @@ plus a b = a + b;
         a unsafely_as list?<'c>,
 
     /**
+     * Group: hash
      * Creates an identity hash map, where keys are compared by their
      * object instance identies (like the same? function does).
      *
@@ -2213,6 +2335,7 @@ plus a b = a + b;
         new IdentityHash() unsafely_as hash<'a, 'b>,
 
     /**
+     * Group: 1_collections
      * Returns a new copy of the given collection.
      *
      * Arguments:
@@ -2226,6 +2349,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: zmisc
      * Fail evaluation with given error message by throwing FailureException.
      *
      * Arguments:
@@ -2238,6 +2362,7 @@ plus a b = a + b;
         throw new FailureException(message),
 
     /**
+     * Group: 1_collections
      * Deletes the index/key and it's associated value from the
      * collection. Does nothing if the given key/index doesn't belong
      * to the collection.
@@ -2250,6 +2375,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~ByKey)#remove(k),
 
     /**
+     * Group: 1_collections
      * Deletes from the collection all keys/indexes (together with their
      * associated values) existing in the given keylist. Keylist
      * elements that are not collection keys are ignored.
@@ -2267,6 +2393,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~Coll)#removeAll(ks),
 
     /**
+     * Group: hash
      * Sets a given default value function for the hash map.
      *
      * Arguments:
@@ -2302,6 +2429,7 @@ plus a b = a + b;
         (h unsafely_as ~ByKey)#setDefault(f),
 
     /**
+     * Group: hash
      * Removes all entries from the hash map.
      * 
      * Arguments:
@@ -2311,6 +2439,7 @@ plus a b = a + b;
         (h unsafely_as ~Map)#clear(),
 
     /**
+     * Group: hash
      * Inserts all source map entries to the destination hash map.
      * Entries with matching key in both maps will be replaced in
      * the destination (with ones from the source).
@@ -2332,6 +2461,7 @@ plus a b = a + b;
         _ = (h unsafely_as ~Map)#putAll(h' unsafely_as ~Map),
 
     /**
+     * Group: array
      * Preallocates the array storage for at least the given element count,
      * so pushing elements later would not cause reallocating and coping
      * the internal storage. Does nothing, if the storage already has
@@ -2346,6 +2476,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#reserve(n),
 
     /**
+     * Group: array
      * Removes all elements from the array.
      *
      * Arguments:
@@ -2355,6 +2486,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#clear(),
 
     /**
+     * Group: array
      * Shifts the first value off from the array and returns it, moving all
      * other elements towards the start.
      *
@@ -2375,6 +2507,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#shift() unsafely_as 'a,
 
     /**
+     * Group: array
      * Pops and returns the last value from the array, like removing the
      * top element from stack.
      *
@@ -2388,6 +2521,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#pop() unsafely_as 'a,
 
     /**
+     * Group: array
      * Pushes a value into the array behind last element, increasing the
      * array size by one. Together with the pop function it allows
      * treating the array like a stack.
@@ -2400,6 +2534,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#add(v),
 
     /**
+     * Group: array
      * Returns a copy of slice of the given array, from start index
      * to the end index.
      *
@@ -2412,6 +2547,7 @@ plus a b = a + b;
         (a unsafely_as ~MList)#copy(start, end) unsafely_as array<'a>,
 
     /**
+     * Group: list
      * Collects values from applications of the generator function to the
      * given argument, until application of the end predicate to generated
      * value yields true. The collected values are returned as a list.
@@ -2441,6 +2577,7 @@ plus a b = a + b;
         fi),
 
     /**
+     * Group: list
      * Returns a lazy list containing all those sequence elements,
      * for which the predicate function returns true.
      *
@@ -2464,6 +2601,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns a lazy list containing values without variant tags from the
      * Some elements in the given sequence.
      *
@@ -2486,6 +2624,7 @@ plus a b = a + b;
         fi,
 
     /**
+     * Group: list
      * Returns a lazy list where each element is result of appling the function
      * to corresponding elements in the given first and second sequences.
      * Excess elements at the end of longer sequence will be ignored.
@@ -2519,6 +2658,7 @@ plus a b = a + b;
             new Map2List(f, a, b) unsafely_as list<'c>
         fi,
 
+    /** Group: list */
     revAppend a b is list?<'a> -> list<'a> -> list<'a> =
         if empty? a then
             b
@@ -2531,6 +2671,7 @@ plus a b = a + b;
             res
         fi,
 
+    /** Group: list */
     reverse l is list?<'a> -> list<'a> =
         if nullptr? l then
             []
@@ -2538,6 +2679,7 @@ plus a b = a + b;
             (l unsafely_as ~AList)#reverse() unsafely_as list<'a>
         fi,
 
+    /// Group: zmisc
     /// Provide return function for block.
     /// Be careful with lazy lists, for example
     /// withExit do e: 1 :. \(e []) done
@@ -2545,6 +2687,7 @@ plus a b = a + b;
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
 
+    /** Group: zmisc */
     threadLocal initialValue is 'a -> {var value is 'a} =
         class Local extends java.lang.ThreadLocal
             Object initialValue() initialValue
@@ -2555,14 +2698,17 @@ plus a b = a + b;
             set value v  = tl#set(v)
         },
 
+    /** Group: zmisc */
     stackTraceString ex is ~java.lang.Throwable -> string =
         sw = new java.io.StringWriter();
         ex#printStackTrace(new java.io.PrintWriter(sw));
         sw#toString(),
 
+    /// Group: str
     /// The UTF-8 charset.
     utf8 = "UTF-8",
 
+    /// Group: zmisc
     /// Yeti version string. Don't try simple string comparision on it.
     /// At least convert it to number list with something like
     /// map number (strSplit '\D+' yetiRuntimeVersion) >= [0,9]

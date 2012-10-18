@@ -40,15 +40,31 @@ formatType template =
                 types.[name] := str;
                 flag := flag or big
             done;
-            docs = not empty? (find ((!= '') . (.description)) l);
-            big := docs or flag or length l >= 3;
-            cur := if variant then 'variant' else 'struct' fi;
+            titles = [:];
+            setHashDefault titles \'';
             fieldDesc f =
                (fn = f.name;
+                var description = f.description;
+                var group = '';
+                var groupTitle = '';
+                m = like '[\s*]*Group: +(\w+)(?: +\(([^\n)]*)\))?\s*\*?'
+                    description ();
+                if not empty? m then
+                    description := strRight description (strLength m.[0]);
+                    group := m.[1];
+                    if m.[2] != '' then
+                        titles.[group] := m.[2]
+                    fi
+                fi;
                 nameStr = if variant or fn =~ '^\w' then fn else "(\(fn))" fi;
-                f is typeitem<type> with { typeStr = types.[fn], nameStr });
-            fields = if variant then id else sortBy (on (<) (.nameStr)) fi
-                        (map fieldDesc l);
+                f is typeitem<type> with { typeStr = types.[fn], nameStr,
+                                      description, group, var groupTitle = ''});
+            sortKey f = [f.group, f.nameStr];
+            fields = sortBy (on (<) sortKey) (map fieldDesc l);
+            for fields do f: f.groupTitle := titles.[f.group] done;
+            docs = not empty? (find ((!= '') . (.description)) fields);
+            big := docs or flag or length l >= 3;
+            cur := if variant then 'variant' else 'struct' fi;
             { big, docs, fields = array fields, top = depth == 1 });
 
         other s =
@@ -205,6 +221,8 @@ td.arg { width: 100% }
     margin: 1px 1pt 0pt;
     display: inline-block; }
 .module { color: #000080 }
+.group { font: 16pt sans-serif; border-bottom: solid black 1px;
+         padding: 0px; margin: 0.5em 0px; text-align: center }
 em { color: #000080; font: bold 13pt sans-serif }
 .function { background: #ffffff }
 .struct { background: #ffffff }
@@ -235,9 +253,18 @@ em { color: #000080; font: bold 13pt sans-serif }
 complexType what before sep after f {big, docs, top, fields} =
    (style = if docs then '"field wdoc"' else 'field' fi;
     contents = array [];
+    var lastGroup = '';
     str sep field' =
-       ({descr, name, type} = f sep field';
+       ({descr, name, type, group, groupTitle} = f sep field';
         var s = strJoin '' type;
+        if groupTitle != '' and groupTitle != lastGroup then
+            if name != '' then
+                if not empty? contents then push contents "<br>" fi;
+                push contents "<a href=\"#\(group)\">\(groupTitle@)</a>: "
+            fi;
+            s := "<div id=\(group) class=group>\(groupTitle@)</div>\(s)";
+            lastGroup := groupTitle
+        fi;
         if big then
             idattr = if name != '' then
                          ref = URLEncoder#encode(name, 'UTF-8');
@@ -249,10 +276,10 @@ complexType what before sep after f {big, docs, top, fields} =
             s
         fi);
     last = pop fields;
-    var fields = map (str sep) fields ++ [str '' last];
+    var fields = map' (str sep) fields ++ [str '' last];
     contents =
         if big and length fields > 10 and not empty? contents then
-            "<div class=\"contents\">\(strJoin ' ' contents)</div>"
+            "<div class=contents>\(strJoin ' ' contents)</div>"
         fi;
     if big then
         block = if top then ' style="display: block; margin: 2pt"' fi;
@@ -268,15 +295,17 @@ to_html = formatType {
         type = concat [[if f.mutable then '<em>var </em>' fi,
                         '<span class=sn>', f.tag, f.nameStr@, '</span>'],
                        args, ['<em> is </em>', f.typeStr, sep]];
-        {descr, type, name = f.name}
+        {descr, type, name = f.name,
+         group = f.group, groupTitle = f.groupTitle}
     done,
     variant = complexType 'variant' '' ' | ' '' do sep m:
         {descr} = parseDoc m.description;
         type = ['<span class=vn>', m.name, m.tag, '</span> ', m.typeStr, sep];
-        {descr, type, name = ''}
+        {descr, type, name = '', group = m.group, groupTitle = m.groupTitle}
     done,
     function = complexType 'function' '' ' &rarr; ' ''
-                           (_ sep t = {descr = '', type = [t, sep], name = ''}),
+                           (_ sep t = {descr = '', type = [t, sep], name = '',
+                                       group = '', groupTitle = ''}),
     alias alias type = "\(alias)<em> is </em>\(type)",
     other descr = "<div class=\"other\">\(descr)</div>",
     escape s =
