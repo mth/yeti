@@ -150,12 +150,12 @@ find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
 
 /**
  * Group: list
- * Returns 0-based index of the first list element, which equals
+ * Returns 0-based index of the first sequence element, which equals
  * to the given value (using == for equality).
  *
  * Arguments:
- *  value - value to search for
- *  list  - list to be searched
+ *  value    - value to search for
+ *  sequence - list or array to be searched
  *
  * Examples:
  *  : index (== 'apple') ['oranges', 'apples', 'rats'] // returns 1
@@ -836,7 +836,7 @@ plus a b = a + b;
     norec defined? a = defined? a,
 
     /**
-     * Group: list
+     * Group: 1_collections
      * Checks whether a collection is empty, and returns true when it is.
      *
      * This function works on all kinds of standard collections - lists,
