@@ -432,7 +432,7 @@ plus a b = a + b;
         new On(f, g) unsafely_as 'a, 
 
     /**
-     * Group: 0_logic (Logical and equality operators)
+     * Group: 0_logic (Logical and comparison operators)
      * Logical negation of the value.
      *
      * Arguments:
