@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!DOCTYPE MODE SYSTEM "xmode.dtd">
+<MODE>
+	<PROPS>
+		<PROPERTY NAME="indentOpenBrackets" VALUE="{"/>
+		<PROPERTY NAME="indentCloseBrackets" VALUE="}"/>
+		<PROPERTY NAME="unalignedOpenBrackets" VALUE="(" />
+		<PROPERTY NAME="unalignedCloseBrackets" VALUE=")" />
+		<PROPERTY NAME="lineUpClosingBracket" VALUE="TRUE"/>
+		<PROPERTY NAME="multipleBracketIndent" VALUE="TRUE" />
+		<PROPERTY NAME="commentStart" VALUE="/*"/>
+		<PROPERTY NAME="commentEnd" VALUE="*/"/>
+		<PROPERTY NAME="lineComment" VALUE="//"/>
+		<PROPERTY NAME="noWordSep" VALUE="_?'"/>
+		<PROPERTY NAME="wordBreakChars" VALUE=",+-=&lt;&gt;/^&amp;*"/>
+		<PROPERTY NAME="indentNextLines" VALUE="\s*(if|case|try|class)\s.*"/>
+		<PROPERTY NAME="unindentThisLine" VALUE="^\s*(else\s*|elif\s.*|catch\s.*|finally\s*)$"/>
+		<PROPERTY NAME="unindentNextLines" VALUE="^\s*(fi|esac|done|end)[;\s]*$"/>
+	</PROPS>
+
+	<RULES>
+		<SPAN TYPE="COMMENT1">
+			<BEGIN>/*</BEGIN>
+			<END>*/</END>
+		</SPAN>
+
+		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
+
+		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLE_QUOTE">
+			<BEGIN>"</BEGIN>
+			<END>"</END>
+		</SPAN>
+
+		<SPAN TYPE="LITERAL1">
+			<BEGIN>'</BEGIN>
+			<END>'</END>
+		</SPAN>
+
+		<SEQ TYPE="OPERATOR">!</SEQ>
+		<SEQ TYPE="OPERATOR">%</SEQ>
+		<SEQ TYPE="OPERATOR">&gt;</SEQ>
+		<SEQ TYPE="OPERATOR">&lt;</SEQ>
+		<SEQ TYPE="OPERATOR">*</SEQ>
+		<SEQ TYPE="OPERATOR">+</SEQ>
+		<SEQ TYPE="OPERATOR">,</SEQ>
+		<SEQ TYPE="OPERATOR">-</SEQ>
+		<SEQ TYPE="OPERATOR">/</SEQ>
+		<SEQ TYPE="OPERATOR">:</SEQ>
+		<SEQ TYPE="OPERATOR">;</SEQ>
+		<SEQ TYPE="OPERATOR">=</SEQ>
+		<SEQ TYPE="OPERATOR">@</SEQ>
+		<SEQ TYPE="OPERATOR">[</SEQ>
+		<SEQ TYPE="OPERATOR">\</SEQ>
+		<SEQ TYPE="OPERATOR">]</SEQ>
+		<SEQ TYPE="OPERATOR">^</SEQ>
+		<SEQ TYPE="OPERATOR">{</SEQ>
+		<SEQ TYPE="OPERATOR">}</SEQ>
+		<SEQ TYPE="OPERATOR">~</SEQ>
+
+		<KEYWORDS>
+			<KEYWORD1>catch</KEYWORD1>
+			<KEYWORD1>try</KEYWORD1>
+			<KEYWORD1>finally</KEYWORD1>
+			<KEYWORD1>if</KEYWORD1>
+			<KEYWORD1>elif</KEYWORD1>
+			<KEYWORD1>else</KEYWORD1>
+			<KEYWORD1>fi</KEYWORD1>
+			<KEYWORD1>then</KEYWORD1>
+			<KEYWORD1>case</KEYWORD1>
+			<KEYWORD1>of</KEYWORD1>
+			<KEYWORD1>esac</KEYWORD1>
+			<KEYWORD1>do</KEYWORD1>
+			<KEYWORD1>done</KEYWORD1>
+			<KEYWORD1>load</KEYWORD1>
+
+			<!-- TYPES -->
+			<KEYWORD3>var</KEYWORD3>
+			<KEYWORD3>get</KEYWORD3>
+			<KEYWORD3>set</KEYWORD3>
+			<KEYWORD3>norec</KEYWORD3>
+
+			<!-- CONSTANTS -->
+			<LITERAL2>true</LITERAL2>
+			<LITERAL2>false</LITERAL2>
+			<LITERAL2>undef_str</LITERAL2>
+			<LITERAL2>undef_bool</LITERAL2>
+		</KEYWORDS>
+	</RULES>
+
+	<RULES DEFAULT="LITERAL1" SET="DOUBLE_QUOTE" NO_LINE_BREAK="TRUE">
+		<SPAN DELEGATE="MAIN" TYPE="OPERATOR">
+			<BEGIN>\(</BEGIN>
+			<END>)</END>
+		</SPAN>
+		<SEQ TYPE="LITERAL4">\"</SEQ>
+		<SEQ TYPE="LITERAL4">\\</SEQ>
+		<SEQ TYPE="LITERAL4">\a</SEQ>
+		<SEQ TYPE="LITERAL4">\b</SEQ>
+		<SEQ TYPE="LITERAL4">\e</SEQ>
+		<SEQ TYPE="LITERAL4">\f</SEQ>
+		<SEQ TYPE="LITERAL4">\n</SEQ>
+		<SEQ TYPE="LITERAL4">\r</SEQ>
+		<SEQ TYPE="LITERAL4">\t</SEQ>
+		<SEQ TYPE="LITERAL4">\0</SEQ>
+		<SEQ TYPE="LITERAL4">\'</SEQ>
+		<SEQ_REGEXP HASH_CHAR="\x" TYPE="LITERAL4">\\u[a-f\d]{2}</SEQ_REGEXP>
+		<SEQ_REGEXP HASH_CHAR="\u" TYPE="LITERAL4">\\u[a-f\d]{4}</SEQ_REGEXP>
+	</RULES>
+</MODE>
