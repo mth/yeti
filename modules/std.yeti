@@ -2704,7 +2704,7 @@ plus a b = a + b;
         ex#printStackTrace(new java.io.PrintWriter(sw));
         sw#toString(),
 
-    /// Group: str
+    /// Group: zmisc
     /// The UTF-8 charset.
     utf8 = "UTF-8",
 
