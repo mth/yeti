@@ -18,13 +18,19 @@
 		<PROPERTY NAME="unindentNextLines" VALUE="^\s*(fi|esac|done|end)[;\s]*$"/>
 	</PROPS>
 
-	<RULES>
+	<RULES HILIGHT_DIGITS="TRUE"
+			DIGIT_RE="[+-]?\d+(\.\d+)?([eE][+-]?\d+)?|0x[0-9A-Fa-f]+">
 		<SPAN TYPE="COMMENT1">
 			<BEGIN>/*</BEGIN>
 			<END>*/</END>
 		</SPAN>
 
 		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
+
+		<SEQ_REGEX TYPE="KEYWORD1" HASH_CHARS="ia-|" AT_WORD_START="TRUE">(is|as|-&gt;)\s+[a-z'~](\w|')+</SEQ_REGEX>
+		<!-- SEQ_REGEX TYPE="KEYWORD2" AT_WORD_START="TRUE"><![CDATA[(is|as|->|\|)\s+([A-Z](\w|')*\s+)*[a-z'~](\w|')+]]></SEQ_REGEX -->
+
+		<SEQ_REGEX TYPE="LITERAL2" HASH_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ" AT_WORD_START="TRUE">\w+</SEQ_REGEX>
 
 		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLE_QUOTE">
 			<BEGIN>"""</BEGIN>
@@ -43,12 +49,12 @@
 
 		<SEQ TYPE="OPERATOR">!</SEQ>
 		<SEQ TYPE="OPERATOR">%</SEQ>
-		<SEQ TYPE="OPERATOR">&gt;</SEQ>
+		<!-- SEQ TYPE="OPERATOR">&gt;</SEQ -->
 		<SEQ TYPE="OPERATOR">&lt;</SEQ>
 		<SEQ TYPE="OPERATOR">*</SEQ>
 		<SEQ TYPE="OPERATOR">+</SEQ>
 		<SEQ TYPE="OPERATOR">,</SEQ>
-		<SEQ TYPE="OPERATOR">-</SEQ>
+		<!-- SEQ TYPE="OPERATOR">-</SEQ -->
 		<SEQ TYPE="OPERATOR">/</SEQ>
 		<SEQ TYPE="OPERATOR">:</SEQ>
 		<SEQ TYPE="OPERATOR">;</SEQ>
@@ -78,6 +84,8 @@
 			<KEYWORD1>of</KEYWORD1>
 			<KEYWORD1>then</KEYWORD1>
 			<KEYWORD1>try</KEYWORD1>
+			<KEYWORD1>for</KEYWORD1>
+			<KEYWORD1>synchronized</KEYWORD1>
 
 			<!-- TYPES -->
 			<KEYWORD3>get</KEYWORD3>
@@ -109,7 +117,7 @@
 		<SEQ TYPE="LITERAL4">\t</SEQ>
 		<SEQ TYPE="LITERAL4">\0</SEQ>
 		<SEQ TYPE="LITERAL4">\'</SEQ>
-		<SEQ_REGEXP HASH_CHAR="\x" TYPE="LITERAL4">\\u[a-f\d]{2}</SEQ_REGEXP>
+		<SEQ_REGEXP HASH_CHAR="\x" TYPE="LITERAL4">\\x[a-f\d]{2}</SEQ_REGEXP>
 		<SEQ_REGEXP HASH_CHAR="\u" TYPE="LITERAL4">\\u[a-f\d]{4}</SEQ_REGEXP>
 	</RULES>
 </MODE>
