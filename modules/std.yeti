@@ -29,7 +29,6 @@
 module yeti.lang.std;
 
 import java.lang.IllegalArgumentException;
-import java.util.regex.Pattern;
 import java.util.Map;
 
 class FailureException(String what)
@@ -680,7 +679,7 @@ plus a b = a + b;
     norec (:.) v l = v :. l,
 
     /**
-     * Group: str (String functions)
+     * Group: tregex (Regular expressions)
      * Returns true when regular expression has a match in the haystack string
      * (and false otherwise).
      *
@@ -703,7 +702,7 @@ plus a b = a + b;
     norec (=~) s p = s =~ p,
 
     /**
-     * Group: str
+     * Group: tregex
      * Returns true when regular expression has no match in the haystack string
      * (and false if it has).
      *
@@ -941,7 +940,7 @@ plus a b = a + b;
     norec synchronized monitor block = synchronized monitor block,
 
     /**
-     * Group: str
+     * Group: str (String functions)
      * Returns the result of concatenating strings a and b.
      *
      * Arguments:
@@ -1980,7 +1979,7 @@ plus a b = a + b;
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     /**
-     * Group: str
+     * Group: tregex
      * Splits the string into substrings separated by matches of the regex,
      * and returns array of the resulting substrings.
      *
@@ -2007,7 +2006,7 @@ plus a b = a + b;
     norec strSplit re = strSplit re,
 
     /**
-     * Group: str
+     * Group: tregex
      * Returns a copy of the string, with each substring matching the regex
      * substituded with the replacement string in the given haystack string.
      *
@@ -2041,7 +2040,7 @@ plus a b = a + b;
     norec substAll re = substAll re,
 
     /**
-     * Group: str
+     * Group: tregex
      * Generates a lazy list by searching matches of given regex in the string.
      *
      * Arguments:
@@ -2093,7 +2092,7 @@ plus a b = a + b;
     norec matchAll re = matchAll re,
 
     /**
-     * Group: str
+     * Group: tregex
      * Returns a function that searches for a regex match in the given string.
      *
      * Arguments:
