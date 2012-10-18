@@ -679,7 +679,7 @@ plus a b = a + b;
     norec (:.) v l = v :. l,
 
     /**
-     * Group: tregex (Regular expressions)
+     * Group: regex (Regular expressions)
      * Returns true when regular expression has a match in the haystack string
      * (and false otherwise).
      *
@@ -702,7 +702,7 @@ plus a b = a + b;
     norec (=~) s p = s =~ p,
 
     /**
-     * Group: tregex
+     * Group: regex
      * Returns true when regular expression has no match in the haystack string
      * (and false if it has).
      *
@@ -1979,7 +1979,7 @@ plus a b = a + b;
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     /**
-     * Group: tregex
+     * Group: regex
      * Splits the string into substrings separated by matches of the regex,
      * and returns array of the resulting substrings.
      *
@@ -2006,7 +2006,7 @@ plus a b = a + b;
     norec strSplit re = strSplit re,
 
     /**
-     * Group: tregex
+     * Group: regex
      * Returns a copy of the string, with each substring matching the regex
      * substituded with the replacement string in the given haystack string.
      *
@@ -2040,7 +2040,7 @@ plus a b = a + b;
     norec substAll re = substAll re,
 
     /**
-     * Group: tregex
+     * Group: regex
      * Generates a lazy list by searching matches of given regex in the string.
      *
      * Arguments:
@@ -2092,7 +2092,7 @@ plus a b = a + b;
     norec matchAll re = matchAll re,
 
     /**
-     * Group: tregex
+     * Group: regex
      * Returns a function that searches for a regex match in the given string.
      *
      * Arguments:
