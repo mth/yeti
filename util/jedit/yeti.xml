@@ -1,11 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE MODE SYSTEM "xmode.dtd">
 <MODE>
-	<!-- XXX Broken, because jedit don't allow SPAN END to be regex nor
-	     keyword, and don't allow SEQ_REGEXP to match multiple lines.
-	     That way it's impossible to correctly color yeti type definitions,
-	     not even speaking of error detection like the vim syntax file does.
-	 -->
 	<PROPS>
 		<PROPERTY NAME="indentOpenBrackets" VALUE="{"/>
 		<PROPERTY NAME="indentCloseBrackets" VALUE="}"/>
@@ -26,15 +21,12 @@
 
 	<RULES IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#$?'"
 	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
+
 		<SPAN TYPE="COMMENT1">
 			<BEGIN>/*</BEGIN>
 			<END>*/</END>
 		</SPAN>
-
 		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
-
-		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
-			HASH_CHARS="iatu-">(?:(?:is\b|as\b|unsafely_as\b|typedef\s[^=]+=|-&gt;|\|)(\s|\n|//[^\n]*|/\*([^*]|\*[^/])*\*/)*(?:[A-Z][\w']*\s+)*(?:[a-z'~][\w'.$?]*|\(\))|&lt;[^&gt;]*&gt;\s*)+</SEQ_REGEXP>
 
 		<SEQ_REGEXP TYPE="LABEL" HASH_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ" AT_WORD_START="TRUE">[A-Z]\w*(?=[^\w#$?']|$)</SEQ_REGEXP>
 
@@ -42,13 +34,6 @@
 			<BEGIN>"""</BEGIN>
 			<END>"""</END>
 		</SPAN>
-
-		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
-			HASH_CHAR="new">new(\s+[\w.]+)\b</SEQ_REGEXP>
-		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
-			HASH_CHAR="instanceof">instanceof(\s+[\w.]+)\b</SEQ_REGEXP>
-		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
-			HASH_CHAR="classOf">classOf(\s+[\w.]+)\b</SEQ_REGEXP>
 
 		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLE_QUOTE" NO_LINE_BREAK="TRUE">
 			<BEGIN>"</BEGIN>
@@ -89,6 +74,46 @@
 			<BEGIN>catch\b</BEGIN>
 			<END>:</END>
 		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
+		             HASH_CHAR="do" DELEGATE="MAIN">
+			<BEGIN>do\b</BEGIN>
+			<END REGEXP="TRUE">(?:^|\W)done\b</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
+		             HASH_CHAR="if" DELEGATE="IF_STATEMENT">
+			<BEGIN>if\b</BEGIN>
+			<END REGEXP="TRUE">(?:^|\W)(?:else:|fi\b)</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
+		             HASH_CHAR="case" DELEGATE="MAIN">
+			<BEGIN>case\b</BEGIN>
+			<END REGEXP="TRUE">(?:^|\W)esac\b</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
+		             HASH_CHAR="try" DELEGATE="MAIN">
+			<BEGIN>try\b</BEGIN>
+			<END REGEXP="TRUE">(?:^|\W)yrt\b</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
+		             HASH_CHAR="class" DELEGATE="MAIN">
+			<BEGIN>try\b</BEGIN>
+			<END REGEXP="TRUE">(?:^|\W)end\b</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="MARKUP" AT_WORD_START="TRUE"
+		             HASH_CHARS="aitu" DELEGATE="TYPE">
+			<BEGIN>(?:[ai]s|unsafely_as)\b|typedef\s[^=]*=</BEGIN>
+			<END REGEXP="TRUE">(?=[=:;,){}\]]|if\b|case\b|try\b|class\b|[ai]s\b|unsafely_as\b|typedef\b|fi\b)</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="OPERATOR" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="new">
+			<BEGIN>new\b</BEGIN>
+			<END REGEXP="TRUE">(?=\()</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="OPERATOR" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHARS="ciln">
+			<BEGIN>(?:classOf|instanceof|load|new)\b</BEGIN>
+			<END REGEXP="TRUE">(?![ \s\w.])</END>
+		</SPAN_REGEXP>
 
 		<SEQ TYPE="OPERATOR">!</SEQ>
 		<SEQ TYPE="OPERATOR">%</SEQ>
@@ -111,27 +136,14 @@
 		<SEQ TYPE="INVALID">}</SEQ>
 
 		<KEYWORDS>
-			<KEYWORD1>do</KEYWORD1>
-			<KEYWORD1>done</KEYWORD1>
-			<KEYWORD1>if</KEYWORD1>
-			<KEYWORD1>elif</KEYWORD1>
-			<KEYWORD1>else</KEYWORD1>
-			<KEYWORD1>case</KEYWORD1>
-			<KEYWORD1>esac</KEYWORD1>
-			<KEYWORD1>fi</KEYWORD1>>
 			<KEYWORD1>finally</KEYWORD1>
 			<KEYWORD1>throw</KEYWORD1>
 			<KEYWORD1>_</KEYWORD1>
 			<KEYWORD2>load</KEYWORD2>
 			<KEYWORD1>of</KEYWORD1>
-			<KEYWORD1>then</KEYWORD1>
-			<KEYWORD1>try</KEYWORD1>
-			<KEYWORD1>yrt</KEYWORD1>
 			<KEYWORD1>for</KEYWORD1>
 			<KEYWORD1>synchronized</KEYWORD1>
 			<KEYWORD1>loop</KEYWORD1>
-			<KEYWORD1>class</KEYWORD1>
-			<KEYWORD1>end</KEYWORD1>
 
 			<!-- TYPES -->
 			<KEYWORD3>get</KEYWORD3>
@@ -150,6 +162,11 @@
 			<OPERATOR>or</OPERATOR>
 			<OPERATOR>in</OPERATOR>
 			<OPERATOR>not</OPERATOR>
+
+			<INVALID>done</INVALID>
+			<INVALID>yrt</INVALID>
+			<INVALID>fi</INVALID>
+			<INVALID>esac</INVALID>
 		</KEYWORDS>
 	</RULES>
 
@@ -171,5 +188,59 @@
 		<SEQ TYPE="LITERAL4">\'</SEQ>
 		<SEQ_REGEXP HASH_CHAR="\x" TYPE="LITERAL4">\\x[a-f\d]{2}</SEQ_REGEXP>
 		<SEQ_REGEXP HASH_CHAR="\u" TYPE="LITERAL4">\\u[a-f\d]{4}</SEQ_REGEXP>
+	</RULES>
+
+	<RULES SET="IF_STATEMENT"
+	       IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#$?'"
+	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
+		<IMPORT DELEGATE="MAIN"/>
+		<KEYWORDS>
+			<KEYWORD1>then</KEYWORD1>
+			<KEYWORD1>elif</KEYWORD1>
+			<KEYWORD1>else</KEYWORD1>
+		</KEYWORDS>
+	</RULES>
+
+	<RULES SET="TYPE" IGNORE_CASE="FALSE" NO_WORD_SEP="?">
+		<SPAN TYPE="COMMENT1">
+			<BEGIN>/*</BEGIN>
+			<END>*/</END>
+		</SPAN>
+		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
+
+		<SEQ TYPE="OPERATOR">-&gt;</SEQ>
+		<SEQ TYPE="OPERATOR">|</SEQ>
+		<SEQ TYPE="OPERATOR">,</SEQ>
+		<SEQ TYPE="OPERATOR">[]</SEQ>
+		<SEQ_REGEXP TYPE="MARKUP" HASH_CHAR="~">~[\w$.]+</SEQ_REGEXP>
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="TYPE">
+			<BEGIN>{</BEGIN>
+			<END>}</END>
+		</SPAN>
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="TYPE">
+			<BEGIN>&lt;</BEGIN>
+			<END>&gt;</END>
+		</SPAN>
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="TYPE">
+			<BEGIN>(</BEGIN>
+			<END>)</END>
+		</SPAN>
+		<SEQ_REGEXP TYPE="LABEL" HASH_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ" AT_WORD_START="TRUE">[A-Z]\w*(?=[^\w#$?']|$)</SEQ_REGEXP>
+		<SEQ TYPE="INVALID">]</SEQ>
+		<SEQ TYPE="INVALID">)</SEQ>
+		<SEQ TYPE="INVALID">}</SEQ>
+		<SEQ TYPE="INVALID">]</SEQ>
+		<KEYWORDS>
+			<MARKUP>array</MARKUP>
+			<MARKUP>hash</MARKUP>
+			<MARKUP>list</MARKUP>
+			<MARKUP>list?</MARKUP>
+			<MARKUP>map</MARKUP>
+			<MARKUP>number</MARKUP>
+			<MARKUP>string</MARKUP>
+			<MARKUP>boolean</MARKUP>
+			<KEYWORD3>var</KEYWORD3>
+			<MARKUP>is</MARKUP>
+		</KEYWORDS>
 	</RULES>
 </MODE>
