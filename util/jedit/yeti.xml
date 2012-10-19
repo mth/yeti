@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE MODE SYSTEM "xmode.dtd">
 <MODE>
+	<!-- XXX Broken, because jedit don't allow SPAN END to be regex nor
+	     keyword, and don't allow SEQ_REGEXP to match multiple lines.
+	     That way it's impossible to correctly color yeti type definitions,
+	     not even speaking of error detection like the vim syntax file does.
+	 -->
 	<PROPS>
 		<PROPERTY NAME="indentOpenBrackets" VALUE="{"/>
 		<PROPERTY NAME="indentCloseBrackets" VALUE="}"/>
