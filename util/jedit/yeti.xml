@@ -95,14 +95,14 @@
 			<END REGEXP="TRUE">(?:^|\W)yrt\b</END>
 		</SPAN_REGEXP>
 		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
-		             HASH_CHAR="class" DELEGATE="MAIN">
-			<BEGIN>try\b</BEGIN>
+		             HASH_CHAR="class" DELEGATE="CLASS_DEF">
+			<BEGIN>class\b</BEGIN>
 			<END REGEXP="TRUE">(?:^|\W)end\b</END>
 		</SPAN_REGEXP>
 		<SPAN_REGEXP MATCH_TYPE="MARKUP" AT_WORD_START="TRUE"
 		             HASH_CHARS="aitu" DELEGATE="TYPE">
 			<BEGIN>(?:[ai]s|unsafely_as)\b|typedef\s[^=]*=</BEGIN>
-			<END REGEXP="TRUE">(?=[=:;,){}\]]|if\b|case\b|try\b|class\b|[ai]s\b|unsafely_as\b|typedef\b|fi\b)</END>
+			<END REGEXP="TRUE">(?=[=:;,)}\]]|(?:if|case|esac|try|class|[ai]s|unsafely_as|typedef|fi)\b)</END>
 		</SPAN_REGEXP>
 		<SPAN_REGEXP MATCH_TYPE="OPERATOR" TYPE="MARKUP"
 		             AT_WORD_START="TRUE" HASH_CHAR="new">
@@ -124,6 +124,7 @@
 		<SEQ TYPE="OPERATOR">,</SEQ>
 		<!-- SEQ TYPE="OPERATOR">-</SEQ -->
 		<SEQ TYPE="OPERATOR">/</SEQ>
+		<SEQ TYPE="OPERATOR">\</SEQ>
 		<SEQ TYPE="OPERATOR">:</SEQ>
 		<SEQ TYPE="OPERATOR">;</SEQ>
 		<SEQ TYPE="OPERATOR">=</SEQ>
@@ -150,7 +151,6 @@
 			<KEYWORD3>norec</KEYWORD3>
 			<KEYWORD3>set</KEYWORD3>
 			<KEYWORD3>var</KEYWORD3>
-			<KEYWORD3>void</KEYWORD3>
 
 			<!-- CONSTANTS -->
 			<LITERAL2>false</LITERAL2>
@@ -201,6 +201,24 @@
 		</KEYWORDS>
 	</RULES>
 
+	<RULES SET="CLASS_DEF"
+	       IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#$?'"
+	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
+		<IMPORT DELEGATE="MAIN"/>
+		<KEYWORDS>
+			<KEYWORD1>extends</KEYWORD1>
+			<KEYWORD3>boolean</KEYWORD3>
+			<KEYWORD3>byte</KEYWORD3>
+			<KEYWORD3>char</KEYWORD3>
+			<KEYWORD3>double</KEYWORD3>
+			<KEYWORD3>float</KEYWORD3>
+			<KEYWORD3>int</KEYWORD3>
+			<KEYWORD3>long</KEYWORD3>
+			<KEYWORD3>short</KEYWORD3>
+			<KEYWORD3>void</KEYWORD3>
+		</KEYWORDS>
+	</RULES>
+
 	<RULES SET="TYPE" IGNORE_CASE="FALSE" NO_WORD_SEP="?">
 		<SPAN TYPE="COMMENT1">
 			<BEGIN>/*</BEGIN>
@@ -208,16 +226,16 @@
 		</SPAN>
 		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
 
-		<SEQ TYPE="OPERATOR">-&gt;</SEQ>
-		<SEQ TYPE="OPERATOR">|</SEQ>
+		<SEQ TYPE="KEYWORD3">-&gt;</SEQ>
+		<SEQ TYPE="KEYWORD3">|</SEQ>
 		<SEQ TYPE="OPERATOR">,</SEQ>
-		<SEQ TYPE="OPERATOR">[]</SEQ>
+		<SEQ TYPE="MARKUP">[]</SEQ>
 		<SEQ_REGEXP TYPE="MARKUP" HASH_CHAR="~">~[\w$.]+</SEQ_REGEXP>
-		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="TYPE">
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="MAIN">
 			<BEGIN>{</BEGIN>
 			<END>}</END>
 		</SPAN>
-		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="TYPE">
+		<SPAN MATCH_TYPE="MARKUP" DELEGATE="TYPE">
 			<BEGIN>&lt;</BEGIN>
 			<END>&gt;</END>
 		</SPAN>
@@ -231,14 +249,14 @@
 		<SEQ TYPE="INVALID">}</SEQ>
 		<SEQ TYPE="INVALID">]</SEQ>
 		<KEYWORDS>
-			<MARKUP>array</MARKUP>
-			<MARKUP>hash</MARKUP>
-			<MARKUP>list</MARKUP>
-			<MARKUP>list?</MARKUP>
-			<MARKUP>map</MARKUP>
-			<MARKUP>number</MARKUP>
-			<MARKUP>string</MARKUP>
-			<MARKUP>boolean</MARKUP>
+			<KEYWORD3>array</KEYWORD3>
+			<KEYWORD3>hash</KEYWORD3>
+			<KEYWORD3>list</KEYWORD3>
+			<KEYWORD3>list?</KEYWORD3>
+			<KEYWORD3>map</KEYWORD3>
+			<KEYWORD3>number</KEYWORD3>
+			<KEYWORD3>string</KEYWORD3>
+			<KEYWORD3>boolean</KEYWORD3>
 			<KEYWORD3>var</KEYWORD3>
 			<MARKUP>is</MARKUP>
 		</KEYWORDS>
