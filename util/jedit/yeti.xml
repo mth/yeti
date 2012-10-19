@@ -19,7 +19,7 @@
 		-->
 	</PROPS>
 
-	<RULES IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#?'"
+	<RULES IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#$?'"
 	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
 		<SPAN TYPE="COMMENT1">
 			<BEGIN>/*</BEGIN>
@@ -28,15 +28,22 @@
 
 		<EOL_SPAN TYPE="COMMENT2">//</EOL_SPAN>
 
-		<SEQ_REGEX TYPE="KEYWORD1" HASH_CHARS="ia-|" AT_WORD_START="TRUE">(is|as|-&gt;)\s+[a-z'~](\w|')+</SEQ_REGEX>
-		<!-- SEQ_REGEX TYPE="KEYWORD2" AT_WORD_START="TRUE"><![CDATA[(is|as|->|\|)\s+([A-Z](\w|')*\s+)*[a-z'~](\w|')+]]></SEQ_REGEX -->
+		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
+			HASH_CHARS="iatu-">(?:(?:is\b|as\b|unsafely_as\b|typedef\s[^=]+=|-&gt;|\|)(\s|\n|//[^\n]*|/\*([^*]|\*[^/])*\*/)*(?:[A-Z][\w']*\s+)*(?:[a-z'~][\w'.$?]*|\(\))|&lt;[^&gt;]*&gt;\s*)+</SEQ_REGEXP>
 
-		<SEQ_REGEX TYPE="LITERAL2" HASH_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ" AT_WORD_START="TRUE">\w+</SEQ_REGEX>
+		<SEQ_REGEXP TYPE="LABEL" HASH_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ" AT_WORD_START="TRUE">[A-Z]\w*(?=[^\w#$?']|$)</SEQ_REGEXP>
 
 		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLE_QUOTE">
 			<BEGIN>"""</BEGIN>
 			<END>"""</END>
 		</SPAN>
+
+		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
+			HASH_CHAR="new">new(\s+[\w.]+)\b</SEQ_REGEXP>
+		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
+			HASH_CHAR="instanceof">instanceof(\s+[\w.]+)\b</SEQ_REGEXP>
+		<SEQ_REGEXP TYPE="MARKUP" AT_WORD_START="TRUE"
+			HASH_CHAR="classOf">classOf(\s+[\w.]+)\b</SEQ_REGEXP>
 
 		<SPAN TYPE="LITERAL1" DELEGATE="DOUBLE_QUOTE" NO_LINE_BREAK="TRUE">
 			<BEGIN>"</BEGIN>
@@ -57,6 +64,26 @@
 			<BEGIN>{</BEGIN>
 			<END>}</END>
 		</SPAN>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD2" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="import">
+			<BEGIN>import\b</BEGIN>
+			<END>;</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD2" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="program">
+			<BEGIN>program\b</BEGIN>
+			<END>;</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD2" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="module">
+			<BEGIN>module\b</BEGIN>
+			<END>;</END>
+		</SPAN_REGEXP>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="catch">
+			<BEGIN>catch\b</BEGIN>
+			<END>:</END>
+		</SPAN_REGEXP>
 
 		<SEQ TYPE="OPERATOR">!</SEQ>
 		<SEQ TYPE="OPERATOR">%</SEQ>
@@ -89,20 +116,25 @@
 			<KEYWORD1>esac</KEYWORD1>
 			<KEYWORD1>fi</KEYWORD1>>
 			<KEYWORD1>finally</KEYWORD1>
+			<KEYWORD1>throw</KEYWORD1>
 			<KEYWORD1>_</KEYWORD1>
-			<KEYWORD1>load</KEYWORD1>
+			<KEYWORD2>load</KEYWORD2>
 			<KEYWORD1>of</KEYWORD1>
 			<KEYWORD1>then</KEYWORD1>
 			<KEYWORD1>try</KEYWORD1>
+			<KEYWORD1>yrt</KEYWORD1>
 			<KEYWORD1>for</KEYWORD1>
 			<KEYWORD1>synchronized</KEYWORD1>
 			<KEYWORD1>loop</KEYWORD1>
+			<KEYWORD1>class</KEYWORD1>
+			<KEYWORD1>end</KEYWORD1>
 
 			<!-- TYPES -->
 			<KEYWORD3>get</KEYWORD3>
 			<KEYWORD3>norec</KEYWORD3>
 			<KEYWORD3>set</KEYWORD3>
 			<KEYWORD3>var</KEYWORD3>
+			<KEYWORD3>void</KEYWORD3>
 
 			<!-- CONSTANTS -->
 			<LITERAL2>false</LITERAL2>
@@ -114,7 +146,6 @@
 			<OPERATOR>or</OPERATOR>
 			<OPERATOR>in</OPERATOR>
 			<OPERATOR>not</OPERATOR>
-			<OPERATOR>instanceof</OPERATOR>
 		</KEYWORDS>
 	</RULES>
 
