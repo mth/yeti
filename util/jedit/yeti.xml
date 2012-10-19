@@ -69,11 +69,6 @@
 			<BEGIN>module\b</BEGIN>
 			<END>;</END>
 		</SPAN_REGEXP>
-		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" TYPE="MARKUP"
-		             AT_WORD_START="TRUE" HASH_CHAR="catch">
-			<BEGIN>catch\b</BEGIN>
-			<END>:</END>
-		</SPAN_REGEXP>
 		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
 		             HASH_CHAR="do" DELEGATE="MAIN">
 			<BEGIN>do\b</BEGIN>
@@ -90,7 +85,7 @@
 			<END REGEXP="TRUE">(?:^|\W)esac\b</END>
 		</SPAN_REGEXP>
 		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" AT_WORD_START="TRUE"
-		             HASH_CHAR="try" DELEGATE="MAIN">
+		             HASH_CHAR="try" DELEGATE="TRY_STATEMENT">
 			<BEGIN>try\b</BEGIN>
 			<END REGEXP="TRUE">(?:^|\W)yrt\b</END>
 		</SPAN_REGEXP>
@@ -137,7 +132,6 @@
 		<SEQ TYPE="INVALID">}</SEQ>
 
 		<KEYWORDS>
-			<KEYWORD1>finally</KEYWORD1>
 			<KEYWORD1>throw</KEYWORD1>
 			<KEYWORD1>_</KEYWORD1>
 			<KEYWORD2>load</KEYWORD2>
@@ -198,6 +192,20 @@
 			<KEYWORD1>then</KEYWORD1>
 			<KEYWORD1>elif</KEYWORD1>
 			<KEYWORD1>else</KEYWORD1>
+		</KEYWORDS>
+	</RULES>
+
+	<RULES SET="TRY_STATEMENT"
+	       IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#$?'"
+	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
+		<IMPORT DELEGATE="MAIN"/>
+		<SPAN_REGEXP MATCH_TYPE="KEYWORD1" TYPE="MARKUP"
+		             AT_WORD_START="TRUE" HASH_CHAR="catch">
+			<BEGIN>catch\b</BEGIN>
+			<END>:</END>
+		</SPAN_REGEXP>
+		<KEYWORDS>
+			<KEYWORD1>finally</KEYWORD1>
 		</KEYWORDS>
 	</RULES>
 
