@@ -12,14 +12,15 @@
 		<PROPERTY NAME="commentEnd" VALUE="*/"/>
 		<PROPERTY NAME="lineComment" VALUE="//"/>
 		<PROPERTY NAME="noWordSep" VALUE="_?'"/>
-		<PROPERTY NAME="wordBreakChars" VALUE=",+-=&lt;&gt;/^&amp;*"/>
+		<!--
 		<PROPERTY NAME="indentNextLines" VALUE="\s*(if|case|try|class)\s.*"/>
 		<PROPERTY NAME="unindentThisLine" VALUE="^\s*(else\s*|elif\s.*|catch\s.*|finally\s*)$"/>
 		<PROPERTY NAME="unindentNextLines" VALUE="^\s*(fi|esac|done|end)[;\s]*$"/>
+		-->
 	</PROPS>
 
-	<RULES HILIGHT_DIGITS="TRUE"
-			DIGIT_RE="[+-]?\d+(\.\d+)?([eE][+-]?\d+)?|0x[0-9A-Fa-f]+">
+	<RULES IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE" NO_WORD_SEP="#?'"
+	       DIGIT_RE="[+-]?\d+(?:\.\d+)(?:eE(?:[+-]?\d+)?)?|0x[0-9A-Fa-f]+">
 		<SPAN TYPE="COMMENT1">
 			<BEGIN>/*</BEGIN>
 			<END>*/</END>
@@ -47,6 +48,16 @@
 			<END>'</END>
 		</SPAN>
 
+		<SPAN DELEGATE="MAIN"><BEGIN>(</BEGIN><END>)</END></SPAN>
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="MAIN">
+			<BEGIN>[</BEGIN>
+			<END>]</END>
+		</SPAN>
+		<SPAN MATCH_TYPE="OPERATOR" DELEGATE="MAIN">
+			<BEGIN>{</BEGIN>
+			<END>}</END>
+		</SPAN>
+
 		<SEQ TYPE="OPERATOR">!</SEQ>
 		<SEQ TYPE="OPERATOR">%</SEQ>
 		<!-- SEQ TYPE="OPERATOR">&gt;</SEQ -->
@@ -60,25 +71,24 @@
 		<SEQ TYPE="OPERATOR">;</SEQ>
 		<SEQ TYPE="OPERATOR">=</SEQ>
 		<SEQ TYPE="OPERATOR">@</SEQ>
-		<SEQ TYPE="OPERATOR">[</SEQ>
 		<SEQ TYPE="OPERATOR">\</SEQ>
-		<SEQ TYPE="OPERATOR">]</SEQ>
 		<SEQ TYPE="OPERATOR">^</SEQ>
-		<SEQ TYPE="OPERATOR">{</SEQ>
-		<SEQ TYPE="OPERATOR">}</SEQ>
 		<SEQ TYPE="OPERATOR">~</SEQ>
+		<SEQ TYPE="INVALID">)</SEQ>
+		<SEQ TYPE="INVALID">]</SEQ>
+		<SEQ TYPE="INVALID">}</SEQ>
 
 		<KEYWORDS>
-			<KEYWORD1>case</KEYWORD1>
 			<KEYWORD1>catch</KEYWORD1>
 			<KEYWORD1>do</KEYWORD1>
 			<KEYWORD1>done</KEYWORD1>
+			<KEYWORD1>if</KEYWORD1>
 			<KEYWORD1>elif</KEYWORD1>
 			<KEYWORD1>else</KEYWORD1>
+			<KEYWORD1>case</KEYWORD1>
 			<KEYWORD1>esac</KEYWORD1>
-			<KEYWORD1>fi</KEYWORD1>
+			<KEYWORD1>fi</KEYWORD1>>
 			<KEYWORD1>finally</KEYWORD1>
-			<KEYWORD1>if</KEYWORD1>
 			<KEYWORD1>_</KEYWORD1>
 			<KEYWORD1>load</KEYWORD1>
 			<KEYWORD1>of</KEYWORD1>
@@ -86,6 +96,7 @@
 			<KEYWORD1>try</KEYWORD1>
 			<KEYWORD1>for</KEYWORD1>
 			<KEYWORD1>synchronized</KEYWORD1>
+			<KEYWORD1>loop</KEYWORD1>
 
 			<!-- TYPES -->
 			<KEYWORD3>get</KEYWORD3>
@@ -98,6 +109,12 @@
 			<LITERAL2>true</LITERAL2>
 			<LITERAL2>undef_bool</LITERAL2>
 			<LITERAL2>undef_str</LITERAL2>
+
+			<OPERATOR>and</OPERATOR>
+			<OPERATOR>or</OPERATOR>
+			<OPERATOR>in</OPERATOR>
+			<OPERATOR>not</OPERATOR>
+			<OPERATOR>instanceof</OPERATOR>
 		</KEYWORDS>
 	</RULES>
 
