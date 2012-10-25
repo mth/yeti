@@ -152,7 +152,8 @@ done,
     };
     v = m.create [5..7];
     m.values v == [5..7]
-done
+done,
+'() as string': \(strIndexOf (() as ~String) "x" 0 == -1)
 ];
 
 var bad = 0;
