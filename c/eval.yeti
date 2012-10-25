@@ -166,7 +166,7 @@ moduleDoc m is ~ModuleType -> module_description = {
         typedefs = array [];
         addDef name def scope =
            (param = array [];
-            type = TypeDescr#typeDef(def unsafely_as ~YType[],
+            type = TypeDescr#typeDef(def is ~YType[],
                                      param unsafely_as ~yeti.lang.MList,
                                      scope is ~TypePattern);
             push typedefs {
@@ -179,7 +179,8 @@ moduleDoc m is ~ModuleType -> module_description = {
             i = m#typeDefs#entrySet()#iterator();
             i#hasNext() loop
                (e = i#next() unsafely_as ~java.util.Map$Entry;
-                addDef e#getKey() e#getValue() (() as ~TypePattern));
+                addDef e#getKey() (e#getValue() unsafely_as ~YType[])
+                       (() as ~TypePattern));
             sortBy (on (<) (.name)) typedefs
         else
             defined = new java.util.HashMap(m#typeDefs);

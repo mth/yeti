@@ -428,8 +428,8 @@ class JavaType implements Cloneable {
 
     static void checkUnsafeCast(YetiParser.Node cast,
                                 YType from, YType to) {
-        if (from.type != YetiType.JAVA && from.type != YetiType.VAR &&
-            to.type != YetiType.JAVA) {
+        if (from.type != YetiType.JAVA && to.type != YetiType.JAVA &&
+                to.type != YetiType.JAVA_ARRAY) {
             throw new CompileException(cast,
                 "Illegal cast from " + from + " to " + to + 
                 " (neither side is java object)");
@@ -438,9 +438,15 @@ class JavaType implements Cloneable {
         if (src == null)
             throw new CompileException(cast, "Illegal cast from " + from);
         JavaType dst = getClass(to);
+        if (from.type == YetiType.VAR && (dst == null ||
+                dst.description != "Ljava/lang/Object;")) {
+            from.type = YetiType.JAVA;
+            from.param = YetiType.NO_PARAM;
+            from.javaType = fromDescription("Ljava/lang/Object;");
+        }
         if (dst == null) {
             if (src.description == "Ljava/lang/Object;" &&
-                    to.deref().type == YetiType.JAVA_ARRAY)
+                    to.type == YetiType.JAVA_ARRAY)
                 return;
             throw new CompileException(cast, "Illegal cast to " + to);
         }
