@@ -270,6 +270,8 @@ class JavaExpr extends Code {
         }
         if (genRawArg(ctx, arg, argType, line))
             convert(ctx, arg.type, argType);
+        else if (argType.type == YetiType.STR)
+            convertValue(ctx, arg.type); // for as cast
     }
 
     private static boolean genRawArg(Ctx ctx, Code arg,
