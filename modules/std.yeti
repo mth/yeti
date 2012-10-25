@@ -1616,7 +1616,7 @@ plus a b = a + b;
      * to using sortBy (<), although the sort function works usually faster.
      *
      * Examples:
-     * sort [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
+     * : sort [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
      */
     sort l is list?<^a> -> list<^a> =
         if empty? l then
@@ -1638,7 +1638,7 @@ plus a b = a + b;
      * sequence - list or array to be sorted (not modified by sortBy function)
      *
      * Examples:
-     * sortBy (<) [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
+     * : sortBy (<) [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
      *
      * Notes:
      * Current implementation uses merge sort algorithm.
@@ -2657,7 +2657,19 @@ plus a b = a + b;
             new Map2List(f, a, b) unsafely_as list<'c>
         fi,
 
-    /** Group: list */
+    /**
+     * Group: list
+     * Returns a list consisting of the first list elements
+     * in reverse order, and with the second list appended as a tail
+     * (without coping it).
+     *
+     * Arguments:
+     * first  - list or array to be reversed (must be finite)
+     * second - list to be appended to the reversed first sequence
+     *
+     * Examples:
+     * : revAppend [1..3] [4..6] == [3, 2, 1, 4, 5, 6]
+     */
     revAppend a b is list?<'a> -> list<'a> -> list<'a> =
         if empty? a then
             b
@@ -2670,7 +2682,21 @@ plus a b = a + b;
             res
         fi,
 
-    /** Group: list */
+    /**
+     * Group: list
+     * Returns a list containing the sequence elements in reverse order.
+     *
+     * Arguments:
+     * sequence - list or array to be reversed (must be finite)
+     *
+     * Examples:
+     * : reverse [1..5] == [5, 4, 3, 2, 1]
+     *
+     * Notes:
+     * Using reverse on range is constant-time operation, as a special
+     * reverse range is returned (instead of creating a list containing
+     * all the range elements).
+     */
     reverse l is list?<'a> -> list<'a> =
         if nullptr? l then
             []
