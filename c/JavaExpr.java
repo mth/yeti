@@ -379,6 +379,8 @@ class JavaExpr extends Code {
             ctx.insn(ACONST_NULL);
         } else if (descr == "Ljava/lang/String;") {
             Label nonnull = new Label();
+            // checkcast to not lie later the type with ctx.fieldInsn
+            ctx.typeInsn(CHECKCAST, "java/lang/String");
             ctx.insn(DUP);
             ctx.jumpInsn(IFNONNULL, nonnull);
             ctx.insn(POP);
