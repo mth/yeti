@@ -2429,7 +2429,7 @@ plus a b = a + b;
 
     /**
      * Group: hash
-     * Removes all entries from the hash map.
+     * Removes all entries from the hash map, leaving it empty.
      * 
      * Arguments:
      * map - the hash map to clear
@@ -2476,7 +2476,7 @@ plus a b = a + b;
 
     /**
      * Group: array
-     * Removes all elements from the array.
+     * Removes all elements from the array, leaving it empty.
      *
      * Arguments:
      * array - the array to clear
