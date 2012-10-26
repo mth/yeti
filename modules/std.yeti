@@ -2723,7 +2723,32 @@ plus a b = a + b;
             set value v  = tl#set(v)
         },
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Returns as a formatted string the exception message and stack trace.
+     *
+     * Arguments:
+     * exception - an exception to format
+     *
+     * Description:
+     * The exception is formatted using the exception#printStackTrace(writer)
+     * method. On most JVM library implementations this results in
+     * a string separated into multiple lines by the "\n" line feed symbol,
+     * with first line containing the exception name and message, and rest
+     * being method and source file names from the call stack that was active
+     * when the Throwable instance was created.
+     *
+     * Examples:
+     * : java -jar yeti.jar -e 'stackTraceString new Exception("TEST")'
+     * : java.lang.Exception: TEST
+     * :         at code.apply(<>:1)
+     * :         at yeti.lang.compiler.eval._1(eval.yeti:85)
+     * :         at yeti.lang.compiler.eval.execClass(eval.yeti:63)
+     * :         at yeti.lang.compiler.eval$evaluateYetiCode$._0(eval.yeti:353)
+     * :         at yeti.lang.compiler.eval$evaluateYetiCode$.apply(eval.yeti:330)
+     * :         at yeti.lang.Fun2_.apply(Unknown Source)
+     * :         at yeti.lang.compiler.yeti.main(yeti.yeti:193)
+     */
     stackTraceString ex is ~java.lang.Throwable -> string =
         sw = new java.io.StringWriter();
         ex#printStackTrace(new java.io.PrintWriter(sw));
