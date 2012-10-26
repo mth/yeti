@@ -2739,7 +2739,7 @@ plus a b = a + b;
      * when the Throwable instance was created.
      *
      * Examples:
-     * : java -jar yeti.jar -e 'stackTraceString new Exception("TEST")'
+     * : java -jar yeti.jar -e "stackTraceString new Exception('TEST')"
      * : java.lang.Exception: TEST
      * :         at code.apply(<>:1)
      * :         at yeti.lang.compiler.eval._1(eval.yeti:85)
