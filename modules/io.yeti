@@ -61,6 +61,7 @@ typedef output_handle = {
     writeln is string -> ()
 }
 
+/** Group: read */
 readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
     var used = false;
@@ -200,7 +201,13 @@ typedef bin_input_handle = {
     .close is () -> ()
 }
 
-/** Group: bin (Binary IO) */
+/**
+ * Group: bin (Binary IO)
+ * Creates handle object for the given input stream.
+ *
+ * Arguments:
+ * input - java.io.InputStream instance to be used
+ */
 binInputHandle istream is ~InputStream -> 'a = {
         read buf from is ~byte[] -> number -> number =
             istream#read(buf, from, length buf - from),
@@ -242,7 +249,6 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     threadExit exitCode =
         throw new ExitError(exitCode),
 
-    /** Group: read */
     readerHandle,
     inputHandle,
     openInFile,
