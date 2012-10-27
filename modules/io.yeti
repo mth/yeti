@@ -202,7 +202,7 @@ typedef bin_input_handle = {
 }
 
 /**
- * Group: bin (Binary IO)
+ * Group: bin
  * Creates handle object for the given input stream.
  *
  * Arguments:
@@ -214,7 +214,7 @@ binInputHandle istream is ~InputStream -> 'a = {
         close () = istream#close()
     };
 
-/** Group: bin */
+/** Group: bin (Binary IO) */
 binOutputHandle ostream is ~OutputStream -> 'a = {
         write buf len is ~byte[] -> number -> () =
             ostream#write(buf, 0, len),
