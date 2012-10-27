@@ -2712,13 +2712,24 @@ plus a b = a + b;
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Creates a structure instance with single property field (value),
+     * that acts like being a independent separate instance for each
+     * thread accessing it.
+     *
+     * Arguments:
+     * initial - initial value for the thread-local variable
+     */
     threadLocal initialValue is 'a -> {var value is 'a} =
         class Local extends java.lang.ThreadLocal
             Object initialValue() initialValue
         end;
         tl = new Local();
         {
+            /**
+             * Thread-local value.
+             */
             get value () = tl#get() unsafely_as 'a,
             set value v  = tl#set(v)
         },
