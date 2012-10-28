@@ -2727,6 +2727,7 @@ plus a b = a + b;
      * reading thread has never assigned another value to the field). Assigning
      * a new value to the field changes it only for the assigning thread.
      *
+     * Notes:
      * Internal implementation uses the java.lang.ThreadLocal class.
      */
     threadLocal initialValue is 'a -> {var value is 'a} =
