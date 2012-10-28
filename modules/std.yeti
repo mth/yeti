@@ -2704,11 +2704,28 @@ plus a b = a + b;
             (l unsafely_as ~AList)#reverse() unsafely_as list<'a>
         fi,
 
-    /// Group: zmisc
-    /// Provide return function for block.
-    /// Be careful with lazy lists, for example
-    /// withExit do e: 1 :. \(e []) done
-    /// fails with exit out scope error..
+    /**
+     * Group: zmisc
+     * Provides a return function for a block.
+     *
+     * Arguments:
+     * block - a function to apply
+     *
+     * Description:
+     * Creates a return function and applies the given block to a return.
+     * When the return function is applied to some value, it causes the
+     * withExit application to return with this value. The return function
+     * may be applied only during the withExit application, if applied later,
+     *
+     * Exceptions:
+     * java.lang.IllegalStateException - throw by the return function, when
+     *                             applied after withExit has already returned
+     *
+     * Notes:
+     * Be careful with lazy lists, for example
+     * withExit do e: 1 :. \(e []) done
+     * fails with exit out scope error.
+     */
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
 
