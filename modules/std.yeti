@@ -2712,19 +2712,20 @@ plus a b = a + b;
      * block - a function to apply
      *
      * Description:
-     * Creates a return function and applies the given block to a return.
+     * Creates a return function and applies the given block to it.
      * When the return function is applied to some value, it causes the
-     * withExit application to return with this value. The return function
-     * may be applied only during the withExit application, if applied later,
+     * withExit application to return with this value (stopping the block
+     * execution). The return function may be applied only during the
+     * withExit application. If applied later, an IllegalStateExceptioni
+     * is thrown, with message indicating an exit out of scope error.
      *
-     * Exceptions:
-     * java.lang.IllegalStateException - throw by the return function, when
-     *                             applied after withExit has already returned
+     * Examples:
+     * TODO
      *
      * Notes:
-     * Be careful with lazy lists, for example
-     * withExit do e: 1 :. \(e []) done
-     * fails with exit out scope error.
+     * Be careful with lazy lists, for example:
+     * : withExit do e: 1 :. \(e []) done
+     * fails with exit out scope error, when the resulting lazy list is used.
      */
     withExit f is (('a -> 'b) -> 'a) -> 'a =
         EscapeFun#with(f) unsafely_as 'a,
