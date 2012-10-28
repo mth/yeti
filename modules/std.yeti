@@ -2771,7 +2771,7 @@ plus a b = a + b;
         sw#toString(),
 
     /// Group: zmisc
-    /// The UTF-8 charset.
+    /// String constant for the UTF-8 charset ("UTF-8").
     utf8 = "UTF-8",
 
     /// Group: zmisc
