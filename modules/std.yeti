@@ -2716,13 +2716,26 @@ plus a b = a + b;
      * When the return function is applied to some value, it causes the
      * withExit application to return with this value (stopping the block
      * execution). The return function may be applied only during the
-     * withExit application. If applied later, an IllegalStateExceptioni
+     * withExit application. If applied later, an IllegalStateException
      * is thrown, with message indicating an exit out of scope error.
      *
      * Examples:
-     * TODO
+     * The withExit function can be useful, when early return from some
+     * code is desired.
+     * : processItems l = 
+     * :     withExit do return:
+     * :         for l do v:
+     * :             if not process v then
+     * :                 return (Bad v)
+     * :             fi
+     * :         done;
+     * :         Ok ()
+     * :     done;
      *
      * Notes:
+     * The withExit return works internally by throwing and catching a special
+     * Error instance, that for efficiency is constructed without stack trace.
+     *
      * Be careful with lazy lists, for example:
      * : withExit do e: 1 :. \(e []) done
      * fails with exit out scope error, when the resulting lazy list is used.
