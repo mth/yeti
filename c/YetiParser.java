@@ -1343,10 +1343,11 @@ interface YetiParser {
                 if (l.size() == 0)
                     throw new CompileException(sym, "Unexpected " + sym);
                 res.add(def(args, l, end == '}', doc));
+                if (args != null)
+                    doc = null;
                 args = null;
                 l = new ArrayList();
                 yetiDocStr = null;
-                doc = null;
             }
             eofWas = sym;
             if (end != ' ' && end != 'e' &&
