@@ -358,6 +358,7 @@ interface YetiParser {
         static final int OPAQUE = 2;
         String name;
         String[] param;
+        String doc;
         TypeNode type;
         int kind;
 
@@ -1538,6 +1539,8 @@ interface YetiParser {
 
         TypeDef readTypeDef() {
             TypeDef def = new TypeDef();
+            def.doc = yetiDocStr;
+            yetiDocStr = null;
             def.name = getTypename(fetch());
             List param = new ArrayList();
             Node node = fetch();
