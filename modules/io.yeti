@@ -61,7 +61,7 @@ typedef output_handle = {
     writeln is string -> ()
 }
 
-/** Group: read */
+/** Group: read_ */
 readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
     var used = false;
@@ -141,7 +141,7 @@ withHandle h block =
     yrt);
 
 // to keep close as only provided
-/** Group: read */
+/** Group: read_ */
 inputHandle stream encoding is ~InputStream -> string -> 'a =
    (var nok = true;
     try
@@ -159,7 +159,7 @@ inputHandle stream encoding is ~InputStream -> string -> 'a =
         fi
     yrt);
 
-/** Group: write (Writing text) */
+/** Group: write_ (Writing text) */
 writerHandle writer is ~BufferedWriter -> 'a = {
         write s is string -> () =
             writer#write(s unsafely_as ~String),
@@ -170,7 +170,7 @@ writerHandle writer is ~BufferedWriter -> 'a = {
         close () = writer#close(),
     };
 
-/** Group: write */
+/** Group: write_ */
 outputHandle stream encoding is ~OutputStream -> string -> 'a =
    (var nok = true;
     try
@@ -188,11 +188,11 @@ outputHandle stream encoding is ~OutputStream -> string -> 'a =
         fi
     yrt);
 
-/** Group: write */
+/** Group: write_ */
 openInFile name is string -> string -> 'a =
     inputHandle new FileInputStream(name);
 
-/** Group: write */
+/** Group: write_ */
 openOutFile name is string -> string -> 'a =
     outputHandle new FileOutputStream(name);
 
@@ -228,19 +228,19 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 {
     withHandle,
 
-    /** Group: read (Reading text) */
+    /** Group: read_ (Reading text) */
     readln () = (stdin ()).readln (),
 
-    /** Group: write */
+    /** Group: write_ */
     print v =
         System#out#print(v);
         System#out#flush(),
 
-    /** Group: write */
+    /** Group: write_ */
     println v =
         System#out#println(v),
 
-    /** Group: write */
+    /** Group: write_ */
     eprintln v =
         System#err#println(v),
 
@@ -261,28 +261,28 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     binInputHandle,
     binOutputHandle,
 
-    /** Group: read */
+    /** Group: read_ */
     get stdin () = stdin (),
 
-    /** Group: read */
+    /** Group: read_ */
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
 
-    /** Group: read */
+    /** Group: read_ */
     readFile name encoding =
         withHandle (openInFile name encoding),
 
-    /** Group: write */
+    /** Group: write_ */
     writeFile name encoding =
         withHandle (openOutFile name encoding),
 
-    /** Group: read */
+    /** Group: read_ */
     getLines h = h.lines (),
 
-    /** Group: write */
+    /** Group: write_ */
     putLines h lines = for lines h.writeln,
 
-    /** Group: read */
+    /** Group: read_ */
     getContents h = h.contents (),
 
     /** Group: bin */
@@ -337,7 +337,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
              yrt;
         inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
-    /** Group: write */
+    /** Group: write_ */
     trace msg a = (System#err#println(msg); a),
 
     /**
