@@ -258,6 +258,8 @@ public class MList extends AMList implements ByKey {
             if (count < 0)
                 return from < size ? from == start
                         ? this : new SubList(from) : null;
+            if ((count += start) > size)
+                count = size;
             MList res = new MList(array);
             res.start = from;
             res.size = count;
@@ -502,6 +504,8 @@ public class MList extends AMList implements ByKey {
         if (count < 0)
             return from < size ? from == start
                 ? (AList) this : (AList) new SubList(from) : null;
+        if ((count += start) > size)
+            count = size;
         MList res = new MList(array);
         res.start = from;
         res.size = count;
