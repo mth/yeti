@@ -12,7 +12,6 @@
   + In this case doc index should still include all module names.
 * v1.0
 * Typedefs in REPL
-* Effective byte list operations
 * Foreign structs (java dto -> struct?)
 * Operator to copy mutable structure fields between two different structures
 * Compile modules required by load directly after parse, before type analyse

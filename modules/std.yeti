@@ -1479,10 +1479,10 @@ plus a b = a + b;
      * appling the take function, the result of application is undefined.
      */
     take n l is number -> list?<'a> -> list<'a> =
-        if nullptr? l then
+        if nullptr? l or n <= 0 then
             []
         else
-            TakeList#take(l, n) unsafely_as list<'a>
+            (l unsafely_as ~AList)#take(0, n) unsafely_as list<'a>
         fi,
 
     /**
@@ -1502,13 +1502,11 @@ plus a b = a + b;
      * to the original array, it will change when the array is modified (use
      * copy function to get an independent copy).
      */
-    drop n l =
+    drop n l is number -> list?<'a> -> list<'a> =
         if n <= 0 then
             l
-        elif empty? l then
-            []
         else
-            drop (n - 1) (tail l)
+            (l unsafely_as ~AList)#take(n, -1) unsafely_as list<'a>
         fi,
 
     /**

@@ -42,7 +42,7 @@ class LListAdapter extends ClassAdapter implements Opcodes {
                                      String signature, String[] exceptions) {
         return "length".equals(name) || "forEach".equals(name) ||
                "fold".equals(name) || "smap".equals(name) || 
-               "copy".equals(name) ? null
+               "copy".equals(name) || "take".equals(name) ? null
                 : cv.visitMethod(access, name, desc, signature, exceptions);
     }
 
@@ -165,6 +165,34 @@ class LListAdapter extends ClassAdapter implements Opcodes {
         mv.visitMaxs(0, 0);
         mv.visitEnd();
         
+        mv = cv.visitMethod(ACC_PUBLIC, "take",
+                            "(II)Lyeti/lang/AList;", null, null);
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitInsn(ACONST_NULL);
+        mv.visitVarInsn(ASTORE, 0);
+
+        Label drop = new Label();
+        mv.visitLabel(retry = new Label());
+        mv.visitVarInsn(ILOAD, 1);
+        mv.visitJumpInsn(IFLE, drop);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
+                           "rest", "()Lyeti/lang/AList;"); // i -> i'
+        mv.visitIincInsn(1, -1);
+        mv.visitInsn(DUP);
+        mv.visitJumpInsn(IFNONNULL, retry);
+        mv.visitInsn(ARETURN);
+        
+        mv.visitLabel(drop);
+        mv.visitVarInsn(ILOAD, 2);
+        mv.visitJumpInsn(IFLT, end = new Label());
+        mv.visitVarInsn(ILOAD, 2);
+        mv.visitMethodInsn(INVOKESTATIC, "yeti/lang/TakeList",
+                           "take", "(Lyeti/lang/AIter;I)Lyeti/lang/AList;");
+        mv.visitLabel(end);
+        mv.visitInsn(ARETURN);
+        mv.visitMaxs(0, 0);
+        mv.visitEnd();
+
         cv.visitEnd();
     }
 }

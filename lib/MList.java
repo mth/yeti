@@ -251,6 +251,19 @@ public class MList extends AMList implements ByKey {
             return (p = start + 1) < size ? new Iter(p) : null;
         }
 
+        public AList take(int from, int count) {
+            if (from < 0)
+                from = 0;
+            from += start;
+            if (count < 0)
+                return from < size ? from == start
+                        ? this : new SubList(from) : null;
+            MList res = new MList(array);
+            res.start = from;
+            res.size = count;
+            return res;
+        }
+
         public boolean isEmpty() {
             return start >= size;
         }
@@ -468,7 +481,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    protected MList copy(int from, int to) {
+    public MList copy(int from, int to) {
         int n = size - start;
         if (from < 0 || from > n)
             throw new NoSuchKeyException(from, n);
@@ -480,6 +493,19 @@ public class MList extends AMList implements ByKey {
         Object[] subArray = new Object[to - from];
         System.arraycopy(array, start + from, subArray, 0, subArray.length);
         return new MList(subArray);
+    }
+
+    public AList take(int from, int count) {
+        if (from < 0)
+            from = 0;
+        from += start;
+        if (count < 0)
+            return from < size ? from == start
+                ? (AList) this : (AList) new SubList(from) : null;
+        MList res = new MList(array);
+        res.start = from;
+        res.size = count;
+        return res;
     }
 
     public AList find(Fun pred) {

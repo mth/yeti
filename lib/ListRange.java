@@ -91,6 +91,36 @@ public final class ListRange extends AList implements Serializable {
         return i;
     }
 
+    public AList take(int from, int count) {
+        Num n = first;
+        if (count == 0)
+            return null;
+        if (from > 0) {
+            n = n.add(inc * from);
+            if (n.compareTo(last) * inc > 0) {
+                if (rest == null)
+                    return null;
+                return rest.take(from - (last.sub(first).intValue()*inc + 1), count);
+            }
+        }
+        AList tail = null;
+        Num last_;
+        if (count < 0) {
+            last_ = last;
+            tail = rest;
+        } else {
+            last_ = n.add(inc * (count - 1));
+            if (last_.compareTo(last) * inc > 0) { // last_ > last -> tail remains
+                if (rest != null)
+                    tail = rest.take(0, last_.sub(last).intValue() * inc);
+                last_ = last;
+            }
+        }
+        ListRange r = new ListRange(n, last_, tail);
+        r.inc = inc;
+        return r;
+    }
+
     public int hashCode() {
         int hashCode = 1;
         for (Num i = first; i.compareTo(last) <= 0; i = i.add(inc))

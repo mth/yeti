@@ -64,8 +64,21 @@ public class PArray extends LList {
         return (n = start + 1) >= length ? null : new PArray(n, length, array);
     }
 
+    public AList take(int from, int count) {
+        if (from < 0)
+            from = 0;
+        from += start;
+        if (count < 0 || (count += from) > length)
+            count = length;
+        if (from >= count)
+            return null;
+        if (from == start && count == length)
+            return this;
+        return new PArray(from, count, array);
+    }
+
     public long length() {
-        return length;
+        return length - start;
     }
 
     public static AList wrap(byte[] array) {
@@ -174,6 +187,18 @@ final class ByteArray extends LList {
         if (length <= 1)
             return null;
         return new ByteArray(a, start + 1, length - 1);
+    }
+
+    public AList take(int from, int count) {
+        if (from < 0)
+            from = 0;
+        if (count < 0 || count > length)
+            count = length;
+        if (from >= count)
+            return null;
+        if (from == 0 && count == length)
+            return this;
+        return new ByteArray(a, from + start, count);
     }
 
     public void forEach(Object f_) {

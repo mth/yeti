@@ -163,4 +163,8 @@ public class LList extends AList implements Serializable {
     public Object copy() {
         return null;
     }
+
+    public AList take(int from, int count) {
+        return null;
+    }
 }
