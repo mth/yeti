@@ -10,6 +10,7 @@
   + Look what's wrong with handling win32 paths
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
+* Avoid upper/lowercase dups on generated classes
 * v1.0
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
@@ -26,7 +27,6 @@
   like introducing FL_EMPTY_PATTERN and keeping account about the list tail
   being exhaustive.
 * Review the Java<->Yeti type autoconversions?
-* Avoid upper/lowercase dups on generated classes
 * Immutable tree map support - this seems to be popular feature. ;)
 * Optional Java generics support?
 * Direct struct-ref optimisation, when only known structs are accessed
