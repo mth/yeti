@@ -1501,6 +1501,8 @@ plus a b = a + b;
      * of all elements starting from index n. As the list view still references
      * to the original array, it will change when the array is modified (use
      * copy function to get an independent copy).
+     *
+     * The drop function is constant-time operation on lists backed by arrays.
      */
     drop n l is number -> list?<'a> -> list<'a> =
         if n <= 0 then
