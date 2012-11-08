@@ -345,19 +345,21 @@ class TypeDescr extends YetiType {
             descr.name = def.end.typename;
             if (def.end.defvars.length == 0)
                 return descr;
+            ctx.refs.put(tt, descr); // to avoid infinite recursion
             descr.type = MAP; // Parametric
             Map param = new HashMap();
             for (Iterator i = defVars.entrySet().iterator(); i.hasNext();) {
                 Map.Entry e = (Map.Entry) i.next();
                 param.put(e.getValue(), e.getKey());
             }
-            ctx.refs.put(tt, descr); // to avoid infinite recursion
             for (int i = def.end.defvars.length; --i >= 0; ) {
                 t = (YType) param.get(Integer.valueOf(def.end.defvars[i]));
                 item = t != null ? prepare(t, ctx) : new TypeDescr("?");
                 item.prev = descr.value;
                 descr.value = item;
             }
+            if (descr.alias == null) // no recursive refs in parameters?
+                ctx.refs.remove(tt);
             return descr;
         }
         ctx.refs.put(tt, descr);
