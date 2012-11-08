@@ -517,8 +517,10 @@ class YetiTypeVisitor implements ClassVisitor {
             return t;
         } catch (CompileException ex) {
             if (ex.line == 0) {
-                ex.line = node.line;
-                ex.col = node.col;
+                if (node != null) {
+                    ex.line = node.line;
+                    ex.col = node.col;
+                }
             }
             throw ex;
         } catch (RuntimeException ex) {

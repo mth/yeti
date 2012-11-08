@@ -351,6 +351,7 @@ class TypeDescr extends YetiType {
                 Map.Entry e = (Map.Entry) i.next();
                 param.put(e.getValue(), e.getKey());
             }
+            ctx.refs.put(tt, descr); // to avoid infinite recursion
             for (int i = def.end.defvars.length; --i >= 0; ) {
                 t = (YType) param.get(Integer.valueOf(def.end.defvars[i]));
                 item = t != null ? prepare(t, ctx) : new TypeDescr("?");
