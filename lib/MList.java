@@ -251,6 +251,18 @@ public class MList extends AMList implements ByKey {
             return (p = start + 1) < size ? new Iter(p) : null;
         }
 
+        public boolean isEmpty() {
+            return start >= size;
+        }
+
+        int _size() {
+            return size;
+        }
+
+        Object[] array() {
+            return array;
+        }
+
         public AList take(int from, int count) {
             if (from < 0)
                 from = 0;
@@ -264,18 +276,6 @@ public class MList extends AMList implements ByKey {
             res.start = from;
             res.size = count;
             return res;
-        }
-
-        public boolean isEmpty() {
-            return start >= size;
-        }
-
-        int _size() {
-            return size;
-        }
-
-        Object[] array() {
-            return array;
         }
 
         public AList find(Fun pred) {
@@ -503,7 +503,7 @@ public class MList extends AMList implements ByKey {
         from += start;
         if (count < 0)
             return from < size ? from == start
-                ? (AList) this : (AList) new SubList(from) : null;
+                    ? this : (AList) new SubList(from) : null;
         if ((count += start) > size)
             count = size;
         MList res = new MList(array);

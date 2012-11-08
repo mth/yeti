@@ -198,7 +198,7 @@ final class ByteArray extends LList {
             return null;
         if (from == 0 && count == length)
             return this;
-        return new ByteArray(a, from + start, count);
+        return new ByteArray(a, from, count - from);
     }
 
     public void forEach(Object f_) {

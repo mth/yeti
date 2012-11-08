@@ -1506,7 +1506,7 @@ plus a b = a + b;
      */
     drop n l is number -> list?<'a> -> list<'a> =
         if n <= 0 then
-            l
+            l unsafely_as ~AList unsafely_as list<'a>
         else
             (l unsafely_as ~AList)#take(n, -1) unsafely_as list<'a>
         fi,
