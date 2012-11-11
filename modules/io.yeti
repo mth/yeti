@@ -142,7 +142,8 @@ stdin () =
  * Group: zmisc (Miscellaneous functions)
  * Apply block to the given handle, after that apply handle.close field
  * to () value, even when exception was thrown by the block (the exception
- * will be passed to caller of withHandle in that case).
+ * will be passed to caller of withHandle in that case). Returns the value
+ * returned by the block.
  *
  * Arguments:
  * handle - object with close field
@@ -311,6 +312,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Applies the given block to text input handle opened for specified
      * file. The input handle will be automatically closed afterwards
      * (even when exception was thrown by the block).
+     * Returns the value returned by the block.
      *
      * Arguments:
      * file     - path to the file to be read
