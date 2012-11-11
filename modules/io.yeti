@@ -61,7 +61,13 @@ typedef output_handle = {
     writeln is string -> ()
 }
 
-/** Group: read_ */
+/**
+ * Group: read_
+ * Create a text input handle object from a Java BufferedReader instance.
+ *
+ * Arguments:
+ * reader - A java.io.BufferedReader instance to be used
+ */
 readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
     var used = false;
@@ -132,7 +138,16 @@ stdin () =
         rh);
     esac;
 
-/// Group: zmisc (Miscellaneous functions)
+/**
+ * Group: zmisc (Miscellaneous functions)
+ * Apply block to the given handle, after that apply handle.close field
+ * to () value, even when exception was thrown by block (the exception
+ * will be passed to caller of withHandle in that case).
+ *
+ * Arguments:
+ * handle - object with close field
+ * block  - a function to be applied to the given handle
+ */
 withHandle h block =
    (try
         block h
@@ -140,8 +155,18 @@ withHandle h block =
         h.close ()
     yrt);
 
-// to keep close as only provided
-/** Group: read_ */
+/**
+ * Group: read_
+ *
+ * Create a text input handle object from a Java InputStream instance.
+ * The bytes read from the stream are converted to text according to
+ * the specified encoding. If encoding is empty string, system default
+ * charset is used.
+ *
+ * Arguments:
+ * stream   - a java.io.InputStream instance to be used
+ * encoding - name of the charset used in the given stream
+ */
 inputHandle stream encoding is ~InputStream -> string -> 'a =
    (var nok = true;
     try
