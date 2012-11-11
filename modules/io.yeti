@@ -264,7 +264,16 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 {
     withHandle,
 
-    /** Group: read_ (Reading text) */
+    /**
+     * Group: read_ (Reading text)
+     * Reads a single line from the stdin and returns as a string.
+     * The undef_str value is returned at the end of stream.
+     *
+     * Notes:
+     * It causes the stdin to create a java.io.BufferedReader wrapping
+     * the System.in, which means that readln may cause more data to be read
+     * from System.in to the stdin buffer, than the returned line.
+     */
     readln () = (stdin ()).readln (),
 
     /** Group: write_ */
@@ -297,7 +306,22 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     binInputHandle,
     binOutputHandle,
 
-    /** Group: read_ */
+    /**
+     * Group: read_
+     * Standard input handle.
+     *
+     * Description:
+     * This module field (stdin) is implemented as read-only property.
+     * When accessed first time, a java.io.BufferedReader instance wrapping
+     * System.in is created internally. This means, that reading stdin can
+     * cause data read from System.in to be in the stdin specific reader buffer.
+     *
+     * Examples:
+     * Read from standard input and print all non-empty lines.
+     * : for (filter (!= '') (stdin.lines ())) println;
+     * This uses stdin.lines and filter working lazily, so whole stdin stream
+     * contents never needs to be hold in memory at once.
+     */
     get stdin () = stdin (),
 
     /**
