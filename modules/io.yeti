@@ -66,7 +66,7 @@ typedef output_handle = {
  * Create a text input handle object from a Java BufferedReader instance.
  *
  * Arguments:
- * reader - A java.io.BufferedReader instance to be used
+ * reader - a java.io.BufferedReader instance to be used
  */
 readerHandle reader is ~BufferedReader -> 'a =
    (var l = []; // used for forcing on close
@@ -299,7 +299,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     /** Group: read_ */
     get stdin () = stdin (),
 
-    /** Group: read_ */
+    /**
+     * Group: read_
+     * Deprecated, use (readerHandle reader).lines if you need this functionality.
+     */
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
 
@@ -322,13 +325,36 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     writeFile name encoding =
         withHandle (openOutFile name encoding),
 
-    /** Group: read_ */
+    /**
+     * Group: read_
+     * Applies the given handle.lines field to () and returns the result.
+     *
+     * Arguments:
+     * handle - a handle object having a lines function field
+     *
+     * Examples:
+     * Can be used together with IO functions expecting a block.
+     * : lines = readFile 'example.txt' '' getLines;
+     * Reads all lines into a string list from a file named 'example.txt'.
+     */
     getLines h = h.lines (),
 
     /** Group: write_ */
     putLines h lines = for lines h.writeln,
 
-    /** Group: read_ */
+    /**
+     * Group: read_
+     * Applies the given handle.contents field to () and returns the result.
+     *
+     * Arguments:
+     * handle - a handle object having a contents function field
+     *
+     * Examples:
+     * Can be used together with IO functions expecting a block.
+     * : str = readFile 'example.txt' '' getContents;
+     * Reads whole contents from a file named 'example.txt' into the str
+     * string.
+     */
     getContents h = h.contents (),
 
     /** Group: bin */
