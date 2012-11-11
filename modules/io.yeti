@@ -141,7 +141,7 @@ stdin () =
 /**
  * Group: zmisc (Miscellaneous functions)
  * Apply block to the given handle, after that apply handle.close field
- * to () value, even when exception was thrown by block (the exception
+ * to () value, even when exception was thrown by the block (the exception
  * will be passed to caller of withHandle in that case).
  *
  * Arguments:
@@ -159,8 +159,8 @@ withHandle h block =
  * Group: read_
  *
  * Create a text input handle object from a Java InputStream instance.
- * The bytes read from the stream are converted to text according to
- * the specified encoding. If encoding is empty string, system default
+ * The bytes read from the stream will be converted to text according
+ * to the specified encoding. If encoding is empty string, system default
  * charset is used.
  *
  * Arguments:
@@ -213,7 +213,17 @@ outputHandle stream encoding is ~OutputStream -> string -> 'a =
         fi
     yrt);
 
-/** Group: write_ */
+/**
+ * Group: read_
+ * Open text file and create an input handle object for it.
+ * The bytes read from the file will be converted to text according
+ * to the specified encoding.
+ *
+ * Arguments:
+ * file     - path to the file to be opened
+ * encoding - name of the charset used in the given stream
+ *            (empty string means system default charset)
+ */
 openInFile name is string -> string -> 'a =
     inputHandle new FileInputStream(name);
 
@@ -293,7 +303,18 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
 
-    /** Group: read_ */
+    /**
+     * Group: read_
+     * Applies the given block to text input handle opened for specified
+     * file. The input handle will be automatically closed afterwards
+     * (even when exception was thrown by the block).
+     *
+     * Arguments:
+     * file     - path to the file to be read
+     * encoding - name of the charset used in the given stream
+     *            (empty string means system default charset)
+     * block    - a function to be applied to the opened input object
+     */
     readFile name encoding =
         withHandle (openInFile name encoding),
 
