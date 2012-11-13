@@ -814,7 +814,7 @@ plus a b = a + b;
      * Use `defined?` instead, unless you really know what you're doing.
      * The low-level check done by `nullptr?` may behave unexpectedly
      * together with some conversions done by Yeti compiler (for example
-     * `nullptr? (System#getenv('???'))` is always false).
+     * `nullptr? (System#getenv('???')`) is always false).
      */
     norec nullptr? a = nullptr? a,
 
