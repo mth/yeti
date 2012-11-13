@@ -362,11 +362,29 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     eprintln v =
         System#err#println(v),
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Terminates the Java virtual machine process with given exit status
+     * (by calling `System#exit(status)`).
+     * 
+     * Arguments:
+     * status - exit status code to be returned from the JVM process
+     */
     sysExit exitCode =
         System#exit(exitCode),
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Terminates the current thread. If it is a main thread, the whole
+     * Java virtual machine will quit with the given exit status.
+     *
+     * Arguments:
+     * status - exit status code to be used when main thread is terminated
+     *
+     * Notes:
+     * The implementation works by throwing yeti.lang.ExitError, which is
+     * catched by the Yeti compiler generated main function.
+     */
     threadExit exitCode =
         throw new ExitError(exitCode),
 
@@ -577,7 +595,13 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
         th#start();
         th,
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Puts the current thread to sleep for given number of seconds.
+     *
+     * Arguments:
+     * seconds - how long to sleep (with 1/1000 second precision)
+     */
     sleep time = Thread#sleep(time * 1000),
 
     /**
