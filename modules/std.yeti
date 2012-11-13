@@ -811,10 +811,10 @@ plus a b = a + b;
      * value - value to check
      *
      * Notes:
-     * Use defined? instead, unless you really know what you're doing.
-     * The low-level check done by nullptr? may behave unexpectedly
+     * Use `defined?` instead, unless you really know what you're doing.
+     * The low-level check done by `nullptr?` may behave unexpectedly
      * together with some conversions done by Yeti compiler (for example
-     * nullptr? (System#getenv('???')) is always false).
+     * `nullptr? (System#getenv('???'))` is always false).
      */
     norec nullptr? a = nullptr? a,
 
@@ -832,7 +832,7 @@ plus a b = a + b;
      *
      * Empty lists are often also considered to be undefined because
      * of being represented by null pointer (but empty arrays are not).
-     * You should use empty? to detect empty lists.
+     * You should use `empty?` to detect empty lists.
      */
     norec defined? a = defined? a,
 
@@ -841,7 +841,7 @@ plus a b = a + b;
      * Checks whether a collection is empty, and returns true when it is.
      *
      * This function works on all kinds of standard collections - lists,
-     * arrays and hashes implement the map<> interface.
+     * arrays and hashes implement the `map<>` interface.
      *
      * Arguments:
      * collection - collection to check
