@@ -74,7 +74,7 @@ array l is list?<'a> -> array<'a> =
  *
  * The result is affected (and unspecified), when array(s) are given as
  * concat argument and mutated before consuming the resulting list. A strict
- * result list or array can be created by applying copy or array function
+ * result list or array can be created by applying `copy` or `array` function
  * to the lazy list returned by concat (for example (copy . concat)).
  *
  * Examples:
@@ -112,7 +112,7 @@ concat l is list?<list?<'a>> -> list<'a> =
  * Calculate a factorial:
  * : factorial n = fold (*) 1 [1..n];
  *
- * The fold function could be implemented in the following way:
+ * The `fold` function could be implemented in the following way:
  * : fold function value sequence =
  * :     case sequence of
  * :     x :: xs: fold function (function value x) xs;
@@ -240,10 +240,10 @@ forHash h f is hash<'a, 'b> -> ('a -> 'b -> ()) -> () =
  * result is consumed by caller. Arrays and lists backed by arrays
  * are mapped strictly.
  *
- * You should ALWAYS use the strict map' instead, if the mapping function
+ * You should ALWAYS use the strict `map'` instead, if the mapping function
  * has side effects, as it's not determined whether the function is applied
- * by map on some sequence element when map was called, some time later or
- * even never at all (if the result list was not consumed).
+ * by `map` on some sequence element when `map` was called, some time later
+ * or even never at all (if the result list was not consumed).
  */
 map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
@@ -262,10 +262,10 @@ map f l is ('a -> 'b) -> list?<'a> -> list<'b> =
  *  sequence - list or array to be processed
  *
  * Description:
- * It is similar to map function, but never creates a lazy list.
- * The map' is usually faster than map on lists, unless huge streams
+ * It is similar to `map` function, but never creates a lazy list.
+ * The `map'` is usually faster than `map` on lists, unless huge streams
  * are processed or most of the resulting list is not used. It works
- * identically to map on arrays.
+ * identically to `map` on arrays.
  */
 map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     if empty? l then
@@ -283,8 +283,8 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
  *
  * Description:
  * For list or array it's length is returned, and for hash map the number of
- * key-value pairs in that hash map. The length function can also be applied
- * to Java arrays (for example length new int[10]), as Yeti compiler wraps
+ * key-value pairs in that hash map. The `length` function can also be applied
+ * to Java arrays (for example `length new int[10]`), as Yeti compiler wraps
  * these automatically into lists on function arguments.
  */
 length l is map<'a, 'b> -> number =
@@ -361,14 +361,15 @@ plus a b = a + b;
      * of the (first) argument x).
      *
      * Arguments:
-     * x - value to be returned by resulting function (const x () is same as x).
+     * x - value to be returned by resulting function
+     *     (`const x ()` is same as `x`).
      */
     const x = (_ = (); \x),
 
     /**
      * Group: zmisc
-     * Application in reverse order. Expression (value |> function)
-     * is equivalent to (function value).
+     * Application in reverse order. Expression (`value |> function`)
+     * is equivalent to (`function value`).
      *
      * Arguments:
      * value - value given as argument to the function
@@ -869,11 +870,11 @@ plus a b = a + b;
      * sequence - the list or array to use
      *
      * Notes:
-     * The tail function can be used on array. In this case a list view
+     * The `tail` function can be used on array. In this case a list view
      * of array is returned, consisting of all elements starting from
      * index 1 (subsequent applications of tail give views with increased
      * start index). As the list view still references to the original
-     * array, it will change when the array is modified (use copy function
+     * array, it will change when the array is modified (use `copy` function
      * to get an independent copy).
      */
     norec tail a = tail a,
@@ -935,7 +936,7 @@ plus a b = a + b;
      * :          nameCount := nameCount + 1;
      * :     done;
      *
-     * The addName function is used as a monitor here.
+     * The `addName` function is used as a monitor here.
      */
     norec synchronized monitor block = synchronized monitor block,
 
@@ -971,7 +972,7 @@ plus a b = a + b;
      *
      * If the second sequence (b) is an array, and is later mutated,
      * then the resulting list will see the modified array as its tail
-     * (use copy function to get an independent copy).
+     * (use `copy` function to get an independent copy).
      *
      * Examples:
      * : for ([1..4] ++ [13..15]) println;
@@ -1048,7 +1049,7 @@ plus a b = a + b;
      * returned when the collection is a hash map.
      *
      * Either returned list or collection given as argument should be
-     * explicitly copied (using copy function), if you want to store the
+     * explicitly copied (using `copy` function), if you want to store the
      * result for later usage and the original collection might change.
      *
      * Relying on the mutating list-view of an array is best
@@ -1096,7 +1097,7 @@ plus a b = a + b;
      * Description:
      * : flip function x y = function y x;
      *
-     * The result of applying flip to binary function is a function that takes
+     * The result of applying `flip` to binary function is a function that takes
      * its two arguments in the reverse order of the original function.
      *
      * Examples:
@@ -1309,7 +1310,7 @@ plus a b = a + b;
     /**
      * Group: list
      * Maps a function over the sequence and concatenates the results.
-     * Shorthand for (concat . map function).
+     * Shorthand for (`concat . map function`).
      *
      * Arguments:
      *  function - function applied to the sequence elements
@@ -1433,9 +1434,9 @@ plus a b = a + b;
     /**
      * Group: list
      * Splits a given sequence into two parts, returning first n elements
-     * as fst and the rest as snd field. Full sequence is returned as list
-     * in the fst field, if n is equal or greater than the length of the
-     * sequence (and snd will be empty list in this case).
+     * as `fst` and the rest as `snd` field. Full sequence is returned as list
+     * in the `fst` field, if n is equal or greater than the length of the
+     * sequence (and `snd` will be empty list in this case).
      *
      * Arguments:
      * n        - position of the split
@@ -1476,7 +1477,7 @@ plus a b = a + b;
      * Notes:
      * The given sequence is lazily consumed as the result returned by take
      * is consumed. If the sequence is a mutable array, and modified after
-     * appling the take function, the result of application is undefined.
+     * appling the `take` function, the result of application is undefined.
      */
     take n l is number -> list?<'a> -> list<'a> =
         if nullptr? l or n <= 0 then
@@ -1496,13 +1497,13 @@ plus a b = a + b;
      * sequence - initial list or array
      *
      * Notes:
-     * The suffix is returned without copying it. When the drop function
+     * The suffix is returned without copying it. When the `drop` function
      * is used on an array, a list view of the array is returned, consisting
      * of all elements starting from index n. As the list view still references
      * to the original array, it will change when the array is modified (use
-     * copy function to get an independent copy).
+     * `copy` function to get an independent copy).
      *
-     * The drop function is constant-time operation on lists backed by arrays.
+     * The `drop` function is constant-time operation on lists backed by arrays.
      */
     drop n l is number -> list?<'a> -> list<'a> =
         if n <= 0 then
@@ -1523,7 +1524,7 @@ plus a b = a + b;
      * Notes:
      * The given sequence is lazily consumed as the result returned by
      * takeWhile is consumed. If the sequence is a mutable array, and
-     * modified after appling the takeWhile function, the result of
+     * modified after appling the `takeWhile` function, the result of
      * application is undefined.
      */
     takeWhile pred l is ('a -> boolean) -> list?<'a> -> list<'a> =
@@ -1607,13 +1608,13 @@ plus a b = a + b;
      * to the order defined by the (<) comparision operator.
      *
      * Arguments:
-     * sequence - list or array to be sorted (not modified by sort function)
+     * sequence - list or array to be sorted (not modified by `sort` function)
      *
      * Description:
      * The original sequence is copied and sorted using
      * java.util.Arrays#sort(Object[]) method. The sequence elements
-     * are required to be of ordered type (^a). The result should be similar
-     * to using sortBy (<), although the sort function works usually faster.
+     * are required to be of ordered type (`^a`). The result should be similar
+     * to using `sortBy (<)`, although the `sort` function works usually faster.
      *
      * Examples:
      * : sort [3,1,4,1,5,9,2,6,5,3] == [1,1,2,3,3,4,5,5,6,9]
@@ -1780,7 +1781,7 @@ plus a b = a + b;
      * haystack    - a original string to process
      *
      * Examples:
-     * strReplace 'aba' '+' 'xabaabababax' == 'x++b+x' 
+     * : strReplace 'aba' '+' 'xabaabababax' == 'x++b+x' 
      */
     strReplace needle replacement haystack
             is string -> string -> string -> string =
@@ -2050,28 +2051,28 @@ plus a b = a + b;
      * string  - string where to search the given regex matches
      *
      * Description:
-     * When a match is found, the onText function is applied to the text
+     * When a match is found, the `onText` function is applied to the text
      * between previous match (or start of the string for first match) and
-     * matched substring, if this text isn't zero-length. The onMatch
+     * matched substring, if this text isn't zero-length. The `onMatch`
      * function is applied to an array composed of captured groups in the
-     * regex (implicit capture of whole matched substring is given as 0th
-     * element in the capture group array). The onText function is also
+     * `regex` (implicit capture of whole matched substring is given as 0th
+     * element in the capture group array). The `onText` function is also
      * applied to the end of the string after last match found, if the last
      * match ends before.
      *
-     * The results of onText and onMatch applications are added to the
+     * The results of `onText` and `onMatch` applications are added to the
      * resulting list in the same order as the corresponding substrings were
-     * in the processed string. This regex match searching and list
+     * in the processed string. This `regex` match searching and list
      * construction is done lazily, as the returned list is consumed
-     * (so if you apply matchAll to long string containing many matches of
+     * (so if you apply `matchAll` to long string containing many matches of
      * the substring and use only head of the result, only the first match
      * will be actually searched).
      *
-     * The regex is compiled and matched using the java.util.regex
+     * The `regex` is compiled and matched using the `java.util.regex`
      * implementation, and therefore uses the same (Perl regular expression
      * compatible) syntax. Yeti compiler optimises usage of this function
      * when literal string is used as regex argument, so that the regex will
-     * be compiled only once into the java.util.regex.Pattern instance.
+     * be compiled only once into the `java.util.regex.Pattern` instance.
      *
      * Examples:
      * : for (matchAll '\d+' M T '2012-08-23T04:11Z') println;
@@ -2129,7 +2130,7 @@ plus a b = a + b;
      * : 04
      * : 11
      *
-     * The matches could be collected into list using the collect function:
+     * The matches could be collected into list using the `collect` function:
      * : matches = collect (like '\d+' '2012-08-23T04:11Z') () empty?);
      * : println matches; // [["2012"], ["08"], ["23"], ["04"], ["11"]]
      *
@@ -2226,7 +2227,7 @@ plus a b = a + b;
      *
      * Notes:
      * The string representations of list elements are idententical to those
-     * that would be returned by the string function.
+     * that would be returned by the `string` function.
      * : strJoin separator (map string list) == strJoin separator list
      */
     strJoin sep list is string -> list?<'a> -> string =
@@ -2325,7 +2326,7 @@ plus a b = a + b;
     /**
      * Group: hash
      * Creates an identity hash map, where keys are compared by their
-     * object instance identies (like the same? function does).
+     * object instance identies (like the `same?` function does).
      *
      * Arguments:
      * () - an unit value
@@ -2401,7 +2402,7 @@ plus a b = a + b;
      *
      * Description:
      * If non-existing key is requested from the hash map (using .[]
-     * subscription operator or at function), the default value
+     * subscription operator or `at` function), the default value
      * function is applied to the requested key, and the result of
      * application will be returned as if it had been in the hash map.
      *
@@ -2448,7 +2449,7 @@ plus a b = a + b;
      * source      - hash map where to take the entries
      *
      * Description:
-     * The insertHash function could be implemented with following code:
+     * The `insertHash` function could be implemented with following code:
      * : insertHash destination source =
      * :     forHash source do key value:
      * :         destination.[key] := value
@@ -2497,9 +2498,9 @@ plus a b = a + b;
      *
      * Notes:
      * The contents of array is not moved internally. Instead of it the
-     * first element is just hidden. This makes the shift operation O(1) fast,
+     * first element is just hidden. This makes the `shift` operation O(1) fast,
      * but leaves the shifted entries internally used (at least until the
-     * internal storage is resized, for example by push having insufficient
+     * internal storage is resized, for example by `push` having insufficient
      * space available).
      */
     shift a is array<'a> -> 'a =
@@ -2522,7 +2523,7 @@ plus a b = a + b;
     /**
      * Group: array
      * Pushes a value into the array behind last element, increasing the
-     * array size by one. Together with the pop function it allows
+     * array size by one. Together with the `pop` function it allows
      * treating the array like a stack.
      *
      * Arguments:
@@ -2634,13 +2635,13 @@ plus a b = a + b;
      *  second   - second list or array to be used
      *
      * Examples:
-     * Coupled with the pair function, two lists could be merged into single
+     * Coupled with the `pair` function, two lists could be merged into single
      * one containing corresponding pairs:
      * : pairs = map2 pair [1..3] ['apple', 'orange', 'cat', 'rock'];
      * : for pairs println;
      *
-     * The second line (for pairs println;) prints the pairs created
-     * by the pair function used with map2:
+     * The second line (`for pairs println;`) prints the pairs created
+     * by the `pair` function used with `map2`:
      * : {fst=1, snd="apple"}
      * : {fst=2, snd="orange"}
      * : {fst=3, snd="cat"}
@@ -2720,7 +2721,7 @@ plus a b = a + b;
      * is thrown, with message indicating an exit out of scope error.
      *
      * Examples:
-     * The withExit function can be useful, when early return from some
+     * The `withExit` function can be useful, when early return from some
      * code is desired.
      * : processItems l = 
      * :     withExit do return:
@@ -2745,21 +2746,21 @@ plus a b = a + b;
 
     /**
      * Group: zmisc
-     * Creates a structure with single writable property field (value), that
+     * Creates a structure with single writable property field (`value`), that
      * acts like being an independent instance for each thread accessing it.
      *
      * Arguments:
-     * initial - initial value for the structures value field
+     * initial - initial value for the structures `value` field
      *
      * Description:
-     * The returned structure has a single property field named value. Reading
+     * The returned structure has a single property field named `value`. Reading
      * the field gives the latest value assigned to it by the same thread (or
-     * the initial argument that was given to the threadLocal function, if the
+     * the initial argument that was given to the `threadLocal` function, if the
      * reading thread has never assigned another value to the field). Assigning
      * a new value to the field changes it only for the assigning thread.
      *
      * Notes:
-     * Internal implementation uses the java.lang.ThreadLocal class.
+     * Internal implementation uses the `java.lang.ThreadLocal` class.
      */
     threadLocal initialValue is 'a -> {var value is 'a} =
         class Local extends java.lang.ThreadLocal

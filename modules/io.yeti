@@ -63,7 +63,7 @@ typedef output_handle = {
 
 /**
  * Group: read_
- * Create a text input handle object from a Java BufferedReader instance.
+ * Create a text input handle object wrapping a Java BufferedReader instance.
  *
  * Arguments:
  * reader - a java.io.BufferedReader instance to be used
@@ -158,7 +158,6 @@ withHandle h block =
 
 /**
  * Group: read_
- *
  * Create a text input handle object from a Java InputStream instance.
  * The bytes read from the stream will be converted to text according
  * to the specified encoding. If encoding is empty string, system default
@@ -185,7 +184,13 @@ inputHandle stream encoding is ~InputStream -> string -> 'a =
         fi
     yrt);
 
-/** Group: write_ (Writing text) */
+/**
+ * Group: write_ (Writing text)
+ * Create a text output handle object wrapping a Java BufferedWriter instance.
+ *
+ * Arguments:
+ * reader - a java.io.WriterReader instance to be used
+ */
 writerHandle writer is ~BufferedWriter -> 'a = {
         write s is string -> () =
             writer#write(s unsafely_as ~String),
@@ -196,7 +201,17 @@ writerHandle writer is ~BufferedWriter -> 'a = {
         close () = writer#close(),
     };
 
-/** Group: write_ */
+/**
+ * Group: write_
+ * Create a text output handle object from a Java OutputStream instance.
+ * The text written to the file will be encoded to bytes according
+ * to the specified encoding. If encoding is empty string, system default
+ * charset is used.
+ *
+ * Arguments:
+ * stream   - a java.io.InputStream instance to be used
+ * encoding - name of the charset used in the given stream
+ */
 outputHandle stream encoding is ~OutputStream -> string -> 'a =
    (var nok = true;
     try
@@ -228,7 +243,17 @@ outputHandle stream encoding is ~OutputStream -> string -> 'a =
 openInFile name is string -> string -> 'a =
     inputHandle new FileInputStream(name);
 
-/** Group: write_ */
+/**
+ * Group: write_
+ * Open text file and create an output handle object for it.
+ * The text written to the file will be encoded to bytes according
+ * to the specified encoding.
+ *
+ * Arguments:
+ * file     - path to the file to be opened
+ * encoding - name of the charset to use for the given stream
+ *            (empty string means system default charset)
+ */
 openOutFile name is string -> string -> 'a =
     outputHandle new FileOutputStream(name);
 
@@ -276,16 +301,64 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      */
     readln () = (stdin ()).readln (),
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Prints string representation of the given value to standard output
+     * and flushes the output buffers.
+     *
+     * Arguments:
+     * value - a value to print
+     *
+     * Description:
+     * The given value is formatted the same way as the `string` function
+     * would do. The resulting string is sent to the standard output stream
+     * and buffers are flushed.
+     *
+     * Using `(print value)` should always be equivalent to
+     * `(print (string value))`, the exact formatting rules
+     * are described in the `string` function documentation.
+     */
     print v =
         System#out#print(v);
         System#out#flush(),
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Prints string representation of the given value and system line separator
+     * to the standard output, and flushes the error printer buffers.
+     *
+     * Arguments:
+     * value - a value to print
+     *
+     * Description:
+     * The given value is formatted the same way as the `string` function
+     * would do. The resulting string and system line separator (usually '\n')
+     * are sent to the standard output stream and buffers are flushed.
+     *
+     * Using `(println value)` should always be equivalent to
+     * `(println (string value))`, the exact formatting rules
+     * are described in the `string` function documentation.
+     */
     println v =
         System#out#println(v),
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Prints string representation of the given value and system line separator
+     * to the standard error output, and flushes the error printer buffers.
+     *
+     * Arguments:
+     * value - a value to print
+     *
+     * Description:
+     * The given value is formatted the same way as the `string` function
+     * would do. The resulting string and system line separator (usually '\n')
+     * are sent to the standard error stream and buffers are flushed.
+     *
+     * Using `(eprintln value)` should be always equivalent to
+     * `(eprintln (string value))`, the exact formatting rules
+     * are described in the `string` function documentation.
+     */
     eprintln v =
         System#err#println(v),
 
@@ -311,16 +384,17 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Standard input handle.
      *
      * Description:
-     * This module field (stdin) is implemented as read-only property.
-     * When accessed first time, a java.io.BufferedReader instance wrapping
-     * System.in is created internally. This means, that reading stdin can
-     * cause data read from System.in to be in the stdin specific reader buffer.
+     * This module field (`stdin`) is implemented as read-only property.
+     * When accessed first time, a `java.io.BufferedReader` instance wrapping
+     * `System.in` is created internally. This means, that reading `stdin` can
+     * cause data read from `System.in` to be in the stdin specific reader
+     * buffer.
      *
      * Examples:
      * Read from standard input and print all non-empty lines.
      * : for (filter (!= '') (stdin.lines ())) println;
-     * This uses stdin.lines and filter working lazily, so whole stdin stream
-     * contents never needs to be hold in memory at once.
+     * This uses `stdin.lines` and `filter` working lazily, so whole `stdin`
+     * stream contents never needs to be hold in memory at once.
      */
     get stdin () = stdin (),
 
@@ -347,7 +421,19 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     readFile name encoding =
         withHandle (openInFile name encoding),
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Applies the given block to text output handle opened for specified
+     * file. The output handle will be automatically closed afterwards
+     * (even when exception was thrown by the block).
+     * Returns the value returned by the block.
+     *
+     * Arguments:
+     * file     - path to the file to be written
+     * encoding - name of the charset to use for the given stream
+     *            (empty string means system default charset)
+     * block    - a function to be applied to the opened output object
+     */
     writeFile name encoding =
         withHandle (openOutFile name encoding),
 
@@ -365,7 +451,20 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      */
     getLines h = h.lines (),
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Applies the given handle.writeln field to each element in the
+     * lines list.
+     *
+     * Arguments:
+     * handle - a handle object having a `writeln` function field
+     * lines  - list of strings to written as separate lines
+     *
+     * Description:
+     * The canonical implementation is following:
+     * : putLines handle lines =
+     * :     for lines handle.writeln;
+     */
     putLines h lines = for lines h.writeln,
 
     /**
@@ -373,7 +472,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Applies the given handle.contents field to () and returns the result.
      *
      * Arguments:
-     * handle - a handle object having a contents function field
+     * handle - a handle object having a `contents` function field
      *
      * Examples:
      * Can be used together with IO functions expecting a block.
@@ -435,7 +534,16 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
              yrt;
         inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
-    /** Group: write_ */
+    /**
+     * Group: write_
+     * Prints trace message (formatted like the `string` function would do it)
+     * to standard error stream and returns the given result value. Useful for
+     * inserting debug printing into expressions.
+     *
+     * Arguments:
+     * message - a value to print
+     * result  - a value to return
+     */
     trace msg a = (System#err#println(msg); a),
 
     /**

@@ -110,15 +110,18 @@ formatType template =
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 parseDoc' doc =
-   (listState to pattern line =
+   (mticks = matchAll '`([^`]*)`'
+        (_ s = if s.[1] == '' then '`' else: "<var>\(s.[1])</var>");
+    ticks = strJoin '' . mticks id;
+    listState to pattern line =
         case pattern line () of
         [_, arg, text]:
-            push to {arg, text = array [text]};
+            push to {arg, text = array [ticks text]};
         _:
             if empty? to then
                 push to {arg = "???", text = array [line]}
             else
-                push to.[length to - 1].text line
+                push to.[length to - 1].text (ticks line)
             fi
         esac;
     var code = false;
@@ -130,7 +133,7 @@ parseDoc' doc =
         elif was and not code then
             push to '</pre>'
         fi;
-        push to if code then strRight line 1 else line fi);
+        push to if code then strRight line 1 else ticks line fi);
     doc = map strTrim (strSplit "\n" (substAll "(?:^|\n[ \\t]+)\\*" "\n" doc@));
     about = array [];
     args = array [];
@@ -166,7 +169,7 @@ parseDoc' doc =
     map strCapitalize arg_list |> hash |> insertHash arg_set;
     mark_arg a =
         if a.[0] in arg_set then "<var>\(a.[0])</var>" else a.[0] fi;
-    mark_args = strJoin '' . matchAll '\w+' mark_arg id;
+    mark_args = strJoin '' . mticks (strJoin '' .  matchAll '\w+' mark_arg id);
     lines = strJoin '<p></p>';
     show pre post f v = if not empty? v then "\(pre)\(f v)\(post)" fi;
     text what = show "<p>\(what)</p>" '' (lines . join);
