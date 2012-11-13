@@ -464,6 +464,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * The canonical implementation is following:
      * : putLines handle lines =
      * :     for lines handle.writeln;
+     *
+     * Examples:
+     * : lines = ['orange', 'apple', 'mouse'];
+     * : writeFile 'test.txt' '' (`putLines` lines);
+     * Writes the `lines` list to the `test.txt` file as separate lines.
      */
     putLines h lines = for lines h.writeln,
 
@@ -575,11 +580,26 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     /** Group: zmisc */
     sleep time = Thread#sleep(time * 1000),
 
-    /** Group: file (Filesystem operations) */
+    /**
+     * Group: file (Filesystem operations)
+     * Deletes a file or empty directory with the specified name.
+     * Returns true if deleting succeeded, and false if it didn't exist, was
+     * a non-empty directory, or couldn't be deleted for some other reason.
+     *
+     * Arguments:
+     * name - directory or file name
+     */
     deleteFile fn is string -> boolean =
         new File(fn unsafely_as ~String)#delete(),
 
-    /** Group: file */
+    /**
+     * Group: file
+     * Creates the specified directory path, if it doesn't already exist.
+     * Missing parent directories are created as needed.
+     *
+     * Arguments:
+     * path - path of the directory to create
+     */
     createPath path is string -> () = _ =
         new File(path unsafely_as ~String)#mkdirs(),
 
