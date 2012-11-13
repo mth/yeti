@@ -583,8 +583,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     /**
      * Group: file (Filesystem operations)
      * Deletes a file or empty directory with the specified name.
-     * Returns true if deleting succeeded, and false if it didn't exist, was
-     * a non-empty directory, or couldn't be deleted for some other reason.
+     * Returns true if deleting succeeded, and false if the name didn't exist,
+     * was a non-empty directory, or couldn't be deleted for some other reason.
      *
      * Arguments:
      * name - directory or file name
