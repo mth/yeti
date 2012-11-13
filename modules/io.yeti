@@ -582,12 +582,12 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Group: file (Filesystem operations)
-     * Deletes a file or empty directory with the specified name.
-     * Returns true if deleting succeeded, and false if the name didn't exist,
+     * Deletes a file or empty directory with the specified path name.
+     * Returns true if deleting succeeded, and false if the path didn't exist,
      * was a non-empty directory, or couldn't be deleted for some other reason.
      *
      * Arguments:
-     * name - directory or file name
+     * path - directory or file name
      */
     deleteFile fn is string -> boolean =
         new File(fn unsafely_as ~String)#delete(),
