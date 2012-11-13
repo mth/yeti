@@ -140,7 +140,7 @@ stdin () =
 
 /**
  * Group: zmisc (Miscellaneous functions)
- * Apply block to the given handle, after that apply handle.close field
+ * Applies block to the given handle, after that applies handle.close field
  * to () value, even when exception was thrown by the block (the exception
  * will be passed to caller of withHandle in that case). Returns the value
  * returned by the block.
