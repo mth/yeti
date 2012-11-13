@@ -2068,11 +2068,11 @@ plus a b = a + b;
      * the substring and use only head of the result, only the first match
      * will be actually searched).
      *
-     * The `regex` is compiled and matched using the `java.util.regex`
+     * The `regex` is compiled and matched using the java.util.regex
      * implementation, and therefore uses the same (Perl regular expression
      * compatible) syntax. Yeti compiler optimises usage of this function
      * when literal string is used as regex argument, so that the regex will
-     * be compiled only once into the `java.util.regex.Pattern` instance.
+     * be compiled only once into the java.util.regex.Pattern instance.
      *
      * Examples:
      * : for (matchAll '\d+' M T '2012-08-23T04:11Z') println;
@@ -2760,7 +2760,7 @@ plus a b = a + b;
      * a new value to the field changes it only for the assigning thread.
      *
      * Notes:
-     * Internal implementation uses the `java.lang.ThreadLocal` class.
+     * Internal implementation uses the java.lang.ThreadLocal class.
      */
     threadLocal initialValue is 'a -> {var value is 'a} =
         class Local extends java.lang.ThreadLocal

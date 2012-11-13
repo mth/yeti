@@ -385,7 +385,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      *
      * Description:
      * This module field (`stdin`) is implemented as read-only property.
-     * When accessed first time, a `java.io.BufferedReader` instance wrapping
+     * When accessed first time, a java.io.BufferedReader instance wrapping
      * `System.in` is created internally. This means, that reading `stdin` can
      * cause data read from `System.in` to be in the stdin specific reader
      * buffer.
