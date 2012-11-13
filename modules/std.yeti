@@ -1798,10 +1798,10 @@ plus a b = a + b;
      *
      * Notes:
      * The basic multilingual (first) plane of unicode characters are
-     * represented as single code units in UTF-16, therefore strLength returns
+     * represented as single code units in UTF-16, therefore `strLength` returns
      * the count of unicode characters for strings containing only those
      * characters. The java.lang.String length method works in the same way,
-     * and compiler optimizes strLength applications into String#length() calls.
+     * and compiler optimizes `strLength` applications into `String#length()` calls.
      */
     norec strLength s = strLength s,
 
@@ -1814,7 +1814,7 @@ plus a b = a + b;
      * string - a string value (internally stored as java.lang.String)
      *
      * Notes:
-     * Compiler optimizes strUpper applications into String#toUpperCase() calls.
+     * Compiler optimizes `strUpper` applications into `String#toUpperCase()` calls.
      */
     norec strUpper s = strUpper s,
 
@@ -1827,7 +1827,7 @@ plus a b = a + b;
      * string - a string value (internally stored as java.lang.String)
      *
      * Notes:
-     * Compiler optimizes strLower applications into String#toLowerCase() calls.
+     * Compiler optimizes `strLower` applications into `String#toLowerCase()` calls.
      */
     norec strLower s = strLower s,
 
@@ -1840,7 +1840,7 @@ plus a b = a + b;
      * string - a string value (internally stored as java.lang.String)
      *
      * Notes:
-     * Compiler optimizes strTrim applications into String#trim() calls.
+     * Compiler optimizes `strTrim` applications into `String#trim()` calls.
      * The argument instance is directly returned, if there is no whitespace
      * to remove.
      */
@@ -1864,7 +1864,7 @@ plus a b = a + b;
      * Notes:
      * The basic multilingual (first) plane of unicode characters are
      * represented as single code units in UTF-16.
-     * Compiler optimises strSlice applications into String#substring() calls.
+     * Compiler optimises `strSlice` applications into `String#substring()` calls.
      */
     norec strSlice s start end = strSlice s start end,
 
@@ -1872,7 +1872,7 @@ plus a b = a + b;
      * Group: str
      * Returns the substring of given string, from code unit at start index
      * until to the end of string.
-     * Same as strSlice string start (strLength string).
+     * Same as `strSlice string start (strLength string)`.
      *
      * Arguments:
      * string - an UTF-16 encoded string (internally stored as java.lang.String)
@@ -1886,7 +1886,7 @@ plus a b = a + b;
      * Notes:
      * The basic multilingual (first) plane of unicode characters are
      * represented as single code units in UTF-16.
-     * Compiler optimises strRight applications into String#substring() calls.
+     * Compiler optimises `strRight` applications into `String#substring()` calls.
      */
     norec strRight s pos = strRight s pos,
 
@@ -1900,8 +1900,8 @@ plus a b = a + b;
      * prefix - the expected prefix string for the tested string value
      *
      * Notes:
-     * Compiler optimises strStarts? applications into
-     * String#startsWith() calls.
+     * Compiler optimises `strStarts?` applications into
+     * `String#startsWith()` calls.
      */
     norec strStarts? s start = strStarts? s start,
 
@@ -1915,7 +1915,7 @@ plus a b = a + b;
      * suffix - the expected prefix suffix for the tested string value
      *
      * Notes:
-     * Compiler optimises strEnds? applications into String#endsWith() calls.
+     * Compiler optimises `strEnds?` applications into `String#endsWith()` calls.
      */
     norec strEnds? s end = strEnds? s end,
 
@@ -1936,7 +1936,7 @@ plus a b = a + b;
      * Notes:
      * The strings are UTF-16 encoded code unit sequences (internally stored as
      * java.lang.String) with 0-based indexing. Compiler optimises
-     * strIndexOf applications into String#indexOf() calls.
+     * `strIndexOf` applications into `String#indexOf()` calls.
      */
     norec strIndexOf haystack needle from = strIndexOf haystack needle from,
 
@@ -1957,7 +1957,7 @@ plus a b = a + b;
      * Notes:
      * The strings are UTF-16 encoded code unit sequences (internally stored as
      * java.lang.String) with 0-based indexing. Compiler optimises
-     * strLastIndexOf applications into String#lastIndexOf() calls.
+     * `strLastIndexOf` applications into `String#lastIndexOf()` calls.
      */
     norec strLastIndexOf haystack needle from =
             strLastIndexOf haystack needle from,
@@ -1966,7 +1966,7 @@ plus a b = a + b;
      * Group: str
      * Finds the start position of the last occurrence of the substring in
      * the given string.
-     * Same as strLastIndexOf string substring (strLength string).
+     * Same as `strLastIndexOf string substring (strLength string)`.
      *
      * Arguments:
      * string    - the string to be searched
@@ -1975,7 +1975,7 @@ plus a b = a + b;
      * Notes:
      * The strings are UTF-16 encoded code unit sequences (internally stored as
      * java.lang.String) with 0-based indexing, and compiler optimises
-     * strLastIndexOf applications into String#lastIndexOf() calls.
+     * `strLastIndexOf` applications into `String#lastIndexOf()` calls.
      */
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
@@ -2162,7 +2162,7 @@ plus a b = a + b;
     /**
      * Group: str
      * Returns the substring of given string, from the start of string
-     * until code unit at end index. Same as strSlice string 0 end.
+     * until code unit at end index. Same as `strSlice string 0 end`.
      *
      * Arguments:
      * string - an UTF-16 encoded string (internally stored as java.lang.String)
