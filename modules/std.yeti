@@ -2234,8 +2234,8 @@ plus a b = a + b;
         if empty? list then
             ""
         else
-            var l = tail list;
-            if empty? l then
+            var l = (list unsafely_as ~AList)#next();
+            if nullptr? l then
                 "\(head list)"
             else
                 // use unsafely_as to not give null's for undef_str's
@@ -2243,13 +2243,13 @@ plus a b = a + b;
                             "\(head list)" unsafely_as ~String);
                 if sep == '' then
                     not nullptr? l loop
-                       (buf#append(head l as ~Object);
-                        l := tail l)
+                       (buf#append(l#first());
+                        l := l#next())
                 else
                     not nullptr? l loop
                        (buf#append(sep unsafely_as ~String);
-                        buf#append(head l as ~Object);
-                        l := tail l)
+                        buf#append(l#first());
+                        l := l#next())
                 fi;
                 buf#toString()
             fi
