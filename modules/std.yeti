@@ -2234,21 +2234,25 @@ plus a b = a + b;
         if empty? list then
             ""
         else
-            // use unsafely_as to not give null's for undef_str's
-            buf = new java.lang.StringBuffer(
-                        "\(head list)" unsafely_as ~String);
             var l = tail list;
-            if sep == '' then
-                not nullptr? l loop
-                   (buf#append(head l as ~Object);
-                    l := tail l)
+            if empty? l then
+                "\(head list)"
             else
-                not nullptr? l loop
-                   (buf#append(sep unsafely_as ~String);
-                    buf#append(head l as ~Object);
-                    l := tail l)
-            fi;
-            buf#toString()
+                // use unsafely_as to not give null's for undef_str's
+                buf = new java.lang.StringBuffer(
+                            "\(head list)" unsafely_as ~String);
+                if sep == '' then
+                    not nullptr? l loop
+                       (buf#append(head l as ~Object);
+                        l := tail l)
+                else
+                    not nullptr? l loop
+                       (buf#append(sep unsafely_as ~String);
+                        buf#append(head l as ~Object);
+                        l := tail l)
+                fi;
+                buf#toString()
+            fi
         fi,
 
     /**
