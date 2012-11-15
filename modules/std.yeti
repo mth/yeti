@@ -2754,21 +2754,23 @@ plus a b = a + b;
      * acts like being an independent instance for each thread accessing it.
      *
      * Arguments:
-     * initial - initial value for the structures `value` field
+     * initial - function returning initial value for
+     *           the structures `value` field (when applied to ())
      *
      * Description:
-     * The returned structure has a single property field named `value`. Reading
-     * the field gives the latest value assigned to it by the same thread (or
-     * the initial argument that was given to the `threadLocal` function, if the
-     * reading thread has never assigned another value to the field). Assigning
-     * a new value to the field changes it only for the assigning thread.
+     * The returned structure has a single property field named `value`.
+     * Reading the field gives the latest value assigned to it by the same
+     * thread (or the result of appling `initial` argument that was given to
+     * the `threadLocal` function, if the reading thread has never assigned
+     * another value to the field). Assigning a new value to the field changes
+     * it only for the assigning thread.
      *
      * Notes:
      * Internal implementation uses the java.lang.ThreadLocal class.
      */
-    threadLocal initialValue is 'a -> {var value is 'a} =
+    threadLocal initialValue is (() -> 'a) -> {var value is 'a} =
         class Local extends java.lang.ThreadLocal
-            Object initialValue() initialValue
+            Object initialValue() initialValue ()
         end;
         tl = new Local();
         {
