@@ -585,7 +585,6 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
         var sf = nohf;
         var body = '';
         var ocs = '';
-        var ignoreErrors = false;
         conn = new java.net.URL(url is string
                     unsafely_as ~String)#openConnection();
         http = if conn instanceof HttpURLConnection then
