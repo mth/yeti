@@ -565,20 +565,20 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Fetches given url, mostly useful for making HTTP GET or POST requests.
      *
      * Arguments:
-     * url     - URL to fetch
      * options - option list
      * result  - block to read the response body
+     * url     - URL to fetch
      *
      * Examples:
      * Fetch URL as string and print it:
-     * : str = fetchURL 'http://example.com/' [] (Handle getContents);
+     * : str = fetchURL [] (Handle getContents) 'http://example.com/';
      * : println str;
      *
      * Fetch as binary data and write to file:
-     * : data = fetchURL 'http://example.com/' [] (Binary (binReadAll 0));
+     * : data = fetchURL [] (Binary (binReadAll 0)) 'http://example.com/';
      * : binWriteFile 'example.html' data;
      */
-    fetchURL url options result =
+    fetchURL options result url =
         var csf = id;
         nohf = const \();
         var hf = nohf;
