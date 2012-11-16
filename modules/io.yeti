@@ -571,17 +571,18 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      *
      * Examples:
      * Fetch URL as string and print it:
-     * : str = fetchURL 'http://example.com/' [] (Handle \getContents);
+     * : str = fetchURL 'http://example.com/' [] (Handle getContents);
      * : println str;
      *
      * Fetch as binary data and write to file:
-     * : data = fetchURL 'http://example.com/' [] (Binary \(binReadAll 0));
+     * : data = fetchURL 'http://example.com/' [] (Binary (binReadAll 0));
      * : binWriteFile 'example.html' data;
      */
     fetchURL url options result =
         var csf = id;
         nohf = const \();
         var hf = nohf;
+        var sf = nohf;
         var body = '';
         var ocs = '';
         var ignoreErrors = false;
@@ -601,12 +602,14 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                         ocs := strTrim (strRightOf 'CHARSET=' (strUpper value))
                     fi;
                     conn#setRequestProperty(name, value);
+                /// Set timeout in seconds.
+                Timeout t: conn#setReadTimeout(t * 1000);
                 /// Callback to be called on each response header.
                 Header f: hf := f;
                 /// Set using caches.
                 UseCaches use: conn#setUseCaches(use);
-                /// Don't fail when response code is >= 300.
-                IgnoreErrorCode (): ignoreErrors := true;
+                /// Callback to be called for the status code and message.
+                Status f: sf := f;
                 /// Send post request with the given body.
                 Post body':
                     body := body';
@@ -625,10 +628,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             fi;
             stream = conn#getInputStream();
             try
-                rc = if not nullptr? http then http#getResponseCode() else: 200;
-                if not ignoreErrors and rc >= 300 then
-                    throw new java.io.IOException("HTTP error \(rc) \
-                                                "\(http#getResponseMessage())")
+                if not same? sf nohf and not nullptr? http then
+                    sf http#getResponseCode() http#getResponseMessage()
                 fi;
                 if not same? hf nohf then
                     var nth = 1;
@@ -638,19 +639,19 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                         nth := nth + 1; true)) loop
                 fi;
                 case result of
-                /// Apply given function to response code and input_handle
+                /// Apply given function to input_handle
                 /// reading from the response body.
                 Handle f:
                     cs = strUpper conn#getContentType() |>
                          strRightOf 'CHARSET=' |> strTrim |> csf;
                     withHandle (inputHandle stream
-                                 if cs != '' then cs else: 'ISO-8859-1') (f rc);
-                /// Apply given function to response code and InputStream
+                                 if cs != '' then cs else: 'ISO-8859-1') f;
+                /// Apply given function to InputStream
                 /// reading from the response body.
-                Stream f: f rc stream;
-                /// Apply given function to response code and bin_input_handle
+                Stream f: f stream;
+                /// Apply given function to bin_input_handle
                 /// reading from the response body.
-                Binary f: f rc (binInputHandle stream);
+                Binary f: f (binInputHandle stream);
                 esac
             finally
                 stream#close()
