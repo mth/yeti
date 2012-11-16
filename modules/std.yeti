@@ -2784,7 +2784,7 @@ plus a b = a + b;
             set value v  = tl#set(v),
 
             /// Clears the thread-local variable.
-            wipe () = tl#remove()
+            get wipe () = (f () = tl#remove(); f)
         },
 
     /**
