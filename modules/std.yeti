@@ -2750,7 +2750,7 @@ plus a b = a + b;
 
     /**
      * Group: zmisc
-     * Creates a structure with single writable property field (`value`), that
+     * Creates a structure with writable property field (`value`), that
      * acts like being an independent instance for each thread accessing it.
      *
      * Arguments:
@@ -2758,24 +2758,33 @@ plus a b = a + b;
      *           the structures `value` field (when applied to ())
      *
      * Description:
-     * The returned structure has a single property field named `value`.
+     * The returned structure has a property field named `value`.
      * Reading the field gives the latest value assigned to it by the same
      * thread (or the result of appling `initial` argument that was given to
      * the `threadLocal` function, if the reading thread has never assigned
      * another value to the field). Assigning a new value to the field changes
      * it only for the assigning thread.
      *
+     * The value associated with thread can be removed by calling the `.wipe`
+     * function field from the structure. Accessing the value field after that
+     * causes new application of the `initial` function.
+     *
      * Notes:
      * Internal implementation uses the java.lang.ThreadLocal class.
      */
-    threadLocal initialValue is (() -> 'a) -> {var value is 'a} =
+    threadLocal initialValue is (() -> 'a) ->
+            {var value is 'a, wipe is () -> ()} =
         class Local extends java.lang.ThreadLocal
             Object initialValue() initialValue ()
         end;
         tl = new Local();
         {
+            /// The value in thread-local variable.
             get value () = tl#get() unsafely_as 'a,
-            set value v  = tl#set(v)
+            set value v  = tl#set(v),
+
+            /// Clears the thread-local variable.
+            wipe () = tl#remove()
         },
 
     /**
