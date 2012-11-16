@@ -604,7 +604,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                     conn#setRequestProperty(name, value);
                 /// Set timeout in seconds.
                 Timeout t: conn#setReadTimeout(t * 1000);
-                /// Callback to be called on each response header.
+                /// Callback to be called on each response header
+                /// (with header name and value as arguments).
                 Header f: hf := f;
                 /// Set using caches.
                 UseCaches use: conn#setUseCaches(use);
