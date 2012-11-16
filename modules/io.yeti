@@ -39,6 +39,7 @@ module yeti.lang.io;
 import java.io: File, FileInputStream, FileOutputStream,
                 Reader, InputStream, InputStreamReader, BufferedReader,
                 OutputStream, OutputStreamWriter, BufferedWriter;
+import java.net.HttpURLConnection;
 import java.lang.Thread;
 
 var stdin' = None ();
@@ -538,8 +539,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
 
-    // Example: getContents (openTextUrl [] 'http://example.com/')
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Deprecated. Use fetchURL instead.
+     */
     openTextUrl options url
             is list<CharSet (string -> string)> -> string -> 'a =
         conn = new java.net.URL(url unsafely_as ~String)#openConnection();
@@ -556,6 +559,104 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                 throw t
              yrt;
         inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
+
+    /**
+     * Group: zmisc
+     * Arguments:
+     * options - option list
+     * result  - block to read the response body
+     *
+     * Examples:
+     * Fetch URL as string and print it:
+     * : str = fetchURL 'http://example.com/' [] (Handle \getContents);
+     * : println str;
+     *
+     * Fetch as binary data and write to file:
+     * : data = fetchURL 'http://example.com/' [] (Binary \(binReadAll 0));
+     * : binWriteFile 'example.html' data;
+     */
+    fetchURL url options result =
+        var csf = id;
+        nohf = const \();
+        var hf = nohf;
+        var body = '';
+        var ocs = '';
+        var ignoreErrors = false;
+        conn = new java.net.URL(url is string
+                    unsafely_as ~String)#openConnection();
+        http = if conn instanceof HttpURLConnection then
+                    conn unsafely_as ~HttpURLConnection
+               fi;
+        try
+            for options \case of
+                /// Callback to determine response body charset.
+                /// Argument is charset from the Content-Type response header.
+                CharSet f: csf := f;
+                /// Set request header.
+                SetHeader {name, value}:
+                    if strUpper name == 'CONTENT-TYPE' then
+                        ocs := strTrim (strRightOf 'CHARSET=' (strUpper value))
+                    fi;
+                    conn#setRequestProperty(name, value);
+                /// Callback to be called on each response header.
+                Header f: hf := f;
+                /// Set using caches.
+                UseCaches use: conn#setUseCaches(use);
+                /// Don't fail when response code is >= 300.
+                IgnoreErrorCode (): ignoreErrors := true;
+                /// Send post request with the given body.
+                Post body':
+                    body := body';
+                    conn#setDoOutput(true);
+                esac;
+            if conn#getDoOutput() then
+                bytes = (body as ~String)#getBytes(if ocs == '' then 'UTF-8'
+                                                                else: ocs);
+                conn#setRequestProperty('Content-Length', "\(length bytes)");
+                os = conn#getOutputStream();
+                try
+                    os#write(bytes)
+                finally
+                    os#close()
+                yrt;
+            fi;
+            stream = conn#getInputStream();
+            try
+                rc = if not nullptr? http then http#getResponseCode() else: 200;
+                if not ignoreErrors and rc >= 300 then
+                    throw new java.io.IOException("HTTP error \(rc) \
+                                                "\(http#getResponseMessage())")
+                fi;
+                if not same? hf nohf then
+                    var nth = 1;
+                    (name = conn#getHeaderFieldKey(nth);
+                     defined? name and
+                       (hf name conn#getHeaderField(nth);
+                        nth := nth + 1; true)) loop
+                fi;
+                case result of
+                /// Apply given function to response code and input_handle
+                /// reading from the response body.
+                Handle f:
+                    cs = strUpper conn#getContentType() |>
+                         strRightOf 'CHARSET=' |> strTrim |> csf;
+                    withHandle (inputHandle stream
+                                 if cs != '' then cs else: 'ISO-8859-1') (f rc);
+                /// Apply given function to response code and InputStream
+                /// reading from the response body.
+                Stream f: f rc stream;
+                /// apply given function to response code and bin_input_handle
+                /// reading from the response body.
+                Binary f: f rc (binInputHandle stream);
+                esac
+            finally
+                stream#close()
+            yrt
+        finally
+            if not nullptr? http then
+                http#disconnect()
+            fi
+        yrt,
 
     /**
      * Group: write_
