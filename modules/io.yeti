@@ -562,7 +562,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Group: zmisc
+     * Fetches given url, mostly useful for making HTTP GET or POST requests.
+     *
      * Arguments:
+     * url     - URL to fetch
      * options - option list
      * result  - block to read the response body
      *
@@ -645,7 +648,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                 /// Apply given function to response code and InputStream
                 /// reading from the response body.
                 Stream f: f rc stream;
-                /// apply given function to response code and bin_input_handle
+                /// Apply given function to response code and bin_input_handle
                 /// reading from the response body.
                 Binary f: f rc (binInputHandle stream);
                 esac
