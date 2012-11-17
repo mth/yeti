@@ -215,6 +215,16 @@ done,
     v = m.create [5..7];
     m.values v == [5..7]
 done,
+'var recursion': do:
+    var f x =
+        if x then
+            f := const 42;
+            f false
+        else
+            0 // failed - should never reach here
+        fi;
+    f true == 42
+done,
 '() as string': \(strIndexOf (() as ~String) "x" 0 == -1)
 ];
 
