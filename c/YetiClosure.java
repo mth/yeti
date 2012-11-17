@@ -369,6 +369,8 @@ abstract class CaptureRef extends BindRef {
         int n = 0;
         for (Function f = capturer; f != null; ++n, f = f.outer)
             if (f.selfBind == ref.binder) {
+                if (ref.flagop(ASSIGN))
+                    break; // no tail recursion for vars
                 args = new Binder[n];
                 f = capturer.outer;
                 for (int i = n; --i >= 0; f = f.outer)
