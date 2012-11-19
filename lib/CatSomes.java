@@ -34,6 +34,7 @@ package yeti.lang;
 final class CatSomes extends LList {
     private boolean checked;
     private AIter src;
+    private AList rest;
 
     public CatSomes(Object v, AIter src) {
         super(v, null);

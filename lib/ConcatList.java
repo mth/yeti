@@ -45,11 +45,11 @@ final class ConcatList extends LList {
     public synchronized AList rest() {
         if (!mappedRest) {
             AIter i = src.next();
-            rest = i == null ? tail : new ConcatList(i, tail);
+            if (i != null)
+                tail = new ConcatList(i, tail);
             src = null;
-            tail = null;
             mappedRest = true;
         }
-        return rest;
+        return tail;
     }
 }
