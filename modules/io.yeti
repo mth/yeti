@@ -419,7 +419,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Group: read_
-     * Deprecated, use (readerHandle reader).lines if you need this functionality.
+     * Deprecated, use (readerHandle reader).lines
+     * if you need this functionality.
      */
     linesOfReader reader is ~BufferedReader -> list<string> =
         ReaderList#lines(reader) unsafely_as list<string>,
@@ -689,12 +690,24 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
         end;
         new Run(),
 
-    /** Group: zmisc */
+    /**
+     * Group: zmisc
+     * Starts a new thread, which will start execution by invoking
+     * the given block. Returns java.lang.Thread object corresponding
+     * to the created thread.
+     *
+     * Arguments:
+     * options - options for the new thread
+     * block   - a function invoked by the new thread
+     */
     runThread options f is list?<'a> -> (() -> ()) -> ~Thread =
         th = new Thread(runnable f);
         for options
            \case of
+            /// Mark the thread a daemon thread. The JVM exits when last
+            /// non-daemon thread has stopped.
             Daemon (): th#setDaemon(true);
+            /// Set the threads context class loader.
             ClassLoader cl: th#setContextClassLoader(cl);
             esac;
         th#start();
