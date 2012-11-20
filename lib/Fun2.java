@@ -34,9 +34,6 @@ public abstract class Fun2 extends Fun {
     public abstract Object apply(Object a, Object b);
 
     public Object apply(Object a) {
-        Fun2_ f = new Fun2_();
-        f.fun = this;
-        f.arg = a;
-        return f;
+        return new Fun2_(this, a);
     }
 }

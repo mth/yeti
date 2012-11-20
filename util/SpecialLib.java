@@ -224,12 +224,23 @@ public class SpecialLib implements Opcodes {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         cw.visit(V1_4, ACC_SUPER,
                  "yeti/lang/Fun2_", null, "yeti/lang/Fun", null);
-        cw.visitField(0, "fun", "Lyeti/lang/Fun2;", null, null).visitEnd();
-        cw.visitField(0, "arg", "Ljava/lang/Object;", null, null).visitEnd();
-        MethodVisitor mv = cw.visitMethod(0, "<init>", "()V", null, null);
+        cw.visitField(ACC_PRIVATE | ACC_FINAL,
+                "fun", "Lyeti/lang/Fun2;", null, null).visitEnd();
+        cw.visitField(ACC_PRIVATE | ACC_FINAL,
+                "arg", "Ljava/lang/Object;", null, null).visitEnd();
+        MethodVisitor mv = cw.visitMethod(0, "<init>",
+                        "(Lyeti/lang/Fun2;Ljava/lang/Object;)V", null, null);
         mv.visitCode();
         mv.visitVarInsn(ALOAD, 0);
         mv.visitMethodInsn(INVOKESPECIAL, "yeti/lang/Fun", "<init>", "()V");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitVarInsn(ALOAD, 1);
+        mv.visitFieldInsn(PUTFIELD, "yeti/lang/Fun2_",
+                          "fun", "Lyeti/lang/Fun2;");
+        mv.visitVarInsn(ALOAD, 0);
+        mv.visitVarInsn(ALOAD, 2);
+        mv.visitFieldInsn(PUTFIELD, "yeti/lang/Fun2_",
+                          "arg", "Ljava/lang/Object;");
         mv.visitInsn(RETURN);
         mv.visitMaxs(0, 0);
         mv.visitEnd();
