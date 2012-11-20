@@ -31,8 +31,8 @@
 package yeti.lang;
 
 public final class Bind2nd extends Fun {
-    private Fun fun;
-    private Object arg2;
+    private final Fun fun;
+    private final Object arg2;
 
     public Bind2nd(Object fun, Object arg2) {
         this.fun = (Fun) fun;

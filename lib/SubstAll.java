@@ -33,7 +33,7 @@ package yeti.lang;
 import java.util.regex.Pattern;
 
 public final class SubstAll extends Fun2 {
-    private Pattern p;
+    private final Pattern p;
 
     public SubstAll(Object pattern) {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);

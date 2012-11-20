@@ -31,7 +31,7 @@
 package yeti.lang;
 
 public class Const extends Fun {
-    private Object v;
+    private final Object v;
 
     public Const(Object value) {
         v = value;

@@ -37,8 +37,8 @@ import java.util.IdentityHashMap;
 // GenericStruct can be useful in Java code and for very large Yeti
 // structures, where pointer scan by field names becomes slow.
 public class GenericStruct extends AStruct {
-    private Map impl;
-    private boolean allMutable;
+    private final Map impl;
+    private final boolean allMutable;
 
     private static String[] getNames(Map values) {
         String[] result =
@@ -63,6 +63,7 @@ public class GenericStruct extends AStruct {
     public GenericStruct(Map values, boolean[] vars) {
         super(getNames(values), vars);
         this.impl = values;
+        allMutable = false;
     }
 
     /**
@@ -72,6 +73,7 @@ public class GenericStruct extends AStruct {
     public GenericStruct(String[] names, boolean[] vars) {
         super(names, vars);
         impl = new IdentityHashMap(names.length);
+        allMutable = false;
     }
 
     public Object get(String field) {

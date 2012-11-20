@@ -33,9 +33,9 @@ package yeti.lang;
 import java.io.Serializable;
 
 public class WithStruct extends AStruct {
-    private Object[] values;
-    private int[] index;
-    private int size;
+    private final Object[] values;
+    private final int[] index;
+    private final int size;
 
     public WithStruct(Struct src, Struct override,
                       String[] names, boolean allowNew) {

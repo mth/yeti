@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
 public final class StrSplit extends Fun {
-    private Pattern p;
+    private final Pattern p;
 
     public StrSplit(Object pattern) {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);

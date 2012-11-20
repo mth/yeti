@@ -34,18 +34,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class MatchAllFun extends Fun {
-    Pattern pattern;
-    Fun matchFun;
-    Fun skipFun;
+    final Pattern pattern;
+    final Fun matchFun;
+    final Fun skipFun;
 
     final class Match extends LList {
         private boolean forced;
-        int last;
-        String str;
-        Matcher m;
+        private final int last;
+        private final String str;
+        private final Matcher m;
 
-        Match(Object v) {
+        Match(Object v, int last_, String str_, Matcher m_) {
             super(v, null);
+            last = last_;
+            str = str_;
+            m = m_;
         }
 
         public synchronized AList rest() {
@@ -55,6 +58,12 @@ final class MatchAllFun extends Fun {
             }
             return rest;
         }
+    }
+
+    MatchAllFun(Pattern pattern_, Fun matchFun_, Fun skipFun_) {
+        pattern = pattern_;
+        matchFun = matchFun_;
+        skipFun = skipFun_;
     }
 
     AList get(String s, Matcher m, int last) {
@@ -72,10 +81,7 @@ final class MatchAllFun extends Fun {
                 g = Core.UNDEF_STR;
             r[i] = g;
         }
-        Match l = new Match(matchFun.apply(new MList(r)));
-        l.str = s;
-        l.m = m;
-        l.last = m.end();
+        Match l = new Match(matchFun.apply(new MList(r)), m.end(), s, m);
         return last < st ? new LList(skip, l) : l;
     }
 
@@ -86,17 +92,13 @@ final class MatchAllFun extends Fun {
 }
 
 final public class MatchAll extends Fun2 {
-    private Pattern p;
+    private final Pattern p;
 
     public MatchAll(Object pattern) {
         p = Pattern.compile((String) pattern, Pattern.DOTALL);
     }
 
     public Object apply(Object matchFun, Object skipFun) {
-        MatchAllFun f = new MatchAllFun();
-        f.pattern = p;
-        f.matchFun = (Fun) matchFun;
-        f.skipFun = (Fun) skipFun;
-        return f;
+        return new MatchAllFun(p, (Fun) matchFun, (Fun) skipFun);
     }
 }
