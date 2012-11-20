@@ -88,7 +88,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             }
             Function f;
             if (!mutable && fun) {
-                ((Function) field.value).prepareGen(ctx);
+                ((Function) field.value).prepareGen(ctx, false);
                 ctx.varInsn(ASTORE, var = ctx.localVarCount++);
             } else {
                 if (arrayVar == -1)

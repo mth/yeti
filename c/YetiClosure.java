@@ -658,6 +658,8 @@ final class Function extends CapturingClosure implements Binder {
     private boolean moduleInit;
     // methodImpl and only one live capture - carry it directly.
     boolean capture1;
+    // not in struct - capture final fields
+    private boolean notInStruct;
 
     final BindRef arg = new BindRef() {
         void gen(Ctx ctx) {
@@ -784,7 +786,8 @@ final class Function extends CapturingClosure implements Binder {
     void captureInit(Ctx fun, Capture c, int n) {
         if (methodImpl == null) {
             // c.getId() initialises the captures id as a side effect
-            fun.cw.visitField(0, c.getId(fun), c.captureType(),
+            fun.cw.visitField(notInStruct ? ACC_PRIVATE | ACC_FINAL : 0,
+                              c.getId(fun), c.captureType(),
                               null, null).visitEnd();
         } else if (capture1) {
             assert (n == 0);
@@ -891,20 +894,21 @@ final class Function extends CapturingClosure implements Binder {
      * An instance is also given, but capture fields are not initialised
      * (the captures are set later in the finishGen).
      */
-    void prepareGen(Ctx ctx) {
+    boolean prepareGen(Ctx ctx, boolean notStruct) {
         if (methodImpl != null) {
             prepareMethod(ctx);
-            return;
+            return false;
         }
 
         if (merged) { // 2 nested lambdas have been optimised into 1
             Function inner = (Function) body;
             inner.bindName = bindName;
-            inner.prepareGen(ctx);
+            boolean res = inner.prepareGen(ctx, notStruct);
             name = inner.name;
-            return;
+            return res;
         }
 
+        notInStruct = notStruct;
         if (bindName == null)
             bindName = "";
         name = ctx.compilation.createClassName(ctx,
@@ -920,7 +924,8 @@ final class Function extends CapturingClosure implements Binder {
         if (publish)
             fun.markInnerClass(ctx, ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
         mergeCaptures(fun, false);
-        fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
+        if (!notStruct)
+            fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
 
         Ctx apply = argVar == 2
             ? fun.newMethod(ACC_PUBLIC + ACC_FINAL, "apply",
@@ -956,7 +961,28 @@ final class Function extends CapturingClosure implements Binder {
             shared ? fun.newMethod(ACC_STATIC, "<clinit>", "()V") : ctx;
         valueCtx.typeInsn(NEW, name);
         valueCtx.insn(DUP);
-        valueCtx.visitInit(name, "()V");
+        if (notStruct) { // final fields must be initialized in constructor
+            StringBuffer sigb = new StringBuffer("(");
+            for (Capture c = captures; c != null; c = c.next)
+                if (!c.uncaptured)
+                    sigb.append(c.captureType());
+            String sig = sigb.append(")V").toString();
+            Ctx init = fun.newMethod(shared ? ACC_PRIVATE : 0, "<init>", sig);
+            init.load(0).methodInsn(INVOKESPECIAL, funClass, "<init>", "()V");
+            int counter = 0;
+            for (Capture c = captures; c != null; c = c.next)
+                if (!c.uncaptured) {
+                    c.captureGen(valueCtx);
+                    init.load(0).load(++counter)
+                        .fieldInsn(PUTFIELD, name, c.id, c.captureType());
+                }
+            init.insn(RETURN);
+            init.closeMethod();
+            valueCtx.visitInit(name, sig);
+            valueCtx.forceType("yeti/lang/Fun");
+        } else {
+            valueCtx.visitInit(name, "()V");
+        }
         if (shared) {
             fun.cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
                               "_", "Lyeti/lang/Fun;", null, null).visitEnd();
@@ -964,6 +990,7 @@ final class Function extends CapturingClosure implements Binder {
             valueCtx.insn(RETURN);
             valueCtx.closeMethod();
         }
+        return notStruct;
     }
 
     void finishGen(Ctx ctx) {
@@ -1081,7 +1108,7 @@ final class Function extends CapturingClosure implements Binder {
         // (and will) be optimised into shared static constant.
         if (liveCaptures == 0) {
             shared = true;
-            prepareGen(ctx);
+            prepareGen(ctx, false);
         }
         return liveCaptures == 0;
     }
@@ -1103,10 +1130,8 @@ final class Function extends CapturingClosure implements Binder {
             ctx.forceType("yeti/lang/Fun");
         } else if (prepareConst(ctx)) {
             ctx.fieldInsn(GETSTATIC, name, "_", "Lyeti/lang/Fun;");
-        } else {
-            prepareGen(ctx);
+        } else if (!prepareGen(ctx, true))
             finishGen(ctx);
-        }
     }
 }
 

@@ -676,8 +676,7 @@ final class Ctx implements Opcodes {
         lastType = type;
     }
 
-    void fieldInsn(int opcode, String owner,
-                              String name, String desc) {
+    void fieldInsn(int opcode, String owner, String name, String desc) {
         if (owner == null || name == null || desc == null)
             throw new IllegalArgumentException("fieldInsn(" + opcode +
                         ", " + owner + ", " + name + ", " + desc + ")");
@@ -690,8 +689,7 @@ final class Ctx implements Opcodes {
         }
     }
 
-    void methodInsn(int opcode, String owner,
-                               String name, String desc) {
+    void methodInsn(int opcode, String owner, String name, String desc) {
         insn(-1);
         m.visitMethodInsn(opcode, owner, name, desc);
     }
