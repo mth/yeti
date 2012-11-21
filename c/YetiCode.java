@@ -1013,6 +1013,10 @@ class StaticRef extends BindRef {
                              'L' + javaType(type) + ';');
     }
 
+    Object valueKey() {
+        return "SREF:" + className + '.' + funFieldName;
+    }
+
     boolean flagop(int fl) {
         return (fl & (DIRECT_BIND | CONST)) != 0;
     }
