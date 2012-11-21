@@ -449,7 +449,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
         int n = constr.arguments.length;
         for (Capture c = captures; c != null; c = c.next) {
             c.localVar = -1; // reset to using this
-            clc.cw.visitField(0, c.id, c.captureType(), null, null).visitEnd();
+            clc.cw.visitField(ACC_FINAL | ACC_PRIVATE, c.id, c.captureType(),
+                              null, null).visitEnd();
             init.load(0).load(++n)
                 .fieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
