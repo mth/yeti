@@ -1014,7 +1014,7 @@ class StaticRef extends BindRef {
     }
 
     boolean flagop(int fl) {
-        return (fl & DIRECT_BIND) != 0;
+        return (fl & (DIRECT_BIND | CONST)) != 0;
     }
 }
 
