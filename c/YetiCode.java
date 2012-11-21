@@ -1475,7 +1475,8 @@ final class Cast extends JavaExpr {
     }
 
     boolean flagop(int fl) {
-        return object.flagop(fl);
+        return ((fl & CONST) != 0 ? !convert : (fl & PURE) != 0) &&
+               object.flagop(fl);
     }
 }
 

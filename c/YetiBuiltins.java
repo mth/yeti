@@ -337,8 +337,8 @@ abstract class Core2 extends StaticRef {
 
                     void gen(Ctx ctx) {
                         if (prepareConst(ctx)) {
-                            Object[] key =
-                                { ".", arg1.valueKey(), arg2.valueKey() };
+                            Object[] key = { Core2.this.getClass(),
+                                             arg1.valueKey(), arg2.valueKey() };
                             ctx.constant(Arrays.asList(key),
                                     new SimpleCode(this, null, type, 0));
                         } else {
