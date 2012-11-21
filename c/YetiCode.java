@@ -1903,12 +1903,12 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             directBind = true;
             return;
         }
-        if (directField == "") {
+        if (directField == "") { // forceDirect, JavaClass does it
             myClass = ctx.className;
             directField =
                 "$".concat(Integer.toString(ctx.constants.ctx.fieldCounter++));
-            ctx.cw.visitField(ACC_STATIC | ACC_SYNTHETIC, directField,
-                              javaDescr, null, null).visitEnd();
+            ctx.cw.visitField(ACC_STATIC | ACC_SYNTHETIC | ACC_VOLATILE,
+                              directField, javaDescr, null, null).visitEnd();
         } else if (mvar == -1) {
             id = ctx.localVarCount++;
         }
