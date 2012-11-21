@@ -330,17 +330,37 @@ abstract class Core2 extends StaticRef {
         return new Apply(res, this, arg1, line1) {
             Code apply(final Code arg2, final YType res,
                        final int line2) {
-                return new Code() {
-                    {
-                        type = res;
-                        polymorph = derivePolymorph && arg1.polymorph
-                                                    && arg2.polymorph;
+                class A extends Code implements CodeGen {
+                    public void gen2(Ctx ctx, Code param, int line) {
+                        genApply2(ctx, arg1, arg2, line2);
                     }
 
                     void gen(Ctx ctx) {
-                        genApply2(ctx, arg1, arg2, line2);
+                        if (prepareConst(ctx)) {
+                            Object[] key =
+                                { ".", arg1.valueKey(), arg2.valueKey() };
+                            ctx.constant(Arrays.asList(key),
+                                    new SimpleCode(this, null, type, 0));
+                        } else {
+                            genApply2(ctx, arg1, arg2, line2);
+                        }
+                    }
+
+                    boolean flagop(int fl) {
+                        return derivePolymorph && (fl & (CONST | PURE)) != 0 &&
+                                arg1.flagop(fl) && arg2.flagop(fl);
+                    }
+
+                    boolean prepareConst(Ctx ctx) {
+                        return derivePolymorph && arg1.prepareConst(ctx) &&
+                                arg2.prepareConst(ctx);
                     }
                 };
+                A r = new A();
+                r.type = res;
+                r.polymorph = derivePolymorph && arg1.polymorph
+                                              && arg2.polymorph;
+                return r;
             }
         };
     }

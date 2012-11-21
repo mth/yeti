@@ -1469,6 +1469,14 @@ final class Cast extends JavaExpr {
             ctx.insn(ACONST_NULL);
         }
     }
+
+    boolean prepareConst(Ctx ctx) {
+        return object.prepareConst(ctx);
+    }
+
+    boolean flagop(int fl) {
+        return object.flagop(fl);
+    }
 }
 
 final class LoadVar extends Code {
