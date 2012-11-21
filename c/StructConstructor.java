@@ -438,12 +438,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         for (i = 0; i < fieldCount; ++i) {
             field = fields[i];
             if (field.property == 0)
-                st.cw.visitField(field.inherited ? ACC_PRIVATE : ACC_SYNTHETIC,
+                st.cw.visitField(field.inherited ? ACC_PRIVATE | ACC_FINAL
+                                                 : ACC_SYNTHETIC,
                                  field.javaName, "Ljava/lang/Object;",
                                  null, null).visitEnd();
             if (field.inherited)
-                st.cw.visitField(ACC_PRIVATE, "i" + i, "I", null, null)
-                     .visitEnd();
+                st.cw.visitField(ACC_PRIVATE | ACC_FINAL, "i" + i,
+                                 "I", null, null).visitEnd();
         }
 
         // get(String)
