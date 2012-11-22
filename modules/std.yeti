@@ -2336,7 +2336,50 @@ plus a b = a + b;
      * () - an unit value
      */
     identityHash () is () -> hash<'a, 'b> =
-        new IdentityHash() unsafely_as hash<'a, 'b>,
+        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+
+    /**
+     * Group: hash
+     * Creates a concurrent hash map (which can be safely used by multiple
+     * threads without synchronizing).
+     *
+     * Arguments:
+     * () - an unit value
+     *
+     * Notes:
+     * Implementation uses java.util.concurrent.ConcurrentHashMap.
+     */
+    concurrentHash () is () -> hash<'a, 'b> =
+        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+
+    /**
+     * Group: hash
+     * Creates a weak hash map, that automatically discards entries
+     * when the key values are garbage collected (and doesn't hold strong
+     * references to the key values).
+     *
+     * Arguments:
+     * () - an unit value
+     *
+     * Notes:
+     * Implementation uses java.util.concurrent.ConcurrentHashMap.
+     */
+    weakHash () is () -> hash<'a, 'b> =
+        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+
+    /**
+     * Group: hash
+     * Creates a hash map backed with some custom implementation
+     * (which instances are created by appling the given constructor).
+     *
+     * Arguments:
+     * constructor - a function creating the java.util.Map instance to be used
+     *
+     * Notes:
+     * Implementation uses java.util.concurrent.ConcurrentHashMap.
+     */
+    customHash cons is (() -> ~java.util.Map) -> hash<'a, 'b> =
+        new CHash(0, cons unsafely_as ~Fun) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: 1_collections

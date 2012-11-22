@@ -30,23 +30,88 @@
  */
 package yeti.lang;
 
+import java.util.AbstractMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Yeti core library - IdentityHash. */
-public class IdentityHash
-        extends java.util.IdentityHashMap implements ByKey, Coll {
-    private Fun defaultFun;
+public class CHash extends AbstractMap implements ByKey, Coll {
+    static final int IDENTITY = 1;
+    static final int CONCURRENT = 2;
+    static final int WEAK = 3;
+    private final int type;
+    private final Fun cons;
+    private final Map impl;
+    private volatile Fun defaultFun;
 
-    public IdentityHash() {
+    public CHash(int type_, Fun cons_) {
+        type = type_;
+        cons = cons_;
+        switch (type) {
+        case 0:
+            impl = (Map) cons_.apply(null);
+            break;
+        case IDENTITY:
+            impl = new java.util.IdentityHashMap();
+            break;
+        case CONCURRENT:
+            impl = new java.util.concurrent.ConcurrentHashMap();
+            break;
+        case WEAK:
+            impl = new java.util.WeakHashMap();
+            break;
+        default:
+            throw new IllegalArgumentException("Invalid CHash type " + type_);
+        }
     }
 
-    public IdentityHash(Map map) {
-        super(map);
+    public void clear() {
+        impl.clear();
+    }
+
+    public Set keySet() {
+        return impl.keySet();
+    }
+
+    public Set entrySet() {
+        return impl.entrySet();
+    }
+
+    public boolean isEmpty() {
+        return impl.isEmpty();
+    }
+
+    public boolean containsKey(Object key) {
+        return impl.containsKey(key);
+    }
+
+    public Object get(Object key) {
+        return impl.get(key);
+    }
+
+    public Object put(Object key, Object value) {
+        return impl.put(key, value);
+    }
+
+    public void putAll(Map m) {
+        impl.putAll(m);
+    }
+
+    public Object remove(Object key) {
+        return impl.remove(key);
+    }
+
+    public int hashCode() {
+        return impl.hashCode();
+    }
+
+    public boolean equals(Object o) {
+        return impl.equals(o);
     }
 
     public Object vget(Object key) {
         Object x;
-        if ((x = get(key)) == null && !containsKey(key)) {
+        if ((x = impl.get(key)) == null && !impl.containsKey(key)) {
             if (defaultFun != null) {
                 return defaultFun.apply(key);
             }
@@ -58,15 +123,19 @@ public class IdentityHash
     public void removeAll(AList keys) {
         if (keys != null && !keys.isEmpty())
             for (AIter i = keys; i != null; i = i.next())
-                remove(i.first());
+                impl.remove(i.first());
+    }
+
+    public int size() {
+        return impl.size();
     }
 
     public long length() {
-        return size();
+        return impl.size();
     }
 
     public AList asList() {
-        return new MList(values().toArray());
+        return new MList(impl.values().toArray());
     }
 
     public void setDefault(Fun fun) {
@@ -74,7 +143,8 @@ public class IdentityHash
     }
     
     public Object copy() {
-        IdentityHash result = new IdentityHash(this);
+        CHash result = new CHash(type, cons);
+        result.putAll(this);
         result.defaultFun = defaultFun;
         return result;
     }
