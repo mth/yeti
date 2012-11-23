@@ -57,6 +57,7 @@ final class StructField implements Opcodes {
  */
 final class StructConstructor extends CapturingClosure implements Comparator {
     StructField[] fields;
+    StructField[] fieldsOrigOrder;
     int fieldCount;
     StructField properties;
     String impl;
@@ -204,6 +205,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
 
     void close() {
         // warning - close can be called second time by `with'
+        fieldsOrigOrder = new StructField[fields.length];
+        System.arraycopy(fields, 0, fieldsOrigOrder, 0, fields.length);
         Arrays.sort(fields, 0, fieldCount, this);
         for (int i = 0; i < fieldCount; ++i) {
             StructField field = fields[i];
@@ -454,19 +457,20 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         Label withMutable = null;
         for (i = 0; i < fieldCount; ++i) {
             next = new Label();
-            m.load(1).ldcInsn(fields[i].name);
+            field = fieldsOrigOrder[i];
+            m.load(1).ldcInsn(field.name);
             m.jumpInsn(IF_ACMPNE, next);
-            if (fields[i].property != 0) {
-                m.intConst(i);
+            if (field.property != 0) {
+                m.intConst(field.index);
                 m.methodInsn(INVOKEVIRTUAL, cn, "get", "(I)Ljava/lang/Object;");
             } else {
-                m.fieldInsn(GETFIELD, cn, fields[i].javaName,
+                m.fieldInsn(GETFIELD, cn, field.javaName,
                             "Ljava/lang/Object;");
             }
-            if (fields[i].inherited) {
+            if (field.inherited) {
                 if (withMutable == null)
                     withMutable = new Label();
-                m.load(0).fieldInsn(GETFIELD, cn, "i" + i, "I");
+                m.load(0).fieldInsn(GETFIELD, cn, "i" + field.index, "I");
                 m.insn(DUP);
                 m.jumpInsn(IFGE, withMutable);
                 m.insn(POP);
@@ -596,7 +600,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.localVarCount = 3;
         m.load(0);
         for (i = 0; i < fieldCount; ++i) {
-            field = fields[i];
+            field = fieldsOrigOrder[i];
             if (!field.mutable)
                 continue;
             next = new Label();
