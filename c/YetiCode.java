@@ -587,17 +587,6 @@ final class Ctx implements Opcodes {
         }
     }
 
-    void genInt(Code arg, int line) {
-        if (arg instanceof NumericConstant) {
-            intConst(((NumericConstant) arg).num.intValue());
-        } else {
-            arg.gen(this);
-            visitLine(line);
-            typeInsn(CHECKCAST, "yeti/lang/Num");
-            methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
-        }
-    }
-
     void visitLine(int line) {
         if (line != 0 && lastLine != line) {
             Label label = new Label();
@@ -839,6 +828,14 @@ abstract class Code implements Opcodes {
         ctx.jumpInsn(ifTrue ? IF_ACMPEQ : IF_ACMPNE, to);
     }
 
+    // should be used, if only int is ever needed
+    void genInt(Ctx ctx, int line) {
+        gen(ctx);
+        ctx.visitLine(line);
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
+        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
+    }
+
     // Used to tell that this code is at tail position in a function.
     // Useful for doing tail call optimisations.
     void markTail() {
@@ -1033,6 +1030,10 @@ final class NumericConstant extends Code implements CodeGen {
     boolean flagop(int fl) {
         return ((fl & INT_NUM) != 0 && num instanceof IntNum) ||
                (fl & STD_CONST) != 0;
+    }
+
+    void genInt(Ctx ctx, int lineno) {
+        ctx.intConst(num.intValue());
     }
 
     boolean genInt(Ctx ctx, boolean small) {
@@ -1257,7 +1258,7 @@ final class NewArrayExpr extends Code {
 
     void gen(Ctx ctx) {
         if (count != null)
-            ctx.genInt(count, line);
+            count.genInt(ctx, line);
         ctx.visitLine(line);
         if (type.param[0].type != YetiType.JAVA) { // array of arrays
             ctx.typeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));

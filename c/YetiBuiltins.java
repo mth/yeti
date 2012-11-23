@@ -581,7 +581,7 @@ final class ArithOpFun extends BinOpRef {
         ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
         boolean ii = method == "intDiv" || method == "rem";
         if (method == "shl" || method == "shr") {
-            ctx.genInt(arg2, line);
+            arg2.genInt(ctx, line);
             if (method == "shr")
                 ctx.insn(INEG);
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
@@ -1086,7 +1086,7 @@ final class JavaArrayRef extends Code implements CodeGen {
     private void _gen(Ctx ctx, Code store) {
         value.gen(ctx);
         ctx.typeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
-        ctx.genInt(index, line);
+        index.genInt(ctx, line);
         String resDescr = elementType.javaType == null
                             ? JavaType.descriptionOf(elementType)
                             : elementType.javaType.description;
@@ -1242,7 +1242,7 @@ final class StrChar extends BinOpRef {
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         arg1.gen(ctx);
         ctx.typeInsn(CHECKCAST, "java/lang/String");
-        ctx.genInt(arg2, line);
+        arg2.genInt(ctx, line);
         ctx.insn(DUP);
         ctx.intConst(1);
         ctx.insn(IADD);
