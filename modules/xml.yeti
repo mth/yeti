@@ -138,7 +138,7 @@ xmlElement name is string -> xml_element =
     xmlElement' name undef_str [:];
 
 add_value e v =
-   (l = e.elements;
+   (l = e.elements is array<'a>;
     if empty? l then
         e.values := v :: e.values
     else

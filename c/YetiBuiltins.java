@@ -372,6 +372,7 @@ final class Length extends StaticRef {
                 ctx.insn(DUP);
                 genLong(ctx, arg, line, false);
                 ctx.visitInit("yeti/lang/IntNum", "(J)V");
+                ctx.forceType("yeti/lang/Num");
             }
 
             void genInt(Ctx ctx, int line_, boolean longValue) {
