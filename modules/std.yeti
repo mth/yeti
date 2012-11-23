@@ -2827,6 +2827,37 @@ plus a b = a + b;
 
     /**
      * Group: zmisc
+     *
+     * Creates a new thread-safe atomic reference with the initial value set.
+     *
+     * Arguments:
+     * initial - the initial value for the reference structure `value` field
+     */
+    atomic initialValue is 'a -> {
+            /// The current value in this atomic reference.
+            var value is 'a,
+
+            /**
+             * Atomically set the value to the given updated value,
+             * if the current value is the expected instance.
+             *
+             * Arguments:
+             * expected - value expected to be in the reference
+             * updated  - a new value to set
+             */
+            compareAndSet is 'a -> 'a -> boolean,
+
+            /**
+             * Atomically sets the updated value and returns the old value.
+             *
+             * Arguments:
+             * updated  - a new value to set
+             */
+            swap is 'a -> 'a
+        } = new Atomic(initialValue unsafely_as ~Object) unsafely_as 'a,
+
+    /**
+     * Group: zmisc
      * Returns as a formatted string the exception message and stack trace.
      *
      * Arguments:

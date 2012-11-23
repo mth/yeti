@@ -81,7 +81,7 @@ syn keyword yetiFunction identityHash deleteFile binReadFile binWriteFile
 syn keyword yetiFunction binReadAll trace runThread threadLocal peekObject
 syn keyword yetiFunction listDirectory clearArray mapJavaList createPath
 syn keyword yetiFunction threadExit runnable concurrentHash weakHash customHash
-syn keyword yetiExternal load deprecated
+syn keyword yetiExternal load deprecated atomic
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains?\>"
 
