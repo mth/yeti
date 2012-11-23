@@ -32,6 +32,7 @@ package yeti.lang;
 
 /** Yeti core library - takeWhile list. */
 final class TakeWhile extends LList {
+    private AList rest;
     private AIter src;
     private Fun pred;
 
@@ -50,7 +51,8 @@ final class TakeWhile extends LList {
         if (pred != null) {
             AIter i = src.next();
             src = null;
-            rest = i == null ? null : take(i, pred);
+            if (i != null)
+                rest = take(i, pred);
             pred = null;
         }
         return rest;

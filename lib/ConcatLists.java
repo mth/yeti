@@ -32,9 +32,9 @@ package yeti.lang;
 
 /** Yeti core library - Concat list. */
 final class ConcatLists extends LList {
-    private boolean mappedRest;
-    private AIter src;
-    private AIter tail;
+    private AList rest;
+    private AIter src;  // current list?<'a>
+    private AIter tail; // list<list?<'a>>
 
     public ConcatLists(AIter src, AIter rest) {
         super(src.first(), null);
@@ -43,23 +43,28 @@ final class ConcatLists extends LList {
     }
 
     public synchronized AList rest() {
-        if (!mappedRest) {
+        if (src != null) {
             AIter i = src.next();
             src = null;
+            // current done? -> rest is concatenation of tail list of lists
+            //  more current -> rest contains the current
             rest = i == null ? concat(tail) : new ConcatLists(i, tail);
             tail = null;
-            mappedRest = true;
         }
         return rest;
     }
 
+    // src is list<list?<'a>>
     public static AList concat(AIter src) {
+        // find first non-empty list in the src list of lists
         while (src != null) {
             AList h = (AList) src.first();
             src = src.next();
+            // If found make concat-list mirroring it,
+            // with tail src to use when it's finished.
             if (h != null && !h.isEmpty())
                 return src == null ? h : new ConcatLists(h, src);
         }
-        return null;
+        return null; // no, all empty
     }
 }

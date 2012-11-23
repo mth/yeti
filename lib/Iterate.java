@@ -32,7 +32,8 @@ package yeti.lang;
 
 /** Yeti core library - Iterate function. */
 final class Iterate extends LList {
-    private volatile Fun f;
+    private AList rest;
+    private Fun f;
 
     Iterate(Object v, Fun f) {
         super(v, null);
@@ -41,7 +42,7 @@ final class Iterate extends LList {
 
     public synchronized AList rest() {
         if (f != null) {
-            rest = new Iterate(f.apply(first), f);
+            rest = new Iterate(f.apply(first()), f);
             f = null;
         }
         return rest;
@@ -63,6 +64,6 @@ final class Iterate extends LList {
     }
 
     public Object copy() {
-        return new Iterate(first, f);
+        return new Iterate(first(), f);
     }
 }

@@ -39,10 +39,10 @@ final class MatchAllFun extends Fun {
     final Fun skipFun;
 
     final class Match extends LList {
-        private boolean forced;
+        private AList rest;
         private final int last;
         private final String str;
-        private final Matcher m;
+        private Matcher m;
 
         Match(Object v, int last_, String str_, Matcher m_) {
             super(v, null);
@@ -52,9 +52,9 @@ final class MatchAllFun extends Fun {
         }
 
         public synchronized AList rest() {
-            if (!forced) {
+            if (m != null) {
                 rest = get(str, m, last);
-                forced = true;
+                m = null;
             }
             return rest;
         }

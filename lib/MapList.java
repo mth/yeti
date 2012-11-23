@@ -32,9 +32,9 @@ package yeti.lang;
 
 /** Yeti core library - Map list. */
 final class MapList extends LList {
-    private boolean mappedRest;
+    private AList rest;
     private AIter src;
-    private Fun f;
+    private final Fun f;
 
     public MapList(AIter src, Fun f) {
         super(f.apply(src.first()), null);
@@ -43,12 +43,11 @@ final class MapList extends LList {
     }
 
     public synchronized AList rest() {
-        if (!mappedRest) {
+        if (src != null) {
             AIter i = src.next();
-            rest = i == null ? null : new MapList(i, f);
+            if (i != null)
+                rest = new MapList(i, f);
             src = null;
-            f = null;
-            mappedRest = true;
         }
         return rest;
     }

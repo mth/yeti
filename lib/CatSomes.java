@@ -32,7 +32,6 @@ package yeti.lang;
 
 /** Yeti core library - CatSomes. */
 final class CatSomes extends LList {
-    private boolean checked;
     private AIter src;
     private AList rest;
 
@@ -49,10 +48,9 @@ final class CatSomes extends LList {
     }
 
     public synchronized AList rest() {
-        if (!checked) {
+        if (src != null) {
             rest = filter(src.next());
             src = null;
-            checked = true;
         }
         return rest;
     }

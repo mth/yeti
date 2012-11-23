@@ -33,7 +33,7 @@ package yeti.lang;
 /** Yeti core library - Lazy list. */
 public final class LazyList extends LList {
     private Fun promise;
-    private boolean forced;
+    private AList rest;
 
     public LazyList(Object first, Fun rest) {
         super(first, null);
@@ -41,9 +41,9 @@ public final class LazyList extends LList {
     }
 
     public synchronized AList rest() {
-        if (!forced) {
+        if (promise != null) {
             rest = (AList) promise.apply(null);
-            forced = true;
+            promise = null;
         }
         return rest;
     }

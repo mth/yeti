@@ -34,8 +34,8 @@ import java.io.Serializable;
 
 /** Yeti core library - List. */
 public class LList extends AList implements Serializable {
-    final Object first;
-    AList rest;
+    private final Object first;
+    private final AList rest;
 
     public LList(Object first, AList rest) {
         this.first = first;

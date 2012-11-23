@@ -32,9 +32,9 @@ package yeti.lang;
 
 /** Yeti core library - Map list. */
 final class FilterList extends LList {
-    private boolean checked;
+    private AList rest;
     private AIter src;
-    private Fun f;
+    private final Fun f;
 
     private FilterList(Object v, AIter src, Fun f) {
         super(v, null);
@@ -50,10 +50,9 @@ final class FilterList extends LList {
     }
 
     public synchronized AList rest() {
-        if (!checked) {
+        if (src != null) {
             rest = filter(src.next(), f);
             src = null;
-            checked = true;
         }
         return rest;
     }

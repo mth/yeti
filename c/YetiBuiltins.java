@@ -858,19 +858,23 @@ final class Cons extends BinOpRef {
     }
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
-        String lclass = "yeti/lang/LList";
-        if (arg2.type.deref().param[1].deref()
-                != YetiType.NO_TYPE) {
-            lclass = "yeti/lang/LMList";
-        }
         ctx.visitLine(line);
-        ctx.typeInsn(NEW, lclass);
+        ctx.typeInsn(NEW, "yeti/lang/LList");
         ctx.insn(DUP);
         arg1.gen(ctx);
         arg2.gen(ctx);
         ctx.visitLine(line);
+        ctx.insn(DUP);
+        Label cons = new Label();
+        ctx.jumpInsn(IFNULL, cons); // null, ok
+        ctx.insn(DUP);
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll", "isEmpty", "()Z"); 
+        ctx.jumpInsn(IFEQ, cons); // not empty, ok
+        ctx.insn(POP); // empty not-null, dump it
+        ctx.insn(ACONST_NULL); // and use null instead
+        ctx.visitLabel(cons);
         ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
-        ctx.visitInit(lclass,
+        ctx.visitInit("yeti/lang/LList",
                       "(Ljava/lang/Object;Lyeti/lang/AList;)V");
         ctx.forceType("yeti/lang/AList");
     }

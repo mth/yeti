@@ -32,7 +32,7 @@ package yeti.lang;
 
 /** Yeti core library - Map 2 lists. */
 final class Map2List extends LList {
-    private boolean mappedRest;
+    private AList rest;
     private AIter src;
     private AIter src2;
     private Fun f;
@@ -45,14 +45,14 @@ final class Map2List extends LList {
     }
 
     public synchronized AList rest() {
-        if (!mappedRest) {
+        if (f != null) {
             AIter i = src.next();
             AIter j = src2.next();
-            rest = i == null || j == null ? null : new Map2List(f, i, j);
+            if (i != null && j != null)
+                rest = new Map2List(f, i, j);
             src = null;
             src2 = null;
             f = null;
-            mappedRest = true;
         }
         return rest;
     }
