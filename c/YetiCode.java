@@ -829,11 +829,14 @@ abstract class Code implements Opcodes {
     }
 
     // should be used, if only int is ever needed
-    void genInt(Ctx ctx, int line) {
+    void genInt(Ctx ctx, int line, boolean longValue) {
         gen(ctx);
         ctx.visitLine(line);
         ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
-        ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
+        if (longValue)
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "longValue", "()J");
+        else
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num", "intValue", "()I");
     }
 
     // Used to tell that this code is at tail position in a function.
@@ -1032,24 +1035,11 @@ final class NumericConstant extends Code implements CodeGen {
                (fl & STD_CONST) != 0;
     }
 
-    void genInt(Ctx ctx, int lineno) {
-        ctx.intConst(num.intValue());
-    }
-
-    boolean genInt(Ctx ctx, boolean small) {
-        if (!(num instanceof IntNum)) {
-            return false;
-        }
-        long n = num.longValue();
-        if (!small) {
-            ctx.ldcInsn(new Long(n));
-        } else if (n >= (long) Integer.MIN_VALUE &&
-                   n <= (long) Integer.MAX_VALUE) {
-            ctx.intConst((int) n);
-        } else {
-            return false;
-        }
-        return true;
+    void genInt(Ctx ctx, int lineno, boolean longValue) {
+        if (longValue)
+            ctx.ldcInsn(new Long(num.longValue()));
+        else
+            ctx.intConst(num.intValue());
     }
 
     private static final class Impl extends Code {
@@ -1258,7 +1248,7 @@ final class NewArrayExpr extends Code {
 
     void gen(Ctx ctx) {
         if (count != null)
-            count.genInt(ctx, line);
+            count.genInt(ctx, line, false);
         ctx.visitLine(line);
         if (type.param[0].type != YetiType.JAVA) { // array of arrays
             ctx.typeInsn(ANEWARRAY, JavaType.descriptionOf(type.param[0]));

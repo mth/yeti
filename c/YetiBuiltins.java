@@ -561,8 +561,8 @@ final class ArithOpFun extends BinOpRef {
     }
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
-        if (method == "and" && arg2 instanceof NumericConstant &&
-                arg2.flagop(INT_NUM)) {
+        boolean arg2IsInt = arg2.flagop(INT_NUM);
+        if (method == "and" && arg2IsInt) {
             ctx.typeInsn(NEW, "yeti/lang/IntNum");
             ctx.insn(DUP);
             arg1.gen(ctx);
@@ -570,7 +570,7 @@ final class ArithOpFun extends BinOpRef {
             ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                                 "longValue", "()J");
-            ((NumericConstant) arg2).genInt(ctx, false);
+            arg2.genInt(ctx, line, true);
             ctx.insn(LAND);
             ctx.visitInit("yeti/lang/IntNum", "(J)V");
             ctx.forceType("yeti/lang/Num");
@@ -579,15 +579,15 @@ final class ArithOpFun extends BinOpRef {
         arg1.gen(ctx);
         ctx.visitLine(line);
         ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
-        boolean ii = method == "intDiv" || method == "rem";
         if (method == "shl" || method == "shr") {
-            arg2.genInt(ctx, line);
+            arg2.genInt(ctx, line, false);
             if (method == "shr")
                 ctx.insn(INEG);
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
-                                "shl", "(I)Lyeti/lang/Num;");
-        } else if (arg2 instanceof NumericConstant &&
-                 ((NumericConstant) arg2).genInt(ctx, ii)) {
+                           "shl", "(I)Lyeti/lang/Num;");
+        } else if (arg2IsInt) {
+            boolean ii = method == "intDiv" || method == "rem";
+            arg2.genInt(ctx, line, !ii);
             ctx.visitLine(line);
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                 method, ii ? "(I)Lyeti/lang/Num;" : "(J)Lyeti/lang/Num;");
@@ -689,7 +689,7 @@ final class CompareFun extends BoolBinOp {
             ctx.visitLine(line);
             if (arg2.flagop(INT_NUM)) {
                 ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
-                ((NumericConstant) arg2).genInt(ctx, false);
+                arg2.genInt(ctx, line, true);
                 ctx.visitLine(line);
                 ctx.methodInsn(INVOKEVIRTUAL,
                         "yeti/lang/Num", "rCompare", "(J)I");
@@ -1086,7 +1086,7 @@ final class JavaArrayRef extends Code implements CodeGen {
     private void _gen(Ctx ctx, Code store) {
         value.gen(ctx);
         ctx.typeInsn(CHECKCAST, JavaType.descriptionOf(value.type));
-        index.genInt(ctx, line);
+        index.genInt(ctx, line, false);
         String resDescr = elementType.javaType == null
                             ? JavaType.descriptionOf(elementType)
                             : elementType.javaType.description;
@@ -1242,7 +1242,7 @@ final class StrChar extends BinOpRef {
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         arg1.gen(ctx);
         ctx.typeInsn(CHECKCAST, "java/lang/String");
-        arg2.genInt(ctx, line);
+        arg2.genInt(ctx, line, false);
         ctx.insn(DUP);
         ctx.intConst(1);
         ctx.insn(IADD);

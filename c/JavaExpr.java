@@ -265,13 +265,10 @@ class JavaExpr extends Code {
         if (argType.type == YetiType.JAVA) {
             // integer arguments can be directly generated
             String desc = desc = argType.javaType.description;
-            if (desc == "I") {
-                arg.genInt(ctx, line);
+            if (desc == "I" || desc == "J") {
+                arg.genInt(ctx, line, desc == "J");
                 return;
             }
-            if (desc == "J" && arg instanceof NumericConstant &&
-                ((NumericConstant) arg).genInt(ctx, false))
-                return; 
         }
         if (genRawArg(ctx, arg, argType, line))
             convert(ctx, arg.type, argType);
