@@ -234,8 +234,7 @@ final class IsEmpty extends IsNullPtr {
         ctx.jumpInsn(IFNULL, isNull);
         if (ctx.compilation.isGCJ)
             ctx.typeInsn(CHECKCAST, "yeti/lang/Coll");
-        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll",
-                            "isEmpty", "()Z"); 
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll", "isEmpty", "()Z");
         ctx.jumpInsn(IFNE, ifTrue ? to : end);
         ctx.jumpInsn(GOTO, ifTrue ? end : to);
         ctx.visitLabel(isNull);
@@ -385,8 +384,7 @@ final class For extends Core2 {
             ctx.insn(DUP);
             ctx.jumpInsn(IFNULL, end);
             ctx.insn(DUP);
-            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList",
-                                "isEmpty", "()Z");
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList", "isEmpty", "()Z");
             ctx.jumpInsn(IFNE, end);
             // start of loop
             ctx.visitLabel(retry);
@@ -870,7 +868,7 @@ final class Cons extends BinOpRef {
             ctx.insn(DUP);
             ctx.jumpInsn(IFNULL, cons); // null, ok
             ctx.insn(DUP);
-            ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll", "isEmpty", "()Z"); 
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AList", "isEmpty", "()Z");
             ctx.jumpInsn(IFEQ, cons); // not empty, ok
             ctx.insn(POP); // empty not-null, dump it
             ctx.insn(ACONST_NULL); // and use null instead
