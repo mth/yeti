@@ -562,7 +562,7 @@ final class ArithOpFun extends BinOpRef {
 
     void binGen(Ctx ctx, Code arg1, Code arg2) {
         if (method == "and" && arg2 instanceof NumericConstant &&
-            ((NumericConstant) arg2).flagop(INT_NUM)) {
+                arg2.flagop(INT_NUM)) {
             ctx.typeInsn(NEW, "yeti/lang/IntNum");
             ctx.insn(DUP);
             arg1.gen(ctx);
