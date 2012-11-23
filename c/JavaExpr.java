@@ -261,12 +261,17 @@ class JavaExpr extends Code {
     }
 
     static void convertedArg(Ctx ctx, Code arg, YType argType, int line) {
-        String desc;
         argType = argType.deref();
-        if (arg instanceof NumericConstant && argType.type == YetiType.JAVA &&
-            ((desc = argType.javaType.description) == "I" || desc == "J") &&
-            ((NumericConstant) arg).genInt(ctx, desc == "I")) {
-            return; // integer arguments can be directly generated
+        if (argType.type == YetiType.JAVA) {
+            // integer arguments can be directly generated
+            String desc = desc = argType.javaType.description;
+            if (desc == "I") {
+                arg.genInt(ctx, line);
+                return;
+            }
+            if (desc == "J" && arg instanceof NumericConstant &&
+                ((NumericConstant) arg).genInt(ctx, false))
+                return; 
         }
         if (genRawArg(ctx, arg, argType, line))
             convert(ctx, arg.type, argType);
