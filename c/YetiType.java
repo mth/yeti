@@ -241,6 +241,7 @@ public class YetiType implements YetiParser {
     static final YType A_TO_BOOL = fun(A, BOOL_TYPE);
     static final YType LIST_TO_A = fun(A_B_LIST_TYPE, A);
     static final YType MAP_TO_BOOL = fun(A_B_C_MAP_TYPE, BOOL_TYPE);
+    static final YType MAP_TO_NUM = fun(A_B_C_MAP_TYPE, NUM_TYPE);
     static final YType LIST_TO_LIST = fun(A_B_LIST_TYPE, A_LIST_TYPE);
     static final YType IN_TYPE = fun2Arg(A, A_B_C_MAP_TYPE, BOOL_TYPE);
     static final YType COMPOSE_TYPE = fun2Arg(fun(B, C), fun(A, B), fun(A, C));
@@ -287,6 +288,7 @@ public class YetiType implements YetiParser {
         bindPoly("tail", LIST_TO_LIST, new BuiltIn(12),
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7),
         bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24),
+        bindPoly("length", MAP_TO_NUM, new BuiltIn(25),
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -353,7 +355,7 @@ public class YetiType implements YetiParser {
         bindImport("Long", "java/lang/Long",
         bindImport("Double", "java/lang/Double",
         bindImport("String", "java/lang/String",
-   null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+  null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System",

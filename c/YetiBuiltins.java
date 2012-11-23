@@ -125,6 +125,9 @@ final class BuiltIn implements Binder {
         case 24:
             r = new Escape(line);
             break;
+        case 25:
+            r = new Length();
+            break;
         }
         r.binder = this;
         return r;
@@ -167,8 +170,7 @@ class IsNullPtr extends StaticRef {
         super("yeti/lang/std$" + fun, "_", type, null, true, line);
     }
 
-    Code apply(final Code arg, final YType res,
-               final int line) {
+    Code apply(final Code arg, final YType res, final int line) {
         return new Code() {
             { type = res; }
 
@@ -315,6 +317,58 @@ final class Negate extends StaticRef implements CodeGen {
                         .num.subFrom(0));
         }
         return new SimpleCode(this, arg1, YetiType.NUM_TYPE, line);
+    }
+}
+
+final class Length extends StaticRef {
+    Length() {
+        super("yeti/lang/std$length", "_", YetiType.MAP_TO_NUM,
+              null, true, 0);
+    }
+
+    void genLong(Ctx ctx, Code arg, int line, boolean toint) {
+        Label nonnull = new Label(), end = new Label();
+        arg.gen(ctx);
+        ctx.visitLine(line);
+        // arrays can't be null, other can
+        if (arg.type.deref().param[1].deref() != YetiType.NUM_TYPE) {
+            ctx.insn(DUP);
+            ctx.jumpInsn(IFNONNULL, nonnull);
+            ctx.insn(POP);
+            if (toint)
+                ctx.intConst(0);
+            else
+                ctx.ldcInsn(new Long(0));
+            ctx.jumpInsn(GOTO, end);
+            ctx.visitLabel(nonnull);
+        }
+        if (ctx.compilation.isGCJ)
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Coll");
+        ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Coll", "length", "()J");
+        if (toint)
+            ctx.insn(L2I);
+        ctx.visitLabel(end);
+    }
+
+    Code apply(final Code arg, final YType res, final int line) {
+        return new Code() {
+            { type = res; }
+
+            void gen(Ctx ctx) {
+                ctx.typeInsn(NEW, "yeti/lang/IntNum");
+                ctx.insn(DUP);
+                genLong(ctx, arg, line, false);
+                ctx.visitInit("yeti/lang/IntNum", "(J)V");
+            }
+
+            void genInt(Ctx ctx, int line_, boolean longValue) {
+                genLong(ctx, arg, line, !longValue);
+            }
+
+            boolean flagop(int fl) {
+                return (fl & INT_NUM) != 0;
+            }
+        };
     }
 }
 

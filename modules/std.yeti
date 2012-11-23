@@ -275,26 +275,6 @@ map' f l is ('a -> 'b) -> list?<'a> -> list<'b> =
     fi;
 
 /**
- * Group: 1_collections (Generic collection functions)
- * Returns count of elements in collection.
- *
- * Arguments:
- *   collection - a list, array or hash map
- *
- * Description:
- * For list or array it's length is returned, and for hash map the number of
- * key-value pairs in that hash map. The `length` function can also be applied
- * to Java arrays (for example `length new int[10]`), as Yeti compiler wraps
- * these automatically into lists on function arguments.
- */
-length l is map<'a, 'b> -> number =
-    if nullptr? l then
-        0
-    else
-        (l unsafely_as ~Coll)#length()
-    fi;
-
-/**
  * Group: zmisc
  * Access any value at runtime. Returns variant tagged with values
  * runtime type.
@@ -849,6 +829,21 @@ plus a b = a + b;
     norec empty? a = empty? a,
 
     /**
+     * Group: 1_collections (Generic collection functions)
+     * Returns count of elements in collection.
+     *
+     * Arguments:
+     *   collection - a list, array or hash map
+     *
+     * Description:
+     * For list or array it's length is returned, and for hash map the number of
+     * key-value pairs in that hash map. The `length` function can also be applied
+     * to Java arrays (for example `length new int[10]`), as Yeti compiler wraps
+     * these automatically into lists on function arguments.
+     */
+    norec length a = length a,
+
+    /**
      * Group: list
      * Returns the first element of sequence (which must be non-empty).
      *
@@ -991,7 +986,7 @@ plus a b = a + b;
 
     // damn struct polymorphism restriction. is it really needed?
     array, concat, fold, find, id, index, keys, hash, map, map',
-    forHash, length, peekObject,
+    forHash, peekObject,
 
     /// Group: array
     /// Deprecated - it doesn't do anything useful, and if you want to
