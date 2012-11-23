@@ -1640,13 +1640,21 @@ final class KeyRefExpr extends Code implements CodeGen {
 
     void gen(Ctx ctx) {
         val.gen(ctx);
-        if (ctx.compilation.isGCJ) {
-            ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
+        if (val.type.deref().param[2] == YetiType.LIST_TYPE) {
+            ctx.visitLine(line);
+            ctx.typeInsn(CHECKCAST, "yeti/lang/MList");
+            key.genInt(ctx, line, false);
+            ctx.visitLine(line);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/MList", "get",
+                           "(I)Ljava/lang/Object;");
+            return;
         }
+        if (ctx.compilation.isGCJ)
+            ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
         key.gen(ctx);
         ctx.visitLine(line);
         ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/ByKey", "vget",
-                              "(Ljava/lang/Object;)Ljava/lang/Object;");
+                       "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
     public void gen2(Ctx ctx, Code setValue, int _) {

@@ -61,27 +61,23 @@ abstract class AMList extends AList implements Serializable {
     }
 
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (obj == null)
             return _size() <= start;
-        }
         if (obj instanceof AMList) {
             AMList o = (AMList) obj;
             int cnt = _size();
-            if (cnt - start != o._size() - o.start) {
+            if (cnt - start != o._size() - o.start)
                 return false;
-            }
             Object[] arr = array(), arr_ = o.array();
             for (int i = start, j = o.start; i < cnt; ++i, ++j) {
                 Object a = arr[i], b = arr_[j];
-                if (a != b && (a == null || !a.equals(b))) {
+                if (a != b && (a == null || !a.equals(b)))
                     return false;
-                }
             }
             return true;
         }
-        if (!(obj instanceof AList)) {
+        if (!(obj instanceof AList))
             return false;
-        }
         Object[] array = array();
         AIter j = (AList) obj;
         Object x, y;
@@ -100,9 +96,8 @@ abstract class AMList extends AList implements Serializable {
         Object[] array = array();
         StringBuffer buf = new StringBuffer("[");
         for (int cnt = _size(), i = start; i < cnt; ++i) {
-            if (i > start) {
+            if (i > start)
                 buf.append(',');
-            }
             buf.append(Core.show(array[i]));
         }
         buf.append(']');
@@ -112,16 +107,14 @@ abstract class AMList extends AList implements Serializable {
     public void forEach(Object fun) {
         Fun f = (Fun) fun;
         Object[] array = array();
-        for (int cnt = _size(), i = start; i < cnt; ++i) {
+        for (int cnt = _size(), i = start; i < cnt; ++i)
             f.apply(array[i]);
-        }
     }
 
     public Object fold(Fun f, Object v) {
         Object[] array = array();
-        for (int cnt = _size(), i = start; i < cnt; ++i) {
+        for (int cnt = _size(), i = start; i < cnt; ++i)
             v = f.apply(v, array[i]);
-        }
         return v;
     }
 
@@ -129,18 +122,14 @@ abstract class AMList extends AList implements Serializable {
         Object[] array = array();
         int cnt = _size();
         if (v == null) {
-            for (int i = start; i < cnt; ++i) {
-                if (array[i] == null) {
+            for (int i = start; i < cnt; ++i)
+                if (array[i] == null)
                     return new IntNum(i - start);
-                }
-            }
             return null;
         }
-        for (int i = start; i < cnt; ++i) {
-            if (v.equals(array[i])) {
+        for (int i = start; i < cnt; ++i)
+            if (v.equals(array[i]))
                 return new IntNum(i - start);
-            }
-        }
         return null;
     }
 
@@ -150,9 +139,8 @@ abstract class AMList extends AList implements Serializable {
             return null;
         Object[] array = array();
         Object[] result = new Object[cnt - start];
-        for (int i = start; i < cnt; ++i) {
+        for (int i = start; i < cnt; ++i)
             result[i - start] = f.apply(array[i]);
-        }
         return new MList(result);
     }
 
@@ -351,16 +339,14 @@ public class MList extends AMList implements ByKey {
     }
 
     public final Object shift() {
-        if (start >= size) {
+        if (start >= size)
             throw new EmptyArrayException("No first element in empty array");
-        }
         return array[start++];
     }
 
     public final Object pop() {
-        if (start >= size) {
+        if (start >= size)
             throw new EmptyArrayException("Cannot pop from an empty array");
-        }
         return array[--size];
     }
 
@@ -369,9 +355,8 @@ public class MList extends AMList implements ByKey {
     }
 
     public final Object first() {
-        if (start >= size) {
+        if (start >= size)
             throw new EmptyArrayException("No first element in empty array");
-        }
         return array[start];
     }
 
@@ -392,38 +377,38 @@ public class MList extends AMList implements ByKey {
 
     public final Object vget(Object index) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0) {
+        if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
-        }
-        if ((i += start) >= size) {
+        if ((i += start) >= size)
             throw new NoSuchKeyException(i - start, size - start);
-        }
+        return array[i];
+    }
+
+    public final Object get(int index) {
+        int i;
+        if (index < 0 || (i = index + start) >= size)
+            throw new NoSuchKeyException(index, size - start);
         return array[i];
     }
 
     public final Object put(Object index, Object value) {
         int i;
-        if ((i = ((Number) index).intValue()) < 0) {
+        if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
-        }
-        if ((i += start) >= size) {
+        if ((i += start) >= size)
             throw new NoSuchKeyException(i - start, size - start);
-        }
         array[i] = value;
         return null;
     }
 
     public final Object remove(Object index) {
         int i, n;
-        if ((i = ((Number) index).intValue()) < 0) {
+        if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
-        }
-        if ((i += start) >= size) {
+        if ((i += start) >= size)
             throw new NoSuchKeyException(i - start, size - start);
-        }
-        if ((n = --size - i) > 0) {
+        if ((n = --size - i) > 0)
             System.arraycopy(array, i + 1, array, i, n);
-        }
         return null;
     }
 
