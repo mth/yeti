@@ -329,8 +329,10 @@ final class Length extends StaticRef {
     void genLong(Ctx ctx, Code arg, int line, boolean toint) {
         if (arg instanceof Cast) {
             Code obj = ((Cast) arg).object;
-            if (obj.type.deref().type == YetiType.JAVA_ARRAY) {
+            YType t = obj.type.deref();
+            if (t.type == YetiType.JAVA_ARRAY) {
                 obj.gen(ctx);
+                ctx.typeInsn(CHECKCAST, JavaType.descriptionOf(t));
                 ctx.visitLine(line);
                 ctx.insn(ARRAYLENGTH);
                 if (!toint)
