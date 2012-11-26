@@ -952,10 +952,12 @@ public final class YetiAnalyzer extends YetiType {
             for (int i = scope.free.length; --i >= 0; ) {
                 int j = def.length - 1;
                 while (--j >= 0 && scope.free[i] != def[j]);
-                if (j < 0)
+                if (j < 0) {
+                    scope.free[i].flags |= FL_ERROR_IS_HERE;
                     throw new CompileException(typeDef, scope, self, null,
                         "typedef opaque " + typeDef.name +
                         " contains free type variable in #1", null);
+                }
             }
             synchronized (scope.ctx.opaqueTypes) {
                 type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
