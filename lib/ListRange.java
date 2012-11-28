@@ -153,27 +153,6 @@ public final class ListRange extends AList implements Serializable {
         return i == null && j == null;
     }
 
-    public String toString() {
-        StringBuffer buf = new StringBuffer("[");
-        boolean f = true;
-        for (Num i = first; i.compareTo(last) * inc <= 0; i = i.add(inc)) {
-            if (f)
-                f = false;
-            else
-                buf.append(',');
-            buf.append(i);
-        }
-        for (AIter i = rest; i != null; i = i.next()) {
-            if (f)
-                f = false;
-            else
-                buf.append(',');
-            buf.append(Core.show(i.first()));
-        }
-        buf.append(']');
-        return buf.toString();
-    }
-
     public int compareTo(Object obj) {
         AIter i = this, j = (AIter) obj;
         while (i != null && j != null) {

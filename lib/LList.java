@@ -83,17 +83,6 @@ public class LList extends AList implements Serializable {
         return i == null && j == null;
     }
 
-    public String toString() {
-        StringBuffer buf = new StringBuffer("[");
-        buf.append(Core.show(first()));
-        for (AIter i = rest(); i != null; i = i.next()) {
-            buf.append(',');
-            buf.append(Core.show(i.first()));
-        }
-        buf.append(']');
-        return buf.toString();
-    }
-
     public int compareTo(Object obj) {
         AIter i = this, j = (AIter) obj;
         while (i != null && j != null) {
