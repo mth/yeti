@@ -173,7 +173,8 @@ public final class YetiAnalyzer extends YetiType {
             if (opop == FIELD_OP) {
                 if (op.right.kind == "listop") {
                     CompileCtx.current().warn(new CompileException(node,
-                        "Old-style .[] array/hash reference is deprecated"));
+                        "Old-style .[] array/hash reference is deprecated" +
+                        " (use [] instead)"));
                     return keyRefExpr(analyze(op.left, scope, depth),
                                       (ObjectRefOp) op.right, scope, depth);
                 }

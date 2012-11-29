@@ -27,7 +27,7 @@ combSort less a =
             fi
         done));
 
-shellSort less a =
+shellSort less a is (^a -> ^a -> boolean) -> array<^a> -> () =
    (var inc = length a;
     (inc := if inc == 2 then 1 else: inc * 10 div 23; inc > 0) loop
        (var i = inc;
@@ -67,7 +67,7 @@ heapSort less a =
                 root := end)
     done);
 
-qsort less a =
+qsort less a is (^a -> ^a -> boolean) -> array<^a> -> () =
    (sort l r =
        (var i = l;
         var j = r;
@@ -75,7 +75,9 @@ qsort less a =
            (less a[i] x loop i := i + 1;
             less x a[j] loop j := j - 1;
             if i <= j then
-                swapAt a i j;
+                tmp = a[i];
+                a[i] := a[j];
+                a[j] := tmp;
                 i := i + 1;
                 j := j - 1;
             fi;
@@ -171,5 +173,5 @@ test n slow =
     testSort "sortBy" sortBy);
 
 test 2000 true;
-test 50000 false;
+test 100000 false;
 
