@@ -46,7 +46,6 @@ formatType template =
                (fn = f.name;
                 var description = f.description;
                 var group = '';
-                var groupTitle = '';
                 m = like '[\s*]*Group: +(\w+)(?: +\(([^\n)]*)\))?\s*\*?'
                     description ();
                 if not empty? m then
