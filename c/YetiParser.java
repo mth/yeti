@@ -409,14 +409,12 @@ interface YetiParser {
         String str() {
             StringBuffer buf =
                 new StringBuffer(right == null ? "<>" : right.str());
-            buf.append('#');
-            buf.append(name);
+            buf.append('#').append(name);
             if (arguments != null) {
                 buf.append('(');
                 for (int i = 0; i < arguments.length; ++i) {
-                    if (i != 0) {
+                    if (i != 0)
                         buf.append(", ");
-                    }
                     buf.append(arguments[i].str());
                 }
                 buf.append(')');
@@ -508,17 +506,15 @@ interface YetiParser {
                     apply(op);
                     to = cur;
                 }
-                if (op.op == "-") {
+                if (op.op == "-")
                     op.prio = 1;
-                }
                 to.left = to.right;
             } else if (lastOp) {
                 throw new CompileException(op, "Do not stack operators");
             } else {
                 while (to.parent != null && (to.postfix || to.prio < op.prio ||
-                            to.prio == op.prio && op.toRight)) {
+                            to.prio == op.prio && op.toRight))
                     to = to.parent;
-                }
                 op.right = to.right;
             }
             op.parent = to;
@@ -528,12 +524,12 @@ interface YetiParser {
         }
 
         void add(Node node) {
-            if (node instanceof BinOp && ((BinOp) node).parent == null) {
+            if (node instanceof BinOp && ((BinOp) node).parent == null &&
+                    (!lastOp || node.kind != "listop")) {
                 addOp((BinOp) node);
             } else {
-                if (!lastOp) {
+                if (!lastOp)
                     apply(node);
-                }
                 lastOp = false;
                 cur.left = cur.right;
                 cur.right = node;
@@ -544,7 +540,7 @@ interface YetiParser {
             if (cur.left == null && cur.prio != -1 && cur.prio != 1 &&
                     cur.prio != Parser.NOT_OP_LEVEL &&
                     !cur.postfix || cur.right == null)
-                throw new CompileException(cur, "Expecting some value");
+                throw new CompileException(cur, "Expecting some value"+cur);
             return root.right;
         }
     }
@@ -690,12 +686,7 @@ interface YetiParser {
                 case '(':
                     return readSeq(')', null);
                 case '[':
-                    if (i + 2 < src.length && src[i + 1] == ':' &&
-                            src[i + 2] == ']') {
-                        p = i + 3;
-                        return new XNode("list").pos(line,col);
-                    }
-                    return new XNode("list", readMany(",", ']')).pos(line, col);
+                    return readList().pos(line, col);
                 case '{':
                     return XNode.struct(readMany(",", '}')).pos(line, col);
                 case ')':
@@ -835,6 +826,23 @@ interface YetiParser {
             return res.pos(line, col);
         }
 
+        private Node readList() {
+            char c;
+            int i = p;
+            if (i + 1 < src.length && src[i] == ':' && src[i + 1] == ']') {
+                p = i + 2;
+                return new XNode("list");
+            }
+            Node[] elem = readMany(",", ']');
+            if (elem.length != 1 || i <= 1 ||
+                    (c = src[i - 2]) < '~' && CHS[c] == ' ' && c != ')' ||
+                    elem[0] instanceof BinOp && ((BinOp) elem[0]).op == "..")
+                return new XNode("list", elem);
+            Node res = new ObjectRefOp(null, elem);
+            res.kind = "listop";
+            return res;
+        }
+
         private Node def(List args, List expr, boolean structDef, String doc) {
             BinOp partial = null;
             String s = null;
@@ -844,7 +852,8 @@ interface YetiParser {
                 if (o instanceof BinOp
                     && (partial = (BinOp) o).parent == null
                     && partial.op != "\\" && partial.op != "-"
-                    && partial.op != "throw" && partial.op != "not") {
+                    && partial.op != "throw" && partial.op != "not"
+                    && partial.op != "#") {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&

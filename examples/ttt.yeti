@@ -5,12 +5,12 @@ newGame size = {
     full? () = not contains? ' ' board,
     hasWon player =
         m = size - 1;
-        check from by = all (_ p = board.[p * by + from] == player) [0 .. m];
+        check from by = all (_ p = board[p * by + from] == player) [0 .. m];
         line i = check i size or check (i * size) 1;
         check 0 (m + 2) or check m m or any line [0 .. m],
     get show () =
         cell n =
-            " | " ^ board.[n] ^ if n % size == size - 1 then " |\n" else "" fi;
+            " | " ^ board[n] ^ if n % size == size - 1 then " |\n" else "" fi;
         strJoin "" (map cell [0 .. maxPos]),
     check me op =
         if hasWon me then
@@ -23,12 +23,12 @@ newGame size = {
             (tryPos best pos =
                 if pos > maxPos or best.score > 0 then
                     best
-                elif board.[pos] != ' ' then
+                elif board[pos] != ' ' then
                     tryPos best (pos + 1)
                 else
-                    board.[pos] := me;
+                    board[pos] := me;
                     res = -(check op me).score;
-                    board.[pos] := ' ';
+                    board[pos] := ' ';
                     if res > best.score then
                         tryPos {score = res, pos} (pos + 1)
                     else
@@ -37,7 +37,7 @@ newGame size = {
                 fi) {score = -2, pos = -1} 0
         fi,
     putBest me =
-        board.[(check me if me == 'O' then 'X' else 'O' fi).pos] := me,
+        board[(check me if me == 'O' then 'X' else 'O' fi).pos] := me,
 };
 
 game = newGame 3;
@@ -54,11 +54,11 @@ human = 'O';
         print "\(game.show)move xy> ";
         move = number (readln ());
         move = game.pos (move div 10 - 1) (move % 10 - 1);
-        if move < 0 or move > game.maxPos or game.board.[move] != ' ' then
+        if move < 0 or move > game.maxPos or game.board[move] != ' ' then
             println "Illegal move. You'll be shot.";
             play true
         else
-            game.board.[move] := human;
+            game.board[move] := human;
             play false
         fi
     else

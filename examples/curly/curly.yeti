@@ -79,9 +79,9 @@ compile tokens topLevel result =
         {code = reverse result, rest = []}
     esac;
 
-srcName = _argv.[0];
+srcName = _argv[0];
 baseName = like '^(.*)\.[^\\/.]+$' srcName ();
-baseName = if empty? baseName then srcName else baseName.[1] fi;
+baseName = if empty? baseName then srcName else baseName[1] fi;
 src = readFile srcName '' getContents;
 
 tokens = matchAll ('/\*.*?\*/|\s+|([{}])|(\w[\w''$?~]*+)|' ^

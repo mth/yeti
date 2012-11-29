@@ -142,7 +142,7 @@ add_value e v =
     if empty? l then
         e.values := v :: e.values
     else
-        e = l.[length l - 1];
+        e = l[length l - 1];
         e.tailValues := v :: e.tailValues
     fi);
 
@@ -237,11 +237,11 @@ xmlParse source is 'a -> xml_element =
             attr = new yeti.lang.Hash(i) unsafely_as hash<string, string>;
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
-                attr.[if keepNS and qn#getNamespaceURI() != '' then
-                         "{\(qn#getNamespaceURI())}\(qn#getLocalPart())"
-                      else
-                         qn#getLocalPart()
-                      fi] := r#getAttributeValue(i));
+                attr[if keepNS and qn#getNamespaceURI() != '' then
+                        "{\(qn#getNamespaceURI())}\(qn#getLocalPart())"
+                     else
+                        qn#getLocalPart()
+                     fi] := r#getAttributeValue(i));
             push stack cur;
             current := xmlElement' r#getLocalName() r#getNamespaceURI() attr;
             push cur.elements current;
@@ -272,7 +272,7 @@ xmlParse source is 'a -> xml_element =
     if empty? root.elements then
         failWith "No document element"
     fi;
-    current := root.elements.[0];
+    current := root.elements[0];
     current.tailValues := root.values;
     current);
 

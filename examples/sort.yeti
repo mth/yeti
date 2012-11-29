@@ -4,7 +4,7 @@ asort f less l =
     list a);
 
 selectionSort less a =
-   (selectLess i j = if less a.[i] a.[j] then i else: j;
+   (selectLess i j = if less a[i] a[j] then i else: j;
     swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
     for [0 .. length a - 2] swapMin);
 
@@ -21,7 +21,7 @@ combSort less a =
         swapped := false;
         gap = gap; // optimisation
         for [0 .. length a - gap - 1] do i:
-            if less a.[i + gap] a.[i] then
+            if less a[i + gap] a[i] then
                 swapAt a i (i + gap);
                 swapped := true
             fi
@@ -32,12 +32,12 @@ shellSort less a =
     (inc := if inc == 2 then 1 else: inc * 10 div 23; inc > 0) loop
        (var i = inc;
         i < length a loop
-           (tmp = a.[i];
+           (tmp = a[i];
             var j = i;
-            j >= inc and less tmp a.[j - inc] loop
-               (a.[j] := a.[j - inc];
+            j >= inc and less tmp a[j - inc] loop
+               (a[j] := a[j - inc];
                 j := j - inc);
-            a.[j] := tmp;
+            a[j] := tmp;
             i := i + 1)));
 
 // based on wikipedia pseudocode example
@@ -46,7 +46,7 @@ heapSort less a =
         var child = end;
         child > 0 loop
            (parent = (child - 1) div 2;
-            if less a.[parent] a.[child] then
+            if less a[parent] a[child] then
                 swapAt a parent child;
                 child := parent
             else:
@@ -57,10 +57,10 @@ heapSort less a =
         var root = 0;
         root * 2 + 1 <= end loop // shiftdown
            (var child = root * 2 + 1;
-            if child < end and less a.[child] a.[child + 1] then
+            if child < end and less a[child] a[child + 1] then
                 child := child + 1
             fi;
-            if less a.[root] a.[child] then
+            if less a[root] a[child] then
                 swapAt a root child;
                 root := child
             else:
@@ -71,9 +71,9 @@ qsort less a =
    (sort l r =
        (var i = l;
         var j = r;
-        x = a.[(l + r) div 2];
-           (less a.[i] x loop i := i + 1;
-            less x a.[j] loop j := j - 1;
+        x = a[(l + r) div 2];
+           (less a[i] x loop i := i + 1;
+            less x a[j] loop j := j - 1;
             if i <= j then
                 swapAt a i j;
                 i := i + 1;
@@ -129,12 +129,12 @@ insertionSort less l =
 
 insertionSort2 less a =
     for [1 .. length a - 1] do i:
-        v = a.[i];
+        v = a[i];
         var j = i - 1;
-        j >= 0 and less v a.[j] loop
-           (a.[j + 1] := a.[j];
+        j >= 0 and less v a[j] loop
+           (a[j + 1] := a[j];
             j := j - 1);
-        a.[j + 1] := v
+        a[j + 1] := v
     done;
 
 

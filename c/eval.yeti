@@ -70,7 +70,7 @@ execClass argv sandbox eval loader mainClass
                     void checkPermission(Permission perm)
                         this#checkPermission(perm, ()),
                     void checkPermission(Permission perm, Object context)
-                        if act.[0] then
+                        if act[0] then
                             throw new java.lang.SecurityException()
                         fi,
                     void checkExit(int status)
@@ -80,12 +80,12 @@ execClass argv sandbox eval loader mainClass
                 System#setSecurityManager(new Sandbox(sandboxed));
                 // can't activate before, because
                 // setSecurityManager would fail otherwise
-                sandboxed.[0] := true
+                sandboxed[0] := true
             fi;
             f ()
         else
             aa = new Object[1];
-            aa.[0] := argv is array<string> as ~String[] as ~Object;
+            aa[0] := argv is array<string> as ~String[] as ~Object;
             c#getMethod("main", [classOf String[]])#invoke((), aa)
         fi
     finally

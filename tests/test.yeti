@@ -144,7 +144,7 @@ trueTests = [
 done,
 'class closure': do:
     wtf = [:];
-    wtff x = wtf.[x] := true;
+    wtff x = wtf[x] := true;
     class X(int a)
         var x = a,
         f _ = x,
@@ -154,7 +154,7 @@ done,
         void test() push received "test"
     end;
     new Y()#test();
-    new X(33)#test() == 33 and list received == ["test", "kala"] and wtf.[12];
+    new X(33)#test() == 33 and list received == ["test", "kala"] and wtf[12];
 done,
 'closure fields': do:
     class Foo()

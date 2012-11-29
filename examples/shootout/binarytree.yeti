@@ -16,7 +16,7 @@ checkDepth depth item =
     check (makeTree item depth) + check (makeTree (-item) depth);
 
 minDepth = 4;
-n = if empty? _argv then 2 else number _argv.[0] fi;
+n = if empty? _argv then 2 else number _argv[0] fi;
 maxDepth = max (minDepth + 2) n;
 
 out "stretch tree" (maxDepth + 1) (check (makeTree 0 (maxDepth + 1)));

@@ -5,12 +5,12 @@ processRequest conn =
         conn.print "HTTP/1.0 \(status)\r\nContent-Type: \(contentType)\r\n\r\n";
     try
         status = split '\s+' (conn.readTo "\r\n" 16384);
-        if length status != 3 or not (status.[2] =~ '^HTTP/1\.') then
+        if length status != 3 or not (status[2] =~ '^HTTP/1\.') then
             throw new Bad('400 Bad request');
         fi;
         uri = subst '[^/]*[^/.]/\.\.' ''
                     (substBy "%(0-9a-fA-F]<2>)" (chr . hexNumber)
-                             (strLeft "?" status.[1]));
+                             (strLeft "?" status[1]));
         if uri =~ '/\.\.' then
             throw new Bad('403 Forbidden');
         fi;

@@ -197,7 +197,7 @@ keys h is hash<'a, 'b> -> list<'a> =
  */
 hash l is list?<'a> -> hash<'a, ()> =
    (h = [:];
-    for l (_ i = h.[i] := ());
+    for l (_ i = h[i] := ());
     h);
 
 /**
@@ -304,7 +304,7 @@ peekObject object =
         i = (o unsafely_as ~Map)#entrySet()#iterator();
         i#hasNext() loop
            (e = i#next() unsafely_as ~java.util.Map$Entry;
-            result.[peekObject (e#getKey() unsafely_as 'a)] :=
+            result[peekObject (e#getKey() unsafely_as 'a)] :=
                 peekObject (e#getValue() unsafely_as 'a));
         Hash result
     elif o instanceof Struct then
@@ -374,7 +374,7 @@ plus a b = a + b;
 
     /**
      * Group: 1_collections
-     * Array/hash subscription operator collection.[key] as function.
+     * Array/hash subscription operator collection[key] as function.
      * Returns element at corresponding key (index).
      *
      * Arguments:
@@ -388,7 +388,7 @@ plus a b = a + b;
      * : numbers = [1: "one", 2: "two", 3: "three"];
      * : println (map (at numbers) [3, 1]); // ["three","one"]
      */
-    at h k = h.[k],
+    at h k = h[k],
 
     /**
      * Group: zmisc
@@ -452,11 +452,11 @@ plus a b = a + b;
      * : h = ['a': 11, 'b': 22];
      * : printKey k =
      * :     if k in h then
-     * :         println "h.[\(k)] = \(h.[k])"
+     * :         println "h[\(k)] = \(h[k])"
      * :     else
      * :         println "\(k) doesn't exist"
      * :     fi;
-     * : printKey 'b'; // prints h.[b] = 22
+     * : printKey 'b'; // prints h[b] = 22
      * : printKey 'c'; // prints c doesn't exist
      */
     norec (in) a b = a in b,
@@ -1070,14 +1070,14 @@ plus a b = a + b;
      * Description:
      * The canonical implementation is following:
      * : swapAt map i j = 
-     * :    (tmp = map.[i];
-     * :     map.[i] := map.[j];
-     * :     map.[j] := tmp);
+     * :    (tmp = map[i];
+     * :     map[i] := map[j];
+     * :     map[j] := tmp);
      */
     swapAt a i j =
-        x = a.[i];
-        a.[i] := a.[j];
-        a.[j] := x,
+        x = a[i];
+        a[i] := a[j];
+        a[j] := x,
 
     /**
      * Group: zmisc
@@ -2113,7 +2113,7 @@ plus a b = a + b;
      * : printMatches matcher =
      * :    (match = matcher ();
      * :     if not empty? match then
-     * :         println match.[0];
+     * :         println match[0];
      * :         printMatches matcher;
      * :     fi);
      * : printMatches (like '\d+' '2012-08-23T04:11Z');
@@ -2443,7 +2443,7 @@ plus a b = a + b;
      * function - default value function
      *
      * Description:
-     * If non-existing key is requested from the hash map (using .[]
+     * If non-existing key is requested from the hash map (using []
      * subscription operator or `at` function), the default value
      * function is applied to the requested key, and the result of
      * application will be returned as if it had been in the hash map.
@@ -2457,11 +2457,11 @@ plus a b = a + b;
      * Memoization can be implemented using setHashDefault:
      * : fibs = [0: 0, 1: 1];
      * : setHashDefault fibs do x:
-     * :     res = fibs.[x - 1] + fibs.[x - 2];
-     * :     fibs.[x] := res;
+     * :     res = fibs[x - 1] + fibs[x - 2];
+     * :     fibs[x] := res;
      * :     res
      * : done;
-     * : println fibs.[100]; // prints 354224848179261915075
+     * : println fibs[100]; // prints 354224848179261915075
      *
      * This example uses memoization to speed up the naive recursive
      * fibonacci numbers calculation algorithm (although using a iterative
@@ -2494,7 +2494,7 @@ plus a b = a + b;
      * The `insertHash` function could be implemented with following code:
      * : insertHash destination source =
      * :     forHash source do key value:
-     * :         destination.[key] := value
+     * :         destination[key] := value
      * :     done;
      *
      * The library implementation uses internally java.util.Map#putAll().

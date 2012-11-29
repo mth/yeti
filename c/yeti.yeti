@@ -156,11 +156,11 @@ scan src local dirs to =
     if src `strEnds?` '.yeti' then
         name = if local == '' then src else local fi;
         // avoid duplicates, prefer shortest name
-        if not src in to or strLength to.[src] > strLength name then
-            to.[src] := name
+        if not src in to or strLength to[src] > strLength name then
+            to[src] := name
         fi
     elif src `strEnds?` '.java' then
-        to.[src] := src // javac prefers full path
+        to[src] := src // javac prefers full path
     else
         dirList = listDirectory false src;
         ok := not empty? dirList or new File(src)#isDirectory();

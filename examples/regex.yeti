@@ -14,7 +14,7 @@ matcher = like 'pattern.*!' str;
 ) loop;
 
 for [
-    strJoin '' (matchAll '\d+' do s: "\(number s.[0] + 1)" done id str),
+    strJoin '' (matchAll '\d+' do s: "\(number s[0] + 1)" done id str),
     strJoin '' (matchAll '\d+' (string . (+1) . number . head) id str),
     strJoin '' (matchAll ',\s+' \';' id str),
     substAll ',\s+' ';' str,

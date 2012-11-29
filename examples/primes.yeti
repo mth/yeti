@@ -5,14 +5,14 @@ primes = sieve (iterate (+1) 2);
 
 sieve2 limit =
    (numbers = array [0 .. limit];
-    numbers.[0] := -1;
-    numbers.[1] := -1;
+    numbers[0] := -1;
+    numbers[1] := -1;
     var primes = [];
     for numbers do i:
         if i != -1 then
             var j = i * 2;
             j <= limit loop
-               (numbers.[j] := -1;
+               (numbers[j] := -1;
                 j := j + i);
             primes := i :: primes;
         fi

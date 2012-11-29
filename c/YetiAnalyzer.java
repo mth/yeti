@@ -99,11 +99,18 @@ public final class YetiAnalyzer extends YetiType {
         }
         String kind = node.kind;
         if (kind != null) {
+            if (kind == "listop") {
+                ObjectRefOp l = (ObjectRefOp) node;
+                if (l.right == null)
+                    return list(l, l.arguments, scope, depth);
+                return keyRefExpr(analyze(l.right, scope, depth),
+                                  l, scope, depth);
+            }
             XNode x = (XNode) node;
             if (kind == "()")
                 return new UnitConstant(null);
             if (kind == "list")
-                return list(x, scope, depth);
+                return list(x, x.expr, scope, depth);
             if (kind == "lambda")
                 return lambda(new Function(null), x, scope, depth);
             if (kind == "struct")
@@ -164,9 +171,12 @@ public final class YetiAnalyzer extends YetiType {
                 return apply(op, analyze(op.left, scope, depth),
                              op.right, scope, depth);
             if (opop == FIELD_OP) {
-                if (op.right.kind == "list")
+                if (op.right.kind == "listop") {
+                    CompileCtx.current().warn(new CompileException(node,
+                        "Old-style .[] array/hash reference is deprecated"));
                     return keyRefExpr(analyze(op.left, scope, depth),
-                                      (XNode) op.right, scope, depth);
+                                      (ObjectRefOp) op.right, scope, depth);
+                }
                 return selectMember(op, getSelectorSym(op, op.right),
                         analyze(op.left, scope, depth), scope, depth);
             }
@@ -642,19 +652,13 @@ public final class YetiAnalyzer extends YetiType {
         };
     }
 
-    static Code keyRefExpr(Code val, XNode keyList, Scope scope, int depth) {
-        if (keyList.expr == null || keyList.expr.length == 0) {
-            throw new CompileException(keyList, ".[] - missing key expression");
-        }
-        if (keyList.expr.length != 1) {
-            throw new CompileException(keyList, "Unexpected , inside .[]");
-        }
-        Code key = analyze(keyList.expr[0], scope, depth);
+    static Code keyRefExpr(Code val, ObjectRefOp keyList, Scope scope, int depth) {
+        Code key = analyze(keyList.arguments[0], scope, depth);
         YType t = val.type.deref();
         if (t.type == JAVA_ARRAY) {
-            unify(key.type, NUM_TYPE, keyList.expr[0], scope,
+            unify(key.type, NUM_TYPE, keyList.arguments[0], scope,
                   "Array index must be a number (but here was #1)");
-            return new JavaArrayRef(t.param[0], val, key, keyList.expr[0].line);
+            return new JavaArrayRef(t.param[0], val, key, keyList.arguments[0].line);
         }
         YType[] param = { new YType(depth), key.type, new YType(depth) };
         unify(val.type, new YType(MAP, param), keyList, scope,
@@ -1574,8 +1578,10 @@ public final class YetiAnalyzer extends YetiType {
         return cc.exp;
     }
 
-    static Code list(XNode list, Scope scope, int depth) {
-        Node[] items = list.expr == null ? new Node[0] : list.expr;
+    static Code list(Node list, Node[] items, Scope scope, int depth) {
+        boolean emptyMap = items == null;
+        if (emptyMap)
+            items = new Node[0];
         Code[] keyItems = null;
         Code[] codeItems = new Code[items.length];
         YType type = null;
@@ -1650,7 +1656,7 @@ public final class YetiAnalyzer extends YetiType {
         if (kind == null) {
             kind = LIST_TYPE;
         }
-        if (list.expr == null) {
+        if (emptyMap) {
             keyType = new YType(depth);
             keyItems = new Code[0];
             kind = MAP_TYPE;

@@ -36,7 +36,7 @@ defaults =
      "Please elaborate that.",
      "Can you elaborate on that?"];
 
-oneOf a = a.[randomInt (length a)];
+oneOf a = a[randomInt (length a)];
 
 answer s pat =
    (r = pat.like s ();
@@ -47,7 +47,7 @@ answer s pat =
         Some if length r <= 1 then
             reply
         else
-            strReplace '%' r.[1] reply
+            strReplace '%' r[1] reply
         fi
     fi);
 

@@ -27,4 +27,4 @@ format l n =
         format l.snd n
     fi;
 
-format (take (number _argv.[0]) (str { q = 1, r = 0, s = 0, t = 1 } (ns 1))) 0
+format (take (number _argv[0]) (str { q = 1, r = 0, s = 0, t = 1 } (ns 1))) 0

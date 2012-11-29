@@ -1124,19 +1124,18 @@ An array can be created from list using an ``array`` function::
     a is array<number> = [3,4,5,6,7]
 
 
-Array elements can be referenced by index using *array*\ **.[**\ *index*\ **]**
+Array elements can be referenced by index using *array*\ **[**\ *index*\ **]**
 syntax::
 
-    > a.[0]
+    > a[0]
     3 is number
-    > a.[4]
+    > a[4]
     7 is number
 
-An array index is always zero-based. The dot is necessary, because otherwise
-the brackets would be mistaken for a list literal. Array elements can be
-assigned like variables::
+An array index is always zero-based. Array elements can be assigned
+like variables::
 
-    > a.[2] := 33
+    > a[2] := 33
     > a
     [3,4,33,6,7] is array<number>
 
@@ -1207,7 +1206,7 @@ A simple example of using arrays - an implementation of the selection
 sort algorithm::
 
     selectionSort a =
-       (selectLess i j = if a.[i] < a.[j] then i else j fi;
+       (selectLess i j = if a[i] < a[j] then i else j fi;
         swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
         for [0 .. length a - 2] swapMin);
 
@@ -1223,7 +1222,7 @@ This algorithm can be easily tested in the interactive environment::
 
     > a = array [3,1,14,7,15,2,9,12,6,10,5,8,11,4,13]
     a is array<number> = [3,1,14,7,15,2,9,12,6,10,5,8,11,4,13]
-    > selectLess i j = if a.[i] < a.[j] then i else j fi;
+    > selectLess i j = if a[i] < a[j] then i else j fi;
     selectLess is number -> number -> number = <code$selectLess>
     > swapMin i = swapAt a i (fold selectLess i [i + 1 .. length a - 1]);
     swapMin is number -> () = <code$swapMin>
@@ -1260,14 +1259,14 @@ The ``[:]`` literal is an empty map constructor.
 
 The map can be referenced by key in a same way as arrays by index::
 
-    > h.["foo"]
+    > h["foo"]
     42 is number
-    > h.["bar"]
+    > h["bar"]
     13 is number
 
 Attempt to read non-existing key from map results in error::
 
-    > h.["zoo"]
+    > h["zoo"]
     yeti.lang.NoSuchKeyException: Key not found (zoo)
             at yeti.lang.Hash.vget(Hash.java:52)
             at code.apply(<>:1)
@@ -1284,8 +1283,8 @@ Existence of a key in the map can be checked using **in** operator::
 
 Existing keys can be modified and new ones added using assignment::
 
-    > h.["bar"] := 11
-    > h.["zoo"] := 666
+    > h["bar"] := 11
+    > h["zoo"] := 666
     > h
     ["zoo":666,"foo":42,"bar":11] is hash<string, number>
 
@@ -1349,16 +1348,16 @@ they are requested. This is done using ``setHashDefault`` function::
     > dh = [:]
     dh is hash<'a, 'b> = [:]
     > setHashDefault dh negate
-    > dh.[33]
+    > dh[33]
     -33 is number
 
 The default fun will be used only when the queried key don't exist in the map.
 ::
 
-    > dh.[33] := 11
-    > dh.[33]
+    > dh[33] := 11
+    > dh[33]
     11 is number
-    > dh.[32]
+    > dh[32]
     -32 is number
 
 The ``negate`` default was not used, when the ``33`` key was put into the map.
@@ -1370,9 +1369,9 @@ give different results::
     > var counter is number = 0
     var counter is number = 0
     > setHashDefault dh \(counter := counter + 1; counter)
-    > dh.[5]
+    > dh[5]
     1 is number
-    > dh.[5]
+    > dh[5]
     2 is number
     > dh
     [33:11] is hash<number, number>
@@ -1383,12 +1382,12 @@ if the function updates the map by itself.
 
     > fibs = [0: 0, 1: 1]
     fibs is hash<number, number> = [0:0,1:1]
-    > calcFib x = (fibs.[x] := fibs.[x - 1] + fibs.[x - 2]; fibs.[x])
+    > calcFib x = (fibs[x] := fibs[x - 1] + fibs[x - 2]; fibs[x])
     calcFib is number -> number = <code$calcFib>
     > setHashDefault fibs calcFib
     > map (at fibs) [0..10]
     [0,1,1,2,3,5,8,13,21,34,55] is list<number>
-    > fibs.[100]
+    > fibs[100]
     354224848179261915075 is number
 
 Here the ``calcFib`` function will cause calculation of previous values
