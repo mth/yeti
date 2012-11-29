@@ -21,7 +21,8 @@
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
-* Context-specific int optimizations for builtins (and java method invocations)
+* Context-specific int optimizations for builtins
+  (and java method invocation return values)
 * Struct mapping (as in doc/stmap.yeti)
 * Allow cons pattern match (::) on arrays?
 * Exhaustive list match detection probably could be improved by something
