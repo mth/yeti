@@ -3,7 +3,8 @@
 /**
  * Yeti core library.
  *
- * Copyright (c) 2007,2008,2009 Madis Janson
+ * Copyright (c) 2007-2012 Madis Janson
+ * Copyright (c) 2012 Chris Cannam
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +32,7 @@
 
 package yeti.lang;
 
+import java.lang.reflect.Array;
 import java.util.Random;
 
 public final class Core {
@@ -146,13 +148,14 @@ public final class Core {
     }
 
     public static String show(Object o) {
+        StringBuffer r;
         if (o == null) {
             return "[]";
         }
         if (o instanceof String) {
             // TODO escaping
             char[] s = ((String) o).toCharArray();
-            StringBuffer r = new StringBuffer("\"");
+            r = new StringBuffer().append('"');
             int p = 0, i = 0, cnt = s.length;
             for (String c; i < cnt; ++i) {
                 if (s[i] == '\\') {
@@ -171,13 +174,23 @@ public final class Core {
                 } else {
                     continue;
                 }
-                r.append(s, p, i - p);
-                r.append(c);
+                r.append(s, p, i - p).append(c);
                 p = i + 1;
             }
-            r.append(s, p, i - p);
-            r.append('"');
-            return r.toString();
+            return r.append(s, p, i - p).append('"').toString();
+        }
+        if (o.getClass().isArray()) {
+            r = new StringBuffer().append('[');
+            for (int i = 0, len = Array.getLength(o); i < len; ++i) {
+                if (i != 0)
+                    r.append(',');
+                if (i == 50 && len > 110) {
+                    r.append("...");
+                    i = len - 50;
+                }
+                r.append(String.valueOf(Array.get(o, i)));
+            }
+            return r.append(']').toString();
         }
         return o.toString();
     }
