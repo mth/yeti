@@ -1,7 +1,7 @@
 import java.net.URLEncoder;
 load yeti.lang.compiler.showtype;
 
-doc_dir = _argv.[0];
+doc_dir = _argv[0];
 
 /* TODO
  * links to typedefs, typedefs in different modules and java class javadocs
@@ -37,7 +37,7 @@ formatType template =
                 if variant then
                     str := enclose str type
                 fi;
-                types.[name] := str;
+                types[name] := str;
                 flag := flag or big
             done;
             titles = [:];
@@ -49,18 +49,18 @@ formatType template =
                 m = like '[\s*]*Group: +(\w+)(?: +\(([^\n)]*)\))?\s*\*?'
                     description ();
                 if not empty? m then
-                    description := strRight description (strLength m.[0]);
-                    group := m.[1];
-                    if m.[2] != '' then
-                        titles.[group] := m.[2]
+                    description := strRight description (strLength m[0]);
+                    group := m[1];
+                    if m[2] != '' then
+                        titles[group] := m[2]
                     fi
                 fi;
                 nameStr = if variant or fn =~ '^\w' then fn else "(\(fn))" fi;
-                f is typeitem<type> with { typeStr = types.[fn], nameStr,
+                f is typeitem<type> with { typeStr = types[fn], nameStr,
                                       description, group, var groupTitle = ''});
             sortKey f = [f.group, f.nameStr];
             fields = sortBy (on (<) sortKey) (map fieldDesc l);
-            for fields do f: f.groupTitle := titles.[f.group] done;
+            for fields do f: f.groupTitle := titles[f.group] done;
             docs = not empty? (find ((!= '') . (.description)) fields);
             big := docs or flag or length l >= 3;
             cur := if variant then 'variant' else 'struct' fi;
@@ -110,7 +110,7 @@ formatType template =
 
 parseDoc' doc =
    (mticks = matchAll '`([^`]*)`'
-        (_ s = if s.[1] == '' then '`' else: "<var>\(s.[1])</var>");
+        (_ s = if s[1] == '' then '`' else: "<var>\(s[1])</var>");
     ticks = strJoin '' . mticks id;
     listState to pattern line =
         case pattern line () of
@@ -120,7 +120,7 @@ parseDoc' doc =
             if empty? to then
                 push to {arg = "???", text = array [line]}
             else
-                push to.[length to - 1].text (ticks line)
+                push to[length to - 1].text (ticks line)
             fi
         esac;
     var code = false;
@@ -167,7 +167,7 @@ parseDoc' doc =
     arg_set = hash arg_list;
     map strCapitalize arg_list |> hash |> insertHash arg_set;
     mark_arg a =
-        if a.[0] in arg_set then "<var>\(a.[0])</var>" else a.[0] fi;
+        if a[0] in arg_set then "<var>\(a[0])</var>" else a[0] fi;
     mark_args = strJoin '' . mticks (strJoin '' .  matchAll '\w+' mark_arg id);
     lines = strJoin '<p></p>';
     show pre post f v = if not empty? v then "\(pre)\(f v)\(post)" fi;
@@ -336,11 +336,11 @@ moduleDoc {type, name, doc, typedefs} =
         typedefs = strJoin '<p>' (map typedef_html typedefs)
     };
     writeFile "\(doc_dir)/\(name).html" utf8 (`putLines` [page]);
-    modules.[name] := head ((splitBy (!= '') raw_doc).snd ++ [undef_str]));
+    modules[name] := head ((splitBy (!= '') raw_doc).snd ++ [undef_str]));
 
 docIndex () =
    (item name =
-        "<dt><a href=\"\(name).html\">\(name)</a><dd>\(modules.[name])";
+        "<dt><a href=\"\(name).html\">\(name)</a><dd>\(modules[name])";
     writeFile "\(doc_dir)/index.html" utf8 (`putLines`
        ["\(html_prelude)<title>Module index</title>\
         "<style type=\"text/css\">DD {margin-bottom: 0.8em}</style>\
