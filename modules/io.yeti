@@ -264,7 +264,7 @@ typedef bin_input_handle = {
 }
 
 /**
- * Group: bin
+ * Group: bin (Binary IO)
  * Creates binary handle object for the given input stream.
  *
  * Arguments:
@@ -277,13 +277,32 @@ binInputHandle istream is ~InputStream -> 'a = {
     };
 
 /**
- * Group: bin (Binary IO)
- * Creates binary handle object for the given output stream.
+ * Group: bin
+ * Creates a binary handle object for the given output stream.
+ *
+ * Arguments:
+ * output - java.io.OutputStream instance to be used
  */
 binOutputHandle ostream is ~OutputStream -> 'a = {
+        /**
+         * Writes first n bytes from the start of the given buffer
+         * to the output stream (calls `output#write(buffer, 0, n)`).
+         *
+         * Arguments:
+         * buffer - byte array to write to the output stream
+         * n      - number of bytes to write
+         */
         write buf len is ~byte[] -> number -> () =
             ostream#write(buf, 0, len),
+
+        /**
+         * Closes the output stream (calls `output#close()`).
+         */
         close () = ostream#close(),
+
+        /**
+         * Flushes the output stream (calls `output#flush()`).
+         */
         flush () = ostream#flush()
     };
 
