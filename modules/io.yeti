@@ -526,11 +526,48 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      */
     getContents h = h.contents (),
 
-    /** Group: bin */
+    /**
+     * Group: bin
+     * Applies the given block to binary input handle opened for
+     * specified file. The input handle will be automatically closed
+     * afterwards (even when exception was thrown by the block).
+     * Returns the value returned by the block.
+     *
+     * Arguments:
+     * file  - path to the file to be read
+     * block - a function to be applied to the opened input object
+     */
     binReadFile name =
         withHandle (binInputHandle new FileInputStream(name is string)),
 
-    /** Group: bin */
+    /**
+     * Group: bin
+     * Applies the given block to function writing to the file
+     * and returns the value returned by the block.
+     *
+     * Arguments:
+     * file     - path to the file to be written
+     * block    - a function to be applied to the write function
+     *
+     * Description:
+     * Creates the specified file and applies the given block to function
+     * writing to the file. The file will be automatically closed afterwards
+     * (even when exception was thrown by the block). If the file existed
+     * before, it will be truncated to zero length before appling the block.
+     *
+     * The write function is same as `.write` field in the handle object
+     * returned by the `binOutputHandle` function, taking as arguments a
+     * byte array and number of bytes to be written from the start of this
+     * array. It may be called as many times as needed, with each call
+     * writing additional bytes to the given file.
+     *
+     * Examples:
+     * Write 4 bytes representing ASCII string 'TEST' to file 'testfile':
+     * : binWriteFile 'testfile' do f:
+     * :     bytes = [84, 69, 83, 84] as ~byte[];
+     * :     f bytes (length bytes)
+     * : done
+     */
     binWriteFile name writer
             is string -> ((~byte[] -> number -> ()) -> 'a) -> 'a =
         withHandle (binOutputHandle new FileOutputStream(name is string))
