@@ -278,7 +278,7 @@ binInputHandle istream is ~InputStream -> 'a = {
 
 /**
  * Group: bin
- * Creates a binary handle object for the given output stream.
+ * Creates binary handle object for the given output stream.
  *
  * Arguments:
  * output - java.io.OutputStream instance to be used
