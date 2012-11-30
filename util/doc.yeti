@@ -109,8 +109,9 @@ formatType template =
 (@) = strReplace '<' '&lt;' . strReplace '>' '&gt;' . strReplace '&' '&amp;';
 
 parseDoc' doc =
-   (mticks = matchAll '`([^`]*)`'
-        (_ s = if s[1] == '' then '`' else: "<var>\(s[1])</var>");
+   (mticks = matchAll '`([^`]*)`|("(?:[^"]|\\.)*")'
+        (_ s = (s = s[1] ^ s[2];
+                if s != '' then "<var>\(s)</var>" else: '`'));
     ticks = strJoin '' . mticks id;
     listState to pattern line =
         case pattern line () of

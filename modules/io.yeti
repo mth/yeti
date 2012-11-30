@@ -45,20 +45,97 @@ import java.lang.Thread;
 var stdin' = None ();
 
 typedef input_handle = {
-    /// Read a line from the stream.
+    /**
+     * Reads at most maxLength characters from the stream.
+     *
+     * Arguments:
+     * maxLength - maximum number of characters to be read
+     *
+     * Description:
+     * Blocks until some input is available, then reads at most maxLength
+     * characters as long as it won't cause blocking again. Returns the
+     * read characters as a string. If applied at the end of stream,
+     * a undef_str is returned.
+     *
+     * Examples:
+     * Copy standard input to standard output:
+     * : (str = stdin.read 8192; print str; defined? str) loop;
+     * The `defined?` function is used to test for `undef_str` marking
+     * the end of stream.
+     */
     read is number -> string,
+
+    /**
+     * Reads a line from the stream. Returns the line, or `undef_str`
+     * if applied at the end of stream.
+     *
+     * Notes:
+     * A line is considered to be terminated by "\r", "\n" or
+     * "\r\n" character sequence.
+     */
     readln is () -> string,
-    /// Read a full contents of the stream.
+
+    /**
+     * Reads full contents of the stream as a single string.
+     */
     contents is () -> string,
+
+    /**
+     * Returns a lazy list representing lines from the stream.
+     *
+     * Description:
+     * The stream will be read as the returned list is consumed.
+     * If the `close` method is called, the whole list will be
+     * forced to be read.
+     *
+     * If the stream is forced to close with `rawClose` method
+     * and the returned list was not fully consumed, then consuming
+     * that list further results in IO exception.
+     *
+     * A line is considered to be terminated by "\r", "\n" or
+     * "\r\n" character sequence.
+     */
     lines is () -> list<string>,
+
+    /**
+     * Closes the input stream.
+     */
     close is () -> (),
+
+    /**
+     * Closes the input stream without forcing pending reads.
+     */
     rawClose is () -> ()
 }
 
 typedef output_handle = {
+    /**
+     * Closes the output stream (flushing any buffers first).
+     */
     close is () -> (),
+
+    /**
+     * Flushes any buffers to the output stream.
+     */
     flush is () -> (),
+
+    /**
+     * Writes the given string to the output stream.
+     *
+     * Arguments:
+     * string - a string to write
+     */
     write is string -> (),
+
+    /**
+     * Writes the string and system line separator to the output stream.
+     *
+     * Arguments:
+     * string - a string to write
+     *
+     * Notes:
+     * The line separator is defined by the system `line.separator` property.
+     */
     writeln is string -> ()
 }
 
@@ -259,7 +336,24 @@ openOutFile name is string -> string -> 'a =
     outputHandle new FileOutputStream(name);
 
 typedef bin_input_handle = {
+    /**
+     * Reads some bytes from the input stream and stores them into the
+     * buffer (after the start offset). Returns the number of bytes actually
+     * read, or -1 if applied at the end of stream.
+     *
+     * Arguments:
+     * buffer - a byte array
+     * offset - starting offset in the buffer for storing data
+     *
+     * Notes:
+     * The `binReadAll` function can be used to ensure reading a given
+     * number of bytes (or all bytes until the end of stream).
+     */
     .read is ~byte[] -> number -> number,
+
+    /**
+     * Closes the input stream.
+     */
     .close is () -> ()
 }
 
