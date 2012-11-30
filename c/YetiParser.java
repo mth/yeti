@@ -174,6 +174,7 @@ interface YetiParser {
         }
 
         Bind(List args, Node expr, boolean inStruct, String doc) {
+            String s;
             this.doc = doc;
             int first = 0;
             Node nameNode = null;
@@ -188,7 +189,7 @@ interface YetiParser {
                     break;
             }
             if (!var && nameNode instanceof Sym) {
-                String s = ((Sym) nameNode).sym;
+                s = ((Sym) nameNode).sym;
                 if (inStruct && args.size() > first) {
                     if (s == "get") {
                         property = true;
@@ -214,7 +215,7 @@ interface YetiParser {
             col = nameNode.col;
             this.name = ((Sym) nameNode).sym;
             if (first < args.size() && args.get(first) instanceof BinOp &&
-                    ((BinOp) args.get(first)).op == FIELD_OP)
+                ((s = ((BinOp) args.get(first)).op) == FIELD_OP || s == "#"))
                 throw new CompileException((BinOp) args.get(first),
                     "Bad argument on binding (use := for assignment, not =)");
             int i = args.size() - 1;
