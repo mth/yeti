@@ -145,8 +145,10 @@ createCtx reader genericOpt =
         /// Disable importing foreign classes. Useful when sandboxing.
         NoImport ():  ctx#flags := ctx#flags b_or YetiC#CF_NO_IMPORT;
 
-        /// Disable generation of Java 1.6 frames to class files (mainly useful
-        /// for debugging, this option is not needed to run on older JVMs).
+        /// Disable generation of Java 1.6 frames to class files.
+        ///
+        /// Mainly useful for debugging, this option is not needed
+        /// to run on older JVMs.
         NoFrames (): ctx#classWriterFlags := 0
         esac;
     ctx#classPath := new ClassFinder(classPath);
@@ -314,9 +316,10 @@ evaluateYetiCode genericOpt =
 
         for options
            \case of
-            /// Store top-level bindings in the evaluation environment,
-            /// so they could be accessed by later evaluations with
-            /// the same context..
+            /// Store top-level bindings in the evaluation environment.
+            ///
+            /// Allows the bindings to be accessed by later evaluations with
+            /// the same context.
             Bind (): bind := true;
 
             /// Set _argv to given parameter turing execution.
