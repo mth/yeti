@@ -269,6 +269,35 @@ compileYetiFiles genericOpt options files =
         fi
     fi);
 
+/**
+ * Evaluates Yeti expression.
+ *
+ * Arguments:
+ * genericOptions    - generic compile options
+ * evaluationOptions - options about evaluating
+ * expression        - string containing the Yeti code
+ *
+ * Examples:
+ * Run a chunk of code, ignoring the result value:
+ * : _ = evaluateYetiCode [] [] 'println "Hello world"';
+ *
+ * Evaluate expression with specific binding environment:
+ * : // Creates the environment
+ * : env = evaluateYetiCode [];
+ * :
+ * : // bind variable in the environment
+ * : case env [Bind ()] 'x = 40' of
+ * : {result = Result _}: (); // OK
+ * : {str}: failWith str;
+ * : esac;
+ * :
+ * : // use the binding 
+ * : res = env [] 'x + 2';
+ * : println res;
+ *
+ * The last println should print the following line:
+ * : {bindings=[], result=Result 42, str="42 is number\n", type=Simple "number"}
+ */
 evaluateYetiCode genericOpt =
    (var evalEnv = () as ~YetiEval;
     mainClass = "code";
@@ -329,6 +358,7 @@ evaluateYetiCode genericOpt =
 
         oldContext = YetiEval#set(evalEnv);
 
+        /// The result of evaluation.
         result =
             try
                 compileErr =
@@ -394,10 +424,17 @@ evaluateYetiCode genericOpt =
             res);
 
         {
-            type, result,
-        
+            /// The inferred type of the evaluated expression.
+            type = type, result,
+            
+            /// List of new bindings created in
+            /// the environment during evaluation.
+            ///
+            /// The Yeti syntax "name is type = value" is used.
             get bindings () = list (bindings ()),
 
+            /// The result of evaluation formatted as string, like the Yeti
+            /// REPL would print it (actually Yeti REPL uses this getter).
             get str () =
                 res = bindings ();
                 case result of
