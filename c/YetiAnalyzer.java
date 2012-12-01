@@ -1215,6 +1215,12 @@ public final class YetiAnalyzer extends YetiType {
                         propertyScope.closure = result;
                     }
                     code = analyze(field.expr, propertyScope, depth);
+                } else if (!field.var) {
+                    XNode xf = (XNode) field.expr;
+                    // disable merging with the get lambda
+                    if (xf.expr[1].kind == "lambda")
+                        xf.expr[1] = new Seq(new Node[] { new XNode("()"),
+                                      xf.expr[1] }, null).pos(xf.line, xf.col);
                 }
                 // get is () -> t, set is t -> ()
                 YType t = (YType) fields.get(field.name);
