@@ -2355,9 +2355,6 @@ plus a b = a + b;
      *
      * Arguments:
      * () - an unit value
-     *
-     * Notes:
-     * Implementation uses java.util.concurrent.ConcurrentHashMap.
      */
     weakHash () is () -> hash<'a, 'b> =
         new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
