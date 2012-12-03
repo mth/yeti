@@ -2369,9 +2369,6 @@ plus a b = a + b;
      *
      * Arguments:
      * constructor - a function creating the java.util.Map instance to be used
-     *
-     * Notes:
-     * Implementation uses java.util.concurrent.ConcurrentHashMap.
      */
     customHash cons is (() -> ~java.util.Map) -> hash<'a, 'b> =
         new CHash(0, cons unsafely_as ~Fun) unsafely_as hash<'a, 'b>,
