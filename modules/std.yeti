@@ -1759,6 +1759,16 @@ plus a b = a + b;
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
     /**
+     * Group: num
+     * Returns the closest integer to the given value.
+     * Implemented using Math#round(value).
+     *
+     * Arguments:
+     * value - a numeric value
+     */
+    round a is number -> number = Math#round(a),
+
+    /**
      * Group: str
      * Returns a copy of the string, with all occurences of the needle
      * substring replaced with replacement string in the given haystack string.
