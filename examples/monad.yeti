@@ -1,0 +1,28 @@
+// Simple state monad using opaque types
+// (language support for Haskell do block alike would make it nicer).
+
+typedef opaque st<v,s> = s -> {fst is v, snd is s}
+
+st = {
+    return = pair,
+    bind mv f st =
+       ({fst, snd} = mv st;
+        f fst snd),
+    getst st  = pair st st,
+    setst v _ = pair () v,
+    run = id,
+} as { // as cast to hide the implementation types
+    return is 'a -> st<'a, 's>,
+    bind is st<'b, 's> -> ('b -> st<'c, 's>) -> st<'c, 's>,
+    getst is st<'s, 's>,
+    setst is 's -> st<(), 's>,
+    run is st<'d, 's> -> 's -> 'r
+};
+
+(>>=) = st.bind;
+{return, getst, setst} = st;
+
+println (st.run (return 'a') 10);
+
+println (st.run (setst 5 >>= (_ _ = getst >>= (_ x = return "a\(x)"))) 10);
+
