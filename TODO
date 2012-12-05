@@ -1,7 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix error on typedef opaque st<v,s> = s -> {fst is v, snd is s}
 * Better error messages
   + Module type not fully defined message is confusing,
     should give more info about where error is.

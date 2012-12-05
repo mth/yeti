@@ -623,11 +623,10 @@ public final class YetiAnalyzer extends YetiType {
                     " as a structure with ." + field + " field\n    " +
                     "(use # instead of . to reference class fields/methods)");
             }
-            if (t != STRUCT && t != VAR) {
+            if (t != STRUCT && t != VAR)
                 throw new CompileException(member, "Cannot use " +
                                 src.type.toString(scope, null) +
                                 " as a structure with ." + field + " field");
-            }
             throw new CompileException(member, scope, src.type, null,
                         "#1 does not have ." + field + " field", ex);
         }
@@ -907,7 +906,7 @@ public final class YetiAnalyzer extends YetiType {
                     "field pattern may not have modifiers");
             }
             bind.expr = new Sym(field.name);
-            bind.expr.pos(bind.line, bind.col);
+            bind.expr.pos(field.line, field.col);
             Node nameNode = field.expr;
             if (!(nameNode instanceof Sym) ||
                     (bind.name = nameNode.sym()) == "_")
@@ -946,9 +945,10 @@ public final class YetiAnalyzer extends YetiType {
               "Type #~ (type self-binding)\n    #0");
 
         scope = new Scope(scope, typeDef.name, null);
+        List structs = typeDef.kind == TypeDef.OPAQUE ? new ArrayList() : null;
         if (typeDef.kind != TypeDef.SHARED) {
             ArrayList vars = new ArrayList();
-            getAllTypeVar(vars, type); // nothing mutable in typedef
+            getAllTypeVar(vars, structs, type); // nothing mutable in typedef
             scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
         }
 
@@ -965,9 +965,11 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
             synchronized (scope.ctx.opaqueTypes) {
+                int n = def.length - 1;
                 type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
-                                 new YType[def.length - 1]);
-                System.arraycopy(def, 0, type.param, 0, type.param.length);
+                                 new YType[n + structs.size()]);
+                System.arraycopy(def, 0, structs.toArray(type.param),
+                                 structs.size(), n);
                 String idstr = scope.ctx.className +
                     ':' + typeDef.name + '#' + (type.type - OPAQUE_TYPES);
                 type.finalMembers = Collections.singletonMap("", self);

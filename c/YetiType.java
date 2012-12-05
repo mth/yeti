@@ -982,14 +982,17 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void getAllTypeVar(List vars, YType type) {
+    static void getAllTypeVar(List vars, List structs, YType type) {
         if (type.seen)
             return;
         YType t = type.deref();
         if (t.type != VAR) {
             type.seen = true;
-            for (int i = 0; i < t.param.length; ++i)
-                getAllTypeVar(vars, t.param[i]);
+            int i = -1;
+            if (structs != null && (t.type == STRUCT || t.type == VARIANT))
+                getAllTypeVar(structs, null, t.param[i = 0]);
+            while (++i < t.param.length)
+                getAllTypeVar(vars, structs, t.param[i]);
             type.seen = false;
         } else if (vars.indexOf(t) < 0)
             vars.add(t);
@@ -1005,7 +1008,7 @@ public class YetiType implements YetiParser {
                 }
                 t.seen = true;
                 for (; i < t.param.length; ++i) {
-                   removeStructs(t.param[i], vars);
+                    removeStructs(t.param[i], vars);
                 }
                 t.seen = false;
             } else if (t.ref != null) {

@@ -207,6 +207,7 @@ done,
     and ((stru as ~Object) unsafely_as ~Struct)#get('one-var test')#equals("foo-text");
 done,
 'opaque types': do:
+    typedef opaque st<v,s> = s -> {fst is v, snd is s}
     typedef opaque magic<x> = list<x>
     m = { create = id, values = id } as {
         create is list<'a> -> magic<'a>,
