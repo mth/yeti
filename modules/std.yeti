@@ -1754,7 +1754,7 @@ plus a b = a + b;
      *
      * Notes:
      * Current implementation expects that result fits into
-     * 64-bit signed integer (Long#MIN_VALUE..Long#MAX_VALUE).
+     * 64-bit signed integer (`Long#MIN_VALUE..Long#MAX_VALUE`).
      */
     int a is number -> number = (a as ~java.lang.Number)#longValue(),
 
@@ -1765,6 +1765,10 @@ plus a b = a + b;
      *
      * Arguments:
      * value - a numeric value
+     *
+     * Notes:
+     * Current implementation expects that result fits into
+     * 64-bit signed integer (`Long#MIN_VALUE..Long#MAX_VALUE`).
      */
     round a is number -> number = Math#round(a),
 
