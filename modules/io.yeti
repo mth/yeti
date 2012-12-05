@@ -267,7 +267,7 @@ inputHandle stream encoding is ~InputStream -> string -> 'a =
  * Create a text output handle object wrapping a Java BufferedWriter instance.
  *
  * Arguments:
- * reader - a java.io.WriterReader instance to be used
+ * writer - a java.io.WriterReader instance to be used
  */
 writerHandle writer is ~BufferedWriter -> 'a = {
         write s is string -> () =
