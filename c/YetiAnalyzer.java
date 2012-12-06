@@ -968,8 +968,9 @@ public final class YetiAnalyzer extends YetiType {
                 type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
                                  new YType[def.length - 1]);
                 System.arraycopy(def, 0, type.param, 0, type.param.length);
-                String idstr = scope.ctx.className +
-                    ':' + typeDef.name + '#' + (type.type - OPAQUE_TYPES);
+                String idstr = scope.ctx.className + ':' + typeDef.name;
+                if (!(seqKind instanceof TopLevel))
+                    idstr = idstr + '#' + (type.type - OPAQUE_TYPES);
                 type.finalMembers = Collections.singletonMap("", self);
                 type.partialMembers = Collections.singletonMap(idstr, NO_TYPE);
                 scope.ctx.opaqueTypes.put(idstr, type);
@@ -987,7 +988,11 @@ public final class YetiAnalyzer extends YetiType {
         scope.typeDef = def;
 
         if (seqKind instanceof TopLevel) {
-            ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
+            YType[] old = (YType[])
+                ((TopLevel) seqKind).typeDefs.put(typeDef.name, def);
+            if (old != null && old[old.length - 1].type >= OPAQUE_TYPES)
+                throw new CompileException(typeDef, "Overriding typedef opaque "
+                          + typeDef.name + "<> at module scope is not allowed");
             ((TopLevel) seqKind).typeScope = scope;
         }
         return scope;
