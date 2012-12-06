@@ -965,18 +965,22 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
             synchronized (scope.ctx.opaqueTypes) {
-                int n = def.length - 1;
                 type = new YType(scope.ctx.opaqueTypes.size() + OPAQUE_TYPES,
-                                 new YType[n + structs.size()]);
-                System.arraycopy(def, 0, structs.toArray(type.param),
-                                 structs.size(), n);
+                                 new YType[def.length - 1]);
+                System.arraycopy(def, 0, type.param, 0, type.param.length);
                 String idstr = scope.ctx.className +
                     ':' + typeDef.name + '#' + (type.type - OPAQUE_TYPES);
                 type.finalMembers = Collections.singletonMap("", self);
                 type.partialMembers = Collections.singletonMap(idstr, NO_TYPE);
                 scope.ctx.opaqueTypes.put(idstr, type);
             }
-            scope.free = type.param;
+            if (structs.size() == 0) {
+                scope.free = type.param;
+            } else {
+                scope.free = new YType[structs.size() + type.param.length];
+                System.arraycopy(def, 0, structs.toArray(scope.free),
+                                 structs.size(), type.param.length);
+            }
         }
 
         def[def.length - 1] = type;
