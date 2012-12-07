@@ -43,15 +43,22 @@ import java.io.File;
 load yeti.lang.compiler.showtype;
 
 typedef typedef_description = {
+    /// The name of the new type alias defined by the typedef.
     name is string,
+    /// Type assigned to the type alias.
     type is type,
+    /// Type parameter names.
     param is list<string>
 }
 
 typedef module_description = {
+    /// Description of the module from the top doc-string.
     doc is string,
+    /// Module name (like `yeti.lang.compiler.eval`).
     name is string,
+    /// Module type signature.
     type is type,
+    /// List of typedefs exported by the module.
     typedefs is list<typedef_description>
 }
 
@@ -255,7 +262,7 @@ compileYetiFiles genericOpt options files =
     for options
        \case of
 
-        /// Get module types. The action ({type is type, doc is string} -> ())
+        /// Get module types. The action (`module_description -> ()`)
         /// is called after each module file given for compilation. 
         Type action:
             typeAction := action;
