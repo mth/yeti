@@ -46,7 +46,7 @@ typedef typeitem<type> = {
     /// "`" - member is both used in code and provided by a constructor
     tag is string,
 
-    /// Whether the member is mutable field?
+    /// Whether the member is a mutable field?
     mutable is boolean,
 
     /// Description of the member (from the YetiDoc comment in code).
