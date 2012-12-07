@@ -224,12 +224,14 @@ moduleDoc m is ~ModuleType -> module_description = {
  * Yeti sources and finally compiling Java sources using javac.
  *
  * The source and class files don't have to be necessarily on
- * the filesystem, if SourceReader or CodeWriter options are used
+ * the filesystem, if `SourceReader` or `CodeWriter` options are used
  * and only Yeti code is compiled (the javac compiler used for
  * the Java code works only with filesystem).
  *
  * Examples:
- * : compileYetiFiles [To 'target'] [] ['hello.yeti']
+ * : load yeti.lang.compiler.eval;
+ * :
+ * : compileYetiFiles [To 'target'] [] ['hello.yeti'];
  * A `hello.class` will be generated to the target directory,
  * given that you have the following `hello.yeti` file:
  * : println 'Hello world!';
@@ -328,6 +330,8 @@ compileYetiFiles genericOpt options files =
  *
  * Examples:
  * Run a chunk of code, ignoring the result value:
+ * : load yeti.lang.compiler.eval;
+ * :
  * : _ = evaluateYetiCode [] [] 'println "Hello world"';
  *
  * Evaluate expression with specific binding environment:
@@ -504,7 +508,31 @@ evaluateYetiCode genericOpt =
         }
     done);
 
-generateYetiDoc {directory, modules, error} =
+/**
+ * Generates HTML documentation for the given set of module descriptions.
+ *
+ * Examples:
+ * The module descriptions can be obtained using the `compileYetiFiles`
+ * function with `Type` option.
+ * : load yeti.lang.compiler.eval;
+ * :
+ * : modules = array [];
+ * : compileYetiFiles [] [Type (push modules)] ['modules/xml.yeti'];
+ * : generateYetiDoc {directory = 'doctest', modules, error = failWith};
+ *
+ * This should generate the documentation HTML into directory named `doctest`
+ * (given that the `modules/xml.yeti` module source file can be found).
+ */
+generateYetiDoc {directory, modules, error} is {
+            /// Directory where to write the generated HTML files.
+            ///
+            /// The directory is created if it doesn't exist already.
+            .directory is 'a,
+            /// List of module descriptions.
+            .modules is 'b,
+            /// Error handler (takes error message as argument).
+            .error is 'c
+        } -> () =
    (cl = classOf YetiEval#getClassLoader();
     ctx = evaluateYetiCode [ICast (),
             CodeWriter (new Loader(cl) as ~CodeWriter)];
