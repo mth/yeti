@@ -1,32 +1,124 @@
+/*
+ * Yeti compiler type formatter interface.
+ *
+ * Copyright (c) 2010-2012 Madis Janson
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Yeti type formatting interface.
+ */
 module yeti.lang.compiler.showtype;
 
 typedef typeitem<type> = {
+    /// Name of the member (either field name or variant tag name).
     name is string,
+
+    /// Type of the member.
     type is type,
-    // . - required field, ` - both required and provided
+
+    /// Tag of the type.
+    ///
+    /// "." - member is expected by code using the value
+    ///
+    /// "`" - member is both used in code and provided by a constructor
     tag is string,
+
+    /// Whether the member is mutable field?
     mutable is boolean,
+
+    /// Description of the member (from the YetiDoc comment in code).
     description is string
 }
 
 typedef type =
+    /// Primitive type (like number, string etc) or type variable.
     Simple string |
-    Parametric { type is string, params is list<type> } |
+
+    /// Parametric type like map, list or alias created by typedef declaration.
+    ///
+    /// Examples:
+    /// Yeti type list<number> would be represented as:
+    /// : Parametric { type = "list", params = [Simple "number"] }
+    Parametric {
+        /// The name of the parametric type (for example "list").
+        type is string,
+
+        /// Type parameters for the parametric type.
+        params is list<type>
+    } |
+
+    /// Function type, the last element in the list is return type.
+    ///
+    /// If there are more than 2 elements, it represents a curried function
+    /// type with multiple arguments.
     Function list<type> |
+
+    /// Variant type, parameter is a list of variants.
     Variant list<typeitem<type>> |
+
+    /// Struct (record) type, parameter is a list of fields.
     Struct list<typeitem<type>> |
-    Alias { alias is string, type is type }
+
+    /// Alias definition, used on recursive type definitions.
+    Alias {
+        /// The name of type variable being alias to the `type`.
+        alias is string,
+
+        /// The actual type. The `alias` may occur as `Simple` type inside it.
+        type is type
+    }
 
 typedef showType_fun = string -> type -> string
 
 typedef showType_param =
+    /// Function used to get string representation of component types
+    /// (type parameters, member types, function argument return types etc).
+    ///
+    /// This is used for example by the YetiDoc HTML generator together
+    /// with `CommentDoc` option.
     ShowType showType_fun |
+    /// Indention step string used when formatting the type.
     Indent string |
+    /// Function for formatting YetiDoc comments associated with member types.
     FormatDoc (string -> string -> string) |
+    /// Whether YetiDoc comments should be included in the formatted type.
     CommentDoc ()
 
+// Core of it is implemented in Java to avoid self-compile issues.
 {
-    // Core of it is implemented in Java to avoid self-compile issues.
+    /**
+     * Formats the given type into string representation according to the
+     * formatting options. The type(s) can be obtained from Yeti code using
+     * the yeti.lang.compiler.eval module functions.
+     *
+     * Arguments:
+     * options - formatting options (look the showType_param typedef)
+     * indent  - initial indent string (to be included at each new line start)
+     * type    - the type to be formatted
+     */
     showType param is list<showType_param> -> showType_fun =
        (fun = new ShowTypeFun();
         for param
