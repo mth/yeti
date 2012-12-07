@@ -1,6 +1,7 @@
 /*
  * Yeti compiler and eval (derived from old REPL module) interface.
- * Copyright (c) 2008,2009,2011 Madis Janson
+ *
+ * Copyright (c) 2008-2012 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,7 +28,10 @@
  */
 
 /**
- Yeti compiler invocation and code evaluation.
+ * Yeti compiler invocation and code evaluation.
+ *
+ * This module is also used by the yeti.lang.compiler.yeti program
+ * to provide a REPL and compile Yeti code.
  */
 module yeti.lang.compiler.eval;
 
@@ -198,6 +202,44 @@ moduleDoc m is ~ModuleType -> module_description = {
         fi
 };
 
+/**
+ * Compiles a set of Yeti (and possibly Java) source files into
+ * JVM class files. Module dependencies will be automatically compiled,
+ * if possible.
+ *
+ * Arguments:
+ * genericOptions - generic compile options
+ * options        - additional options
+ * source         - list of the source files to compile
+ *
+ * Description:
+ * Compiles the source files into class files. Yeti sources (identified
+ * by the `.yeti` suffix) will be compiled directly. The Java sources
+ * (with `.java` suffix) will be compiled by invoking the javac compiler
+ * class com.sun.tools.javac.Main (`lib/tools.jar` is loaded from the
+ * JDK home, if the class is not already available).
+ *
+ * On mixed compiles a three-way sequence is done, by partially parsing
+ * the Java source files first to obtain the class types, compiling
+ * Yeti sources and finally compiling Java sources using javac.
+ *
+ * The source and class files don't have to be necessarily on
+ * the filesystem, if SourceReader or CodeWriter options are used
+ * and only Yeti code is compiled (the javac compiler used for
+ * the Java code works only with filesystem).
+ *
+ * Examples:
+ * : compileYetiFiles [To 'target'] [] ['hello.yeti']
+ * A `hello.class` will be generated to the target directory,
+ * given that you have the following `hello.yeti` file:
+ * : println 'Hello world!';
+ *
+ * The compiled code can be executed with the usual `java` command:
+ * : java -cp yeti.jar:target hello
+ * 
+ * The `yeti.jar` (or `yeti-lib.jar`) is required here for
+ * the Yeti standard library.
+ */
 compileYetiFiles genericOpt options files =
    (var exec = false;
     var execArg = array [];
@@ -278,6 +320,11 @@ compileYetiFiles genericOpt options files =
  * genericOptions    - generic compile options
  * evaluationOptions - options about evaluating
  * expression        - string containing the Yeti code
+ *
+ * Description:
+ * Compiles the expression in memory to JVM class(es),
+ * and then lets the JVM to load and execute the bytecode
+ * from these generated classes.
  *
  * Examples:
  * Run a chunk of code, ignoring the result value:
