@@ -38,7 +38,10 @@ When load foo.bar.baz is done the source file is searched with following rules:
      SOURCEPATH-ENTRY/foo/bar/baz.yeti
   3) If not found in previous step and the NAME contained dots,
      SOURCEPATH-ENTRY/baz.yeti
-  The SOURCEPATH entry of the current compilation will be searched first.
+  The SOURCEPATH entry of the current compilation should be searched first?
+  Probably not, either the path is explicit or contains single element,
+  and if it's explicit, more consistent build is achieved when always
+  searching in the same order.
 
 Additionally the class foo/bar/baz.class should be searched from the classpath.
 If neither the source or class is found, the module not found error should be
