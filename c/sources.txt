@@ -1,0 +1,58 @@
+* Fix full path script invocation (yeti /some/fubar/script.yeti)
+  + Use unique path identifiers (File? URL?) on module (re)compilation.
+  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
+  + Look what's wrong with handling win32 paths
+  + Bad error message on: echo 'module x; ()' > y.yeti; yeti -e 'load y'
+
+All path matches described below will be done on canonical names
+in case-insensitive manner. The path separators should be unified to '/'
+before matching. The generated module classnames should be always
+in lower case.
+
+The module/program NAME IS always defined:
+  * EXPLICITLY with module/program declaration.
+  * IMPLICITLY from the source file name omitting the ".yeti" suffix.
+    If SOURCEPATH is explicitly declared, the package part will be derived
+    by matching the start of the canonical path with SOURCEPATH entries and
+    adding the remaining path as package name.
+    Shortest package name will be chosen on multiple matches.
+    Root package ("") will used if there are no matches.
+  Explicitly declared NAME in the form foo.bar.baz must be in source file
+  named baz.yeti. If SOURCEPATH is explicitly declared, it's path must
+  match SOURCEPATH-ENTRY/foo/bar/baz.yeti OR SOURCEPATH-ENTRY/baz.yeti
+  for some SOURCEPATH entry. Alternatively NO SOURCEPATH entry should
+  match the start of the source file path.
+  Error must be given on incorrectly named modules/programs.
+
+SOURCEPATH IS always defined:
+  * EXPLICITLY with compiler options (may contain multiple directories)
+  * IMPLICITLY a single directory
+    + If the the canonical path ends with /foo/bar/baz(.yeti) matching
+      the module/program NAME foo.bar.baz (case insensitive),
+      the SOURCEPATH is the preceding part of the canonical path.
+    + Otherwise the SOURCEPATH is the directory of source file.
+
+When load foo.bar.baz is done the source file is searched with following rules:
+  1) From lookup/compilation cache.
+  2) From each SOURCEPATH entry in the form
+     SOURCEPATH-ENTRY/foo/bar/baz.yeti
+  3) If not found in previous step and the NAME contained dots,
+     SOURCEPATH-ENTRY/baz.yeti
+  The SOURCEPATH entry of the current compilation will be searched first.
+
+Additionally the class foo/bar/baz.class should be searched from the classpath.
+If neither the source or class is found, the module not found error should be
+given.
+
+If both are found, the modification times should be compared.
+If the source file is newer or there is no class file, the module should
+be recompiled, otherwise the existing class file should be used.
+
+The module classes already compiled or looked up in the same compilation
+session should be used without additional lookups.
+
+The source finding logic (SOURCEPATH handling and source file lookup from it)
+should be implemented in Yeti code, probably in the eval.yeti module.
+The bootstrap SourceReader can be simplified to search from single source
+directory with flat naming (suitable for the compiler modules and
+c directories).
