@@ -226,7 +226,13 @@ done,
         fi;
     f true == 42
 done,
-'() as string': \(strIndexOf (() as ~String) "x" 0 == -1)
+'() as string': \(strIndexOf (() as ~String) "x" 0 == -1),
+'primitive array store': do:
+    arr = array [1];
+    p_arr = new double[1];
+    p_arr[0] := arr[0];
+    p_arr[0] == 1
+done,
 ];
 
 var bad = 0;

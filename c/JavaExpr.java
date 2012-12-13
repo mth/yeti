@@ -368,6 +368,7 @@ class JavaExpr extends Code {
         genRawArg(ctx, arg, argType, line);
         if (arg.type.deref().type == YetiType.NUM &&
             argType.javaType.description.length() == 1) {
+            ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
             convertNum(ctx, argType.javaType.description);
         }
     }
