@@ -489,7 +489,7 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType getType(YetiParser.Node node, String name,
                               boolean bySourcePath) {
-        CompileCtx ctx = CompileCtx.current();
+        final CompileCtx ctx = CompileCtx.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null)
             return t;
@@ -499,9 +499,11 @@ class YetiTypeVisitor implements ClassVisitor {
             source += ".yeti";
             in = ClassFinder.get().findClass(name + ".class");
         }
+        int old_flags = ctx.flags;
         try {
             if (in == null) {
                 //System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
+                ctx.flags &= ~YetiC.CF_EVAL_BIND; // clear the eval flags
                 t = (ModuleType) ctx.types.get(ctx.compile(source, 0));
                 if (t == null)
                     throw new Exception("Could not compile `" + name
@@ -527,6 +529,8 @@ class YetiTypeVisitor implements ClassVisitor {
             throw ex;
         } catch (Exception ex) {
             throw new CompileException(node, ex.getMessage());
+        } finally {
+            ctx.flags = old_flags;
         }
     }
 }
