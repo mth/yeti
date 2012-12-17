@@ -233,6 +233,18 @@ done,
     p_arr[0] := arr[0];
     p_arr[0] == 1
 done,
+'eval load scope': do:
+    load yeti.lang.compiler.eval;
+    c = evaluateYetiCode [SourceReader \'module foo; x = 4; ()'];
+    case (c [Bind ()] 'r = load foo; r').result of
+    Result _: ();
+    ...
+    esac;
+    case (c [] 'x').result of
+    CompileException _: true;
+    ...
+    esac
+done
 ];
 
 var bad = 0;
