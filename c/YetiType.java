@@ -700,27 +700,36 @@ public class YetiType implements YetiParser {
     static void unify(YType a, YType b) throws TypeException {
         a = a.deref();
         b = b.deref();
-        if (a == b) {
-        } else if (a.type == VAR) {
+        if (a == b)
+            return;
+        if (a.type == VAR) {
             unifyToVar(a, b);
-        } else if (b.type == VAR) {
+            return;
+        }
+        if (b.type == VAR) {
             unifyToVar(b, a);
-        } else if (a.type == JAVA) {
-            unifyJava(a, b);
-        } else if (b.type == JAVA) {
-            unifyJava(b, a);
-        } else if (a.type != b.type) {
+            return;
+        }
+        if (a.type != b.type) {
             YType opaque = null;
             if (a.type >= OPAQUE_TYPES && (a.flags & FL_AMBIGUOUS_OPAQUE) != 0)
                 opaque = a;
             else if (b.type >= OPAQUE_TYPES &&
                      (b.flags & FL_AMBIGUOUS_OPAQUE) != 0)
                 opaque = b;
-            if (opaque == null)
-                mismatch(a, b);
-            opaque.ref = (YType) opaque.finalMembers.values().toArray()[0];
-            opaque.type = 0;
-            unify(a, b);
+            if (opaque != null) {
+                opaque.ref = (YType) opaque.finalMembers.values().toArray()[0];
+                opaque.type = 0;
+                unify(a, b);
+                return;
+            }
+        }
+        if (a.type == JAVA) {
+            unifyJava(a, b);
+        } else if (b.type == JAVA) {
+            unifyJava(b, a);
+        } else if (a.type != b.type) {
+            mismatch(a, b);
         } else if (a.type == STRUCT || a.type == VARIANT) {
             unifyMembers(a, b);
         } else {

@@ -216,6 +216,10 @@ done,
     v = m.create [5..7];
     m.values v == [5..7]
 done,
+'opaque java types': do:
+    typedef opaque foo = ~Integer;
+    "\(new Integer(22) as foo)" == "22"
+done,
 'var recursion': do:
     var f x =
         if x then
