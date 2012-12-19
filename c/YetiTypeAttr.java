@@ -274,10 +274,8 @@ class YetiTypeAttr extends Attribute {
             case MUTABLE:
                 return YetiType.fieldRef(1, read(), YetiType.FIELD_MUTABLE);
             }
-            if (tv < YetiType.PRIMITIVES.length &&
-                (t = YetiType.PRIMITIVES[tv]) != null) {
-                return t;
-            }
+            if (tv < YetiType.PRIMITIVES.length && tv > 0)
+                return YetiType.PRIMITIVES[tv];
             t = new YType(tv, null);
             refs.add(t);
             if (t.type == YetiType.FUN) {
