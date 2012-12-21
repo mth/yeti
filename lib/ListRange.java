@@ -177,7 +177,7 @@ public final class ListRange extends AList implements Serializable {
                 for (int i = first.intValue(), e = last.intValue();
                      i <= e; ++i)
                     f.apply(new IntNum(i));
-        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+        } else if (inc < 0 && first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
             if (first.compareTo(last) >= 0)
                 for (int i = first.intValue(), e = last.intValue();
@@ -198,7 +198,7 @@ public final class ListRange extends AList implements Serializable {
                 for (int i = first.intValue(), e = last.intValue();
                      i <= e; ++i)
                     v = f.apply(v, new IntNum(i));
-        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+        } else if (inc < 0 && first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
             if (first.compareTo(last) >= 0)
                 for (int i = first.intValue(), e = last.intValue();
@@ -252,7 +252,7 @@ public final class ListRange extends AList implements Serializable {
             l.reserve(e - i + 1);
             while (i <= e)
                 l.add(f.apply(new IntNum(i++)));
-        } else if (first.rCompare(Integer.MAX_VALUE) > 0 &&
+        } else if (inc < 0 && first.rCompare(Integer.MAX_VALUE) > 0 &&
                    last.rCompare(Integer.MIN_VALUE) < 0) {
             int i = first.intValue(), e = last.intValue();
             if (i < e)
