@@ -666,9 +666,12 @@ final class Function extends CapturingClosure implements Binder {
             if (uncaptureArg != null) {
                 uncaptureArg.gen(ctx);
             } else {
+                int t;
                 ctx.load(argVar);
                 // inexact nulling...
-                if (--argUsed == 0 && ctx.tainted == 0) {
+                if (--argUsed == 0 && ctx.tainted == 0 &&
+                        (t = type.deref().type) != YetiType.NUM &&
+                        t != YetiType.BOOL) {
                     ctx.insn(ACONST_NULL);
                     ctx.varInsn(ASTORE, argVar);
                 }
