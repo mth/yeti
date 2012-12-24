@@ -248,7 +248,18 @@ done,
     CompileException _: true;
     ...
     esac
-done
+done,
+'double arguments': do:
+    class Doubles(double a, double b, double c)
+        double res()
+            (a + b) / c,
+        double calc(double x, double y, double z)
+            s = x + y;
+            s / z
+    end;
+    t = new Doubles(3, 5, 2);
+    [t#res(), t#calc(3, 5, 2)] == [4, 4]
+done,
 ];
 
 var bad = 0;

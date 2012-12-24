@@ -131,17 +131,20 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
         void convertArgs(Ctx ctx) {
             int n = (access & ACC_STATIC) == 0 ? 1 : 0;
-            ctx.localVarCount = args.size() + n;
+            int at = n;
             for (int i = 0; i < arguments.length; ++i) {
+                ++at;
                 if (arguments[i].type != YetiType.JAVA)
                     continue;
                 String descr = arguments[i].javaType.description;
                 if (descr != "Ljava/lang/String;" && descr.charAt(0) == 'L')
                     continue;
-                loadArg(ctx, arguments[i], i + n);
+                --at;
+                at += loadArg(ctx, arguments[i], at);
                 JavaExpr.convertValue(ctx, arguments[i]);
                 ctx.varInsn(ASTORE, i + n);
             }
+            ctx.localVarCount = at;
         }
 
         void gen(Ctx ctx) {
@@ -281,7 +284,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         this.isPublic = isPublic;
     }
 
-    static void loadArg(Ctx ctx, YType argType, int n) {
+    private static int loadArg(Ctx ctx, YType argType, int n) {
         int ins = ALOAD;
         if (argType.type == YetiType.JAVA) {
             switch (argType.javaType.description.charAt(0)) {
@@ -293,6 +296,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
             }
         }
         ctx.varInsn(ins, n);
+        return ins == DLOAD ? 2 : 1;
     }
 
     static void genRet(Ctx ctx, YType returnType) {
@@ -493,8 +497,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
                     start = 1;
                     mc.load(0);
                 }
-                for (int j = 0; j < m.arguments.length; ++j)
-                    loadArg(mc, m.arguments[j], j + start);
+                for (int j = 0; j < m.arguments.length; )
+                    j += loadArg(mc, m.arguments[j], j + start);
                 mc.methodInsn(insn, accessor[3] == null ? className :
                                     parentClass.type.javaType.className(),
                               m.name, m.descr(null));
