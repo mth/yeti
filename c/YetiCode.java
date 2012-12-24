@@ -1808,7 +1808,10 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
 
         CaptureWrapper capture() {
             captured = true;
-            return var ? BindExpr.this : null;
+            if (!var)
+                return null;
+            ++bindingUsed; // reference through wrapper
+            return BindExpr.this;
         }
 
         Code unref(boolean force) {
