@@ -1765,6 +1765,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     private boolean directBind;
     private String directField;
     private String myClass;
+    private int bindingUsed;
 
     class Ref extends BindRef {
         int arity;
@@ -1774,6 +1775,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             if (directBind) {
                 st.gen(ctx);
             } else {
+                --bindingUsed;
                 genPreGet(ctx);
                 genGet(ctx);
             }
@@ -1839,6 +1841,7 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         res.next = refs;
         if (st instanceof Function)
             res.origin = res;
+        ++bindingUsed;
         return refs = res;
     }
 
@@ -1855,7 +1858,18 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
     public void genPreGet(Ctx ctx) {
         if (mvar == -1) {
             if (directField == null) {
-                ctx.load(id).forceType(javaType);
+                ctx.load(id);
+                YType t;
+                // garbage collect infinite lists
+                if (bindingUsed == 0 && ctx.tainted == 0 &&
+                        ((t = st.type.deref()).type == 0 ||
+                         t.type == YetiType.MAP &&
+                         t.param[2].deref().type != YetiType.MAP_MARKER &&
+                         t.param[1].deref().type != YetiType.NUM)) {
+                    ctx.insn(ACONST_NULL);
+                    ctx.varInsn(ASTORE, id);
+                }
+                ctx.forceType(javaType);
             } else {
                 ctx.fieldInsn(GETSTATIC, myClass, directField, javaDescr);
             }
