@@ -9,9 +9,13 @@ in case-insensitive manner. The path separators should be unified to '/'
 before matching. The generated module classnames should be always
 in lower case.
 
+Deriving NAME IMPLICITLY is done before deriving SOURCEPATH implicitly.
+This means that it must be done in the analyze phase after parsing.
+
 The module/program NAME IS always defined:
   * EXPLICITLY with module/program declaration.
-  * IMPLICITLY from the source file name omitting the ".yeti" suffix.
+  * IMPLICITLY from the source file name omitting the ".yeti" suffix
+    for a program.
     If SOURCEPATH is explicitly declared, the package part will be derived
     by matching the start of the canonical path with SOURCEPATH entries and
     adding the remaining path as package name.
@@ -32,6 +36,21 @@ SOURCEPATH IS always defined:
       the SOURCEPATH is the preceding part of the canonical path.
     + Otherwise the SOURCEPATH is the directory of source file.
 
+CompileParam class should be created, where sourcepath and some
+other properties are passed, to avoid the need to modify CompileCtx
+externally?
+
+SOURCEPATH derivation needs to know the NAME and the canonical path
+of the source file for NAME. Since NAME can be certainly known only after
+parse phase, the SOURCEPATH derivation should also be done after parse,
+but before loading any dependant modules (where the SOURCEPATH would be
+already needed). This means that the source loader should return the
+canonical path additionally to the source code, which has to be passed to
+the YetiAnalyzer.toCode().
+
+Maybe CompileCtx should be separated from YetiCode, and the derivation be
+a CompileCtx method.
+
 When load foo.bar.baz is done the source file is searched with following rules:
   1) From lookup/compilation cache.
   2) From each SOURCEPATH entry in the form
@@ -42,6 +61,10 @@ When load foo.bar.baz is done the source file is searched with following rules:
   Probably not, either the path is explicit or contains single element,
   and if it's explicit, more consistent build is achieved when always
   searching in the same order.
+  The load should fail after parse phase, if the source is not a module.
+  There the toCode should get as parameter a flag about expecting module
+  or program. Maybe toCode should be non-static and it's parameters
+  YetiAnalyzer instance fields.
 
 Additionally the class foo/bar/baz.class should be searched from the classpath.
 If neither the source or class is found, the module not found error should be
