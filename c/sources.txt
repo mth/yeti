@@ -48,9 +48,6 @@ already needed). This means that the source loader should return the
 canonical path additionally to the source code, which has to be passed to
 the YetiAnalyzer.toCode().
 
-Maybe CompileCtx should be separated from YetiCode, and the derivation be
-a CompileCtx method.
-
 When load foo.bar.baz is done the source file is searched with following rules:
   1) From lookup/compilation cache.
   2) From each SOURCEPATH entry in the form
