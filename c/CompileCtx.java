@@ -401,5 +401,3 @@ final class YClassWriter extends ClassWriter {
         return "java/lang/Object";
     }
 }
-
-
