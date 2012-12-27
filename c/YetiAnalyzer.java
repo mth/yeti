@@ -1686,9 +1686,12 @@ public final class YetiAnalyzer extends YetiType {
         return res;
     }
 
-    public static RootClosure toCode(String sourceName, String className,
-                                     char[] src, CompileCtx ctx,
-                                     String[] preload) {
+    String sourceName;
+    String className;
+    CompileCtx ctx;
+    String[] preload;
+
+    public RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);

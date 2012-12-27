@@ -244,8 +244,12 @@ final class CompileCtx implements Opcodes {
         unstoredClasses = new ArrayList();
         try {
             try {
-                codeTree = YetiAnalyzer.toCode(sourceName, name, code,
-                                               this, preload);
+                YetiAnalyzer anal = new YetiAnalyzer();
+                anal.sourceName = sourceName;
+                anal.className = name;
+                anal.ctx = this;
+                anal.preload = preload;
+                codeTree = anal.toCode(code);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }

@@ -60,8 +60,7 @@ When load foo.bar.baz is done the source file is searched with following rules:
   searching in the same order.
   The load should fail after parse phase, if the source is not a module.
   There the toCode should get as parameter a flag about expecting module
-  or program. Maybe toCode should be non-static and it's parameters
-  YetiAnalyzer instance fields.
+  or program.
 
 Additionally the class foo/bar/baz.class should be searched from the classpath.
 If neither the source or class is found, the module not found error should be
