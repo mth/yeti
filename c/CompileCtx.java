@@ -299,7 +299,7 @@ final class CompileCtx implements Opcodes {
                                      !name.equalsIgnoreCase(parser.moduleName)))
             throw new CompileException(0, 0, analyzer.sourceName +
                 ": Cannot contain " + (parser.isModule ? "module "
-                    : "program " + parser.moduleName.replace('/', '.')));
+                    : "program ") + parser.moduleName.replace('/', '.'));
         if (parser.moduleName != null)
             name = parser.moduleName;
         parser.moduleName = name.toLowerCase();
