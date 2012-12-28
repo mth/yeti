@@ -1686,6 +1686,7 @@ public final class YetiAnalyzer extends YetiType {
         return res;
     }
 
+    Boolean expectModule;
     String sourceName;
     String className;
     CompileCtx ctx;
@@ -1705,12 +1706,14 @@ public final class YetiAnalyzer extends YetiType {
                     ex.line = parser.currentLine();
                 throw ex;
             }
-            if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0) {
+            if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0)
                 System.err.println(n.str());
-            }
-            if (parser.moduleName != null) {
+            if (expectModule != null &&
+                    expectModule.booleanValue() != parser.isModule)
+                throw new CompileException(0, 0, expectModule.booleanValue()
+                            ? "Expected module" : "Expected program");
+            if (parser.moduleName != null)
                 className = parser.moduleName;
-            }
             ctx.addClass(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & YetiC.CF_NO_IMPORT) == 0
