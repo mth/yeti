@@ -56,9 +56,11 @@ final class CompileCtx implements Opcodes {
     private List unstoredClasses;
     final List postGen = new ArrayList();
     boolean isGCJ;
+
     String sourceCharset;
-    String[] sourcePath;
+    String[] sourcePath = {};
     Fun customReader;
+
     ClassFinder classPath;
     final Map types = new HashMap();
     final Map opaqueTypes = new HashMap();
@@ -243,7 +245,7 @@ final class CompileCtx implements Opcodes {
                 return readSourceFile(null, localName, analyzer);
             // Search from path. The localName is slashed package name.
             localName += ".yeti";
-            if (sourcePath == null || sourcePath.length == 0)
+            if (sourcePath.length == 0)
                 throw new IOException("no source path");
             String fn = localName;
             int sep = fn.lastIndexOf('/');
@@ -266,7 +268,45 @@ final class CompileCtx implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
-        // TODO
+        // derive or verify the module name
+        String cf = analyzer.canonicalFile, name = null;
+        int i, lastlen = -1, l = -1;
+        boolean ok = parser.moduleName == null;
+        String shortName = parser.moduleName;
+        if (shortName != null) {
+            l = shortName.lastIndexOf('/');
+            shortName = l > 0 ? shortName.substring(l + 1) : null;
+        }
+        for (i = 0; i < sourcePath.length; ++i) {
+            l = sourcePath[i].length();
+            if (l <= lastlen || cf.length() <= l ||
+                    cf.charAt(l) != File.pathSeparatorChar ||
+                    !sourcePath[i].equals(cf.substring(0, l)))
+                continue;
+            name = cf.substring(l + 1);
+            if (File.pathSeparatorChar != '/')
+                name = name.replace(File.pathSeparatorChar, '/');
+            if (!ok && (name.equalsIgnoreCase(parser.moduleName) ||
+                        name.equalsIgnoreCase(shortName))) {
+                ok = true;
+                break;
+            }
+            lastlen = l;
+        }
+        if (name == null)
+            name = new File(cf).getName();
+        if (!ok && (lastlen != -1 || !name.equalsIgnoreCase(shortName) &&
+                                     !name.equalsIgnoreCase(parser.moduleName)))
+            throw new CompileException(0, 0, analyzer.sourceName +
+                ": Cannot contain " + (parser.isModule ? "module "
+                    : "program " + parser.moduleName.replace('/', '.')));
+        if (parser.moduleName != null)
+            name = parser.moduleName;
+        parser.moduleName = name.toLowerCase();
+        
+        // derive the source path
+        if (sourcePath.length == 0) {
+        }
     }
 
     String compile(String sourceName, int flags) throws Exception {
@@ -326,6 +366,7 @@ final class CompileCtx implements Opcodes {
                 anal.className = name;
                 anal.ctx = this;
                 anal.preload = preload;
+                anal.canonicalFile = sourceName; //XXX
                 codeTree = anal.toCode(code);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
