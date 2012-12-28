@@ -40,6 +40,14 @@ CompileParam class should be created, where sourcepath and some
 other properties are passed, to avoid the need to modify CompileCtx
 externally?
 
+compileYetiFiles level reader API.
+The sourcepath is meant to contain a set of different sources.
+Therefore custom readers should also give unique universal canonical
+paths to the read files, probably in the form of URI.
+Therefore the SourceReader parameter should just return a structure
+{source, path} - but the current API in fact is suitable with the notion,
+that _absolute_ name should be assigned to the name field.
+
 SOURCEPATH derivation needs to know the NAME and the canonical path
 of the source file for NAME. Since NAME can be certainly known only after
 parse phase, the SOURCEPATH derivation should also be done after parse,
@@ -65,6 +73,10 @@ When load foo.bar.baz is done the source file is searched with following rules:
 Additionally the class foo/bar/baz.class should be searched from the classpath.
 If neither the source or class is found, the module not found error should be
 given.
+
+When compilation of path foo/bar/baz.yeti is requested:
+  It will be tried to read using the given source reader, ignoring the
+  source path.
 
 If both are found, the modification times should be compared.
 If the source file is newer or there is no class file, the module should

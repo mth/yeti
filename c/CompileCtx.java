@@ -54,6 +54,8 @@ final class CompileCtx implements Opcodes {
     private List unstoredClasses;
     final List postGen = new ArrayList();
     boolean isGCJ;
+    String sourceCharset;
+    String[] sourcePath;
     ClassFinder classPath;
     final Map types = new HashMap();
     final Map opaqueTypes = new HashMap();
@@ -192,6 +194,72 @@ final class CompileCtx implements Opcodes {
         return yetiCount != 0 ? mainClass : "";
     }
 
+    private char[] readSourceFile(File file, String errorName) {
+        char[] buf = new char[0x8000];
+        try {
+            InputStream stream = new FileInputStream(file);
+            Reader reader = null;
+            try {
+                reader = new java.io.InputStreamReader(stream, sourceCharset);
+                int n, l = 0;
+                while ((n = reader.read(buf, l, buf.length - l)) >= 0) {
+                    if (buf.length - (l += n) < 0x1000) {
+                        char[] tmp = new char[buf.length << 1];
+                        System.arraycopy(buf, 0, tmp, 0, l);
+                        buf = tmp;
+                    }
+                }
+            } finally {
+                if (reader != null)
+                    reader.close();
+                else
+                    stream.close();
+            }
+        } catch (IOException ex) {
+            if (errorName != null)
+                throw new CompileException(0, 0,
+                            errorName + ": " + ex.getMessage());
+            buf = null;
+        }
+        return buf;
+    }
+
+    // if loadModule is true, the file is searched from the source path
+    private char[] readSource(String localName, YetiAnalyzer analyzer,
+                              boolean loadModule) throws IOException {
+        File f;
+
+        if (!loadModule) {
+            f = new File(localName).getCanonicalFile();
+            analyzer.canonicalFile = f.getPath();
+            return readSourceFile(f, localName);
+        }
+        // Search from path. The localName is slashed package name.
+        localName += ".yeti";
+        if (sourcePath == null || sourcePath.length == 0)
+            throw new CompileException(0, 0, localName + ": no source path");
+        String fn = localName;
+        int sep = fn.lastIndexOf('/');
+        for (;;) {
+            // search _with_ packageName
+            for (int i = 0; i < sourcePath.length; ++i) {
+                f = new File(sourcePath[i], fn);
+                char[] result = readSourceFile(f, sep <= 0 &&
+                    i + 1 == sourcePath.length ? localName : null);
+                if (result != null) {
+                    analyzer.canonicalFile = f.getCanonicalPath();
+                    return result;
+                }
+            }
+            fn = fn.substring(sep + 1);
+            sep = -1;
+        }
+    }
+
+    void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
+        // TODO
+    }
+
     String compile(String sourceName, int flags) throws Exception {
         String className = (String) compiled.get(sourceName);
         if (className != null)
@@ -307,10 +375,6 @@ final class CompileCtx implements Opcodes {
                 ex.fn = sourceName;
             throw ex;
         }
-    }
-
-    void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
-        // TODO
     }
 
     private void moduleEval(RootClosure codeTree, Ctx mctx, String name) {

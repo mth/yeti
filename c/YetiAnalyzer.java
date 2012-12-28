@@ -1687,11 +1687,11 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     Boolean expectModule;
+    String canonicalFile; // canonical source name, used by ctx.deriveName
     String sourceName;
     String className;
     CompileCtx ctx;
     String[] preload;
-    Object sourceInfo; // used by ctx.deriveName
 
     public RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
