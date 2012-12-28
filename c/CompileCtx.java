@@ -268,9 +268,16 @@ final class CompileCtx implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
+        //System.err.println("Module name before derive: " + parser.moduleName);
         // derive or verify the module name
         String cf = analyzer.canonicalFile, name = null;
         int i, lastlen = -1, l = -1;
+        i = cf.length() - 5;
+        if (i > 0 && cf.substring(i).equalsIgnoreCase(".yeti"))
+            cf = cf.substring(0, i);
+        else if (parser.isModule)
+            throw new CompileException(0, 0,
+                "Yeti module source file must have a .yeti suffix");
         boolean ok = parser.moduleName == null;
         String shortName = parser.moduleName;
         if (shortName != null) {
@@ -295,14 +302,18 @@ final class CompileCtx implements Opcodes {
         }
         if (name == null)
             name = new File(cf).getName();
+        //System.err.println("SPATH:" + java.util.Arrays.asList(sourcePath) +
+        //    "; cf:" + cf + "; name:" + name + "; shortName:" + shortName +
+        //    "; lastlen:" + lastlen);
         if (!ok && (lastlen != -1 || !name.equalsIgnoreCase(shortName) &&
                                      !name.equalsIgnoreCase(parser.moduleName)))
-            throw new CompileException(0, 0, analyzer.sourceName +
-                ": Cannot contain " + (parser.isModule ? "module "
-                    : "program ") + parser.moduleName.replace('/', '.'));
+            throw new CompileException(0, 0, "Cannot contain " +
+                        (parser.isModule ? "module " : "program ") +
+                        parser.moduleName.replace('/', '.'));
         if (parser.moduleName != null)
             name = parser.moduleName;
         parser.moduleName = name.toLowerCase();
+        //System.err.println("Derived module name: " + parser.moduleName);
         
         // derive the source path
         if (sourcePath.length == 0) {

@@ -1713,9 +1713,10 @@ public final class YetiAnalyzer extends YetiType {
                     expectModule.booleanValue() != parser.isModule)
                 throw new CompileException(0, 0, expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
-            ctx.deriveName(parser, this);
-            if (parser.moduleName != null)
+            if ((ctx.flags & YetiC.CF_EVAL) == 0) {
+                ctx.deriveName(parser, this);
                 className = parser.moduleName;
+            }
             ctx.addClass(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & YetiC.CF_NO_IMPORT) == 0
