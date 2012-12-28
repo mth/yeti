@@ -395,16 +395,20 @@ class TypeDescr extends YetiType {
                                     && p1.type != VAR ? "hash" : "map";
                     n = 2;
                 }
+                while (--n >= 0) {
+                    item = prepare(param[n], ctx);
+                    item.prev = descr.value;
+                    descr.value = item;
+                }
+                break;
             default:
-                if (type >= OPAQUE_TYPES) {
-                    descr.type = MAP;
-                    descr.name = t.partialMembers.keySet().toString();
-                    n = param.length;
-                } else if (type != MAP) {
+                if (type < OPAQUE_TYPES) {
                     descr.name = "?" + type + '?';
                     break;
                 }
-                while (--n >= 0) {
+                descr.type = MAP;
+                descr.name = t.partialMembers.keySet().toString();
+                for (n = -1; ++n < param.length; ) {
                     item = prepare(param[n], ctx);
                     item.prev = descr.value;
                     descr.value = item;
