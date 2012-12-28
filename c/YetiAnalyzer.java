@@ -1691,6 +1691,7 @@ public final class YetiAnalyzer extends YetiType {
     String className;
     CompileCtx ctx;
     String[] preload;
+    Object sourceInfo; // used by ctx.deriveName
 
     public RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
@@ -1712,6 +1713,7 @@ public final class YetiAnalyzer extends YetiType {
                     expectModule.booleanValue() != parser.isModule)
                 throw new CompileException(0, 0, expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
+            ctx.deriveName(parser, this);
             if (parser.moduleName != null)
                 className = parser.moduleName;
             ctx.addClass(className, null);

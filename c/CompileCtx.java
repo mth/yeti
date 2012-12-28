@@ -309,6 +309,10 @@ final class CompileCtx implements Opcodes {
         }
     }
 
+    void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
+        // TODO
+    }
+
     private void moduleEval(RootClosure codeTree, Ctx mctx, String name) {
         mctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, "$",
                            "Ljava/lang/Object;", null, null).visitEnd();
