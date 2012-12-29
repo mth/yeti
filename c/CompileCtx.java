@@ -290,9 +290,7 @@ final class CompileCtx implements Opcodes {
                     cf.charAt(l) != File.pathSeparatorChar ||
                     !sourcePath[i].equals(cf.substring(0, l)))
                 continue;
-            name = cf.substring(l + 1);
-            if (File.pathSeparatorChar != '/')
-                name = name.replace(File.pathSeparatorChar, '/');
+            name = cf.substring(l + 1).replace(File.pathSeparatorChar, '/');
             if (!ok && (name.equalsIgnoreCase(parser.moduleName) ||
                         name.equalsIgnoreCase(shortName))) {
                 ok = true;
@@ -315,8 +313,26 @@ final class CompileCtx implements Opcodes {
         parser.moduleName = name.toLowerCase();
         //System.err.println("Derived module name: " + parser.moduleName);
         
-        // derive the source path
+        /* Derive the source path IMPLICITLY as a single directory:
+         * + If the the canonical path ends with /foo/bar/baz(.yeti) matching
+         *   the module/program NAME foo.bar.baz (case insensitive),
+         *   the SOURCEPATH is the preceding part of the canonical path.
+         * + Otherwise the SOURCEPATH is the directory of source file. */
         if (sourcePath.length == 0) {
+            l = cf.length() - (name.length() + 1);
+            if (l >= 0) {
+                name = cf.substring(l)
+                         .replace(File.pathSeparatorChar, '/');
+                if (l == 0)
+                    l = 1;
+                if (name.charAt(0) != '/' ||
+                    !name.substring(1).equalsIgnoreCase(parser.moduleName))
+                    l = -1;
+            }
+            name = l < 0 ? new File(cf).getParent() : cf.substring(0, l);
+            if (name == null)
+                name = new File("").getAbsolutePath();
+            sourcePath = new String[] { name  };
         }
     }
 
