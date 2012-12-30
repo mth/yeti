@@ -292,6 +292,7 @@ compileYetiFiles genericOpt options files =
     // TODO use null writer when no Exec and no To,
     // for signaling to skip the bytecode generation.
     reader#basedirs := sourcePath as ~String[];
+    ctx#sourcePath := sourcePath as ~String[];
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
         CompileCtx#currentCompileCtx#set(ctx);

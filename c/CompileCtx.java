@@ -32,11 +32,7 @@ package yeti.lang.compiler;
 
 import yeti.renamed.asm3.*;
 import java.io.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import yeti.lang.Fun;
@@ -58,7 +54,7 @@ final class CompileCtx implements Opcodes {
     boolean isGCJ;
 
     String sourceCharset;
-    String[] sourcePath = {};
+    private String[] sourcePath = {};
     Fun customReader;
 
     ClassFinder classPath;
@@ -161,8 +157,12 @@ final class CompileCtx implements Opcodes {
                 sources[yetiCount++] = sources[i];
             }
         String mainClass = null;
+        if (flags != 0)
+            this.flags = flags;
+        System.err.println("compileAll: " + Arrays.asList(sourcePath));
         for (i = 0; i < yetiCount; ++i) {
-            String className = compile(sources[i], flags);
+            System.err.println("compileAll: " + sources[i]);
+            String className = compile(sources[i], null).name;
             if (!types.containsKey(className))
                 mainClass = className;
         }
@@ -199,8 +199,15 @@ final class CompileCtx implements Opcodes {
         return yetiCount != 0 ? mainClass : "";
     }
 
-    private char[] readSourceFile(String parent, String fn, YetiAnalyzer analyzer)
-            throws IOException {
+    void setSourcePath(String[] path) throws IOException {
+        String[] sp = new String[path.length];
+        for (int i = 0; i < path.length; ++i)
+            sp[i] = new File(path[i]).getCanonicalPath();
+        sourcePath = sp;
+    }
+
+    private char[] readSourceFile(String parent, String fn,
+                                  YetiAnalyzer analyzer) throws IOException {
         if (customReader != null) {
             Struct3 arg = new Struct3(new String[] { "name" }, null);
             arg._0 = fn;
@@ -238,16 +245,15 @@ final class CompileCtx implements Opcodes {
     }
 
     // if loadModule is true, the file is searched from the source path
-    private char[] readSource(String localName, YetiAnalyzer analyzer,
-                              boolean loadModule) {
+    private char[] readSource(YetiAnalyzer analyzer, boolean loadModule) {
+        System.err.println(analyzer.sourceName + ": loadModule=" + loadModule);
         try {
             if (!loadModule)
-                return readSourceFile(null, localName, analyzer);
+                return readSourceFile(null, analyzer.sourceName, analyzer);
             // Search from path. The localName is slashed package name.
-            localName += ".yeti";
+            String fn = analyzer.sourceName += ".yeti";
             if (sourcePath.length == 0)
                 throw new IOException("no source path");
-            String fn = localName;
             int sep = fn.lastIndexOf('/');
             for (;;) {
                 // search _with_ packageName
@@ -263,7 +269,8 @@ final class CompileCtx implements Opcodes {
                 sep = -1;
             }
         } catch (IOException e) {
-            throw new CompileException(0, 0, localName + ": " + e.getMessage());
+            throw new CompileException(0, 0,
+                        analyzer.sourceName + ": " + e.getMessage());
         }
     }
 
@@ -334,81 +341,49 @@ final class CompileCtx implements Opcodes {
                 name = new File("").getAbsolutePath();
             sourcePath = new String[] { name  };
         }
-    }
 
-    String compile(String sourceName, int flags) throws Exception {
-        String className = (String) compiled.get(sourceName);
-        if (className != null)
-            return className;
-        String[] srcName = { sourceName };
-        char[] src;
-        try {
-            src = reader.getSource(srcName, false);
-        } catch (IOException ex) {
-            throw new CompileException(null, ex.getMessage());
-        }
-        int dot = srcName[0].lastIndexOf('.');
-        className = dot < 0 ? srcName[0] : srcName[0].substring(0, dot);
-        dot = className.lastIndexOf('.');
-        if (dot >= 0) {
-            dot = Math.max(className.indexOf('/', dot),
-                           className.indexOf('\\', dot));
-            if (dot >= 0)
-                className = className.substring(dot + 1);
-        }
-        compile(srcName[0], className, src, flags);
-        className = (String) compiled.get(srcName[0]);
-        compiled.put(sourceName, className);
-        return className;
-    }
-
-    ModuleType compile(String sourceName, String name,
-                      char[] code, int flags) throws Exception {
-        // TODO
-        // The circular dep check doesn't work always, as the SourceReader +
-        // compile(sourceName, flags) gets the proposed classname wrong
-        // when the sourcereader modifies the path - even when the original
-        // sourceName contained correct name base for classname provided
-        // by the YetiTypeAttr when loading a module.
-        // The source reading logic is a mess and needs a refactoring, badly.
+        name = parser.moduleName;
         if (definedClasses.containsKey(name)) {
             throw new CompileException(0, 0, (definedClasses.get(name) == null
                 ? "Circular module dependency: "
                 : "Duplicate module name: ") + name.replace('/', '.'));
         }
-        boolean module = (flags & YetiC.CF_COMPILE_MODULE) != 0;
+    }
+
+    ModuleType compile(String sourceName, char[] code) throws Exception {
+        YetiAnalyzer anal = new YetiAnalyzer(sourceName);
+        anal.ctx = this;
+        if ((flags & (YetiC.CF_COMPILE_MODULE | YetiC.CF_EXPECT_MODULE)) != 0)
+            anal.expectModule = Boolean.TRUE;
+        else if ((flags & (YetiC.CF_EXPECT_PROGRAM)) != 0)
+            anal.expectModule = Boolean.FALSE;
+        if ((flags & YetiC.CF_EVAL) != 0)
+            anal.className = "code";
+        if (code == null)
+            code = readSource(anal, (flags & YetiC.CF_COMPILE_MODULE) != 0);
         RootClosure codeTree;
         Object oldCompileCtx = currentCompileCtx.get();
         currentCompileCtx.set(this);
         String oldCurrentSrc = currentSrc;
         currentSrc = sourceName;
-        if (flags != 0)
-            this.flags = flags;
         List oldUnstoredClasses = unstoredClasses;
         unstoredClasses = new ArrayList();
         try {
             try {
-                YetiAnalyzer anal = new YetiAnalyzer();
-                anal.sourceName = sourceName;
-                anal.className = name;
-                anal.ctx = this;
                 anal.preload = preload;
-                anal.canonicalFile = sourceName; //XXX
                 codeTree = anal.toCode(code);
             } finally {
                 currentCompileCtx.set(oldCompileCtx);
             }
-            if (codeTree.moduleType.name != null)
-                name = codeTree.moduleType.name;
-            module = module || codeTree.isModule;
+            String name = codeTree.moduleType.name;
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
-            Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC
-                    | ACC_SUPER | (module && codeTree.moduleType.deprecated
-                        ? ACC_DEPRECATED : 0), name,
-                   (flags & YetiC.CF_EVAL) != 0 ? "yeti/lang/Fun" : null, null);
+            Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
+                ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
+                    ? ACC_DEPRECATED : 0), name, (flags & YetiC.CF_EVAL) != 0
+                    ? "yeti/lang/Fun" : null, null);
             constants.ctx = ctx;
-            if (module) {
+            if (codeTree.isModule) {
                 moduleEval(codeTree, ctx, name);
                 types.put(name, codeTree.moduleType);
             } else if ((flags & YetiC.CF_EVAL) != 0) {

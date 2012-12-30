@@ -88,6 +88,7 @@ public class YetiBoot extends MatchingTask {
         String[] javaOpt = { "-encoding", "utf-8", "-d", target };
         log("Compiling " + files.length + " files.");
         try {
+            compilation.setSourcePath(reader.basedirs);
             compilation.compileAll(files, 0, javaOpt);
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());

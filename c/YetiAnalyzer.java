@@ -1693,7 +1693,11 @@ public final class YetiAnalyzer extends YetiType {
     CompileCtx ctx;
     String[] preload;
 
-    public RootClosure toCode(char[] src) {
+    YetiAnalyzer(String sourceName) {
+        this.sourceName = sourceName;
+    }
+
+    RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);

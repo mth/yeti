@@ -485,24 +485,25 @@ class YetiTypeVisitor implements ClassVisitor {
         return mt;
     }
 
-    static ModuleType getType(YetiParser.Node node, String name,
-                              boolean bySourcePath) {
+    static ModuleType getType(YetiParser.Node node, String name, boolean byPath) {
+        final boolean bySourcePath = false;
         final CompileCtx ctx = CompileCtx.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null)
             return t;
         String source = name;
         InputStream in = null;
-        if (!bySourcePath) {
-            source += ".yeti";
-            in = ClassFinder.get().findClass(name + ".class");
-        }
         int old_flags = ctx.flags;
+        if (!byPath) {
+            in = ClassFinder.get().findClass(name + ".class");
+            ctx.flags |= YetiC.CF_COMPILE_MODULE;
+        }
         try {
             if (in == null) {
                 //System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
+                ctx.flags |= YetiC.CF_EXPECT_MODULE;
                 ctx.flags &= ~YetiC.CF_EVAL_BIND; // clear the eval flags
-                t = (ModuleType) ctx.types.get(ctx.compile(source, 0));
+                t = (ModuleType) ctx.types.get(ctx.compile(source, null).name);
                 if (t == null)
                     throw new Exception("Could not compile `" + name
                                       + "' to a module");
