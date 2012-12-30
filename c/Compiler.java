@@ -214,12 +214,18 @@ final class Compiler implements Opcodes {
             String result = (String) customReader.apply(arg);
             if (result != Core.UNDEF_STR) {
                 analyzer.canonicalFile = (String) arg._0;
+                if (compiled.containsKey(analyzer.canonicalFile))
+                    return null;
                 return result.toCharArray();
             }
         }
         File f = new File(parent, fn);
-        if (parent == null)
+        if (parent == null) {
             f = f.getCanonicalFile();
+            analyzer.canonicalFile = f.getPath();
+            if (compiled.containsKey(analyzer.canonicalFile))
+                return null;
+        }
         char[] buf = new char[0x8000];
         InputStream stream = new FileInputStream(f);
         Reader reader = null;
@@ -239,8 +245,8 @@ final class Compiler implements Opcodes {
             else
                 stream.close();
         }
-        analyzer.canonicalFile =
-            parent == null ? f.getPath() : f.getCanonicalPath();
+        if (parent != null)
+            analyzer.canonicalFile = f.getCanonicalPath();
         return buf;
     }
 
@@ -363,8 +369,11 @@ final class Compiler implements Opcodes {
             anal.expectModule = Boolean.FALSE;
         if ((flags & YetiC.CF_EVAL) != 0)
             anal.className = "code";
-        if (code == null)
+        if (code == null) {
             code = readSource(anal, (flags & YetiC.CF_COMPILE_MODULE) != 0);
+            if (code == null)
+                return (ModuleType) compiled.get(anal.canonicalFile);
+        }
         RootClosure codeTree;
         Object oldCompiler = currentCompiler.get();
         currentCompiler.set(this);
@@ -380,6 +389,9 @@ final class Compiler implements Opcodes {
                 currentCompiler.set(oldCompiler);
             }
             String name = codeTree.moduleType.name;
+            if (name == null)
+                throw new CompileException(0, 0,
+                            "internal error: module/program name undefined");
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
             Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
@@ -420,7 +432,7 @@ final class Compiler implements Opcodes {
                 ctx.closeMethod();
             }
             constants.close();
-            compiled.put(sourceName, name);
+            compiled.put(anal.canonicalFile, codeTree.moduleType);
             write();
             unstoredClasses = oldUnstoredClasses;
             classPath.existsCache.clear();
