@@ -1,6 +1,6 @@
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
   + Use unique path identifiers (File? URL?) on module (re)compilation.
-  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
+  + Fix the circular dependency checking (TODO in Compiler.compile()).
   + Look what's wrong with handling win32 paths
   + Bad error message on: echo 'module x; ()' > y.yeti; yeti -e 'load y'
 
@@ -37,7 +37,7 @@ SOURCEPATH IS always defined:
     + Otherwise the SOURCEPATH is the directory of source file.
 
 CompileParam class should be created, where sourcepath and some
-other properties are passed, to avoid the need to modify CompileCtx
+other properties are passed, to avoid the need to modify Compiler
 externally?
 
 compileYetiFiles level reader API.

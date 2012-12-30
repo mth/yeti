@@ -109,7 +109,7 @@ execClass argv sandbox eval loader mainClass
 createCtx reader genericOpt =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
-    ctx = new CompileCtx(reader is ~YetiC, ());
+    ctx = new Compiler(reader is ~YetiC, ());
     java = array [];
 
     for genericOpt
@@ -295,7 +295,7 @@ compileYetiFiles genericOpt options files =
     ctx#setSourcePath(sourcePath);
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
-        CompileCtx#currentCompileCtx#set(ctx);
+        Compiler#currentCompiler#set(ctx);
         for files do src:
             typeAction (moduleDoc YetiTypeVisitor#getType((), src, true))
         done

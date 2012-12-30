@@ -51,7 +51,7 @@ public final class YetiAnalyzer extends YetiType {
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
     static void unusedBinding(Bind bind) {
-        CompileCtx.current().warn(
+        Compiler.current().warn(
             new CompileException(bind, "Unused binding: " + bind.name));
     }
 
@@ -138,12 +138,12 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "try")
                 return tryCatch(x, scope, depth);
             if (kind == "load") {
-                if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT)
+                if ((Compiler.current().flags & YetiC.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
                 ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
                 if (mt.deprecated)
-                    CompileCtx.current().warn(new CompileException(node,
+                    Compiler.current().warn(new CompileException(node,
                          "Module " + nam.replace('/', '.') + " is deprecated"));
                 return new LoadModule(nam, mt, depth);
             }
@@ -172,7 +172,7 @@ public final class YetiAnalyzer extends YetiType {
                              op.right, scope, depth);
             if (opop == FIELD_OP) {
                 if (op.right.kind == "listop") {
-                    CompileCtx.current().warn(new CompileException(node,
+                    Compiler.current().warn(new CompileException(node,
                         "Old-style .[] array/hash reference is deprecated" +
                         " (use [] instead)"));
                     return keyRefExpr(analyze(op.left, scope, depth),
@@ -420,7 +420,7 @@ public final class YetiAnalyzer extends YetiType {
             String className = ref.right.sym();
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
-                (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) == 0)
+                (Compiler.current().flags & YetiC.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.ctx.packageName, className);
             // a terrible hack - tell super ref that it's used for call
             if (className == "super")
@@ -1058,7 +1058,7 @@ public final class YetiAnalyzer extends YetiType {
                     ((TopLevel) seq.seqKind).typeScope = scope;
                 }
             } else if (nodes[i].kind == "import") {
-                if ((CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+                if ((Compiler.current().flags & YetiC.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
                 Node[] imports = ((XNode) nodes[i]).expr;
                 for (int j = 0; j < imports.length; ++j) {
@@ -1691,7 +1691,7 @@ public final class YetiAnalyzer extends YetiType {
     String sourceName;
     String sourceDir; // sourcePath entry used to find it
     String className;
-    CompileCtx ctx;
+    Compiler ctx;
     String[] preload;
 
     YetiAnalyzer(String sourceName) {

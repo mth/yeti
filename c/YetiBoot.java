@@ -84,7 +84,7 @@ public class YetiBoot extends MatchingTask {
         CodeWriter writer = new ToFile(target);
         YetiC reader = new YetiC();
         reader.basedirs = new String[] { dir.getPath() };
-        CompileCtx compilation = new CompileCtx(reader, writer);
+        Compiler compilation = new Compiler(reader, writer);
         compilation.preload = preload;
         compilation.classPath = new ClassFinder(classPath);
         compilation.isGCJ |= gcj;

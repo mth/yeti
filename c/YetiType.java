@@ -892,7 +892,7 @@ public class YetiType implements YetiParser {
             return new ClassBinding(t);
         }
         if (checkPerm != null &&
-            (CompileCtx.current().flags & YetiC.CF_NO_IMPORT) != 0)
+            (Compiler.current().flags & YetiC.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
         return new ClassBinding(JavaType.typeOfClass(packageName, name));
     }

@@ -189,6 +189,6 @@ class ClassFinder {
     }
 
     static ClassFinder get() {
-        return CompileCtx.current().classPath;
+        return Compiler.current().classPath;
     }
 }

@@ -207,7 +207,7 @@ class YetiTypeAttr extends Attribute {
         int p, end;
         Map vars = new HashMap();
         List refs = new ArrayList();
-        Map opaqueTypes = CompileCtx.current().opaqueTypes;
+        Map opaqueTypes = Compiler.current().opaqueTypes;
 
         DecodeType(ClassReader cr, int off, int len, char[] buf) {
             this.cr = cr;
@@ -487,7 +487,7 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType getType(YetiParser.Node node, String name, boolean byPath) {
         final boolean bySourcePath = false;
-        final CompileCtx ctx = CompileCtx.current();
+        final Compiler ctx = Compiler.current();
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null)
             return t;

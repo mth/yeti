@@ -167,7 +167,7 @@ final class MethodDesc extends YetiType {
         Scope scope = new Scope(scope_[0], null, null);
         String className = cl.expr[0].sym();
         String packageName = scope.ctx.packageName;
-        CompileCtx cctx = CompileCtx.current();
+        Compiler cctx = Compiler.current();
         if (!topLevel) {
             className = cctx.createClassName(null, scope.ctx.className, className);
         } else if (packageName != null && packageName.length() != 0) {

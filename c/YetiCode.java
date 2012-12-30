@@ -144,7 +144,7 @@ final class Constants implements Opcodes {
 }
 
 final class Ctx implements Opcodes {
-    CompileCtx compilation;
+    Compiler compilation;
     String className;
     ClassWriter cw;
     private MethodVisitor m;
@@ -157,7 +157,7 @@ final class Ctx implements Opcodes {
     int lastLine;
     int tainted; // you are inside loop, natural laws a broken
 
-    Ctx(CompileCtx compilation, Constants constants,
+    Ctx(Compiler compilation, Constants constants,
             ClassWriter writer, String className) {
         this.compilation = compilation;
         this.constants = constants;

@@ -39,8 +39,8 @@ import yeti.lang.Fun;
 import yeti.lang.Struct3;
 import yeti.lang.Core;
 
-final class CompileCtx implements Opcodes {
-    static final ThreadLocal currentCompileCtx = new ThreadLocal();
+final class Compiler implements Opcodes {
+    static final ThreadLocal currentCompiler = new ThreadLocal();
     private static ClassLoader JAVAC;
 
     CodeWriter writer;
@@ -64,7 +64,7 @@ final class CompileCtx implements Opcodes {
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
 
-    CompileCtx(SourceReader reader, CodeWriter writer) {
+    Compiler(SourceReader reader, CodeWriter writer) {
         this.reader = reader;
         this.writer = writer;
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
@@ -72,8 +72,8 @@ final class CompileCtx implements Opcodes {
 //            isGCJ = true;
     }
 
-    static CompileCtx current() {
-        return (CompileCtx) currentCompileCtx.get();
+    static Compiler current() {
+        return (Compiler) currentCompiler.get();
     }
 
     void warn(CompileException ex) {
@@ -177,7 +177,7 @@ final class CompileCtx implements Opcodes {
             java.lang.reflect.Method m;
             try {
                 if (javac == null) { // find javac...
-                    synchronized (currentCompileCtx) {
+                    synchronized (currentCompiler) {
                         if (JAVAC == null)
                             JAVAC = new URLClassLoader(new URL[] {
                                 new URL("file://" + new File(System.getProperty(
@@ -366,8 +366,8 @@ final class CompileCtx implements Opcodes {
         if (code == null)
             code = readSource(anal, (flags & YetiC.CF_COMPILE_MODULE) != 0);
         RootClosure codeTree;
-        Object oldCompileCtx = currentCompileCtx.get();
-        currentCompileCtx.set(this);
+        Object oldCompiler = currentCompiler.get();
+        currentCompiler.set(this);
         String oldCurrentSrc = currentSrc;
         currentSrc = sourceName;
         List oldUnstoredClasses = unstoredClasses;
@@ -377,7 +377,7 @@ final class CompileCtx implements Opcodes {
                 anal.preload = preload;
                 codeTree = anal.toCode(code);
             } finally {
-                currentCompileCtx.set(oldCompileCtx);
+                currentCompiler.set(oldCompiler);
             }
             String name = codeTree.moduleType.name;
             Constants constants = new Constants();
