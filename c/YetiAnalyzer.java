@@ -138,7 +138,7 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "try")
                 return tryCatch(x, scope, depth);
             if (kind == "load") {
-                if ((Compiler.current().flags & YetiC.CF_NO_IMPORT)
+                if ((Compiler.current().flags & Compiler.CF_NO_IMPORT)
                      != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
                 ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
@@ -420,7 +420,7 @@ public final class YetiAnalyzer extends YetiType {
             String className = ref.right.sym();
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
-                (Compiler.current().flags & YetiC.CF_NO_IMPORT) == 0)
+                (Compiler.current().flags & Compiler.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.ctx.packageName, className);
             // a terrible hack - tell super ref that it's used for call
             if (className == "super")
@@ -1058,7 +1058,7 @@ public final class YetiAnalyzer extends YetiType {
                     ((TopLevel) seq.seqKind).typeScope = scope;
                 }
             } else if (nodes[i].kind == "import") {
-                if ((Compiler.current().flags & YetiC.CF_NO_IMPORT) != 0)
+                if ((Compiler.current().flags & Compiler.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
                 Node[] imports = ((XNode) nodes[i]).expr;
                 for (int j = 0; j < imports.length; ++j) {
@@ -1712,19 +1712,19 @@ public final class YetiAnalyzer extends YetiType {
                     ex.line = parser.currentLine();
                 throw ex;
             }
-            if ((ctx.flags & YetiC.CF_PRINT_PARSE_TREE) != 0)
+            if ((ctx.flags & Compiler.CF_PRINT_PARSE_TREE) != 0)
                 System.err.println(n.str());
             if (expectModule != null &&
                     expectModule.booleanValue() != parser.isModule)
                 throw new CompileException(0, 0, expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
-            if ((ctx.flags & YetiC.CF_EVAL) == 0) {
+            if ((ctx.flags & Compiler.CF_EVAL) == 0) {
                 ctx.deriveName(parser, this);
                 className = parser.moduleName;
             }
             ctx.addClass(className, null);
             RootClosure root = new RootClosure();
-            Scope scope = new Scope((ctx.flags & YetiC.CF_NO_IMPORT) == 0
+            Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
             LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
@@ -1739,7 +1739,7 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
-            if ((ctx.flags & YetiC.CF_EVAL_RESOLVE) != 0) {
+            if ((ctx.flags & Compiler.CF_EVAL_RESOLVE) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
@@ -1770,7 +1770,7 @@ public final class YetiAnalyzer extends YetiType {
             root.moduleType.name = parser.moduleName;
             root.moduleType.typeScope = topLevel.typeScope;
             root.isModule = parser.isModule;
-            if ((ctx.flags & YetiC.CF_COMPILE_MODULE) != 0 || parser.isModule) {
+            if ((ctx.flags & Compiler.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type,
                            root.body.polymorph ? RESTRICT_POLY : 0, -1);
@@ -1783,7 +1783,7 @@ public final class YetiAnalyzer extends YetiType {
                         "\nModule type is not fully defined " +
                         "(offending type variables are marked with *)");
                 }
-            } else if ((ctx.flags & YetiC.CF_EVAL) == 0) {
+            } else if ((ctx.flags & Compiler.CF_EVAL) == 0) {
                 expectUnit(root, n, topLevel.typeScope,
                            "Program body must have a unit type");
             }

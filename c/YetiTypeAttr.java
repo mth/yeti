@@ -496,13 +496,13 @@ class YetiTypeVisitor implements ClassVisitor {
         int old_flags = ctx.flags;
         if (!byPath) {
             in = ClassFinder.get().findClass(name + ".class");
-            ctx.flags |= YetiC.CF_COMPILE_MODULE;
+            ctx.flags |= Compiler.CF_COMPILE_MODULE;
         }
         try {
             if (in == null) {
                 //System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
-                ctx.flags |= YetiC.CF_EXPECT_MODULE;
-                ctx.flags &= ~YetiC.CF_EVAL_BIND; // clear the eval flags
+                ctx.flags |= Compiler.CF_EXPECT_MODULE;
+                ctx.flags &= ~Compiler.CF_EVAL_BIND; // clear the eval flags
                 t = (ModuleType) ctx.types.get(ctx.compile(source, null).name);
                 if (t == null)
                     throw new Exception("Could not compile `" + name

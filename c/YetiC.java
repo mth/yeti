@@ -102,17 +102,6 @@ class Loader extends ClassLoader implements CodeWriter {
 }
 
 public class YetiC implements SourceReader {
-    public static final int CF_COMPILE_MODULE   = 1;
-    public static final int CF_PRINT_PARSE_TREE = 2;
-    public static final int CF_EVAL             = 4;
-    public static final int CF_EVAL_RESOLVE     = 8;
-    public static final int CF_NO_IMPORT        = 16;
-    public static final int CF_EVAL_STORE       = 32;
-    public static final int CF_EVAL_BIND        = 40;
-    public static final int CF_DOC              = 64;
-    public static final int CF_EXPECT_MODULE    = 128;
-    public static final int CF_EXPECT_PROGRAM   = 256;
-
     static String inCharset = "UTF-8";
     static final String[] PRELOAD =
         { "yeti/lang/std", "yeti/lang/io" };

@@ -151,10 +151,10 @@ createCtx reader genericOpt =
 
         /// Print parse tree to stdout.
         /// Not very useful, unless you want to debug the compiler.
-        ParseTree (): ctx#flags := ctx#flags b_or YetiC#CF_PRINT_PARSE_TREE;
+        ParseTree (): ctx#flags := ctx#flags b_or Compiler#CF_PRINT_PARSE_TREE;
 
         /// Disable importing foreign classes. Useful when sandboxing.
-        NoImport ():  ctx#flags := ctx#flags b_or YetiC#CF_NO_IMPORT;
+        NoImport ():  ctx#flags := ctx#flags b_or Compiler#CF_NO_IMPORT;
 
         /// Disable generation of Java 1.6 frames to class files.
         ///
@@ -266,7 +266,7 @@ compileYetiFiles genericOpt options files =
         /// is called after each module file given for compilation. 
         Type action:
             typeAction := action;
-            ctx#flags := ctx#flags b_or YetiC#CF_DOC;
+            ctx#flags := ctx#flags b_or Compiler#CF_DOC;
 
         /// Execute main after compilation of the sources.
         /// The _argv will be set to the arg parameter.
@@ -371,8 +371,8 @@ evaluateYetiCode genericOpt =
         var argv = array [];
         var sourceName = undef_str;
         {ctx, warn} = createCtx new YetiC() genericOpt;
-        ctx#flags := ctx#flags b_or YetiC#CF_EVAL b_or YetiC#CF_EVAL_RESOLVE;
-
+        ctx#flags := ctx#flags b_or Compiler#CF_EVAL
+                        b_or Compiler#CF_EVAL_RESOLVE;
         for options
            \case of
             /// Store top-level bindings in the evaluation environment.
@@ -408,7 +408,7 @@ evaluateYetiCode genericOpt =
                fi;
 
         if bind then
-            ctx#flags := ctx#flags b_or YetiC#CF_EVAL_STORE;
+            ctx#flags := ctx#flags b_or Compiler#CF_EVAL_STORE;
         fi;
 
         if nullptr? evalEnv then

@@ -40,6 +40,17 @@ import yeti.lang.Struct3;
 import yeti.lang.Core;
 
 final class Compiler implements Opcodes {
+    public static final int CF_COMPILE_MODULE   = 1;
+    public static final int CF_PRINT_PARSE_TREE = 2;
+    public static final int CF_EVAL             = 4;
+    public static final int CF_EVAL_RESOLVE     = 8;
+    public static final int CF_NO_IMPORT        = 16;
+    public static final int CF_EVAL_STORE       = 32;
+    public static final int CF_EVAL_BIND        = 40;
+    public static final int CF_DOC              = 64;
+    public static final int CF_EXPECT_MODULE    = 128;
+    public static final int CF_EXPECT_PROGRAM   = 256;
+
     static final ThreadLocal currentCompiler = new ThreadLocal();
     private static ClassLoader JAVAC;
 
@@ -363,14 +374,14 @@ final class Compiler implements Opcodes {
     ModuleType compile(String sourceName, char[] code) throws Exception {
         YetiAnalyzer anal = new YetiAnalyzer(sourceName);
         anal.ctx = this;
-        if ((flags & (YetiC.CF_COMPILE_MODULE | YetiC.CF_EXPECT_MODULE)) != 0)
+        if ((flags & (CF_COMPILE_MODULE | CF_EXPECT_MODULE)) != 0)
             anal.expectModule = Boolean.TRUE;
-        else if ((flags & (YetiC.CF_EXPECT_PROGRAM)) != 0)
+        else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
-        if ((flags & YetiC.CF_EVAL) != 0)
+        if ((flags & CF_EVAL) != 0)
             anal.className = "code";
         if (code == null) {
-            code = readSource(anal, (flags & YetiC.CF_COMPILE_MODULE) != 0);
+            code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
             if (code == null)
                 return (ModuleType) compiled.get(anal.canonicalFile);
         }
@@ -396,13 +407,13 @@ final class Compiler implements Opcodes {
             constants.sourceName = sourceName == null ? "<>" : sourceName;
             Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
                 ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
-                    ? ACC_DEPRECATED : 0), name, (flags & YetiC.CF_EVAL) != 0
+                    ? ACC_DEPRECATED : 0), name, (flags & CF_EVAL) != 0
                     ? "yeti/lang/Fun" : null, null);
             constants.ctx = ctx;
             if (codeTree.isModule) {
                 moduleEval(codeTree, ctx, name);
                 types.put(name, codeTree.moduleType);
-            } else if ((flags & YetiC.CF_EVAL) != 0) {
+            } else if ((flags & CF_EVAL) != 0) {
                 ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
                 ctx = ctx.newMethod(ACC_PUBLIC, "apply",
                                     "(Ljava/lang/Object;)Ljava/lang/Object;");

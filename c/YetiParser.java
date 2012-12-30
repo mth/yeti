@@ -605,7 +605,7 @@ interface YetiParser {
         }
 
         private void addDoc(int from, int to) {
-            if ((flags & YetiC.CF_DOC) == 0)
+            if ((flags & Compiler.CF_DOC) == 0)
                 return;
             ++from;
             String str = new String(src, from, to - from);
@@ -1762,7 +1762,7 @@ interface YetiParser {
             }
             char first = p < src.length ? src[p] : ' ';
             Node res;
-            if ((flags & YetiC.CF_EVAL_STORE) != 0) {
+            if ((flags & Compiler.CF_EVAL_STORE) != 0) {
                 res = readSeq(' ', Seq.EVAL);
                 if (res instanceof Seq) {
                     Seq seq = (Seq) res;
