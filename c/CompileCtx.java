@@ -259,7 +259,9 @@ final class CompileCtx implements Opcodes {
                 // search _with_ packageName
                 for (int i = 0; i < sourcePath.length; ++i) {
                     try {
-                        return readSourceFile(sourcePath[i], fn, analyzer);
+                        char[] r = readSourceFile(sourcePath[i], fn, analyzer);
+                        analyzer.sourceDir = sourcePath[i];
+                        return r;
                     } catch (IOException ex) {
                         if (sep <= 0 && i + 1 == sourcePath.length)
                             throw ex;
@@ -291,11 +293,13 @@ final class CompileCtx implements Opcodes {
             l = shortName.lastIndexOf('/');
             shortName = l > 0 ? shortName.substring(l + 1) : null;
         }
-        for (i = 0; i < sourcePath.length; ++i) {
-            l = sourcePath[i].length();
+        String[] path = analyzer.sourceDir == null ? sourcePath :
+                            new String[] { analyzer.sourceDir };
+        for (i = 0; i < path.length; ++i) {
+            l = path[i].length();
             if (l <= lastlen || cf.length() <= l ||
                     cf.charAt(l) != File.pathSeparatorChar ||
-                    !sourcePath[i].equals(cf.substring(0, l)))
+                    !path[i].equals(cf.substring(0, l)))
                 continue;
             name = cf.substring(l + 1).replace(File.pathSeparatorChar, '/');
             if (!ok && (name.equalsIgnoreCase(parser.moduleName) ||
