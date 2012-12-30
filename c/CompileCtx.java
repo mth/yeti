@@ -53,7 +53,7 @@ final class CompileCtx implements Opcodes {
     final List postGen = new ArrayList();
     boolean isGCJ;
 
-    String sourceCharset;
+    String sourceCharset = "UTF-8";
     private String[] sourcePath = {};
     Fun customReader;
 

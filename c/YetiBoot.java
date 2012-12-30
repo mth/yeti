@@ -30,8 +30,10 @@
  */
 package yeti.lang.compiler;
 
+import java.io.File;
 import java.util.*;
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.Path;
 import yeti.lang.Fun;
@@ -75,7 +77,8 @@ public class YetiBoot extends MatchingTask {
             dir = getProject().getBaseDir();
         if (!fileset.hasPatterns())
             setIncludes("*.yeti");
-        String[] files = getDirectoryScanner(dir).getIncludedFiles();
+        DirectoryScanner scanner = getDirectoryScanner(dir);
+        String[] files = scanner.getIncludedFiles();
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
         CodeWriter writer = new ToFile(target);
@@ -88,6 +91,8 @@ public class YetiBoot extends MatchingTask {
         String[] javaOpt = { "-encoding", "utf-8", "-d", target };
         log("Compiling " + files.length + " files.");
         try {
+            for (int i = 0; i < files.length; ++i)
+                files[i] = new File(dir, files[i]).getPath();
             compilation.setSourcePath(reader.basedirs);
             compilation.compileAll(files, 0, javaOpt);
         } catch (CompileException ex) {

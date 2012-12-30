@@ -292,7 +292,7 @@ compileYetiFiles genericOpt options files =
     // TODO use null writer when no Exec and no To,
     // for signaling to skip the bytecode generation.
     reader#basedirs := sourcePath as ~String[];
-    ctx#sourcePath := sourcePath as ~String[];
+    ctx#setSourcePath(sourcePath);
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
         CompileCtx#currentCompileCtx#set(ctx);
@@ -425,7 +425,7 @@ evaluateYetiCode genericOpt =
             try
                 compileErr =
                     try
-                        t = ctx#compile(sourceName, mainClass, code, ctx#flags);
+                        t = ctx#compile(sourceName, code);
                         type := if typeOf? then
                                     TypeDescr#yetiType(t#type, (), ())
                                 else
