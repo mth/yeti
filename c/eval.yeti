@@ -128,8 +128,9 @@ createCtx reader genericOpt =
         /// Set custom source reader function
         SourceReader f:
             reader#override :=
-                f is {var .name is string, .fullpath is boolean} -> string
-                  as ~yeti.lang.Fun;
+                f is {var .name is string} -> string as ~yeti.lang.Fun;
+            ctx#customReader := 
+                f is {var .name is string} -> string as ~yeti.lang.Fun;
 
         /// Set custom CodeWriter
         CodeWriter writer:
