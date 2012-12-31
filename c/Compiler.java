@@ -294,6 +294,10 @@ final class Compiler implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
+        if ((flags & Compiler.CF_EVAL) != 0) {
+            parser.moduleName = "code";
+            return;
+        }
         //System.err.println("Module name before derive: " + parser.moduleName);
         // derive or verify the module name
         String cf = analyzer.canonicalFile, name = null;
@@ -378,8 +382,6 @@ final class Compiler implements Opcodes {
             anal.expectModule = Boolean.TRUE;
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
-        if ((flags & CF_EVAL) != 0)
-            anal.className = "code";
         if (code == null) {
             code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
             if (code == null)

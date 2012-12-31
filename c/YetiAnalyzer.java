@@ -1690,7 +1690,6 @@ public final class YetiAnalyzer extends YetiType {
     String canonicalFile; // canonical source name, used by ctx.deriveName
     String sourceName;
     String sourceDir; // sourcePath entry used to find it
-    String className;
     Compiler ctx;
     String[] preload;
 
@@ -1718,10 +1717,8 @@ public final class YetiAnalyzer extends YetiType {
                     expectModule.booleanValue() != parser.isModule)
                 throw new CompileException(0, 0, expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
-            if ((ctx.flags & Compiler.CF_EVAL) == 0) {
-                ctx.deriveName(parser, this);
-                className = parser.moduleName;
-            }
+            ctx.deriveName(parser, this);
+            final String className = parser.moduleName;
             ctx.addClass(className, null);
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
@@ -1767,7 +1764,7 @@ public final class YetiAnalyzer extends YetiType {
                                              java.util.Collections.EMPTY_MAP);
             root.moduleType.topDoc = parser.topDoc;
             root.moduleType.deprecated = parser.deprecated;
-            root.moduleType.name = parser.moduleName;
+            root.moduleType.name = className;
             root.moduleType.typeScope = topLevel.typeScope;
             root.isModule = parser.isModule;
             if ((ctx.flags & Compiler.CF_COMPILE_MODULE) != 0 || parser.isModule) {
