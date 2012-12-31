@@ -296,6 +296,13 @@ final class Compiler implements Opcodes {
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
         if ((flags & Compiler.CF_EVAL) != 0) {
             parser.moduleName = "code";
+            if (sourcePath.length == 0)
+                try {
+                    sourcePath =
+                        new String[] { new File("").getCanonicalPath() };
+                } catch (IOException ex) {
+                    throw new CompileException(0, 0, ex.getMessage());
+                }
             return;
         }
         //System.err.println("Module name before derive: " + parser.moduleName);
