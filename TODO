@@ -12,6 +12,8 @@
   + When load is done verify:
       1. The module requested by load and actual file read has the same case.
          Error if the end of canonical name differs only by case.
+	 This should also be done on explicit compilation
+	 (but not on program eval).
       2. The module requested is actually same as loaded
          (since foo.yeti loaded may have wrong package). Case insensitive.
   + Allow absolute path to be URI for custom loaders.
