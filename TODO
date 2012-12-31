@@ -6,9 +6,16 @@
     should give more info about where error is.
 * Fix full path script invocation (yeti /some/fubar/script.yeti)
   + Use unique path identifiers (File? URL?) on module (re)compilation.
-  + Fix the circular dependency checking (TODO in CompileCtx.compile()).
-  + Look what's wrong with handling win32 paths
-  + Bad error message on: echo 'module x; ()' > y.yeti; yeti -e 'load y'
+  + Better error message on: echo 'module x; ()' > y.yeti; yeti -e 'load y'
+    (Cannot contain module x isn't very obvious).
+    The parser should also store the line of module/program declaration.
+  + When load is done verify:
+      1. The module requested by load and actual file read has the same case.
+         Error if the end of canonical name differs only by case.
+      2. The module requested is actually same as loaded
+         (since foo.yeti loaded may have wrong package). Case insensitive.
+  + Allow absolute path to be URI for custom loaders.
+  + Make the compileAll to use readSourceFile for Java sources.
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
 * Avoid upper/lowercase dups on generated classes

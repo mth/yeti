@@ -294,7 +294,7 @@ final class Compiler implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
-        if ((flags & (CF_EVAL | CF_EXPECT_MODULE)) == CF_EVAL) {
+        if ((flags & (CF_EVAL | CF_COMPILE_MODULE)) == CF_EVAL) {
             if (parser.moduleName == null)
                 parser.moduleName = "code";
             if (sourcePath.length == 0)
