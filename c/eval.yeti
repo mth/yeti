@@ -128,7 +128,12 @@ createCtx genericOpt =
         /// Set custom source reader function
         SourceReader f:
             ctx#customReader := 
-                f is {var .name is string} -> string as ~yeti.lang.Fun;
+                f is {
+                    /// Source file name.
+                    /// The reader function should assign a canonical path
+                    /// of the source file to it.
+                    var .name is string
+                } -> string as ~yeti.lang.Fun;
 
         /// Set custom CodeWriter
         CodeWriter writer:
