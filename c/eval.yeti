@@ -302,6 +302,9 @@ compileYetiFiles genericOpt options files =
             typeAction (moduleDoc YetiTypeVisitor#getType((), src, true))
         done
     else
+        if exec and length files == 1 then
+            ctx#flags := ctx#flags b_or Compiler#CF_EXPECT_PROGRAM
+        fi;
         try
             mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
         finally

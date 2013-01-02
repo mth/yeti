@@ -168,9 +168,7 @@ final class Compiler implements Opcodes {
         String mainClass = null;
         if (flags != 0)
             this.flags = flags;
-        System.err.println("compileAll: " + Arrays.asList(sourcePath));
         for (i = 0; i < yetiCount; ++i) {
-            System.err.println("compileAll: " + sources[i]);
             String className = compile(sources[i], null).name;
             if (!types.containsKey(className))
                 mainClass = className;
@@ -259,14 +257,25 @@ final class Compiler implements Opcodes {
         return buf;
     }
 
+    private void verifyModuleCase(YetiAnalyzer analyzer) {
+        int l = analyzer.canonicalFile.length() - analyzer.sourceName.length();
+        if (l < 0)
+            return;
+        String cf = analyzer.canonicalFile.substring(l);
+        if (!analyzer.sourceName.equals(cf) &&
+            analyzer.sourceName.equalsIgnoreCase(cf))
+            throw new CompileException(0, 0,
+                "Module file name case doesn't match the requested name");
+    }
+
     // if loadModule is true, the file is searched from the source path
     private char[] readSource(YetiAnalyzer analyzer, boolean loadModule) {
-        System.err.println(analyzer.sourceName + ": loadModule=" + loadModule);
         try {
             if (!loadModule)
                 return readSourceFile(null, analyzer.sourceName, analyzer);
             // Search from path. The localName is slashed package name.
-            String fn = analyzer.sourceName += ".yeti";
+            String name = analyzer.sourceName;
+            String fn = analyzer.sourceName = name + ".yeti";
             if (sourcePath.length == 0)
                 throw new IOException("no source path");
             int sep = fn.lastIndexOf('/');
@@ -276,10 +285,13 @@ final class Compiler implements Opcodes {
                     try {
                         char[] r = readSourceFile(sourcePath[i], fn, analyzer);
                         analyzer.sourceDir = sourcePath[i];
+                        verifyModuleCase(analyzer);
                         return r;
                     } catch (IOException ex) {
-                        if (sep <= 0 && i + 1 == sourcePath.length)
-                            throw ex;
+                        if (sep <= 0 && i + 1 == sourcePath.length) {
+                            throw new CompileException(0, 0, "Module " +
+                                name.replace('/', '.') + " not found");
+                        }
                     }
                 }
                 fn = fn.substring(sep + 1);
@@ -338,9 +350,11 @@ final class Compiler implements Opcodes {
         //    "; lastlen:" + lastlen);
         if (!ok && (lastlen != -1 || !name.equalsIgnoreCase(shortName) &&
                                      !name.equalsIgnoreCase(parser.moduleName)))
-            throw new CompileException(0, 0, "Cannot contain " +
+            throw new CompileException(parser.moduleNameLine, 0,
                         (parser.isModule ? "module " : "program ") +
-                        parser.moduleName.replace('/', '.'));
+                        parser.moduleName.replace('/', '.') +
+                        " is not allowed to be in file named '" +
+                        analyzer.canonicalFile + "'");
         if (parser.moduleName != null)
             name = parser.moduleName;
         parser.moduleName = name.toLowerCase();
@@ -393,7 +407,7 @@ final class Compiler implements Opcodes {
         Object oldCompiler = currentCompiler.get();
         currentCompiler.set(this);
         String oldCurrentSrc = currentSrc;
-        currentSrc = sourceName;
+        currentSrc = sourceName = anal.sourceName;
         List oldUnstoredClasses = unstoredClasses;
         unstoredClasses = new ArrayList();
         try {

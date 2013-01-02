@@ -1711,7 +1711,8 @@ public final class YetiAnalyzer extends YetiType {
                 System.err.println(n.str());
             if (expectModule != null &&
                     expectModule.booleanValue() != parser.isModule)
-                throw new CompileException(0, 0, expectModule.booleanValue()
+                throw new CompileException(parser.moduleNameLine, 0,
+                            expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
             ctx.deriveName(parser, this);
             final String className = parser.moduleName;

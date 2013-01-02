@@ -491,7 +491,6 @@ class YetiTypeVisitor implements ClassVisitor {
         ModuleType t = (ModuleType) ctx.types.get(name);
         if (t != null)
             return t;
-        String source = name;
         InputStream in = null;
         int old_flags = ctx.flags;
         if (!byPath) {
@@ -500,18 +499,22 @@ class YetiTypeVisitor implements ClassVisitor {
         }
         try {
             if (in == null) {
-                //System.err.println("|" + name + "|source=" + source + "|" + bySourcePath);
                 ctx.flags |= Compiler.CF_EXPECT_MODULE;
                 ctx.flags &= ~Compiler.CF_EVAL_BIND; // clear the eval flags
-                t = (ModuleType) ctx.types.get(ctx.compile(source, null).name);
+                t = (ModuleType) ctx.types.get(ctx.compile(name, null).name);
                 if (t == null)
-                    throw new Exception("Could not compile `" + name
-                                      + "' to a module");
+                    throw new CompileException(node,
+                                "Could not compile `" + name + "' to a module");
+                if (!byPath && !name.equalsIgnoreCase(t.name))
+                    throw new CompileException(node, "Found " +
+                                t.name.replace('/', '.') + " instead of " +
+                                name.replace('/', '.'));
             } else {
                 t = readType(new ClassReader(in));
                 in.close();
                 if (t == null)
-                    throw new Exception("`" + name + "' is not a yeti module");
+                    throw new CompileException(node,
+                                "`" + name + "' is not a yeti module");
                 t.name = name;
             }
             ctx.types.put(name, t);

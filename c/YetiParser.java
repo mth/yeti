@@ -583,6 +583,7 @@ interface YetiParser {
         private String yetiDocStr;
         private boolean yetiDocReset;
         String moduleName;
+        int moduleNameLine;
         String topDoc;
         boolean isModule;
         boolean deprecated;
@@ -1742,7 +1743,9 @@ interface YetiParser {
             String s = new String(src, p, i - p);
             if (s.equals("module") || s.equals("program")) {
                 p = i;
-                moduleName = readDotted("Expected " + s + " name, not a ").sym;
+                Sym name = readDotted("Expected " + s + " name, not a ");
+                moduleName = name.sym;
+                moduleNameLine = name.line;
                 isModule = s.equals("module");
 
                 if (isModule) {
