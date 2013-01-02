@@ -210,6 +210,15 @@ class TypeDescr extends YetiType {
         name = name_;
     }
 
+    static Struct pair(String name1, Object value1,
+                       String name2, Object value2) {
+        // low-level implementation-specific struct, don't do that ;)
+        Struct3 result = new Struct3(new String[] { name1, name2 }, null);
+        result._0 = value1;
+        result._1 = value2;
+        return result;
+    }
+
     Tag force() {
         if (type == 0)
             return new Tag(name, "Simple");
@@ -227,7 +236,7 @@ class TypeDescr extends YetiType {
         case FUN:
             tag = "Function"; break;
         case MAP:
-            val = YetiC.pair("params", l, "type", name);
+            val = pair("params", l, "type", name);
             tag = "Parametric"; break;
         case STRUCT:
             tag = "Struct"; break;
@@ -237,7 +246,7 @@ class TypeDescr extends YetiType {
         Tag res = new Tag(val, tag);
         if (alias == null)
             return res;
-        return new Tag(YetiC.pair("alias", alias, "type", res), "Alias");
+        return new Tag(pair("alias", alias, "type", res), "Alias");
     }
 
     static Tag yetiType(YType t, TypePattern defs, TypeException path) {

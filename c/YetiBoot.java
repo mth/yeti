@@ -40,7 +40,7 @@ import yeti.lang.Fun;
 
 public class YetiBoot extends MatchingTask {
     private java.io.File dir;
-    private String[] preload = YetiC.PRELOAD;
+    private String[] preload = Compiler.PRELOAD;
     private String target;
     private Path classPath;
     private boolean gcj;
@@ -82,9 +82,7 @@ public class YetiBoot extends MatchingTask {
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
         CodeWriter writer = new ToFile(target);
-        YetiC reader = new YetiC();
-        reader.basedirs = new String[] { dir.getPath() };
-        Compiler compilation = new Compiler(reader, writer);
+        Compiler compilation = new Compiler(writer);
         compilation.preload = preload;
         compilation.classPath = new ClassFinder(classPath);
         compilation.isGCJ |= gcj;
@@ -93,7 +91,7 @@ public class YetiBoot extends MatchingTask {
         try {
             for (int i = 0; i < files.length; ++i)
                 files[i] = new File(dir, files[i]).getPath();
-            compilation.setSourcePath(reader.basedirs);
+            compilation.setSourcePath(new String[] { dir.getPath() });
             compilation.compileAll(files, 0, javaOpt);
         } catch (CompileException ex) {
             throw new BuildException(ex.getMessage());

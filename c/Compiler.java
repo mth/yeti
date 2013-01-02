@@ -3,7 +3,7 @@
 /*
  * Yeti language compiler java bytecode generator.
  *
- * Copyright (c) 2007-2012 Madis Janson
+ * Copyright (c) 2007-2013 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,12 +50,13 @@ final class Compiler implements Opcodes {
     public static final int CF_DOC              = 64;
     public static final int CF_EXPECT_MODULE    = 128;
     public static final int CF_EXPECT_PROGRAM   = 256;
+    static final String[] PRELOAD =
+        new String[] { "yeti/lang/std", "yeti/lang/io" };
 
     static final ThreadLocal currentCompiler = new ThreadLocal();
     private static ClassLoader JAVAC;
 
     CodeWriter writer;
-    private SourceReader reader;
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
     private String currentSrc;
@@ -71,12 +72,11 @@ final class Compiler implements Opcodes {
     ClassFinder classPath;
     final Map types = new HashMap();
     final Map opaqueTypes = new HashMap();
-    String[] preload = new String[] { "yeti/lang/std", "yeti/lang/io" };
+    String[] preload = PRELOAD;
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
 
-    Compiler(SourceReader reader, CodeWriter writer) {
-        this.reader = reader;
+    Compiler(CodeWriter writer) {
         this.writer = writer;
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
         isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
@@ -136,14 +136,12 @@ final class Compiler implements Opcodes {
 
     String compileAll(String[] sources, int flags, String[] javaArg)
             throws Exception {
-        String[] fn = new String[1];
         List java = null;
         int i, yetiCount = 0;
         for (i = 0; i < sources.length; ++i)
             if (sources[i].endsWith(".java")) {
-                fn[0] = sources[i];
-                char[] s = reader.getSource(fn, true);
-                new JavaSource(fn[0], s, classPath.parsed);
+                char[] s = readSourceFile(null, sources[i], new YetiAnalyzer());
+                new JavaSource(sources[i], s, classPath.parsed);
                 if (java == null) {
                     java = new ArrayList();
                     boolean debug = true;
@@ -298,12 +296,7 @@ final class Compiler implements Opcodes {
             if (parser.moduleName == null)
                 parser.moduleName = "code";
             if (sourcePath.length == 0)
-                try {
-                    sourcePath =
-                        new String[] { new File("").getCanonicalPath() };
-                } catch (IOException ex) {
-                    throw new CompileException(0, 0, ex.getMessage());
-                }
+                sourcePath = new String[] { new File("").getAbsolutePath() };
             return;
         }
         //System.err.println("Module name before derive: " + parser.moduleName);
@@ -384,8 +377,9 @@ final class Compiler implements Opcodes {
     }
 
     ModuleType compile(String sourceName, char[] code) throws Exception {
-        YetiAnalyzer anal = new YetiAnalyzer(sourceName);
+        YetiAnalyzer anal = new YetiAnalyzer();
         anal.ctx = this;
+        anal.sourceName = sourceName;
         if ((flags & (CF_COMPILE_MODULE | CF_EXPECT_MODULE)) != 0)
             anal.expectModule = Boolean.TRUE;
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)

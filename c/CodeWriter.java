@@ -3,7 +3,7 @@
 /*
  * Yeti language compiler java bytecode generator.
  *
- * Copyright (c) 2007 Madis Janson
+ * Copyright (c) 2007-2013 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,75 @@
  */
 package yeti.lang.compiler;
 
+import java.io.*;
+import java.util.HashMap;
+
 public interface CodeWriter {
     void writeClass(String name, byte[] code) throws Exception;
+}
+
+class ToFile implements CodeWriter {
+    private String target;
+
+    ToFile(String target) {
+        this.target = target;
+    }
+
+    public void writeClass(String name, byte[] code) throws Exception {
+        name = target + name;
+        int sl = name.lastIndexOf('/');
+        if (sl > 0) {
+            new File(name.substring(0, sl)).mkdirs();
+        }
+        FileOutputStream out = new FileOutputStream(name);
+        out.write(code);
+        out.close();
+    }
+}
+
+class Loader extends ClassLoader implements CodeWriter {
+    private HashMap classes = new HashMap();
+
+    Loader() {
+        super(Thread.currentThread().getContextClassLoader());
+    }
+
+    Loader(ClassLoader cl) {
+        super(cl);
+    }
+
+    public void writeClass(String name, byte[] code) {
+        // to a dotted classname used by loadClass
+        classes.put(name.substring(0, name.length() - 6).replace('/', '.'),
+                    code);
+    }
+
+    // override loadClass to ensure loading our own class
+    // even when it already exists in current classpath
+    protected synchronized Class loadClass(String name, boolean resolve)
+            throws ClassNotFoundException {
+        Class loaded = findLoadedClass(name);
+        if (loaded == null) {
+            byte[] code = (byte[]) classes.get(name);
+            if (code == null) {
+                return super.loadClass(name, resolve);
+            }
+            loaded = defineClass(name, code, 0, code.length);
+        }
+        if (resolve) {
+            resolveClass(loaded);
+        }
+        return loaded;
+    }
+
+    public InputStream getResourceAsStream(String path) {
+        if (path.endsWith(".class")) {
+            String name =
+                path.substring(0, path.length() - 6).replace('.', '/');
+            byte[] code = (byte[]) classes.get(name);
+            if (code != null)
+                return new ByteArrayInputStream(code);
+        }
+        return super.getResourceAsStream(path);
+    }
 }

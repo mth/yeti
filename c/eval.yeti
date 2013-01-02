@@ -106,10 +106,10 @@ execClass argv sandbox eval loader mainClass
         fi
     yrt);
 
-createCtx reader genericOpt =
+createCtx genericOpt =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
-    ctx = new Compiler(reader is ~YetiC, ());
+    ctx = new Compiler(());
     java = array [];
 
     for genericOpt
@@ -127,8 +127,6 @@ createCtx reader genericOpt =
 
         /// Set custom source reader function
         SourceReader f:
-            reader#override :=
-                f is {var .name is string} -> string as ~yeti.lang.Fun;
             ctx#customReader := 
                 f is {var .name is string} -> string as ~yeti.lang.Fun;
 
@@ -256,8 +254,7 @@ compileYetiFiles genericOpt options files =
     var typeAction = nullTypeAction;
     var mainClass = '';
 
-    reader = new YetiC();
-    {ctx, warn, java = javaOptions} = createCtx reader genericOpt;
+    {ctx, warn, java = javaOptions} = createCtx genericOpt;
 
     sourcePath = array [];
     for options
@@ -292,7 +289,6 @@ compileYetiFiles genericOpt options files =
 
     // TODO use null writer when no Exec and no To,
     // for signaling to skip the bytecode generation.
-    reader#basedirs := sourcePath as ~String[];
     ctx#setSourcePath(sourcePath);
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
@@ -371,7 +367,7 @@ evaluateYetiCode genericOpt =
         var sandbox = false;
         var argv = array [];
         var sourceName = undef_str;
-        {ctx, warn} = createCtx new YetiC() genericOpt;
+        {ctx, warn} = createCtx genericOpt;
         ctx#flags := ctx#flags b_or Compiler#CF_EVAL
                         b_or Compiler#CF_EVAL_RESOLVE;
         for options
