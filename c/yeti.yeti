@@ -153,19 +153,13 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
 
 scan src local dirs to =
    (var ok = true;
-    if src `strEnds?` '.yeti' then
-        name = if local == '' then src else local fi;
-        // avoid duplicates, prefer shortest name
-        if not src in to or strLength to[src] > strLength name then
-            to[src] := name
-        fi
-    elif src `strEnds?` '.java' then
-        to[src] := src // javac prefers full path
+    if src `strEnds?` '.yeti' or src `strEnds?` '.java' then
+        to[src] := src
     else
         dirList = listDirectory false src;
         ok := not empty? dirList or new File(src)#isDirectory();
-        if ok then
-            dirs src;
+        if not empty? dirList then
+            dirs src
         fi;
         for dirList do {name, path}:
             fn = if local == '' then name else "\(local)/\(name)" fi;
