@@ -488,13 +488,14 @@ class YetiTypeVisitor implements ClassVisitor {
     static ModuleType getType(YetiParser.Node node, String name, boolean byPath) {
         final boolean bySourcePath = false;
         final Compiler ctx = Compiler.current();
-        ModuleType t = (ModuleType) ctx.types.get(name);
+        final String cname = name.toLowerCase();
+        ModuleType t = (ModuleType) ctx.types.get(cname);
         if (t != null)
             return t;
         InputStream in = null;
         int old_flags = ctx.flags;
         if (!byPath) {
-            in = ClassFinder.get().findClass(name + ".class");
+            in = ClassFinder.get().findClass(cname + ".class");
             ctx.flags |= Compiler.CF_COMPILE_MODULE;
         }
         try {
@@ -505,7 +506,7 @@ class YetiTypeVisitor implements ClassVisitor {
                 if (t == null)
                     throw new CompileException(node,
                                 "Could not compile `" + name + "' to a module");
-                if (!byPath && !name.equalsIgnoreCase(t.name))
+                if (!byPath && !cname.equals(t.name))
                     throw new CompileException(node, "Found " +
                                 t.name.replace('/', '.') + " instead of " +
                                 name.replace('/', '.'));
@@ -515,9 +516,9 @@ class YetiTypeVisitor implements ClassVisitor {
                 if (t == null)
                     throw new CompileException(node,
                                 "`" + name + "' is not a yeti module");
-                t.name = name;
+                t.name = cname;
+                ctx.types.put(cname, t);
             }
-            ctx.types.put(name, t);
             return t;
         } catch (CompileException ex) {
             if (ex.line == 0) {
