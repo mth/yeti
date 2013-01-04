@@ -421,6 +421,9 @@ final class Compiler implements Opcodes {
             if (name == null)
                 throw new CompileException(0, 0,
                             "internal error: module/program name undefined");
+            ModuleType exists = (ModuleType) types.get(name);
+            if (exists != null)
+                return exists;
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;
             Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
