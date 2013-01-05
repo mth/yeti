@@ -1,10 +1,8 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Better error messages
-  + Module type not fully defined message is confusing,
-    should give more info about where error is.
-* Allow absolute path to be URI for custom loaders.
+* Module type not fully defined message is confusing,
+  should give more info about where error is.
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
 * Avoid upper/lowercase dups on generated classes

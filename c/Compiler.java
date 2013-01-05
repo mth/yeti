@@ -208,8 +208,14 @@ final class Compiler implements Opcodes {
 
     void setSourcePath(String[] path) throws IOException {
         String[] sp = new String[path.length];
-        for (int i = 0; i < path.length; ++i)
-            sp[i] = new File(path[i]).getCanonicalPath();
+        for (int i = 0, j, cnt; i < path.length; ++i) {
+            String s = path[i];
+            char c = ' '; // check URI
+            for (j = 0, cnt = s.length(); j < cnt; ++j)
+                if (((c = s.charAt(j)) < 'a' || c > 'z') &&
+                    (c < '0' || c > '9')) break;
+            sp[i] = j > 1 && c == ':' ? s : new File(s).getCanonicalPath();
+        }
         sourcePath = sp;
     }
 
