@@ -50,6 +50,9 @@ final class Compiler implements Opcodes {
     public static final int CF_DOC              = 64;
     public static final int CF_EXPECT_MODULE    = 128;
     public static final int CF_EXPECT_PROGRAM   = 256;
+    // hack to force getting yetidoc on doc generation
+    public static final int CF_FORCE_COMPILE    = 512;
+
     static final String[] PRELOAD =
         new String[] { "yeti/lang/std", "yeti/lang/io" };
 
@@ -428,7 +431,7 @@ final class Compiler implements Opcodes {
                 throw new CompileException(0, 0,
                             "internal error: module/program name undefined");
             ModuleType exists = (ModuleType) types.get(name);
-            if (exists != null)
+            if (exists != null && (flags & CF_FORCE_COMPILE) == 0)
                 return exists;
             Constants constants = new Constants();
             constants.sourceName = sourceName == null ? "<>" : sourceName;

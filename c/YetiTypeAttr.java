@@ -497,6 +497,8 @@ class YetiTypeVisitor implements ClassVisitor {
         if (!byPath) {
             in = ClassFinder.get().findClass(cname + ".class");
             ctx.flags |= Compiler.CF_COMPILE_MODULE;
+        } else {
+            ctx.flags |= Compiler.CF_FORCE_COMPILE;
         }
         try {
             if (in == null) {
