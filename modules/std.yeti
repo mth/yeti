@@ -2338,6 +2338,33 @@ plus a b = a + b;
 
     /**
      * Group: hash
+     * Creates a new hash map populated with key-value pairs derived
+     * from the sequence elements by application of getKey and getValue
+     * functions.
+     *
+     * Arguments:
+     * getKey   - function to derive hash map key from the sequence element
+     * getValue - function to derive hash map value from the sequence element
+     * sequence - list or array to use for creating the hash map
+     *
+     * Description:
+     * The canonical implementation is following:
+     * : mapIntoHash getKey getValue sequence =
+     * :     result = [:];
+     * :     for sequence do element:
+     * :         result[getKey element] := getValue element
+     * :     done;
+     * :     result;
+     */
+    mapIntoHash getKey getValue sequence =
+        result = [:];
+        for sequence do element:
+            result[getKey element] := getValue element
+        done;
+        result,
+
+    /**
+     * Group: hash
      * Creates an identity hash map, where keys are compared by their
      * object instance identies (like the `same?` function does).
      *
