@@ -2350,11 +2350,11 @@ plus a b = a + b;
      * Description:
      * The canonical implementation is following:
      * : mapIntoHash getKey getValue sequence =
-     * :     result = [:];
+     * :    (result = [:];
      * :     for sequence do element:
      * :         result[getKey element] := getValue element
      * :     done;
-     * :     result;
+     * :     result);
      */
     mapIntoHash getKey getValue sequence =
         result = [:];
