@@ -138,10 +138,8 @@ public final class YetiAnalyzer extends YetiType {
             if (kind == "try")
                 return tryCatch(x, scope, depth);
             if (kind == "load") {
-                if ((Compiler.current().flags & Compiler.CF_NO_IMPORT)
-                     != 0) throw new CompileException(node, "load is disabled");
                 String nam = x.expr[0].sym();
-                ModuleType mt = YetiTypeVisitor.getType(node, nam, false);
+                ModuleType mt = (ModuleType) x.expr[1];
                 if (mt.deprecated)
                     Compiler.current().warn(new CompileException(node,
                          "Module " + nam.replace('/', '.') + " is deprecated"));
@@ -1730,6 +1728,13 @@ public final class YetiAnalyzer extends YetiType {
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
+            }
+            while (parser.loads != null) {
+                XNode l = parser.loads;
+                if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
+                    throw new CompileException(l, "load is disabled");
+                parser.loads = (XNode) l.expr[1];
+                l.expr[1] = YetiTypeVisitor.getType(l, l.expr[0].sym(), false);
             }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);

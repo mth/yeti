@@ -391,7 +391,7 @@ class YetiTypeAttr extends Attribute {
 
 }
 
-class ModuleType {
+class ModuleType extends YetiParser.Node {
     YType type;
     Map typeDefs;
     Map directFields;

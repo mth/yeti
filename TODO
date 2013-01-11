@@ -12,7 +12,6 @@
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
 * Operator to copy mutable structure fields between two different structures
-* Compile modules required by load directly after parse, before type analyse
 * Support as in type definitions for recursive types
 * Support module qualification on type, like x is foo.sometype
 * Dependency analyses on struct field self-bindings?

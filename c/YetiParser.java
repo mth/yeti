@@ -120,7 +120,8 @@ interface YetiParser {
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
                 buf.append(' ');
-                buf.append(expr[i].str());
+                if (expr[i] != null)
+                    buf.append(expr[i].str());
             }
             buf.append(')');
             return buf.toString();
@@ -582,6 +583,7 @@ interface YetiParser {
         private int lineStart;
         private String yetiDocStr;
         private boolean yetiDocReset;
+        XNode loads;
         String moduleName;
         int moduleNameLine;
         String topDoc;
@@ -791,8 +793,9 @@ interface YetiParser {
             } else if (s == "import") {
                 res = readImport();
             } else if (s == "load") {
-                res = new XNode(s,
-                    readDotted("Expected module name after 'load', not a "));
+                res = loads = new XNode(s, new Node[] {
+                    readDotted("Expected module name after 'load', not a "),
+                    loads });
             } else if (s == "classOf") {
                 res = new XNode(s,
                             readDottedType("Expected class name, not a "));
