@@ -1715,6 +1715,13 @@ public final class YetiAnalyzer extends YetiType {
             ctx.deriveName(parser, this);
             final String className = parser.moduleName;
             ctx.addClass(className, null);
+            while (parser.loads != null) {
+                XNode l = parser.loads;
+                if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
+                    throw new CompileException(l, "load is disabled");
+                parser.loads = (XNode) l.expr[1];
+                l.expr[1] = YetiTypeVisitor.getType(l, l.expr[0].sym(), false);
+            }
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
@@ -1728,13 +1735,6 @@ public final class YetiAnalyzer extends YetiType {
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
                 }
-            }
-            while (parser.loads != null) {
-                XNode l = parser.loads;
-                if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
-                    throw new CompileException(l, "load is disabled");
-                parser.loads = (XNode) l.expr[1];
-                l.expr[1] = YetiTypeVisitor.getType(l, l.expr[0].sym(), false);
             }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
