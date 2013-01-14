@@ -186,7 +186,7 @@ class YetiTypeAttr extends Attribute {
             }
             buf.putByte(END);
         }
-
+/*
         void writeDirectFields(Map fields) {
             buf.putShort(fields.size());
             Iterator i = fields.entrySet().iterator();
@@ -196,7 +196,7 @@ class YetiTypeAttr extends Attribute {
                 buf.putShort(cw.newUTF8((String) e.getKey()));
                 buf.putShort(cw.newUTF8(v == null ? "" : (String) v));
             }
-        }
+        }*/
     }
 
     private static final class DecodeType {
@@ -339,7 +339,7 @@ class YetiTypeAttr extends Attribute {
             ++p;
             return result;
         }
-
+/*
         Map readDirectFields() {
             int n = cr.readUnsignedShort(p);
             Map result = new HashMap(n);
@@ -351,7 +351,7 @@ class YetiTypeAttr extends Attribute {
                 String fun = cr.readUTF8(p += 2, buf);
                 result.put(name, fun.length() == 0 ? null : fun);
             }
-        }
+        }*/
     }
 
     protected Attribute read(ClassReader cr, int off, int len, char[] buf,
@@ -362,8 +362,8 @@ class YetiTypeAttr extends Attribute {
         DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new YetiTypeAttr(new ModuleType(t, typeDefs,
-                                               decoder.readDirectFields()));
+        return new YetiTypeAttr(new ModuleType(t, typeDefs, true));
+//                                               decoder.readDirectFields()));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -385,7 +385,7 @@ class YetiTypeAttr extends Attribute {
         enc.buf.putByte(0); // encoding version
         enc.write(moduleType.type);
         enc.writeTypeDefs(moduleType.typeDefs);
-        enc.writeDirectFields(moduleType.directFields);
+//        enc.writeDirectFields(moduleType.directFields);
         return encoded = enc.buf;
     }
 
@@ -394,14 +394,14 @@ class YetiTypeAttr extends Attribute {
 class ModuleType extends YetiParser.Node {
     YType type;
     Map typeDefs;
-    Map directFields;
+    boolean directFields;
     Scope typeScope;
     String topDoc;
     String name;
     boolean deprecated;
     private YType[] free;
 
-    ModuleType(YType type, Map typeDefs, Map directFields) {
+    ModuleType(YType type, Map typeDefs, boolean directFields) {
         this.type = type;
         this.typeDefs = typeDefs;
         this.directFields = directFields;

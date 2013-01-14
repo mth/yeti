@@ -229,11 +229,11 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
     }
 
-    Map getDirect(Constants constants) {
+    Map getDirect() {
         Map r = new HashMap(fieldCount);
         for (int i = 0; i < fieldCount; ++i) {
             if (fields[i].mutable || fields[i].property > 0) {
-                r.put(fields[i].name, null);
+                r.put(fields[i].name, null); // disable
                 continue;
             }
             if (fields[i].binder != null)
@@ -241,7 +241,9 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             Code v = fields[i].value;
             while (v instanceof BindRef)
                 v = ((BindRef) v).unref(false);
-            if (v != null && v.flagop(CONST)) {
+            if (v != null && v.flagop(CONST))
+                r.put(fields[i].name, v);
+/*
                 if (v instanceof Function) {
                     r.put(fields[i].name, ((Function) v).name);
                 } else {
@@ -250,7 +252,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                                          mangle(fields[i].name), v, descr);
                     r.put(fields[i].name, ".");
                 }
-            }
+            } */
         }
         return r;
     }

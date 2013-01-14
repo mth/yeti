@@ -627,6 +627,7 @@ final class BindWrapper extends BindRef {
 class StaticRef extends BindRef {
     String className;
     protected String funFieldName;
+    boolean method;
     int line;
    
     StaticRef(String className, String fieldName, YType type,
@@ -641,12 +642,16 @@ class StaticRef extends BindRef {
     
     void gen(Ctx ctx) {
         ctx.visitLine(line);
-        ctx.fieldInsn(GETSTATIC, className, funFieldName,
-                             'L' + javaType(type) + ';');
+        if (method)
+            ctx.methodInsn(INVOKESTATIC, className, funFieldName,
+                           "()L" + javaType(type) + ';');
+        else
+            ctx.fieldInsn(GETSTATIC, className, funFieldName,
+                                 'L' + javaType(type) + ';');
     }
 
     Object valueKey() {
-        return "SREF:" + className + '.' + funFieldName;
+        return (method ? "MREF:" : "SREF:") + className + '.' + funFieldName;
     }
 
     boolean flagop(int fl) {
@@ -1618,21 +1623,17 @@ final class LoadModule extends Code {
     Binder bindField(final String name, final YType type) {
         return new Binder() {
             public BindRef getRef(final int line) {
-                String directRef = (String) moduleType.directFields.get(name);
-                if (directRef != null && !directRef.equals("."))
-                    return new StaticRef(directRef, "_", type,
-                                         this, true, line);
-                if (directRef == null)
-                    used = true;
-
-                // constant field
-                if (directRef != null || // "." - static final on module
-                        !moduleType.directFields.containsKey(name))
-                    return new StaticRef(moduleName, mangle(name), type,
-                                         this, true, line);
+                final boolean mutable = type.field == YetiType.FIELD_MUTABLE;
+                if (!mutable && moduleType.directFields) {
+                    String fname = name.equals("eval") ? "eval$" : mangle(name);
+                    StaticRef r = new StaticRef(moduleName, fname, type,
+                                                this, true, line);
+                    r.method = true;
+                    return r;
+                }
 
                 // property or mutable field
-                final boolean mutable = type.field == YetiType.FIELD_MUTABLE;
+                used = true;
                 return new SelectMember(type, LoadModule.this,
                                         name, line, false) {
                     boolean mayAssign() {

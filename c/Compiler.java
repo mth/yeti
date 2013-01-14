@@ -115,29 +115,9 @@ final class Compiler implements Opcodes {
         }
     }
 
-    private void generateModuleFields(Map fields, Ctx ctx, Map ignore) {
+    private void generateModuleAccessors(Map fields, Ctx ctx, Map direct) {
         if (ctx.compilation.isGCJ)
             ctx.typeInsn(CHECKCAST, "yeti/lang/Struct");
-        for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry) i.next();
-            String name = (String) entry.getKey();
-            if (ignore.containsKey(name))
-                continue;
-            String jname = Code.mangle(name);
-            String type = Code.javaType((YType) entry.getValue());
-            String descr = 'L' + type + ';';
-            ctx.cw.visitField(ACC_PUBLIC | ACC_STATIC, jname,
-                    descr, null, null).visitEnd();
-            ctx.insn(DUP);
-            ctx.ldcInsn(name);
-            ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
-                "get", "(Ljava/lang/String;)Ljava/lang/Object;");
-            ctx.typeInsn(CHECKCAST, type);
-            ctx.fieldInsn(PUTSTATIC, ctx.className, jname, descr);
-        }
-    }
-
-    private void generateModuleAccessors(Map fields, Ctx ctx, Map direct) {
         for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             String name = (String) entry.getKey();
@@ -147,20 +127,32 @@ final class Compiler implements Opcodes {
             String descr = "()L" + type + ';';
 
             Ctx m = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, fname, descr);
-            Object v = direct.get(name);
-            if (v == null) {
-                genFastInit(m);
-                m.fieldInsn(GETSTATIC, ctx.className, jname,
-                            descr.substring(2));
-            } else {
+            Code v = (Code) direct.get(name);
+            if (v != null) { // constant
+                v.gen(m);
+                m.typeInsn(CHECKCAST, type);
+            } else if (direct.containsKey(name)) { // mutable
                 m.methodInsn(INVOKESTATIC, ctx.className, "eval",
                              "()Ljava/lang/Object;");
                 if (ctx.compilation.isGCJ)
                     m.typeInsn(CHECKCAST, "yeti/lang/Struct");
                 m.ldcInsn(name);
-                m.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
-                             "get", "(Ljava/lang/String;)Ljava/lang/Object;");
+                m.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
+                             "(Ljava/lang/String;)Ljava/lang/Object;");
                 m.typeInsn(CHECKCAST, type);
+            } else { // through static field
+                descr = descr.substring(2);
+                ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC, jname,
+                                  descr, null, null).visitEnd();
+                ctx.insn(DUP);
+                ctx.ldcInsn(name);
+                ctx.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct", "get",
+                               "(Ljava/lang/String;)Ljava/lang/Object;");
+                ctx.typeInsn(CHECKCAST, type);
+                ctx.fieldInsn(PUTSTATIC, ctx.className, jname, descr);
+
+                genFastInit(m);
+                m.fieldInsn(GETSTATIC, ctx.className, jname, descr);
             }
             m.insn(ARETURN);
             m.closeMethod();
@@ -534,21 +526,18 @@ final class Compiler implements Opcodes {
         Code codeTail = codeTree.body;
         while (codeTail instanceof SeqExpr)
             codeTail = ((SeqExpr) codeTail).result;
+        Map direct = Collections.EMPTY_MAP;
         if (codeTail instanceof StructConstructor) {
             ((StructConstructor) codeTail).publish();
             codeTree.gen(ctx);
-            codeTree.moduleType.directFields =
-                ((StructConstructor) codeTail).getDirect(ctx.constants);
+            //codeTree.moduleType.directFields =
+            direct = ((StructConstructor) codeTail).getDirect();
         } else {
             codeTree.gen(ctx);
         }
         ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.moduleType));
-        if (codeTree.type.type == YetiType.STRUCT) {
-            generateModuleFields(codeTree.type.finalMembers, ctx,
-                                 codeTree.moduleType.directFields);
-            generateModuleAccessors(codeTree.type.finalMembers, ctx,
-                                    codeTree.moduleType.directFields);
-        }
+        if (codeTree.type.type == YetiType.STRUCT)
+            generateModuleAccessors(codeTree.type.finalMembers, ctx, direct);
         ctx.insn(DUP);
         ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.intConst(1);

@@ -1762,8 +1762,8 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx.opaqueTypes = ctx.opaqueTypes;
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
-            root.moduleType = new ModuleType(root.type, topLevel.typeDefs,
-                                             java.util.Collections.EMPTY_MAP);
+            root.moduleType =
+                new ModuleType(root.type, topLevel.typeDefs, true);
             root.moduleType.topDoc = parser.topDoc;
             root.moduleType.deprecated = parser.deprecated;
             root.moduleType.name = className;
