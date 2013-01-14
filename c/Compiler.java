@@ -137,6 +137,36 @@ final class Compiler implements Opcodes {
         }
     }
 
+    private void generateModuleAccessors(Map fields, Ctx ctx, Map direct) {
+        for (Iterator i = fields.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Map.Entry) i.next();
+            String name = (String) entry.getKey();
+            String jname = Code.mangle(name);
+            String fname = name.equals("eval") ? "eval$" : jname;
+            String type = Code.javaType((YType) entry.getValue());
+            String descr = "()L" + type + ';';
+
+            Ctx m = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, fname, descr);
+            Object v = direct.get(name);
+            if (v == null) {
+                genFastInit(m);
+                m.fieldInsn(GETSTATIC, ctx.className, jname,
+                            descr.substring(2));
+            } else {
+                m.methodInsn(INVOKESTATIC, ctx.className, "eval",
+                             "()Ljava/lang/Object;");
+                if (ctx.compilation.isGCJ)
+                    m.typeInsn(CHECKCAST, "yeti/lang/Struct");
+                m.ldcInsn(name);
+                m.methodInsn(INVOKEINTERFACE, "yeti/lang/Struct",
+                             "get", "(Ljava/lang/String;)Ljava/lang/Object;");
+                m.typeInsn(CHECKCAST, type);
+            }
+            m.insn(ARETURN);
+            m.closeMethod();
+        }
+    }
+
     String compileAll(String[] sources, int flags, String[] javaArg)
             throws Exception {
         List java = null;
@@ -516,6 +546,8 @@ final class Compiler implements Opcodes {
         if (codeTree.type.type == YetiType.STRUCT) {
             generateModuleFields(codeTree.type.finalMembers, ctx,
                                  codeTree.moduleType.directFields);
+            generateModuleAccessors(codeTree.type.finalMembers, ctx,
+                                    codeTree.moduleType.directFields);
         }
         ctx.insn(DUP);
         ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
@@ -524,15 +556,19 @@ final class Compiler implements Opcodes {
         ctx.insn(ARETURN);
         ctx.closeMethod();
         ctx = mctx.newMethod(ACC_PUBLIC | ACC_STATIC, "init", "()V");
-        ctx.fieldInsn(GETSTATIC, name, "_$", "I");
+        genFastInit(ctx);
+        ctx.insn(RETURN);
+        ctx.closeMethod();
+    }
+
+    private void genFastInit(Ctx ctx) {
+        ctx.fieldInsn(GETSTATIC, ctx.className, "_$", "I");
         Label ret = new Label();
         ctx.jumpInsn(IFNE, ret);
         ctx.methodInsn(INVOKESTATIC, ctx.className,
                        "eval", "()Ljava/lang/Object;");
         ctx.insn(POP);
         ctx.visitLabel(ret);
-        ctx.insn(RETURN);
-        ctx.closeMethod();
     }
 
     void addClass(String name, Ctx ctx) {
