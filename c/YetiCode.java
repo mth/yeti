@@ -642,12 +642,14 @@ class StaticRef extends BindRef {
     
     void gen(Ctx ctx) {
         ctx.visitLine(line);
-        if (method)
+        String t = javaType(type);
+        if (method) {
             ctx.methodInsn(INVOKESTATIC, className, funFieldName,
-                           "()L" + javaType(type) + ';');
-        else
-            ctx.fieldInsn(GETSTATIC, className, funFieldName,
-                                 'L' + javaType(type) + ';');
+                           "()L" + t + ';');
+            ctx.forceType(t);
+        } else {
+            ctx.fieldInsn(GETSTATIC, className, funFieldName, 'L' + t + ';');
+        }
     }
 
     Object valueKey() {
