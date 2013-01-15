@@ -2585,6 +2585,18 @@ unsafe cast, because such casts allow circumventing the Yeti typesystem
             at code.apply(<>:1)
             ...
 
+Note that there is a fundamental difference between ``as`` and ``unsafely_as`` -
+the ``as`` cast may convert the value into different runtime representation,
+but allows only such casts/conversions, which always succeed (won't throw
+exceptions other than running out of memory). The ``unsafely_as`` cast is the
+opposite - it always returns the same runtime instance as was given, but
+may fail with ClassCastException, when the cast is impossible to do (exactly
+like Java casts - it uses the low-level JVM checkcast instruction).
+
+The ``unsafely_as`` cast should be used with care, as it allows forcing
+types in unsound ways (as can be seen in the above example where string was
+added into array<number>).
+
 Defining Java classes in Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
