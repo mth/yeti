@@ -988,12 +988,6 @@ plus a b = a + b;
     array, concat, fold, find, id, index, keys, hash, map, map',
     forHash, peekObject,
 
-    /// Group: array
-    /// Deprecated - it doesn't do anything useful, and if you want to
-    /// wrap a Java array, then either use implicit cast or explicit
-    /// value as array<'a> cast.
-    wrapArray is 'a[] -> array<'a> = id,
-
     /**
      * Group: list
      * Returns a list of elements obtained by applying the function
