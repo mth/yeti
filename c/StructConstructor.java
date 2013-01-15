@@ -243,16 +243,6 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 v = ((BindRef) v).unref(false);
             if (v != null && v.flagop(CONST))
                 r.put(fields[i].name, v);
-/*
-                if (v instanceof Function) {
-                    r.put(fields[i].name, ((Function) v).name);
-                } else {
-                    String descr = 'L' + Code.javaType(v.type) + ';';
-                    constants.constField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
-                                         mangle(fields[i].name), v, descr);
-                    r.put(fields[i].name, ".");
-                }
-            } */
         }
         return r;
     }

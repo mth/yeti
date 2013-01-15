@@ -530,7 +530,6 @@ final class Compiler implements Opcodes {
         if (codeTail instanceof StructConstructor) {
             ((StructConstructor) codeTail).publish();
             codeTree.gen(ctx);
-            //codeTree.moduleType.directFields =
             direct = ((StructConstructor) codeTail).getDirect();
         } else {
             codeTree.gen(ctx);

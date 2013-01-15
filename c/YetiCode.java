@@ -48,7 +48,7 @@ final class Constants implements Opcodes {
     String sourceName;
     Ctx ctx;
 
-    void constField(int mode, String name, Code code, String descr) {
+    private void constField(int mode, String name, Code code, String descr) {
         ctx.cw.visitField(mode, name, descr, null, null).visitEnd();
         if (sb == null)
             sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");

@@ -186,17 +186,6 @@ class YetiTypeAttr extends Attribute {
             }
             buf.putByte(END);
         }
-/*
-        void writeDirectFields(Map fields) {
-            buf.putShort(fields.size());
-            Iterator i = fields.entrySet().iterator();
-            while (i.hasNext()) {
-                Map.Entry e = (Map.Entry) i.next();
-                Object v = e.getValue();
-                buf.putShort(cw.newUTF8((String) e.getKey()));
-                buf.putShort(cw.newUTF8(v == null ? "" : (String) v));
-            }
-        }*/
     }
 
     private static final class DecodeType {
@@ -339,31 +328,21 @@ class YetiTypeAttr extends Attribute {
             ++p;
             return result;
         }
-/*
-        Map readDirectFields() {
-            int n = cr.readUnsignedShort(p);
-            Map result = new HashMap(n);
-            for (;;) {
-                p += 2;
-                if (--n < 0)
-                    return result;
-                String name = cr.readUTF8(p, buf);
-                String fun = cr.readUTF8(p += 2, buf);
-                result.put(name, fun.length() == 0 ? null : fun);
-            }
-        }*/
     }
 
     protected Attribute read(ClassReader cr, int off, int len, char[] buf,
                              int codeOff, Label[] labels) {
-        if (cr.b[off] != 0) {
+        int hdr = 3;
+        switch (cr.b[off]) {
+        case 0: hdr = 1; // version 0 has only version in header
+        case 1: break;
+        default:
             throw new RuntimeException("Unknown type encoding: " + cr.b[off]);
         }
-        DecodeType decoder = new DecodeType(cr, off + 1, len - 1, buf);
+        DecodeType decoder = new DecodeType(cr, off + hdr, len - hdr, buf);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new YetiTypeAttr(new ModuleType(t, typeDefs, true));
-//                                               decoder.readDirectFields()));
+        return new YetiTypeAttr(new ModuleType(t, typeDefs, hdr != 1));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -382,10 +361,10 @@ class YetiTypeAttr extends Attribute {
                                moduleType.name + ':' + e.getKey());
         }
         enc.cw = cw;
-        enc.buf.putByte(0); // encoding version
+        enc.buf.putByte(1); // encoding version
+        enc.buf.putShort(0);
         enc.write(moduleType.type);
         enc.writeTypeDefs(moduleType.typeDefs);
-//        enc.writeDirectFields(moduleType.directFields);
         return encoded = enc.buf;
     }
 
@@ -510,8 +489,8 @@ class YetiTypeVisitor implements ClassVisitor {
                                 "Could not compile `" + name + "' to a module");
                 if (!byPath && !cname.equals(t.name))
                     throw new CompileException(node, "Found " +
-                                t.name.replace('/', '.') + " instead of " +
-                                name.replace('/', '.'));
+                                t.name.replace('/', '.') +
+                                " instead of " + name.replace('/', '.'));
             } else {
                 t = readType(new ClassReader(in));
                 in.close();
@@ -519,6 +498,11 @@ class YetiTypeVisitor implements ClassVisitor {
                     throw new CompileException(node,
                                 "`" + name + "' is not a yeti module");
                 t.name = cname;
+                if (!t.directFields)
+                    ctx.warn(new CompileException(node, "The `" +
+                        t.name.replace('/', '.') + "' module is compiled " +
+                        "with pre-0.9.8 version\n    of Yeti compiler and " +
+                        "might not work with newer standard library."));
                 ctx.types.put(cname, t);
             }
             return t;
