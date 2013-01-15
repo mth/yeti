@@ -106,7 +106,7 @@ execClass argv sandbox eval loader mainClass
         fi
     yrt);
 
-createCtx genericOpt =
+createCtx genericOpt cl =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
     ctx = new Compiler(());
@@ -168,7 +168,21 @@ createCtx genericOpt =
         esac;
     ctx#classPath := new ClassFinder(classPath);
     if nullptr? ctx#writer then
-        ctx#writer := new Loader() as ~CodeWriter;
+        var cl = cl;
+        if nullptr? cl then
+            cl := Thread#currentThread()#getContextClassLoader();
+            if not empty? classPath then
+                urls = array [];
+                for classPath do p:
+                    s = strReplace '\' '/' new File(p)#getAbsolutePath();
+                    push urls new java.net.URL("file://\(
+                        if s `strEnds?` '/' or s `strEnds?` '.jar' then s
+                        else "\(s)/" fi)")
+                done;
+                cl := new java.net.URLClassLoader(urls, cl) as ~ClassLoader
+            fi
+        fi;
+        ctx#writer := new Loader(cl) as ~CodeWriter;
     fi;
     {warn, ctx, java});
 
@@ -259,7 +273,7 @@ compileYetiFiles genericOpt options files =
     var typeAction = nullTypeAction;
     var mainClass = '';
 
-    {ctx, warn, java = javaOptions} = createCtx genericOpt;
+    {ctx, warn, java = javaOptions} = createCtx genericOpt (() as ~ClassLoader);
 
     sourcePath = array [];
     for options
@@ -367,6 +381,7 @@ compileYetiFiles genericOpt options files =
 evaluateYetiCode genericOpt =
    (var evalEnv = () as ~YetiEval;
     mainClass = "code";
+    var cl = () as ~ClassLoader;
     do options code:
         bindingVars = array [];
         var type = Simple '()';
@@ -375,7 +390,10 @@ evaluateYetiCode genericOpt =
         var sandbox = false;
         var argv = array [];
         var sourceName = undef_str;
-        {ctx, warn} = createCtx genericOpt;
+        {ctx, warn} = createCtx genericOpt cl;
+        if ctx#writer instanceof Loader then
+            cl := (ctx#writer unsafely_as ~Loader)#getParent()
+        fi;
         ctx#flags := ctx#flags b_or Compiler#CF_EVAL
                         b_or Compiler#CF_EVAL_RESOLVE;
         for options

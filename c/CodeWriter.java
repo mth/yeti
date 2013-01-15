@@ -59,12 +59,8 @@ class ToFile implements CodeWriter {
 class Loader extends ClassLoader implements CodeWriter {
     private HashMap classes = new HashMap();
 
-    Loader() {
-        super(Thread.currentThread().getContextClassLoader());
-    }
-
     Loader(ClassLoader cl) {
-        super(cl);
+        super(cl != null ? cl : Thread.currentThread().getContextClassLoader());
     }
 
     public void writeClass(String name, byte[] code) {
