@@ -6,8 +6,6 @@
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
 * Avoid upper/lowercase dups on generated classes
-* Use static methods returning module fields instead of multiple
-  different ways for access to have better backward compatibility
 * v1.0
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
