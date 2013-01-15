@@ -626,16 +626,16 @@ final class BindWrapper extends BindRef {
 
 class StaticRef extends BindRef {
     String className;
-    protected String funFieldName;
+    private String fieldName;
+    private int line;
     boolean method;
-    int line;
    
     StaticRef(String className, String fieldName, YType type,
               Binder binder, boolean polymorph, int line) {
         this.type = type;
         this.binder = binder;
         this.className = className;
-        this.funFieldName = fieldName;
+        this.fieldName = fieldName;
         this.polymorph = polymorph;
         this.line = line;
     }
@@ -644,16 +644,16 @@ class StaticRef extends BindRef {
         ctx.visitLine(line);
         String t = javaType(type);
         if (method) {
-            ctx.methodInsn(INVOKESTATIC, className, funFieldName,
+            ctx.methodInsn(INVOKESTATIC, className, fieldName,
                            "()L" + t + ';');
             ctx.forceType(t);
         } else {
-            ctx.fieldInsn(GETSTATIC, className, funFieldName, 'L' + t + ';');
+            ctx.fieldInsn(GETSTATIC, className, fieldName, 'L' + t + ';');
         }
     }
 
     Object valueKey() {
-        return (method ? "MREF:" : "SREF:") + className + '.' + funFieldName;
+        return (method ? "MREF:" : "SREF:") + className + '.' + fieldName;
     }
 
     boolean flagop(int fl) {
@@ -1635,9 +1635,10 @@ final class LoadModule extends Code {
                 }
 
                 // property or mutable field
+                // XXX in threory reading properties could be done directly
                 used = true;
                 return new SelectMember(type, LoadModule.this,
-                                        name, line, false) {
+                                        name, line, !mutable) {
                     boolean mayAssign() {
                         return mutable;
                     }
