@@ -40,4 +40,8 @@ public final class Selector extends Fun {
     public final Object apply(Object value) {
         return ((Struct) value).get(name);
     }
+
+    public String toString() {
+        return "<(." + name + ")>";
+    }
 }
