@@ -48,6 +48,7 @@ import java.io.InputStream;
  * 0A e.. i.. t.. - MAP<e,i,t>
  * 0B <partialMembers...> FF <finalMembers...> FF - Struct
  * 0C <partialMembers...> FF <finalMembers...> FF - Variant
+ * 0C F9 ... - Variant with FL_ANY_CASE flag
  * 0D XX XX <param...> FF - java type
  * 0E e.. FF - java array e[]
  * FA XX XX <parameters...> FF - opaque type instance (X is "module:name")
@@ -72,6 +73,7 @@ class YetiTypeAttr extends Attribute {
     static final byte MUTABLE = -4;
     static final byte TAINTED = -5;
     static final byte OPAQUE  = -6;
+    static final byte ANYCASE = -7;
 
     ModuleType moduleType;
     private ByteVector encoded;
@@ -166,6 +168,8 @@ class YetiTypeAttr extends Attribute {
                                 type.type == YetiType.STRUCT
                                 ? "Internal error: empty struct"
                                 : "Internal error: empty variant");
+                if ((type.flags & YetiType.FL_ANY_CASE) != 0)
+                    buf.putByte(ANYCASE);
                 writeMap(type.finalMembers);
                 writeMap(type.partialMembers);
             } else if (type.type == YetiType.JAVA) {
@@ -274,6 +278,10 @@ class YetiTypeAttr extends Attribute {
             } else if (tv == YetiType.MAP) {
                 t.param = readArray();
             } else if (tv == YetiType.STRUCT || tv == YetiType.VARIANT) {
+                if (in[p] == ANYCASE) {
+                    t.flags |= YetiType.FL_ANY_CASE;
+                    ++p;
+                }
                 t.finalMembers = readMap();
                 t.partialMembers = readMap();
                 Map param;
