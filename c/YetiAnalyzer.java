@@ -1419,6 +1419,7 @@ public final class YetiAnalyzer extends YetiType {
                     t.type = VARIANT;
                     if (t.partialMembers == null) {
                         t.partialMembers = new HashMap();
+                        t.flags |= FL_ANY_CASE;
                         if (submatch == 0) { // XXX hack!!!
                             variants.add(t);
                         }
@@ -1508,6 +1509,7 @@ public final class YetiAnalyzer extends YetiType {
                     (t.flags & FL_ANY_PATTERN) == 0) {
                     t.finalMembers = t.partialMembers;
                     t.partialMembers = null;
+                    t.flags &= ~FL_ANY_CASE;
                 }
             }
         }

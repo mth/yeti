@@ -195,10 +195,11 @@ public class YetiType implements YetiParser {
     static final int OPAQUE_TYPES = 0x10000;
 
     static final int FL_ORDERED_REQUIRED = 1;
-    static final int FL_TAINTED_VAR = 2;
+    static final int FL_TAINTED_VAR      = 2;
     static final int FL_AMBIGUOUS_OPAQUE = 4;
-    static final int FL_ERROR_IS_HERE = 0x100;
-    static final int FL_ANY_PATTERN = 0x4000;
+    static final int FL_ANY_CASE         = 8;
+    static final int FL_ERROR_IS_HERE    = 0x100;
+    static final int FL_ANY_PATTERN      = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
     static final int FIELD_NON_POLYMORPHIC = 1;
@@ -487,6 +488,8 @@ public class YetiType implements YetiParser {
                 Object name = entry.getKey();
                 YType ff = (YType) src.finalMembers.get(name);
                 if (ff == null) {
+                    if ((partial.flags & FL_ANY_CASE) != 0)
+                        continue;
                     throw new TypeException(src, " => ",
                            partial, " (member missing: " + name + ")");
                 }
@@ -556,7 +559,12 @@ public class YetiType implements YetiParser {
             }
             finalizeStruct(a, b);
             finalizeStruct(b, a);
-            if (a.partialMembers == null) {
+
+            if (ff != null && (b.flags & FL_ANY_CASE) != 0) {
+                if ((a.flags & FL_ANY_CASE) != 0)
+                    a.partialMembers = null;
+            } else if (a.partialMembers == null ||
+                       (ff != null && (a.flags & FL_ANY_CASE) != 0)) {
                 a.partialMembers = b.partialMembers;
             } else if (b.partialMembers != null) {
                 // join partial members
@@ -577,6 +585,7 @@ public class YetiType implements YetiParser {
                 a.partialMembers.putAll(b.partialMembers);
             }
             a.finalMembers = ff;
+            a.flags &= b.flags | ~FL_ANY_CASE;
             if (ff == null) {
                 ff = a.partialMembers;
             } else if (a.partialMembers != null) {
@@ -811,6 +820,7 @@ public class YetiType implements YetiParser {
             param[i] = copyType(type.param[i], free, known);
         }
         if (type.partialMembers != null) {
+            copy.flags = type.flags & FL_ANY_CASE;
             copy.partialMembers = copyTypeMap(type.partialMembers, free, known);
         }
         if (type.finalMembers != null) {
