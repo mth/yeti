@@ -77,6 +77,8 @@ final class Constants implements Opcodes {
 
     // first value in array must be empty
     void stringArray(Ctx ctx_, String[] array) {
+        if (sb == null)
+            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
         array[0] = "Strings";
         List key = Arrays.asList(array);
         String name = (String) constants.get(key);
@@ -103,8 +105,6 @@ final class Constants implements Opcodes {
     // generates [Ljava/lang/String;[Z into stack, using constant cache
     void structInitArg(Ctx ctx_, StructField[] fields,
                        int fieldCount, boolean nomutable) {
-        if (sb == null)
-            sb = ctx.newMethod(ACC_STATIC, "<clinit>", "()V");
         String[] fieldNameArr = new String[fieldCount + 1];
         char[] mutableArr = new char[fieldNameArr.length];
         mutableArr[0] = '@';
