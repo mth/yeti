@@ -48,6 +48,19 @@ final class Constants implements Opcodes {
     String sourceName;
     Ctx ctx;
 
+    Constants(String sourceName, String sourceFile) {
+        if (sourceFile != null) {
+        } else if (sourceName != null) {
+            int p = sourceName.lastIndexOf('/');
+            if (p < 0)
+                p = sourceName.lastIndexOf('\\');
+            sourceFile = p < 0 ? sourceName : sourceName.substring(p + 1);
+        } else {
+            sourceFile = "<>";
+        }
+        this.sourceName = sourceFile;
+    }
+
     private void constField(int mode, String name, Code code, String descr) {
         ctx.cw.visitField(mode, name, descr, null, null).visitEnd();
         if (sb == null)

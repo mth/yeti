@@ -1688,7 +1688,8 @@ public final class YetiAnalyzer extends YetiType {
 
     Boolean expectModule;
     String canonicalFile; // canonical source name, used by ctx.deriveName
-    String sourceName;
+    String sourceName; // source file path as given to compile
+    String sourceFile; // sourceName without directory path
     String sourceDir; // sourcePath entry used to find it
     Compiler ctx;
     String[] preload;

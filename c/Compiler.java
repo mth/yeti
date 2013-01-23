@@ -252,12 +252,14 @@ final class Compiler implements Opcodes {
             String result = (String) customReader.apply(arg);
             if (result != Core.UNDEF_STR) {
                 analyzer.canonicalFile = (String) arg._0;
+                analyzer.sourceFile = null;
                 if (compiled.containsKey(analyzer.canonicalFile))
                     return null;
                 return result.toCharArray();
             }
         }
         File f = new File(parent, fn);
+        analyzer.sourceFile = f.getName();
         if (parent == null) {
             f = f.getCanonicalFile();
             analyzer.canonicalFile = f.getPath();
@@ -438,7 +440,7 @@ final class Compiler implements Opcodes {
         Object oldCompiler = currentCompiler.get();
         currentCompiler.set(this);
         String oldCurrentSrc = currentSrc;
-        currentSrc = sourceName = anal.sourceName;
+        currentSrc = anal.sourceName;
         List oldUnstoredClasses = unstoredClasses;
         unstoredClasses = new ArrayList();
         try {
@@ -455,8 +457,8 @@ final class Compiler implements Opcodes {
             ModuleType exists = (ModuleType) types.get(name);
             if (exists != null && (flags & CF_FORCE_COMPILE) == 0)
                 return exists;
-            Constants constants = new Constants();
-            constants.sourceName = sourceName == null ? "<>" : sourceName;
+            Constants constants =
+                new Constants(anal.sourceName, anal.sourceFile);
             Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
                 ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
                     ? ACC_DEPRECATED : 0), name, (flags & CF_EVAL) != 0
@@ -503,7 +505,7 @@ final class Compiler implements Opcodes {
             return codeTree.moduleType;
         } catch (CompileException ex) {
             if (ex.fn == null)
-                ex.fn = sourceName;
+                ex.fn = anal.sourceName;
             throw ex;
         }
     }
