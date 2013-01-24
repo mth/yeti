@@ -1622,7 +1622,7 @@ final class LoadModule extends Code {
 
     LoadModule(String moduleName, ModuleType type, int depth) {
         this.type = type.copy(depth);
-        this.moduleName = moduleName;
+        this.moduleName = moduleName.toLowerCase();
         moduleType = type;
         polymorph = true;
     }
