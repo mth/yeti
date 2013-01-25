@@ -174,10 +174,7 @@ createCtx genericOpt cl =
             if not empty? classPath then
                 urls = array [];
                 for classPath do p:
-                    s = strReplace '\' '/' new File(p)#getAbsolutePath();
-                    push urls new java.net.URL("file://\(
-                        if s `strEnds?` '/' or s `strEnds?` '.jar' then s
-                        else "\(s)/" fi)")
+                    push urls new File(p)#toURI()#toURL()
                 done;
                 cl := new java.net.URLClassLoader(urls, cl) as ~ClassLoader
             fi
