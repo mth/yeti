@@ -15,6 +15,7 @@
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
+  + structType should use asLambda instead of == "lambda"
 * Reuse local JVM variables (have a free var list on Ctx and add variable
   to it after last use when it could be nulled). This could compact code
   and help GC with bindings that are not explicitly nulled (type != MAP).
