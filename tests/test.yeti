@@ -260,6 +260,20 @@ done,
     t = new Doubles(3, 5, 2);
     [t#res(), t#calc(3, 5, 2)] == [4, 4]
 done,
+'\case of 1': do:
+    rs = "[\("")]";
+    f st = \case of
+        Token n: Error rs `const` OK n
+        esac;
+    f "" (Token "foo") == Error "[]"
+done,
+'\case of 2': do:
+    rs = "[\("")]";
+    f st = \case of
+        Token n: Error rs `const` OK n
+        esac;
+    id f "" (Token "foo") == Error "[]"
+done,
 ];
 
 var bad = 0;

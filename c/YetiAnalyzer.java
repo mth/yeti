@@ -1144,12 +1144,13 @@ public final class YetiAnalyzer extends YetiType {
         while (marker.outer != scope)
             marker = marker.outer;
         marker.closure = to;
-        if (lambda.expr[1].kind == "lambda") {
+        XNode bodyLambda = asLambda(lambda.expr[1]);
+        if (bodyLambda != null) {
             Function f = new Function(expected != null && expected.type == FUN
                                       ? expected.param[1] : null);
             // make f to know about its outer scope before processing it
             to.setBody(seq == null || seq[0] == null ? (Code) f : seq[1]);
-            lambda(f, (XNode) lambda.expr[1], bodyScope, depth);
+            lambda(f, bodyLambda, bodyScope, depth);
             wrapSeq(f, seq);
         } else {
             Code body = analyze(lambda.expr[1], bodyScope, depth);

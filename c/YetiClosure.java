@@ -709,7 +709,8 @@ final class Function extends CapturingClosure implements Binder {
         if (body instanceof Function) {
             Function bodyFun = (Function) body;
             bodyFun.outer = this;
-            if (argVar == 1 && !bodyFun.merged && bodyFun.selfRef == null) {
+            if (argVar == 1 && !bodyFun.merged &&
+                bodyFun.selfRef == null && captures == null) {
                 merged = true;
                 ++bodyFun.argVar;
             }
@@ -817,9 +818,13 @@ final class Function extends CapturingClosure implements Binder {
         /*
          * This has to be done before mergeCaptures to have all binders.
          * NOP for 1/2-arg functions - they don't have argument captures and
-         * the outer captures localVar's will be set by mergeCaptures.
+         * the outer captures localVar's will be set by mergeCaptures
+         * (unless the 2 argument function _has_ argument captures,
+         *  which can happen when the inner function is constructed by
+         *  some weird kind of lambda!).
          */
-        if (methodImpl != this && methodImpl != body) {
+        if (methodImpl != this &&
+            (methodImpl != body || methodImpl.captures != null)) {
             captureMapping = new IdentityHashMap();
 
             // Function is binder for it's argument
