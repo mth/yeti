@@ -66,7 +66,7 @@ import java.io.InputStream;
  *  'F' fieldName 00 function-class 00
  *  'P' fieldName 00 - property (field mapping as null)
  */
-class YetiTypeAttr extends Attribute {
+class TypeAttr extends Attribute {
     static final byte END = -1;
     static final byte REF = -2;
     static final byte ORDERED = -3;
@@ -78,7 +78,7 @@ class YetiTypeAttr extends Attribute {
     ModuleType moduleType;
     private ByteVector encoded;
 
-    YetiTypeAttr(ModuleType mt) {
+    TypeAttr(ModuleType mt) {
         super("YetiModuleType");
         this.moduleType = mt;
     }
@@ -350,7 +350,7 @@ class YetiTypeAttr extends Attribute {
         DecodeType decoder = new DecodeType(cr, off + hdr, len - hdr, buf);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new YetiTypeAttr(new ModuleType(t, typeDefs, hdr != 1));
+        return new TypeAttr(new ModuleType(t, typeDefs, hdr != 1));
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -415,7 +415,7 @@ class ModuleType extends YetiParser.Node {
 }
 
 class YetiTypeVisitor implements ClassVisitor {
-    YetiTypeAttr typeAttr;
+    TypeAttr typeAttr;
     private boolean deprecated;
 
     public void visit(int version, int access, String name, String signature,
@@ -436,7 +436,7 @@ class YetiTypeVisitor implements ClassVisitor {
                 throw new RuntimeException(
                     "Multiple YetiModuleType attributes are forbidden");
             }
-            typeAttr = (YetiTypeAttr) attr;
+            typeAttr = (TypeAttr) attr;
         }
     }
 
@@ -462,7 +462,7 @@ class YetiTypeVisitor implements ClassVisitor {
 
     static ModuleType readType(ClassReader reader) {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
-        reader.accept(visitor, new Attribute[] { new YetiTypeAttr(null) },
+        reader.accept(visitor, new Attribute[] { new TypeAttr(null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         if (visitor.typeAttr == null)
             return null;

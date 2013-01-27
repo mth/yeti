@@ -536,7 +536,7 @@ final class Compiler implements Opcodes {
         } else {
             codeTree.gen(ctx);
         }
-        ctx.cw.visitAttribute(new YetiTypeAttr(codeTree.moduleType));
+        ctx.cw.visitAttribute(new TypeAttr(codeTree.moduleType));
         if (codeTree.type.type == YetiType.STRUCT)
             generateModuleAccessors(codeTree.type.finalMembers, ctx, direct);
         ctx.insn(DUP);
