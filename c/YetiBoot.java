@@ -3,7 +3,7 @@
 /*
  * Yeti language compiler bootstrap ANT task.
  *
- * Copyright (c) 2007,2008,2011 Madis Janson
+ * Copyright (c) 2007-2013 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

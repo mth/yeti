@@ -3,7 +3,7 @@
 /*
  * Yeti language compiler java bytecode generator - structures.
  *
- * Copyright (c) 2010 Madis Janson
+ * Copyright (c) 2010-2013 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
