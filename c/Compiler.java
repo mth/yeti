@@ -60,6 +60,7 @@ final class Compiler implements Opcodes {
     private static ClassLoader JAVAC;
 
     CodeWriter writer;
+    String depDestDir; // used to read already compiled classes
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
     private String currentSrc;
@@ -266,6 +267,11 @@ final class Compiler implements Opcodes {
             if (compiled.containsKey(analyzer.canonicalFile))
                 return null;
         }
+        if (analyzer.targetTime != 0 &&
+                f.lastModified() < analyzer.targetTime) {
+            analyzer.targetFresh = true;
+            return null;
+        }
         char[] buf = new char[0x8000];
         InputStream stream = new FileInputStream(f);
         Reader reader = null;
@@ -432,9 +438,23 @@ final class Compiler implements Opcodes {
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
         if (code == null) {
+            File target = null;
+            if (depDestDir != null && (flags & CF_COMPILE_MODULE) != 0) {
+                target = new File(depDestDir, sourceName);
+                anal.targetTime = target.lastModified();
+            }
             code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
-            if (code == null)
-                return (ModuleType) compiled.get(anal.canonicalFile);
+            if (code == null) {
+                if (!anal.targetFresh)
+                    return (ModuleType) compiled.get(anal.canonicalFile);
+                // XXX modules should read source even when target exists
+                //     (to compile the deps), and ignore error when the
+                //     source was read.
+                ModuleType t = YetiTypeVisitor.readType(
+                        new FileInputStream(target));
+                types.put(t.name, t);
+                return t;
+            }
         }
         RootClosure codeTree;
         Object oldCompiler = currentCompiler.get();

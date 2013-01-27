@@ -1692,6 +1692,8 @@ public final class YetiAnalyzer extends YetiType {
     String sourceName; // source file path as given to compile
     String sourceFile; // sourceName without directory path
     String sourceDir; // sourcePath entry used to find it
+    long targetTime;  // target's lastModified
+    boolean targetFresh; // source is older than target
     Compiler ctx;
     String[] preload;
 
@@ -1724,7 +1726,8 @@ public final class YetiAnalyzer extends YetiType {
                 if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
                     throw new CompileException(l, "load is disabled");
                 parser.loads = (XNode) l.expr[1];
-                l.expr[1] = YetiTypeVisitor.getType(l, l.expr[0].sym(), false);
+                l.expr[1] =
+                    YetiTypeVisitor.getType(ctx, l, l.expr[0].sym(), false);
             }
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
@@ -1732,10 +1735,9 @@ public final class YetiAnalyzer extends YetiType {
             LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
-                    preloadModules[i] =
-                        new LoadModule(preload[i],
-                              YetiTypeVisitor.getType(null, preload[i], false),
-                              -1);
+                    preloadModules[i] = new LoadModule(preload[i],
+                         YetiTypeVisitor.getType(ctx, null, preload[i], false),
+                         -1);
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
                 }

@@ -460,21 +460,24 @@ class YetiTypeVisitor implements ClassVisitor {
     public void visitSource(String source, String debug) {
     }
 
-    static ModuleType readType(ClassReader reader) {
+    static ModuleType readType(InputStream in) throws IOException {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
+        ClassReader reader = new ClassReader(in);
         reader.accept(visitor, new Attribute[] { new TypeAttr(null) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
+        in.close();
         if (visitor.typeAttr == null)
             return null;
         ModuleType mt = visitor.typeAttr.moduleType;
         if (mt != null)
             mt.deprecated = visitor.deprecated;
+        mt.name = reader.getClassName();
         return mt;
     }
 
-    static ModuleType getType(YetiParser.Node node, String name, boolean byPath) {
+    static ModuleType getType(Compiler ctx, YetiParser.Node node,
+                              String name, boolean byPath) {
         final boolean bySourcePath = false;
-        final Compiler ctx = Compiler.current();
         final String cname = name.toLowerCase();
         ModuleType t = (ModuleType) ctx.types.get(cname);
         if (t != null)
@@ -500,19 +503,18 @@ class YetiTypeVisitor implements ClassVisitor {
                                 t.name.replace('/', '.') +
                                 " instead of " + name.replace('/', '.'));
             } else {
-                t = readType(new ClassReader(in));
-                in.close();
+                t = readType(in);
                 if (t == null)
                     throw new CompileException(node,
                                 "`" + name + "' is not a yeti module");
                 t.name = cname;
-                if (!t.directFields)
-                    ctx.warn(new CompileException(node, "The `" +
-                        t.name.replace('/', '.') + "' module is compiled " +
-                        "with pre-0.9.8 version\n    of Yeti compiler and " +
-                        "might not work with newer standard library."));
                 ctx.types.put(cname, t);
             }
+            if (!t.directFields)
+                ctx.warn(new CompileException(node, "The `" +
+                    t.name.replace('/', '.') + "' module is compiled " +
+                    "with pre-0.9.8 version\n    of Yeti compiler and " +
+                    "might not work with newer standard library."));
             return t;
         } catch (CompileException ex) {
             if (ex.line == 0) {

@@ -310,7 +310,7 @@ compileYetiFiles genericOpt options files =
             and ctx#writer instanceof Loader then
         Compiler#currentCompiler#set(ctx);
         for files do src:
-            typeAction (moduleDoc YetiTypeVisitor#getType((), src, true))
+            typeAction (moduleDoc YetiTypeVisitor#getType(ctx, (), src, true))
         done
     else
         if exec and length files == 1 then
