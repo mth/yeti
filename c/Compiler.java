@@ -266,11 +266,8 @@ final class Compiler implements Opcodes {
             analyzer.canonicalFile = f.getPath();
             if (compiled.containsKey(analyzer.canonicalFile))
                 return null;
-        }
-        if (analyzer.targetTime != 0 &&
-                f.lastModified() < analyzer.targetTime) {
-            analyzer.targetFresh = true;
-            return null;
+        } else { // loadModule
+            analyzer.sourceTime = f.lastModified();
         }
         char[] buf = new char[0x8000];
         InputStream stream = new FileInputStream(f);
@@ -437,24 +434,16 @@ final class Compiler implements Opcodes {
             anal.expectModule = Boolean.TRUE;
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
+        File targetFile = null;
         if (code == null) {
-            File target = null;
-            if (depDestDir != null && (flags & CF_COMPILE_MODULE) != 0) {
-                target = new File(depDestDir, sourceName);
-                anal.targetTime = target.lastModified();
+            if (depDestDir != null && (flags & (CF_COMPILE_MODULE |
+                    CF_FORCE_COMPILE)) == CF_COMPILE_MODULE) {
+                targetFile = new File(depDestDir, sourceName);
+                anal.targetTime = targetFile.lastModified();
             }
             code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
-            if (code == null) {
-                if (!anal.targetFresh)
-                    return (ModuleType) compiled.get(anal.canonicalFile);
-                // XXX modules should read source even when target exists
-                //     (to compile the deps), and ignore error when the
-                //     source was read.
-                ModuleType t = YetiTypeVisitor.readType(
-                        new FileInputStream(target));
-                types.put(t.name, t);
-                return t;
-            }
+            if (code == null)
+                return (ModuleType) compiled.get(anal.canonicalFile);
         }
         RootClosure codeTree;
         Object oldCompiler = currentCompiler.get();
@@ -467,6 +456,13 @@ final class Compiler implements Opcodes {
             try {
                 anal.preload = preload;
                 codeTree = anal.toCode(code);
+                if (codeTree == null) {
+                    ModuleType t = YetiTypeVisitor.readType(
+                            new FileInputStream(targetFile));
+                    types.put(t.name, t);
+                    System.err.println(t.name + " already compiled.");
+                    return t;
+                }
             } finally {
                 currentCompiler.set(oldCompiler);
             }

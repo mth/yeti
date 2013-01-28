@@ -1696,6 +1696,8 @@ public final class YetiAnalyzer extends YetiType {
     boolean targetFresh; // source is older than target
     Compiler ctx;
     String[] preload;
+    long depsLastModified;
+    long sourceTime;
 
     RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
@@ -1726,8 +1728,11 @@ public final class YetiAnalyzer extends YetiType {
                 if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
                     throw new CompileException(l, "load is disabled");
                 parser.loads = (XNode) l.expr[1];
-                l.expr[1] =
+                ModuleType t = 
                     YetiTypeVisitor.getType(ctx, l, l.expr[0].sym(), false);
+                l.expr[1] = t;
+                if (depsLastModified < t.lastModified)
+                    depsLastModified = t.lastModified;
             }
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
@@ -1735,13 +1740,20 @@ public final class YetiAnalyzer extends YetiType {
             LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
-                    preloadModules[i] = new LoadModule(preload[i],
-                         YetiTypeVisitor.getType(ctx, null, preload[i], false),
-                         -1);
+                    ModuleType t = 
+                         YetiTypeVisitor.getType(ctx, null, preload[i], false);
+                    preloadModules[i] = new LoadModule(preload[i], t, -1);
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
+                    if (depsLastModified < t.lastModified)
+                        depsLastModified = t.lastModified;
                 }
             }
+            System.err.println(sourceName + ": target:" + targetTime +
+                " source:" + sourceTime + " depend:" + depsLastModified);
+            if (targetTime > sourceTime && sourceTime != 0 &&
+                    targetTime >= depsLastModified)
+                return null;
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
             if ((ctx.flags & Compiler.CF_EVAL_RESOLVE) != 0) {

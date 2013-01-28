@@ -386,6 +386,7 @@ class ModuleType extends YetiParser.Node {
     String topDoc;
     String name;
     boolean deprecated;
+    long lastModified;
     private YType[] free;
 
     ModuleType(YType type, Map typeDefs, boolean directFields) {
