@@ -531,7 +531,8 @@ class JavaType implements Cloneable {
             resolved = true;
             return;
         }
-        JavaTypeReader t = ClassFinder.get().readClass(className());
+        JavaTypeReader t = ((Compiler) Compiler.currentCompiler.get())
+            .classPath.readClass(className());
         if (t == null) {
             throw new JavaClassNotFoundException(dottedName());
         }
@@ -751,7 +752,7 @@ class JavaType implements Cloneable {
         }
     }
 
-    static boolean isSafeCast(YetiParser.Node where,
+    static boolean isSafeCast(Scope scope, YetiParser.Node where,
                               YType to, YType from, boolean explicit) {
         to = to.deref();
         from = from.deref();
@@ -788,7 +789,7 @@ class JavaType implements Cloneable {
                 index.param = YetiType.NO_PARAM;
             }
             if (index.type == YetiType.NUM && tp.type == YetiType.STR) {
-                Compiler.current().warn(new CompileException(where,
+                scope.ctx.compiler.warn(new CompileException(where,
                     "Cast `as array<string>' is dangerous and deprecated." +
                     "\n    Please use either `as list<string>' or" +
                     " `as array<~String>'"));

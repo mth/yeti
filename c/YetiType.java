@@ -444,9 +444,17 @@ public class YetiType implements YetiParser {
     }
 
     static final class ScopeCtx {
-        String packageName;
-        String className;
-        Map opaqueTypes;
+        final String packageName;
+        final String className;
+        final Map opaqueTypes;
+        final Compiler compiler;
+
+        ScopeCtx(String className_, Compiler compiler_) {
+            packageName = JavaType.packageOfClass(className_);
+            className = className_;
+            opaqueTypes = compiler_.opaqueTypes;
+            compiler = compiler_;
+        }
     }
 
     static YType orderedVar(int maxDepth) {
@@ -902,7 +910,7 @@ public class YetiType implements YetiParser {
             return new ClassBinding(t);
         }
         if (checkPerm != null &&
-            (Compiler.current().flags & Compiler.CF_NO_IMPORT) != 0)
+            (scope.ctx.compiler.flags & Compiler.CF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
         return new ClassBinding(JavaType.typeOfClass(packageName, name));
     }

@@ -51,8 +51,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static final String NONSENSE_STRUCT = "No sense in empty struct";
 
-    static void unusedBinding(Bind bind) {
-        Compiler.current().warn(
+    static void unusedBinding(Scope scope, Bind bind) {
+        scope.ctx.compiler.warn(
             new CompileException(bind, "Unused binding: " + bind.name));
     }
 
@@ -94,7 +94,7 @@ public final class YetiAnalyzer extends YetiType {
             Function r = singleBind(bind, scope, depth);
             BindExpr self = (BindExpr) r.selfBind;
             if (self.refs == null)
-                unusedBinding(bind);
+                unusedBinding(scope, bind);
             self.genBind(null); // initialize binding
             return r;
         }
@@ -142,7 +142,7 @@ public final class YetiAnalyzer extends YetiType {
                 String nam = x.expr[0].sym();
                 ModuleType mt = (ModuleType) x.expr[1];
                 if (mt.deprecated)
-                    Compiler.current().warn(new CompileException(node,
+                    scope.ctx.compiler.warn(new CompileException(node,
                          "Module " + nam.replace('/', '.') + " is deprecated"));
                 return new LoadModule(nam, mt, depth);
             }
@@ -171,7 +171,7 @@ public final class YetiAnalyzer extends YetiType {
                              op.right, scope, depth);
             if (opop == FIELD_OP) {
                 if (op.right.kind == "listop") {
-                    Compiler.current().warn(new CompileException(node,
+                    scope.ctx.compiler.warn(new CompileException(node,
                         "Old-style .[] array/hash reference is deprecated" +
                         " (use [] instead)"));
                     return keyRefExpr(analyze(op.left, scope, depth),
@@ -384,7 +384,8 @@ public final class YetiAnalyzer extends YetiType {
             }
             if (s == "unsafely_as" && (vt.type != VAR || t.type != VAR)) {
                 JavaType.checkUnsafeCast(is, vt, t);
-            } else if (s == "as" && !JavaType.isSafeCast(is, t, vt, true)) {
+            } else if (s == "as" &&
+                       !JavaType.isSafeCast(scope, is, t, vt, true)) {
                 try {
                     opaqueCast(vt, t, scope, depth);
                 } catch (TypeException ex) {
@@ -419,7 +420,7 @@ public final class YetiAnalyzer extends YetiType {
             String className = ref.right.sym();
             t = resolveClass(className, scope, true);
             if (t == null && Character.isUpperCase(className.charAt(0)) &&
-                (Compiler.current().flags & Compiler.CF_NO_IMPORT) == 0)
+                (scope.ctx.compiler.flags & Compiler.CF_NO_IMPORT) == 0)
                 t = JavaType.typeOfClass(scope.ctx.packageName, className);
             // a terrible hack - tell super ref that it's used for call
             if (className == "super")
@@ -490,7 +491,7 @@ public final class YetiAnalyzer extends YetiType {
                 ? lambda(new Function(funarg), lambdaArg, scope, depth)
                 : analyze(arg, scope, depth);
         if (funarg != null &&
-            JavaType.isSafeCast(where, funarg, argCode.type, false)) {
+            JavaType.isSafeCast(scope, where, funarg, argCode.type, false)) {
             argCode = new Cast(argCode, funarg, true, where.line);
         }
         YType[] applyFun = { argCode.type, new YType(depth) };
@@ -1057,7 +1058,7 @@ public final class YetiAnalyzer extends YetiType {
                     ((TopLevel) seq.seqKind).typeScope = scope;
                 }
             } else if (nodes[i].kind == "import") {
-                if ((Compiler.current().flags & Compiler.CF_NO_IMPORT) != 0)
+                if ((scope.ctx.compiler.flags & Compiler.CF_NO_IMPORT) != 0)
                     throw new CompileException(nodes[i], "import is disabled");
                 Node[] imports = ((XNode) nodes[i]).expr;
                 for (int j = 0; j < imports.length; ++j) {
@@ -1095,7 +1096,7 @@ public final class YetiAnalyzer extends YetiType {
         for (int i = bindings.length; --i >= 0;)
             if (bindings[i] != null && bindings[i].refs == null &&
                     seq.seqKind != Seq.EVAL)
-                unusedBinding((Bind) nodes[i]);
+                unusedBinding(scope, (Bind) nodes[i]);
         return wrapSeq(code, last);
     }
 
@@ -1157,7 +1158,8 @@ public final class YetiAnalyzer extends YetiType {
             Code body = analyze(lambda.expr[1], bodyScope, depth);
             YType res; // try casting to expected type
             if (expected != null && expected.type == FUN &&
-                JavaType.isSafeCast(lambda, res = expected.param[1].deref(),
+                JavaType.isSafeCast(scope, lambda,
+                                    res = expected.param[1].deref(),
                                     body.type, false)) {
                 body = new Cast(body, res, true, lambda.expr[1].line);
             }
@@ -1777,10 +1779,7 @@ public final class YetiAnalyzer extends YetiType {
             topLevel.typeScope = scope;
             root.preload = preloadModules;
             scope.closure = root;
-            scope.ctx = new ScopeCtx();
-            scope.ctx.packageName = JavaType.packageOfClass(className);
-            scope.ctx.className = className;
-            scope.ctx.opaqueTypes = ctx.opaqueTypes;
+            scope.ctx = new ScopeCtx(className, ctx);
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
             ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true);

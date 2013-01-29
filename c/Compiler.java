@@ -76,6 +76,7 @@ final class Compiler implements Opcodes {
     ClassFinder classPath;
     final Map types = new HashMap();
     final Map opaqueTypes = new HashMap();
+    final Map javaTypeCache = new HashMap();
     String[] preload = PRELOAD;
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int flags;
@@ -85,10 +86,6 @@ final class Compiler implements Opcodes {
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
         isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
 //            isGCJ = true;
-    }
-
-    static Compiler current() {
-        return (Compiler) currentCompiler.get();
     }
 
     void warn(CompileException ex) {
@@ -456,7 +453,7 @@ final class Compiler implements Opcodes {
                 anal.preload = preload;
                 codeTree = anal.toCode(code);
                 if (codeTree == null) {
-                    ModuleType t = YetiTypeVisitor.readType(
+                    ModuleType t = YetiTypeVisitor.readType(this,
                             new FileInputStream(anal.targetFile));
                     t.lastModified = anal.targetTime;
                     types.put(t.name, t);
@@ -552,7 +549,7 @@ final class Compiler implements Opcodes {
         } else {
             codeTree.gen(ctx);
         }
-        ctx.cw.visitAttribute(new TypeAttr(codeTree.moduleType));
+        ctx.cw.visitAttribute(new TypeAttr(codeTree.moduleType, this));
         if (codeTree.type.type == YetiType.STRUCT)
             generateModuleAccessors(codeTree.type.finalMembers, ctx, direct);
         ctx.insn(DUP);

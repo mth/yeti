@@ -196,8 +196,4 @@ class ClassFinder {
         }
         return t;
     }
-
-    static ClassFinder get() {
-        return Compiler.current().classPath;
-    }
 }

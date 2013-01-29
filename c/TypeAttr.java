@@ -75,12 +75,14 @@ class TypeAttr extends Attribute {
     static final byte OPAQUE  = -6;
     static final byte ANYCASE = -7;
 
-    ModuleType moduleType;
+    final ModuleType moduleType;
     private ByteVector encoded;
+    final Compiler compiler;
 
-    TypeAttr(ModuleType mt) {
+    TypeAttr(ModuleType mt, Compiler ctx) {
         super("YetiModuleType");
-        this.moduleType = mt;
+        moduleType = mt;
+        compiler = ctx;
     }
 
     private static final class EncodeType {
@@ -194,20 +196,23 @@ class TypeAttr extends Attribute {
 
     private static final class DecodeType {
         private static final int VAR_DEPTH = 1;
-        ClassReader cr;
-        byte[] in;
-        char[] buf;
-        int p, end;
-        Map vars = new HashMap();
-        List refs = new ArrayList();
-        Map opaqueTypes = Compiler.current().opaqueTypes;
+        final ClassReader cr;
+        final byte[] in;
+        final char[] buf;
+        int p;
+        final int end;
+        final Map vars = new HashMap();
+        final List refs = new ArrayList();
+        final Map opaqueTypes;
 
-        DecodeType(ClassReader cr, int off, int len, char[] buf) {
+        DecodeType(ClassReader cr, int off, int len, char[] buf,
+                   Map opaqueTypes) {
             this.cr = cr;
             in = cr.b;
             p = off;
             end = p + len;
             this.buf = buf;
+            this.opaqueTypes = opaqueTypes;
         }
 
         Map readMap() {
@@ -347,10 +352,11 @@ class TypeAttr extends Attribute {
         default:
             throw new RuntimeException("Unknown type encoding: " + cr.b[off]);
         }
-        DecodeType decoder = new DecodeType(cr, off + hdr, len - hdr, buf);
+        DecodeType decoder =
+            new DecodeType(cr, off + hdr, len - hdr, buf, compiler.opaqueTypes);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new TypeAttr(new ModuleType(t, typeDefs, hdr != 1));
+        return new TypeAttr(new ModuleType(t, typeDefs, hdr != 1), compiler);
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -375,13 +381,12 @@ class TypeAttr extends Attribute {
         enc.writeTypeDefs(moduleType.typeDefs);
         return encoded = enc.buf;
     }
-
 }
 
 class ModuleType extends YetiParser.Node {
-    YType type;
-    Map typeDefs;
-    boolean directFields;
+    final YType type;
+    final Map typeDefs;
+    final boolean directFields;
     Scope typeScope;
     String topDoc;
     String name;
@@ -461,10 +466,11 @@ class YetiTypeVisitor implements ClassVisitor {
     public void visitSource(String source, String debug) {
     }
 
-    static ModuleType readType(InputStream in) throws IOException {
+    static ModuleType readType(Compiler compiler, InputStream in)
+            throws IOException {
         YetiTypeVisitor visitor = new YetiTypeVisitor();
         ClassReader reader = new ClassReader(in);
-        reader.accept(visitor, new Attribute[] { new TypeAttr(null) },
+        reader.accept(visitor, new Attribute[] { new TypeAttr(null, compiler) },
                       ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         in.close();
         if (visitor.typeAttr == null)
@@ -487,7 +493,7 @@ class YetiTypeVisitor implements ClassVisitor {
         int old_flags = ctx.flags;
         long[] lastModified = new long[1];
         if (!byPath) {
-            in = ClassFinder.get().findClass(cname + ".class", lastModified);
+            in = ctx.classPath.findClass(cname + ".class", lastModified);
             ctx.flags |= Compiler.CF_COMPILE_MODULE;
         } else {
             ctx.flags |= Compiler.CF_FORCE_COMPILE;
@@ -505,7 +511,7 @@ class YetiTypeVisitor implements ClassVisitor {
                                 t.name.replace('/', '.') +
                                 " instead of " + name.replace('/', '.'));
             } else {
-                t = readType(in);
+                t = readType(ctx, in);
                 if (t == null)
                     throw new CompileException(node,
                                 "`" + name + "' is not a yeti module");
