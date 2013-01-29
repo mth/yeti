@@ -392,7 +392,7 @@ final class Compiler implements Opcodes {
                         analyzer.canonicalFile + "'");
         if (parser.moduleName != null)
             name = parser.moduleName;
-        parser.moduleName = name.toLowerCase();
+        parser.moduleName = parser.isModule ? name.toLowerCase() : name;
         //System.err.println("Derived module name: " + parser.moduleName);
         
         /* Derive the source path IMPLICITLY as a single directory:
