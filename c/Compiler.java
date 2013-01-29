@@ -430,7 +430,7 @@ final class Compiler implements Opcodes {
 
     ModuleType compile(String sourceName, char[] code) throws Exception {
         YetiAnalyzer anal = new YetiAnalyzer();
-        anal.ctx = this;
+        anal.compiler = this;
         anal.sourceName = sourceName;
         if ((flags & (CF_COMPILE_MODULE | CF_EXPECT_MODULE)) != 0)
             anal.expectModule = Boolean.TRUE;

@@ -1697,7 +1697,7 @@ public final class YetiAnalyzer extends YetiType {
     String sourceDir; // sourcePath entry used to find it
     long targetTime;  // target's lastModified
     File targetFile;  // set by deriveName
-    Compiler ctx;
+    Compiler compiler;
     String[] preload;
     long depsModifiedTime;
     long sourceTime;
@@ -1707,7 +1707,7 @@ public final class YetiAnalyzer extends YetiType {
         Object oldSrc = currentSrc.get();
         currentSrc.set(src);
         try {
-            Parser parser = new Parser(sourceName, src, ctx.flags);
+            Parser parser = new Parser(sourceName, src, compiler.flags);
             Node n;
             try {
                 n = parser.parse(topLevel);
@@ -1716,35 +1716,36 @@ public final class YetiAnalyzer extends YetiType {
                     ex.line = parser.currentLine();
                 throw ex;
             }
-            if ((ctx.flags & Compiler.CF_PRINT_PARSE_TREE) != 0)
+            if ((compiler.flags & Compiler.CF_PRINT_PARSE_TREE) != 0)
                 System.err.println(n.str());
             if (expectModule != null &&
                     expectModule.booleanValue() != parser.isModule)
                 throw new CompileException(parser.moduleNameLine, 0,
                             expectModule.booleanValue()
                             ? "Expected module" : "Expected program");
-            ctx.deriveName(parser, this);
+            compiler.deriveName(parser, this);
             final String className = parser.moduleName;
-            ctx.addClass(className, null);
+            compiler.addClass(className, null);
             while (parser.loads != null) {
                 XNode l = parser.loads;
-                if ((ctx.flags & Compiler.CF_NO_IMPORT) != 0)
+                if ((compiler.flags & Compiler.CF_NO_IMPORT) != 0)
                     throw new CompileException(l, "load is disabled");
                 parser.loads = (XNode) l.expr[1];
                 ModuleType t = 
-                    YetiTypeVisitor.getType(ctx, l, l.expr[0].sym(), false);
+                   YetiTypeVisitor.getType(compiler, l, l.expr[0].sym(), false);
                 l.expr[1] = t;
                 if (depsModifiedTime < t.lastModified)
                     depsModifiedTime = t.lastModified;
             }
             RootClosure root = new RootClosure();
-            Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
+            Scope scope =
+                new Scope((compiler.flags & Compiler.CF_NO_IMPORT) == 0
                                 ? ROOT_SCOPE_SYS : ROOT_SCOPE, null, null);
             LoadModule[] preloadModules = new LoadModule[preload.length];
             for (int i = 0; i < preload.length; ++i) {
                 if (!preload[i].equals(className)) {
-                    ModuleType t = 
-                         YetiTypeVisitor.getType(ctx, null, preload[i], false);
+                    ModuleType t = YetiTypeVisitor.getType(compiler,
+                                        null, preload[i], false);
                     preloadModules[i] = new LoadModule(preload[i], t, -1);
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
@@ -1761,7 +1762,7 @@ public final class YetiAnalyzer extends YetiType {
                 return null;
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
-            if ((ctx.flags & Compiler.CF_EVAL_RESOLVE) != 0) {
+            if ((compiler.flags & Compiler.CF_EVAL_RESOLVE) != 0) {
                 List binds = YetiEval.get().bindings;
                 for (int i = 0, cnt = binds.size(); i < cnt; ++i) {
                     YetiEval.Binding bind = (YetiEval.Binding) binds.get(i);
@@ -1779,7 +1780,7 @@ public final class YetiAnalyzer extends YetiType {
             topLevel.typeScope = scope;
             root.preload = preloadModules;
             scope.closure = root;
-            scope.ctx = new ScopeCtx(className, ctx);
+            scope.ctx = new ScopeCtx(className, compiler);
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
             ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true);
@@ -1792,7 +1793,8 @@ public final class YetiAnalyzer extends YetiType {
             if (mt.lastModified < depsModifiedTime)
                 mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;
-            if ((ctx.flags & Compiler.CF_COMPILE_MODULE) != 0 || parser.isModule) {
+            if ((compiler.flags & Compiler.CF_COMPILE_MODULE) != 0 ||
+                    parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type,
                            root.body.polymorph ? RESTRICT_POLY : 0, -1);
@@ -1805,7 +1807,7 @@ public final class YetiAnalyzer extends YetiType {
                         "\nModule type is not fully defined " +
                         "(offending type variables are marked with *)");
                 }
-            } else if ((ctx.flags & Compiler.CF_EVAL) == 0) {
+            } else if ((compiler.flags & Compiler.CF_EVAL) == 0) {
                 expectUnit(root, n, topLevel.typeScope,
                            "Program body must have a unit type");
             }
