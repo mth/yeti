@@ -44,7 +44,7 @@ import java.util.zip.ZipEntry;
 import yeti.renamed.asm3.ClassReader;
 
 abstract class ClassPathItem {
-    abstract InputStream getStream(String name) throws IOException;
+    abstract InputStream getStream(String name, long[] time) throws IOException;
     abstract boolean exists(String name);
 }
 
@@ -52,15 +52,19 @@ class ClassDir extends ClassPathItem {
     String path;
 
     ClassDir(String path) {
-        this.path = path.length() > 0 ? path.concat(File.separator) : "";
+        this.path = path;
     }
 
-    InputStream getStream(String name) throws IOException {
-        return new FileInputStream(path.concat(name));
+    InputStream getStream(String name, long[] time) throws IOException {
+        File f = new File(path, name);
+        InputStream r = new FileInputStream(f);
+        if (time != null)
+            time[0] = f.lastModified();
+        return r;
     }
 
     boolean exists(String name) {
-        return new File(path.concat(name)).isFile();
+        return new File(path, name).isFile();
     }
 }
 
@@ -83,9 +87,14 @@ class ClassJar extends ClassPathItem {
         }
     }
 
-    InputStream getStream(String name) throws IOException {
+    InputStream getStream(String name, long[] time) throws IOException {
         ZipEntry entry = (ZipEntry) entries.get(name);
-        return entry == null ? null : jar.getInputStream(entry);
+        if (entry == null)
+            return null;
+        InputStream r = jar.getInputStream(entry);
+        if (time != null && (time[0] = entry.getTime()) < 0)
+            time[0] = 0;
+        return r;
     }
 
     boolean exists(String name) {
@@ -117,7 +126,7 @@ class ClassFinder {
         pathStr = buf.toString();
     }
 
-    public InputStream findClass(String name) {
+    public InputStream findClass(String name, long[] time) {
         Object x = defined.get(name);
         if (x != null) {
             return new ByteArrayInputStream((byte[]) x);
@@ -125,7 +134,7 @@ class ClassFinder {
         InputStream in;
         for (int i = 0; i < classPath.length; ++i) {
             try {
-                if ((in = classPath[i].getStream(name)) != null)
+                if ((in = classPath[i].getStream(name, time)) != null)
                     return in;
             } catch (IOException ex) {
             }
@@ -176,7 +185,7 @@ class ClassFinder {
             JavaSource.loadClass(this, t, (JavaNode) classNode);
             return t;
         }
-        InputStream in = findClass(className + ".class");
+        InputStream in = findClass(className + ".class", null);
         if (in == null)
             return null;
         try {

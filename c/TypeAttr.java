@@ -485,8 +485,9 @@ class YetiTypeVisitor implements ClassVisitor {
             return t;
         InputStream in = null;
         int old_flags = ctx.flags;
+        long[] lastModified = new long[1];
         if (!byPath) {
-            in = ClassFinder.get().findClass(cname + ".class");
+            in = ClassFinder.get().findClass(cname + ".class", lastModified);
             ctx.flags |= Compiler.CF_COMPILE_MODULE;
         } else {
             ctx.flags |= Compiler.CF_FORCE_COMPILE;
@@ -509,6 +510,7 @@ class YetiTypeVisitor implements ClassVisitor {
                     throw new CompileException(node,
                                 "`" + name + "' is not a yeti module");
                 t.name = cname;
+                t.lastModified = lastModified[0];
                 ctx.types.put(cname, t);
             }
             if (!t.directFields)

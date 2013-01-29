@@ -124,6 +124,7 @@ createCtx genericOpt cl =
                 push java dir;
             fi;
             ctx#writer := new ToFile(dir) as ~CodeWriter;
+            ctx#depDestDir := dir;
 
         /// Set custom source reader function
         SourceReader f:

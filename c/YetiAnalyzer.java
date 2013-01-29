@@ -30,6 +30,7 @@
 
 package yeti.lang.compiler;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -1693,10 +1694,10 @@ public final class YetiAnalyzer extends YetiType {
     String sourceFile; // sourceName without directory path
     String sourceDir; // sourcePath entry used to find it
     long targetTime;  // target's lastModified
-    boolean targetFresh; // source is older than target
+    File targetFile;  // set by deriveName
     Compiler ctx;
     String[] preload;
-    long depsLastModified;
+    long depsModifiedTime;
     long sourceTime;
 
     RootClosure toCode(char[] src) {
@@ -1731,8 +1732,8 @@ public final class YetiAnalyzer extends YetiType {
                 ModuleType t = 
                     YetiTypeVisitor.getType(ctx, l, l.expr[0].sym(), false);
                 l.expr[1] = t;
-                if (depsLastModified < t.lastModified)
-                    depsLastModified = t.lastModified;
+                if (depsModifiedTime < t.lastModified)
+                    depsModifiedTime = t.lastModified;
             }
             RootClosure root = new RootClosure();
             Scope scope = new Scope((ctx.flags & Compiler.CF_NO_IMPORT) == 0
@@ -1745,14 +1746,16 @@ public final class YetiAnalyzer extends YetiType {
                     preloadModules[i] = new LoadModule(preload[i], t, -1);
                     scope = explodeStruct(null, preloadModules[i],
                               scope, 0, "yeti/lang/std".equals(preload[i]));
-                    if (depsLastModified < t.lastModified)
-                        depsLastModified = t.lastModified;
+                    if (depsModifiedTime < t.lastModified)
+                        depsModifiedTime = t.lastModified;
+                    else if (t.lastModified == 0)
+                        depsModifiedTime = Long.MAX_VALUE;
                 }
             }
-            System.err.println(sourceName + ": target:" + targetTime +
-                " source:" + sourceTime + " depend:" + depsLastModified);
+            // System.err.println(sourceName + ": target:" + targetTime +
+            //    " source:" + sourceTime + " depend:" + depsModifiedTime);
             if (targetTime > sourceTime && sourceTime != 0 &&
-                    targetTime >= depsLastModified)
+                    targetTime >= depsModifiedTime && targetFile != null)
                 return null;
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
@@ -1780,12 +1783,15 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx.opaqueTypes = ctx.opaqueTypes;
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
-            root.moduleType =
-                new ModuleType(root.type, topLevel.typeDefs, true);
-            root.moduleType.topDoc = parser.topDoc;
-            root.moduleType.deprecated = parser.deprecated;
-            root.moduleType.name = className;
-            root.moduleType.typeScope = topLevel.typeScope;
+            ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true);
+            root.moduleType = mt;
+            mt.topDoc = parser.topDoc;
+            mt.deprecated = parser.deprecated;
+            mt.name = className;
+            mt.typeScope = topLevel.typeScope;
+            mt.lastModified = sourceTime;
+            if (mt.lastModified < depsModifiedTime)
+                mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;
             if ((ctx.flags & Compiler.CF_COMPILE_MODULE) != 0 || parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();

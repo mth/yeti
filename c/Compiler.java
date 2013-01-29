@@ -261,13 +261,11 @@ final class Compiler implements Opcodes {
         }
         File f = new File(parent, fn);
         analyzer.sourceFile = f.getName();
-        if (parent == null) {
+        if (parent == null) { // !loadModule
             f = f.getCanonicalFile();
             analyzer.canonicalFile = f.getPath();
             if (compiled.containsKey(analyzer.canonicalFile))
                 return null;
-        } else { // loadModule
-            analyzer.sourceTime = f.lastModified();
         }
         char[] buf = new char[0x8000];
         InputStream stream = new FileInputStream(f);
@@ -290,6 +288,7 @@ final class Compiler implements Opcodes {
         }
         if (parent != null)
             analyzer.canonicalFile = f.getCanonicalPath();
+        analyzer.sourceTime = f.lastModified();
         return buf;
     }
 
@@ -424,6 +423,12 @@ final class Compiler implements Opcodes {
                 ? "Circular module dependency: "
                 : "Duplicate module name: ") + name.replace('/', '.'));
         }
+        if (depDestDir != null && parser.isModule &&
+                (flags & CF_FORCE_COMPILE) == 0) {
+            analyzer.targetFile =
+                new File(depDestDir, parser.moduleName.concat(".class"));
+            analyzer.targetTime = analyzer.targetFile.lastModified();
+        }
     }
 
     ModuleType compile(String sourceName, char[] code) throws Exception {
@@ -434,13 +439,7 @@ final class Compiler implements Opcodes {
             anal.expectModule = Boolean.TRUE;
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
-        File targetFile = null;
         if (code == null) {
-            if (depDestDir != null && (flags & (CF_COMPILE_MODULE |
-                    CF_FORCE_COMPILE)) == CF_COMPILE_MODULE) {
-                targetFile = new File(depDestDir, sourceName);
-                anal.targetTime = targetFile.lastModified();
-            }
             code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
             if (code == null)
                 return (ModuleType) compiled.get(anal.canonicalFile);
@@ -458,9 +457,10 @@ final class Compiler implements Opcodes {
                 codeTree = anal.toCode(code);
                 if (codeTree == null) {
                     ModuleType t = YetiTypeVisitor.readType(
-                            new FileInputStream(targetFile));
+                            new FileInputStream(anal.targetFile));
+                    t.lastModified = anal.targetTime;
                     types.put(t.name, t);
-                    System.err.println(t.name + " already compiled.");
+                    //System.err.println(t.name + " already compiled.");
                     return t;
                 }
             } finally {
