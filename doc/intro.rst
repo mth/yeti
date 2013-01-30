@@ -2547,7 +2547,7 @@ Those casts done on the method arguments can be done by hand using
 
 Arrays of Java objects can be wrapped into Yeti arrays::
 
-    > wrapArray ("some test" as ~java.lang.String)#split(" ")
+    > ("some test" as ~java.lang.String)#split(" ") as array<'a>
     ["some","test"] is array<~java.lang.String>
 
 Sometimes you want to give null pointer to a Java method. This can be
