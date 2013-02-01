@@ -457,6 +457,7 @@ final class Compiler implements Opcodes {
                             new FileInputStream(anal.targetFile));
                     t.lastModified = anal.targetTime;
                     types.put(t.name, t);
+                    compiled.put(anal.canonicalFile, t);
                     //System.err.println(t.name + " already compiled.");
                     return t;
                 }
