@@ -157,9 +157,10 @@ scan src local dirs to =
         to[src] := src
     else
         dirList = listDirectory false src;
-        ok := not empty? dirList or new File(src)#isDirectory();
-        if not empty? dirList then
-            dirs src
+        if empty? dirList then
+            ok := new File(src)#isDirectory()
+        else
+            dirs (SourceDir src)
         fi;
         for dirList do {name, path}:
             fn = if local == '' then name else "\(local)/\(name)" fi;
@@ -210,9 +211,8 @@ else
         push compileOptions (Exec argv)
     fi;
     files = [:];
-    sourcePath = array [];
     for srcs do src:
-        if not scan src '' (push sourcePath) files then
+        if not scan src '' (push compileOptions) files then
             println "Don't know what to do with `\(src)'";
             threadExit 1
         fi
