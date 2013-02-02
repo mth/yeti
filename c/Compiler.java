@@ -456,6 +456,7 @@ final class Compiler implements Opcodes {
                     ModuleType t = YetiTypeVisitor.readType(this,
                             new FileInputStream(anal.targetFile));
                     t.lastModified = anal.targetTime;
+                    t.topDoc = anal.topDoc;
                     types.put(t.name, t);
                     compiled.put(anal.canonicalFile, t);
                     //System.err.println(t.name + " already compiled.");

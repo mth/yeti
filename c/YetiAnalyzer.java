@@ -1701,6 +1701,7 @@ public final class YetiAnalyzer extends YetiType {
     String[] preload;
     long depsModifiedTime;
     long sourceTime;
+    String topDoc; // used to return module doc, when no compilation is done
 
     RootClosure toCode(char[] src) {
         TopLevel topLevel = new TopLevel();
@@ -1758,8 +1759,10 @@ public final class YetiAnalyzer extends YetiType {
             // System.err.println(sourceName + ": target:" + targetTime +
             //    " source:" + sourceTime + " depend:" + depsModifiedTime);
             if (targetTime > sourceTime && sourceTime != 0 &&
-                    targetTime >= depsModifiedTime && targetFile != null)
+                    targetTime >= depsModifiedTime && targetFile != null) {
+                topDoc = parser.topDoc;
                 return null;
+            }
             if (parser.isModule)
                 scope = bindImport("module", className, scope);
             if ((compiler.flags & Compiler.CF_EVAL_RESOLVE) != 0) {
