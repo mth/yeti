@@ -749,8 +749,9 @@ public class YetiType implements YetiParser {
             mismatch(a, b);
         } else if (a.type == STRUCT || a.type == VARIANT) {
             unifyMembers(a, b);
-        } else if (a.type == MAP && a.param[2] == b.param[2] &&
-                   (a.param[1].type ^ b.param[1].type) == (NUM ^ NONE)) {
+        } else if (a.type == MAP &&
+                   (a.param[1].type ^ b.param[1].type) == (NUM ^ NONE) &&
+                   (a.param[1].type == NONE || b.param[1].type == NONE)) {
             mismatch(a, b);
         } else {
             for (int i = 0, cnt = a.param.length; i < cnt; ++i)
