@@ -1796,8 +1796,7 @@ public final class YetiAnalyzer extends YetiType {
             if (mt.lastModified < depsModifiedTime)
                 mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;
-            if ((compiler.flags & Compiler.CF_RESOLVE_MODULE) != 0 ||
-                    parser.isModule) {
+            if (parser.isModule) {
                 List free = new ArrayList(), deny = new ArrayList();
                 getFreeVar(free, deny, root.type,
                            root.body.polymorph ? RESTRICT_POLY : 0, -1);
