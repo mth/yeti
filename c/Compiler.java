@@ -40,7 +40,7 @@ import yeti.lang.Struct3;
 import yeti.lang.Core;
 
 final class Compiler implements Opcodes {
-    public static final int CF_COMPILE_MODULE   = 1;
+    public static final int CF_RESOLVE_MODULE   = 1;
     public static final int CF_PRINT_PARSE_TREE = 2;
     public static final int CF_EVAL             = 4;
     public static final int CF_EVAL_RESOLVE     = 8;
@@ -336,7 +336,7 @@ final class Compiler implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
-        if ((flags & (CF_EVAL | CF_COMPILE_MODULE)) == CF_EVAL) {
+        if ((flags & (CF_EVAL | CF_RESOLVE_MODULE)) == CF_EVAL) {
             if (parser.moduleName == null)
                 parser.moduleName = "code";
             if (sourcePath.length == 0)
@@ -432,12 +432,12 @@ final class Compiler implements Opcodes {
         YetiAnalyzer anal = new YetiAnalyzer();
         anal.compiler = this;
         anal.sourceName = sourceName;
-        if ((flags & (CF_COMPILE_MODULE | CF_EXPECT_MODULE)) != 0)
+        if ((flags & (CF_RESOLVE_MODULE | CF_EXPECT_MODULE)) != 0)
             anal.expectModule = Boolean.TRUE;
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
         if (code == null) {
-            code = readSource(anal, (flags & CF_COMPILE_MODULE) != 0);
+            code = readSource(anal, (flags & CF_RESOLVE_MODULE) != 0);
             if (code == null)
                 return (ModuleType) compiled.get(anal.canonicalFile);
         }

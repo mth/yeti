@@ -494,7 +494,7 @@ class YetiTypeVisitor implements ClassVisitor {
         long[] lastModified = new long[1];
         if (!byPath) {
             in = ctx.classPath.findClass(cname + ".class", lastModified);
-            ctx.flags |= Compiler.CF_COMPILE_MODULE;
+            ctx.flags |= Compiler.CF_RESOLVE_MODULE;
         } else {
             ctx.flags |= Compiler.CF_FORCE_COMPILE;
         }
