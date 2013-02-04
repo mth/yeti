@@ -492,36 +492,23 @@ class YetiTypeVisitor implements ClassVisitor {
         ModuleType t = (ModuleType) ctx.types.get(cname);
         if (t != null)
             return t;
-        InputStream in = null;
         int old_flags = ctx.flags;
-        long[] lastModified = new long[1];
         if (!byPath) {
-            in = ctx.classPath.findClass(cname + ".class", lastModified);
             ctx.flags |= Compiler.CF_RESOLVE_MODULE;
         } else {
             ctx.flags |= Compiler.CF_FORCE_COMPILE;
         }
         try {
-            if (in == null) {
-                ctx.flags |= Compiler.CF_EXPECT_MODULE;
-                ctx.flags &= ~Compiler.CF_EVAL_BIND; // clear the eval flags
-                t = (ModuleType) ctx.types.get(ctx.compile(name, null).name);
-                if (t == null)
-                    throw new CompileException(node,
-                                "Could not compile `" + name + "' to a module");
-                if (!byPath && !cname.equals(t.name))
-                    throw new CompileException(node, "Found " +
-                                t.name.replace('/', '.') +
-                                " instead of " + name.replace('/', '.'));
-            } else {
-                t = readType(ctx, in);
-                if (t == null)
-                    throw new CompileException(node,
-                                "`" + name + "' is not a yeti module");
-                t.name = cname;
-                t.lastModified = lastModified[0];
-                ctx.types.put(cname, t);
-            }
+            ctx.flags |= Compiler.CF_EXPECT_MODULE;
+            ctx.flags &= ~Compiler.CF_EVAL_BIND; // clear the eval flags
+            t = (ModuleType) ctx.types.get(ctx.compile(name, null).name);
+            if (t == null)
+                throw new CompileException(node,
+                            "Could not compile `" + name + "' to a module");
+            if (!byPath && !cname.equals(t.name))
+                throw new CompileException(node, "Found " +
+                            t.name.replace('/', '.') +
+                            " instead of " + name.replace('/', '.'));
             if (!t.directFields)
                 ctx.warn(new CompileException(node, "The `" +
                     t.name.replace('/', '.') + "' module is compiled " +

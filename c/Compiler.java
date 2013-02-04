@@ -300,6 +300,8 @@ final class Compiler implements Opcodes {
                 "Module file name case doesn't match the requested name");
     }
 
+    private static final char[] MODULE_NOT_FOUND = {};
+
     // if loadModule is true, the file is searched from the source path
     private char[] readSource(YetiAnalyzer analyzer, boolean loadModule) {
         try {
@@ -320,10 +322,8 @@ final class Compiler implements Opcodes {
                         verifyModuleCase(analyzer);
                         return r;
                     } catch (IOException ex) {
-                        if (sep <= 0 && i + 1 == sourcePath.length) {
-                            throw new CompileException(0, 0, "Module " +
-                                name.replace('/', '.') + " not found");
-                        }
+                        if (sep <= 0 && i + 1 == sourcePath.length)
+                            return MODULE_NOT_FOUND;
                     }
                 }
                 fn = fn.substring(sep + 1);
@@ -428,6 +428,23 @@ final class Compiler implements Opcodes {
         }
     }
 
+    private ModuleType moduleType(String name) throws Exception {
+        String cname = name.toLowerCase();
+        long[] lastModified = new long[1];
+        InputStream in = classPath.findClass(cname + ".class", lastModified);
+        ModuleType t;
+        if (in == null || (t = YetiTypeVisitor.readType(this, in)) == null) {
+            name = name.replace('/', '.');
+            throw new CompileException(0, 0, in == null
+                        ? "Module " + name + " not found"
+                        : name + " is not a Yeti module");
+        }
+        t.name = cname;
+        t.lastModified = lastModified[0];
+        types.put(cname, t);
+        return t;
+    }
+
     ModuleType compile(String sourceName, char[] code) throws Exception {
         YetiAnalyzer anal = new YetiAnalyzer();
         anal.compiler = this;
@@ -440,6 +457,8 @@ final class Compiler implements Opcodes {
             code = readSource(anal, (flags & CF_RESOLVE_MODULE) != 0);
             if (code == null)
                 return (ModuleType) compiled.get(anal.canonicalFile);
+            if (code == MODULE_NOT_FOUND)
+                return moduleType(sourceName);
         }
         RootClosure codeTree;
         Object oldCompiler = currentCompiler.get();
