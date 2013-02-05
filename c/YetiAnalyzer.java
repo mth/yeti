@@ -1786,7 +1786,8 @@ public final class YetiAnalyzer extends YetiType {
             scope.ctx = new ScopeCtx(className, compiler);
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
-            ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true);
+            ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true,
+                                           parser.isModule ? 1 : 1);
             root.moduleType = mt;
             mt.topDoc = parser.topDoc;
             mt.deprecated = parser.deprecated;

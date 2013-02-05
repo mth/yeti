@@ -356,7 +356,8 @@ class TypeAttr extends Attribute {
             new DecodeType(cr, off + hdr, len - hdr, buf, compiler.opaqueTypes);
         YType t = decoder.read();
         Map typeDefs = decoder.readTypeDefs();
-        return new TypeAttr(new ModuleType(t, typeDefs, hdr != 1), compiler);
+        return new TypeAttr(new ModuleType(t, typeDefs, hdr != 1, -1),
+                            compiler);
     }
 
     protected ByteVector write(ClassWriter cw, byte[] code, int len,
@@ -394,22 +395,24 @@ class ModuleType extends YetiParser.Node {
     long lastModified;
     private YType[] free;
 
-    ModuleType(YType type, Map typeDefs, boolean directFields) {
-        this.type = type;
+    ModuleType(YType type, Map typeDefs, boolean directFields, int depth) {
         this.typeDefs = typeDefs;
         this.directFields = directFields;
+        this.type = copy(depth, type);
     }
 
-    YType copy(int depth) {
+    YType copy(int depth, YType t) {
+        if (t == null)
+            t = type;
         if (depth == -1)
-            return type;
+            return t;
         if (free == null) {
             List freeVars = new ArrayList();
-            YetiType.getFreeVar(freeVars, freeVars, type,
+            YetiType.getFreeVar(freeVars, freeVars, t,
                                 YetiType.RESTRICT_POLY, -1);
             free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
         }
-        return YetiType.copyType(type, YetiType.createFreeVars(free, depth),
+        return YetiType.copyType(t, YetiType.createFreeVars(free, depth),
                                  new HashMap());
     }
 
