@@ -490,6 +490,11 @@ class YetiTypeVisitor implements ClassVisitor {
         final boolean bySourcePath = false;
         final String cname = name.toLowerCase();
         ModuleType t = (ModuleType) ctx.types.get(cname);
+        if (t == null && node == null && !byPath) // preload
+            try {
+                t = ctx.moduleType(cname);
+            } catch (IOException ex) {
+            }
         if (t != null)
             return t;
         int old_flags = ctx.flags;

@@ -300,15 +300,13 @@ final class Compiler implements Opcodes {
                 "Module file name case doesn't match the requested name");
     }
 
-    private static final char[] MODULE_NOT_FOUND = {};
-
     // if loadModule is true, the file is searched from the source path
-    private char[] readSource(YetiAnalyzer analyzer, boolean loadModule) {
+    private char[] readSource(YetiAnalyzer analyzer, ModuleType[] loadModule) {
         try {
-            if (!loadModule)
+            if (loadModule == null)
                 return readSourceFile(null, analyzer.sourceName, analyzer);
             // Search from path. The localName is slashed package name.
-            String name = analyzer.sourceName;
+            final String name = analyzer.sourceName;
             String fn = analyzer.sourceName = name + ".yeti";
             if (sourcePath.length == 0)
                 throw new IOException("no source path");
@@ -323,9 +321,13 @@ final class Compiler implements Opcodes {
                         return r;
                     } catch (IOException ex) {
                         if (sep <= 0 && i + 1 == sourcePath.length)
-                            return MODULE_NOT_FOUND;
+                            throw new CompileException(0, 0, "Module " +
+                                name.replace('/', '.') + " not found");
                     }
                 }
+                // TODO not needed on preload.
+                if ((loadModule[0] = moduleType(name)) != null)
+                    return null;
                 fn = fn.substring(sep + 1);
                 sep = -1;
             }
@@ -333,6 +335,21 @@ final class Compiler implements Opcodes {
             throw new CompileException(0, 0,
                         analyzer.sourceName + ": " + e.getMessage());
         }
+    }
+
+    ModuleType moduleType(String name) throws IOException {
+        String cname = name.toLowerCase();
+        long[] lastModified = new long[1];
+        InputStream in = classPath.findClass(cname + ".class", lastModified);
+        if (in == null)
+            return null;
+        ModuleType t = YetiTypeVisitor.readType(this, in);
+        if (t != null) {
+            t.name = cname;
+            t.lastModified = lastModified[0];
+            types.put(cname, t);
+        }
+        return t;
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
@@ -428,23 +445,6 @@ final class Compiler implements Opcodes {
         }
     }
 
-    private ModuleType moduleType(String name) throws Exception {
-        String cname = name.toLowerCase();
-        long[] lastModified = new long[1];
-        InputStream in = classPath.findClass(cname + ".class", lastModified);
-        ModuleType t;
-        if (in == null || (t = YetiTypeVisitor.readType(this, in)) == null) {
-            name = name.replace('/', '.');
-            throw new CompileException(0, 0, in == null
-                        ? "Module " + name + " not found"
-                        : name + " is not a Yeti module");
-        }
-        t.name = cname;
-        t.lastModified = lastModified[0];
-        types.put(cname, t);
-        return t;
-    }
-
     ModuleType compile(String sourceName, char[] code) throws Exception {
         YetiAnalyzer anal = new YetiAnalyzer();
         anal.compiler = this;
@@ -454,11 +454,12 @@ final class Compiler implements Opcodes {
         else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
             anal.expectModule = Boolean.FALSE;
         if (code == null) {
-            code = readSource(anal, (flags & CF_RESOLVE_MODULE) != 0);
+            ModuleType[] m =
+                (flags & CF_RESOLVE_MODULE) != 0 ? new ModuleType[1] : null;
+            code = readSource(anal, m);
             if (code == null)
-                return (ModuleType) compiled.get(anal.canonicalFile);
-            if (code == MODULE_NOT_FOUND)
-                return moduleType(sourceName);
+                return m != null && m[0] != null ? m[0] :
+                    (ModuleType) compiled.get(anal.canonicalFile);
         }
         RootClosure codeTree;
         Object oldCompiler = currentCompiler.get();
