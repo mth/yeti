@@ -21,6 +21,7 @@
 * Reuse local JVM variables (have a free var list on Ctx and add variable
   to it after last use when it could be nulled). This could compact code
   and help GC with bindings that are not explicitly nulled (type != MAP).
+* foo = load bar; foo.x should be optimised into same as load bar; x
 * Context-specific int optimizations for builtins
   (and java method invocation return values)
 * Struct mapping (as in doc/stmap.yeti)
