@@ -7,7 +7,6 @@
   + In this case doc index should still include all module names.
   + Programs could be also built only when source is newer
     (has to create the ModuleType)
-  + eval's compileYetiFiles could give the number of compiled files
 * Avoid upper/lowercase dups on generated classes
 * v1.0
 * Typedefs in REPL
