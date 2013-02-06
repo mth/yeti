@@ -608,7 +608,7 @@ interface YetiParser {
         }
 
         private void addDoc(int from, int to) {
-            if ((flags & Compiler.CF_DOC) == 0)
+            if ((flags & Compiler.GF_DOC) == 0)
                 return;
             ++from;
             String str = new String(src, from, to - from);

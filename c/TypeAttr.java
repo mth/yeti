@@ -490,23 +490,19 @@ class YetiTypeVisitor implements ClassVisitor {
         final boolean bySourcePath = false;
         final String cname = name.toLowerCase();
         ModuleType t = (ModuleType) ctx.types.get(cname);
-        if (t == null && node == null && !byPath) // preload
-            try {
-                t = ctx.moduleType(cname);
-            } catch (IOException ex) {
-            }
         if (t != null)
             return t;
-        int old_flags = ctx.flags;
-        if (!byPath) {
-            ctx.flags |= Compiler.CF_RESOLVE_MODULE;
-        } else {
-            ctx.flags |= Compiler.CF_FORCE_COMPILE;
-        }
         try {
-            ctx.flags |= Compiler.CF_EXPECT_MODULE;
-            ctx.flags &= ~Compiler.CF_EVAL_BIND; // clear the eval flags
-            t = (ModuleType) ctx.types.get(ctx.compile(name, null).name);
+            int flags = byPath ? Compiler.CF_FORCE_COMPILE
+                               : Compiler.CF_RESOLVE_MODULE;
+            if (node == null && !byPath) {
+                t = ctx.moduleType(cname);
+                if (t != null)
+                    return t;
+                flags |= Compiler.CF_IGNORE_CLASSPATH;
+            }
+            t = (ModuleType) ctx.types.get(ctx.compile(name, null,
+                    flags | Compiler.CF_EXPECT_MODULE).name);
             if (t == null)
                 throw new CompileException(node,
                             "Could not compile `" + name + "' to a module");
@@ -532,8 +528,6 @@ class YetiTypeVisitor implements ClassVisitor {
             throw ex;
         } catch (Exception ex) {
             throw new CompileException(node, ex.getMessage());
-        } finally {
-            ctx.flags = old_flags;
         }
     }
 }

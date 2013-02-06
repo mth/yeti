@@ -914,7 +914,7 @@ public class YetiType implements YetiParser {
             return new ClassBinding(t);
         }
         if (checkPerm != null &&
-            (scope.ctx.compiler.flags & Compiler.CF_NO_IMPORT) != 0)
+            (scope.ctx.compiler.globalFlags & Compiler.GF_NO_IMPORT) != 0)
             throw new CompileException(checkPerm, name + " is not imported");
         return new ClassBinding(JavaType.typeOfClass(packageName, name));
     }

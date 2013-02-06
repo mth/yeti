@@ -5,10 +5,6 @@
   should give more info about where error is.
 * Rebuild modified dependencies when compiling
   + In this case doc index should still include all module names.
-  + Build from source if needed, even when target dir is in classpath
-    - has to check sources first in getType()
-    - CF_COMPILE_MODULE could be renamed CF_RESOLVE_MODULE,
-      and compile could use ClassFinder by itself with that flag
   + Programs could be also built only when source is newer
     (has to create the ModuleType)
   + eval's compileYetiFiles could give the number of compiled files

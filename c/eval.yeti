@@ -109,6 +109,7 @@ execClass argv sandbox eval loader mainClass
 createCtx genericOpt cl =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
+    var flags = 0;
     ctx = new Compiler(());
     java = array [];
 
@@ -149,17 +150,18 @@ createCtx genericOpt cl =
         ClassPath path: classPath := classPath ++ path;
 
         /// If you have really broken JVM, generate superfluous casts.
-        ICast ():     ctx#isGCJ := true;
+        ICast (): ctx#isGCJ := true;
 
         /// Set modules that are preloaded. Default is yeti.lang.std and io.
-        Preload p:    ctx#preload := p is list?<string> as ~String[];
+        Preload p: ctx#preload := p is list?<string> as ~String[];
 
         /// Print parse tree to stdout.
         /// Not very useful, unless you want to debug the compiler.
-        ParseTree (): ctx#flags := ctx#flags b_or Compiler#CF_PRINT_PARSE_TREE;
+        ParseTree (): flags := flags b_or Compiler#CF_PRINT_PARSE_TREE;
 
         /// Disable importing foreign classes. Useful when sandboxing.
-        NoImport ():  ctx#flags := ctx#flags b_or Compiler#CF_NO_IMPORT;
+        NoImport ():
+            ctx#globalFlags := ctx#globalFlags b_or Compiler#GF_NO_IMPORT;
 
         /// Disable generation of Java 1.6 frames to class files.
         ///
@@ -182,7 +184,7 @@ createCtx genericOpt cl =
         fi;
         ctx#writer := new Loader(cl) as ~CodeWriter;
     fi;
-    {warn, ctx, java});
+    {warn, ctx, flags, java});
 
 nullTypeAction _ is module_description -> () = ();
 
@@ -271,7 +273,8 @@ compileYetiFiles genericOpt options files =
     var typeAction = nullTypeAction;
     var mainClass = '';
 
-    {ctx, warn, java = javaOptions} = createCtx genericOpt (() as ~ClassLoader);
+    param = createCtx genericOpt (() as ~ClassLoader);
+    {ctx} = param;
 
     sourcePath = array [];
     for options
@@ -281,7 +284,7 @@ compileYetiFiles genericOpt options files =
         /// is called after each module file given for compilation. 
         Type action:
             typeAction := action;
-            ctx#flags := ctx#flags b_or Compiler#CF_DOC;
+            ctx#globalFlags := ctx#globalFlags b_or Compiler#GF_DOC;
 
         /// Execute main after compilation of the sources.
         /// The _argv will be set to the arg parameter.
@@ -301,7 +304,7 @@ compileYetiFiles genericOpt options files =
         /// Option to give to the javac,
         /// when .java files were in source file set.
         JavaOption option:
-            push javaOptions option;
+            push param.java option;
         esac;
 
     // TODO use null writer when no Exec and no To,
@@ -314,13 +317,14 @@ compileYetiFiles genericOpt options files =
             typeAction (moduleDoc YetiTypeVisitor#getType(ctx, (), src, true))
         done
     else
-        if exec and length files == 1 then
-            ctx#flags := ctx#flags b_or Compiler#CF_EXPECT_PROGRAM
-        fi;
         try
-            mainClass := ctx#compileAll(sort (list files), 0, javaOptions)
+            var flags = param.flags;
+            if exec and length files == 1 then
+                flags := flags b_or Compiler#CF_EXPECT_PROGRAM
+            fi;
+            mainClass := ctx#compileAll(sort (list files), flags, param.java)
         finally
-            ctx#enumWarns(warn)
+            ctx#enumWarns(param.warn)
         yrt;
         if not same? typeAction nullTypeAction then
             i = ctx#types#values()#iterator();
@@ -388,12 +392,14 @@ evaluateYetiCode genericOpt =
         var sandbox = false;
         var argv = array [];
         var sourceName = undef_str;
-        {ctx, warn} = createCtx genericOpt cl;
+        param = createCtx genericOpt cl;
+        {ctx} = param;
+        var flags = param.flags b_or Compiler#CF_EVAL
+                                b_or Compiler#CF_EVAL_RESOLVE;
         if ctx#writer instanceof Loader then
             cl := (ctx#writer unsafely_as ~Loader)#getParent()
         fi;
-        ctx#flags := ctx#flags b_or Compiler#CF_EVAL
-                        b_or Compiler#CF_EVAL_RESOLVE;
+
         for options
            \case of
             /// Store top-level bindings in the evaluation environment.
@@ -429,7 +435,7 @@ evaluateYetiCode genericOpt =
                fi;
 
         if bind then
-            ctx#flags := ctx#flags b_or Compiler#CF_EVAL_STORE;
+            flags := flags b_or Compiler#CF_EVAL_STORE;
         fi;
 
         if nullptr? evalEnv then
@@ -446,7 +452,7 @@ evaluateYetiCode genericOpt =
             try
                 compileErr =
                     try
-                        t = ctx#compile(sourceName, code);
+                        t = ctx#compile(sourceName, code, flags);
                         type := if typeOf? then
                                     TypeDescr#yetiType(t#type, (), ())
                                 else
@@ -456,7 +462,7 @@ evaluateYetiCode genericOpt =
                     catch CompileException ex:
                         ex
                     finally
-                        ctx#enumWarns(warn)
+                        ctx#enumWarns(param.warn)
                     yrt;
                 if not nullptr? compileErr then
                     CompileException compileErr

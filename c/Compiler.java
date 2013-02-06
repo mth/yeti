@@ -40,18 +40,22 @@ import yeti.lang.Struct3;
 import yeti.lang.Core;
 
 final class Compiler implements Opcodes {
-    public static final int CF_RESOLVE_MODULE   = 1;
-    public static final int CF_PRINT_PARSE_TREE = 2;
-    public static final int CF_EVAL             = 4;
-    public static final int CF_EVAL_RESOLVE     = 8;
-    public static final int CF_NO_IMPORT        = 16;
-    public static final int CF_EVAL_STORE       = 32;
-    public static final int CF_EVAL_BIND        = 40;
-    public static final int CF_DOC              = 64;
-    public static final int CF_EXPECT_MODULE    = 128;
-    public static final int CF_EXPECT_PROGRAM   = 256;
+    static final int CF_RESOLVE_MODULE   = 1;
+    static final int CF_PRINT_PARSE_TREE = 2;
+    static final int CF_EVAL             = 4;
+    static final int CF_EVAL_RESOLVE     = 8;
+    static final int CF_EVAL_STORE       = 32;
+    static final int CF_EVAL_BIND        = 40;
+    static final int CF_EXPECT_MODULE    = 128;
+    static final int CF_EXPECT_PROGRAM   = 256;
     // hack to force getting yetidoc on doc generation
-    public static final int CF_FORCE_COMPILE    = 512;
+    static final int CF_FORCE_COMPILE    = 512;
+    // used with CF_RESOLVE_MODULE on preload
+    static final int CF_IGNORE_CLASSPATH = 1024;
+
+    // global flags
+    static final int GF_NO_IMPORT = 16;
+    static final int GF_DOC       = 64;
 
     static final String[] PRELOAD =
         new String[] { "yeti/lang/std", "yeti/lang/io" };
@@ -79,7 +83,7 @@ final class Compiler implements Opcodes {
     final Map javaTypeCache = new HashMap();
     String[] preload = PRELOAD;
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
-    int flags;
+    int globalFlags;
 
     Compiler(CodeWriter writer) {
         this.writer = writer;
@@ -189,10 +193,8 @@ final class Compiler implements Opcodes {
                 sources[yetiCount++] = sources[i];
             }
         String mainClass = null;
-        if (flags != 0)
-            this.flags = flags;
         for (i = 0; i < yetiCount; ++i) {
-            String className = compile(sources[i], null).name;
+            String className = compile(sources[i], null, flags).name;
             if (!types.containsKey(className))
                 mainClass = className;
         }
@@ -301,9 +303,9 @@ final class Compiler implements Opcodes {
     }
 
     // if loadModule is true, the file is searched from the source path
-    private char[] readSource(YetiAnalyzer analyzer, ModuleType[] loadModule) {
+    private char[] readSource(YetiAnalyzer analyzer) {
         try {
-            if (loadModule == null)
+            if ((analyzer.flags & CF_RESOLVE_MODULE) == 0)
                 return readSourceFile(null, analyzer.sourceName, analyzer);
             // Search from path. The localName is slashed package name.
             final String name = analyzer.sourceName;
@@ -325,8 +327,8 @@ final class Compiler implements Opcodes {
                                 name.replace('/', '.') + " not found");
                     }
                 }
-                // TODO not needed on preload.
-                if ((loadModule[0] = moduleType(name)) != null)
+                if ((analyzer.flags & CF_IGNORE_CLASSPATH) == 0 &&
+                    (analyzer.resolvedType = moduleType(name)) != null)
                     return null;
                 fn = fn.substring(sep + 1);
                 sep = -1;
@@ -353,7 +355,7 @@ final class Compiler implements Opcodes {
     }
 
     void deriveName(YetiParser.Parser parser, YetiAnalyzer analyzer) {
-        if ((flags & (CF_EVAL | CF_RESOLVE_MODULE)) == CF_EVAL) {
+        if ((analyzer.flags & (CF_EVAL | CF_RESOLVE_MODULE)) == CF_EVAL) {
             if (parser.moduleName == null)
                 parser.moduleName = "code";
             if (sourcePath.length == 0)
@@ -438,27 +440,23 @@ final class Compiler implements Opcodes {
                 : "Duplicate module name: ") + name.replace('/', '.'));
         }
         if (depDestDir != null && parser.isModule &&
-                (flags & CF_FORCE_COMPILE) == 0) {
+                (analyzer.flags & CF_FORCE_COMPILE) == 0) {
             analyzer.targetFile =
                 new File(depDestDir, parser.moduleName.concat(".class"));
             analyzer.targetTime = analyzer.targetFile.lastModified();
         }
     }
 
-    ModuleType compile(String sourceName, char[] code) throws Exception {
+    ModuleType compile(String sourceName, char[] code, int flags)
+            throws Exception {
         YetiAnalyzer anal = new YetiAnalyzer();
+        anal.flags = flags;
         anal.compiler = this;
         anal.sourceName = sourceName;
-        if ((flags & (CF_RESOLVE_MODULE | CF_EXPECT_MODULE)) != 0)
-            anal.expectModule = Boolean.TRUE;
-        else if ((flags & (CF_EXPECT_PROGRAM)) != 0)
-            anal.expectModule = Boolean.FALSE;
         if (code == null) {
-            ModuleType[] m =
-                (flags & CF_RESOLVE_MODULE) != 0 ? new ModuleType[1] : null;
-            code = readSource(anal, m);
+            code = readSource(anal);
             if (code == null)
-                return m != null && m[0] != null ? m[0] :
+                return anal.resolvedType != null ? anal.resolvedType :
                     (ModuleType) compiled.get(anal.canonicalFile);
         }
         RootClosure codeTree;
