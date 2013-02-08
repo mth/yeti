@@ -42,6 +42,6 @@ public final class Selector extends Fun {
     }
 
     public String toString() {
-        return "<(." + name + ")>";
+        return "(." + name + ')';
     }
 }
