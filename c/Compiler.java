@@ -341,7 +341,7 @@ final class Compiler implements Opcodes {
 
     ModuleType moduleType(String name) throws IOException {
         String cname = name.toLowerCase();
-        long[] lastModified = new long[1];
+        long[] lastModified = { -1 };
         InputStream in = classPath.findClass(cname + ".class", lastModified);
         if (in == null)
             return null;
@@ -477,7 +477,7 @@ final class Compiler implements Opcodes {
                     t.topDoc = anal.topDoc;
                     types.put(t.name, t);
                     compiled.put(anal.canonicalFile, t);
-                    //System.err.println(t.name + " already compiled.");
+                    System.err.println(t.name + " already compiled.");
                     return t;
                 }
             } finally {

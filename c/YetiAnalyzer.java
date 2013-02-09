@@ -1759,7 +1759,7 @@ public final class YetiAnalyzer extends YetiType {
                         depsModifiedTime = Long.MAX_VALUE;
                 }
             }
-            // System.err.println(sourceName + ": target:" + targetTime +
+            //System.err.println(sourceName + ": target:" + targetTime +
             //    " source:" + sourceTime + " depend:" + depsModifiedTime);
             if (targetTime > sourceTime && sourceTime != 0 &&
                     targetTime >= depsModifiedTime && targetFile != null) {
