@@ -475,9 +475,10 @@ final class Compiler implements Opcodes {
                             new FileInputStream(anal.targetFile));
                     t.lastModified = anal.targetTime;
                     t.topDoc = anal.topDoc;
+                    t.hasSource = true;
                     types.put(t.name, t);
                     compiled.put(anal.canonicalFile, t);
-                    System.err.println(t.name + " already compiled.");
+                    //System.err.println(t.name + " already compiled.");
                     return t;
                 }
             } finally {

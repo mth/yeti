@@ -59,7 +59,9 @@ typedef module_description = {
     /// Module type signature.
     type is type,
     /// List of typedefs exported by the module.
-    typedefs is list<typedef_description>
+    typedefs is list<typedef_description>,
+    /// Compilation was skipped, type don't have doc-strings.
+    skipped is boolean
 }
 
 // XXX: Beware - the GlobalSandbox argument sets a very restricive
@@ -224,7 +226,9 @@ moduleDoc m is ~ModuleType -> module_description = {
                 fi;
                 scope := scope#outer);
             reverse typedefs
-        fi
+        fi,
+
+    skipped = m#fromClass,
 };
 
 /**
@@ -329,7 +333,10 @@ compileYetiFiles genericOpt options files =
         if not same? typeAction nullTypeAction then
             i = ctx#types#values()#iterator();
             i#hasNext() loop
-                typeAction (moduleDoc (i#next() unsafely_as ~ModuleType))
+               (t = i#next() unsafely_as ~ModuleType;
+                if t#hasSource then
+                    typeAction (moduleDoc t)
+                fi)
         fi
     fi;
     if exec then

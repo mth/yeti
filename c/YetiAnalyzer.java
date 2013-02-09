@@ -1797,6 +1797,7 @@ public final class YetiAnalyzer extends YetiType {
             mt.name = className;
             mt.typeScope = topLevel.typeScope;
             mt.lastModified = sourceTime;
+            mt.hasSource = true;
             if (mt.lastModified < depsModifiedTime)
                 mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;

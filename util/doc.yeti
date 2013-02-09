@@ -329,14 +329,16 @@ typedef_html {name, type, param} =
 
 modules = [:];
 
-moduleDoc {type, name, doc, typedefs} =
-   (moduleType = to_html '' type;
-    {descr, raw_doc} = parseDoc doc;
-    page = html_page {
-        name, descr, moduleType,
-        typedefs = strJoin '<p>' (map typedef_html typedefs)
-    };
-    writeFile "\(doc_dir)/\(name).html" utf8 (`putLines` [page]);
+moduleDoc {type, name, doc, typedefs, skipped} =
+   ({descr, raw_doc} = parseDoc doc;
+    if not skipped then
+        moduleType = to_html '' type;
+        page = html_page {
+            name, descr, moduleType,
+            typedefs = strJoin '<p>' (map typedef_html typedefs)
+        };
+        writeFile "\(doc_dir)/\(name).html" utf8 (`putLines` [page])
+    fi;
     modules[name] := head ((splitBy (!= '') raw_doc).snd ++ [undef_str]));
 
 docIndex () =

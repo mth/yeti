@@ -392,6 +392,8 @@ class ModuleType extends YetiParser.Node {
     String topDoc;
     String name;
     boolean deprecated;
+    boolean fromClass;
+    boolean hasSource;
     long lastModified;
     private YType[] free;
 
@@ -482,6 +484,7 @@ class YetiTypeVisitor implements ClassVisitor {
         if (mt != null)
             mt.deprecated = visitor.deprecated;
         mt.name = reader.getClassName();
+        mt.fromClass = true;
         return mt;
     }
 
