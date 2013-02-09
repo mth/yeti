@@ -93,7 +93,7 @@ class ClassJar extends ClassPathItem {
             return null;
         InputStream r = jar.getInputStream(entry);
         if (time != null && (time[0] = entry.getTime()) < 0)
-            time[0] = 0;
+            time[0] = 0; // unknown, should probably rebuild
         return r;
     }
 
@@ -129,6 +129,7 @@ class ClassFinder {
     public InputStream findClass(String name, long[] time) {
         Object x = defined.get(name);
         if (x != null) {
+            time[0] = 0; // unknown, should probably rebuild
             return new ByteArrayInputStream((byte[]) x);
         }
         InputStream in;
