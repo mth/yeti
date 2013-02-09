@@ -5,6 +5,7 @@
   should give more info about where error is.
 * Rebuild modified dependencies when compiling: programs could be also
   built only when source is newer (has to create the ModuleType)
+* Skip code generation, when only doc generation is requested
 * Avoid upper/lowercase dups on generated classes
 * v1.0
 * Typedefs in REPL
@@ -29,5 +30,6 @@
   being exhaustive.
 * Review the Java<->Yeti type autoconversions?
 * Immutable tree map support - this seems to be popular feature. ;)
+* Support module field deprecation
 * Optional Java generics support?
 * Direct struct-ref optimisation, when only known structs are accessed
