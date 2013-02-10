@@ -82,51 +82,52 @@ public final class Core {
     public static Num parseNum(String str) {
         String s = str.trim();
         int l;
-        if ((l = str.length()) == 0) {
+        if ((l = s.length()) == 0) {
             throw new IllegalArgumentException("Number expected");
         }
-        if (s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
-            char c;
-            if ((c = s.charAt(l - 1)) == 'e' || c == 'E') {
-                return new FloatNum(Double.parseDouble(s.substring(0, l - 1)));
-            }
-            return new FloatNum(Double.parseDouble(s));
-        }
-        int dot = s.indexOf('.');
-        if (dot == l - 1) {
-            s = s.substring(0, dot);
-            dot = -1;
-        }
-        int st = s.charAt(0) == '-' ? 1 : 0, n;
-        if (dot > 0) do {
-            while (s.charAt(--l) == '0');
-            if (s.charAt(l) == '.') {
-                s = s.substring(0, l);
-                break;
-            }
-            if ((n = l - st) > 10 || n == 10 && s.charAt(st) > '2') {
-                return new FloatNum(Double.parseDouble(s));
-            }
-            int shift = DEC_SHIFT[l - dot];
-            s = s.substring(0, dot) + s.substring(dot + 1, l + 1);
-            return new RatNum(Integer.parseInt(s), shift);
-        } while (false);
-        n = 10; // radix
-        if (l > 2 && s.charAt(st) == '0') {
+        int radix = 10, st = s.charAt(0) == '-' ? 1 : 0;
+        if (l > 2 && s.charAt(st) == '0')
             switch (s.charAt(st + 1)) {
                 case 'o': case 'O':
-                    n = 2;
+                    radix = 2;
                 case 'x': case 'X':
                     s = s.substring(st += 2);
                     if (st != 2)
                         s = "-".concat(s);
-                    n += 6;
+                    radix += 6;
             }
+        if (radix == 10) {
+            if (s.indexOf('e') >= 0 || s.indexOf('E') >= 0) {
+                char c;
+                if ((c = s.charAt(l - 1)) == 'e' || c == 'E')
+                    return new FloatNum(Double.parseDouble(
+                                s.substring(0, l - 1)));
+                return new FloatNum(Double.parseDouble(s));
+            }
+            int dot = s.indexOf('.');
+            if (dot == l - 1) {
+                s = s.substring(0, dot);
+                dot = -1;
+            }
+            int n;
+            if (dot > 0) do {
+                while (s.charAt(--l) == '0');
+                if (s.charAt(l) == '.') {
+                    s = s.substring(0, l);
+                    break;
+                }
+                if ((n = l - st) > 10 || n == 10 && s.charAt(st) > '2') {
+                    return new FloatNum(Double.parseDouble(s));
+                }
+                int shift = DEC_SHIFT[l - dot];
+                s = s.substring(0, dot) + s.substring(dot + 1, l + 1);
+                return new RatNum(Integer.parseInt(s), shift);
+            } while (false);
         }
-        if ((l - st) < 96 / n + 10) { // 22, 19, 16
-            return new IntNum(Long.parseLong(s, n));
+        if ((l - st) < 96 / radix + 10) { // 22, 19, 16
+            return new IntNum(Long.parseLong(s, radix));
         }
-        return new BigNum(s, n);
+        return new BigNum(s, radix);
     }
 
     public static String concat(String[] param) {
