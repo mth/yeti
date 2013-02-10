@@ -439,8 +439,7 @@ final class Compiler implements Opcodes {
                 ? "Circular module dependency: "
                 : "Duplicate module name: ") + name.replace('/', '.'));
         }
-        if (depDestDir != null && parser.isModule &&
-                (analyzer.flags & CF_FORCE_COMPILE) == 0) {
+        if (depDestDir != null && (analyzer.flags & CF_FORCE_COMPILE) == 0) {
             analyzer.targetFile =
                 new File(depDestDir, parser.moduleName.concat(".class"));
             analyzer.targetTime = analyzer.targetFile.lastModified();
@@ -471,12 +470,15 @@ final class Compiler implements Opcodes {
                 anal.preload = preload;
                 codeTree = anal.toCode(code);
                 if (codeTree == null) {
-                    ModuleType t = YetiTypeVisitor.readType(this,
+                    ModuleType t = anal.resolvedType;
+                    if (t == null) { // module, type from class
+                        t = YetiTypeVisitor.readType(this,
                             new FileInputStream(anal.targetFile));
+                        types.put(t.name, t);
+                        t.topDoc = anal.topDoc;
+                    }
                     t.lastModified = anal.targetTime;
-                    t.topDoc = anal.topDoc;
                     t.hasSource = true;
-                    types.put(t.name, t);
                     compiled.put(anal.canonicalFile, t);
                     //System.err.println(t.name + " already compiled.");
                     return t;

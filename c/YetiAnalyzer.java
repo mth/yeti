@@ -1764,6 +1764,10 @@ public final class YetiAnalyzer extends YetiType {
             if (targetTime > sourceTime && sourceTime != 0 &&
                     targetTime >= depsModifiedTime && targetFile != null) {
                 topDoc = parser.topDoc;
+                if (!parser.isModule) {
+                    resolvedType = new ModuleType(UNIT_TYPE, null, true, -1);
+                    resolvedType.name = className;
+                }
                 return null;
             }
             if (parser.isModule)
@@ -1790,7 +1794,7 @@ public final class YetiAnalyzer extends YetiType {
             root.body = analyze(n, scope, 0);
             root.type = root.body.type.deref();
             ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true,
-                                           parser.isModule ? 1 : 1);
+                                           parser.isModule ? 1 : -1);
             root.moduleType = mt;
             mt.topDoc = parser.topDoc;
             mt.deprecated = parser.deprecated;
