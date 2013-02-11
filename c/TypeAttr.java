@@ -93,7 +93,7 @@ class TypeAttr extends Attribute {
         Map opaque = new HashMap();
 
         void writeMap(Map m) {
-            if (m != null) {
+            if (m != null)
                 for (Iterator i = m.entrySet().iterator(); i.hasNext();) {
                     Map.Entry e = (Map.Entry) i.next();
                     YType t = (YType) e.getValue();
@@ -103,14 +103,12 @@ class TypeAttr extends Attribute {
                     int name = cw.newUTF8((String) e.getKey());
                     buf.putShort(name);
                 }
-            }
             buf.putByte(END);
         }
 
         void writeArray(YType[] param) {
-            for (int i = 0; i < param.length; ++i) {
+            for (int i = 0; i < param.length; ++i)
                 write(param[i]);
-            }
             buf.putByte(END);
         }
 
@@ -138,9 +136,8 @@ class TypeAttr extends Attribute {
             }
             Integer id = (Integer) refs.get(type);
             if (id != null) {
-                if (id.intValue() > 0x7fff) {
+                if (id.intValue() > 0x7fff)
                     throw new RuntimeException("Too many type parts");
-                }
                 buf.putByte(REF);
                 buf.putShort(id.intValue());
                 return;
@@ -232,9 +229,8 @@ class TypeAttr extends Attribute {
 
         YType[] readArray() {
             List param = new ArrayList();
-            while (in[p] != END) {
+            while (in[p] != END)
                 param.add(read());
-            }
             ++p;
             return (YType[]) param.toArray(new YType[param.size()]);
         }
@@ -243,9 +239,8 @@ class TypeAttr extends Attribute {
             YType t;
             int tv;
 
-            if (p >= end) {
+            if (p >= end)
                 throw new RuntimeException("Invalid type description");
-            }
             switch (tv = in[p++]) {
             case YetiType.VAR:
             case TAINTED: {
@@ -264,9 +259,8 @@ class TypeAttr extends Attribute {
             case REF: {
                 int v = cr.readUnsignedShort(p);
                 p += 2;
-                if (refs.size() <= v) {
+                if (refs.size() <= v)
                     throw new RuntimeException("Illegal type reference");
-                }
                 return (YType) refs.get(v);
             }
             case MUTABLE:
@@ -443,10 +437,9 @@ class YetiTypeVisitor implements ClassVisitor {
 
     public void visitAttribute(Attribute attr) {
         if (attr.type == "YetiModuleType") {
-            if (typeAttr != null) {
+            if (typeAttr != null)
                 throw new RuntimeException(
                     "Multiple YetiModuleType attributes are forbidden");
-            }
             typeAttr = (TypeAttr) attr;
         }
     }
@@ -520,12 +513,11 @@ class YetiTypeVisitor implements ClassVisitor {
                     "might not work with newer standard library."));
             return t;
         } catch (CompileException ex) {
-            if (ex.line == 0) {
+            if (ex.line == 0)
                 if (node != null) {
                     ex.line = node.line;
                     ex.col = node.col;
                 }
-            }
             throw ex;
         } catch (RuntimeException ex) {
             throw ex;

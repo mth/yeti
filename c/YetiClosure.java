@@ -4,6 +4,7 @@
  * Yeti language compiler java bytecode generator.
  *
  * Copyright (c) 2007-2013 Madis Janson
+ * Copyright (c) 2011 Gergő Érdi
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

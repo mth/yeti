@@ -3,7 +3,7 @@
 /**
  * Yeti core library.
  *
- * Copyright (c) 2007-2012 Madis Janson
+ * Copyright (c) 2007-2013 Madis Janson
  * Copyright (c) 2012 Chris Cannam
  * All rights reserved.
  *
@@ -44,25 +44,21 @@ public final class Core {
 
     public static final Fun RANDINT = new Fun() {
         public Object apply(Object x) {
-            if (rnd == null) {
+            if (rnd == null)
                 initRandom();
-            }
             Num n = (Num) x;
-            if (n.rCompare(0x7fffffffL) > 0) {
+            if (n.rCompare(0x7fffffffL) > 0)
                 return new IntNum(rnd.nextInt(n.intValue()));
-            }
-            if (n.rCompare(Long.MAX_VALUE) > 0) {
+            if (n.rCompare(Long.MAX_VALUE) > 0)
                 return new IntNum((long) (n.doubleValue() * rnd.nextDouble()));
-            }
             // XXX
             return new FloatNum(Math.floor(n.doubleValue() * rnd.nextDouble()));
         }
     };
 
     private static synchronized void initRandom() {
-        if (rnd == null) {
+        if (rnd == null)
             rnd = new Random();
-        }
     }
 
     public static String replace(String f, String r, String s) {
@@ -73,18 +69,16 @@ public final class Core {
             result.append(r);
             p = i + l;
         }
-        if (p < s.length()) {
+        if (p < s.length())
             result.append(s.substring(p));
-        }
         return result.toString();
     }
 
     public static Num parseNum(String str) {
         String s = str.trim();
         int l;
-        if ((l = s.length()) == 0) {
+        if ((l = s.length()) == 0)
             throw new IllegalArgumentException("Number expected");
-        }
         int radix = 10, st = s.charAt(0) == '-' ? 1 : 0;
         if (l > 2 && s.charAt(st) == '0')
             switch (s.charAt(st + 1)) {
@@ -116,28 +110,24 @@ public final class Core {
                     s = s.substring(0, l);
                     break;
                 }
-                if ((n = l - st) > 10 || n == 10 && s.charAt(st) > '2') {
+                if ((n = l - st) > 10 || n == 10 && s.charAt(st) > '2')
                     return new FloatNum(Double.parseDouble(s));
-                }
                 int shift = DEC_SHIFT[l - dot];
                 s = s.substring(0, dot) + s.substring(dot + 1, l + 1);
                 return new RatNum(Integer.parseInt(s), shift);
             } while (false);
         }
-        if ((l - st) < 96 / radix + 10) { // 22, 19, 16
+        if ((l - st) < 96 / radix + 10) // 22, 19, 16
             return new IntNum(Long.parseLong(s, radix));
-        }
         return new BigNum(s, radix);
     }
 
     public static String concat(String[] param) {
         int l = 0;
-        for (int i = param.length; --i >= 0;) {
+        for (int i = param.length; --i >= 0;)
             l += param[i].length();
-        }
-        if (l == 0) {
+        if (l == 0)
             return "";
-        }
         char[] res = new char[l];
         int p = 0;
         for (int i = 0, cnt = param.length; i < cnt; ++i) {
@@ -150,9 +140,8 @@ public final class Core {
 
     public static String show(Object o) {
         StringBuffer r;
-        if (o == null) {
+        if (o == null)
             return "[]";
-        }
         if (o instanceof String) {
             // TODO escaping
             char[] s = ((String) o).toCharArray();
@@ -206,9 +195,8 @@ public final class Core {
         StringBuffer result = new StringBuffer();
         char[] buf = new char[8192];
         int n;
-        while ((n = r.read(buf, 0, buf.length)) > 0) {
+        while ((n = r.read(buf, 0, buf.length)) > 0)
             result.append(buf, 0, n);
-        }
         return result.toString();
     }
 

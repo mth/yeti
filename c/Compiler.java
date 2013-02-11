@@ -112,9 +112,8 @@ final class Compiler implements Opcodes {
     }
 
     public void enumWarns(Fun f) {
-        for (int i = 0, cnt = warnings.size(); i < cnt; ++i) {
+        for (int i = 0, cnt = warnings.size(); i < cnt; ++i)
             f.apply(warnings.get(i));
-        }
     }
 
     private void generateModuleAccessors(Map fields, Ctx ctx, Map direct) {
@@ -598,13 +597,11 @@ final class Compiler implements Opcodes {
     }
 
     void addClass(String name, Ctx ctx) {
-        if (definedClasses.put(name, ctx) != null) {
+        if (definedClasses.put(name, ctx) != null)
             throw new IllegalStateException("Duplicate class: "
                                             + name.replace('/', '.'));
-        }
-        if (ctx != null) {
+        if (ctx != null)
             unstoredClasses.add(ctx);
-        }
     }
 
     private void write() throws Exception {
