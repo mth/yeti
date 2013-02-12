@@ -94,7 +94,8 @@ class ShowTypeFun extends Fun2 {
             to.append(variant ? " " : " is ");
             Tag fieldType = (Tag) field.get("type");
             Object tstr = showType.apply(indent_, fieldType);
-            if (variant && fieldType.name == "Function")
+            if (variant && (fieldType.name == "Function" ||
+                            fieldType.name == "Variant"))
                 to.append('(').append(tstr).append(')');
             else
                 to.append(tstr);
