@@ -1728,7 +1728,7 @@ interface YetiParser {
                 throw new CompileException(res, "Invalid `| " + res.str() +
                         "' in variant type (expecting Tag after `|')");
             p = i = skipSpace();
-            if (checkVariant >= TYPE_VARIANT || i + 1 >= src.length ||
+            if (checkVariant == TYPE_VARIANT_ARG || i + 1 >= src.length ||
                     src[i] != '\u2192' && (src[i] != '-' || src[++i] != '>'))
                 return res;
             sline = line;
