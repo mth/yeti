@@ -246,8 +246,9 @@ final class Compiler implements Opcodes {
     private char[] readSourceFile(String parent, String fn,
                                   YetiAnalyzer analyzer) throws IOException {
         if (customReader != null) {
-            Struct3 arg = new Struct3(new String[] { "name" }, null);
+            Struct3 arg = new Struct3(new String[] { "name", "parent" }, null);
             arg._0 = fn;
+            arg._1 = parent == null ? Core.UNDEF_STR : parent;
             String result = (String) customReader.apply(arg);
             if (result != Core.UNDEF_STR) {
                 analyzer.canonicalFile = (String) arg._0;
