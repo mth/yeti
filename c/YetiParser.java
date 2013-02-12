@@ -1706,10 +1706,6 @@ interface YetiParser {
                         new TypeNode("|", (TypeNode[]) param.toArray(
                                 new TypeNode[param.size()])).pos(sline, scol);
                     break; // break do...while, go check for ->
-                } else if (checkVariant == TYPE_VARIANT) {
-                    throw new CompileException(line, p - lineStart,
-                            "Invalid `| " + sym +
-                            "' in variant type (expecting Tag after `|')");
                 }
                 if ((p = skipSpace()) < src.length && src[p] == '<') {
                     ++p;
@@ -1728,6 +1724,9 @@ interface YetiParser {
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
             } while (false);
+            if (checkVariant == TYPE_VARIANT)
+                throw new CompileException(res, "Invalid `| " + res.str() +
+                        "' in variant type (expecting Tag after `|')");
             p = i = skipSpace();
             if (checkVariant >= TYPE_VARIANT || i + 1 >= src.length ||
                     src[i] != '\u2192' && (src[i] != '-' || src[++i] != '>'))
