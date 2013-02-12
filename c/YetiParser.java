@@ -1695,7 +1695,8 @@ interface YetiParser {
                     if (checkVariant == TYPE_VARIANT)
                         return node;
                     param.add(node);
-                    if (checkVariant == TYPE_NORMAL) {
+                    if (checkVariant == TYPE_NORMAL ||
+                            checkVariant == TYPE_FUNRET) {
                         while ((p = skipSpace() + 1) < src.length &&
                                src[p - 1] == '|' &&
                                (node = readType(TYPE_VARIANT)) != null)
