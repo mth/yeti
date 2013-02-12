@@ -451,19 +451,15 @@ interface YetiParser {
                 return "(" + param[0].str() + " -> " + param[1].str() + ")";
             StringBuffer buf = new StringBuffer();
             if (name == "|") {
-                for (int i = 0; i < param.length; ++i) {
-                    if (i != 0)
-                        buf.append(" | ");
-                    buf.append(param[i].str());
-                }
+                for (int i = 0; i < param.length; ++i)
+                    buf.append(" | ").append(param[i].str());
                 return buf.toString();
             }
             if (name == "") {
                 buf.append('{');
                 for (int i = 0; i < param.length; ++i) {
-                    if (i != 0) {
+                    if (i != 0)
                         buf.append("; ");
-                    }
                     buf.append(param[i].name);
                     buf.append(" is ");
                     buf.append(param[i].param[0].str());
@@ -473,9 +469,8 @@ interface YetiParser {
             }
             if (param == null || param.length == 0)
                 return name;
-            if (Character.isUpperCase(name.charAt(0))) {
+            if (Character.isUpperCase(name.charAt(0)))
                 return "(" + name + " " + param[0].str() + ")";
-            }
             buf.append(name);
             buf.append('<');
             for (int i = 0; i < param.length; ++i) {
@@ -775,7 +770,7 @@ interface YetiParser {
             } else if (s == "b_or" || s == "xor") {
                 res = new BinOp(s, FIRST_OP_LEVEL + 1, true);
             } else if (s == "is" || s == "unsafely_as" || s == "as") {
-                TypeNode t = readType(true);
+                TypeNode t = readType(TYPE_NORMAL);
                 if (t == null) {
                     throw new CompileException(line, col,
                                 "Expecting type expression");
@@ -1579,14 +1574,19 @@ interface YetiParser {
             if (node.kind != "=")
                 throw new CompileException(node, "Expected '=', not a " + node);
             def.param = (String[]) param.toArray(new String[param.size()]);
-            if ((def.type = readType(true)) == null)
+            if ((def.type = readType(TYPE_NORMAL)) == null)
                 throw new CompileException(node,
                             "Missing type in typedef declaration");
             return def;
         }
 
         // ugly all-in-one bastard type expression parser
-        TypeNode readType(boolean checkVariant) {
+        private static final int TYPE_NORMAL = 0;
+        private static final int TYPE_FUNRET = 1;
+        private static final int TYPE_VARIANT = 2;
+        private static final int TYPE_VARIANT_ARG = 3;
+
+        TypeNode readType(int checkVariant) {
             yetiDocStr = null;
             int i = skipSpace();
             if (p >= src.length || src[i] == ')' || src[i] == '>') {
@@ -1597,7 +1597,7 @@ interface YetiParser {
             TypeNode res;
             if (src[i] == '(') {
                 p = i + 1;
-                res = readType(true);
+                res = readType(TYPE_NORMAL);
                 if (p >= src.length || src[p] != ')') {
                     if (res == null)
                         throw new CompileException(sline, scol, "Unclosed (");
@@ -1654,7 +1654,7 @@ interface YetiParser {
                 res = new TypeNode("",
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
-            } else {
+            } else do {
                 int start = i;
                 char c = ' ', dot = '_';
                 if (i < src.length) {
@@ -1685,29 +1685,36 @@ interface YetiParser {
                         ++p;
                     else
                         sym = ".".concat(sym);
-                    TypeNode node = readType(false);
+                    TypeNode node = readType(TYPE_VARIANT_ARG);
                     if (node == null)
                         throw new CompileException(line, p - lineStart,
                                         "Expecting variant argument");
                     node = new TypeNode(sym, new TypeNode[] { node });
                     node.doc = doc;
                     node.pos(sline, scol);
-                    if (!checkVariant) {
+                    if (checkVariant == TYPE_VARIANT)
                         return node;
-                    }
                     param.add(node);
-                    while ((p = skipSpace() + 1) < src.length &&
-                           src[p - 1] == '|' &&
-                           (node = readType(false)) != null)
-                        param.add(node);
-                    --p;
-                    return (TypeNode)
+                    if (checkVariant == TYPE_NORMAL) {
+                        while ((p = skipSpace() + 1) < src.length &&
+                               src[p - 1] == '|' &&
+                               (node = readType(TYPE_VARIANT)) != null)
+                            param.add(node);
+                        --p;
+                    }
+                    res = (TypeNode)
                         new TypeNode("|", (TypeNode[]) param.toArray(
                                 new TypeNode[param.size()])).pos(sline, scol);
+                    break; // break do...while, go check for ->
+                } else if (checkVariant == TYPE_VARIANT) {
+                    throw new CompileException(line, p - lineStart,
+                            "Invalid `| " + sym +
+                            "' in variant type (expecting Tag after `|')");
                 }
                 if ((p = skipSpace()) < src.length && src[p] == '<') {
                     ++p;
-                    for (TypeNode node; (node = readType(true)) != null; ++p) {
+                    for (TypeNode node; (node = readType(TYPE_NORMAL)) != null;
+                            ++p) {
                         param.add(node);
                         if ((p = skipSpace()) >= src.length || src[p] != ',')
                             break;
@@ -1720,15 +1727,15 @@ interface YetiParser {
                 res = new TypeNode(sym,
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
                 res.pos(sline, scol);
-            }
+            } while (false);
             p = i = skipSpace();
-            if (i + 1 >= src.length ||
+            if (checkVariant >= TYPE_VARIANT || i + 1 >= src.length ||
                     src[i] != '\u2192' && (src[i] != '-' || src[++i] != '>'))
                 return res;
             sline = line;
             scol = p - lineStart;
             p = i + 1;
-            TypeNode arg = readType(false);
+            TypeNode arg = readType(TYPE_FUNRET);
             if (arg == null)
                 throw new CompileException(sline, scol,
                                 "Expecting return type after ->");
