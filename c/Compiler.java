@@ -484,6 +484,8 @@ final class Compiler implements Opcodes {
                 throw new CompileException(0, 0,
                             "internal error: module/program name undefined");
             ModuleType exists = (ModuleType) types.get(name);
+            // If source set has multiple modules with same name (for some
+            // crazy reason), it would be useful to use just one.
             if (exists != null && (flags & CF_FORCE_COMPILE) == 0)
                 return exists;
             if (codeTree.isModule)
