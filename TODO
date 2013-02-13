@@ -3,7 +3,6 @@
 
 * Module type not fully defined message is confusing,
   should give more info about where error is.
-* Skip code generation, when only doc generation is requested
 * Avoid upper/lowercase dups on generated classes
 * v1.0
 * Typedefs in REPL

@@ -69,7 +69,6 @@ final class Compiler implements Opcodes {
     private List warnings = new ArrayList();
     private String currentSrc;
     private Map definedClasses = new HashMap();
-    private List unstoredClasses;
     final List postGen = new ArrayList();
     boolean isGCJ;
 
@@ -85,8 +84,7 @@ final class Compiler implements Opcodes {
     int classWriterFlags = ClassWriter.COMPUTE_FRAMES;
     int globalFlags;
 
-    Compiler(CodeWriter writer) {
-        this.writer = writer;
+    Compiler() {
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
         isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
 //            isGCJ = true;
@@ -463,8 +461,6 @@ final class Compiler implements Opcodes {
         currentCompiler.set(this);
         String oldCurrentSrc = currentSrc;
         currentSrc = anal.sourceName;
-        List oldUnstoredClasses = unstoredClasses;
-        unstoredClasses = new ArrayList();
         try {
             try {
                 anal.preload = preload;
@@ -486,56 +482,18 @@ final class Compiler implements Opcodes {
             } finally {
                 currentCompiler.set(oldCompiler);
             }
-            String name = codeTree.moduleType.name;
+            final String name = codeTree.moduleType.name;
             if (name == null)
                 throw new CompileException(0, 0,
                             "internal error: module/program name undefined");
             ModuleType exists = (ModuleType) types.get(name);
             if (exists != null && (flags & CF_FORCE_COMPILE) == 0)
                 return exists;
-            Constants constants =
-                new Constants(anal.sourceName, anal.sourceFile);
-            Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
-                ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
-                    ? ACC_DEPRECATED : 0), name, (flags & CF_EVAL) != 0
-                    ? "yeti/lang/Fun" : null, null);
-            constants.ctx = ctx;
-            if (codeTree.isModule) {
-                moduleEval(codeTree, ctx, name);
+            if (codeTree.isModule)
                 types.put(name, codeTree.moduleType);
-            } else if ((flags & CF_EVAL) != 0) {
-                ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
-                ctx = ctx.newMethod(ACC_PUBLIC, "apply",
-                                    "(Ljava/lang/Object;)Ljava/lang/Object;");
-                codeTree.gen(ctx);
-                ctx.insn(ARETURN);
-                ctx.closeMethod();
-            } else {
-                ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
-                                    "([Ljava/lang/String;)V");
-                ctx.localVarCount++;
-                ctx.load(0).methodInsn(INVOKESTATIC, "yeti/lang/Core",
-                                            "setArgv", "([Ljava/lang/String;)V");
-                Label codeStart = new Label();
-                ctx.visitLabel(codeStart);
-                codeTree.gen(ctx);
-                ctx.insn(POP);
-                ctx.insn(RETURN);
-                Label exitStart = new Label();
-                ctx.tryCatchBlock(codeStart, exitStart, exitStart,
-                                       "yeti/lang/ExitError");
-                ctx.visitLabel(exitStart);
-                ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
-                                    "getExitCode", "()I");
-                ctx.methodInsn(INVOKESTATIC, "java/lang/System",
-                                    "exit", "(I)V");
-                ctx.insn(RETURN);
-                ctx.closeMethod();
-            }
-            constants.close();
+            if (writer != null)
+                generateCode(anal, codeTree);
             compiled.put(anal.canonicalFile, codeTree.moduleType);
-            write();
-            unstoredClasses = oldUnstoredClasses;
             classPath.existsCache.clear();
             currentSrc = oldCurrentSrc;
             return codeTree.moduleType;
@@ -544,6 +502,49 @@ final class Compiler implements Opcodes {
                 ex.fn = anal.sourceName;
             throw ex;
         }
+    }
+
+    private void generateCode(YetiAnalyzer anal, RootClosure codeTree)
+            throws Exception {
+        String name = codeTree.moduleType.name;
+        Constants constants = new Constants(anal.sourceName, anal.sourceFile);
+        Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
+            ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
+                ? ACC_DEPRECATED : 0), name, (anal.flags & CF_EVAL) != 0
+                ? "yeti/lang/Fun" : null, null);
+        constants.ctx = ctx;
+        if (codeTree.isModule) {
+            moduleEval(codeTree, ctx, name);
+        } else if ((anal.flags & CF_EVAL) != 0) {
+            ctx.createInit(ACC_PUBLIC, "yeti/lang/Fun");
+            ctx = ctx.newMethod(ACC_PUBLIC, "apply",
+                                "(Ljava/lang/Object;)Ljava/lang/Object;");
+            codeTree.gen(ctx);
+            ctx.insn(ARETURN);
+            ctx.closeMethod();
+        } else {
+            ctx = ctx.newMethod(ACC_PUBLIC | ACC_STATIC, "main",
+                                "([Ljava/lang/String;)V");
+            ctx.localVarCount++;
+            ctx.load(0).methodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                   "setArgv", "([Ljava/lang/String;)V");
+            Label codeStart = new Label();
+            ctx.visitLabel(codeStart);
+            codeTree.gen(ctx);
+            ctx.insn(POP);
+            ctx.insn(RETURN);
+            Label exitStart = new Label();
+            ctx.tryCatchBlock(codeStart, exitStart, exitStart,
+                              "yeti/lang/ExitError");
+            ctx.visitLabel(exitStart);
+            ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/ExitError",
+                           "getExitCode", "()I");
+            ctx.methodInsn(INVOKESTATIC, "java/lang/System", "exit", "(I)V");
+            ctx.insn(RETURN);
+            ctx.closeMethod();
+        }
+        constants.close();
+        write(constants.unstoredClasses);
     }
 
     private void moduleEval(RootClosure codeTree, Ctx mctx, String name) {
@@ -602,10 +603,10 @@ final class Compiler implements Opcodes {
             throw new IllegalStateException("Duplicate class: "
                                             + name.replace('/', '.'));
         if (ctx != null)
-            unstoredClasses.add(ctx);
+            ctx.constants.unstoredClasses.add(ctx);
     }
 
-    private void write() throws Exception {
+    private void write(List unstoredClasses) throws Exception {
         if (writer == null)
             return;
         int i, cnt = postGen.size();
@@ -621,7 +622,6 @@ final class Compiler implements Opcodes {
             writer.writeClass(name, content);
             classPath.define(name, content);
         }
-        unstoredClasses = null;
     }
 }
 

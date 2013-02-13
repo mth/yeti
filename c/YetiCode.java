@@ -34,6 +34,7 @@ import yeti.renamed.asm3.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import yeti.lang.Num;
 import yeti.lang.RatNum;
@@ -47,6 +48,7 @@ final class Constants implements Opcodes {
     int anonymousClassCounter;
     String sourceName;
     Ctx ctx;
+    List unstoredClasses = new ArrayList();
 
     Constants(String sourceName, String sourceFile) {
         if (sourceFile != null) {

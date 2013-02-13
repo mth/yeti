@@ -112,7 +112,7 @@ createCtx genericOpt cl =
    (var warn = \() is ~CompileException -> ();
     var classPath = [] is list<string>;
     var flags = 0;
-    ctx = new Compiler(());
+    ctx = new Compiler();
     java = array [];
 
     for genericOpt
@@ -320,6 +320,7 @@ compileYetiFiles genericOpt options files =
     ctx#setSourcePath(sourcePath);
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
+        ctx#writer := () as ~CodeWriter;
         Compiler#currentCompiler#set(ctx);
         for files do src:
             typeAction (moduleDoc YetiTypeVisitor#getType(ctx, (), src, true))

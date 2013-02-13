@@ -81,8 +81,8 @@ public class YetiBoot extends MatchingTask {
         String[] files = scanner.getIncludedFiles();
         String[] classPath =
             this.classPath == null ? new String[0] : this.classPath.list();
-        CodeWriter writer = new ToFile(target);
-        Compiler compilation = new Compiler(writer);
+        Compiler compilation = new Compiler();
+        compilation.writer = new ToFile(target);
         compilation.depDestDir = target;
         compilation.preload = preload;
         compilation.classPath = new ClassFinder(classPath);
