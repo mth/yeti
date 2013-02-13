@@ -128,7 +128,7 @@ class ClassFinder {
 
     public InputStream findClass(String name, long[] time) {
         Object x = defined.get(name);
-        if (x != null) {
+        if (x != null && time != null) {
             time[0] = 0; // unknown, should probably rebuild
             return new ByteArrayInputStream((byte[]) x);
         }
