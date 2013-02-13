@@ -98,14 +98,13 @@ final class Compiler implements Opcodes {
     String createClassName(Ctx ctx, String outerClass, String nameBase) {
         boolean anon = nameBase == "" && ctx != null;
         String name = nameBase = outerClass + '$' + nameBase;
-        if (anon) {
+        if (anon)
             do {
                 name = nameBase + ctx.constants.anonymousClassCounter++;
             } while (definedClasses.containsKey(name));
-        } else {
+        else
             for (int i = 0; definedClasses.containsKey(name); ++i)
                 name = nameBase + i;
-        }
         return name;
     }
 
@@ -270,13 +269,12 @@ final class Compiler implements Opcodes {
         try {
             reader = new java.io.InputStreamReader(stream, sourceCharset);
             int n, l = 0;
-            while ((n = reader.read(buf, l, buf.length - l)) >= 0) {
+            while ((n = reader.read(buf, l, buf.length - l)) >= 0)
                 if (buf.length - (l += n) < 0x1000) {
                     char[] tmp = new char[buf.length << 1];
                     System.arraycopy(buf, 0, tmp, 0, l);
                     buf = tmp;
                 }
-            }
         } finally {
             if (reader != null)
                 reader.close();
@@ -313,7 +311,7 @@ final class Compiler implements Opcodes {
             int sep = fn.lastIndexOf('/');
             for (;;) {
                 // search _with_ packageName
-                for (int i = 0; i < sourcePath.length; ++i) {
+                for (int i = 0; i < sourcePath.length; ++i)
                     try {
                         char[] r = readSourceFile(sourcePath[i], fn, analyzer);
                         analyzer.sourceDir = sourcePath[i];
@@ -324,7 +322,6 @@ final class Compiler implements Opcodes {
                             throw new CompileException(0, 0, "Module " +
                                 name.replace('/', '.') + " not found");
                     }
-                }
                 if ((analyzer.flags & CF_IGNORE_CLASSPATH) == 0 &&
                     (analyzer.resolvedType = moduleType(name)) != null)
                     return null;
@@ -632,13 +629,11 @@ final class YClassWriter extends ClassWriter {
 
     // Overload to avoid using reflection on non-standard-library classes
     protected String getCommonSuperClass(String type1, String type2) {
-        if (type1.equals(type2)) {
+        if (type1.equals(type2))
             return type1;
-        }
         if (type1.startsWith("java/lang/") && type2.startsWith("java/lang/") ||
-            type1.startsWith("yeti/lang/") && type2.startsWith("yeti/lang/")) {
+            type1.startsWith("yeti/lang/") && type2.startsWith("yeti/lang/"))
             return super.getCommonSuperClass(type1, type2);
-        }
         return "java/lang/Object";
     }
 }
