@@ -318,15 +318,15 @@ final class Compiler implements Opcodes {
                         verifyModuleCase(analyzer);
                         return r;
                     } catch (IOException ex) {
-                        if (sep <= 0 && i + 1 == sourcePath.length)
-                            throw new CompileException(0, 0, "Module " +
-                                name.replace('/', '.') + " not found");
                     }
-                if ((analyzer.flags & CF_IGNORE_CLASSPATH) == 0 &&
-                    (analyzer.resolvedType = moduleType(name)) != null)
+                if (sep != -2 && (analyzer.flags & CF_IGNORE_CLASSPATH) == 0
+                    && (analyzer.resolvedType = moduleType(name)) != null)
                     return null;
-                fn = fn.substring(sep + 1);
-                sep = -1;
+                if (sep <= 0) // no package path, fail
+                    throw new CompileException(0, 0, "Module " +
+                                name.replace('/', '.') + " not found");
+                fn = fn.substring(sep + 1); // try without package path
+                sep = -2; // fail next time, without rechecking classpath
             }
         } catch (IOException e) {
             throw new CompileException(0, 0,
