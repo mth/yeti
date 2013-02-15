@@ -160,7 +160,9 @@ scan src local dirs to =
     if src `strEnds?` '.yeti' then
         to[src] := src
     elif src `strEnds?` '.java' then
-        if not nojava then
+        if nojava then
+            ok := false
+        else
             to[src] := src
         fi
     else
