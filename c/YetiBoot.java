@@ -85,7 +85,7 @@ public class YetiBoot extends MatchingTask {
         compilation.writer = new ToFile(target);
         compilation.depDestDir = target;
         compilation.preload = preload;
-        compilation.classPath = new ClassFinder(classPath);
+        compilation.classPath = new ClassFinder(classPath, target);
         compilation.isGCJ |= gcj;
         String[] javaOpt = { "-encoding", "utf-8", "-d", target };
         log("Compiling " + files.length + " files.");

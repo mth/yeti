@@ -175,7 +175,7 @@ createCtx genericOpt cl =
         /// to run on older JVMs.
         NoFrames (): ctx#classWriterFlags := 0
         esac;
-    ctx#classPath := new ClassFinder(classPath);
+    ctx#classPath := new ClassFinder(classPath, ctx#depDestDir);
     if nullptr? ctx#writer then
         var cl = cl;
         if nullptr? cl then

@@ -103,17 +103,18 @@ class ClassJar extends ClassPathItem {
 }
 
 class ClassFinder {
-    private ClassPathItem[] classPath;
+    private final ClassPathItem[] classPath;
+    private final ClassPathItem destDir;
     private Map defined = new HashMap();
     final Map parsed = new HashMap();
     final Map existsCache = new HashMap();
     final String pathStr;
 
     ClassFinder(String cp) {
-        this(cp.split(File.pathSeparator));
+        this(cp.split(File.pathSeparator), null);
     }
 
-    ClassFinder(String[] cp) {
+    ClassFinder(String[] cp, String depDestDir) {
         classPath = new ClassPathItem[cp.length];
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < cp.length; ++i) {
@@ -124,6 +125,7 @@ class ClassFinder {
             buf.append(cp[i]);
         }
         pathStr = buf.toString();
+        destDir = depDestDir == null ? null : new ClassDir(depDestDir);
     }
 
     public InputStream findClass(String name, long[] time) {
@@ -186,9 +188,16 @@ class ClassFinder {
             JavaSource.loadClass(this, t, (JavaNode) classNode);
             return t;
         }
-        InputStream in = findClass(className + ".class", null);
+        String classFile = className.concat(".class");
+        InputStream in = findClass(classFile, null);
         if (in == null)
-            return null;
+            try {
+                if (destDir == null)
+                    return null;
+                in = destDir.getStream(classFile, null);
+            } catch (IOException ex) {
+                return null;
+            }
         try {
             new ClassReader(in).accept(t, null,
                     ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
