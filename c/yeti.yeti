@@ -40,6 +40,7 @@ var sandbox = false;
 var out = System#err;
 var doc_dir = undef_str;
 var doc_script = '';
+var nojava = false;
 
 srcs = array [];
 argv = array _argv;
@@ -68,6 +69,7 @@ help =
     "  -d directory     Compile and store the generated class files\n\
     "                   in the given directory\n\
     "  -cp path         Give classpath\n\
+    "  -nojava          Don't search java files from source directories\n\
     "  -preload modules Preload modules (: separated list)\n\
     "  -icast           Generate superfluous casts for broken JVMs\n\
     "  -javaver version Forces specified Java version when compiling Java\n\
@@ -104,6 +106,8 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
             push compileOptions (Type (push modules));
         "-doc-format":
             doc_script := shift argv;
+        "-nojava":
+            nojava := true;
         "-javaver":
             ver = shift argv;
             for ['-source', ver, '-target', ver]
@@ -153,8 +157,12 @@ not (defined? eval or empty? argv) and (not exec or empty? srcs) loop
 
 scan src local dirs to =
    (var ok = true;
-    if src `strEnds?` '.yeti' or src `strEnds?` '.java' then
+    if src `strEnds?` '.yeti' then
         to[src] := src
+    elif src `strEnds?` '.java' then
+        if not nojava then
+            to[src] := src
+        fi
     else
         dirList = listDirectory false src;
         if empty? dirList then

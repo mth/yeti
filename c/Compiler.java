@@ -206,11 +206,15 @@ final class Compiler implements Opcodes {
             try {
                 if (javac == null) { // find javac...
                     synchronized (currentCompiler) {
-                        if (JAVAC == null)
-                            JAVAC = new URLClassLoader(new URL[] {
-                                new URL("file://" + new File(System.getProperty(
-                                             "java.home"), "/../lib/tools.jar")
-                                    .getAbsolutePath().replace('\\', '/')) });
+                        if (JAVAC == null) {
+                            File f = new File(System.getenv("JAVA_HOME"),
+                                              "lib/tools.jar");
+                            if (!f.exists())
+                                f = new File(System.getProperty("java.home"),
+                                             "../lib/tools.jar");
+                            JAVAC = new URLClassLoader(
+                                            new URL[] { f.toURI().toURL() });
+                        }
                     }
                     javac =
                         Class.forName("com.sun.tools.javac.Main", true, JAVAC);
