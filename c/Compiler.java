@@ -97,15 +97,17 @@ final class Compiler implements Opcodes {
 
     String createClassName(Ctx ctx, String outerClass, String nameBase) {
         boolean anon = nameBase == "" && ctx != null;
-        String name = nameBase = outerClass + '$' + nameBase;
+        nameBase = outerClass + '$' + nameBase;
+        String lower = nameBase.toLowerCase(), name = lower;
+        int counter = -1;
+
         if (anon)
-            do {
-                name = nameBase + ctx.constants.anonymousClassCounter++;
-            } while (definedClasses.containsKey(name));
-        else
-            for (int i = 0; definedClasses.containsKey(name); ++i)
-                name = nameBase + i;
-        return name;
+            name = lower + (counter = ctx.constants.anonymousClassCounter);
+        while (definedClasses.containsKey(name))
+            name = lower + ++counter;
+        if (anon)
+            ctx.constants.anonymousClassCounter = counter + 1;
+        return counter < 0 ? nameBase : nameBase + counter;
     }
 
     public void enumWarns(Fun f) {
@@ -432,12 +434,11 @@ final class Compiler implements Opcodes {
             sourcePath = new String[] { name  };
         }
 
-        name = parser.moduleName;
-        if (definedClasses.containsKey(name)) {
+        name = parser.moduleName.toLowerCase();
+        if (definedClasses.containsKey(name))
             throw new CompileException(0, 0, (definedClasses.get(name) == null
                 ? "Circular module dependency: "
                 : "Duplicate module name: ") + name.replace('/', '.'));
-        }
         if (depDestDir != null && (analyzer.flags & CF_FORCE_COMPILE) == 0) {
             analyzer.targetFile =
                 new File(depDestDir, parser.moduleName.concat(".class"));
@@ -602,7 +603,7 @@ final class Compiler implements Opcodes {
     }
 
     void addClass(String name, Ctx ctx) {
-        if (definedClasses.put(name, ctx) != null)
+        if (definedClasses.put(name.toLowerCase(), ctx) != null)
             throw new IllegalStateException("Duplicate class: "
                                             + name.replace('/', '.'));
         if (ctx != null)
@@ -619,7 +620,7 @@ final class Compiler implements Opcodes {
         cnt = unstoredClasses.size();
         for (i = 0; i < cnt; ++i) {
             Ctx c = (Ctx) unstoredClasses.get(i);
-            definedClasses.put(c.className, "");
+            definedClasses.put(c.className.toLowerCase(), "");
             String name = c.className + ".class";
             byte[] content = c.cw.toByteArray();
             writer.writeClass(name, content);
