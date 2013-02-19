@@ -1690,6 +1690,21 @@ public final class YetiAnalyzer extends YetiType {
         return res;
     }
 
+    void checkModuleFree(Node n, RootClosure root) {
+        List free = new ArrayList(), deny = new ArrayList();
+        getFreeVar(free, deny, root.type,
+                   root.body.polymorph ? RESTRICT_POLY : 0, -1);
+        if (!deny.isEmpty())
+            removeStructs(root.type, deny);
+        if (!deny.isEmpty()) {
+            for (int i = deny.size(); --i >= 0;)
+                ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
+            throw new CompileException(n, root.body.type +
+                "\nModule type is not fully defined " +
+                "(offending type variables are marked with *)");
+        }
+    }
+
     int flags; // compilation flags
     String canonicalFile; // canonical source name, used by ctx.deriveName
     String sourceName; // source file path as given to compile
@@ -1806,18 +1821,7 @@ public final class YetiAnalyzer extends YetiType {
                 mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;
             if (parser.isModule) {
-                List free = new ArrayList(), deny = new ArrayList();
-                getFreeVar(free, deny, root.type,
-                           root.body.polymorph ? RESTRICT_POLY : 0, -1);
-                if (!deny.isEmpty())
-                    removeStructs(root.type, deny);
-                if (!deny.isEmpty()) {
-                    for (int i = deny.size(); --i >= 0;)
-                        ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
-                    throw new CompileException(n, root.body.type +
-                        "\nModule type is not fully defined " +
-                        "(offending type variables are marked with *)");
-                }
+                checkModuleFree(n, root);
             } else if ((flags & Compiler.CF_EVAL) == 0) {
                 expectUnit(root, n, topLevel.typeScope,
                            "Program body must have a unit type");
