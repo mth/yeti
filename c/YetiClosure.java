@@ -185,8 +185,7 @@ final class TryCatch extends CapturingClosure {
         }
         sigb.append(")Ljava/lang/Object;");
         String sig = sigb.toString();
-        String name = "_" + ctx.usedMethodNames.size();
-        ctx.usedMethodNames.put(name, null);
+        String name = ctx.methodName(null);
         ctx.methodInsn(INVOKESTATIC, ctx.className, name, sig);
         Ctx mc = ctx.newMethod(ACC_PRIVATE | ACC_STATIC, name, sig);
         mc.localVarCount = argc;
@@ -847,11 +846,9 @@ final class Function extends CapturingClosure implements Binder {
         }
 
         // Create method
-        Map usedNames = ctx.usedMethodNames;
-        bindName = bindName != null ? mangle(bindName) : "_";
-        if (usedNames.containsKey(bindName) || bindName.startsWith("_"))
-            bindName += usedNames.size();
-        usedNames.put(bindName, null);
+        if (bindName != null)
+            bindName = mangle(bindName);
+        bindName = ctx.methodName(bindName);
         StringBuffer sig = new StringBuffer(capture1 ? "(" : "([");
         for (int i = methodImpl.argVar + 2; --i >= 0;) {
             if (i == 0)

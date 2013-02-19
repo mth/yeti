@@ -191,6 +191,16 @@ final class Ctx implements Opcodes {
         return ctx;
     }
 
+    String methodName(String name) {
+        Map used = usedMethodNames;
+        if (name == null)
+            name = "_" + used.size();
+        else if (used.containsKey(name) || name.startsWith("_"))
+            name += used.size();
+        used.put(name, null);
+        return name;
+    }
+
     Ctx newMethod(int flags, String name, String type) {
         Ctx ctx = new Ctx(compilation, constants, cw, className);
         ctx.usedMethodNames = usedMethodNames;
