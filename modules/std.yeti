@@ -2275,7 +2275,7 @@ plus a b = a + b;
      * : strPad '.' 10 'test' == 'test......'
      */
     strPad pad n str is string -> number -> string -> string =
-        if strLength str >= n then
+        if strLength str >= n or pad == '' then
             str
         else
             buf = new java.lang.StringBuffer(str unsafely_as ~String);
