@@ -173,8 +173,8 @@ final class MethodDesc extends YetiType {
         } else if (packageName != null && packageName.length() != 0) {
             className = packageName + '/' + className;
         }
-        cctx.addClass(className, null);
-        JavaClass c = new JavaClass(className, topLevel);
+        cctx.addClass(className, null, cl.line);
+        JavaClass c = new JavaClass(className, topLevel, cl.line);
         scope.closure = c; // to proxy super-class closures
 
         ClassBinding parentClass = null;

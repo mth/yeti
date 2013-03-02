@@ -180,14 +180,15 @@ final class Ctx implements Opcodes {
         this.className = className;
     }
 
-    Ctx newClass(int flags, String name, String extend, String[] interfaces) {
+    Ctx newClass(int flags, String name, String extend,
+                 String[] interfaces, int line) {
         Ctx ctx = new Ctx(compilation, constants,
                           new YClassWriter(compilation.classWriterFlags), name);
         ctx.usedMethodNames = new HashMap();
         ctx.cw.visit(V1_4, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
-        compilation.addClass(name, ctx);
+        compilation.addClass(name, ctx, line);
         return ctx;
     }
 

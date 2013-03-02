@@ -354,7 +354,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             ctx.constants.structClasses.put(structKey, cn);
         }
         Ctx st = ctx.newClass(ACC_SUPER | ACC_FINAL, cn,
-                              "yeti/lang/AStruct", null);
+                              "yeti/lang/AStruct", null,
+                              fieldsOrigOrder[0].line);
         st.fieldCounter = fieldCount;
         mergeCaptures(st, true);
         Ctx m = st.newMethod(ACC_PUBLIC, "<init>",

@@ -1744,7 +1744,7 @@ public final class YetiAnalyzer extends YetiType {
                             ? "Expected module" : "Expected program");
             compiler.deriveName(parser, this);
             final String className = parser.moduleName;
-            compiler.addClass(className, null);
+            compiler.addClass(className, null, parser.moduleNameLine);
             while (parser.loads != null) {
                 XNode l = parser.loads;
                 if ((compiler.globalFlags & Compiler.GF_NO_IMPORT) != 0)
@@ -1804,6 +1804,7 @@ public final class YetiAnalyzer extends YetiType {
             topLevel.isModule = parser.isModule;
             topLevel.typeScope = scope;
             root.preload = preloadModules;
+            root.line = parser.moduleNameLine;
             scope.closure = root;
             scope.ctx = new ScopeCtx(className, compiler);
             root.body = analyze(n, scope, 0);

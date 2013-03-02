@@ -925,7 +925,7 @@ final class Function extends CapturingClosure implements Binder {
             argVar == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
         Ctx fun = ctx.newClass(publish ? ACC_PUBLIC | ACC_SUPER | ACC_FINAL
                                        : ACC_SUPER | ACC_FINAL,
-                               name, funClass, null);
+                               name, funClass, null, 0);
 
         if (publish)
             fun.markInnerClass(ctx, ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
@@ -1172,6 +1172,7 @@ final class RootClosure extends LoopExpr {
     LoadModule[] preload;
     boolean isModule;
     ModuleType moduleType;
+    int line;
 
     void gen(Ctx ctx) {
         genClosureInit(ctx);

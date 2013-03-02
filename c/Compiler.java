@@ -515,7 +515,7 @@ final class Compiler implements Opcodes {
         Ctx ctx = new Ctx(this, constants, null, null).newClass(ACC_PUBLIC |
             ACC_SUPER | (codeTree.isModule && codeTree.moduleType.deprecated
                 ? ACC_DEPRECATED : 0), name, (anal.flags & CF_EVAL) != 0
-                ? "yeti/lang/Fun" : null, null);
+                ? "yeti/lang/Fun" : null, null, codeTree.line);
         constants.ctx = ctx;
         if (codeTree.isModule) {
             moduleEval(codeTree, ctx, name);
@@ -602,10 +602,11 @@ final class Compiler implements Opcodes {
         ctx.visitLabel(ret);
     }
 
-    void addClass(String name, Ctx ctx) {
-        if (definedClasses.put(name.toLowerCase(), ctx) != null)
-            throw new IllegalStateException("Duplicate class: "
-                                            + name.replace('/', '.'));
+    void addClass(String name, Ctx ctx, int line) {
+        if (definedClasses.put(name.toLowerCase(), ctx) != null) {
+            throw new CompileException(line, 0,
+                        "Duplicate class: " + name.replace('/', '.'));
+        }
         if (ctx != null)
             ctx.constants.unstoredClasses.add(ctx);
     }

@@ -49,6 +49,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private int captureCount;
     private Map accessors;
     private Ctx classCtx;
+    private final int cline; // for duplicate class error
     YType classType;
     final Meth constr = new Meth();
     final Binder self;
@@ -271,7 +272,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         }
     }
 
-    JavaClass(String className, boolean isPublic) {
+    JavaClass(String className, boolean isPublic, int line) {
         type = YetiType.UNIT_TYPE;
         this.className = className;
         classType = new YType(YetiType.JAVA, YetiType.NO_PARAM);
@@ -282,6 +283,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         constr.className = className;
         constr.access = isPublic ? ACC_PUBLIC : 0;
         this.isPublic = isPublic;
+        cline = line;
     }
 
     private static int loadArg(Ctx ctx, YType argType, int n) {
@@ -435,7 +437,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         ctx.insn(ACONST_NULL);
         Ctx clc = ctx.newClass(classType.javaType.access | ACC_SUPER,
                         className, parentClass.type.javaType.className(),
-                        implement);
+                        implement, cline);
         clc.fieldCounter = captureCount;
         // block using our method names ;)
         for (i = 0, cnt = methods.size(); i < cnt; ++i)
