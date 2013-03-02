@@ -387,7 +387,7 @@ final class Compiler implements Opcodes {
                     cf.charAt(l) != File.pathSeparatorChar ||
                     !path[i].equals(cf.substring(0, l)))
                 continue;
-            name = cf.substring(l + 1).replace(File.pathSeparatorChar, '/');
+            name = cf.substring(l + 1).replace(File.separatorChar, '/');
             if (!ok && (name.equalsIgnoreCase(parser.moduleName) ||
                         name.equalsIgnoreCase(shortName))) {
                 ok = true;
@@ -397,7 +397,7 @@ final class Compiler implements Opcodes {
         }
         if (name == null)
             name = new File(cf).getName();
-        //System.err.println("SPATH:" + java.util.Arrays.asList(sourcePath) +
+        //System.err.println("SPATH:" + java.util.Arrays.asList(path) +
         //    "; cf:" + cf + "; name:" + name + "; shortName:" + shortName +
         //    "; lastlen:" + lastlen);
         if (!ok && (lastlen != -1 || !name.equalsIgnoreCase(shortName) &&
@@ -421,7 +421,7 @@ final class Compiler implements Opcodes {
             l = cf.length() - (name.length() + 1);
             if (l >= 0) {
                 name = cf.substring(l)
-                         .replace(File.pathSeparatorChar, '/');
+                         .replace(File.separatorChar, '/');
                 if (l == 0)
                     l = 1;
                 if (name.charAt(0) != '/' ||
