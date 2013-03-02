@@ -384,7 +384,7 @@ final class Compiler implements Opcodes {
         for (i = 0; i < path.length; ++i) {
             l = path[i].length();
             if (l <= lastlen || cf.length() <= l ||
-                    cf.charAt(l) != File.pathSeparatorChar ||
+                    cf.charAt(l) != File.separatorChar ||
                     !path[i].equals(cf.substring(0, l)))
                 continue;
             name = cf.substring(l + 1).replace(File.separatorChar, '/');

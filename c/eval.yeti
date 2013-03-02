@@ -597,12 +597,14 @@ generateYetiDoc {directory, modules, error} is {
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.taskdefs.MatchingTask;
+import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.Path;
 
 class YetiTask extends MatchingTask
     genOpt = array [],
     options = array [],
     modules = array [],
+    sources = array [],
     var src = () as ~File,
     var classPath = () as ~Path,
     var docDir = undef_str,
@@ -623,6 +625,9 @@ class YetiTask extends MatchingTask
         push options (Type (push modules));
         docDir := dir,
 
+    void addSrc(FileSet src)
+        push sources src,
+
     Path createClasspath()
         if nullptr? classPath then
             classPath := new Path(this#getProject())
@@ -635,22 +640,33 @@ class YetiTask extends MatchingTask
         fi,
 
     void execute()
-        if nullptr? src then
-            src := this#getProject()#getBaseDir()
-        fi;
         if not this#fileset#hasPatterns() then
             this#setIncludes("*.yeti")
         fi;
+        scanners = array [];
+        if empty? sources or not nullptr? src then
+            if nullptr? src then
+                src := this#getProject()#getBaseDir()
+            fi;
+            push scanners this#getDirectoryScanner(src)
+        fi;
+        for sources do s:
+            if not s#hasPatterns() then
+                s#setIncludes("*.yeti")
+            fi;
+            push scanners s#getDirectoryScanner()
+        done;
         files = array [];
-        scanner = this#getDirectoryScanner(src);
-        for scanner#getIncludedFiles() do f:
-            push files new File(scanner#getBasedir(), f)#getPath()
+        for scanners do scanner:
+            for scanner#getIncludedFiles() do f:
+                push files new File(scanner#getBasedir(), f)#getPath()
+            done;
+            push options (SourceDir scanner#getBasedir()#getPath())
         done;
         cp = if nullptr? classPath then [] else map string classPath#list() fi;
         push genOpt (ClassPath cp);
         warn ex = this#log((ex is ~CompileException)#getMessage());
         push genOpt (Warn warn);
-        push options (SourceDir src#getPath());
         options = JavaOption "-encoding" :: JavaOption utf8 :: options;
         this#log("Compiling \(length files) files.");
         try

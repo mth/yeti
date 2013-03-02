@@ -118,8 +118,10 @@
 <target name="doc" depends="prepare-build">
     <taskdef name="yeti" classname="yeti.lang.compiler.YetiTask"
         classpath="${basedir}/yeti.jar"/>
-    <yeti srcdir="${basedir}" includes="modules/*.yeti,c/*.yeti"
-          excludes="c/yeti.yeti" docdir="${docdir}"/>
+    <yeti docdir="${docdir}">
+        <src dir="${basedir}/modules"/>
+        <src dir="${basedir}/c" includes="*.yeti" excludes="yeti.yeti"/>
+    </yeti>
 </target>
 
 <target name="noant">
