@@ -1,9 +1,3 @@
-* Fix full path script invocation (yeti /some/fubar/script.yeti)
-  + Use unique path identifiers (File? URL?) on module (re)compilation.
-  + Fix the circular dependency checking (TODO in Compiler.compile()).
-  + Look what's wrong with handling win32 paths
-  + Bad error message on: echo 'module x; ()' > y.yeti; yeti -e 'load y'
-
 All path matches described below will be done on canonical names
 in case-insensitive manner. The path separators should be unified to '/'
 before matching. The generated module classnames should be always
@@ -35,18 +29,6 @@ SOURCEPATH IS always defined:
       the module/program NAME foo.bar.baz (case insensitive),
       the SOURCEPATH is the preceding part of the canonical path.
     + Otherwise the SOURCEPATH is the directory of source file.
-
-CompileParam class should be created, where sourcepath and some
-other properties are passed, to avoid the need to modify Compiler
-externally?
-
-compileYetiFiles level reader API.
-The sourcepath is meant to contain a set of different sources.
-Therefore custom readers should also give unique universal canonical
-paths to the read files, probably in the form of URI.
-Therefore the SourceReader parameter should just return a structure
-{source, path} - but the current API in fact is suitable with the notion,
-that _absolute_ name should be assigned to the name field.
 
 SOURCEPATH derivation needs to know the NAME and the canonical path
 of the source file for NAME. Since NAME can be certainly known only after
@@ -84,9 +66,3 @@ be recompiled, otherwise the existing class file should be used.
 
 The module classes already compiled or looked up in the same compilation
 session should be used without additional lookups.
-
-The source finding logic (SOURCEPATH handling and source file lookup from it)
-should be implemented in Yeti code, probably in the eval.yeti module.
-The bootstrap SourceReader can be simplified to search from single source
-directory with flat naming (suitable for the compiler modules and
-c directories).
