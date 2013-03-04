@@ -387,7 +387,7 @@ public final class YetiAnalyzer extends YetiType {
             } else if (s == "as" &&
                        !JavaType.isSafeCast(scope, is, t, vt, true)) {
                 try {
-                    opaqueCast(vt, t, scope, depth);
+                    t = opaqueCast(vt, t, scope, depth);
                 } catch (TypeException ex) {
                     String msg = "impossible cast from #1 to #2";
                     if (t.type != JAVA && t.type != JAVA_ARRAY &&

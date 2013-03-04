@@ -1092,7 +1092,7 @@ public class YetiType implements YetiParser {
 
     // Used by as cast to mark opaque types as ambigous, allowing them
     // to later unify with their hidden (wrapped) type.
-    static void prepareOpaqueCast(YType type, boolean[] known) {
+    private static void prepareOpaqueCast(YType type, boolean[] known) {
         if (type.seen)
             return;
         YType t = type.deref();
@@ -1106,18 +1106,85 @@ public class YetiType implements YetiParser {
         }
     }
 
-    static void opaqueCast(YType from, YType to, Scope scope, int depth)
+    private static Map opaqueMembers(Map src, Map cache) {
+        // FIXME totally broken - cache contains
+        // opaque side instances as keys, not src
+        // XXX - and it should preserve the final/partial set of src
+        if (src == null)
+            return null;
+        Map m = new HashMap(src);
+        boolean modified = false;
+        for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            YType field = (YType) e.getValue();
+            YType t = field.field == 0 || field.ref == null ? field : field.ref;
+            YType tt = t.deref();
+            t = (YType) cache.get(tt);
+            System.err.println("name:" + e.getKey() + " tt(" + tt + ") t(" + t + ")");
+            if (t != tt && t != null) {
+                modified = true;
+                if (field.field != 0)
+                    t = fieldRef(field.depth, t, field.field);
+                e.setValue(t);
+            }
+        }
+        return modified ? m : src;
+    }
+
+    private static YType deriveOpaque(YType src, YType opaque,
+                                      Map cache, boolean[] mask, String ss) {
+        opaque = opaque.deref();
+        YType res = (YType) cache.get(opaque);
+        System.err.println(ss + "src(" + src + ") opaque(" + opaque + ") res:" + res);
+        if (res != null)
+            return res;
+        if (opaque.type >= OPAQUE_TYPES && mask[opaque.type - OPAQUE_TYPES]) {
+            System.err.println(ss + "-> OPAQUE:" + opaque);
+            src = opaque; 
+        } else if (opaque.type > PRIMITIVE_END && opaque.param.length != 0 &&
+                   opaque.param.length == src.param.length) {
+            // FIXME broken for STRUCT/VARIANT! There param may well not match
+            // (not even in length) when the the member set is compatible.
+            res = new YType(src.type, new YType[src.param.length]);
+            cache.put(opaque, res);
+            boolean hasOpaque = false;
+            for (int i = 0; i < res.param.length; ++i) {
+                YType s = src.param[i].deref();
+                YType d = deriveOpaque(s, opaque.param[i], cache, mask, ss + " ");
+                res.param[i] = d;
+                hasOpaque |= s != d;
+            }
+            if (hasOpaque) {
+                res.finalMembers = opaqueMembers(src.finalMembers, cache);
+                res.partialMembers = opaqueMembers(src.partialMembers, cache);
+                System.err.println(ss + "-> COPY:" + res);
+                return res;
+            }
+            res.type = VAR;
+            res.ref = src;
+            res.param = null;
+            System.err.println(ss + "-> REF:" + src);
+        }
+        cache.put(opaque, src);
+        return src;
+    }
+
+    static YType opaqueCast(YType from, YType to, Scope scope, int depth)
             throws TypeException {
+        YType t;
         boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size()];
         for (; scope != null; scope = scope.outer)
             if (scope.typeDef != null) {
-                YType t = scope.typeDef[scope.typeDef.length - 1];
+                t = scope.typeDef[scope.typeDef.length - 1];
                 if (t.type >= OPAQUE_TYPES && t.finalMembers != null)
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
-        to = copyType(to, new IdentityHashMap(), new IdentityHashMap());
-        prepareOpaqueCast(to, allow_opaque);
-        unify(from, to);
+        to = to.deref();
+        Map free = new IdentityHashMap();
+        t = copyType(to, free, new IdentityHashMap());
+        prepareOpaqueCast(t, allow_opaque);
+        unify(from, t);
+        return deriveOpaque(from, to, free, allow_opaque, "");
     }
 
     static YType withDoc(YType t, String doc) {
