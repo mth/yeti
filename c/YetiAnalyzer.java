@@ -267,6 +267,13 @@ public final class YetiAnalyzer extends YetiType {
         } else if (members_.isEmpty()) {
             members_ = null;
         }
+        if (members != null && members_ != null)
+            for (Iterator i = members_.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                // anything in requiredMembers MUST be also in allowedMembers
+                if (!members.containsKey(e.getKey()))
+                    members.put(e.getKey(), e.getValue());
+            }
         result.allowedMembers = members;
         result.requiredMembers = members_;
         return result;
