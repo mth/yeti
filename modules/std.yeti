@@ -1823,8 +1823,8 @@ plus a b = a + b;
 
     /**
      * Group: str
-     * Returns a copy of the string, with all lowercase letters translated
-     * to uppercase using the rules of the default locale.
+     * Returns a copy of the string, with all uppercase letters translated
+     * to lowercase using the rules of the default locale.
      *
      * Arguments:
      * string - a string value (internally stored as java.lang.String)
