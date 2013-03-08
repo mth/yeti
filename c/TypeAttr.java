@@ -46,8 +46,8 @@ import java.io.InputStream;
  *      primitives (same as YType.type UNIT - MAP_MARKER)
  * 09 x.. y.. - Function x -> y
  * 0A e.. i.. t.. - MAP<e,i,t>
- * 0B <partialMembers...> FF <finalMembers...> FF - Struct
- * 0C <partialMembers...> FF <finalMembers...> FF - Variant
+ * 0B <requiredMembers...> FF <allowedMembers...> FF - Struct
+ * 0C <requiredMembers...> FF <allowedMembers...> FF - Variant
  * 0C F9 ... - Variant with FL_ANY_CASE flag
  * 0D XX XX <param...> FF - java type
  * 0E e.. FF - java array e[]
@@ -146,7 +146,7 @@ class TypeAttr extends Attribute {
             if (type.type >= YetiType.OPAQUE_TYPES) {
                 Object idstr = opaque.get(new Integer(type.type));
                 if (idstr == null)
-                    idstr = type.partialMembers.keySet().toArray()[0];
+                    idstr = type.requiredMembers.keySet().toArray()[0];
                 buf.putByte(OPAQUE);
                 buf.putShort(cw.newUTF8(idstr.toString()));
                 writeArray(type.param);
@@ -160,17 +160,17 @@ class TypeAttr extends Attribute {
                 writeArray(type.param);
             } else if (type.type == YetiType.STRUCT ||
                        type.type == YetiType.VARIANT) {
-                if ((type.finalMembers == null || type.finalMembers.isEmpty())
-                    && (type.partialMembers == null ||
-                        type.partialMembers.isEmpty()))
+                if ((type.allowedMembers == null || type.allowedMembers.isEmpty())
+                    && (type.requiredMembers == null ||
+                        type.requiredMembers.isEmpty()))
                     throw new CompileException(0, 0,
                                 type.type == YetiType.STRUCT
                                 ? "Internal error: empty struct"
                                 : "Internal error: empty variant");
                 if ((type.flags & YetiType.FL_ANY_CASE) != 0)
                     buf.putByte(ANYCASE);
-                writeMap(type.finalMembers);
-                writeMap(type.partialMembers);
+                writeMap(type.allowedMembers);
+                writeMap(type.requiredMembers);
             } else if (type.type == YetiType.JAVA) {
                 buf.putShort(cw.newUTF8(type.javaType.description));
                 writeArray(type.param);
@@ -281,17 +281,17 @@ class TypeAttr extends Attribute {
                     t.flags |= YetiType.FL_ANY_CASE;
                     ++p;
                 }
-                t.finalMembers = readMap();
-                t.partialMembers = readMap();
+                t.allowedMembers = readMap();
+                t.requiredMembers = readMap();
                 Map param;
-                if (t.finalMembers == null) {
-                    if ((param = t.partialMembers) == null)
+                if (t.allowedMembers == null) {
+                    if ((param = t.requiredMembers) == null)
                         param = new HashMap();
-                } else if (t.partialMembers == null) {
-                    param = t.finalMembers;
+                } else if (t.requiredMembers == null) {
+                    param = t.allowedMembers;
                 } else {
-                    param = new HashMap(t.finalMembers);
-                    param.putAll(t.partialMembers);
+                    param = new HashMap(t.allowedMembers);
+                    param.putAll(t.requiredMembers);
                 }
                 t.param = new YType[param.size() + 1];
                 t.param[0] = new YType(VAR_DEPTH);
@@ -316,7 +316,7 @@ class TypeAttr extends Attribute {
                         opaqueTypes.put(idstr, t);
                     }
                 }
-                t.partialMembers =
+                t.requiredMembers =
                     Collections.singletonMap(idstr, YetiType.NO_TYPE);
                 t.param = readArray();
             } else {
@@ -365,7 +365,7 @@ class TypeAttr extends Attribute {
             Map.Entry e = (Map.Entry) i.next();
             YType[] def = (YType[]) e.getValue();
             YType t = def[def.length - 1];
-            if (t.type >= YetiType.OPAQUE_TYPES && t.partialMembers == null)
+            if (t.type >= YetiType.OPAQUE_TYPES && t.requiredMembers == null)
                 enc.opaque.put(new Integer(t.type),
                                moduleType.name + ':' + e.getKey());
         }

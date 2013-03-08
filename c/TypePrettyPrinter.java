@@ -274,10 +274,10 @@ class TypeDescr extends YetiType {
 
     private static void hdescr(TypeDescr descr, YType tt, DescrCtx ctx) {
         Map m = new java.util.TreeMap();
-        if (tt.partialMembers != null)
-            m.putAll(tt.partialMembers);
-        if (tt.finalMembers != null) {
-            Iterator i = tt.finalMembers.entrySet().iterator();
+        if (tt.requiredMembers != null)
+            m.putAll(tt.requiredMembers);
+        if (tt.allowedMembers != null) {
+            Iterator i = tt.allowedMembers.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry) i.next();
                 YType t = (YType) e.getValue();
@@ -313,9 +313,9 @@ class TypeDescr extends YetiType {
             it.put("description", doc == null ? Core.UNDEF_STR : doc);
             it.put("mutable", Boolean.valueOf(t.field == FIELD_MUTABLE));
             it.put("tag",
-                tt.finalMembers == null || !tt.finalMembers.containsKey(name)
+                tt.allowedMembers == null || !tt.allowedMembers.containsKey(name)
                     ? tt.type == STRUCT ? "." : "" :
-                tt.partialMembers != null && tt.partialMembers.containsKey(name)
+                tt.requiredMembers != null && tt.requiredMembers.containsKey(name)
                     ? "`" : tt.type == STRUCT ? "" : ".");
             it.put("strip", strip);
             TypeDescr field = prepare(t, ctx);
@@ -417,7 +417,7 @@ class TypeDescr extends YetiType {
                     break;
                 }
                 descr.type = MAP;
-                descr.name = t.partialMembers.keySet().toString();
+                descr.name = t.requiredMembers.keySet().toString();
                 for (n = -1; ++n < param.length; ) {
                     item = prepare(param[n], ctx);
                     item.prev = descr.value;
@@ -472,8 +472,8 @@ class TypeWalk implements Comparable {
             tvars.put(t, p);
         }
         if (id == YetiType.STRUCT || id == YetiType.VARIANT) {
-            fieldMap = t.finalMembers != null ? t.finalMembers
-                                              : t.partialMembers;
+            fieldMap = t.allowedMembers != null ? t.allowedMembers
+                                              : t.requiredMembers;
             fields = (String[])
                 fieldMap.keySet().toArray(new String[fieldMap.size()]);
             Arrays.sort(fields);
@@ -563,9 +563,9 @@ class TypePattern {
                     pat = pat.match(param[i], typeVars);
         } else {
             // TODO check final/partial if necessary
-            Map m = type.finalMembers;
+            Map m = type.allowedMembers;
             if (m == null)
-                m = type.partialMembers;
+                m = type.requiredMembers;
             i = m.size();
             while (--i >= 0 && pat != null) {
                 if (pat.field == null)
@@ -742,13 +742,13 @@ class TypePattern {
 
     public static void main(String[] _) {
         YType st = new YType(YetiType.STRUCT, null);
-        st.finalMembers = new HashMap();
-        st.finalMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
-        st.finalMembers.put("read", YetiType.fun(YetiType.A, YetiType.STR_TYPE));
+        st.allowedMembers = new HashMap();
+        st.allowedMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
+        st.allowedMembers.put("read", YetiType.fun(YetiType.A, YetiType.STR_TYPE));
         YType st2 = new YType(YetiType.STRUCT, null);
-        st2.finalMembers = new HashMap();
-        st2.finalMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
-        st2.finalMembers.put("write", YetiType.fun(YetiType.STR_TYPE, YetiType.UNIT_TYPE));
+        st2.allowedMembers = new HashMap();
+        st2.allowedMembers.put("close", YetiType.fun(YetiType.UNIT_TYPE, YetiType.UNIT_TYPE));
+        st2.allowedMembers.put("write", YetiType.fun(YetiType.STR_TYPE, YetiType.UNIT_TYPE));
         //YType[] types = {YetiType.CONS_TYPE, st};
         Map defs = new HashMap();
         defs.put("cons", new YType[] { YetiType.A, YetiType.CONS_TYPE });

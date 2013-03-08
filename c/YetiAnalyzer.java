@@ -267,8 +267,8 @@ public final class YetiAnalyzer extends YetiType {
         } else if (members_.isEmpty()) {
             members_ = null;
         }
-        result.finalMembers = members;
-        result.partialMembers = members_;
+        result.allowedMembers = members;
+        result.requiredMembers = members_;
         return result;
     }
 
@@ -576,8 +576,8 @@ public final class YetiAnalyzer extends YetiType {
     static Code variantConstructor(String name, int depth) {
         YType arg = new YType(depth);
         YType tag = new YType(VARIANT, new YType[] { new YType(depth), arg });
-        tag.partialMembers = new HashMap();
-        tag.partialMembers.put(name, arg);
+        tag.requiredMembers = new HashMap();
+        tag.requiredMembers.put(name, arg);
         YType[] fun = { arg, tag };
         return new VariantConstructor(new YType(FUN, fun), name);
     }
@@ -595,8 +595,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static YType selectMemberType(YType res, String field, int depth) {
         YType arg = new YType(STRUCT, new YType[] { new YType(depth), res });
-        arg.partialMembers = new HashMap();
-        arg.partialMembers.put(field, res);
+        arg.requiredMembers = new HashMap();
+        arg.requiredMembers.put(field, res);
         return arg;
     }
 
@@ -631,21 +631,21 @@ public final class YetiAnalyzer extends YetiType {
                         "#1 does not have ." + field + " field", ex);
         }
         limitDepth(res, arg.deref().param[0].deref().depth);
-        boolean poly = src.polymorph && src.type.finalMembers != null &&
-            ((YType) src.type.finalMembers.get(field)).field == 0;
+        boolean poly = src.polymorph && src.type.allowedMembers != null &&
+            ((YType) src.type.allowedMembers.get(field)).field == 0;
         return new SelectMember(res, src, field, op.line, poly) {
             boolean mayAssign() {
                 YType t = st.type.deref();
                 YType given;
-                if (t.finalMembers != null &&
-                    (given = (YType) t.finalMembers.get(field)) != null &&
+                if (t.allowedMembers != null &&
+                    (given = (YType) t.allowedMembers.get(field)) != null &&
                     (given.field != FIELD_MUTABLE)) {
                     return false;
                 }
-                YType self = (YType) t.partialMembers.get(field);
+                YType self = (YType) t.requiredMembers.get(field);
                 if (self.field != FIELD_MUTABLE) {
                     // XXX couldn't we get along with res.field = FIELD_MUTABLE?
-                    t.partialMembers.put(field, mutableFieldRef(res));
+                    t.requiredMembers.put(field, mutableFieldRef(res));
                 }
                 return true;
             }
@@ -759,38 +759,38 @@ public final class YetiAnalyzer extends YetiType {
         Code src = analyze(with.left, scope, depth);
         Code override = analyze(with.right, scope, depth);
         YType ot = override.type.deref();
-        Map otf = ot.finalMembers;
+        Map otf = ot.allowedMembers;
         if (otf == null || ot.type != STRUCT)
             throw new CompileException(with.right, "Right-hand side of with " +
                             "must be a structure with known member set");
         YType result, st = src.type.deref();
-        if (st.type == STRUCT && st.finalMembers != null) {
+        if (st.type == STRUCT && st.allowedMembers != null) {
             unify(st.param[0], ot.param[0], with, scope,
                   "Internal error (withStruct depth unify)");
-            Map param = new HashMap(st.finalMembers);
+            Map param = new HashMap(st.allowedMembers);
             param.putAll(otf);
             // with ensures override, because type can change and
             // members can be missing in the source structure.
             // Another mechanism is needed "default arguments".
-            if (ot.partialMembers == null) {
-                ot.partialMembers = otf;
+            if (ot.requiredMembers == null) {
+                ot.requiredMembers = otf;
             } else {
                 HashMap tmp = new HashMap(otf);
-                tmp.keySet().removeAll(ot.partialMembers.keySet());
-                ot.partialMembers.putAll(otf);
+                tmp.keySet().removeAll(ot.requiredMembers.keySet());
+                ot.requiredMembers.putAll(otf);
             }
             // lock used members.
-            HashMap tmp = new HashMap(st.finalMembers);
+            HashMap tmp = new HashMap(st.allowedMembers);
             tmp.keySet().removeAll(otf.keySet());
-            if (st.partialMembers != null)
-                tmp.putAll(st.partialMembers);
-            st.partialMembers = tmp;
+            if (st.requiredMembers != null)
+                tmp.putAll(st.requiredMembers);
+            st.requiredMembers = tmp;
             result = new YType(STRUCT, null);
-            result.finalMembers = param;
+            result.allowedMembers = param;
             structParam(result, param, st.param[0].deref());
         } else {
             result = new YType(STRUCT, null);
-            result.partialMembers = new HashMap(otf);
+            result.requiredMembers = new HashMap(otf);
             result.param = ot.param;
             unify(src.type, result, with.right, scope,
                   "Cannot extend #1 with #2");
@@ -818,7 +818,7 @@ public final class YetiAnalyzer extends YetiType {
                                Scope scope, int depth, boolean noRoot) {
         m.checkUsed = true;
         if (m.type.type == STRUCT) {
-            Iterator j = m.type.finalMembers.entrySet().iterator();
+            Iterator j = m.type.allowedMembers.entrySet().iterator();
         members:
             while (j.hasNext()) {
                 Map.Entry e = (Map.Entry) j.next();
@@ -972,8 +972,8 @@ public final class YetiAnalyzer extends YetiType {
                 String idstr = scope.ctx.className + ':' + typeDef.name;
                 if (!(seqKind instanceof TopLevel))
                     idstr = idstr + '#' + (type.type - OPAQUE_TYPES);
-                type.finalMembers = Collections.singletonMap("", self);
-                type.partialMembers = Collections.singletonMap(idstr, NO_TYPE);
+                type.allowedMembers = Collections.singletonMap("", self);
+                type.requiredMembers = Collections.singletonMap(idstr, NO_TYPE);
                 override = scope.ctx.opaqueTypes.put(idstr, type) != null;
             }
             if (structs.size() == 0) {
@@ -1328,7 +1328,7 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(st,
                     "Property " + i.name + " has no getter");
         structParam(result.type, fields, new YType(depth));
-        result.type.finalMembers = fields;
+        result.type.allowedMembers = fields;
         result.close();
         return result;
     }
@@ -1421,8 +1421,8 @@ public final class YetiAnalyzer extends YetiType {
                                      " ... is not " + t.toString(scope, null));
                     }
                     t.type = VARIANT;
-                    if (t.partialMembers == null) {
-                        t.partialMembers = new HashMap();
+                    if (t.requiredMembers == null) {
+                        t.requiredMembers = new HashMap();
                         t.flags |= FL_ANY_CASE;
                         if (submatch == 0) { // XXX hack!!!
                             variants.add(t);
@@ -1430,13 +1430,13 @@ public final class YetiAnalyzer extends YetiType {
                     }
                     YType argt = new YType(depth);
                     argt.doc = doc;
-                    YType old = (YType) t.partialMembers.put(variant, argt);
+                    YType old = (YType) t.requiredMembers.put(variant, argt);
                     if (old != null) {
                         argt = withDoc(old, doc);
-                        t.partialMembers.put(variant, argt);
+                        t.requiredMembers.put(variant, argt);
                     }
                     CasePattern arg = toPattern(pat.right, argt, null);
-                    structParam(t, t.partialMembers, new YType(depth));
+                    structParam(t, t.requiredMembers, new YType(depth));
                     return new VariantPattern(variant, arg);
                 }
                 if (pat.op == "::") {
@@ -1478,7 +1478,7 @@ public final class YetiAnalyzer extends YetiType {
                             new YType[] { new YType(depth), ft });
                     HashMap tm = new HashMap();
                     tm.put(field.name, ft);
-                    part.partialMembers = tm;
+                    part.requiredMembers = tm;
                     unify(t, part, field, scope, "#0");
                     names[i] = field.name;
                     ft.flags &= ~FL_ANY_PATTERN;
@@ -1486,7 +1486,7 @@ public final class YetiAnalyzer extends YetiType {
                     allAny &= ft.flags;
                 }
                 //--submatch;
-                Map tm = t.deref().partialMembers;
+                Map tm = t.deref().requiredMembers;
                 // The submatch hack was broken by allowing non-matcing matches
                 // to be given. So, force ANY for missing structure fields - it
                 // seems at least a sensible thing to do. This might be alsa
@@ -1509,10 +1509,10 @@ public final class YetiAnalyzer extends YetiType {
         void finalizeVariants() {
             for (int i = variants.size(); --i >= 0;) {
                 YType t = (YType) variants.get(i);
-                if (t.type == VARIANT && t.finalMembers == null &&
+                if (t.type == VARIANT && t.allowedMembers == null &&
                     (t.flags & FL_ANY_PATTERN) == 0) {
-                    t.finalMembers = t.partialMembers;
-                    t.partialMembers = null;
+                    t.allowedMembers = t.requiredMembers;
+                    t.requiredMembers = null;
                     t.flags &= ~FL_ANY_CASE;
                 }
             }
@@ -1550,7 +1550,7 @@ public final class YetiAnalyzer extends YetiType {
                     if (t.type == MAP)
                         return "(" + s + ")::_";
                     if (t.type == VARIANT || t.type == STRUCT) {
-                        Iterator j = t.partialMembers.entrySet().iterator();
+                        Iterator j = t.requiredMembers.entrySet().iterator();
                         while (j.hasNext()) {
                             Map.Entry e = (Map.Entry) j.next();
                             if (e.getValue() == t.param[i])

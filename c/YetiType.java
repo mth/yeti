@@ -41,8 +41,8 @@ import java.util.Iterator;
 
 class YType {
     int type;
-    Map partialMembers;
-    Map finalMembers;
+    Map requiredMembers;
+    Map allowedMembers;
 
     YType[] param;
     YType ref;
@@ -403,9 +403,9 @@ public class YetiType implements YetiParser {
 
     static YType variantOf(String[] na, YType[] ta) {
         YType t = new YType(VARIANT, ta);
-        t.partialMembers = new HashMap(na.length);
+        t.requiredMembers = new HashMap(na.length);
         for (int i = 0; i < na.length; ++i) {
-            t.partialMembers.put(na[i], ta[i]);
+            t.requiredMembers.put(na[i], ta[i]);
         }
         return t;
     }
@@ -484,17 +484,17 @@ public class YetiType implements YetiParser {
     }
 
     static void finalizeStruct(YType partial, YType src) throws TypeException {
-        if (src.finalMembers == null || partial.partialMembers == null /*||
-                partial.finalMembers != null*/) {
+        if (src.allowedMembers == null || partial.requiredMembers == null /*||
+                partial.allowedMembers != null*/) {
             return; // nothing to check
         }
-        Object[] members = partial.partialMembers.entrySet().toArray();
+        Object[] members = partial.requiredMembers.entrySet().toArray();
         Object current = null;
         try {
             for (int i = 0; i < members.length; ++i) {
                 Map.Entry entry = (Map.Entry) members[i];
                 Object name = entry.getKey();
-                YType ff = (YType) src.finalMembers.get(name);
+                YType ff = (YType) src.allowedMembers.get(name);
                 if (ff == null) {
                     if ((partial.flags & FL_ANY_CASE) != 0)
                         continue;
@@ -535,17 +535,17 @@ public class YetiType implements YetiParser {
                     requireOrdered(a);
                 }
             }
-            if (a.finalMembers == null) {
-                ff = b.finalMembers;
-            } else if (b.finalMembers == null) {
-                ff = a.finalMembers;
+            if (a.allowedMembers == null) {
+                ff = b.allowedMembers;
+            } else if (b.allowedMembers == null) {
+                ff = a.allowedMembers;
             } else {
                 // unify final members
-                ff = new HashMap(a.finalMembers);
+                ff = new HashMap(a.allowedMembers);
                 for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
                     Map.Entry entry = (Map.Entry) i.next();
                     currentField = entry.getKey();
-                    YType f = (YType) b.finalMembers.get(currentField);
+                    YType f = (YType) b.allowedMembers.get(currentField);
                     if (f != null) {
                         YType t = (YType) entry.getValue();
                         unify(f, t);
@@ -570,17 +570,17 @@ public class YetiType implements YetiParser {
 
             if (ff != null && (b.flags & FL_ANY_CASE) != 0) {
                 if ((a.flags & FL_ANY_CASE) != 0)
-                    a.partialMembers = null;
-            } else if (a.partialMembers == null ||
+                    a.requiredMembers = null;
+            } else if (a.requiredMembers == null ||
                        (ff != null && (a.flags & FL_ANY_CASE) != 0)) {
-                a.partialMembers = b.partialMembers;
-            } else if (b.partialMembers != null) {
+                a.requiredMembers = b.requiredMembers;
+            } else if (b.requiredMembers != null) {
                 // join partial members
-                Object[] aa = a.partialMembers.entrySet().toArray();
+                Object[] aa = a.requiredMembers.entrySet().toArray();
                 for (int i = 0; i < aa.length; ++i) {
                     Map.Entry entry = (Map.Entry) aa[i];
                     currentField = entry.getKey();
-                    YType f = (YType) b.partialMembers.get(currentField);
+                    YType f = (YType) b.requiredMembers.get(currentField);
                     if (f != null) {
                         unify((YType) entry.getValue(), f);
                         // mutability spreads
@@ -590,15 +590,15 @@ public class YetiType implements YetiParser {
                     }
                 }
                 currentField = null;
-                a.partialMembers.putAll(b.partialMembers);
+                a.requiredMembers.putAll(b.requiredMembers);
             }
-            a.finalMembers = ff;
+            a.allowedMembers = ff;
             a.flags &= b.flags | ~FL_ANY_CASE;
             if (ff == null) {
-                ff = a.partialMembers;
-            } else if (a.partialMembers != null) {
+                ff = a.requiredMembers;
+            } else if (a.requiredMembers != null) {
                 ff = new HashMap(ff);
-                ff.putAll(a.partialMembers);
+                ff.putAll(a.requiredMembers);
             }
             unify(a.param[0], b.param[0]);
             structParam(a, ff, a.param[0].deref());
@@ -644,14 +644,14 @@ public class YetiType implements YetiParser {
         switch (type.type) {
             case VARIANT:
                 if ((type.flags & FL_ORDERED_REQUIRED) == 0) {
-                    if (type.partialMembers != null) {
-                        Iterator i = type.partialMembers.values().iterator();
+                    if (type.requiredMembers != null) {
+                        Iterator i = type.requiredMembers.values().iterator();
                         while (i.hasNext()) {
                             requireOrdered((YType) i.next());
                         }
                     }
-                    if (type.finalMembers != null) {
-                        Iterator i = type.finalMembers.values().iterator();
+                    if (type.allowedMembers != null) {
+                        Iterator i = type.allowedMembers.values().iterator();
                         while (i.hasNext()) {
                             requireOrdered((YType) i.next());
                         }
@@ -735,7 +735,7 @@ public class YetiType implements YetiParser {
                      (b.flags & FL_AMBIGUOUS_OPAQUE) != 0)
                 opaque = b;
             if (opaque != null) {
-                opaque.ref = (YType) opaque.finalMembers.values().toArray()[0];
+                opaque.ref = (YType) opaque.allowedMembers.values().toArray()[0];
                 opaque.type = 0;
                 unify(a, b);
                 return;
@@ -831,12 +831,12 @@ public class YetiType implements YetiParser {
         for (int i = param.length; --i >= 0;) {
             param[i] = copyType(type.param[i], free, known);
         }
-        if (type.partialMembers != null) {
+        if (type.requiredMembers != null) {
             copy.flags = type.flags & FL_ANY_CASE;
-            copy.partialMembers = copyTypeMap(type.partialMembers, free, known);
+            copy.requiredMembers = copyTypeMap(type.requiredMembers, free, known);
         }
-        if (type.finalMembers != null) {
-            copy.finalMembers = copyTypeMap(type.finalMembers, free, known);
+        if (type.allowedMembers != null) {
+            copy.allowedMembers = copyTypeMap(type.allowedMembers, free, known);
         }
         return res;
     }
@@ -1134,15 +1134,12 @@ public class YetiType implements YetiParser {
         if (opaque.type == STRUCT || opaque.type == VARIANT) {
             res = new YType(src.type, NO_PARAM);
             cache.put(opaque, res);
-            // finalMembers - the ones allowed
-            // partialMembers - the ones required
-            // member types in result
-            Map members = new HashMap(opaque.partialMembers != null
-                    ? opaque.partialMembers : opaque.finalMembers);
+            Map members = new HashMap(opaque.requiredMembers != null
+                    ? opaque.requiredMembers : opaque.allowedMembers);
             for (Iterator i = members.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
-                s = (YType) (src.partialMembers != null ? src.partialMembers
-                            : src.finalMembers).get(e.getKey());
+                s = (YType) (src.requiredMembers != null ? src.requiredMembers
+                            : src.allowedMembers).get(e.getKey());
                 if (s == null) {
                     i.remove();
                     continue;
@@ -1154,10 +1151,10 @@ public class YetiType implements YetiParser {
                 }
             }
             if (hasOpaque) {
-                res.finalMembers = opaqueMembers(src.finalMembers, members);
-                res.partialMembers = opaqueMembers(src.partialMembers, members);
-                structParam(res, res.partialMembers != null
-                        ? res.partialMembers : res.finalMembers,
+                res.allowedMembers = opaqueMembers(src.allowedMembers, members);
+                res.requiredMembers = opaqueMembers(src.requiredMembers, members);
+                structParam(res, res.requiredMembers != null
+                        ? res.requiredMembers : res.allowedMembers,
                         src.param[0].deref());
                 return res;
             }
@@ -1192,7 +1189,7 @@ public class YetiType implements YetiParser {
         for (; scope != null; scope = scope.outer)
             if (scope.typeDef != null) {
                 t = scope.typeDef[scope.typeDef.length - 1];
-                if (t.type >= OPAQUE_TYPES && t.finalMembers != null)
+                if (t.type >= OPAQUE_TYPES && t.allowedMembers != null)
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
         to = to.deref();

@@ -670,7 +670,7 @@ final class WithStruct extends Code {
     }
 
     void gen(Ctx ctx) {
-        Map srcFields = src.type.deref().finalMembers;
+        Map srcFields = src.type.deref().allowedMembers;
         if (srcFields != null && override instanceof StructConstructor) {
             ((StructConstructor) override).genWith(ctx, src, srcFields);
             return;

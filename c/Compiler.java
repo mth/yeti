@@ -579,7 +579,7 @@ final class Compiler implements Opcodes {
         }
         ctx.cw.visitAttribute(new TypeAttr(codeTree.moduleType, this));
         if (codeTree.type.type == YetiType.STRUCT)
-            generateModuleAccessors(codeTree.type.finalMembers, ctx, direct);
+            generateModuleAccessors(codeTree.type.allowedMembers, ctx, direct);
         ctx.insn(DUP);
         ctx.fieldInsn(PUTSTATIC, name, "$", "Ljava/lang/Object;");
         ctx.intConst(1);
