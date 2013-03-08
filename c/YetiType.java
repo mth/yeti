@@ -1106,64 +1106,80 @@ public class YetiType implements YetiParser {
         }
     }
 
-    private static Map opaqueMembers(Map src, Map cache) {
-        // FIXME totally broken - cache contains
-        // opaque side instances as keys, not src
-        // XXX - and it should preserve the final/partial set of src
-        if (src == null)
-            return null;
-        Map m = new HashMap(src);
-        boolean modified = false;
-        for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry) i.next();
-            YType field = (YType) e.getValue();
-            YType t = field.field == 0 || field.ref == null ? field : field.ref;
-            YType tt = t.deref();
-            t = (YType) cache.get(tt);
-            System.err.println("name:" + e.getKey() + " tt(" + tt + ") t(" + t + ")");
-            if (t != tt && t != null) {
-                modified = true;
-                if (field.field != 0)
-                    t = fieldRef(field.depth, t, field.field);
-                e.setValue(t);
+    private static Map opaqueMembers(Map src, Map members) {
+        if (src != null) {
+            src = new HashMap(src);
+            for (Iterator i = src.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                Object t = members.get(e.getKey());
+                if (t != null)
+                    e.setValue(t);
             }
         }
-        return modified ? m : src;
+        return src;
     }
 
     private static YType deriveOpaque(YType src, YType opaque,
-                                      Map cache, boolean[] mask, String ss) {
+                                      Map cache, boolean[] mask) {
         opaque = opaque.deref();
         YType res = (YType) cache.get(opaque);
-        System.err.println(ss + "src(" + src + ") opaque(" + opaque + ") res:" + res);
         if (res != null)
             return res;
         if (opaque.type >= OPAQUE_TYPES && mask[opaque.type - OPAQUE_TYPES]) {
-            System.err.println(ss + "-> OPAQUE:" + opaque);
-            src = opaque; 
-        } else if (opaque.type > PRIMITIVE_END && opaque.param.length != 0 &&
-                   opaque.param.length == src.param.length) {
-            // FIXME broken for STRUCT/VARIANT! There param may well not match
-            // (not even in length) when the the member set is compatible.
-            res = new YType(src.type, new YType[src.param.length]);
+            cache.put(opaque, opaque);
+            return opaque;
+        }
+        YType s, t;
+        boolean hasOpaque = false;
+        if (opaque.type == STRUCT || opaque.type == VARIANT) {
+            res = new YType(src.type, NO_PARAM);
             cache.put(opaque, res);
-            boolean hasOpaque = false;
-            for (int i = 0; i < res.param.length; ++i) {
-                YType s = src.param[i].deref();
-                YType d = deriveOpaque(s, opaque.param[i], cache, mask, ss + " ");
-                res.param[i] = d;
-                hasOpaque |= s != d;
+            // finalMembers - the ones allowed
+            // partialMembers - the ones required
+            // member types in result
+            Map members = new HashMap(opaque.partialMembers != null
+                    ? opaque.partialMembers : opaque.finalMembers);
+            for (Iterator i = members.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                s = (YType) (src.partialMembers != null ? src.partialMembers
+                            : src.finalMembers).get(e.getKey());
+                if (s == null) {
+                    i.remove();
+                    continue;
+                }
+                t = deriveOpaque(s.deref(), (YType) e.getValue(), cache, mask);
+                if (t != e.getValue()) {
+                    e.setValue(t);
+                    hasOpaque = true;
+                }
             }
             if (hasOpaque) {
-                res.finalMembers = opaqueMembers(src.finalMembers, cache);
-                res.partialMembers = opaqueMembers(src.partialMembers, cache);
-                System.err.println(ss + "-> COPY:" + res);
+                res.finalMembers = opaqueMembers(src.finalMembers, members);
+                res.partialMembers = opaqueMembers(src.partialMembers, members);
+                structParam(res, res.partialMembers != null
+                        ? res.partialMembers : res.finalMembers,
+                        src.param[0].deref());
                 return res;
             }
+        } else if (opaque.type > PRIMITIVE_END && opaque.param.length != 0 &&
+                   opaque.param.length == src.param.length) {
+            res = new YType(src.type, new YType[src.param.length]);
+            cache.put(opaque, res);
+            for (int i = 0; i < res.param.length; ++i) {
+                s = src.param[i].deref();
+                t = deriveOpaque(s, opaque.param[i], cache, mask);
+                res.param[i] = t;
+                hasOpaque |= s != t;
+            }
+            if (hasOpaque)
+                return res;
+        } else {
+            res = null;
+        }
+        if (res != null) {
             res.type = VAR;
             res.ref = src;
             res.param = null;
-            System.err.println(ss + "-> REF:" + src);
         }
         cache.put(opaque, src);
         return src;
@@ -1184,7 +1200,7 @@ public class YetiType implements YetiParser {
         t = copyType(to, free, new IdentityHashMap());
         prepareOpaqueCast(t, allow_opaque);
         unify(from, t);
-        return deriveOpaque(from, to, free, allow_opaque, "");
+        return deriveOpaque(from, to, free, allow_opaque);
     }
 
     static YType withDoc(YType t, String doc) {
