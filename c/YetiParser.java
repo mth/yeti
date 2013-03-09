@@ -364,6 +364,7 @@ interface YetiParser {
         String[] param;
         String doc;
         TypeNode type;
+        boolean exact;
         int kind;
 
         String str() {
@@ -1576,6 +1577,11 @@ interface YetiParser {
                 def.kind = TypeDef.SHARED;
             if (def.kind != 0) {
                 def.name = getTypename(node);
+                node = fetch();
+            }
+            if (def.kind != TypeDef.SHARED && node instanceof BinOp &&
+                ((BinOp) node).op == "!") {
+                def.exact = true;
                 node = fetch();
             }
             if (node instanceof BinOp && ((BinOp) node).op == "<" &&

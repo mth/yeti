@@ -199,6 +199,7 @@ public class YetiType implements YetiParser {
     static final int FL_TAINTED_VAR      = 2;
     static final int FL_AMBIGUOUS_OPAQUE = 4;
     static final int FL_ANY_CASE         = 8;
+    static final int FL_SMART_TYPEDEF    = 0x10;
     static final int FL_ERROR_IS_HERE    = 0x100;
     static final int FL_ANY_PATTERN      = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
