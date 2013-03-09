@@ -201,6 +201,7 @@ public class YetiType implements YetiParser {
     static final int FL_ANY_CASE         = 8;
     static final int FL_SMART_TYPEDEF    = 0x10;
     static final int FL_ERROR_IS_HERE    = 0x100;
+    static final int FL_NO_SMART_FLIP    = 0x2000;
     static final int FL_ANY_PATTERN      = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -536,11 +537,16 @@ public class YetiType implements YetiParser {
                         (b.requiredMembers != null ? 8 : 0);
                 if (x == 6 || x == 9) { // 0110 or 1001
                     YType t = (a.flags & FL_SMART_TYPEDEF) != 0 ? a : b;
-                    Map tmp = t.allowedMembers;
-                    t.allowedMembers = t.requiredMembers;
-                    t.requiredMembers = tmp;
+                    if ((t.flags & FL_NO_SMART_FLIP) == 0) {
+                        Map tmp = t.allowedMembers;
+                        t.allowedMembers = t.requiredMembers;
+                        t.requiredMembers = tmp;
+                        t.flags &= ~FL_SMART_TYPEDEF; // flip only once.
+                        System.err.println("  flip");
+                    }
                 }
             }
+            a.flags |= FL_NO_SMART_FLIP;
             if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
                 // VARIANT types are sometimes ordered.
                 // when all their variant parameters are ordered types.
