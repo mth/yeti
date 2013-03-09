@@ -529,6 +529,18 @@ public class YetiType implements YetiParser {
         try {
             b.ref = a; // just fake ref now to avoid cycles...
             Map ff;
+            if (((a.flags | b.flags) & FL_SMART_TYPEDEF) != 0) {
+                int x = (a.allowedMembers  != null ? 1 : 0) |
+                        (a.requiredMembers != null ? 2 : 0) |
+                        (b.allowedMembers  != null ? 4 : 0) |
+                        (b.requiredMembers != null ? 8 : 0);
+                if (x == 6 || x == 9) { // 0110 or 1001
+                    YType t = (a.flags & FL_SMART_TYPEDEF) != 0 ? a : b;
+                    Map tmp = t.allowedMembers;
+                    t.allowedMembers = t.requiredMembers;
+                    t.requiredMembers = tmp;
+                }
+            }
             if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
                 // VARIANT types are sometimes ordered.
                 // when all their variant parameters are ordered types.
@@ -596,7 +608,7 @@ public class YetiType implements YetiParser {
                 a.requiredMembers.putAll(b.requiredMembers);
             }
             a.allowedMembers = ff;
-            a.flags &= b.flags | ~FL_ANY_CASE;
+            a.flags &= b.flags | ~(FL_ANY_CASE | FL_SMART_TYPEDEF);
             if (ff == null) {
                 ff = a.requiredMembers;
             } else if (a.requiredMembers != null) {
@@ -839,11 +851,13 @@ public class YetiType implements YetiParser {
         for (int i = param.length; --i >= 0;)
             param[i] = copyType(type.param[i], free, known);
         if (type.requiredMembers != null) {
-            copy.flags = type.flags & FL_ANY_CASE;
+            copy.flags = type.flags & (FL_ANY_CASE | FL_SMART_TYPEDEF);
             copy.requiredMembers = copyTypeMap(type.requiredMembers, free, known);
         }
-        if (type.allowedMembers != null)
+        if (type.allowedMembers != null) {
+            copy.flags |= type.flags & FL_SMART_TYPEDEF;
             copy.allowedMembers = copyTypeMap(type.allowedMembers, free, known);
+        }
         return res;
     }
 
