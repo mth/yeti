@@ -673,7 +673,7 @@ interface YetiParser {
             switch (src[i]) {
                 case '.':
                     if ((i <= 0 || (c = src[i - 1]) < '~' && CHS[c] == ' ' &&
-                                (i >= src.length ||
+                                (i + 1 >= src.length ||
                                  (c = src[i + 1]) < '~' && CHS[c] == ' ')))
                         return new BinOp(".", COMP_OP_LEVEL - 1, true)
                             .pos(line, col);
