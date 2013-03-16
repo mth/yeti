@@ -19,6 +19,8 @@
 * foo = load bar; foo.x should be optimised into same as load bar; x
 * Context-specific int optimizations for builtins
   (and java method invocation return values)
+* Ability to override struct class toString would be probably useful,
+  for example by defining special property like { get as string () = "hi!" }
 * Struct mapping (as in doc/stmap.yeti)
 * Allow cons pattern match (::) on arrays?
 * Exhaustive list match detection probably could be improved by something
