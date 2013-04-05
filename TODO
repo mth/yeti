@@ -1,8 +1,11 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* opaque cast can give NullPointerException (chrisichris reported)
+* Smart typedefs, if possible
 * Module type not fully defined message is confusing,
   should give more info about where error is.
+  + Fix not detecting incomplete module type sometimes
 * v1.0
 * Typedefs in REPL
 * Foreign structs (java dto -> struct?)
