@@ -8,10 +8,12 @@
   + Fix not detecting incomplete module type sometimes
 * v1.0
 * Typedefs in REPL
+* Compiling simple module a; in REPL results in ClassNotFoundException
 * Foreign structs (java dto -> struct?)
 * Operator to copy mutable structure fields between two different structures
 * Support as in type definitions for recursive types
 * Support module qualification on type, like x is foo.sometype
+* Module-local typedefs
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)
@@ -29,6 +31,7 @@
 * Exhaustive list match detection probably could be improved by something
   like introducing FL_EMPTY_PATTERN and keeping account about the list tail
   being exhaustive.
+* Support A x | B y | variantTypeDef?
 * Review the Java<->Yeti type autoconversions?
 * Immutable tree map support - this seems to be popular feature. ;)
 * Support module field deprecation
