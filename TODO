@@ -1,6 +1,7 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* Invalid polymorphism error (chrisichris reported on 7 apr)
 * opaque cast can give NullPointerException (chrisichris reported)
 * Smart typedefs, if possible
 * Module type not fully defined message is confusing,
