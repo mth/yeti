@@ -2,6 +2,8 @@
 ~~~~~~~~~~~~~~~~~
 
 * Invalid polymorphism error (chrisichris reported on 7 apr)
+  fn () = (var v = none; {setValue x = case v of None _ : v := Some x;
+  		_ : () esac, value() = v})
 * opaque cast can give NullPointerException (chrisichris reported)
 * Smart typedefs, if possible
 * Module type not fully defined message is confusing,
