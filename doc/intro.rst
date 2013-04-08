@@ -1759,6 +1759,109 @@ The ``splitAt`` is a standard function which returns structure containing
 first n elements from list as ``fst`` field and the rest as the ``snd``
 field.
 
+Overridiing using 'with'
+++++++++++++++++++++++++
+
+A structure can be merged/overriden with another structure using the ``with`` 
+keyword::
+
+    > {a="foo", b=2} with {b=3,c = true}
+    {a="foo", b=3, c=true} is {
+       a is string,
+       b is number,
+       c is boolean
+    }
+
+The ``with`` keyword creates a new structure with all the fields of the first 
+structure and all the fields of the second structure. The fields of the second 
+structure override the once of the first. 
+
+The original structures keep unchanged::
+
+    > st1 = {a = "foo",b=2}
+    st1 is {a is string, b is number} = {a="foo", b=2}
+    
+    > st2 = {b="foob", c=false}
+    st2 is {b is string, c is boolean} = {b="foob", c=false}
+    
+    > str3 = st1 with st2
+    str3 is {
+       a is string,
+       b is string,
+       c is boolean
+    } = {a="foo", b="foob", c=false}
+    
+    > st1
+    {a="foo", b=2} is {a is string, b is number}
+    
+    > st2
+    {b="foob", c=false} is {b is string, c is boolean}
+
+Overriding can also change type::
+
+    > st = {a = 12}
+    st is {a is number} = {a=12}
+    > st with {a = "foo"}
+    {a="foo"} is {a is string}
+
+This functionality allows doing simple prototype OO inheritance. See the
+prototype example: 
+http://github.com/mth/yeti/blob/master/examples/prototype.yeti
+
+The example contains both inheritance with overriding and a abstract 
+callback (method). This kind of OO implementation separates strictly 
+callback functions consumed by object and the interface that object 
+provides to its users. 
+
+When using ``with`` on a function argument, the argument requires all fields
+of the merged structure. In this case overriding with same type works::
+
+    > f x = x with {a = 42}
+    f is ({.a is number} is 'a) -> 'a = <code$f>
+
+    > f {a = 12,b = "foo"}
+    {b="foo",a=42} is {`a is number, b is string}
+
+However if the field is not provided with the right type it does not compile::
+
+    > f x = x with {a = 42}
+    f is {.a is number} -> {.a is number} = <code$f>
+    
+    > f {b = 12}
+    1:3: Cannot apply {.a is number} -> {.a is number} function (f) to {b is number} argument
+        Type mismatch: {b is number} => {.a is number} (member missing: a)
+    
+    > f {a="foo"}
+    1:3: Cannot apply {.a is number} -> {.a is number} function (f) to {a is string} argument
+        Type mismatch: number is not string
+
+Adding members or changing type won't work in this case, as the function 
+signature restricts argument and result types to be same (which is needed 
+for fields that were not known in the function).
+
+Also the right-hand side must be a structure with known member set. Therefore
+the following does not compile:
+
+    > g x = {a = 2} with x
+    1:20: Right-hand side of with must be a structure with known member set
+
+Note that the ``known-memeber-set`` does not have to be a structure 
+literal it can also be ie a function with a known result-type::
+
+    > rightHand a b = {a, b}
+    rightHand is 'a -> 'b -> {a is 'a, b is 'b} = <code$rightHand>
+    
+    > fn a b c = c with (rightHand a b)
+    fn is 'a -> 'b -> {.a is 'a, .b is 'b} -> {.a is 'a, .b is 'b} = <code$fn>
+    
+    > fn 2 "foo" {a = 3, b = "tmp", c=true}
+    {a=2, b="foo", c=true} is {
+       `a is number,
+       `b is string,
+       c is boolean
+    }
+
+
 .. _variant type:
 
 Variant types
@@ -2197,6 +2300,159 @@ followed by ``is``::
        writeln is string -> ()
     }
 
+Type Aliases using 'shared'
+++++++++++++++++++++++++++
+
+Often types are quite complex and writing the ``typedef`` is accordingly much 
+code, which is annoying when you know that yeti anway inferes the right type.
+
+Therefore alias-types can be implicitly defined using the ``typedef shared```
+keywords.
+
+Lets say we have cowboys and horses want to map their respective 
+relatives ::
+
+    program cowboys;
+
+    createCowboy name = {
+        id = -1,
+        name is string,
+        posts = [] is list<{
+             id is string,
+             text is string,
+             rating is number,
+        }>,
+        active = true,
+        relatives = [] //other cowboys only
+    };
+
+    createHorse name price = {
+        name is string,
+        price is number,
+        relatives = [] //other horses only
+    };
+
+    addCowboyRelative toAdd addTo = 
+        addTo with {
+             relatives = toAdd :: addTo.relatives
+        };
+
+    addHorseRelative toAdd addTo =
+        addTo with {
+            relatives = toAdd :: addTo.relatives
+        };
+
+    john = addCowboyRelative (createHorse "Blacky" 1000) 
+                             (createCowboy "John");
+
+    println john;
+
+Now we have a problem because the above compiles fine and the cowboy John 
+has the horse Blacky as his relative.
+        
+To make sure that addCowboyRelative only takes cowboys as argument we
+could create a ``typedef`` like described in the previous 
+paragraph, but this would be more or less just a repeat of the createCowboy
+function and we would have to do the same for horses.
+
+Instead we can use ``typedef shared`` to say that the return-type of 
+``createCowboy`` should be the same as the argument-types  of 
+``addCowboyRelative`` ::
+
+    typedef shared cowboy = 'a;
+    typedef shared horse = 'a;
+
+    createCowboy name is string -> cowboy = {
+        .....
+        relatives = [] is list<cowboy>
+    };
+
+    createHorse name price is string -> number -> horse = {
+        ....
+    };
+
+    addCowboyRelative toAdd addTo is cowboy -> cowboy -> cowboy = 
+        ...;
+
+    addHorseRelative toAdd addTo is horse -> horse -> horse =
+        ...;
+
+    //this does now not compile anymore:
+    john = addCowboyRelative (createHorse "Blacky" 1000) 
+                             (createCowboy "John");
+
+    println john;
+
+Now we get a compile-error ::
+
+    C:\TEMP>java -jar C:\yeti\yeti.jar cowboys.yeti
+    cowboys.yeti:34:52: Cannot apply cowboy -> cowboy -> cowboy function 
+    (addCowboyRelative) to horse argument
+        Type mismatch: horse => cowboy (member missing: posts)
+
+
+Opaque Types
+++++++++++++
+
+The usual typedef - like described in the previous two paragraphs - defines a 
+named alias for some type, that can be used interchangeably with the original 
+type.
+
+The opaque typedef defines a completely new unique type, 
+that is incompatible with the one used in the definition. 
+
+It has the word ``opaque`` before the type name like:: 
+
+    typedef opaque foo = something 
+
+For example you write in REPL:: 
+
+    > typedef opaque foo = number; 1 is foo 
+    1:32: Type mismatch: number is not foo (when checking number is foo) 
+
+The new types can be put in use with as cast, like:: 
+
+    > typedef opaque foo = number; 1 as foo 
+    1 is [code:foo#0]<> 
+
+It's useful if you want to hide actual implementation types. 
+There is simple example of it in the git repo: 
+
+https://github.com/mth/yeti/blob/master/examples/opaquelist.yeti 
+
+Yeti supports hiding implementation using closures and structs, additional 
+opaque types can hide the underlying-types also (An additional benefit is 
+that opaque types have zero runtime overhead as they don't exist at 
+runtime):: 
+
+    module opaquelist; 
+
+    typedef opaque magic<x> = list<x> 
+
+    { 
+         create l is list<'a> -> list<'a> = l, 
+         values v is list<'a> -> list<'a> = v, 
+    } as { 
+         create is list<'a> -> magic<'a>, 
+         values is magic<'b> -> list<'b>, 
+    } 
+
+In the above example a new type ``magic<a>`` together with conversation 
+funcitons is defined, which is implentation-wise just a ``list<a>``. However 
+it is as a type completly different from ``list<a>`` as you can see
+in the following example::
+
+       load opaquelist; 
+        
+       v = create ["foo", "bar"]; 
+        
+       // have to first convert 'v' back to list
+       // because 'for v println;' would not compile as v is no list 
+       for (values v) println; 
+       
+Opaque types are als very useful to hide java-classes and to transport
+type-varialbles with them.
+
 
 Running and compiling source files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2596,6 +2852,16 @@ like Java casts - it uses the low-level JVM checkcast instruction).
 The ``unsafely_as`` cast should be used with care, as it allows forcing
 types in unsound ways (as can be seen in the above example where string was
 added into array<number>).
+
+``as`` and ``unsafley_as`` can also be used as functions using the 
+section-syntax ie ``(as ~Object)`` or ``(unsafely_as string)```::
+
+
+    > map ((unsafely_as ~yeti.lang.Num) . (as ~Object)) [1..10]
+    [1,2,3,4,5,6,7,8,9,10] is list<~yeti.lang.Num>
+    
+    
+
 
 Defining Java classes in Yeti code
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
