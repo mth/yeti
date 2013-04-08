@@ -2301,7 +2301,7 @@ followed by ``is``::
     }
 
 Type Aliases using 'shared'
-++++++++++++++++++++++++++
++++++++++++++++++++++++++++++
 
 Often types are quite complex and writing the ``typedef`` is accordingly much 
 code, which is annoying when you know that yeti anway inferes the right type.
