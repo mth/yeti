@@ -2380,7 +2380,7 @@ plus a b = a + b;
      * Implementation uses java.util.concurrent.ConcurrentHashMap.
      */
     concurrentHash () is () -> hash<'a, 'b> =
-        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+        new CHash(CHash#CONCURRENT, ()) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: hash
@@ -2392,7 +2392,7 @@ plus a b = a + b;
      * () - an unit value
      */
     weakHash () is () -> hash<'a, 'b> =
-        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+        new CHash(CHash#WEAK, ()) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: hash
