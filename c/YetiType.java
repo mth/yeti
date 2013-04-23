@@ -671,7 +671,6 @@ public class YetiType implements YetiParser {
                 }
             case NUM:
             case STR:
-            case UNIT:
             case LIST_MARKER:
                 return;
             case JAVA:
