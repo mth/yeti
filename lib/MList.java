@@ -39,11 +39,13 @@ abstract class AMList extends AList implements Serializable {
     abstract int _size();
     abstract Object[] array();
 
-    public final long length() {
+    // used by length
+    public long length() {
         int l = _size() - start;
         return l > 0 ? l : 0;
     }
 
+    // used by copy
     public Object copy() {
         Object[] a = new Object[_size()];
         System.arraycopy(array(), start, a, 0, a.length);
@@ -321,7 +323,8 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    public final void reserve(int n) {
+    // used by setArrayCapacity
+    public void reserve(int n) {
         if (n > array.length) {
             Object[] tmp = new Object[n];
             System.arraycopy(array, 0, tmp, 0, size);
@@ -329,7 +332,8 @@ public class MList extends AMList implements ByKey {
         }
     }
 
-    public final void add(Object o) {
+    // used by push
+    public void add(Object o) {
         if (size >= array.length) {
             Object[] tmp = new Object[size == 0 ? 10 : size * 3 / 2 + 1];
             System.arraycopy(array, 0, tmp, 0, array.length);
@@ -338,44 +342,52 @@ public class MList extends AMList implements ByKey {
         array[size++] = o;
     }
 
-    public final Object shift() {
+    // used by shift
+    public Object shift() {
         if (start >= size)
             throw new EmptyArrayException("No first element in empty array");
         return array[start++];
     }
 
-    public final Object pop() {
+    // used by pop
+    public Object pop() {
         if (start >= size)
             throw new EmptyArrayException("Cannot pop from an empty array");
         return array[--size];
     }
 
-    public final void clear() {
+    // used by clear
+    public void clear() {
         start = size = 0;
     }
 
-    public final Object first() {
+    // used by head
+    public Object first() {
         if (start >= size)
             throw new EmptyArrayException("No first element in empty array");
         return array[start];
     }
 
-    public final AList rest() {
+    // used by tail
+    public AList rest() {
         int p;
         return (p = start + 1) < size ? new SubList(p) : null;
     }
 
-    public final AIter next() {
+    // used for iterating lists
+    public AIter next() {
         int p;
         return (p = start + 1) < size ? new Iter(p) : null;
     }
 
+    // used by compiler for i in a
     public boolean containsKey(Object index) {
         int i;
         return  (i = ((Number) index).intValue()) >= 0 && i + start < size;
     }
 
-    public final Object vget(Object index) {
+    // used by compiler for a[i]
+    public Object vget(Object index) {
         int i;
         if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
@@ -384,14 +396,16 @@ public class MList extends AMList implements ByKey {
         return array[i];
     }
 
-    public final Object get(int index) {
+    // used by compiler for a[number]
+    public Object get(int index) {
         int i;
         if (index < 0 || (i = index + start) >= size)
             throw new NoSuchKeyException(index, size - start);
         return array[i];
     }
 
-    public final Object put(Object index, Object value) {
+    // used by compiler for a[i] := x
+    public Object put(Object index, Object value) {
         int i;
         if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
@@ -401,7 +415,8 @@ public class MList extends AMList implements ByKey {
         return null;
     }
 
-    public final Object remove(Object index) {
+    // used delete
+    public Object remove(Object index) {
         int i, n;
         if ((i = ((Number) index).intValue()) < 0)
             throw new NoSuchKeyException(i, size - start);
@@ -433,6 +448,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
+    // used by deleteAll
     public void removeAll(AList keys) {
         // a common use case is removing a single range
         if (keys instanceof ListRange) {
@@ -468,6 +484,7 @@ public class MList extends AMList implements ByKey {
         }
     }
 
+    // used by slice
     public MList copy(int from, int to) {
         int n = size - start;
         if (from < 0 || from > n)
@@ -482,6 +499,7 @@ public class MList extends AMList implements ByKey {
         return new MList(subArray);
     }
 
+    // used by take
     public AList take(int from, int count) {
         if (from < 0)
             from = 0;
@@ -497,6 +515,7 @@ public class MList extends AMList implements ByKey {
         return res;
     }
 
+    // used by find
     public AList find(Fun pred) {
         for (int cnt = size, i = start; i < cnt; ++i) {
             if (pred.apply(array[i]) == Boolean.TRUE) {
@@ -506,7 +525,8 @@ public class MList extends AMList implements ByKey {
         return null;
     }
 
-    public final boolean isEmpty() {
+    // used by empty?
+    public boolean isEmpty() {
         return start >= size;
     }
 
