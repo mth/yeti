@@ -1184,6 +1184,9 @@ public class YetiType implements YetiParser {
 
     static YType opaqueCast(YType from, YType to, Scope scope, int depth)
             throws TypeException {
+        if (from.deref().type == VAR) {
+            throw new TypeException("Illegal as cast from 'a to non-Java type");
+        }
         YType t;
         boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size()];
         for (; scope != null; scope = scope.outer)
@@ -1197,7 +1200,7 @@ public class YetiType implements YetiParser {
         t = copyType(to, free, new IdentityHashMap());
         prepareOpaqueCast(t, allow_opaque);
         unify(from, t);
-        return deriveOpaque(from, to, free, allow_opaque);
+        return deriveOpaque(from.deref(), to, free, allow_opaque);
     }
 
     static YType withDoc(YType t, String doc) {
