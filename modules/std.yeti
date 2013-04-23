@@ -2366,7 +2366,7 @@ plus a b = a + b;
      * () - an unit value
      */
     identityHash () is () -> hash<'a, 'b> =
-        new CHash(CHash#IDENTITY, ()) unsafely_as hash<'a, 'b>,
+        new CHash(CHash#IDENTITY, (),()) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: hash
@@ -2380,7 +2380,7 @@ plus a b = a + b;
      * Implementation uses java.util.concurrent.ConcurrentHashMap.
      */
     concurrentHash () is () -> hash<'a, 'b> =
-        new CHash(CHash#CONCURRENT, ()) unsafely_as hash<'a, 'b>,
+        new CHash(CHash#CONCURRENT, (),()) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: hash
@@ -2392,7 +2392,7 @@ plus a b = a + b;
      * () - an unit value
      */
     weakHash () is () -> hash<'a, 'b> =
-        new CHash(CHash#WEAK, ()) unsafely_as hash<'a, 'b>,
+        new CHash(CHash#WEAK, (),()) unsafely_as hash<'a, 'b>,
 
     /**
      * Group: hash
@@ -2401,10 +2401,32 @@ plus a b = a + b;
      *
      * Arguments:
      * constructor - a function creating the java.util.Map instance to be used
+     * copyFn - a function which copies the current java.util.Map to a new
+     * one
      */
-    customHash cons is (() -> ~java.util.Map) -> hash<'a, 'b> =
-        new CHash(0, cons unsafely_as ~Fun) unsafely_as hash<'a, 'b>,
+    customHash cons copyFn
+        is (() -> ~java.util.Map) 
+        -> (~java.util.Map -> ~java.util.Map)
+        -> hash<'a, 'b> =
+        new CHash(0, cons unsafely_as ~Fun,
+                    copyFn unsafely_as ~Fun) unsafely_as hash<'a, 'b>,
 
+    /**
+     * Group: array
+     * Creates an array backed with the given java.util.List
+     *
+     * Arguments:
+     * jList - the java List backing the array
+     * copyFn - function which copies the given java.util.List to a new
+     * java.util.List
+     */
+    customArray jlist copyFn 
+        is ~java.util.List 
+        -> (~java.util.List -> ~java.util.List) 
+        -> array<'a> =
+        (r = new MJUList(jlist, (copyFn as ~Object) unsafely_as ~Fun);
+        (r as ~Object) unsafely_as array<'a>),
+    
     /**
      * Group: 1_collections
      * Returns a new copy of the given collection.

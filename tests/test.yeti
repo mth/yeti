@@ -5,6 +5,14 @@ addReceived v =
     push received v;
 
 h = [0.5e: true, 33.2: false];
+
+arrayList vs = 
+    (import java.util.ArrayList;
+    ar = customArray (new ArrayList()) 
+        do ls: (new ArrayList(ls)) as ~java.util.List done;
+    for vs (push ar);
+    ar);
+
 trueTests = [
 'id': \(id true),
 'const': const true,
@@ -274,6 +282,76 @@ done,
         esac;
     id f "" (Token "foo") == Error "[]"
 done,
+"MJUList:create" : do:
+    empty? (arrayList [])
+done,
+"MJUList:equals" : do:
+    ((array []) == (arrayList []))
+    and (arrayList [1..5]) == (arrayList [1..5]);
+    //and (array [1..5]) == (arrayList [1..5]);
+done,
+
+"MJUList:array:get" : do:
+    els = ["foo", "go", "bar"];
+    ar = arrayList els;
+    
+    (ar[0] == "foo")
+    and (ar == array els)
+    and (ar[1] == "go");
+done,
+
+"MJUList:array:set" : do:
+    ar = arrayList ["foo"];
+    ar[0] := "bar";
+    ar[0] == "bar";
+done,
+
+"MJUList:array:push/pop" : do:
+    ar = arrayList [];
+    push ar 1;
+    push ar 2;
+    ((pop ar) == 2)
+    and ((pop ar) == 1)
+done,
+
+"MJUList:list:map" : do:
+    ar = arrayList [1,2,3] |> map (* 2);
+    ar == [2,4,6];
+done,
+
+"MJUList:list:filter" : do:
+    ar = arrayList [1..6] |> filter ((== 0) .( % 2));
+    ar == [2,4,6]
+done,
+
+"MJUList:list:sort" : do:
+    ar = arrayList ["c","a","b"] |> sort;
+    ar == ["a","b","c"];
+done,
+
+"MJUList:list:sortBy": do:
+    ar = arrayList [1..5] |> sortBy (>);
+    ar == [5,4,3,2,1];
+done,
+
+"MJUList:list:list": do:
+    ls = list (arrayList [1..4]);
+    t =tail ls;
+    ((head ls) == 1)
+    and (t == [2..4])
+    and (2 == (head t)) 
+    and ((tail t) == [3,4]);
+done,
+"MJUList:take": do:
+    ls = arrayList [1..20] |> take 10;
+    ls == [1..10]
+done,
+"MJUList:drop": do:
+    ls = arrayList [1..20] |> drop 10;
+    ls == [11..20]
+done,
+
+
 ];
 
 var bad = 0;
