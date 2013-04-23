@@ -41,12 +41,14 @@ public class CHash extends AbstractMap implements ByKey, Coll {
     static final int WEAK = 3;
     private final int type;
     private final Fun cons;
+    private final Fun copyFn;
     private final Map impl;
     private volatile Fun defaultFun;
 
-    public CHash(int type_, Fun cons_) {
+    public CHash(int type_, Fun cons_, Fun copyFn_) {
         type = type_;
         cons = cons_;
+        copyFn = copyFn_;
         switch (type) {
         case 0:
             impl = (Map) cons_.apply(null);
@@ -143,8 +145,18 @@ public class CHash extends AbstractMap implements ByKey, Coll {
     }
     
     public Object copy() {
-        CHash result = new CHash(type, cons);
-        result.putAll(this);
+        CHash result;
+        if(copyFn != null)
+            result = new CHash(type, new Fun() {
+                public Object apply(Object ob) {
+                    return copyFn.apply(impl);
+                }
+            }, copyFn);
+        else{
+            result = new CHash(type, cons,copyFn);
+            result.putAll(this);
+        };
+            
         result.defaultFun = defaultFun;
         return result;
     }
