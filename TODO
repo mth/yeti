@@ -1,9 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Invalid polymorphism error (chrisichris reported on 7 apr)
-  fn () = (var v = none; {setValue x = case v of None _ : v := Some x;
-  		_ : () esac, value() = v})
 * Smart typedefs, if possible
 * Module type not fully defined message is confusing,
   should give more info about where error is.

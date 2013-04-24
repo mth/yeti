@@ -193,7 +193,6 @@ class DescrCtx {
             buf[--p] =
                 (t.flags & YetiType.FL_ORDERED_REQUIRED) == 0 ? '\'' : '^';
             v = new String(buf, p, buf.length - p);
-            v+= t.depth;
             vars.put(t, v);
         }
         return v;

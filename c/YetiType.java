@@ -463,29 +463,20 @@ public class YetiType implements YetiParser {
         return type;
     }
 
-    static void limitDepth(YType type, int maxDepth) {
+    static void limitDepth(YType type, int maxDepth, int setFlag) {
         type = type.deref();
         if (type.type != VAR) {
             if (type.seen)
                 return;
             type.seen = true;
             for (int i = type.param.length; --i >= 0;)
-                limitDepth(type.param[i], maxDepth);
+                limitDepth(type.param[i], maxDepth, setFlag);
             type.seen = false;
-        } else if (type.depth > maxDepth) {
-            type.depth = maxDepth;
-        }
-    }
-
-    static void taintAll(YType type) {
-        type = type.deref();
-        if (type.type == VAR) {
-            type.flags |= FL_TAINTED_VAR;
-        } else if (!type.seen) {
-            type.seen = true;
-            for (int i = type.param.length; --i >= 0;)
-                taintAll(type.param[i]);
-            type.seen = false;
+        } else {
+            if (type.depth > maxDepth) {
+                type.depth = maxDepth;
+            }
+            type.flags |= setFlag;
         }
     }
 
@@ -603,7 +594,6 @@ public class YetiType implements YetiParser {
                 a.requiredMembers.putAll(b.requiredMembers);
             }
             a.allowedMembers = ff;
-            int param_flag_diff = a.param[0].flags ^ b.param[0].flags;
             a.flags &= b.flags | ~FL_ANY_CASE;
             if (ff == null) {
                 ff = a.requiredMembers;
@@ -615,10 +605,8 @@ public class YetiType implements YetiParser {
             structParam(a, ff, a.param[0].deref());
             b.type = VAR;
             b.ref = a;
-            if ((param_flag_diff & FL_TAINTED_VAR) != 0) {
-                taintAll(a);
-                System.err.println("taintAll: " + a);
-            }
+            if ((a.param[0].flags & FL_TAINTED_VAR) != 0)
+                limitDepth(a, a.param[0].depth, FL_TAINTED_VAR);
         } catch (TypeException ex) {
             b.ref = oldRef;
             if (currentField != null) {
@@ -724,7 +712,7 @@ public class YetiType implements YetiParser {
         if ((var.flags & FL_TAINTED_VAR) != 0)
             from.flags |= FL_TAINTED_VAR;
         
-        limitDepth(from, var.depth);
+        limitDepth(from, var.depth, 0);
         var.ref = from;
     }
 
@@ -891,10 +879,7 @@ public class YetiType implements YetiParser {
         if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
             Map vars = createFreeVars(r[0].free, depth);
-            YType debug= new YType(FUN, new YType[] { ref.type, null });
             ref.type = copyType(ref.type, vars, new IdentityHashMap());
-            debug.param[1] = ref.type;
-            System.err.println("copy: " + debug);
         }
         return ref;
     }
@@ -1016,7 +1001,6 @@ public class YetiType implements YetiParser {
             type.seen = false;
         } else if (t.depth > depth) {
             if ((flags & RESTRICT_ALL) != 0) {
-                System.err.println("taint1");
                 t.flags |= FL_TAINTED_VAR;
                 vars = deny;
             } else if ((flags & (RESTRICT_CONTRA | RESTRICT_POLY)) ==
@@ -1027,7 +1011,6 @@ public class YetiType implements YetiParser {
             if (vars.indexOf(t) < 0)
                 vars.add(t);
         } else if ((flags & RESTRICT_ALL) != 0 && t.depth == depth) {
-                System.err.println("taint2");
             t.flags |= FL_TAINTED_VAR;
         }
     }
@@ -1071,9 +1054,6 @@ public class YetiType implements YetiParser {
                       int flags, int depth, Scope scope) {
         List free = new ArrayList(), deny = new ArrayList();
         getFreeVar(free, deny, valueType, flags, depth);
-        System.err.println("bind " + name + " flags:" + flags +
-                " depth:" + depth + " valuetype(" + valueType + ") " +
-                " deny" + deny + " free" + free);
         if (deny.size() != 0)
             for (int i = free.size(); --i >= 0; )
                 if (deny.indexOf(free.get(i)) >= 0)

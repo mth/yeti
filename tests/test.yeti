@@ -274,6 +274,20 @@ done,
         esac;
     id f "" (Token "foo") == Error "[]"
 done,
+'mutability and polymorphism': do:
+    testCode = """var v = None ();
+        o = { setValue x = v := Some x, value () = v };
+        o.setValue 'kala';
+        case o.value () of
+        Some x: println (x + 2);
+        None _: println "None";
+        esac""";
+    load yeti.lang.compiler.eval;
+    case evaluateYetiCode [] [] testCode of
+    {result = CompileException _}: true;
+    {str}: println str; false;
+    esac
+done,
 ];
 
 var bad = 0;

@@ -637,7 +637,7 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(member, scope, src.type, null,
                         "#1 does not have ." + field + " field", ex);
         }
-        limitDepth(res, arg.deref().param[0].deref().depth);
+        limitDepth(res, arg.deref().param[0].deref().depth, 0);
         boolean poly = src.polymorph && src.type.allowedMembers != null &&
             ((YType) src.type.allowedMembers.get(field)).field == 0;
         return new SelectMember(res, src, field, op.line, poly) {
