@@ -105,7 +105,7 @@ syn region yetiString start=+"\(""\)\@!+ end=+"\|\\[ \t\r]*\n+ contains=yetiEmbe
 syn region yetiString start=+\<'+ skip=+''+ end=+'+
 
 " Numbers: supporting integers and floating point numbers
-syn match yetiNumber "-\=\<[+-]\?\d*\.\?\d\+\([eE]\d*\)\?\>"
+syn match yetiNumber "-\=\<\([+-]\?\d*\.\?\d\+\([eE]\d*\)\?\|0x[0-9a-fA-F]\+\)\>"
 
 syn match yetiMemberOp "\(\<\u\(\w\|\$\)*\_\s*\)\?#\_\s*\w\+\_\s*\(()\)\?"
 
