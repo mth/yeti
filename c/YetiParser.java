@@ -1540,7 +1540,7 @@ interface YetiParser {
                 throw new CompileException(node,
                             "Expected typename, not a " + node);
             String s = ((Sym) node).sym;
-            if (!Character.isLowerCase(s.charAt(0)))
+            if (!Character.isLowerCase(s.charAt(0)) && s.charAt(0) != '_')
                 throw new CompileException(node,
                             "Typename must start with lowercase character");
             return s;

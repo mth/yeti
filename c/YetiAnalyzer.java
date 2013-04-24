@@ -995,7 +995,7 @@ public final class YetiAnalyzer extends YetiType {
         def[def.length - 1] = type;
         scope.typeDef = def;
 
-        if (seqKind instanceof TopLevel) {
+        if (typeDef.name.charAt(0) != '_' && seqKind instanceof TopLevel) {
             if (((TopLevel) seqKind).typeDefs.put(typeDef.name, def) != null &&
                     override)
                 throw new CompileException(typeDef, "Overriding typedef opaque "
