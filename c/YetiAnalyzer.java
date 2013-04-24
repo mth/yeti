@@ -1132,22 +1132,22 @@ public final class YetiAnalyzer extends YetiType {
         SeqExpr[] seq = null;
         Node arg = lambda.expr[0];
 
-        if (arg instanceof Sym) {
-            if (expected != null && expected.type == FUN)
-                to.arg.type = expected.param[0];
-            else
-                to.arg.type = new YType(depth);
-            String argName = arg.sym();
-            if (argName != "_")
-                bodyScope = new Scope(scope, argName, to);
-        } else if (arg.kind == "()") {
+        if (arg.kind == "()") {
             to.arg.type = UNIT_TYPE;
-        } else if (arg.kind == "struct") {
-            to.arg.type = new YType(depth);
-            seq = new SeqExpr[] { null, null };
-            bodyScope = bindStruct(to, (XNode) arg, false, scope, depth, seq);
         } else {
-            throw new CompileException(arg, "Bad argument: " + arg);
+            to.arg.type = expected != null && expected.type == FUN
+                ? expected.param[0] : new YType(depth);
+            if (arg instanceof Sym) {
+                String argName = arg.sym();
+                if (argName != "_")
+                    bodyScope = new Scope(scope, argName, to);
+            } else if (arg.kind == "struct") {
+                seq = new SeqExpr[] { null, null };
+                bodyScope =
+                    bindStruct(to, (XNode) arg, false, scope, depth, seq);
+            } else {
+                throw new CompileException(arg, "Bad argument: " + arg);
+            }
         }
         if (bodyScope == null)
             bodyScope = new Scope(scope, null, to);
