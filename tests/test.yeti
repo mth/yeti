@@ -1,5 +1,12 @@
 program test;
 
+expectCompileError testCode =
+   (load yeti.lang.compiler.eval;
+    case evaluateYetiCode [] [] testCode of
+    {result = CompileException _}: true;
+    {str}: println str; false;
+    esac);
+
 received = array [];
 addReceived v =
     push received v;
@@ -274,19 +281,24 @@ done,
         esac;
     id f "" (Token "foo") == Error "[]"
 done,
+'evil2': do:
+    expectCompileError
+       'var id x = x;
+        do:
+                z = { a = id }.a;
+                println (z "a");
+                println (z 42)
+        done (id := do x: x + 1 done)'
+done,
 'mutability and polymorphism': do:
-    testCode = """var v = None ();
+    expectCompileError
+     """var v = None ();
         o = { setValue x = v := Some x, value () = v };
         o.setValue 'kala';
         case o.value () of
         Some x: println (x + 2);
         None _: println "None";
-        esac""";
-    load yeti.lang.compiler.eval;
-    case evaluateYetiCode [] [] testCode of
-    {result = CompileException _}: true;
-    {str}: println str; false;
-    esac
+        esac"""
 done,
 ];
 
