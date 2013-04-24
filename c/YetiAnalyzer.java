@@ -1035,11 +1035,13 @@ public final class YetiAnalyzer extends YetiType {
                 Bind bind = (Bind) nodes[i];
                 BindExpr binder;
                 XNode lambda;
+                int bindDepth = bind.var ? depth : depth + 1;
                 if ((lambda = asLambda(bind.expr)) != null) {
                     bind.expr = lambda;
-                    binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
+                    binder = (BindExpr)
+                        singleBind(bind, scope, bindDepth - 1).selfBind;
                 } else {
-                    Code code = analyze(bind.expr, scope, depth + 1);
+                    Code code = analyze(bind.expr, scope, bindDepth);
                     binder = new BindExpr(code, bind.var);
                     if (bind.type != null)
                         isOp(bind, bind.type, binder.st, scope, depth);
