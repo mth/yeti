@@ -76,15 +76,15 @@ json value is json_value -> json = {
         esac,
 };
 
-json_str  = json . String;
-json_num  = json . Number;
-json_bool = json . Boolean;
-json_list' = json . List;
-json_list = json_list' . map (.value);
-json_obj  = json . Object;
-json_null = json (Null ());
+jsonStr  = json . String;
+jsonNum  = json . Number;
+jsonBool = json . Boolean;
+jsonList' = json . List;
+jsonList = jsonList' . map (.value);
+jsonObj  = json . Object;
+jsonNull = json (Null ());
 
-json_decode str is string -> json =
+jsonParse str is string -> json =
    (invalid = failWith . ("Invalid JSON: " ^);
     var tokens = matchAll ('\s+|([{:,}\[\]]|"(?:[^\\"]|\["\\/bfnrtu])*"|' ^
                           '-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|null|true|false)')
@@ -158,18 +158,18 @@ json_decode str is string -> json =
     fi;
     json res);
 
-json_encode is json_value -> string =
+jsonEncode is json_value -> string =
    \case of
     String s: Core#show(s);
     Number n: "\(n)";
-    Object m: "{\(mapHash (_ k v = "\(Core#show(k)):\(json_encode v.value)") m
+    Object m: "{\(mapHash (_ k v = "\(Core#show(k)):\(jsonEncode v.value)") m
                     |> strJoin ',')}";
-    List l: "[\(map json_encode l |> strJoin ',')]";
+    List l: "[\(map jsonEncode l |> strJoin ',')]";
     Boolean b: "\(b)";
     Null (): "null";
     esac;
 
-json_encode is json -> string = json_encode . (.value);
+jsonEncode is json -> string = jsonEncode . (.value);
 
-{ json, json_str, json_num, json_bool, json_list', json_list, json_obj,
-  json_null, json_decode, json_encode }
+{ json, jsonStr, jsonNum, jsonBool, jsonList', jsonList, jsonObj,
+  jsonNull, jsonDecode, jsonEncode }
