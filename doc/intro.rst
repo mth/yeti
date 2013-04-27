@@ -1759,10 +1759,10 @@ The ``splitAt`` is a standard function which returns structure containing
 first n elements from list as ``fst`` field and the rest as the ``snd``
 field.
 
-Overridiing using 'with'
+Overriding using 'with'
 ++++++++++++++++++++++++
 
-A structure can be merged/overriden with another structure using the ``with`` 
+A structure can be merged/overridden with another structure using the ``with`` 
 keyword::
 
     > {a="foo", b=2} with {b=3,c = true}
@@ -2303,13 +2303,13 @@ followed by ``is``::
 Type Aliases using 'shared'
 +++++++++++++++++++++++++++++
 
-Often types are quite complex and writing the ``typedef`` is accordingly much 
-code, which is annoying when you know that yeti anway inferes the right type.
+Often types are quite complex, and writing the ``typedef`` is therefore much 
+code, which is annoying, when you know that yeti already infers the right type.
 
 Therefore alias-types can be implicitly defined using the ``typedef shared```
 keywords.
 
-Lets say we have cowboys and horses want to map their respective 
+Lets say we have cowboys and horses, and want to map their respective 
 relatives ::
 
     program cowboys;
@@ -2392,7 +2392,7 @@ Now we get a compile-error ::
 
 
 Opaque Types
-++++++++++++
++++++++++++++++
 
 The usual typedef - like described in the previous two paragraphs - defines a 
 named alias for some type, that can be used interchangeably with the original 
@@ -2437,9 +2437,9 @@ runtime)::
          values is magic<'b> -> list<'b>, 
     } 
 
-In the above example a new type ``magic<a>`` together with conversation 
-funcitons is defined, which is implentation-wise just a ``list<a>``. However 
-it is as a type completly different from ``list<a>`` as you can see
+In the above example a new type ``magic<a>`` together with conversion 
+functions is defined, which implentation-wise is just a ``list<a>``. However 
+it is completly different type from ``list<a>``, as you can see
 in the following example::
 
        load opaquelist; 
@@ -2450,8 +2450,8 @@ in the following example::
        // because 'for v println;' would not compile as v is no list 
        for (values v) println; 
        
-Opaque types are als very useful to hide java-classes and to transport
-type-varialbles with them.
+Opaque types are also useful to hide java-classes and to include
+type-variables with them.
 
 
 Running and compiling source files
