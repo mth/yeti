@@ -172,4 +172,4 @@ jsonEncode is json_value -> string =
 jsonEncode is json -> string = jsonEncode . (.value);
 
 { json, jsonStr, jsonNum, jsonBool, jsonList', jsonList, jsonObj,
-  jsonNull, jsonDecode, jsonEncode }
+  jsonNull, jsonParse, jsonEncode }
