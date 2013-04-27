@@ -1840,7 +1840,7 @@ signature restricts argument and result types to be same (which is needed
 for fields that were not known in the function).
 
 Also the right-hand side must be a structure with known member set. Therefore
-the following does not compile:
+the following does not compile::
 
     > g x = {a = 2} with x
     1:20: Right-hand side of with must be a structure with known member set
@@ -2306,11 +2306,11 @@ Type Aliases using 'shared'
 Often types are quite complex, and writing the ``typedef`` is therefore much 
 code, which is annoying, when you know that yeti already infers the right type.
 
-Therefore alias-types can be implicitly defined using the ``typedef shared```
-keywords.
+Therefore alias types can be implicitly defined using the ``typedef shared``
+definition.
 
 Lets say we have cowboys and horses, and want to map their respective 
-relatives ::
+relatives::
 
     program cowboys;
 
@@ -2350,14 +2350,13 @@ relatives ::
 Now we have a problem because the above compiles fine and the cowboy John 
 has the horse Blacky as his relative.
         
-To make sure that addCowboyRelative only takes cowboys as argument we
-could create a ``typedef`` like described in the previous 
-paragraph, but this would be more or less just a repeat of the createCowboy
-function and we would have to do the same for horses.
+We could use ``typedef`` like described in the previous paragraph
+to make sure that addCowboyRelative only takes cowboys as argument,
+but this would more or less just repeat the createCowboy
+function, and we would have to do the same for horses.
 
-Instead we can use ``typedef shared`` to say that the return-type of 
-``createCowboy`` should be the same as the argument-types  of 
-``addCowboyRelative`` ::
+Instead we can use ``typedef shared`` to say that the return type of 
+``createCowboy`` should be same as the argument types of ``addCowboyRelative``::
 
     typedef shared cowboy = 'a;
     typedef shared horse = 'a;
@@ -2383,7 +2382,7 @@ Instead we can use ``typedef shared`` to say that the return-type of
 
     println john;
 
-Now we get a compile-error ::
+Now we get a compile-error::
 
     C:\TEMP>java -jar C:\yeti\yeti.jar cowboys.yeti
     cowboys.yeti:34:52: Cannot apply cowboy -> cowboy -> cowboy function 
@@ -2416,12 +2415,8 @@ The new types can be put in use with as cast, like::
     1 is [code:foo#0]<> 
 
 It's useful if you want to hide actual implementation types. 
-There is simple example of it in the git repo: 
-
-https://github.com/mth/yeti/blob/master/examples/opaquelist.yeti 
-
 Yeti supports hiding implementation using closures and structs, additional 
-opaque types can hide the underlying-types also (An additional benefit is 
+opaque types can hide the underlying types also (an additional benefit is 
 that opaque types have zero runtime overhead as they don't exist at 
 runtime):: 
 
@@ -2450,8 +2445,8 @@ in the following example::
        // because 'for v println;' would not compile as v is no list 
        for (values v) println; 
        
-Opaque types are also useful to hide java-classes and to include
-type-variables with them.
+Opaque types are also useful to hide Java classes and to include
+type variables with them.
 
 
 Running and compiling source files
