@@ -180,7 +180,7 @@ final class ByteArray extends LList {
     }
 
     public Object first() {
-        return new IntNum(a[start]);
+        return new IntNum(a[start] & 0xff);
     }
 
     public AList rest() {

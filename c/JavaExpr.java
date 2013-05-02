@@ -402,6 +402,10 @@ class JavaExpr extends Code {
             ctx.visitLabel(end);
         } else if (descr == "B" || descr == "S" ||
                    descr == "I" || descr == "J") {
+            if (descr == "B") {
+                ctx.intConst(0xff);
+                ctx.insn(IAND);
+            }
             ctx.typeInsn(NEW, "yeti/lang/IntNum");
             if (descr == "J") {
                 ctx.insn(DUP_X2);
