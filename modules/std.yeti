@@ -2778,6 +2778,27 @@ plus a b = a + b;
 
     /**
      * Group: zmisc
+     * Encodes list of bytes as BASE64 string and returns the result.
+     *
+     * Arguments:
+     * bytes - bytes to encode
+     */
+    base64Encode bytes is list<number> -> string =
+        bytes = bytes as ~byte[];
+        Core#b64enc(bytes, length bytes),
+
+    /**
+     * Group: zmisc
+     * Decodes BASE64 encoded data into byte array and returns the result.
+     *
+     * Arguments:
+     * data - BASE64 encoded data
+     */
+    base64Decode data is string -> ~byte[] =
+        Core#b64dec(data unsafely_as ~String),
+
+    /**
+     * Group: zmisc
      * Provides a return function for a block.
      *
      * Arguments:
