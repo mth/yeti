@@ -1,6 +1,7 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* Fix [A x, A x] in case of
 * Smart typedefs, if possible
 * Module type not fully defined message is confusing,
   should give more info about where error is.
@@ -27,6 +28,7 @@
   for example by defining special property like { get as string () = "hi!" }
 * Struct mapping (as in doc/stmap.yeti)
 * Allow cons pattern match (::) on arrays?
+* Have fall keyword in case to jump to checking next pattern.
 * Exhaustive list match detection probably could be improved by something
   like introducing FL_EMPTY_PATTERN and keeping account about the list tail
   being exhaustive.
