@@ -175,7 +175,7 @@ public final class RatNum extends Num {
         if ((a = denominator * num) > 0x7fffffffL || a < -0x7fffffffL) {
             long gcd, b = numerator / (gcd = gcd(a, numerator));
             if ((a /= gcd) > 0x7fffffffL || a < -0x7fffffffL) {
-                return new FloatNum((double) b / a);
+                return new FloatNum((double) a / b);
             }
             return new RatNum(a, b);
         }
