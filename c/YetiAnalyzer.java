@@ -1347,6 +1347,7 @@ public final class YetiAnalyzer extends YetiType {
         Scope scope;
         int depth;
         List variants = new ArrayList();
+        List listVars;
         int submatch; // hack for variants
   
         CaseCompiler(Code val, int depth) {
@@ -1356,10 +1357,12 @@ public final class YetiAnalyzer extends YetiType {
         }
 
         CasePattern toPattern(Node node, YType t, String doc) {
-            if ((t.flags & FL_ANY_PATTERN) != 0) {
+            if ((t.flags & FL_ANY_PATTERN) != 0)
                 throw new CompileException(node,
                     "Useless case " + node + " (any value already matched)");
-            }
+            if (t.type == VAR && t.ref == null && listVars != null &&
+                    !listVars.contains(t))
+                listVars.add(t);
             if (node instanceof Sym) {
                 t.flags |= FL_ANY_PATTERN;
                 String name = node.sym();
@@ -1368,9 +1371,8 @@ public final class YetiAnalyzer extends YetiType {
                 BindPattern binding = new BindPattern(exp, t);
                 scope = new Scope(scope, name, binding);
                 t = t.deref();
-                if (t.type == VARIANT) {
+                if (t.type == VARIANT)
                     t.flags |= FL_ANY_PATTERN;
-                }
                 return binding;
             }
             if (node.kind == "()") {
@@ -1406,11 +1408,16 @@ public final class YetiAnalyzer extends YetiType {
                 CasePattern[] items = new CasePattern[list.expr.length];
                 int anyitem = FL_ANY_PATTERN;
                 ++submatch;
+                List oldListVars = listVars;
+                listVars = new ArrayList();
                 for (int i = 0; i < items.length; ++i) {
                     itemt.flags &= ~FL_ANY_PATTERN;
+                    for (int j = listVars.size(); --j >= 0; )
+                        ((YType) listVars.get(j)).flags &= ~FL_ANY_PATTERN;
                     items[i] = toPattern(list.expr[i], itemt, null);
                     anyitem &= itemt.flags;
                 }
+                listVars = oldListVars;
                 --submatch;
                 itemt.flags &= anyitem;
                 unify(t, lt, node, scope, "#0");
@@ -1420,22 +1427,19 @@ public final class YetiAnalyzer extends YetiType {
                 BinOp pat = (BinOp) node;
                 if (pat.op == "" && pat.left instanceof Sym) {
                     String variant = pat.left.sym();
-                    if (!Character.isUpperCase(variant.charAt(0))) {
+                    if (!Character.isUpperCase(variant.charAt(0)))
                         throw new CompileException(pat.left, variant +
                             ": Variant constructor must start with upper case");
-                    }
                     t = t.deref();
-                    if (t.type != VAR && t.type != VARIANT) {
+                    if (t.type != VAR && t.type != VARIANT)
                         throw new CompileException(node, "Variant " + variant +
                                      " ... is not " + t.toString(scope, null));
-                    }
                     t.type = VARIANT;
                     if (t.requiredMembers == null) {
                         t.requiredMembers = new HashMap();
                         t.flags |= FL_ANY_CASE;
-                        if (submatch == 0) { // XXX hack!!!
+                        if (submatch == 0) // XXX hack!!!
                             variants.add(t);
-                        }
                     }
                     YType argt = new YType(depth);
                     argt.doc = doc;
@@ -1547,9 +1551,8 @@ public final class YetiAnalyzer extends YetiType {
     static String checkPartialMatch(YType t) {
         if (t.seen || (t.flags & FL_ANY_PATTERN) != 0)
             return null;
-        if ((t.flags & FL_PARTIAL_PATTERN) != 0) {
+        if ((t.flags & FL_PARTIAL_PATTERN) != 0)
             return t.type == MAP ? "[]" : t.toString();
-        }
         if (t.type != VAR) {
             t.seen = true;
             for (int i = t.param.length; --i >= 0;) {
@@ -1579,9 +1582,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code caseType(XNode ex, Scope scope, int depth) {
         Node[] choices = ex.expr;
-        if (choices.length <= 1) {
+        if (choices.length <= 1)
             throw new CompileException(ex, "case expects some option!");
-        }
         Code val = analyze(choices[0], scope, depth);
         CaseCompiler cc = new CaseCompiler(val, depth);
         CasePattern[] pats = new CasePattern[choices.length];
@@ -1595,15 +1597,12 @@ public final class YetiAnalyzer extends YetiType {
             cc.exp.resetParams();
         }
         String partialError = checkPartialMatch(argType);
-        if (partialError != null) {
+        if (partialError != null)
             throw new CompileException(ex, "Partial match: " + partialError);
-        }
         cc.finalizeVariants();
-        for (int i = 1; i < choices.length; ++i) {
-            if (choices[i].kind != "...") {
+        for (int i = 1; i < choices.length; ++i)
+            if (choices[i].kind != "...")
                 cc.mergeChoice(pats[i], ((XNode) choices[i]).expr[1], scopes[i]);
-            }
-        }
         unify(val.type, argType, choices[0], scope,
           "Inferred type for case argument is #2, but a #1 is given\n    (#0)");
         return cc.exp;
@@ -1627,11 +1626,10 @@ public final class YetiAnalyzer extends YetiType {
                     throw new CompileException(items[i],
                                                "Expecting , here, not :");
                 keyNode = (XNode) items[i];
-                if (kind == LIST_TYPE) {
+                if (kind == LIST_TYPE)
                     throw new CompileException(keyNode,
                         "Unexpected : in list" + (i != 1 ? "" :
                         " (or the key is missing on the first item?)"));
-                }
                 --n;
                 continue;
             }
@@ -1681,12 +1679,10 @@ public final class YetiAnalyzer extends YetiType {
                 }
             }
         }
-        if (type == null) {
+        if (type == null)
             type = new YType(depth);
-        }
-        if (kind == null) {
+        if (kind == null)
             kind = LIST_TYPE;
-        }
         if (emptyMap) {
             keyType = new YType(depth);
             keyItems = new Code[0];
