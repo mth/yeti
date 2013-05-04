@@ -1414,6 +1414,7 @@ public final class YetiAnalyzer extends YetiType {
                     itemt.flags &= ~FL_ANY_PATTERN;
                     for (int j = listVars.size(); --j >= 0; )
                         ((YType) listVars.get(j)).flags &= ~FL_ANY_PATTERN;
+                    listVars.clear();
                     items[i] = toPattern(list.expr[i], itemt, null);
                     anyitem &= itemt.flags;
                 }
