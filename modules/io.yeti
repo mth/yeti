@@ -532,14 +532,6 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
 
     /**
      * Group: read_
-     * Deprecated, use (readerHandle reader).lines
-     * if you need this functionality.
-     */
-    linesOfReader reader is ~BufferedReader -> list<string> =
-        ReaderList#lines(reader) unsafely_as list<string>,
-
-    /**
-     * Group: read_
      * Applies the given block to text input handle opened for specified
      * file. The input handle will be automatically closed afterwards
      * (even when exception was thrown by the block).
@@ -689,27 +681,6 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
     binReadAll limit handle
             is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
         BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
-
-    /**
-     * Group: zmisc
-     * Deprecated. Use fetchURL instead.
-     */
-    openTextUrl options url
-            is list<CharSet (string -> string)> -> string -> 'a =
-        conn = new java.net.URL(url unsafely_as ~String)#openConnection();
-        stream = conn#getInputStream();
-        cs = try
-                contentType = conn#getContentType();
-                cs = strTrim (strRightOf 'CHARSET=' (strUpper contentType));
-                case options of
-                CharSet f :: _: f cs;
-                _: cs
-                esac
-             catch java.lang.Throwable t:
-                stream#close();
-                throw t
-             yrt;
-        inputHandle stream if cs != '' then cs else 'ISO-8859-1' fi,
 
     /**
      * Group: zmisc
