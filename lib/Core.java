@@ -240,11 +240,11 @@ public final class Core {
     static String b64enc(byte[] buf, int len) {
         char[] res = new char[(len + 2) / 3 * 4];
         for (int s = 0, d = 0; len > 0; len -= 3) {
-            res[d] = base64[buf[s] >> 2];
+            res[d] = base64[buf[s] >>> 2 & 63];
             res[d + 1] = base64[((buf[s] & 3) << 4) |
-                                (len > 1 ? buf[s + 1] >> 4 : 0)];
+                                (len > 1 ? buf[s + 1] >>> 4 & 15 : 0)];
             res[d + 2] = len > 1 ? base64[((buf[s + 1] & 15) << 2) |
-                                         (len > 2 ? buf[s + 2] >> 6 : 0)] : '=';
+                                     (len > 2 ? buf[s + 2] >>> 6 & 3: 0)] : '=';
             res[d + 3] = len > 2 ? base64[buf[s + 2] & 63] : '=';
             s += 3;
             d += 4;
@@ -272,12 +272,12 @@ public final class Core {
                 tmp[0] = (byte) (v << 2);
                 break;
             case 1:
-                tmp[0] |= v >> 4;
+                tmp[0] |= v >>> 4;
                 tmp[1] = (byte) ((v & 15) << 4);
                 break;
             case 2:
-                tmp[1] |= v >> 2;
-                tmp[2] = (byte) (v & 3);
+                tmp[1] |= v >>> 2;
+                tmp[2] = (byte) ((v & 3) << 6);
                 break;
             case 3:
                 tmp[2] |= v;
