@@ -86,8 +86,8 @@ jsonNull = json (Null ());
 
 jsonParse str is string -> json =
    (invalid = failWith . ("Invalid JSON: " ^);
-    var tokens = matchAll ('\s+|([{:,}\[\]]|"(?:[^\\"]|\\["\\/bfnrtu])*"|' ^
-                          '-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?|null|true|false)')
+    var tokens = matchAll ('\s++|([{:,}\[\]]|"(?:[^\\"]|\\["\\/bfnrtu])*+"|' ^
+                         '-?\d++(?:\.\d++)?(?:[eE][+-]?\d++)?|null|true|false)')
                           (`at` 0) invalid str;
     fetch () =
         case tokens of
