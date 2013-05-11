@@ -152,7 +152,6 @@ class JavaExpr extends Code {
                 convertNum(ctx, descr);
             }
             ctx.varInsn(ILOAD, index); // AaAvn
-            ctx.insn(SWAP); // AaAnv
             int insn = BASTORE;
             switch (argType.javaType.description.charAt(0)) {
                 case 'D': insn = DASTORE; break;
@@ -160,6 +159,13 @@ class JavaExpr extends Code {
                 case 'I': insn = IASTORE; break;
                 case 'J': insn = LASTORE; break;
                 case 'S': insn = SASTORE;
+            }
+            if (insn == DASTORE || insn == LASTORE) {
+                // AaAvvn actually - long and double is 2 entries
+                ctx.insn(DUP_X2); // AaAnvvn
+                ctx.insn(POP);    // AaAnvv
+            } else {
+                ctx.insn(SWAP); // AaAnv
             }
             ctx.insn(insn); // Aa
             ctx.jumpInsn(GOTO, next); // Aa
