@@ -400,9 +400,13 @@ class TypeDescr extends YetiType {
                 if (p2.type == LIST_MARKER) {
                     descr.name = p1.type == NONE ? "list" : p1.type == NUM
                                     ? "array" : "list?";
+                    if ((p1.flags & FL_ERROR_IS_HERE) != 0)
+                        descr.name = descr.name.concat("*");
                 } else {
                     descr.name = p2.type == MAP_MARKER || p1.type != NUM
                                     && p1.type != VAR ? "hash" : "map";
+                    if ((p2.flags & FL_ERROR_IS_HERE) != 0)
+                        descr.name = descr.name.concat("*");
                     n = 2;
                 }
                 while (--n >= 0) {
