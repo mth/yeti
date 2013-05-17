@@ -256,6 +256,21 @@ done,
     ...
     esac
 done,
+'typevars in map': do:
+    testModule = """
+        module test;
+        typedef obj = { f is () -> 'a }
+        st d = { data = d, ix x y =
+            case d of A aa: a = aa[x]; a[y]; B bb: b = bb[y]; b[x]; esac };
+        mk s = s with { f () = st (A (array [[1]])); };
+        { mk } as { mk is obj -> obj }
+    """;
+    load yeti.lang.compiler.eval;
+    modules = array [];
+    compileYetiFiles [SourceReader \testModule] [Type (push modules)]
+                     ['test.yeti'];
+    length modules == 1
+done,
 'double arguments': do:
     class Doubles(double a, double b, double c)
         double res()

@@ -1038,10 +1038,14 @@ public class YetiType implements YetiParser {
                 if (t.type == STRUCT || t.type == VARIANT) {
                     vars.remove(t.param[0].deref());
                     i = 1;
+                } else if (t.type == MAP) {
+                    // MAP marker type var shouldn't really cause
+                    // polymorphism restrictions - no real data associated.
+                    vars.remove(t.param[2].deref());
                 }
                 t.seen = true;
-                for (; i < t.param.length; ++i) {
-                    removeStructs(t.param[i], vars);
+                while (i < t.param.length) {
+                    removeStructs(t.param[i++], vars);
                 }
                 t.seen = false;
             } else if (t.ref != null) {
