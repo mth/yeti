@@ -59,9 +59,13 @@ public class PArray extends LList {
         return rest;
     }
 
+    AList slice(int start, int length) {
+        return new PArray(start, length, array);
+    }
+
     public AList rest() {
         int n;
-        return (n = start + 1) >= length ? null : new PArray(n, length, array);
+        return (n = start + 1) >= length ? null : slice(n, length);
     }
 
     public AList take(int from, int count) {
@@ -74,7 +78,7 @@ public class PArray extends LList {
             return null;
         if (from == start && count == length)
             return this;
-        return new PArray(from, count, array);
+        return slice(from, count);
     }
 
     public long length() {
@@ -131,9 +135,8 @@ final class CharArray extends PArray {
         return new String((char[]) array, start, 1);
     }
 
-    public AList rest() {
-        int n;
-        return (n = start + 1) >= length ? null : new CharArray(n, length, array);
+    AList slice(int start, int length) {
+        return new CharArray(start, length, array);
     }
 }
 
@@ -146,9 +149,8 @@ final class FloatArray extends PArray {
         return new FloatNum(Array.getDouble(array, start));
     }
 
-    public AList rest() {
-        int n;
-        return (n = start + 1) >= length ? null : new FloatArray(n, length, array);
+    AList slice(int start, int length) {
+        return new FloatArray(start, length, array);
     }
 }
 
@@ -161,9 +163,8 @@ final class BooleanArray extends PArray {
         return ((boolean[]) array)[start] ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    public AList rest() {
-        int n;
-        return (n = start + 1) >= length ? null : new BooleanArray(n, length, array);
+    AList slice(int start, int length) {
+        return new BooleanArray(start, length, array);
     }
 }
 
