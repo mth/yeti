@@ -264,6 +264,8 @@ interface YetiParser {
 
         String str() {
             StringBuffer res = new StringBuffer("(`begin");
+            if (seqKind != null)
+                res.append(':').append(seqKind);
             for (int i = 0; st != null && i < st.length; ++i) {
                 res.append(' ').append(st[i].str());
             }
@@ -1332,7 +1334,7 @@ interface YetiParser {
                 if (sym.kind == "=") {
                     args = l;
                     if (end == '}') {
-                        l = Collections.singletonList(readSeq(' ', null));
+                        l = Collections.singletonList(readSeq(' ', "{}"));
                         if ((sym = eofWas) instanceof Eof)
                             break;
                     } else {

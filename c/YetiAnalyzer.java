@@ -472,7 +472,7 @@ public final class YetiAnalyzer extends YetiType {
         if (t.expr[lastCatch].kind != "catch") {
             tc.cleanup = analyze(t.expr[lastCatch], scope, depth);
             expectUnit(tc.cleanup, t.expr[lastCatch], scope,
-                      "finally block must have a unit type");
+                      "finally block must have a unit type", null);
             --lastCatch;
         }
         for (int i = 1; i <= lastCatch; ++i) {
@@ -758,7 +758,7 @@ public final class YetiAnalyzer extends YetiType {
         }
         loop.body = analyze(node.right, scope, depth);
         expectUnit(loop.body, node.right, scope,
-                   "Loop body must have a unit type");
+                   "Loop body must have a unit type", null);
         return loop;
     }
 
@@ -1005,7 +1005,8 @@ public final class YetiAnalyzer extends YetiType {
         return scope;
     }
 
-    static void expectUnit(Code value, Node where, Scope scope, String what) {
+    static void expectUnit(Code value, Node where, Scope scope,
+                           String what, String hint) {
         if (value.type.type == JAVA || value.type.type == JAVA_ARRAY)
             return; // java is messy, don't try to be strict with it
         try {
@@ -1021,6 +1022,8 @@ public final class YetiAnalyzer extends YetiType {
                 && !(value instanceof Function)) {
                 s += "\n    Maybe you should give more arguments"
                    + " to the function?";
+            } else if (hint != null) {
+                s += hint;
             }
             throw new CompileException(where, scope, value.type, null, s, ex);
         }
@@ -1091,8 +1094,9 @@ public final class YetiAnalyzer extends YetiType {
                 scope = scope_[0];
             } else {
                 Code code = analyze(nodes[i], scope, depth);
-                expectUnit(code, nodes[i], scope, "Unit type expected here");
-                //code.ignoreValue();
+                expectUnit(code, nodes[i], scope, "Unit type expected here",
+                    seq.seqKind != "{}" ? null :
+                    "\n    (use , instead of ; to separate structure fields)");
                 addSeq(last, new SeqExpr(code));
             }
         }
@@ -1831,7 +1835,7 @@ public final class YetiAnalyzer extends YetiType {
                 checkModuleFree(n, root);
             } else if ((flags & Compiler.CF_EVAL) == 0) {
                 expectUnit(root, n, topLevel.typeScope,
-                           "Program body must have a unit type");
+                           "Program body must have a unit type", null);
             }
             return root;
         } finally {
