@@ -62,6 +62,15 @@ class JavaExpr extends Code {
             (argType.type == YetiType.JAVA_ARRAY ||
              argType.type == YetiType.JAVA &&
                 argType.javaType.isCollection())) {
+            YType t = argType.param.length != 0
+                        ? argType.param[0].deref() : null;
+            if (argType.type == YetiType.JAVA_ARRAY &&
+                t.javaType != null && t.javaType.description == "B") {
+                ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+                ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
+                               "bytes", "(Lyeti/lang/AList;)[B");
+                return;
+            }
             Label retry = new Label(), end = new Label();
             ctx.typeInsn(CHECKCAST, "yeti/lang/AIter"); // i
             String tmpClass = descr != "Ljava/lang/Set;"
@@ -80,10 +89,8 @@ class JavaExpr extends Code {
             ctx.insn(DUP2); // aiai
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "first", "()Ljava/lang/Object;");
-            YType t = null;
-            if (argType.param.length != 0 &&
-                ((t = argType.param[0]).type != YetiType.JAVA ||
-                 t.javaType.description.length() > 1)) {
+            if (t != null && t.type != YetiType.JAVA ||
+                 t.javaType.description.length() > 1) {
                 convert(ctx, given.param[0], argType.param[0]);
             }
             // aiav
