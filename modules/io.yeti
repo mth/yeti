@@ -380,7 +380,7 @@ binInputHandle istream is ~InputStream -> 'a = {
 binOutputHandle ostream is ~OutputStream -> 'a = {
         /**
          * Writes bytes from the given list to the output stream.
-         * If numbers out of the range -127 to 255 are present in
+         * If numbers out of the range -128 to 255 are present in
          * the list, then the result is undefined.
          *
          * Arguments:
