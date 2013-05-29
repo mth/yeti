@@ -69,6 +69,7 @@ final class ConcatLists extends LList {
                 i = (AIter) lists.first();
                 while (i != null)
                     i = i.write(out);
+                lists = lists.next();
             } while (lists != null);
         }
         return null;
