@@ -60,10 +60,12 @@ public class PArray extends LList {
     }
 
     public AIter dup() {
-        return slice(start, length);
+         PArray slice = slice(start, length);
+         slice.iter = true;
+         return slice;
     }
 
-    AList slice(int start, int length) {
+    PArray slice(int start, int length) {
         return new PArray(start, length, array);
     }
 
@@ -139,7 +141,7 @@ final class CharArray extends PArray {
         return new String((char[]) array, start, 1);
     }
 
-    AList slice(int start, int length) {
+    PArray slice(int start, int length) {
         return new CharArray(start, length, array);
     }
 }
@@ -153,7 +155,7 @@ final class FloatArray extends PArray {
         return new FloatNum(Array.getDouble(array, start));
     }
 
-    AList slice(int start, int length) {
+    PArray slice(int start, int length) {
         return new FloatArray(start, length, array);
     }
 }
@@ -167,61 +169,43 @@ final class BooleanArray extends PArray {
         return ((boolean[]) array)[start] ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    AList slice(int start, int length) {
+    PArray slice(int start, int length) {
         return new BooleanArray(start, length, array);
     }
 }
 
 // XXX maybe ByteArray should also implement it's own iteration like PArray
-final class ByteArray extends LList {
+final class ByteArray extends PArray {
     private final byte[] a;
-    private final int start;
-    private final int length;
 
-    ByteArray(int start_, int length_, byte[] a_) {
-        super(null, null);
-        a = a_;
-        start = start_;
-        length = length_;
+    ByteArray(int start, int length, byte[] a) {
+        super(start, length, a);
+        this.a = a;
     }
 
     public Object first() {
         return new IntNum(a[start] & 0xff);
     }
 
-    public AList rest() {
-        if (length <= 1)
-            return null;
-        return new ByteArray(start + 1, length - 1, a);
-    }
-
-    public AList take(int from, int count) {
-        if (from < 0)
-            from = 0;
-        if (count < 0 || count > length)
-            count = length;
-        if (from >= count)
-            return null;
-        if (from == 0 && count == length)
-            return this;
-        return new ByteArray(from, count - from, a);
+    PArray slice(int start, int length) {
+        return new ByteArray(start, length, a);
     }
 
     public void forEach(Object f_) {
         Fun f = (Fun) f_;
-        for (int i = start, e = i + length; i < e; ++i)
+        for (int i = start, e = length; i < e; ++i)
             f.apply(new IntNum(a[i]));
     }
 
     public Object fold(Fun f_, Object v) {
         Fun f = (Fun) f_;
-        for (int i = start, e = i + length; i < e; ++i)
+        for (int i = start, e = length; i < e; ++i)
             v = f.apply(v, new IntNum(a[i]));
         return v;
     }
 
     public AList reverse() {
-        byte[] tmp = new byte[length];
+        byte[] tmp = new byte[length - start];
         for (int i = 0; i < tmp.length; ++i)
             tmp[tmp.length - i] = a[i + start];
         return new ByteArray(0, tmp.length, tmp);
@@ -229,21 +213,21 @@ final class ByteArray extends LList {
 
     public Num index(Object v) {
         int b = ((IntNum) v).intValue();
-        for (int i = start, e = i + length; i < e; ++i)
+        for (int i = start, e = length; i < e; ++i)
             if (a[i] == b)
                 return new IntNum(i - start);
         return null;
     }
 
     public AList find(Fun pred) {
-        for (int i = start, e = i + length; i < e; ++i)
+        for (int i = start, e = length; i < e; ++i)
             if (pred.apply(new IntNum(a[i])) == Boolean.TRUE)
                 return new ByteArray(i, e - i, a);
         return null;
     }
 
     public AList sort() {
-        byte[] tmp = new byte[length];
+        byte[] tmp = new byte[length - start];
         System.arraycopy(a, start, tmp, 0, tmp.length);
         Arrays.sort(tmp);
         return new ByteArray(0, tmp.length, tmp);
@@ -254,7 +238,7 @@ final class ByteArray extends LList {
     }
 
     public Object copy() {
-        byte[] tmp = new byte[length];
+        byte[] tmp = new byte[length - start];
         System.arraycopy(a, start, tmp, 0, tmp.length);
         return new ByteArray(0, tmp.length, tmp);
     }
