@@ -30,6 +30,8 @@
  */
 package yeti.lang;
 
+import java.io.OutputStream;
+
 /** Yeti core library - List. */
 public abstract class AIter {
     /**
@@ -49,5 +51,10 @@ public abstract class AIter {
 
     public boolean isEmpty() {
         return false;
+    }
+
+    AIter write(OutputStream stream) throws java.io.IOException {
+        stream.write(((Number) first()).intValue());
+        return next();
     }
 }

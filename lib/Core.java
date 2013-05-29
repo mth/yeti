@@ -33,6 +33,7 @@
 package yeti.lang;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Random;
 
@@ -186,13 +187,13 @@ public final class Core {
         return o.toString();
     }
 
-    static String read(java.io.Reader r, int max) throws java.io.IOException {
+    static String read(java.io.Reader r, int max) throws IOException {
         char[] buf = new char[max];
         int n = r.read(buf, 0, max);
         return n < 0 ? null : new String(buf, 0, n);
     }
 
-    static String readAll(java.io.Reader r) throws java.io.IOException {
+    static String readAll(java.io.Reader r) throws IOException {
         StringBuffer result = new StringBuffer();
         char[] buf = new char[8192];
         int n;
@@ -290,6 +291,21 @@ public final class Core {
         if (n > 0) // 1, 2, 3
             buf.write(tmp, 0, n - 1);
         return buf.toByteArray();
+    }
+
+    public static byte[] bytes(AList list) {
+        if (list == null) {
+            return new byte[0];
+        }
+        try {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            AIter i = list;
+            while (i != null)
+                i = i.write(buf);
+            return buf.toByteArray();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 /*
