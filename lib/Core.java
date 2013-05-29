@@ -202,6 +202,30 @@ public final class Core {
         return result.toString();
     }
 
+    static AList readAll(int limit, Fun read, Fun close) {
+        byte[] buf = new byte[0 < limit && limit <= 65536 ? limit : 8192];
+        int l = 0, n;
+        try {
+            while ((n = ((Number) read.apply(buf, new IntNum(l)))
+                        .intValue()) >= 0)
+                if (buf.length - (l += n) < 2048) {
+                    int reserve = buf.length << 1;
+                    if (limit > 0 && reserve > limit) {
+                        if (buf.length >= limit)
+                            Unsafe.unsafeThrow(new java.io.IOException(
+                                "Read limit " + limit + " exceeded"));
+                        reserve = limit;
+                    }
+                    byte[] tmp = new byte[reserve];
+                    System.arraycopy(buf, 0, tmp, 0, l);
+                    buf = tmp;
+                }
+        } finally {
+            close.apply(null);
+        }
+        return l > 0 ? new ByteArray(0, l, buf) : null;
+    }
+
     public static final ThreadLocal ARGV = new ThreadLocal() {
         protected Object initialValue() {
             return new MList();
@@ -253,10 +277,9 @@ public final class Core {
         return new String(res);
     }
 
-    static byte[] b64dec(String src) throws Exception {
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        int n = 0;
-        byte[] tmp = new byte[3];
+    static AList b64dec(String src) throws Exception {
+        int n = 0, outp = 0;
+        byte[] buf = new byte[src.length() * 3 / 4];
 
         for (int s = 0, len = src.length(); s < len; ++s) {
             char c = src.charAt(s);
@@ -270,27 +293,27 @@ public final class Core {
             }
             switch (n) {
             case 0:
-                tmp[0] = (byte) (v << 2);
+                buf[outp] = (byte) (v << 2);
                 break;
             case 1:
-                tmp[0] |= v >>> 4;
-                tmp[1] = (byte) ((v & 15) << 4);
+                buf[outp] |= v >>> 4;
+                buf[outp + 1] = (byte) ((v & 15) << 4);
                 break;
             case 2:
-                tmp[1] |= v >>> 2;
-                tmp[2] = (byte) ((v & 3) << 6);
+                buf[outp + 1] |= v >>> 2;
+                buf[outp + 2] = (byte) ((v & 3) << 6);
                 break;
             case 3:
-                tmp[2] |= v;
-                buf.write(tmp);
+                buf[outp + 2] |= v;
+                outp += 3;
                 n = -1;
                 break;
             }
             ++n;
         }
         if (n > 0) // 1, 2, 3
-            buf.write(tmp, 0, n - 1);
-        return buf.toByteArray();
+            outp += n - 1;
+        return outp > 0 ? new ByteArray(0, outp, buf) : null;
     }
 
     public static byte[] bytes(AList list) {
@@ -307,26 +330,4 @@ public final class Core {
             throw new RuntimeException(ex);
         }
     }
-
-/*
-    public static Object convertList(Object value, String type) {
-        if (type == "") {
-            return value;
-        }
-        switch (type.charAt(0)) {
-        case 'l': return ((AList) value).toList(type.substring(1));
-        case 's': return ((AList) value).toSet(type.substring(1));
-        case '[': return ((AList) value).toArray(type.substring(1));
-        case 'B': return new Byte(((Num) value).byteValue());
-        case 'S': return new Short(((Num) value).shortValue());
-        case 'F': return new Float(((Num) value).floatValue());
-        case 'D': return new Double(((Num) value).doubleValue());
-        case 'I': return new Integer(((Num) value).intValue());
-        case 'J': return new Long(((Num) value).longValue());
-        case 'i': return ((Num) value).toBigInteger();
-        case 'd': return ((Num) value).toBigDecimal();
-        }
-        return value;
-    }
-*/
 }

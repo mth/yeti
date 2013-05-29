@@ -320,8 +320,7 @@ done,
 done,
 'base64': do:
     bytes = map (_ n = [1..n]) [0..0xff];
-    encdec x = base64Decode (base64Encode x) as list<number>;
-    map encdec bytes == bytes
+    map (base64Decode . base64Encode) bytes == bytes
 done,
 ];
 

@@ -2789,13 +2789,13 @@ plus a b = a + b;
 
     /**
      * Group: zmisc
-     * Decodes BASE64 encoded data into byte array and returns the result.
+     * Decodes BASE64 encoded data into byte list and returns the result.
      *
      * Arguments:
      * data - BASE64 encoded data
      */
-    base64Decode data is string -> ~byte[] =
-        Core#b64dec(data unsafely_as ~String),
+    base64Decode data is string -> list<number> =
+        Core#b64dec(data unsafely_as ~String) unsafely_as list<number>,
 
     /**
      * Group: zmisc

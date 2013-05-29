@@ -379,15 +379,17 @@ binInputHandle istream is ~InputStream -> 'a = {
  */
 binOutputHandle ostream is ~OutputStream -> 'a = {
         /**
-         * Writes first n bytes from the start of the given buffer
-         * to the output stream (calls `output#write(buffer, 0, n)`).
+         * Writes bytes from the given list to the output stream.
+         * If numbers out of the range -127 to 255 are present in
+         * the list, then the result is undefined.
          *
          * Arguments:
-         * buffer - byte array to write to the output stream
-         * n      - number of bytes to write
+         * list - list of bytes to write to the output stream
          */
-        write buf len is ~byte[] -> number -> () =
-            ostream#write(buf, 0, len),
+        write bytes is list?<number> -> () =
+            var i = bytes as ~AIter;
+            not nullptr? i loop
+                i := i#write(ostream),
 
         /**
          * Closes the output stream (calls `output#close()`).
@@ -642,28 +644,24 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * before, it will be truncated to zero length before appling the block.
      *
      * The write function is same as `.write` field in the handle object
-     * returned by the `binOutputHandle` function, taking as arguments a
-     * byte array and number of bytes to be written from the start of this
-     * array. It may be called as many times as needed, with each call
-     * writing additional bytes to the given file.
+     * returned by the `binOutputHandle` function, taking as argument
+     * a byte list to be written. It may be called as many times as needed,
+     * with each call writing additional bytes to the given file.
      *
      * Examples:
      * Write 4 bytes representing ASCII string 'TEST' to file 'testfile':
      * : binWriteFile 'testfile' do f:
-     * :     bytes = [84, 69, 83, 84] as ~byte[];
-     * :     f bytes (length bytes)
+     * :     f [84, 69, 83, 84]
      * : done
      */
-    binWriteFile name writer
-            is string -> ((~byte[] -> number -> ()) -> 'a) -> 'a =
+    binWriteFile name writer is string -> ((list<number> -> ()) -> 'a) -> 'a =
         withHandle (binOutputHandle new FileOutputStream(name is string))
                    (writer . (.write)),
 
     /**
      * Group: bin
-     * Reads up to limit bytes from input handle and returns function
-     * that will apply it's argument to byte[] buffer containing the data
-     * and actual number of bytes read.
+     * Reads up to limit bytes from input handle and returns a list of
+     * the read bytes.
      *
      * Arguments:
      *  limit - Maximum number of bytes to read (<= 0 means unlimited).
@@ -672,15 +670,11 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * Examples:
      * A contents of file could be copied in the following way:
      * : data = binReadFile "test" (binReadAll 0);
-     * : binWriteFile "test2" data;
-     *
-     * The read data (from previous example) can be easily converted
-     * into list<number>:
-     * : bytes = data (_ a n = take n a);
+     * : binWriteFile "test2" (data |>);
      */
     binReadAll limit handle
-            is number -> bin_input_handle -> ((~byte[] -> number -> 'a) -> 'a) =
-        BinBuf#readAll(limit, handle.read, handle.close) unsafely_as 'b,
+            is number -> bin_input_handle -> list<number> =
+        Core#readAll(limit, handle.read, handle.close) unsafely_as list<number>,
 
     /**
      * Group: zmisc
@@ -698,7 +692,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      *
      * Fetch as binary data and write to file:
      * : data = fetchURL [] (Binary (binReadAll 0)) 'http://example.com/';
-     * : binWriteFile 'example.html' data;
+     * : binWriteFile 'example.html' (data |>);
      */
     fetchURL options result url =
         var csf = id;

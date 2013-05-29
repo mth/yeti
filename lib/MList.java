@@ -31,6 +31,8 @@
 package yeti.lang;
 
 import java.util.Arrays;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 
 abstract class AMList extends AList implements Serializable {
@@ -303,6 +305,16 @@ public class MList extends AMList implements ByKey {
 
         public AIter dup() {
             return new Iter(i);
+        }
+
+        AIter write(OutputStream out) throws IOException {
+            if (i < size) {
+                byte[] tmp = new byte[size - i];
+                for (int off = i, j = 0; j < tmp.length; ++j)
+                    tmp[j] = ((Number) array[j + off]).byteValue();
+                out.write(tmp);
+            }
+            return null;
         }
     }
 
