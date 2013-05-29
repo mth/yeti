@@ -30,6 +30,9 @@
  */
 package yeti.lang;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 /** Yeti core library - Concat list. */
 final class ConcatLists extends LList {
     private AList rest;
@@ -52,6 +55,23 @@ final class ConcatLists extends LList {
             tail = null;
         }
         return rest;
+    }
+
+    synchronized AIter write(OutputStream out) throws IOException {
+        if (src == null)
+            return super.write(out);
+        AIter i = src.dup();
+        while (i != null)
+            i = i.write(out);
+        if (tail != null) {
+            AIter lists = tail.dup();
+            do {
+                i = (AIter) lists.first();
+                while (i != null)
+                    i = i.write(out);
+            } while (lists != null);
+        }
+        return null;
     }
 
     // src is list<list?<'a>>
