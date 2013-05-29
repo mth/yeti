@@ -91,7 +91,7 @@ public class PArray extends LList {
 
     public static AList wrap(byte[] array) {
         return array == null || array.length == 0
-            ? null : new ByteArray(array, 0, array.length);
+            ? null : new ByteArray(0, array.length, array);
     }
 
     public static AList wrap(short[] array) {
@@ -178,7 +178,7 @@ final class ByteArray extends LList {
     private final int start;
     private final int length;
 
-    ByteArray(byte[] a_, int start_, int length_) {
+    ByteArray(int start_, int length_, byte[] a_) {
         super(null, null);
         a = a_;
         start = start_;
@@ -192,7 +192,7 @@ final class ByteArray extends LList {
     public AList rest() {
         if (length <= 1)
             return null;
-        return new ByteArray(a, start + 1, length - 1);
+        return new ByteArray(start + 1, length - 1, a);
     }
 
     public AList take(int from, int count) {
@@ -204,7 +204,7 @@ final class ByteArray extends LList {
             return null;
         if (from == 0 && count == length)
             return this;
-        return new ByteArray(a, from, count - from);
+        return new ByteArray(from, count - from, a);
     }
 
     public void forEach(Object f_) {
@@ -224,7 +224,7 @@ final class ByteArray extends LList {
         byte[] tmp = new byte[length];
         for (int i = 0; i < tmp.length; ++i)
             tmp[tmp.length - i] = a[i + start];
-        return new ByteArray(tmp, 0, tmp.length);
+        return new ByteArray(0, tmp.length, tmp);
     }
 
     public Num index(Object v) {
@@ -238,7 +238,7 @@ final class ByteArray extends LList {
     public AList find(Fun pred) {
         for (int i = start, e = i + length; i < e; ++i)
             if (pred.apply(new IntNum(a[i])) == Boolean.TRUE)
-                return new ByteArray(a, i, e - i);
+                return new ByteArray(i, e - i, a);
         return null;
     }
 
@@ -246,7 +246,7 @@ final class ByteArray extends LList {
         byte[] tmp = new byte[length];
         System.arraycopy(a, start, tmp, 0, tmp.length);
         Arrays.sort(tmp);
-        return new ByteArray(tmp, 0, tmp.length);
+        return new ByteArray(0, tmp.length, tmp);
     }
 
     public long length() {
@@ -256,7 +256,7 @@ final class ByteArray extends LList {
     public Object copy() {
         byte[] tmp = new byte[length];
         System.arraycopy(a, start, tmp, 0, tmp.length);
-        return new ByteArray(tmp, 0, tmp.length);
+        return new ByteArray(0, tmp.length, tmp);
     }
 
     public AList map(Fun f) {
