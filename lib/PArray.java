@@ -176,7 +176,6 @@ final class BooleanArray extends PArray {
     }
 }
 
-// XXX maybe ByteArray should also implement it's own iteration like PArray
 final class ByteArray extends PArray {
     private final byte[] a;
 
