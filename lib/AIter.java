@@ -43,6 +43,10 @@ public abstract class AIter {
      */
     public abstract AIter next();
 
+    public AIter dup() {
+        return this;
+    }
+
     public boolean isEmpty() {
         return false;
     }

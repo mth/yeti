@@ -300,6 +300,10 @@ public class MList extends AMList implements ByKey {
         public boolean isEmpty() {
             return i >= size;
         }
+
+        public AIter dup() {
+            return new Iter(i);
+        }
     }
 
     public MList() {

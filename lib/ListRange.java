@@ -52,6 +52,10 @@ final class RangeIter extends AIter implements Serializable {
     public AIter next() {
         return (n = n.add(inc)).compareTo(last) * inc > 0 ? (AIter) rest : this;
     }
+
+    public AIter dup() {
+        return new RangeIter(n, last, rest, inc);
+    }
 }
 
 /** Yeti core library - List. */

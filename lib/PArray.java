@@ -59,6 +59,10 @@ public class PArray extends LList {
         return rest;
     }
 
+    public AIter dup() {
+        return slice(start, length);
+    }
+
     AList slice(int start, int length) {
         return new PArray(start, length, array);
     }
@@ -168,6 +172,7 @@ final class BooleanArray extends PArray {
     }
 }
 
+// XXX maybe ByteArray should also implement it's own iteration like PArray
 final class ByteArray extends LList {
     private final byte[] a;
     private final int start;
