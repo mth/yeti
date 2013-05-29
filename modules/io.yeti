@@ -654,7 +654,7 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * :     f [84, 69, 83, 84]
      * : done
      */
-    binWriteFile name writer is string -> ((list<number> -> ()) -> 'a) -> 'a =
+    binWriteFile name writer is string -> ((list?<number> -> ()) -> 'a) -> 'a =
         withHandle (binOutputHandle new FileOutputStream(name is string))
                    (writer . (.write)),
 
