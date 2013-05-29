@@ -30,6 +30,8 @@
  */
 package yeti.lang;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
@@ -234,13 +236,18 @@ final class ByteArray extends PArray {
     }
 
     public long length() {
-        return length;
+        return length - start;
     }
 
     public Object copy() {
         byte[] tmp = new byte[length - start];
         System.arraycopy(a, start, tmp, 0, tmp.length);
         return new ByteArray(0, tmp.length, tmp);
+    }
+
+    AIter write(OutputStream out) throws IOException {
+        out.write(a, start, length - start);
+        return null;
     }
 
     public AList map(Fun f) {
