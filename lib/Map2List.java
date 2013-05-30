@@ -38,7 +38,7 @@ final class Map2List extends LList {
     private Fun f;
 
     public Map2List(Fun f, AIter src, AIter src2) {
-        super(((Fun) f.apply(src.first())).apply(src2.first()), null);
+        super(f.apply(src.first(), src2.first()), null);
         this.src = src;
         this.src2 = src2;
         this.f = f;
