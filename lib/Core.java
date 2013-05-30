@@ -323,6 +323,7 @@ public final class Core {
         try {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             AIter i = list;
+            list = null; // help gc
             while (i != null)
                 i = i.write(buf);
             return buf.toByteArray();
