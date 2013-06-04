@@ -322,6 +322,31 @@ done,
     bytes = map (_ n = [1..n]) [0..0xff];
     map (base64Decode . base64Encode) bytes == bytes
 done,
+'tailrec2': do:
+    foo = {
+        maxPos = 8,
+        var board = false,
+        hasWon _ = board,
+        check me op =
+            if hasWon op then
+                1
+            else
+                (tryPos best pos =
+                    if pos > maxPos or best > 0 then
+                        best
+                    else
+                        board := true;
+                        res = check op me;
+                        if res > best then
+                            tryPos res (pos + 1)
+                        else
+                            tryPos best (pos + 1)
+                        fi
+                    fi) (-2) maxPos
+            fi,
+    };
+    foo.check 'O' 'X' == 1
+done,
 ];
 
 var bad = 0;
