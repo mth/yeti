@@ -347,15 +347,54 @@ done,
     };
     foo.check 'O' 'X' == 1
 done,
+'tailrec4': do:
+    foo = {
+        maxPos = 8,
+        var board = false,
+        hasWon _ = board,
+        check me op =
+            if hasWon op then
+                1
+            else
+                (tryPos a b best pos =
+                    if pos > maxPos or best > 0 then
+                        best
+                    else
+                        board := true;
+                        res = check op me;
+                        if res > best then
+                            tryPos a b res (pos + 1)
+                        else
+                            tryPos a b best (pos + 1)
+                        fi
+                    fi) 'a' 'b' (-2) maxPos
+            fi,
+    };
+    foo.check 'O' 'X' == 1
+done,
+'method-tailrec4': do:
+    tr a b c d =
+        if c == 'wtf' then
+            a
+        else
+            tr true b 'wtf' 0
+        fi;
+    tr false 0 'test' 0
+done,
 ];
 
 var bad = 0;
 
 forHash trueTests do name f:
-    if not (f ()) then
-        println "\(name) failed.";
-        bad := bad + 1
-    fi
+    try
+        if not (f ()) then
+            bad := bad + 1;
+            println "\(name) failed."
+        fi
+    catch java.lang.Throwable ex:
+        bad := bad + 1;
+        println "\(name) failed: \(stackTraceString ex)"
+    yrt
 done;
 
 total = length trueTests;

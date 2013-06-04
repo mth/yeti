@@ -300,8 +300,14 @@ abstract class CaptureRef extends BindRef {
             // Now assign the call argument values into argument registers.
             if (argCaptures != null) {
                 int i = argCaptures.length;
-                if (capturer.outer != null && capturer.outer.merged && --i >= 0)
+                // XXX: The merged-argument fix is needed only when
+                //      argCaptures[i - 1] == null - the argument is
+                //      wrongly considered unused by the tailcall optimizer.
+                if (capturer.outer != null && capturer.outer.merged &&
+                        i > 0 && argCaptures[i - 1] == null) {
+                    --i;
                     ctx.varInsn(ASTORE, 1); // HACK - fixes merged argument
+                }
                 while (--i >= 0)
                     if (argCaptures[i] != null)
                         ctx.varInsn(ASTORE, argCaptures[i].localVar);
