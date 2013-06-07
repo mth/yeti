@@ -569,6 +569,7 @@ interface YetiParser {
         private static final int FIRST_OP_LEVEL = 3;
         private static final int COMP_OP_LEVEL = opLevel("<");
         static final int NOT_OP_LEVEL = COMP_OP_LEVEL + 1;
+        static final int LIST_OP_LEVEL = NOT_OP_LEVEL + 3;
         static final int IS_OP_LEVEL = opLevel("is");
         private static final Eof EOF = new Eof("EOF");
         private char[] src;
@@ -720,14 +721,12 @@ interface YetiParser {
                     return new BinOp(FIELD_OP, 0, true).pos(line, col);
                 if (s == "#")
                     return readObjectRef().pos(line, col);
-                for (i = OPS.length; --i >= 0;) {
-                    for (int j = OPS[i].length; --j >= 0;) {
-                        if (OPS[i][j] == s) {
-                            return new BinOp(s, i + FIRST_OP_LEVEL, s != "::")
+                for (i = OPS.length; --i >= 0;)
+                    for (int j = OPS[i].length; --j >= 0;)
+                        if (OPS[i][j] == s)
+                            return new BinOp(s, i + FIRST_OP_LEVEL,
+                                             i != LIST_OP_LEVEL - FIRST_OP_LEVEL)
                                          .pos(line, col);
-                        }
-                    }
-                }
                 return new BinOp(s, FIRST_OP_LEVEL + 2, true).pos(line, col);
             }
             if ((c = src[i]) >= '0' && c <= '9') {

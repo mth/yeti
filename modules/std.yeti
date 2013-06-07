@@ -974,6 +974,26 @@ plus a b = a + b;
      *
      * Prints numbers 1, 2, 3, 4, 13, 14, 15. No list containing those
      * numbers is never allocated (as lazy ranges are lazily appended).
+     *
+     * Notes:
+     * The created lazy list head holds references to both concatenated
+     * list heads. When the resulting list is iterated (tail is requested),
+     * the next element from first list is requested using `next()` method
+     * on the internal list object (when end of first list is reached, then
+     * the second list is given directly as a tail). This means that left
+     * folding (++) will result in actual Java call stack depth porpotional
+     * to the (++) nesting depth on the left side.
+     * : x = tail (((([1] ++ [2]) ++ [3]) ++ [4]) ++ [5]);
+     * In the above example five `++` operators are nested by left side,
+     * resulting call stack depth of 5 for the concatenation (without
+     * parenthesis the ++ operators would associate on the right side).
+     * This can cause problems when deep nesting is created, for example
+     * the following naive implementation of `concat` will likely result
+     * in throwing StackOverflowError:
+     * : concat = fold (++) [];
+     * : concat (map \[1] [1..10000]);
+     * The library implementation of concat doesn't use (++) internally for
+     * this reason.
      */
     (++) a b is list?<'a> -> list?<'a> -> list<'a> =
         if empty? a then
