@@ -165,11 +165,14 @@ class ClassFinder {
                 found = true;
                 break;
             }
-        ClassLoader clc;
+        ClassLoader clc = null;
         InputStream in;
-        if (!found &&
-              (clc = Thread.currentThread().getContextClassLoader()) != null &&
-              (in = clc.getResourceAsStream(fn)) != null) {
+        if (!found) {
+            clc = Thread.currentThread().getContextClassLoader();
+            if (clc == null && name.startsWith("java"))
+                clc = ClassLoader.getSystemClassLoader();
+        }
+        if (clc != null && (in = clc.getResourceAsStream(fn)) != null) {
             found = true;
             try {
                 in.close();

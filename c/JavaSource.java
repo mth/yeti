@@ -160,7 +160,18 @@ class JavaSource implements Opcodes {
         String id = get(0), sep = null;
         if (id == "{")
             return id;
-        while (id != null && (sep = get(0)) == "." && mode != 1) {
+        while (id != null) {
+            sep = get(0);
+            if (sep == "<" && mode > 1) {
+                int level = 1;
+                String x;
+                while ((x = get(0)) != null && (x != ">" || --level > 0))
+                    if (x == "<")
+                        ++level;
+                sep = get(0);
+            }
+            if (sep != "." || mode == 1)
+                break;
             if (result == null)
                 result = new StringBuffer(id);
             result.append('/');
@@ -168,20 +179,12 @@ class JavaSource implements Opcodes {
                 result.append(id);
         }
         String type = result == null ? id : result.toString();
-        if (mode != 0) {
-            if (sep == "<") {
-                int level = 1;
-                while ((id = get(0)) != null && (id != ">" || --level > 0))
-                    if (id == "<")
-                        ++level;
-                sep = get(0);
-            }
+        if (mode != 0)
             while (sep == "[" && mode != 2) {
                 expect("]", get(0));
                 type = "[".concat(type);
                 sep = get(0);
             }
-        }
         lookahead = sep;
         return type;
     }
@@ -259,11 +262,16 @@ class JavaSource implements Opcodes {
         cl.name = outer != null ? outer + '$' + id :
                     packageName.length() != 0 ? packageName + '/' + id : id;
         id = get(0);
+        boolean iface_extends = false;
         if ("extends".equals(id)) {
-            cl.type = type(2);
-            id = get(0);
+            if ((modifiers & ACC_INTERFACE) == 0) {
+                cl.type = type(2);
+                id = get(0);
+            } else {
+                iface_extends = true;
+            }
         }
-        if ("implements".equals(id)) {
+        if (iface_extends || "implements".equals(id)) {
             List impl = new ArrayList();
             do {
                 impl.add(type(2));
