@@ -654,7 +654,7 @@ class YetiTask extends MatchingTask
             if not s#hasPatterns() then
                 s#setIncludes("*.yeti")
             fi;
-            push scanners s#getDirectoryScanner()
+            push scanners s#getDirectoryScanner(this#getProject())
         done;
         files = array [];
         for scanners do scanner:
