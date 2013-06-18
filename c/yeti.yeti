@@ -63,7 +63,7 @@ repl eval =
     fi);
 
 help =
-    "yeti -flags... files\n\n\
+    "yeti -flags... files/directories\n\n\
     "  -h               Print this help\n\
     "  -e expr          Evaluate expr and print result\n\
     "  -d directory     Compile and store the generated class files\n\
