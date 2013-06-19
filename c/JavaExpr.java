@@ -89,10 +89,9 @@ class JavaExpr extends Code {
             ctx.insn(DUP2); // aiai
             ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/AIter",
                                 "first", "()Ljava/lang/Object;");
-            if (t != null && t.type != YetiType.JAVA ||
-                 t.javaType.description.length() > 1) {
+            if (t != null && (t.type != YetiType.JAVA ||
+                 t.javaType.description.length() > 1))
                 convert(ctx, given.param[0], argType.param[0]);
-            }
             // aiav
             ctx.methodInsn(INVOKEVIRTUAL, tmpClass,
                                 "add", "(Ljava/lang/Object;)Z"); // aiz
