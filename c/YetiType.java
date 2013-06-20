@@ -1194,7 +1194,7 @@ public class YetiType implements YetiParser {
             throw new TypeException("Illegal as cast from 'a to non-Java type");
         }
         YType t;
-        boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size()];
+        boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size() + 1];
         for (; scope != null; scope = scope.outer)
             if (scope.typeDef != null) {
                 t = scope.typeDef[scope.typeDef.length - 1];
