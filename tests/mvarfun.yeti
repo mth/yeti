@@ -1,0 +1,4 @@
+module mvarfun;
+
+var cached _ = { v = [true] };
+{ f x = cached x }

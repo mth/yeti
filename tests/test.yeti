@@ -381,6 +381,10 @@ done,
         fi;
     tr false 0 'test' 0
 done,
+'module-var-fun': do:
+    load mvarfun;
+    (f ()).v == [true]
+done,
 ];
 
 var bad = 0;
