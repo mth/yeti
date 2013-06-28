@@ -182,7 +182,7 @@ final class Compiler implements Opcodes {
                     if (debug)
                         java.add("-g");
                     if (classPath.pathStr.length() != 0) {
-                        java.add("-cp");
+                        java.add("-classpath");
                         String path = classPath.pathStr;
                         if (depDestDir != null)
                             path = path.length() == 0 ? depDestDir
