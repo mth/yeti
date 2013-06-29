@@ -600,6 +600,8 @@ public class MList extends AMList implements ByKey {
     }
 
     public static MList ofList(AList list) {
+        if (list instanceof MList)
+            return (MList) list;
         return new MList(list);
     }
 
