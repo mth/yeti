@@ -594,6 +594,15 @@ public class MList extends AMList implements ByKey {
         throw new UnsupportedOperationException();
     }
 
+    public Object[] toArray(Object[] to) {
+        System.arraycopy(array, start, to, 0, size - start);
+        return to;
+    }
+
+    public static MList ofList(AList list) {
+        return new MList(list);
+    }
+
     public static MList ofStrArray(Object[] array) {
         Object[] tmp = new Object[array.length];
         for (int i = 0; i < tmp.length; ++i)

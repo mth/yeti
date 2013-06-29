@@ -64,12 +64,29 @@ class JavaExpr extends Code {
                 argType.javaType.isCollection())) {
             YType t = argType.param.length != 0
                         ? argType.param[0].deref() : null;
-            if (argType.type == YetiType.JAVA_ARRAY &&
-                t.javaType != null && t.javaType.description == "B") {
-                ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
-                ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
-                               "bytes", "(Lyeti/lang/AList;)[B");
-                return;
+            if (argType.type == YetiType.JAVA_ARRAY && t.javaType != null) {
+                if (t.javaType.description == "B") {
+                    ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+                    ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
+                                   "bytes", "(Lyeti/lang/AList;)[B");
+                    return;
+                }
+                if (t.javaType.description.charAt(0) == 'L') {
+                    ctx.typeInsn(CHECKCAST, "yeti/lang/AList");
+                    ctx.methodInsn(INVOKESTATIC, "yeti/lang/MList", "ofList",
+                                   "(Lyeti/lang/AList;)Lyeti/lang/MList;");
+                    ctx.insn(DUP);
+                    ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/MList",
+                                  "length", "()J");
+                    ctx.insn(L2I);
+                    new NewArrayExpr(argType, null, 0).gen(ctx);
+                    ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/MList", "toArray",
+                                  "([Ljava/lang/Object;)[Ljava/lang/Object;");
+                    descr = JavaType.descriptionOf(argType);
+                    ctx.typeInsn(CHECKCAST, descr);
+                    ctx.forceType(descr);
+                    return;
+                }
             }
             Label retry = new Label(), end = new Label();
             ctx.typeInsn(CHECKCAST, "yeti/lang/AIter"); // i
