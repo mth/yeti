@@ -385,6 +385,12 @@ done,
     load mvarfun;
     (f ()).v == [true]
 done,
+'modify-var-fun-ref': do:
+    var cached _ = {v=false};
+    st = { f x = cached x, setf f = cached := f };
+    st.setf (const {v=true});
+    (st.f ()).v
+done,
 ];
 
 var bad = 0;
