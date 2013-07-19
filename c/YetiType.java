@@ -878,7 +878,7 @@ public class YetiType implements YetiParser {
         // provided/requested member lists.
         if (r[0].free != null && (ref.polymorph || r[0].free.length != 0)) {
             ref = ref.unshare();
-            Map vars = createFreeVars(r[0].free, depth);
+            Map vars = createFreeVars(r[0].free, depth + 1);
             ref.type = copyType(ref.type, vars, new IdentityHashMap());
         }
         return ref;

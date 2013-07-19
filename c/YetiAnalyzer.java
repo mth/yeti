@@ -201,7 +201,7 @@ public final class YetiAnalyzer extends YetiType {
             if (opop == "throw") {
                 Code throwable = analyze(op.right, scope, depth);
                 JavaType.checkThrowable(op, throwable.type);
-                return new Throw(throwable, new YType(depth));
+                return new Throw(throwable, new YType(depth + 1));
             }
             if (opop == "with")
                 return withStruct(op, scope, depth);
@@ -501,7 +501,7 @@ public final class YetiAnalyzer extends YetiType {
             JavaType.isSafeCast(scope, where, funarg, argCode.type, false)) {
             argCode = new Cast(argCode, funarg, true, where.line);
         }
-        YType[] applyFun = { argCode.type, new YType(depth) };
+        YType[] applyFun = { argCode.type, new YType(depth + 1) };
         try {
             unify(fun.type, new YType(FUN, applyFun));
         } catch (TypeException ex) {
@@ -550,6 +550,7 @@ public final class YetiAnalyzer extends YetiType {
     static Code rsection(XNode section, Scope scope, int depth) {
         String sym = section.expr[0].sym();
         if (sym == FIELD_OP) {
+            ++depth;
             LinkedList parts = new LinkedList();
             Node x = section.expr[1];
             for (BinOp op; x instanceof BinOp; x = op.left) {
@@ -581,7 +582,7 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static Code variantConstructor(String name, int depth) {
-        YType arg = new YType(depth);
+        YType arg = new YType(++depth);
         YType tag = new YType(VARIANT, new YType[] { new YType(depth), arg });
         tag.requiredMembers = new HashMap();
         tag.requiredMembers.put(name, arg);
@@ -609,7 +610,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code selectMember(Node op, Sym member, Code src,
                              Scope scope, int depth) {
-        final YType res = new YType(depth);
+        final YType res = new YType(++depth);
         final String field = member.sym;
         YType arg = selectMemberType(res, field, depth);
         try {
@@ -817,7 +818,7 @@ public final class YetiAnalyzer extends YetiType {
         lambda.selfBind = binder;
         if (!bind.noRec)
             scope = new Scope(scope, bind.name, binder);
-        lambdaBind(lambda, bind, scope, depth + 1);
+        lambdaBind(lambda, bind, scope, depth);
         return lambda;
     }
 
@@ -1039,13 +1040,11 @@ public final class YetiAnalyzer extends YetiType {
                 Bind bind = (Bind) nodes[i];
                 BindExpr binder;
                 XNode lambda;
-                int bindDepth = bind.var ? depth : depth + 1;
                 if ((lambda = asLambda(bind.expr)) != null) {
                     bind.expr = lambda;
-                    binder = (BindExpr)
-                        singleBind(bind, scope, bindDepth - 1).selfBind;
+                    binder = (BindExpr) singleBind(bind, scope, depth).selfBind;
                 } else {
-                    Code code = analyze(bind.expr, scope, bindDepth);
+                    Code code = analyze(bind.expr, scope, depth);
                     binder = new BindExpr(code, bind.var);
                     if (bind.type != null)
                         isOp(bind, bind.type, binder.st, scope, depth);
@@ -1126,11 +1125,12 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
         if (bind.type != null)
-            isOp(bind, bind.type, to, scope, depth);
+            isOp(bind, bind.type, to, scope, depth + 1);
         return lambda(to, (XNode) bind.expr, scope, depth);
     } 
 
     static Code lambda(Function to, XNode lambda, Scope scope, int depth) {
+        ++depth;
         YType expected = to.type == null ? null : to.type.deref();
         to.polymorph = true;
         Scope bodyScope = null;
@@ -1221,7 +1221,7 @@ public final class YetiAnalyzer extends YetiType {
         for (int i = 0; i < nodes.length; ++i) {
             Bind field = getField(nodes[i]);
             Function lambda = !field.noRec && field.expr.kind == "lambda"
-                            ? funs[i] = new Function(new YType(depth)) : null;
+                        ? funs[i] = new Function(new YType(depth + 1)) : null;
             Code code = lambda;
             StructField sf = (StructField) codeMap.get(field.name);
             if (field.property) {
@@ -1334,7 +1334,7 @@ public final class YetiAnalyzer extends YetiType {
             Bind field = (Bind) nodes[i];
             if (funs[i] != null)
                 lambdaBind(funs[i], field, ((Bind) nodes[i]).property
-                                ? propertyScope :  local, depth);
+                                ? propertyScope : local, depth);
         }
         result.type = new YType(STRUCT, null);
         for (StructField i = result.properties; i != null; i = i.nextProperty)
