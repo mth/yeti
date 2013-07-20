@@ -195,7 +195,7 @@ class DescrCtx {
             v = new String(buf, p, buf.length - p);
             vars.put(t, v);
         }
-        return v;
+        return v+t.depth;
     }
 }
 

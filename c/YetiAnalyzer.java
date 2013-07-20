@@ -1206,6 +1206,53 @@ public final class YetiAnalyzer extends YetiType {
                 "Duplicate field " + field.name + " in the structure");
     }
 
+    static void propertyField(Bind field, Code code, StructField sf, Map fields,
+                    Node where, Scope scope, Scope propertyScope, int depth) {
+        if (code == null) {
+            code = analyze(field.expr, propertyScope, depth);
+        } else if (!field.var) {
+            XNode xf = (XNode) field.expr;
+            // disable merging with the get lambda
+            if (xf.expr[1].kind == "lambda")
+                xf.expr[1] = new Seq(new Node[] { new XNode("()"),
+                              xf.expr[1] }, null).pos(xf.line, xf.col);
+        }
+        // get is () -> t, set is t -> ()
+        YType t = (YType) fields.get(field.name);
+        if (t == null) {
+            t = new YType(depth);
+            t.field = FIELD_NON_POLYMORPHIC;
+            fields.put(field.name, t);
+        }
+        if (field.type != null)
+            unify(t, nodeToType(field.type, new HashMap(), scope,depth),
+                  field, scope, "#0 (when checking #1 is #2)");
+        if (field.var)
+            t.field = FIELD_MUTABLE;
+        if (field.doc != null) {
+            if (t.doc == null)
+                t = withDoc(t, field.doc);
+            else
+                t.doc = field.doc + '\n' + t.doc;
+        }
+        YType f = new YType(FUN, field.var
+                        ? new YType[] { t, UNIT_TYPE }
+                        : new YType[] { UNIT_TYPE, t });
+        try {
+            unify(code.type, f);
+        } catch (TypeException ex) {
+            throw new CompileException(where, scope, code.type, f,
+                        (field.var ? "Setter " : "Getter ")
+                        + field.name + " type #~", ex);
+        }
+        if (field.var) {
+            sf.setter = code;
+            sf.mutable = true;
+        } else {
+            sf.value = code;
+        }
+    }
+
     static Code structType(XNode st, Scope scope, int depth) {
         Node[] nodes = st.expr;
         if (nodes.length == 0)
@@ -1236,53 +1283,12 @@ public final class YetiAnalyzer extends YetiType {
                            (field.var ? sf.setter : sf.value) != null) {
                     duplicateField(field);
                 }
-                if (code == null) {
-                    if (propertyScope == null) {
-                        propertyScope = new Scope(scope, null, null);
-                        propertyScope.closure = result;
-                    }
-                    code = analyze(field.expr, propertyScope, depth);
-                } else if (!field.var) {
-                    XNode xf = (XNode) field.expr;
-                    // disable merging with the get lambda
-                    if (xf.expr[1].kind == "lambda")
-                        xf.expr[1] = new Seq(new Node[] { new XNode("()"),
-                                      xf.expr[1] }, null).pos(xf.line, xf.col);
+                if (code == null && propertyScope == null) {
+                    propertyScope = new Scope(scope, null, null);
+                    propertyScope.closure = result;
                 }
-                // get is () -> t, set is t -> ()
-                YType t = (YType) fields.get(field.name);
-                if (t == null) {
-                    t = new YType(depth);
-                    t.field = FIELD_NON_POLYMORPHIC;
-                    fields.put(field.name, t);
-                }
-                if (field.type != null)
-                    unify(t, nodeToType(field.type, new HashMap(), scope,depth),
-                          field, scope, "#0 (when checking #1 is #2)");
-                if (field.var)
-                    t.field = FIELD_MUTABLE;
-                if (field.doc != null) {
-                    if (t.doc == null)
-                        t = withDoc(t, field.doc);
-                    else
-                        t.doc = field.doc + '\n' + t.doc;
-                }
-                YType f = new YType(FUN, field.var
-                                ? new YType[] { t, UNIT_TYPE }
-                                : new YType[] { UNIT_TYPE, t });
-                try {
-                    unify(code.type, f);
-                } catch (TypeException ex) {
-                    throw new CompileException(nodes[i], scope, code.type, f,
-                                (field.var ? "Setter " : "Getter ")
-                                + field.name + " type #~", ex);
-                }
-                if (field.var) {
-                    sf.setter = code;
-                    sf.mutable = true;
-                } else {
-                    sf.value = code;
-                }
+                propertyField(field, code, sf, fields, nodes[i],
+                              scope, propertyScope, depth);
             } else {
                 if (sf != null)
                     duplicateField(field);
@@ -1702,9 +1708,10 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     void checkModuleFree(Node n, RootClosure root) {
+        System.err.println(root.type);
         List free = new ArrayList(), deny = new ArrayList();
         getFreeVar(free, deny, root.type,
-                   root.body.polymorph ? RESTRICT_POLY : 0, -1);
+                   root.body.polymorph ? RESTRICT_POLY : 0, 0);
         if (!deny.isEmpty())
             removeStructs(root.type, deny);
         if (!deny.isEmpty()) {
