@@ -1310,8 +1310,7 @@ public final class YetiAnalyzer extends YetiType {
                     case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
                         List deny = new ArrayList();
                         List vars = new ArrayList();
-                        // XXX uh. depth - 1, should it work?
-                        getFreeVar(vars, deny, t, 0, depth - 1);
+                        getFreeVar(vars, deny, t, 0, depth);
                         if ((poly = vars.size() != 0) && deny.size() != 0) {
                             removeStructs(t, deny);
                             poly = deny.size() == 0;
