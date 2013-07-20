@@ -315,6 +315,28 @@ done,
         None _: println "None";
         esac"""
 done,
+'invalid escaping polymorphism': do:
+    expectCompileError
+     """v = (var x = [];
+             r a b =
+               (f a = x := a;
+                g () = head x;
+                a f;
+                b g);
+             r);
+        v (_ f = f [true]) \();
+        v \() (_ g = println (g () + 3))"""
+done,
+'invalid escaping polymorphism 2': do:
+    expectCompileError
+     """v = (var x = [];
+             do a b:
+                a (_ v = x := v);
+                b (head x)
+             done);
+        v ([true] |>) \();
+        v \() (println . (+3));"""
+done,
 'case of variant list': do:
     case [A 1, A 2] of [A a, A b]: a + b; ... esac == 3
 done,
