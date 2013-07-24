@@ -1188,7 +1188,7 @@ public class YetiType implements YetiParser {
         return src;
     }
 
-    static YType opaqueCast(YType from, YType to, Scope scope, int depth)
+    static YType opaqueCast(YType from, YType to, Scope scope)
             throws TypeException {
         if (from.deref().type == VAR) {
             throw new TypeException("Illegal as cast from 'a to non-Java type");

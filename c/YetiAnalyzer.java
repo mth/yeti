@@ -380,7 +380,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code isOp(Node is, TypeNode type, Code value,
                      Scope scope, int depth) {
-        YType t = nodeToType(type, new HashMap(), scope, depth).deref();
+        YType t = nodeToType(type, new HashMap(), scope, depth + 1).deref();
         YType vt = value.type.deref();
         String s;
         if (is instanceof BinOp && (s = ((BinOp) is).op) != "is") {
@@ -394,7 +394,7 @@ public final class YetiAnalyzer extends YetiType {
             } else if (s == "as" &&
                        !JavaType.isSafeCast(scope, is, t, vt, true)) {
                 try {
-                    t = opaqueCast(vt, t, scope, depth);
+                    t = opaqueCast(vt, t, scope);
                 } catch (TypeException ex) {
                     String msg = "impossible cast from #1 to #2";
                     if (t.type != JAVA && t.type != JAVA_ARRAY &&
@@ -924,7 +924,7 @@ public final class YetiAnalyzer extends YetiType {
             Code code = selectMember(fields[j], (Sym) bind.expr,
                           binder.getRef(fields[j].line), scope, depth + 1);
             if (field.type != null)
-                isOp(field, field.type, code, scope, depth + 1);
+                isOp(field, field.type, code, scope, depth);
             BindExpr bindExpr = new BindExpr(code, false);
             scope = genericBind(bind, bindExpr, isEval, scope, depth);
             addSeq(last, bindExpr);
@@ -1125,7 +1125,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
         if (bind.type != null)
-            isOp(bind, bind.type, to, scope, depth + 1);
+            isOp(bind, bind.type, to, scope, depth);
         return lambda(to, (XNode) bind.expr, scope, depth);
     } 
 
@@ -1225,7 +1225,7 @@ public final class YetiAnalyzer extends YetiType {
             fields.put(field.name, t);
         }
         if (field.type != null)
-            unify(t, nodeToType(field.type, new HashMap(), scope,depth),
+            unify(t, nodeToType(field.type, new HashMap(), scope, depth),
                   field, scope, "#0 (when checking #1 is #2)");
         if (field.var)
             t.field = FIELD_MUTABLE;
@@ -1709,6 +1709,10 @@ public final class YetiAnalyzer extends YetiType {
     void checkModuleFree(Node n, RootClosure root) {
         System.err.println(root.type);
         List free = new ArrayList(), deny = new ArrayList();
+        // Doesn't work - vars with too low level just don't get into free,
+        // but it doesn't cause them appearing in the deny set.
+        // If n is structure, then we have to get the offending structure
+        // field name also, to get correct error location.
         getFreeVar(free, deny, root.type,
                    root.body.polymorph ? RESTRICT_POLY : 0, 0);
         if (!deny.isEmpty())
