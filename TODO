@@ -2,9 +2,6 @@
 ~~~~~~~~~~~~~~~~~
 
 * Smart typedefs, if possible
-* Module type not fully defined message is confusing,
-  should give more info about where error is.
-  + Fix not detecting incomplete module type sometimes
 * v1.0
 * Typedefs in REPL
 * Compiling simple module a; in REPL results in ClassNotFoundException

@@ -1707,23 +1707,57 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     void checkModuleFree(Node n, RootClosure root) {
-        System.err.println(root.type);
         List free = new ArrayList(), deny = new ArrayList();
-        // Doesn't work - vars with too low level just don't get into free,
-        // but it doesn't cause them appearing in the deny set.
-        // If n is structure, then we have to get the offending structure
-        // field name also, to get correct error location.
-        getFreeVar(free, deny, root.type,
-                   root.body.polymorph ? RESTRICT_POLY : 0, 0);
-        if (!deny.isEmpty())
-            removeStructs(root.type, deny);
-        if (!deny.isEmpty()) {
-            for (int i = deny.size(); --i >= 0;)
-                ((YType) deny.get(i)).deref().flags |= FL_ERROR_IS_HERE;
+        YType t = root.type.deref();
+        getFreeVar(free, deny, t, root.body.polymorph ? RESTRICT_POLY : 0, 0);
+        free.removeAll(deny);
+        Map fields = null;
+        while (n instanceof Seq) {
+            Seq seq = (Seq) n;
+            n = seq.st[seq.st.length - 1];
+        }
+        Node[] nodes = n.kind == "struct" ? ((XNode) n).expr : null;
+        if (nodes == null || t.type != STRUCT) {
+            fields = Collections.singletonMap(null, t);
+        } else if (t.requiredMembers != null) {
+            fields = t.requiredMembers;
+        } else {
+            fields = t.allowedMembers;
+        }
+        Node errorLocation = null;
+        boolean bad = false;
+        for (Iterator f = fields.entrySet().iterator(); f.hasNext(); ) {
+            Map.Entry e = (Map.Entry) f.next();
+            List all = new ArrayList(), structs = new ArrayList();
+            t = (YType) e.getValue();
+            getAllTypeVar(all, structs, t);
+            all.removeAll(free);
+            if (all.isEmpty())
+                continue; // no non-free typevars in this field
+            // clean up structs, to fix MAP marker errors
+            removeStructs(t, all);
+            if (all.isEmpty())
+                continue;
+            bad = true;
+            for (int i = all.size(); --i >= 0; ) // mark errors
+                ((YType) all.get(i)).deref().flags |= FL_ERROR_IS_HERE;
+            if (e.getKey() == null)
+                continue;
+            for (int i = 0; i < nodes.length; ++i) {
+                System.err.println(nodes[i].getClass());
+                if (nodes[i] instanceof Bind &&
+                        e.getKey().equals(((Bind) nodes[i]).name)) {
+                    throw new CompileException(nodes[i],
+                        "Module type is not fully defined in field " +
+                        e.getKey() + ":\n    " + t +
+                        "\n    (offending type variables are marked with *)");
+                }
+            }
+        }
+        if (bad)
             throw new CompileException(n, root.body.type +
                 "\nModule type is not fully defined " +
                 "(offending type variables are marked with *)");
-        }
     }
 
     int flags; // compilation flags
