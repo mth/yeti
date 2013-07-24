@@ -1,7 +1,0 @@
-module nonpoly;
-
-var x = [];
-{
-    f a = x := a,
-    g () = head x
-}

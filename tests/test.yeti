@@ -338,7 +338,19 @@ done,
         v \() (println . (+3));"""
 done,
 'non-polymorphic type vars in module': do:
-    expectCompileError 'load nonpoly'
+    src = 'module nonpoly;
+        var x = [];
+        {
+            f a = x := a,
+            g () = head x
+        }';
+    try
+        load yeti.lang.compiler.eval;
+        compileYetiFiles [SourceReader \src] [Type \()] ['nonpoly.yeti'];
+        false
+    catch yeti.lang.compiler.CompileException e:
+        e#getMessage() =~ 'defined'
+    yrt
 done,
 'case of variant list': do:
     case [A 1, A 2] of [A a, A b]: a + b; ... esac == 3

@@ -1743,8 +1743,7 @@ public final class YetiAnalyzer extends YetiType {
                 ((YType) all.get(i)).deref().flags |= FL_ERROR_IS_HERE;
             if (e.getKey() == null)
                 continue;
-            for (int i = 0; i < nodes.length; ++i) {
-                System.err.println(nodes[i].getClass());
+            for (int i = 0; i < nodes.length; ++i)
                 if (nodes[i] instanceof Bind &&
                         e.getKey().equals(((Bind) nodes[i]).name)) {
                     throw new CompileException(nodes[i],
@@ -1752,7 +1751,6 @@ public final class YetiAnalyzer extends YetiType {
                         e.getKey() + ":\n    " + t +
                         "\n    (offending type variables are marked with *)");
                 }
-            }
         }
         if (bad)
             throw new CompileException(n, root.body.type +
