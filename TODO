@@ -28,6 +28,8 @@
 * Exhaustive list match detection probably could be improved by something
   like introducing FL_EMPTY_PATTERN and keeping account about the list tail
   being exhaustive.
+* import foo.Bar; Bar$Baz could resolve
+  to foo.Bar$Baz instead of current.package.Bar$Baz
 * Support A x | B y | variantTypeDef?
 * Review the Java<->Yeti type autoconversions?
 * Immutable tree map support - this seems to be popular feature. ;)
