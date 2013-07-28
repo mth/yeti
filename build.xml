@@ -5,62 +5,62 @@
     <property file="properties"/>
     <property name="asm" value="${basedir}/asm-3.1-p1r.jar"/>
     <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
-    <property name="docdir" value="${basedir}/.build/doc"/>
+    <property name="build"  value="${basedir}/.build"/>
+    <property name="docdir" value="${build}/doc"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${basedir}/.build/asm-3.1-p1.jar"/>
-    <mkdir dir="${basedir}/.build/util"/>
+    <property name="asmt" value="${build}/asm-3.1-p1.jar"/>
+    <mkdir dir="${build}/util"/>
     <get src="http://linux.ee/~mzz/yeti/asm-3.1-p1.jar"
          dest="${asmt}" verbose="true"/>
-    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
+    <javac destdir="${build}/util" srcdir="${basedir}/util"
            includes="Rename.java" encoding="UTF-8"
            includeantruntime="false"/>
     <java classname="yeti.lang.Rename" failonerror="true"
-          classpath="${basedir}/.build/util">
+          classpath="${build}/util">
         <arg value="${asmt}"/>
         <arg value="${asm}"/>
     </java>
 </target>
 
 <target name="lib" depends="fetch" unless="no.lib.build">
-    <mkdir dir="${basedir}/.build/util"/>
-    <javac destdir="${basedir}/.build/util" srcdir="${basedir}/util"
+    <mkdir dir="${build}/util"/>
+    <javac destdir="${build}/util" srcdir="${basedir}/util"
            includes="SpecialLib.java" encoding="UTF-8" classpath="${asm}"
            includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
-          classpath="${asm}:${basedir}/.build/util">
+          classpath="${asm}:${build}/util">
         <arg value="pre"/>
-        <arg value="${basedir}/.build/lib"/>
+        <arg value="${build}/lib"/>
     </java>
-    <javac destdir="${basedir}/.build/lib" srcdir="${basedir}/lib" debug="on"
+    <javac destdir="${build}/lib" srcdir="${basedir}/lib" debug="on"
         encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
         includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
-          classpath="${asm}:${basedir}/.build/util">
+          classpath="${asm}:${build}/util">
         <arg value="tr"/>
-        <arg value="${basedir}/.build/lib"/>
+        <arg value="${build}/lib"/>
     </java>
 </target>
 
 <target name="checklib">
-    <available property="no.lib.build" file="${basedir}/.build/lib" type="dir"/>
+    <available property="no.lib.build" file="${build}/lib" type="dir"/>
 </target>
 
 <target name="checkmod">
-    <available property="no.modules.build"
-               file="${basedir}/.build/modules" type="dir"/>
+    <available property="no.modules.build" file="${build}/modules" type="dir"/>
 </target>
 
 <target name="compiler" depends="checklib,lib">
-    <mkdir dir="${basedir}/.build/compiler"/>
-    <javac destdir="${basedir}/.build/compiler" srcdir="${basedir}/c" debug="on"
+    <mkdir dir="${build}/compiler"/>
+    <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
            includeantruntime="true">
         <classpath>
             <path location="${asm}"/>
-            <path location="${basedir}/.build/lib"/>
+            <path location="${build}/lib"/>
             <path location="${ant.home}/lib/ant.jar"/>
         </classpath>
     </javac>
@@ -68,24 +68,24 @@
 
 <target name="taskdef">
     <taskdef name="yetic" classname="yeti.lang.compiler.YetiBoot"
-        classpath="${asm}:${basedir}/.build/lib:${basedir}/.build/compiler"/>
+        classpath="${asm}:${build}/lib:${build}/compiler"/>
 </target>
 
 <target name="modules" depends="prepare-build,taskdef"
         unless="no.modules.build">
-    <yetic srcdir="${basedir}/modules" destdir="${basedir}/.build/modules"
+    <yetic srcdir="${basedir}/modules" destdir="${build}/modules"
            includes="*.yeti" preload="yeti/lang/std" icast="${icast}"/>
 </target>
 
 <target name="yeti" depends="compiler,checkmod,modules">
-    <yetic srcdir="${basedir}/c" destdir="${basedir}/.build/compiler"
+    <yetic srcdir="${basedir}/c" destdir="${build}/compiler"
            icast="${icast}">
         <classpath>
-            <path location="${basedir}/.build/std"/>
-            <path location="${basedir}/.build/modules"/>
+            <path location="${build}/std"/>
+            <path location="${build}/modules"/>
         </classpath>
     </yetic>
-    <copy file="${basedir}/util/doc.yeti" todir="${basedir}/.build/compiler"/>
+    <copy file="${basedir}/util/doc.yeti" todir="${build}/compiler"/>
 </target>
 
 <target name="jar" depends="compiler,modules,yeti">
@@ -93,15 +93,15 @@
         <not><isset property="jar-name"/></not>
     </condition>
     <jar jarfile="${basedir}/yeti-lib.jar" roundup="false">
-        <fileset dir="${basedir}/.build/lib"/>
-        <fileset dir="${basedir}/.build/modules"/>
+        <fileset dir="${build}/lib"/>
+        <fileset dir="${build}/modules"/>
     </jar>
     <jar jarfile="${basedir}/${jar-name}" keepcompression="true">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
         <zipfileset src="${basedir}/yeti-lib.jar"/>
-        <fileset dir="${basedir}/.build/compiler"
+        <fileset dir="${build}/compiler"
             excludes="yeti/lang/compiler/YetiBoot*.class,${jar-excludes}"/>
         <zipfileset src="${asm}" excludes="yeti/renamed/asm3/signature/*"/>
     </jar>
@@ -130,7 +130,7 @@
 </target>
 
 <target name="clean">
-    <delete dir="${basedir}/.build"/>
+    <delete dir="${build}"/>
 </target>
 
 <target name="rebuild" depends="clean,test"/>
