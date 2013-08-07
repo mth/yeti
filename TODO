@@ -1,6 +1,7 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
+* {store is string -> list?*<Foo boolean> -> ()} module type not fully defined
 * Smart typedefs, if possible
 * v1.0
 * Typedefs in REPL
