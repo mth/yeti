@@ -363,7 +363,7 @@ class TypeDescr extends YetiType {
                 param.put(e.getValue(), e.getKey());
             }
             for (int i = def.end.defvars.length; --i >= 0; ) {
-                t = (YType) param.get(Integer.valueOf(def.end.defvars[i]));
+                t = (YType) param.get(new Integer(def.end.defvars[i]));
                 item = t != null ? prepare(t, ctx) : new TypeDescr("?");
                 item.prev = descr.value;
                 descr.value = item;
@@ -554,11 +554,11 @@ class TypePattern {
             if (idx[i = idx.length - 1] != Integer.MAX_VALUE)
                 return null;
             if (var < 0)
-                typeVars.put(type, Integer.valueOf(var));
+                typeVars.put(type, new Integer(var));
             return next[i];
         }
         if (var < 0)
-            typeVars.put(type, Integer.valueOf(var));
+            typeVars.put(type, new Integer(var));
         TypePattern pat = next[i];
         if (pat.field == null) {
             YType[] param = type.param;
