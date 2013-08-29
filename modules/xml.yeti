@@ -188,7 +188,7 @@ xmlParse source is 'a -> xml_element =
     var r = () as ~XMLStreamReader;
     var keepWS = false;
     var keepNS = false;
-    f = XMLInputFactory#newFactory();
+    f = XMLInputFactory#newInstance();
     for source
        \case of
         /// Read XML from this InputStream instance (expects UTF-8 encoding).
