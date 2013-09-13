@@ -124,7 +124,7 @@
     </yeti>
 </target>
 
-<target name="noant">
+<target name="noant" depends="prepare-build">
     <property name="jar-name" value="${jardir}/yeti-noant.jar"/>
     <property name="jar-excludes" value="yeti/lang/compiler/YetiTask.class"/>
 </target>
