@@ -4,8 +4,8 @@
 <target name="prepare-build">
     <property file="properties"/>
     <property name="asm" value="${basedir}/asm-3.1-p1r.jar"/>
-    <property name="jarjar" value="${basedir}/jarjar-1.0.jar"/>
     <property name="build"  value="${basedir}/.build"/>
+    <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
     <available property="has.asm" file="${asm}"/>
 </target>
@@ -89,18 +89,18 @@
 </target>
 
 <target name="jar" depends="compiler,modules,yeti">
-    <condition property="jar-name" value="yeti.jar">
+    <condition property="jar-name" value="${jardir}/yeti.jar">
         <not><isset property="jar-name"/></not>
     </condition>
-    <jar jarfile="${basedir}/yeti-lib.jar" roundup="false">
+    <jar jarfile="${jardir}/yeti-lib.jar" roundup="false">
         <fileset dir="${build}/lib"/>
         <fileset dir="${build}/modules"/>
     </jar>
-    <jar jarfile="${basedir}/${jar-name}" keepcompression="true">
+    <jar jarfile="${jar-name}" keepcompression="true">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
-        <zipfileset src="${basedir}/yeti-lib.jar"/>
+        <zipfileset src="${jardir}/yeti-lib.jar"/>
         <fileset dir="${build}/compiler"
             excludes="yeti/lang/compiler/YetiBoot*.class,${jar-excludes}"/>
         <zipfileset src="${asm}" excludes="yeti/renamed/asm3/signature/*"/>
@@ -117,7 +117,7 @@
 
 <target name="doc" depends="prepare-build">
     <taskdef name="yeti" classname="yeti.lang.compiler.YetiTask"
-        classpath="${basedir}/yeti.jar"/>
+        classpath="${jardir}/yeti.jar"/>
     <yeti docdir="${docdir}">
         <src dir="${basedir}/modules"/>
         <src dir="${basedir}/c" includes="*.yeti" excludes="yeti.yeti"/>
@@ -125,7 +125,7 @@
 </target>
 
 <target name="noant">
-    <property name="jar-name" value="yeti-noant.jar"/>
+    <property name="jar-name" value="${jardir}/yeti-noant.jar"/>
     <property name="jar-excludes" value="yeti/lang/compiler/YetiTask.class"/>
 </target>
 
@@ -136,7 +136,7 @@
 <target name="rebuild" depends="clean,test"/>
 
 <target name="checkjar">
-    <available property="no.jar.build" file="${basedir}/yeti.jar"/>
+    <available property="no.jar.build" file="${jardir}/yeti.jar"/>
 </target>
 
 </project>
