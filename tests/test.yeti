@@ -315,6 +315,13 @@ done,
         None _: println "None";
         esac"""
 done,
+'value restriction with non-polymorphic fields': do:
+    expectCompileError
+       'x = lazy \{var z = [], get last () = head z};
+        count () = length (x ()).last.fubar;
+        (x ()).z := { tomato = false } :: (x ()).z;
+        count () |> println;'
+done,
 'invalid escaping polymorphism': do:
     expectCompileError
      """v = (var x = [];
