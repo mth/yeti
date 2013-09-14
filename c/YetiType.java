@@ -709,10 +709,7 @@ public class YetiType implements YetiParser {
         occursCheck(from, var);
         if ((var.flags & FL_ORDERED_REQUIRED) != 0)
             requireOrdered(from);
-        if ((var.flags & FL_TAINTED_VAR) != 0)
-            from.flags |= FL_TAINTED_VAR;
-        
-        limitDepth(from, var.depth, 0);
+        limitDepth(from, var.depth, var.flags & FL_TAINTED_VAR);
         var.ref = from;
     }
 
@@ -846,8 +843,8 @@ public class YetiType implements YetiParser {
     static Map createFreeVars(YType[] freeTypes, int depth) {
         IdentityHashMap vars = new IdentityHashMap(freeTypes.length);
         for (int i = freeTypes.length; --i >= 0;) {
-            YType t = new YType(depth);
             YType free = freeTypes[i];
+            YType t = new YType(depth);
             t.flags = free.flags;
             t.field = free.field;
             vars.put(free, t);
@@ -980,9 +977,9 @@ public class YetiType implements YetiParser {
                            int flags, int depth) {
         if (type.seen)
             return;
-        if ((flags & RESTRICT_PROTECT) == 0 &&
-                type.field >= FIELD_NON_POLYMORPHIC)
-            flags |= RESTRICT_ALL;
+        if (type.field >= FIELD_NON_POLYMORPHIC)
+            flags |= (flags & RESTRICT_PROTECT) == 0
+                        ? RESTRICT_ALL : RESTRICT_CONTRA;
         YType t = type.deref();
         int tt = t.type;
         if (tt != VAR) {
@@ -995,7 +992,7 @@ public class YetiType implements YetiParser {
                     flags |= RESTRICT_CONTRA;
                 else if (i == 1 && tt == MAP && t.param[1].deref() != NO_TYPE)
                     flags |= (flags & RESTRICT_PROTECT) == 0
-                        ? RESTRICT_ALL : RESTRICT_CONTRA;
+                                ? RESTRICT_ALL : RESTRICT_CONTRA;
                 getFreeVar(vars, deny, t.param[i], flags, depth);
             }
             type.seen = false;

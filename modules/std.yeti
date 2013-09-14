@@ -1150,7 +1150,7 @@ plus a b = a + b;
      * application of lazy_sum. The second application returns the result
      * from first application.
      */
-    lazy f is (() -> 'a) -> (() -> 'a) =
+    lazy f is (() -> '_a) -> (() -> '_a) =
         new Lazy(f) unsafely_as (() -> 'a),
 
     /**
@@ -2880,15 +2880,15 @@ plus a b = a + b;
      * Notes:
      * Internal implementation uses the java.lang.ThreadLocal class.
      */
-    threadLocal initialValue is (() -> 'a) ->
-            {var value is 'a, wipe is () -> ()} =
+    threadLocal initialValue is (() -> '_a) ->
+            {var value is '_a, wipe is () -> ()} =
         class Local extends java.lang.ThreadLocal
             Object initialValue() initialValue ()
         end;
         tl = new Local();
         {
             /// The value in thread-local variable.
-            get value () = tl#get() unsafely_as 'a,
+            get value () = tl#get() unsafely_as '_a,
             set value v  = tl#set(v),
 
             /// Clears the thread-local variable.

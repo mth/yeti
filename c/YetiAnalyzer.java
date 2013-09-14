@@ -359,15 +359,15 @@ public final class YetiAnalyzer extends YetiType {
             expectsParam(node, 0);
             t = JavaType.typeOfName(
                 name.substring(1).replace('.', '/').intern(), scope);
-        } else if (c == '\'') {
-            t = (YType) free.get(name);
-            if (t == null)
-                free.put(name, t = new YType(depth));
-        } else if (c == '^') {
+        } else if (c == '\'' || c == '^') {
             t = (YType) free.get(name);
             if (t == null) {
+                t = new YType(depth);
                 free.put(name, t = new YType(depth));
-                t.flags = FL_ORDERED_REQUIRED;
+                if (c == '^')
+                    t.flags = FL_ORDERED_REQUIRED;
+                if (name.charAt(1) == '_')
+                    t.flags |= FL_TAINTED_VAR;
             }
         } else {
             YType[] tp = new YType[node.param.length];
