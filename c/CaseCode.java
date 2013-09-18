@@ -315,6 +315,65 @@ final class VariantPattern extends CasePattern {
     }
 }
 
+final class SomeVariantPattern extends CasePattern {
+    CasePattern variantArg;
+
+    SomeVariantPattern(CasePattern arg) {
+        this.variantArg = arg;
+    }
+
+    int preparePattern(Ctx ctx) {
+        return 1;
+
+    }
+
+    void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
+
+
+
+        Label cont = new Label();
+        Label run = new Label();
+
+        if(preserve)
+            ctx.insn(DUP);
+        //null check
+        ctx.insn(DUP);
+        ctx.jumpInsn(IFNULL,cont);
+
+        //taginstance check
+        ctx.insn(DUP);
+        ctx.typeInsn(INSTANCEOF,"yeti/lang/Tag");
+        ctx.jumpInsn(IFEQ,run);
+
+        //it is a Tag check wheter Some 
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Tag");
+        ctx.insn(DUP);
+        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "name",
+                           "Ljava/lang/String;");
+        ctx.ldcInsn("Some");
+        ctx.jumpInsn(IF_ACMPNE, cont); // TN
+
+        //if Some than get the value and run it
+        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "value",
+                             "Ljava/lang/Object;"); // TNt (t)
+        ctx.jumpInsn(GOTO,run);
+        
+        //tag rewind dup and to on
+        ctx.visitLabel(cont);
+        ctx.insn(POP);
+        ctx.jumpInsn(GOTO,onFail);
+        
+        
+
+        //not tag therefore call variantArg
+        ctx.visitLabel(run);
+        if(variantArg == ANY_PATTERN)
+            return;
+        variantArg.preparePattern(ctx);
+        variantArg.tryMatch(ctx, onFail,false);
+    }
+}
+
 final class CaseExpr extends Code {
     private int totalParams;
     private Code caseValue;
@@ -339,10 +398,19 @@ final class CaseExpr extends Code {
     }
 
     void addChoice(CasePattern pattern, Code code) {
-        Choice c = new Choice();
-        c.pattern = pattern;
-        c.expr = code;
-        choices.add(c);
+        if(pattern instanceof VariantPattern
+          && ((VariantPattern)pattern).variantTag.equals("Some")) {
+            Choice sc = new Choice();
+            sc.pattern = 
+                new SomeVariantPattern(((VariantPattern)pattern).variantArg);
+            sc.expr = code;
+            choices.add(0,sc);
+        }else{
+            Choice c = new Choice();
+            c.pattern = pattern;
+            c.expr = code;
+            choices.add(c);
+        }
     }
 
     void gen(Ctx ctx) {
