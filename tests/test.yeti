@@ -322,6 +322,32 @@ done,
         (x ()).z := { tomato = false } :: (x ()).z;
         count () |> println;'
 done,
+'struct polymorphism restrictions 1': do:
+    // Problem arises when x is allowed to be polymorphic, although containing
+    // no typevars. Because var z is property of structure type instance, not
+    // the field type inside that structure, a copy is made of polymorphic x,
+    // when x.z := happens, causing the assigned type to be unified with
+    // _copy_ of the structure type inferred in count function.
+    expectCompileError
+       'x = {var z = [], get last () = head z};
+        count () = length x.last.fubar;
+        x.z := { fubar = [], get tomato () = false } :: [];
+        x.last.fubar := "hi" :: x.last.fubar;
+        count () |> println;'
+done,
+'struct polymorphism restrictions 2': do:
+    // Test variation of same problem as the previous struct polymorphism test.
+    // Here the .bar member gets introduced into the structure in count2,
+    // and gets lost if the x together with last has been copied (allowing
+    // a structure without bar assigned, and causing runtime error when
+    // running count2).
+    expectCompileError
+       'x = {var z = [], get last () = head z};
+        count () = length x.last.fubar;
+        count2 () = length x.last.bar;
+        x.z := [{fubar=[true]}];
+        count2 () |> println;'
+done,
 'invalid escaping polymorphism': do:
     expectCompileError
      """v = (var x = [];
