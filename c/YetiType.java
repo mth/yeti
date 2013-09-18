@@ -817,6 +817,14 @@ public class YetiType implements YetiParser {
         if (copy != null) {
             return copy;
         }
+        /* No structure without polymorphic flag variable shouldn't be copied.
+         * The getFreeVar should ensure that any variable reachable through
+         * such structure isn't free either.
+         */
+        if ((type.type == STRUCT || type.type == VARIANT) &&
+            !free.containsKey(type.param[0])) {
+            return type;
+        }
         YType[] param = new YType[type.param.length];
         copy = new YType(type.type, param);
         copy.doc = type_;
@@ -972,9 +980,64 @@ public class YetiType implements YetiParser {
     private static final int RESTRICT_CONTRA  = 2;
     static final int RESTRICT_ALL  = 4;
     static final int RESTRICT_POLY = 8;
+    static final int STRUCT_VAR    = 16;
+    static final int IGNORE_STRUCT = 32;
 
-    static void getFreeVar(List vars, List deny, YType type,
-                           int flags, int depth) {
+    /*
+     * All free vars reachable through structures that have flag var denied
+     * must be denied. This is n:m relationship - structure can have many free
+     * vars reachable through it, and a free var can be reachable through many
+     * structures. Since suppressed var can be another structures flag var,
+     * circular dependencies can arise, therefore it can't be done in single
+     * step. Collecting relationships and actual suppression have to be
+     * separate actions. This implementation stores freevars in IdentityHashMap
+     * as keys. For deny, a special DENY object instance is associated.
+     * Otherwise, the structure deps (a linked list) will be the associated
+     * value.
+     *
+     * Each entry is representive of single struct var.
+     * Virtual struct vars will be created, when scope needs to be assigned
+     * to var that already has scope. In this case the link will point
+     * to the old scope and next to the current scope.
+     */
+    static class StructVar {
+        int deny; // -1 seen, 0 - unseen, 1 - denied
+        StructVar link; // concatenated (old) scope
+        StructVar next; // outer scope
+
+        StructVar(int deny, StructVar next) {
+            this.deny = deny;
+            this.next = next;
+        }
+    }
+
+    private static final StructVar DENY = new StructVar(1, null);
+
+    private static void addFreeVar(Map vars, StructVar deps,
+                                   YType t, int flags) {
+        if ((flags & RESTRICT_ALL) != 0) {
+            t.flags |= FL_TAINTED_VAR;
+            deps = DENY;
+        } else if ((flags & (RESTRICT_CONTRA | RESTRICT_POLY)) ==
+                        RESTRICT_CONTRA &&
+                   (t.flags & FL_TAINTED_VAR) != 0) {
+            deps = DENY;
+        }
+        Object old = vars.put(t, deps);
+        // Non-deny struct flag-var must always get a new instance
+        if (old == null && (flags & STRUCT_VAR) == 0 || deps == DENY)
+            return;
+        if (old == DENY) {
+            deps = DENY;
+        } else {
+            deps = new StructVar(0, deps);
+            deps.link = (StructVar) old;
+        }
+        vars.put(t, deps);
+    }
+
+    private static void scanFreeVar(Map vars, StructVar deps, YType type,
+                                    int flags, int depth) {
         if (type.seen)
             return;
         if (type.field >= FIELD_NON_POLYMORPHIC)
@@ -982,7 +1045,16 @@ public class YetiType implements YetiParser {
                         ? RESTRICT_ALL : RESTRICT_CONTRA;
         YType t = type.deref();
         int tt = t.type;
-        if (tt != VAR) {
+        if (tt == STRUCT || tt == VARIANT) {
+            type.seen = true;
+            if ((flags & IGNORE_STRUCT) == 0) {
+                scanFreeVar(vars, deps, t.param[0], flags | STRUCT_VAR, depth);
+                deps = (StructVar) vars.get(t.param[0].deref());
+            }
+            for (int i = 1; i < t.param.length; ++i)
+                scanFreeVar(vars, deps, t.param[i], flags, depth);
+            type.seen = false;
+        } else if (tt != VAR) {
             if (tt == FUN)
                 flags |= RESTRICT_PROTECT;
             type.seen = true;
@@ -993,23 +1065,49 @@ public class YetiType implements YetiParser {
                 else if (i == 1 && tt == MAP && t.param[1].deref() != NO_TYPE)
                     flags |= (flags & RESTRICT_PROTECT) == 0
                                 ? RESTRICT_ALL : RESTRICT_CONTRA;
-                getFreeVar(vars, deny, t.param[i], flags, depth);
+                scanFreeVar(vars, deps, t.param[i], flags, depth);
             }
             type.seen = false;
         } else if (t.depth > depth) {
-            if ((flags & RESTRICT_ALL) != 0) {
-                t.flags |= FL_TAINTED_VAR;
-                vars = deny;
-            } else if ((flags & (RESTRICT_CONTRA | RESTRICT_POLY)) ==
-                            RESTRICT_CONTRA &&
-                       (t.flags & FL_TAINTED_VAR) != 0) {
-                vars = deny;
-            }
-            if (vars.indexOf(t) < 0)
-                vars.add(t);
+            addFreeVar(vars, deps, t, flags);
         } else if ((flags & RESTRICT_ALL) != 0 && t.depth == depth) {
             t.flags |= FL_TAINTED_VAR;
         }
+    }
+
+    private static boolean purgeNonFree(StructVar var) {
+        var.deny = -1; // already seen
+        if (var.next != null && var.next.deny != 0 &&
+                (var.next.deny > 0 || purgeNonFree(var.next)) ||
+            var.link != null && var.link.deny != 0 &&
+                (var.link.deny > 0 || purgeNonFree(var.link))) {
+            var.deny = 1;
+            return true;
+        }
+        return false;
+    }
+
+    static YType[] getFreeVar(Map vars, YType type, int flags, int depth) {
+        scanFreeVar(vars, null, type, flags, depth);
+        if ((flags & RESTRICT_ALL) != 0)
+            return NO_PARAM;
+        YType[] tv = new YType[vars.size()];
+        StructVar[] v = new StructVar[tv.length];
+        int n = 0;
+        for (Iterator i = vars.entrySet().iterator(); i.hasNext(); ++n) {
+            Map.Entry e = (Map.Entry) i.next();
+            tv[n] = (YType) e.getKey();
+            StructVar var = v[n] = (StructVar) e.getValue();
+            if (var != null && var.deny == 0 && purgeNonFree(var))
+                var.deny = 1;
+        }
+        n = 0;
+        for (int i = 0; i < tv.length; ++i)
+            if (v[i] == null || v[i].deny <= 0)
+                tv[n++] = tv[i];
+        YType[] result = new YType[n];
+        System.arraycopy(tv, 0, result, 0, n);
+        return result;
     }
 
     static void getAllTypeVar(List vars, List structs, YType type) {
@@ -1053,15 +1151,10 @@ public class YetiType implements YetiParser {
 
     static Scope bind(String name, YType valueType, Binder value,
                       int flags, int depth, Scope scope) {
-        List free = new ArrayList(), deny = new ArrayList();
-        getFreeVar(free, deny, valueType, flags, depth);
-        if (deny.size() != 0)
-            for (int i = free.size(); --i >= 0; )
-                if (deny.indexOf(free.get(i)) >= 0)
-                    free.remove(i);
         scope = new Scope(scope, name, value);
-        if ((flags & RESTRICT_ALL) == 0)
-            scope.free = (YType[]) free.toArray(new YType[free.size()]);
+        scope.free = getFreeVar(new IdentityHashMap(), valueType, flags, depth);
+        if ((flags & RESTRICT_ALL) != 0)
+            scope.free = null;
         return scope;
     }
 

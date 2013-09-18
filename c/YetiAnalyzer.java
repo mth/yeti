@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import yeti.lang.Num;
 import yeti.lang.FloatNum;
@@ -1308,13 +1309,9 @@ public final class YetiAnalyzer extends YetiType {
                 if (!poly && !field.var) {
                     switch (t.deref().type) {
                     case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
-                        List deny = new ArrayList();
-                        List vars = new ArrayList();
-                        getFreeVar(vars, deny, t, 0, depth);
-                        if ((poly = vars.size() != 0) && deny.size() != 0) {
-                            removeStructs(t, deny);
-                            poly = deny.size() == 0;
-                        }
+                        Map all = new IdentityHashMap();
+                        YType[] vars = getFreeVar(all, t, IGNORE_STRUCT, depth);
+                        poly = vars.length != 0 && vars.length == all.size();
                     }
                 }
                 if (field.var)
@@ -1707,10 +1704,9 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     void checkModuleFree(Node n, RootClosure root) {
-        List free = new ArrayList(), deny = new ArrayList();
         YType t = root.type.deref();
-        getFreeVar(free, deny, t, root.body.polymorph ? RESTRICT_POLY : 0, 0);
-        free.removeAll(deny);
+        YType[] free = getFreeVar(new IdentityHashMap(), t,
+                                  root.body.polymorph ? RESTRICT_POLY : 0, 0);
         Map fields = null;
         while (n instanceof Seq) {
             Seq seq = (Seq) n;
@@ -1731,7 +1727,8 @@ public final class YetiAnalyzer extends YetiType {
             List all = new ArrayList(), structs = new ArrayList();
             t = (YType) e.getValue();
             getAllTypeVar(all, structs, t);
-            all.removeAll(free);
+            for (int i = 0; i < free.length; ++i)
+                all.remove(free[i]);
             if (all.isEmpty())
                 continue; // no non-free typevars in this field
             // clean up structs, to fix MAP marker errors
