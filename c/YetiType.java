@@ -32,8 +32,9 @@
 
 package yeti.lang.compiler;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -1126,7 +1127,7 @@ public class YetiType implements YetiParser {
             vars.add(t);
     }
 
-    static void removeStructs(YType t, List vars) {
+    static void removeStructs(YType t, Collection vars) {
         if (!t.seen) {
             if (t.type != VAR) {
                 int i = 0;
