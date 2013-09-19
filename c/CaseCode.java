@@ -365,19 +365,10 @@ final class CaseExpr extends Code {
     }
 
     void addChoice(CasePattern pattern, Code code) {
-        if(pattern instanceof VariantPattern
-          && ((VariantPattern)pattern).variantTag.equals("Some")) {
-            Choice sc = new Choice();
-            sc.pattern = 
-                new SomeVariantPattern(((VariantPattern)pattern).variantArg);
-            sc.expr = code;
-            choices.add(0,sc);
-        }else{
-            Choice c = new Choice();
-            c.pattern = pattern;
-            c.expr = code;
-            choices.add(c);
-        }
+        Choice c = new Choice();
+        c.pattern = pattern;
+        c.expr = code;
+        choices.add(c);
     }
 
     void gen(Ctx ctx) {
