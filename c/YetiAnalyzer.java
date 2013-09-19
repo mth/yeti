@@ -1310,11 +1310,11 @@ public final class YetiAnalyzer extends YetiType {
                     switch (t.deref().type) {
                     case VAR: case FUN: case MAP: case STRUCT: case VARIANT:
                         Map all = new IdentityHashMap();
-                        YType[] vars = getFreeVar(all, t, IGNORE_STRUCT, depth);
+                        YType[] vars = getFreeVar(all, t, 0, depth);
                         if (vars.length != 0 &&
                                 !(poly = vars.length == all.size())) {
                             removeStructs(t, all.keySet());
-                            poly = vars.length == all.size();
+                            poly = vars.length >= all.size();
                         }
                     }
                 }

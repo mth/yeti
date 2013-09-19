@@ -982,7 +982,6 @@ public class YetiType implements YetiParser {
     static final int RESTRICT_ALL  = 4;
     static final int RESTRICT_POLY = 8;
     static final int STRUCT_VAR    = 16;
-    static final int IGNORE_STRUCT = 32;
 
     /*
      * All free vars reachable through structures that have flag var denied
@@ -1048,10 +1047,8 @@ public class YetiType implements YetiParser {
         int tt = t.type;
         if (tt == STRUCT || tt == VARIANT) {
             type.seen = true;
-            if ((flags & IGNORE_STRUCT) == 0) {
-                scanFreeVar(vars, deps, t.param[0], flags | STRUCT_VAR, depth);
-                deps = (StructVar) vars.get(t.param[0].deref());
-            }
+            scanFreeVar(vars, deps, t.param[0], flags | STRUCT_VAR, depth);
+            deps = (StructVar) vars.get(t.param[0].deref());
             for (int i = 1; i < t.param.length; ++i)
                 scanFreeVar(vars, deps, t.param[i], flags, depth);
             type.seen = false;
