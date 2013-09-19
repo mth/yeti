@@ -576,12 +576,12 @@ interface YetiParser {
         private int p;
         private Node eofWas;
         private int flags;
-        private String sourceName;
         private int line = 1;
         private int lineStart;
         private String yetiDocStr;
         private boolean yetiDocReset;
         XNode loads;
+        String sourceName;
         String moduleName;
         int moduleNameLine;
         String topDoc;
@@ -605,14 +605,30 @@ interface YetiParser {
             return line;
         }
 
-        private void addDoc(int from, int to) {
-            if ((flags & Compiler.GF_DOC) == 0)
-                return;
+        private int directive(int from, int to) {
+            boolean doc = src[from] != '%';;
+            if (doc && (flags & Compiler.GF_DOC) == 0)
+                return to;
             ++from;
             String str = new String(src, from, to - from);
-            yetiDocStr = yetiDocStr == null || yetiDocReset
-                            ? str : yetiDocStr + '\n' + str;
-            yetiDocReset = false;
+            if (doc) {
+                yetiDocStr = yetiDocStr == null || yetiDocReset
+                                ? str : yetiDocStr + '\n' + str;
+                yetiDocReset = false;
+            } else if (str.length() < 2) {
+            } else if (str.charAt(0) == ':') {
+                try {
+                    line = Integer.parseInt(str.substring(1)) - 1;
+                } catch (NumberFormatException ex) {
+                    throw new CompileException(line, from - lineStart,
+                                               "Bad line directive");
+                }
+            } else if (str.startsWith("FILE='")) {
+                p = from + 6;
+                sourceName = readAStr().str;
+                return p > to ? p : to;
+            }
+            return to;
         }
 
         private int skipSpace() {
@@ -634,8 +650,8 @@ interface YetiParser {
                         sp = i += 2;
                         while (i < src.length && src[i] != '\n'
                                 && src[i] != '\r') ++i;
-                        if (i > sp && src[sp] == '/')
-                            addDoc(sp, i);
+                        if (i > sp && (src[sp] == '/' || src[sp] == '%'))
+                            i = directive(sp, i);
                         continue;
                     }
                     if (src[i + 1] == '*') {
@@ -656,7 +672,7 @@ interface YetiParser {
                             }
                         }
                         if (i - 3 > sp && src[sp] == '*')
-                            addDoc(sp, i - 2);
+                            directive(sp, i - 2);
                         continue;
                     }
                 }
@@ -1518,7 +1534,7 @@ interface YetiParser {
                                             new Node[parts.size()]));
         }
 
-        private Node readAStr() {
+        private Str readAStr() {
             int i = p, sline = line, scol = i - lineStart;
             String s = "";
             do {
