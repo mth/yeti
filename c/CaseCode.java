@@ -276,44 +276,70 @@ final class VariantPattern extends CasePattern {
     }
 
     int preparePattern(Ctx ctx) {
-        ctx.typeInsn(CHECKCAST, "yeti/lang/Tag");
-        ctx.insn(DUP);
+        //Stack Members
+        //T : value given in is ~Tag or ~Object 
+        //    which is interpreted as (Some value)
+        //V : unwrapped value of tag 
+        //N : name of tag
+        
+        Label tag = new Label();
+        Label end = new Label();
+        ctx.insn(DUP); //TT
+        ctx.insn(DUP); //TTT
+        ctx.typeInsn(INSTANCEOF,"yeti/lang/Tag"); //TTn
+        ctx.jumpInsn(IFNE,tag); //TT
+        
+        //No yeti.lang.Tag therefore value == given value and name = Some
+        ctx.ldcInsn("Some"); //TVN (Value == Tag and Name == 'Some') 
+        ctx.jumpInsn(GOTO,end);
+
+        //Tag is given
+        ctx.visitLabel(tag);
+        ctx.typeInsn(CHECKCAST, "yeti/lang/Tag");//TT 
+        ctx.insn(DUP);//TTT
+        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "value",
+                           "Ljava/lang/Object;"); //TTV
+        ctx.insn(SWAP); //TVT
         ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "name",
-                           "Ljava/lang/String;");
-        return 2; // TN
+                           "Ljava/lang/String;"); //TVN
+        ctx.visitLabel(end);
+        return 3; // TVN
     }
 
     void tryMatch(Ctx ctx, Label onFail, boolean preserve) {
         Label jumpTo = onFail;
         if (preserve) {
-            ctx.insn(DUP); // TNN
-            ctx.ldcInsn(variantTag);
-            ctx.jumpInsn(IF_ACMPNE, onFail); // TN
+            ctx.insn(DUP); // TVNN
+            ctx.ldcInsn(variantTag); //TVNNN
+            ctx.jumpInsn(IF_ACMPNE, onFail); // TVN
             if (variantArg == ANY_PATTERN) {
                 return;
             }
-            ctx.insn(SWAP); // NT
-            ctx.insn(DUP_X1); // TNT
+            ctx.insn(SWAP); // TNV
+            ctx.insn(DUP_X1); // TVNV
         } else if (variantArg == ANY_PATTERN) {
-            ctx.insn(SWAP); // NT
-            ctx.insn(POP); // N
-            ctx.ldcInsn(variantTag);
-            ctx.jumpInsn(IF_ACMPNE, onFail);
+            ctx.insn(SWAP); // TNV
+            ctx.insn(POP); // TN
+            ctx.insn(SWAP);//NT
+            ctx.insn(POP); //N
+            ctx.ldcInsn(variantTag);//NN
+            ctx.jumpInsn(IF_ACMPNE, onFail); //
             return;
         } else {
-            Label cont = new Label(); // TN
-            ctx.ldcInsn(variantTag);
-            ctx.jumpInsn(IF_ACMPEQ, cont); // T
-            ctx.insn(POP);
+            Label cont = new Label(); // TVN
+            ctx.ldcInsn(variantTag); //TVNN
+            ctx.jumpInsn(IF_ACMPEQ, cont); // TV
+            ctx.insn(POP2); //clean
             ctx.jumpInsn(GOTO, onFail);
-            ctx.visitLabel(cont);
+            ctx.visitLabel(cont); //TV
+            ctx.insn(SWAP); //VT
+            ctx.insn(POP); //V
         }
-        ctx.fieldInsn(GETFIELD, "yeti/lang/Tag", "value",
-                             "Ljava/lang/Object;"); // TNt (t)
-        variantArg.preparePattern(ctx); 
-        variantArg.tryMatch(ctx, onFail, false); // TN ()
+        variantArg.preparePattern(ctx); //V ->
+        variantArg.tryMatch(ctx, onFail, false); // ()
     }
 }
+
 
 final class CaseExpr extends Code {
     private int totalParams;

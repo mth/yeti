@@ -461,6 +461,31 @@ done,
     st.setf (const {v=true});
     (st.f ()).v
 done,
+'case of Some': do:
+    case (Some 1) of
+    Some x : x == 1
+    esac
+done,
+'case of Some Foo': do:
+    case Foo () of
+    Some x : false;
+    Foo () : true;
+    esac
+done,
+'case of Some with plain value' : do:
+    case (1 as ~Object) unsafely_as Some number of
+    None () : false;
+    Some x : x == 1;
+    esac;
+done,
+'case of Some with plain value nested' : do:
+    case (1 as ~Object) unsafely_as 'a of
+    None () : false;
+    Some x : case x of
+             Some x : x == 1;
+             esac;
+    esac;
+done,
 ];
 
 var bad = 0;
