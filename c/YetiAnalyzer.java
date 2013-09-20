@@ -1787,11 +1787,12 @@ public final class YetiAnalyzer extends YetiType {
                 if (ex.line == 0)
                     ex.line = parser.currentLine();
                 throw ex;
-            }
-            if (parser.sourceName != null &&
-                !parser.sourceName.equals(sourceName)) {
-                sourceName = parser.sourceName;
-                sourceFile = null;
+            } finally {
+                if (parser.sourceName != null &&
+                    !parser.sourceName.equals(sourceName)) {
+                    sourceName = parser.sourceName;
+                    sourceFile = null;
+                }
             }
             if ((flags & Compiler.CF_PRINT_PARSE_TREE) != 0)
                 System.err.println(n.str());
