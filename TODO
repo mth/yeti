@@ -4,6 +4,8 @@
 * {store is string -> list?*<Foo boolean> -> ()} module type not fully defined
 * Smart typedefs, if possible
 * v1.0
+* Look why threadLocal has 'a instead of '_a in REPL,
+  although it has '_a in the std.yeti source.
 * Typedefs in REPL
 * Fix type pretty-printing of function return types to use typedef( name)s
 * Compiling simple module a; in REPL results in ClassNotFoundException
