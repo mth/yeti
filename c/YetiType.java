@@ -1151,7 +1151,9 @@ public class YetiType implements YetiParser {
                       int flags, int depth, Scope scope) {
         scope = new Scope(scope, name, value);
         scope.free = getFreeVar(new IdentityHashMap(), valueType, flags, depth);
-        if ((flags & RESTRICT_ALL) != 0)
+        // If structure should be polymorphic,
+        // then at least it's flag var will be in free
+        if (scope.free.length == 0)
             scope.free = null;
         return scope;
     }
