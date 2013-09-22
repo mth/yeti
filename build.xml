@@ -129,7 +129,7 @@
     <property name="jar-excludes" value="yeti/lang/compiler/YetiTask.class"/>
 </target>
 
-<target name="clean">
+<target name="clean" depends="prepare-build">
     <delete dir="${build}"/>
 </target>
 
