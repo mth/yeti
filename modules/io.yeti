@@ -872,7 +872,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             -> list<{name is string, path is string,
                      file? is boolean, directory? is boolean}> =
        (res = array [];
-        for new File(directory unsafely_as ~String)#listFiles() do f:
+        for (new File(directory unsafely_as ~String)#listFiles()
+                as list<'a>) do f:
             if hidden or not f#isHidden() then
                 var path = f#getPath();
                 if File#separator == '\' then

@@ -442,9 +442,7 @@ xmlWrite to root =
             write_attr w element;
             write_values w element.values;
             elements = element.elements;
-            for elements do e:
-                iter new_indent e
-            done;
+            for elements (iter new_indent);
             if defined? indent and not empty? elements then
                 w#writeCharacters(cur_indent)
             fi;
@@ -497,7 +495,7 @@ xmlWrite to root =
  */
 xmlByPath path element =
    (var elem = [element];
-    for path do name:
+    for (path is list<string>) do name:
         result = array [];
         for elem do ee:
             for ee.elements do e:

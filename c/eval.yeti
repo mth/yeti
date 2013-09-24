@@ -322,7 +322,7 @@ compileYetiFiles genericOpt options files =
             and ctx#writer instanceof Loader then
         ctx#writer := () as ~CodeWriter;
         Compiler#currentCompiler#set(ctx);
-        for files do src:
+        for (list files) do src:
             typeAction (moduleDoc YetiTypeVisitor#getType(ctx, (), src, true))
         done
     else
@@ -331,7 +331,7 @@ compileYetiFiles genericOpt options files =
             if exec and length files == 1 then
                 flags := flags b_or Compiler#CF_EXPECT_PROGRAM
             fi;
-            mainClass := ctx#compileAll(sort (list files), flags, param.java)
+            mainClass := ctx#compileAll(sort files, flags, param.java)
         finally
             ctx#enumWarns(param.warn)
         yrt;
@@ -508,7 +508,7 @@ evaluateYetiCode genericOpt =
 
         bindings () =
            (res = array [];
-            for bindingVars do binding:
+            for (list bindingVars) do binding:
                 if not binding#isImport then
                     t = binding#type;
                     push res "\(if binding#mutable then "var " else "" fi)\
@@ -650,15 +650,15 @@ class YetiTask extends MatchingTask
             fi;
             push scanners this#getDirectoryScanner(src)
         fi;
-        for sources do s:
+        for (list sources) do s:
             if not s#hasPatterns() then
                 s#setIncludes("*.yeti")
             fi;
             push scanners s#getDirectoryScanner(this#getProject())
         done;
         files = array [];
-        for scanners do scanner:
-            for scanner#getIncludedFiles() do f:
+        for (list scanners) do scanner:
+            for (list scanner#getIncludedFiles()) do f:
                 push files new File(scanner#getBasedir(), f)#getPath()
             done;
             push options (SourceDir scanner#getBasedir()#getPath())

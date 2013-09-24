@@ -740,7 +740,7 @@ final class Function extends CapturingClosure implements Binder {
             if (selfRef == null) {
                 selfRef = new CaptureRef() {
                     void gen(Ctx ctx) {
-                        ctx.load(0);
+                        ctx.load(0).forceType("yeti/lang/Fun");
                     }
                 };
                 selfRef.binder = selfBind;

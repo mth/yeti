@@ -221,7 +221,7 @@ else
         push compileOptions (Exec argv)
     fi;
     files = [:];
-    for srcs do src:
+    for (list srcs) do src:
         if not scan src '' (push compileOptions) files then
             println "Don't know what to do with `\(src)'";
             threadExit 1
@@ -244,7 +244,7 @@ else
         if defined? doc_dir then
             generateYetiDoc {directory = doc_dir, modules, error = println}
         else
-            for modules do m:
+            for (list modules) do m:
                 if m.doc != "" then
                     println "/*\n\(m.doc)\n*/"
                 fi;
