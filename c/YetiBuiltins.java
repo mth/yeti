@@ -447,7 +447,7 @@ final class For extends Core2 {
         if (!list.flagop(LIST_RANGE) && fun instanceof Function &&
                 ((f = (Function) fun).body instanceof CaseExpr ||
                  (t = list.type.deref()).type == YetiType.MAP &&
-                 t.param[1].deref() == YetiType.NO_TYPE) &&
+                 t.param[1].deref().type == YetiType.NONE) &&
                 f.uncapture(arg)) {
             Label retry = new Label(), end = new Label();
             list.gen(ctx);
