@@ -443,8 +443,12 @@ final class For extends Core2 {
     void genApply2(Ctx ctx, Code list, Code fun, int line) {
         Function f;
         LoadVar arg = new LoadVar();
+        YType t;
         if (!list.flagop(LIST_RANGE) && fun instanceof Function &&
-                    (f = (Function) fun).uncapture(arg)) {
+                ((f = (Function) fun).body instanceof CaseExpr ||
+                 (t = list.type.deref()).type == YetiType.MAP &&
+                 t.param[1].deref() == YetiType.NO_TYPE) &&
+                f.uncapture(arg)) {
             Label retry = new Label(), end = new Label();
             list.gen(ctx);
             ctx.visitLine(line);
