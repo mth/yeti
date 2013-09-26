@@ -180,7 +180,7 @@ public final class Core {
                     r.append("...");
                     i = len - 50;
                 }
-                r.append(String.valueOf(Array.get(o, i)));
+                r.append(Array.get(o, i));
             }
             return r.append(']').toString();
         }
