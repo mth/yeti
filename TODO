@@ -4,6 +4,7 @@
 * {store is string -> list?*<Foo boolean> -> ()} module type not fully defined
 * Smart typedefs, if possible
 * v1.0
+* Allow optional ~ before classname in instanceof and friends.
 * Look why threadLocal has 'a instead of '_a in REPL,
   although it has '_a in the std.yeti source.
 * Typedefs in REPL
