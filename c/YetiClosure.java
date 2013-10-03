@@ -740,7 +740,16 @@ final class Function extends CapturingClosure implements Binder {
             if (selfRef == null) {
                 selfRef = new CaptureRef() {
                     void gen(Ctx ctx) {
-                        ctx.load(0).forceType("yeti/lang/Fun");
+                        if (shared) {
+                            Function.this.gen(ctx);
+                        } else {
+                            ctx.load(0).forceType("yeti/lang/Fun");
+                        }
+                    }
+
+                    boolean flagop(int fl) {
+                        // Don't be a capture when FunClass._ can be used
+                        return (fl & DIRECT_BIND) != 0 && shared;
                     }
                 };
                 selfRef.binder = selfBind;
