@@ -397,7 +397,7 @@ public final class YetiAnalyzer extends YetiType {
                 try {
                     t = opaqueCast(vt, t, scope);
                 } catch (TypeException ex) {
-                    String msg = "impossible cast from #1 to #2";
+                    String msg = "Impossible cast from #1 to #2";
                     if (t.type != JAVA && t.type != JAVA_ARRAY &&
                         vt.type != JAVA && vt.type != JAVA_ARRAY)
                         msg += "\n    #0";
