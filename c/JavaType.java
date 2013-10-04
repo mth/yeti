@@ -796,6 +796,8 @@ class JavaType implements Cloneable {
             }
             return true;
         }
+        if (to.type == YetiType.JAVA && to.javaType.description.length() == 1)
+            return false;
         if (explicit)
             return isAssignable(where, to, from, true) >= 0;
         boolean smart = true;
