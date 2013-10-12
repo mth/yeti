@@ -83,7 +83,7 @@ public abstract class AStruct implements Struct, Serializable {
         int acnt = count(), bcnt = st.count(), i = 0, j = 0;
         while (i < acnt && j < bcnt) {
             String an, bn;
-            if ((an = eqName(i)) == (bn = st.eqName(j))) {
+            if ((an = eqName(i)) == (bn = st.eqName(j)) && an != "") {
                 Object a = get(i);
                 Object b = st.get(j);
                 if (a != b && (a == null || !a.equals(b)))
