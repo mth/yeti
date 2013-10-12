@@ -41,8 +41,8 @@ public class WithStruct extends AStruct {
                       String[] names, boolean allowNew) {
         super(null, null);
         int ac = src.count(), bc = override.count();
-        index = new int[allowNew ? ac + names.length : ac];
-        values = new Object[index.length << 1];
+        index = new int[(allowNew ? ac + names.length : ac) << 1];
+        values = new Object[index.length];
         int i = 0, j = -1, k = 0, n = 0;
         String an = src.name(0), bn;
         while ((bn = override.name(++j)) != names[0]);
@@ -50,7 +50,9 @@ public class WithStruct extends AStruct {
             int c = an == null ? 1 : bn == null ? -1 : an.compareTo(bn);
             if (c >= 0) { // src >= override - take override
                 values[n] = bn;
-                values[n + 1] = override.ref(j, index, n >> 1);
+                values[n + 1] = override.ref(j, index, n);
+                if (override.eqName(j) == "")
+                    index[n + 1] = 1;
                 if (++k >= names.length) {
                     bn = null;
                 } else {
@@ -58,7 +60,9 @@ public class WithStruct extends AStruct {
                 }
             } else { // src < override - take super
                 values[n] = an;
-                values[n + 1] = src.ref(i, index, n >> 1);
+                values[n + 1] = src.ref(i, index, n);
+                if (src.eqName(i) == "")
+                    index[n + 1] = 1;
             }
             if (c <= 0) {
                 an = ++i >= ac ? null : src.name(i);
@@ -76,6 +80,10 @@ public class WithStruct extends AStruct {
         return values[i << 1].toString();
     }
 
+    public String eqName(int i) {
+        return index[(i <<= 1) + 1] == 0 ? values[i << 1].toString() : "";
+    }
+
     public Object get(int i) {
         return values[(i << 1) + 1];
     }
@@ -83,7 +91,7 @@ public class WithStruct extends AStruct {
     public Object get(String field) {
         int id, i = -2;
         while (values[i += 2] != field);
-        if ((id = index[i >>> 1]) < 0)
+        if ((id = index[i]) < 0)
             return values[i + 1];
         return ((Struct) values[i + 1]).get(id);
     }
@@ -95,7 +103,7 @@ public class WithStruct extends AStruct {
     }
 
     public Object ref(int field, int[] index, int at) {
-        index[at] = this.index[field];
-        return values[(field << 1) + 1];
+        index[at] = this.index[field <<= 1];
+        return values[field + 1];
     }
 }
