@@ -81,7 +81,7 @@ public class WithStruct extends AStruct {
     }
 
     public String eqName(int i) {
-        return index[(i <<= 1) + 1] == 0 ? values[i << 1].toString() : "";
+        return index[(i <<= 1) + 1] == 0 ? values[i].toString() : "";
     }
 
     public Object get(int i) {
