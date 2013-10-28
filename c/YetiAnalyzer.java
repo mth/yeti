@@ -1871,6 +1871,11 @@ public final class YetiAnalyzer extends YetiType {
             root.type = root.body.type.deref();
             ModuleType mt = new ModuleType(root.type, topLevel.typeDefs, true,
                                            parser.isModule ? 1 : -1);
+            for (Iterator i = mt.typeDefs.values().iterator(); i.hasNext(); ) {
+                YType[] t = (YType[]) i.next(); // hide implementation type
+                if (t[t.length - 1].type >= OPAQUE_TYPES)
+                    t[t.length - 1].allowedMembers = null;
+            }
             root.moduleType = mt;
             mt.topDoc = parser.topDoc;
             mt.deprecated = parser.deprecated;
