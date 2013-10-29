@@ -823,36 +823,39 @@ public final class YetiAnalyzer extends YetiType {
         return lambda;
     }
 
-    static Scope explodeStruct(Node where, LoadModule m,
-                               Scope scope, int depth, boolean noRoot) {
-        m.checkUsed = true;
-        if (m.type.type == STRUCT) {
-            Iterator j = m.type.allowedMembers.entrySet().iterator();
-        members:
-            while (j.hasNext()) {
-                Map.Entry e = (Map.Entry) j.next();
-                String name = ((String) e.getKey()).intern();
-                if (noRoot)
-                    for (Scope i = ROOT_SCOPE; i != null; i = i.outer)
-                        if (i.name == name)
-                            continue members;
-                YType t = (YType) e.getValue();
-                scope = bind(name, t, m.bindField(name, t),
-                             RESTRICT_POLY, depth, scope);
+    static Scope explodeStruct(Node where, LoadModule m, Scope scope,
+                               String prefix, int depth, boolean noRoot) {
+        if (prefix == null) {
+            m.checkUsed = true;
+            if (m.type.type == STRUCT) {
+                Iterator j = m.type.allowedMembers.entrySet().iterator();
+            members:
+                while (j.hasNext()) {
+                    Map.Entry e = (Map.Entry) j.next();
+                    String name = ((String) e.getKey()).intern();
+                    if (noRoot)
+                        for (Scope i = ROOT_SCOPE; i != null; i = i.outer)
+                            if (i.name == name)
+                                continue members;
+                    YType t = (YType) e.getValue();
+                    scope = bind(name, t, m.bindField(name, t),
+                                 RESTRICT_POLY, depth, scope);
+                }
+            } else if (m.type.type != UNIT) {
+                throw new CompileException(where,
+                    "Expected module with struct or unit type here (" +
+                    m.moduleName.replace('/', '.') + " has type " +
+                    m.type.toString(scope, null) +
+                    ", but only structs can be exploded)");
             }
-        } else if (m.type.type != UNIT) {
-            throw new CompileException(where,
-                "Expected module with struct or unit type here (" +
-                m.moduleName.replace('/', '.') + " has type " +
-                m.type.toString(scope, null) +
-                ", but only structs can be exploded)");
         }
         Iterator j = m.moduleType.typeDefs.entrySet().iterator();
         while (j.hasNext()) {
             Map.Entry e = (Map.Entry) j.next();
             YType[] typeDef = (YType[]) e.getValue();
-            scope = bind((String) e.getKey(), typeDef[typeDef.length - 1],
-                         null, RESTRICT_POLY, -1, scope);
+            String name = (String) e.getKey();
+            scope = bind(prefix == null ? name : prefix.concat(name).intern(),
+                 typeDef[typeDef.length - 1], null, RESTRICT_POLY, -1, scope);
             scope.typeDef = typeDef;
         }
         return scope;
@@ -1047,6 +1050,9 @@ public final class YetiAnalyzer extends YetiType {
                 } else {
                     Code code = analyze(bind.expr, scope, depth);
                     binder = new BindExpr(code, bind.var);
+                    if (code instanceof LoadModule)
+                        scope = explodeStruct(bind, (LoadModule) code, scope,
+                                    bind.name.concat("."), depth - 1, false);
                     if (bind.type != null)
                         isOp(bind, bind.type, binder.st, scope, depth);
                 }
@@ -1065,7 +1071,8 @@ public final class YetiAnalyzer extends YetiType {
                                    seq.seqKind == Seq.EVAL, scope, depth, last);
             } else if (nodes[i].kind == "load") {
                 LoadModule m = (LoadModule) analyze(nodes[i], scope, depth);
-                scope = explodeStruct(nodes[i], m, scope, depth - 1, false);
+                scope = explodeStruct(nodes[i], m, scope, null,
+                                      depth - 1, false);
                 addSeq(last, new SeqExpr(m));
                 if (seq.seqKind instanceof TopLevel) {
                     ((TopLevel) seq.seqKind).typeScope = scope;
@@ -1826,8 +1833,8 @@ public final class YetiAnalyzer extends YetiType {
                     ModuleType t = YetiTypeVisitor.getType(compiler,
                                         null, preload[i], false);
                     preloadModules[i] = new LoadModule(preload[i], t, -1);
-                    scope = explodeStruct(null, preloadModules[i],
-                              scope, 0, "yeti/lang/std".equals(preload[i]));
+                    scope = explodeStruct(null, preloadModules[i], scope,
+                                null, 0, "yeti/lang/std".equals(preload[i]));
                     if (depsModifiedTime < t.lastModified)
                         depsModifiedTime = t.lastModified;
                     else if (t.lastModified == 0)
