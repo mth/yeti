@@ -461,6 +461,10 @@ done,
     st.setf (const {v=true});
     (st.f ()).v
 done,
+'Case.': do:
+    f x is Case. 'b -> 'b = case x of Case a: a esac;
+    f (Case 42) == 42
+done
 ];
 
 var bad = 0;
