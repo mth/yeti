@@ -1673,13 +1673,19 @@ interface YetiParser {
                 res.pos(sline, scol);
             } else do {
                 int start = i;
-                char c = ' ';
+                char c = ' ', dot = '.';
                 if (i < src.length && ((c = src[i]) == '~' || c == '^'))
                     ++i;
                 boolean maybeArr = c == '~' || c == '\'';
-                while (i < src.length && ((c = src[i]) > '~' || CHS[c] == 'x'
-                                          || c == '.' || c == '$'))
-                    ++i;
+                if (c != '.') {
+                    if (Character.isUpperCase(c))
+                        dot = '_';
+                    while (i < src.length && ((c = src[i]) > '~' ||
+                                CHS[c] == 'x' || c == dot || c == '$'))
+                        ++i;
+                    while (src[i - 1] == '.')
+                        --i;
+                }
                 while (maybeArr && i + 1 < src.length && // java arrays
                        src[i] == '[' && src[i + 1] == ']')
                     i += 2;
@@ -1690,7 +1696,7 @@ interface YetiParser {
                 p = i;
                 String sym = new String(src, start, i - start).intern();
                 ArrayList param = new ArrayList();
-                if (Character.isUpperCase(src[start])) {
+                if (dot == '_') {
                     String doc = yetiDocStr;
                     if (i < src.length && src[i] == '.')
                         ++p;
