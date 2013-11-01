@@ -220,7 +220,7 @@ done,
         create is list<'a> -> magic<'a>,
         values is magic<'b> -> list<'b>,
     };
-    v = m.create [5..7];
+    v = m.create [5..7] is magic<number>;
     m.values v == [5..7]
 done,
 'opaque java types': do:

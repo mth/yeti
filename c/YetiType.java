@@ -779,9 +779,8 @@ public class YetiType implements YetiParser {
 
     static YType mergeOrUnify(YType to, YType val) throws TypeException {
         YType t = JavaType.mergeTypes(to, val);
-        if (t != null) {
+        if (t != null)
             return t;
-        }
         unify(to, val);
         return to;
     }
@@ -805,47 +804,45 @@ public class YetiType implements YetiParser {
         return result;
     }
 
+    // free should be given null only in that special case,
+    // when it is desirable to copy non-polymorphic structures.
+    // Only known such case currently is in the opaqueCast function.
     static YType copyType(YType type_, Map free, Map known) {
-        YType type = type_.deref();
-        if (type.type == VAR) {
-            YType var = (YType) free.get(type);
-            return var == null ? type : var;
-        }
-        if (type.param.length == 0 && type.type < OPAQUE_TYPES) {
+        YType res, type = type_.deref();
+        if (type.type == VAR)
+            return free != null && (res = (YType) free.get(type)) != null
+                    ? res : type;
+        if (type.param.length == 0 && type.type < OPAQUE_TYPES)
             return type_;
-        }
         YType copy = (YType) known.get(type);
-        if (copy != null) {
+        if (copy != null)
             return copy;
-        }
         /* No structure without polymorphic flag variable shouldn't be copied.
          * The getFreeVar should ensure that any variable reachable through
          * such structure isn't free either.
          */
         if ((type.type == STRUCT || type.type == VARIANT) &&
-            !free.containsKey(type.param[0])) {
+            free != null && !free.containsKey(type.param[0])) {
             return type;
         }
         YType[] param = new YType[type.param.length];
         copy = new YType(type.type, param);
         copy.doc = type_;
-        YType res = copy;
+        res = copy;
         if (type_.field >= FIELD_NON_POLYMORPHIC) {
             res = mutableFieldRef(type_);
             res.field = type_.field;
             res.ref = copy;
         }
         known.put(type, res);
-        for (int i = param.length; --i >= 0;) {
+        for (int i = param.length; --i >= 0;)
             param[i] = copyType(type.param[i], free, known);
-        }
         if (type.requiredMembers != null) {
             copy.flags = type.flags & FL_ANY_CASE;
             copy.requiredMembers = copyTypeMap(type.requiredMembers, free, known);
         }
-        if (type.allowedMembers != null) {
+        if (type.allowedMembers != null)
             copy.allowedMembers = copyTypeMap(type.allowedMembers, free, known);
-        }
         return res;
     }
 
@@ -868,10 +865,9 @@ public class YetiType implements YetiParser {
                 r[0] = scope;
                 return scope.binder.getRef(where.line);
             }
-            if (scope.closure != null) {
+            if (scope.closure != null)
                 return scope.closure.refProxy(
                             resolveRef(sym, where, scope.outer, r));
-            }
         }
         throw new CompileException(where, "Unknown identifier: " + sym);
     }
@@ -891,9 +887,8 @@ public class YetiType implements YetiParser {
     }
 
     static YType resolveClass(String name, Scope scope, boolean shadow) {
-        if (name.indexOf('/') >= 0) {
+        if (name.indexOf('/') >= 0)
             return JavaType.typeOfClass(null, name);
-        }
         for (; scope != null; scope = scope.outer)
             if (scope.name == name) {
                 if (scope.importClass != null)
@@ -1292,11 +1287,11 @@ public class YetiType implements YetiParser {
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
         to = to.deref();
-        Map free = new IdentityHashMap();
-        t = copyType(to, free, new IdentityHashMap());
+        t = copyType(to, null, new IdentityHashMap());
         prepareOpaqueCast(t, allow_opaque);
         unify(from, t);
-        return deriveOpaque(from.deref(), to, free, allow_opaque);
+        return deriveOpaque(from.deref(), to, new IdentityHashMap(),
+                            allow_opaque);
     }
 
     static YType withDoc(YType t, String doc) {
