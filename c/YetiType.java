@@ -1155,13 +1155,33 @@ public class YetiType implements YetiParser {
                     vars.remove(t.param[2].deref());
                 }
                 t.seen = true;
-                while (i < t.param.length) {
+                while (i < t.param.length)
                     removeStructs(t.param[i++], vars);
-                }
                 t.seen = false;
             } else if (t.ref != null) {
                 removeStructs(t.ref, vars);
             }
+        }
+    }
+
+    static void normalizeFlexType(YType t, boolean covariant) {
+        t = t.deref();
+        if (t.type != VAR && !t.seen) {
+            if ((t.flags & FL_SMART_TYPEDEF) != 0 &&
+                (t.type == STRUCT || t.type == VARIANT)) {
+                Map members = t.requiredMembers;
+                if (t.type == STRUCT ^ members != null ^ covariant &&
+                    (members == null || t.allowedMembers == null)) {
+                    t.requiredMembers = t.allowedMembers;
+                    t.allowedMembers = members;
+                }
+                t.flags &= ~FL_SMART_TYPEDEF;
+            }
+            t.seen = true;
+            for (int i = 0; i < t.param.length; ++i)
+                normalizeFlexType(t.param[i],
+                                  (i == 0 && t.type == FUN) ^ covariant);
+            t.seen = false;
         }
     }
 

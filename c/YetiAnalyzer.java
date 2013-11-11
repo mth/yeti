@@ -386,7 +386,10 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code isOp(Node is, TypeNode type, Code value,
                      Scope scope, int depth) {
-        YType t = nodeToType(type, new HashMap(), scope, depth + 1, true).deref();
+        YType t = nodeToType(type != null ? type : ((Bind) is).type,
+                             new HashMap(), scope, depth + 1, true).deref();
+        if (type == null)
+            normalizeFlexType(t, true);
         YType vt = value.type.deref();
         String s;
         if (is instanceof BinOp && (s = ((BinOp) is).op) != "is") {
@@ -933,7 +936,7 @@ public final class YetiAnalyzer extends YetiType {
             Code code = selectMember(fields[j], (Sym) bind.expr,
                           binder.getRef(fields[j].line), scope, depth + 1);
             if (field.type != null)
-                isOp(field, field.type, code, scope, depth);
+                isOp(field, null, code, scope, depth);
             BindExpr bindExpr = new BindExpr(code, false);
             scope = genericBind(bind, bindExpr, isEval, scope, depth);
             addSeq(last, bindExpr);
@@ -1059,7 +1062,7 @@ public final class YetiAnalyzer extends YetiType {
                         scope = explodeStruct(bind, (LoadModule) code, scope,
                                     bind.name.concat("."), depth - 1, false);
                     if (bind.type != null)
-                        isOp(bind, bind.type, binder.st, scope, depth);
+                        isOp(bind, null, binder.st, scope, depth);
                 }
                 if (bind.doc != null)
                     binder.st.type = withDoc(binder.st.type, bind.doc);
@@ -1138,7 +1141,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static Code lambdaBind(Function to, Bind bind, Scope scope, int depth) {
         if (bind.type != null)
-            isOp(bind, bind.type, to, scope, depth);
+            isOp(bind, null, to, scope, depth);
         return lambda(to, (XNode) bind.expr, scope, depth);
     } 
 
@@ -1221,6 +1224,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static void propertyField(Bind field, Code code, StructField sf, Map fields,
                     Node where, Scope scope, Scope propertyScope, int depth) {
+        YType f;
         if (code == null) {
             code = analyze(field.expr, propertyScope, depth);
         } else if (!field.var) {
@@ -1237,9 +1241,11 @@ public final class YetiAnalyzer extends YetiType {
             t.field = FIELD_NON_POLYMORPHIC;
             fields.put(field.name, t);
         }
-        if (field.type != null)
-            unify(t, nodeToType(field.type, new HashMap(), scope, depth, true),
-                  field, scope, "#0 (when checking #1 is #2)");
+        if (field.type != null) {
+            f = nodeToType(field.type, new HashMap(), scope, depth, true);
+            normalizeFlexType(f, true);
+            unify(t, f, field, scope, "#0 (when checking #1 is #2)");
+        }
         if (field.var)
             t.field = FIELD_MUTABLE;
         if (field.doc != null) {
@@ -1248,9 +1254,8 @@ public final class YetiAnalyzer extends YetiType {
             else
                 t.doc = field.doc + '\n' + t.doc;
         }
-        YType f = new YType(FUN, field.var
-                        ? new YType[] { t, UNIT_TYPE }
-                        : new YType[] { UNIT_TYPE, t });
+        f = new YType(FUN, field.var ? new YType[] { t, UNIT_TYPE }
+                                     : new YType[] { UNIT_TYPE, t });
         try {
             unify(code.type, f);
         } catch (TypeException ex) {
@@ -1308,7 +1313,7 @@ public final class YetiAnalyzer extends YetiType {
                 if (code == null) {
                     code = analyze(field.expr, scope, depth);
                     if (field.type != null)
-                        isOp(field, field.type, code, scope, depth);
+                        isOp(field, null, code, scope, depth);
                 }
                 sf = new StructField();
                 sf.name = field.name;

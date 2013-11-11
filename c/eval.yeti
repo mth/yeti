@@ -192,7 +192,7 @@ createCtx genericOpt cl =
     fi;
     {warn, ctx, flags, java});
 
-nullTypeAction _ is module_description -> () = ();
+nullTypeAction = const ();
 
 moduleDoc m is ~ModuleType -> module_description = {
     doc = m#topDoc,

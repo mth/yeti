@@ -34,23 +34,23 @@ module yeti.lang.compiler.showtype;
 
 typedef typeitem<type> = {
     /// Name of the member (either field name or variant tag name).
-    .name is string,
+    name is string,
 
     /// Type of the member.
-    .type is type,
+    type is type,
 
     /// Tag of the type.
     ///
     /// "." - member is expected by code using the value
     ///
     /// "`" - member is both used in code and provided by a constructor
-    .tag is string,
+    tag is string,
 
     /// Whether the member is a mutable field?
-    .mutable is boolean,
+    mutable is boolean,
 
     /// Description of the member (from the YetiDoc comment in code).
-    .description is string
+    description is string
 }
 
 typedef type =
@@ -64,10 +64,10 @@ typedef type =
     /// : Parametric { type = "list", params = [Simple "number"] }
     Parametric {
         /// The name of the parametric type (for example "list").
-        .type is string,
+        type is string,
 
         /// Type parameters for the parametric type.
-        .params is list<type>
+        params is list<type>
     } |
 
     /// Function type, the last element in the list is return type.
@@ -85,10 +85,10 @@ typedef type =
     /// Alias definition, used on recursive type definitions.
     Alias {
         /// The name of type variable being alias to the `type`.
-        .alias is string,
+        alias is string,
 
         /// The actual type. The `alias` may occur as `Simple` type inside it.
-        .type is type
+        type is type
     }
 
 typedef showType_fun = string -> type -> string
