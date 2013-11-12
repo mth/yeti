@@ -131,7 +131,7 @@ syn cluster yetiTypeDecls contains=yetiTypeDecl,yetiTypeVar
 syn region yetiTypeDecl transparent start="(" end=")" contained contains=@yetiTypeDecls,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 syn region yetiTypeDecl transparent start="{" end="}" contained contains=yetiType,yetiComment skipempty skipwhite nextgroup=yetiTypeOp
 syn match yetiTypeDecl "\~\(\w\|\.\|\$\)*\(\[\]\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
-syn match yetiTypeDecl "\l\(\w\|'\|?\)*" contained skipempty skipwhite nextgroup=yetiTypeOp
+syn match yetiTypeDecl "\l\(\w\|'\|?\)*!\?" contained skipempty skipwhite nextgroup=yetiTypeOp
 syn match yetiTypeVar "['^]\(\w\|'\)*\(\[\]\)*" contained skipwhite skipempty nextgroup=yetiTypeOp
 syn match yetiTypeDecl "\<\u\(\w\|'\)*\>" contained skipwhite skipempty nextgroup=@yetiTypeDecls
 syn match yetiTypeDecl "()" contained skipwhite skipempty nextgroup=yetiTypeOp

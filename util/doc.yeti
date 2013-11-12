@@ -84,8 +84,7 @@ formatType template =
                     fi
                 fi;
                 nameStr = if variant or fn =~ '^\w' then fn else "(\(fn))" fi;
-                f is typeitem<type> = f;
-                f with { typeStr = types[fn], nameStr,
+                f is typeitem!<type> with { typeStr = types[fn], nameStr,
                          description, group, var groupTitle = ''});
             sortKey f = [f.group, f.nameStr];
             fields = sortBy (on (<) sortKey) (map fieldDesc l);
