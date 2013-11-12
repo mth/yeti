@@ -364,7 +364,6 @@ interface YetiParser {
         String[] param;
         String doc;
         TypeNode type;
-        boolean exact;
         int kind;
 
         String str() {
@@ -442,6 +441,7 @@ interface YetiParser {
         String name;
         TypeNode[] param;
         boolean var;
+        boolean exact;
         String doc;
 
         TypeNode(String name, TypeNode[] param) {
@@ -1579,11 +1579,6 @@ interface YetiParser {
                 def.name = getTypename(node);
                 node = fetch();
             }
-            if (def.kind != TypeDef.SHARED && node instanceof BinOp &&
-                ((BinOp) node).op == "!") {
-                def.exact = true;
-                node = fetch();
-            }
             if (node instanceof BinOp && ((BinOp) node).op == "<" &&
                 def.kind != TypeDef.SHARED) {
                 do {
@@ -1692,9 +1687,12 @@ interface YetiParser {
                     while (src[i - 1] == '.')
                         --i;
                 }
-                while (maybeArr && i + 1 < src.length && // java arrays
-                       src[i] == '[' && src[i + 1] == ']')
-                    i += 2;
+                if (maybeArr) {
+                    c = ' ';
+                    while (i + 1 < src.length && // java arrays
+                           src[i] == '[' && src[i + 1] == ']')
+                        i += 2;
+                }
                 if (i == start)
                     throw new CompileException(sline, scol,
                                 "Expected type identifier, not '" +
@@ -1702,7 +1700,7 @@ interface YetiParser {
                 p = i;
                 String sym = new String(src, start, i - start).intern();
                 ArrayList param = new ArrayList();
-                if (dot == '_') {
+                if (dot == '_') { // Tag variant
                     String doc = yetiDocStr;
                     if (i < src.length && src[i] == '.')
                         ++p;
@@ -1730,6 +1728,8 @@ interface YetiParser {
                                 new TypeNode[param.size()])).pos(sline, scol);
                     break; // break do...while, go check for ->
                 }
+                if (c == '!')
+                    ++p;
                 if ((p = skipSpace()) < src.length && src[p] == '<') {
                     ++p;
                     for (TypeNode node; (node = readType(TYPE_NORMAL)) != null;
@@ -1745,6 +1745,7 @@ interface YetiParser {
                 }
                 res = new TypeNode(sym,
                         (TypeNode[]) param.toArray(new TypeNode[param.size()]));
+                res.exact = c == '!';
                 res.pos(sline, scol);
             } while (false);
             if (checkVariant == TYPE_VARIANT)

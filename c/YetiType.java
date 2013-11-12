@@ -1185,6 +1185,16 @@ public class YetiType implements YetiParser {
         }
     }
 
+    private static void stripFlexTypes(YType t) {
+        if (t.type != VAR && !t.seen) {
+            t.flags &= ~FL_SMART_TYPEDEF;
+            t.seen = true;
+            for (int i = 0; i < t.param.length; ++i)
+                stripFlexTypes(t.param[i].deref());
+            t.seen = false;
+        }
+    }
+
     static Scope bind(String name, YType valueType, Binder value,
                       int flags, int depth, Scope scope) {
         scope = new Scope(scope, name, value);
@@ -1202,11 +1212,11 @@ public class YetiType implements YetiParser {
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
-                                int depth, Node where) {
+                                int depth, TypeNode src) {
         for (; scope != null; scope = scope.outer) {
             if (scope.typeDef != null && scope.name == name) {
                 if (scope.typeDef.length - 1 != param.length) {
-                    throw new CompileException(where,
+                    throw new CompileException(src,
                         "Type " + name + " expects "
                         + (scope.typeDef.length == 2 ?  "1 parameter"
                             : (scope.typeDef.length - 1) + " parameters")
@@ -1217,11 +1227,14 @@ public class YetiType implements YetiParser {
                 Map vars = createFreeVars(scope.free, depth);
                 for (int i = param.length; --i >= 0;)
                     vars.put(scope.typeDef[i], param[i]);
-                return copyType(scope.typeDef[param.length], vars,
-                                new IdentityHashMap());
+                YType res = copyType(scope.typeDef[param.length], vars,
+                                     new IdentityHashMap());
+                if (src.exact)
+                    stripFlexTypes(res);
+                return res;
             }
         }
-        throw new CompileException(where, "Unknown type: " + name);
+        throw new CompileException(src, "Unknown type: " + name);
     }
 
     // Used by as cast to mark opaque types as ambigous, allowing them

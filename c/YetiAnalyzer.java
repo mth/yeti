@@ -960,7 +960,7 @@ public final class YetiAnalyzer extends YetiType {
             //arg.doc = defScope.name; // to provide name to pretty-printer
         }
         YType type = nodeToType(typeDef.type, new HashMap(),
-                                defScope, 1, typeDef.exact).deref();
+                                defScope, 1, false).deref();
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
