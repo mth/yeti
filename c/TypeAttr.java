@@ -49,7 +49,7 @@ import java.io.InputStream;
  * 0B <requiredMembers...> FF <allowedMembers...> FF - Struct
  * 0C <requiredMembers...> FF <allowedMembers...> FF - Variant
  * 0C F9 ... - Variant with FL_ANY_CASE flag
- * (0B | 0C) F9? F8 ... - Variant or struct with FL_SMART_TYPEDEF flag
+ * (0B | 0C) F9? F8 ... - Variant or struct with FL_FLEX_TYPEDEF flag
  * 0D XX XX <param...> FF - java type
  * 0E e.. FF - java array e[]
  * FA XX XX <parameters...> FF - opaque type instance (X is "module:name")
@@ -171,7 +171,7 @@ class TypeAttr extends Attribute {
                                 : "Internal error: empty variant");
                 if ((type.flags & YetiType.FL_ANY_CASE) != 0)
                     buf.putByte(ANYCASE);
-                if ((type.flags & YetiType.FL_SMART_TYPEDEF) != 0)
+                if ((type.flags & YetiType.FL_FLEX_TYPEDEF) != 0)
                     buf.putByte(SMART);
                 writeMap(type.allowedMembers);
                 writeMap(type.requiredMembers);
@@ -286,7 +286,7 @@ class TypeAttr extends Attribute {
                     ++p;
                 }
                 if (in[p] == SMART) {
-                    t.flags |= YetiType.FL_SMART_TYPEDEF;
+                    t.flags |= YetiType.FL_FLEX_TYPEDEF;
                     ++p;
                 }
                 t.allowedMembers = readMap();

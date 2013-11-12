@@ -278,7 +278,7 @@ public final class YetiAnalyzer extends YetiType {
         result.allowedMembers = members;
         result.requiredMembers = members_;
         if (!exact && (members == null || members_ == null))
-            result.flags |= FL_SMART_TYPEDEF;
+            result.flags |= FL_FLEX_TYPEDEF;
         return result;
     }
 

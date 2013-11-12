@@ -199,9 +199,8 @@ public class YetiType implements YetiParser {
     static final int FL_TAINTED_VAR      = 2;
     static final int FL_AMBIGUOUS_OPAQUE = 4;
     static final int FL_ANY_CASE         = 8;
-    static final int FL_SMART_TYPEDEF    = 0x10;
+    static final int FL_FLEX_TYPEDEF     = 0x10;
     static final int FL_ERROR_IS_HERE    = 0x100;
-//    static final int FL_NO_SMART_FLIP    = 0x2000;
     static final int FL_ANY_PATTERN      = 0x4000;
     static final int FL_PARTIAL_PATTERN  = 0x8000;
 
@@ -530,25 +529,21 @@ public class YetiType implements YetiParser {
         try {
             b.ref = a; // just fake ref now to avoid cycles...
             Map ff;
-            if (((a.flags | b.flags) & FL_SMART_TYPEDEF) != 0) {
+            if (((a.flags | b.flags) & FL_FLEX_TYPEDEF) != 0) {
                 int x = (a.allowedMembers  != null ? 1 : 0) |
                         (a.requiredMembers != null ? 2 : 0) |
                         (b.allowedMembers  != null ? 4 : 0) |
                         (b.requiredMembers != null ? 8 : 0);
                 if (x == 6 || x == 9) { // 0110 or 1001
-                    YType t = (a.flags & FL_SMART_TYPEDEF) != 0 ? a : b;
-                    //if ((t.flags & FL_NO_SMART_FLIP) == 0) {
-                        Map tmp = t.allowedMembers;
-                        t.allowedMembers = t.requiredMembers;
-                        t.requiredMembers = tmp;
-                        t.flags &= ~FL_SMART_TYPEDEF; // flip only once.
-                        System.err.println("  flip");
-                    //}
+                    YType t = (a.flags & FL_FLEX_TYPEDEF) != 0 ? a : b;
+                    Map tmp = t.allowedMembers;
+                    t.allowedMembers = t.requiredMembers;
+                    t.requiredMembers = tmp;
+                    t.flags &= ~FL_FLEX_TYPEDEF; // flip only once.
                 }
             }
             // don't be smart anymore
-            a.flags &= ~FL_SMART_TYPEDEF;
-//            a.flags |= FL_NO_SMART_FLIP;
+            a.flags &= ~FL_FLEX_TYPEDEF;
             if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
                 // VARIANT types are sometimes ordered.
                 // when all their variant parameters are ordered types.
@@ -616,7 +611,7 @@ public class YetiType implements YetiParser {
                 a.requiredMembers.putAll(b.requiredMembers);
             }
             a.allowedMembers = ff;
-            a.flags &= b.flags | ~(FL_ANY_CASE | FL_SMART_TYPEDEF);
+            a.flags &= b.flags | ~(FL_ANY_CASE | FL_FLEX_TYPEDEF);
             if (ff == null) {
                 ff = a.requiredMembers;
             } else if (a.requiredMembers != null) {
@@ -859,11 +854,11 @@ public class YetiType implements YetiParser {
         for (int i = param.length; --i >= 0;)
             param[i] = copyType(type.param[i], free, known);
         if (type.requiredMembers != null) {
-            copy.flags = type.flags & (FL_ANY_CASE | FL_SMART_TYPEDEF);
+            copy.flags = type.flags & (FL_ANY_CASE | FL_FLEX_TYPEDEF);
             copy.requiredMembers = copyTypeMap(type.requiredMembers, free, known);
         }
         if (type.allowedMembers != null) {
-            copy.flags |= type.flags & FL_SMART_TYPEDEF;
+            copy.flags |= type.flags & FL_FLEX_TYPEDEF;
             copy.allowedMembers = copyTypeMap(type.allowedMembers, free, known);
         }
         return res;
@@ -1167,7 +1162,7 @@ public class YetiType implements YetiParser {
     static void normalizeFlexType(YType t, boolean covariant) {
         t = t.deref();
         if (t.type != VAR && !t.seen) {
-            if ((t.flags & FL_SMART_TYPEDEF) != 0 &&
+            if ((t.flags & FL_FLEX_TYPEDEF) != 0 &&
                 (t.type == STRUCT || t.type == VARIANT)) {
                 Map members = t.requiredMembers;
                 if (t.type == STRUCT ^ members != null ^ covariant &&
@@ -1175,7 +1170,7 @@ public class YetiType implements YetiParser {
                     t.requiredMembers = t.allowedMembers;
                     t.allowedMembers = members;
                 }
-                t.flags &= ~FL_SMART_TYPEDEF;
+                t.flags &= ~FL_FLEX_TYPEDEF;
             }
             t.seen = true;
             for (int i = 0; i < t.param.length; ++i)
@@ -1187,7 +1182,7 @@ public class YetiType implements YetiParser {
 
     private static void stripFlexTypes(YType t) {
         if (t.type != VAR && !t.seen) {
-            t.flags &= ~FL_SMART_TYPEDEF;
+            t.flags &= ~FL_FLEX_TYPEDEF;
             t.seen = true;
             for (int i = 0; i < t.param.length; ++i)
                 stripFlexTypes(t.param[i].deref());
