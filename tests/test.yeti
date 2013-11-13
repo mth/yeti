@@ -227,6 +227,20 @@ done,
     typedef opaque foo = ~Integer;
     "\(new Integer(22) as foo)" == "22"
 done,
+'opaque struct 1': do:
+    expectCompileError
+       'typedef opaque st = {a is number, b is ()};
+        wrap = id as {a is number} -> st;
+        unwrap = id as st -> {a is number, b is ()};
+        (unwrap (wrap {a = 42})).b'
+done,
+'opaque struct 2': do:
+    expectCompileError
+       'typedef opaque st = {.a is number};
+        wrap = id as {.a is number} -> st;
+        unwrap = id as st -> {.a is number, .b is ()};
+        (unwrap (wrap {a = 42})).b'
+done,
 'var recursion': do:
     var f x =
         if x then

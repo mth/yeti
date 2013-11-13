@@ -959,22 +959,24 @@ public final class YetiAnalyzer extends YetiType {
             defScope.free = NO_PARAM;
             //arg.doc = defScope.name; // to provide name to pretty-printer
         }
+        boolean opaque = typeDef.kind == TypeDef.OPAQUE;
         YType type = nodeToType(typeDef.type, new HashMap(),
-                                defScope, 1, false).deref();
+                                defScope, 1, opaque).deref();
         // XXX the order of unify arguments matters!
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
         scope = new Scope(scope, typeDef.name, null);
-        List structs = typeDef.kind == TypeDef.OPAQUE ? new ArrayList() : null;
+        List structs = opaque ? new ArrayList() : null;
         if (typeDef.kind != TypeDef.SHARED) {
             ArrayList vars = new ArrayList();
-            getAllTypeVar(vars, structs, type); // nothing mutable in typedef
+            // nothing mutable in typedef
+            getAllTypeVar(vars, structs, type, opaque);
             scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
         }
 
         boolean override = false;
-        if (typeDef.kind == TypeDef.OPAQUE) {
+        if (opaque) {
             self = type;
             for (int i = scope.free.length; --i >= 0; ) {
                 int j = def.length - 1;
@@ -1747,7 +1749,7 @@ public final class YetiAnalyzer extends YetiType {
             Map.Entry e = (Map.Entry) f.next();
             List all = new ArrayList(), structs = new ArrayList();
             t = (YType) e.getValue();
-            getAllTypeVar(all, structs, t);
+            getAllTypeVar(all, structs, t, false);
             for (int i = 0; i < free.length; ++i)
                 all.remove(free[i]);
             if (all.isEmpty())

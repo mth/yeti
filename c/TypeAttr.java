@@ -412,7 +412,7 @@ class ModuleType extends YetiParser.Node {
             return t;
         if (free == null) {
             List freeVars = new ArrayList();
-            YetiType.getAllTypeVar(freeVars, null, t);
+            YetiType.getAllTypeVar(freeVars, null, t, false);
             free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
         }
         return YetiType.copyType(t, YetiType.createFreeVars(free, depth),

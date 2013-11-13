@@ -1121,17 +1121,26 @@ public class YetiType implements YetiParser {
         return result;
     }
 
-    static void getAllTypeVar(List vars, List structs, YType type) {
+    static void getAllTypeVar(List vars, List structs, YType type,
+                              boolean freeze) {
         if (type.seen)
             return;
         YType t = type.deref();
         if (t.type != VAR) {
             type.seen = true;
             int i = -1;
-            if (structs != null && (t.type == STRUCT || t.type == VARIANT))
-                getAllTypeVar(structs, null, t.param[i = 0]);
+            if (structs != null && (t.type == STRUCT || t.type == VARIANT)) {
+                getAllTypeVar(structs, null, t.param[i = 0], false);
+                if (freeze) {
+                    if (t.requiredMembers == null)
+                        t.requiredMembers = t.allowedMembers;
+                    else
+                        t.allowedMembers = t.requiredMembers;
+                    t.flags &= ~FL_FLEX_TYPEDEF;
+                }
+            }
             while (++i < t.param.length)
-                getAllTypeVar(vars, structs, t.param[i]);
+                getAllTypeVar(vars, structs, t.param[i], freeze);
             type.seen = false;
         } else if (vars.indexOf(t) < 0)
             vars.add(t);
