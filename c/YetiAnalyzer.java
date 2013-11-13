@@ -242,8 +242,8 @@ public final class YetiAnalyzer extends YetiType {
 
     static YType nodeToMembers(int type, TypeNode[] param, Map free,
                                Scope scope, int depth, boolean exact) {
-        Map members = new HashMap(param.length);
-        Map members_ = new HashMap(param.length);
+        Map members = new IdentityHashMap(param.length);
+        Map members_ = new IdentityHashMap(param.length);
         YType[] tp = new YType[param.length + 1];
         tp[0] = new YType(depth);
         for (int i = 1; i <= param.length; ++i) {
@@ -593,7 +593,7 @@ public final class YetiAnalyzer extends YetiType {
     static Code variantConstructor(String name, int depth) {
         YType arg = new YType(++depth);
         YType tag = new YType(VARIANT, new YType[] { new YType(depth), arg });
-        tag.requiredMembers = new HashMap();
+        tag.requiredMembers = new IdentityHashMap();
         tag.requiredMembers.put(name, arg);
         YType[] fun = { arg, tag };
         return new VariantConstructor(new YType(FUN, fun), name);
@@ -612,7 +612,7 @@ public final class YetiAnalyzer extends YetiType {
 
     static YType selectMemberType(YType res, String field, int depth) {
         YType arg = new YType(STRUCT, new YType[] { new YType(depth), res });
-        arg.requiredMembers = new HashMap();
+        arg.requiredMembers = new IdentityHashMap();
         arg.requiredMembers.put(field, res);
         return arg;
     }
@@ -784,7 +784,7 @@ public final class YetiAnalyzer extends YetiType {
         if (st.type == STRUCT && st.allowedMembers != null) {
             unify(st.param[0], ot.param[0], with, scope,
                   "Internal error (withStruct depth unify)");
-            Map param = new HashMap(st.allowedMembers);
+            Map param = new IdentityHashMap(st.allowedMembers);
             param.putAll(otf);
             // with ensures override, because type can change and
             // members can be missing in the source structure.
@@ -792,12 +792,12 @@ public final class YetiAnalyzer extends YetiType {
             if (ot.requiredMembers == null) {
                 ot.requiredMembers = otf;
             } else {
-                HashMap tmp = new HashMap(otf);
+                IdentityHashMap tmp = new IdentityHashMap(otf);
                 tmp.keySet().removeAll(ot.requiredMembers.keySet());
                 ot.requiredMembers.putAll(otf);
             }
             // lock used members.
-            HashMap tmp = new HashMap(st.allowedMembers);
+            IdentityHashMap tmp = new IdentityHashMap(st.allowedMembers);
             tmp.keySet().removeAll(otf.keySet());
             if (st.requiredMembers != null)
                 tmp.putAll(st.requiredMembers);
@@ -807,7 +807,7 @@ public final class YetiAnalyzer extends YetiType {
             structParam(result, param, st.param[0].deref());
         } else {
             result = new YType(STRUCT, null);
-            result.requiredMembers = new HashMap(otf);
+            result.requiredMembers = new IdentityHashMap(otf);
             result.param = ot.param;
             unify(src.type, result, with.right, scope,
                   "Cannot extend #1 with #2");
@@ -1278,8 +1278,8 @@ public final class YetiAnalyzer extends YetiType {
         if (nodes.length == 0)
             throw new CompileException(st, NONSENSE_STRUCT);
         Scope local = scope, propertyScope = null;
-        Map fields = new HashMap(nodes.length),
-            codeMap = new HashMap(nodes.length);
+        Map fields = new IdentityHashMap(nodes.length),
+            codeMap = new IdentityHashMap(nodes.length);
         Function[] funs = new Function[nodes.length];
         StructConstructor result = new StructConstructor(nodes.length);
         result.polymorph = true;
@@ -1467,7 +1467,7 @@ public final class YetiAnalyzer extends YetiType {
                                      " ... is not " + t.toString(scope, null));
                     t.type = VARIANT;
                     if (t.requiredMembers == null) {
-                        t.requiredMembers = new HashMap();
+                        t.requiredMembers = new IdentityHashMap();
                         t.flags |= FL_ANY_CASE;
                         if (submatch == 0) // XXX hack!!!
                             variants.add(t);
@@ -1520,7 +1520,7 @@ public final class YetiAnalyzer extends YetiType {
                     YType ft = new YType(depth);
                     YType part = new YType(STRUCT,
                             new YType[] { new YType(depth), ft });
-                    HashMap tm = new HashMap();
+                    IdentityHashMap tm = new IdentityHashMap();
                     tm.put(field.name, ft);
                     part.requiredMembers = tm;
                     unify(t, part, field, scope, "#0");

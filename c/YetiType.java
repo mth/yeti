@@ -403,15 +403,6 @@ public class YetiType implements YetiParser {
             new YType[] { a, new YType(FUN, new YType[] { b, res }) });
     }
 
-    static YType variantOf(String[] na, YType[] ta) {
-        YType t = new YType(VARIANT, ta);
-        t.requiredMembers = new HashMap(na.length);
-        for (int i = 0; i < na.length; ++i) {
-            t.requiredMembers.put(na[i], ta[i]);
-        }
-        return t;
-    }
-
     static YType mutableFieldRef(YType src) {
         YType t = new YType(src.depth);
         t.ref = src.ref;
@@ -559,7 +550,7 @@ public class YetiType implements YetiParser {
                 ff = a.allowedMembers;
             } else {
                 // unify final members
-                ff = new HashMap(a.allowedMembers);
+                ff = new IdentityHashMap(a.allowedMembers);
                 for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
                     Map.Entry entry = (Map.Entry) i.next();
                     currentField = entry.getKey();
@@ -615,7 +606,7 @@ public class YetiType implements YetiParser {
             if (ff == null) {
                 ff = a.requiredMembers;
             } else if (a.requiredMembers != null) {
-                ff = new HashMap(ff);
+                ff = new IdentityHashMap(ff);
                 ff.putAll(a.requiredMembers);
             }
             unify(a.param[0], b.param[0]);
@@ -802,7 +793,7 @@ public class YetiType implements YetiParser {
     }
 
     static Map copyTypeMap(Map types, Map free, Map known) {
-        Map result = new HashMap(types.size());
+        Map result = new IdentityHashMap(types.size());
         for (Iterator i = types.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
             YType t = (YType) entry.getValue();
@@ -1259,7 +1250,7 @@ public class YetiType implements YetiParser {
 
     private static Map opaqueMembers(Map src, Map members) {
         if (src != null) {
-            src = new HashMap(src);
+            src = new IdentityHashMap(src);
             for (Iterator i = src.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
                 Object t = members.get(e.getKey());
@@ -1285,7 +1276,7 @@ public class YetiType implements YetiParser {
         if (opaque.type == STRUCT || opaque.type == VARIANT) {
             res = new YType(src.type, NO_PARAM);
             cache.put(opaque, res);
-            Map members = new HashMap(opaque.requiredMembers != null
+            Map members = new IdentityHashMap(opaque.requiredMembers != null
                     ? opaque.requiredMembers : opaque.allowedMembers);
             for (Iterator i = members.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();

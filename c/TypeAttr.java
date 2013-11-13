@@ -90,8 +90,8 @@ class TypeAttr extends Attribute {
     private static final class EncodeType {
         ClassWriter cw;
         ByteVector buf = new ByteVector();
-        Map refs = new HashMap();
-        Map vars = new HashMap();
+        Map refs = new IdentityHashMap();
+        Map vars = new IdentityHashMap();
         Map opaque = new HashMap();
 
         void writeMap(Map m) {
@@ -221,10 +221,10 @@ class TypeAttr extends Attribute {
                 ++p;
                 return null;
             }
-            HashMap res = new HashMap();
+            Map res = new IdentityHashMap();
             while (in[p] != END) {
                 YType t = read();
-                res.put(cr.readUTF8(p, buf), t);
+                res.put(cr.readUTF8(p, buf).intern(), t);
                 p += 2;
             }
             ++p;
@@ -294,11 +294,11 @@ class TypeAttr extends Attribute {
                 Map param;
                 if (t.allowedMembers == null) {
                     if ((param = t.requiredMembers) == null)
-                        param = new HashMap();
+                        param = new IdentityHashMap();
                 } else if (t.requiredMembers == null) {
                     param = t.allowedMembers;
                 } else {
-                    param = new HashMap(t.allowedMembers);
+                    param = new IdentityHashMap(t.allowedMembers);
                     param.putAll(t.requiredMembers);
                 }
                 t.param = new YType[param.size() + 1];
@@ -416,7 +416,7 @@ class ModuleType extends YetiParser.Node {
             free = (YType[]) freeVars.toArray(new YType[freeVars.size()]);
         }
         return YetiType.copyType(t, YetiType.createFreeVars(free, depth),
-                                 new HashMap());
+                                 new IdentityHashMap());
     }
 
     Tag yetiType() {
