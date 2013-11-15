@@ -324,7 +324,37 @@ class TypeDescr extends YetiType {
             descr.value = field;
         }
     }
-    
+
+    private static boolean match(TypeDescr descr, YType t, DescrCtx ctx) {
+        Map defVars = null;
+        TypePattern def = null;
+        if (ctx.defs == null ||
+              (def = ctx.defs.match(t, defVars = new IdentityHashMap())) == null
+              || def.end == null)
+            return false;
+        descr.name = def.end.typename;
+        if (def.end.defvars.length == 0) {
+            descr.type = 0;
+            return true;
+        }
+        ctx.refs.put(t, descr); // to avoid infinite recursion
+        descr.type = MAP; // Parametric
+        Map param = new HashMap();
+        for (Iterator i = defVars.entrySet().iterator(); i.hasNext();) {
+            Map.Entry e = (Map.Entry) i.next();
+            param.put(e.getValue(), e.getKey());
+        }
+        for (int i = def.end.defvars.length; --i >= 0; ) {
+            YType tp = (YType) param.get(new Integer(def.end.defvars[i]));
+            TypeDescr item = tp != null ? prepare(tp, ctx) : new TypeDescr("?");
+            item.prev = descr.value;
+            descr.value = item;
+        }
+        if (descr.alias == null) // no recursive refs in parameters?
+            ctx.refs.remove(t);
+        return true;
+    }
+
     private static TypeDescr prepare(YType t, DescrCtx ctx) {
         final int type = t.type;
         if (type == VAR) {
@@ -347,31 +377,8 @@ class TypeDescr extends YetiType {
         final YType tt = t;
         descr = new TypeDescr(null);
         int varcount = ctx.vars.size();
-        Map defVars = null;
-        TypePattern def = null;
-        if (ctx.defs != null &&
-              (def = ctx.defs.match(t, defVars = new IdentityHashMap())) != null
-              && def.end != null) {
-            descr.name = def.end.typename;
-            if (def.end.defvars.length == 0)
-                return descr;
-            ctx.refs.put(tt, descr); // to avoid infinite recursion
-            descr.type = MAP; // Parametric
-            Map param = new HashMap();
-            for (Iterator i = defVars.entrySet().iterator(); i.hasNext();) {
-                Map.Entry e = (Map.Entry) i.next();
-                param.put(e.getValue(), e.getKey());
-            }
-            for (int i = def.end.defvars.length; --i >= 0; ) {
-                t = (YType) param.get(new Integer(def.end.defvars[i]));
-                item = t != null ? prepare(t, ctx) : new TypeDescr("?");
-                item.prev = descr.value;
-                descr.value = item;
-            }
-            if (descr.alias == null) // no recursive refs in parameters?
-                ctx.refs.remove(tt);
+        if (match(descr, tt, ctx))
             return descr;
-        }
         ctx.refs.put(tt, descr);
         descr.type = type;
         YType[] param = t.param;
