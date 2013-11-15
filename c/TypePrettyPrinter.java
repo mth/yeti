@@ -368,7 +368,7 @@ class TypeDescr extends YetiType {
             return new TypeDescr(t.javaType.str());
         if (type == JAVA_ARRAY)
             return new TypeDescr(prepare(t.param[0], ctx).name.concat("[]"));
-        TypeDescr descr = (TypeDescr) ctx.refs.get(t), item;
+        TypeDescr descr = (TypeDescr) ctx.refs.get(t), item, tmp;
         if (descr != null) {
             if (descr.alias == null)
                 descr.alias = ctx.getVarName(t);
@@ -385,14 +385,17 @@ class TypeDescr extends YetiType {
         int n = 1;
         switch (type) {
             case FUN:
-                for (; t.type == FUN; param = t.param) {
+                tmp = new TypeDescr(null);
+                do {
+                    param = t.param;
                     item = prepare(param[0], ctx);
                     item.prev = descr.value;
                     descr.value = item;
                     t = param[1].deref();
-                }
-                (item = prepare(t, ctx)).prev = descr.value;
-                descr.value = item;
+                } while (t.type == FUN ? !match(tmp, t, ctx)
+                                       : (tmp = prepare(t, ctx)) == null);
+                tmp.prev = descr.value;
+                descr.value = tmp;
                 break;
             case STRUCT:
             case VARIANT:
