@@ -1122,10 +1122,10 @@ public class YetiType implements YetiParser {
             if (structs != null && (t.type == STRUCT || t.type == VARIANT)) {
                 getAllTypeVar(structs, null, t.param[i = 0], false);
                 if (freeze) {
-                    if (t.requiredMembers == null)
-                        t.requiredMembers = t.allowedMembers;
-                    else
+                    if (t.allowedMembers == null)
                         t.allowedMembers = t.requiredMembers;
+                    else
+                        t.requiredMembers = t.allowedMembers;
                     t.flags &= ~FL_FLEX_TYPEDEF;
                 }
             }
@@ -1275,12 +1275,12 @@ public class YetiType implements YetiParser {
         if (opaque.type == STRUCT || opaque.type == VARIANT) {
             res = new YType(src.type, NO_PARAM);
             cache.put(opaque, res);
-            Map members = new IdentityHashMap(opaque.requiredMembers != null
-                    ? opaque.requiredMembers : opaque.allowedMembers);
+            Map members = new IdentityHashMap(opaque.allowedMembers != null
+                    ? opaque.allowedMembers : opaque.requiredMembers);
             for (Iterator i = members.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
-                s = (YType) (src.requiredMembers != null ? src.requiredMembers
-                            : src.allowedMembers).get(e.getKey());
+                s = (YType) (src.allowedMembers != null ? src.allowedMembers
+                            : src.requiredMembers).get(e.getKey());
                 if (s == null) {
                     i.remove();
                     continue;
