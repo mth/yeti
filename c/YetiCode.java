@@ -1631,6 +1631,7 @@ final class LoadModule extends Code {
     String moduleName;
     ModuleType moduleType;
     boolean checkUsed;
+    boolean typedefUsed;
     private boolean used;
 
     LoadModule(String moduleName, ModuleType type, int depth) {

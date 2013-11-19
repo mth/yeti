@@ -1,7 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Don't warn, when load-binding is used only for typedefs
 * v1.0
 * Allow optional ~ before classname in instanceof and friends.
 * Look why threadLocal has 'a instead of '_a in REPL,

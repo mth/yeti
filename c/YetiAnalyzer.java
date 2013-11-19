@@ -864,7 +864,7 @@ public final class YetiAnalyzer extends YetiType {
                 name = prefix.concat(name).intern();
             ArrayList vars = new ArrayList();
             getAllTypeVar(vars, null, typeDef[typeDef.length - 1], false);
-            scope = new TypeScope(scope, name, typeDef);
+            scope = new TypeScope(scope, name, typeDef, m);
             scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
         }
         return scope;
@@ -949,15 +949,16 @@ public final class YetiAnalyzer extends YetiType {
         YType self = new YType(0);
         Scope defScope = scope;
         if (typeDef.kind != TypeDef.UNSHARE)
-            defScope = new TypeScope(scope, typeDef.name, new YType[] { self });
+            defScope = new TypeScope(scope, typeDef.name,
+                                     new YType[] { self }, null);
         YType[] def = new YType[typeDef.param.length + 1];
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
             YType arg = new YType(0);
             arg.doc = defScope.name;
             def[i] = arg;
-            defScope =
-                new TypeScope(defScope, typeDef.param[i], new YType[] { arg });
+            defScope = new TypeScope(defScope, typeDef.param[i],
+                                     new YType[] { arg }, null);
         }
         boolean opaque = typeDef.kind == TypeDef.OPAQUE;
         YType type = nodeToType(typeDef.type, new HashMap(),
@@ -966,7 +967,7 @@ public final class YetiAnalyzer extends YetiType {
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
-        scope = new TypeScope(scope, typeDef.name, def);
+        scope = new TypeScope(scope, typeDef.name, def, null);
         List structs = opaque ? new ArrayList() : null;
         if (typeDef.kind != TypeDef.SHARED) {
             ArrayList vars = new ArrayList();
@@ -1133,7 +1134,9 @@ public final class YetiAnalyzer extends YetiType {
             : analyze(expr, scope, depth);
         for (int i = bindings.length; --i >= 0;)
             if (bindings[i] != null && bindings[i].refs == null &&
-                    seq.seqKind != Seq.EVAL)
+                    seq.seqKind != Seq.EVAL &&
+                !(bindings[i].st instanceof LoadModule &&
+                  ((LoadModule) bindings[i].st).typedefUsed))
                 unusedBinding(scope, (Bind) nodes[i]);
         return wrapSeq(code, last);
     }

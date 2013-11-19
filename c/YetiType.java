@@ -179,14 +179,18 @@ class Scope {
 
 final class TypeScope extends Scope {
     private final YType[] def;
+    final LoadModule module;
 
-    TypeScope(Scope outer, String name, YType[] typedef) {
+    TypeScope(Scope outer, String name, YType[] typedef, LoadModule m) {
         super(outer, name, null);
         def = typedef;
         free = YetiType.NO_PARAM;
+        module = m;
     }
 
     YType[] typedef(boolean use) {
+        if (use && module != null)
+            module.typedefUsed = true;
         return def;
     }
 }
@@ -1230,8 +1234,8 @@ public class YetiType implements YetiParser {
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
                                 int depth, TypeNode src, int def) {
         for (; scope != null; scope = scope.outer) {
-            if (scope instanceof TypeScope && scope.name == name) {
-                YType[] typeDef = scope.typedef(true);
+            YType[] typeDef;
+            if (scope.name == name && (typeDef = scope.typedef(true)) != null) {
                 if (typeDef.length - 1 != param.length) {
                     throw new CompileException(src, "Type " + name + " expects "
                         + (typeDef.length == 2 ? "1 parameter"
