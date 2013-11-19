@@ -358,8 +358,9 @@ interface YetiParser {
     }
 
     final class TypeDef extends Node {
-        static final int SHARED = 1;
-        static final int OPAQUE = 2;
+        static final int SHARED  = 1;
+        static final int OPAQUE  = 2;
+        static final int UNSHARE = 3;
         String name;
         String[] param;
         String doc;
@@ -1571,12 +1572,21 @@ interface YetiParser {
             def.name = getTypename(fetch());
             List param = new ArrayList();
             Node node = fetch();
-            if (def.name == "opaque")
+            if (def.name == "opaque") {
                 def.kind = TypeDef.OPAQUE;
-            else if (def.name == "shared" && node instanceof Sym)
+            } else if (!(node instanceof Sym)) {
+            } else if (def.name == "shared") {
                 def.kind = TypeDef.SHARED;
+            } else if (def.name == "unshare") {
+                def.kind = TypeDef.UNSHARE;
+            }
             if (def.kind != 0) {
                 def.name = getTypename(node);
+                if (def.kind == TypeDef.UNSHARE) {
+                    def.param = new String[0];
+                    def.type = new TypeNode(def.name, new TypeNode[0]);
+                    return def;
+                }
                 node = fetch();
             }
             if (node instanceof BinOp && ((BinOp) node).op == "<" &&

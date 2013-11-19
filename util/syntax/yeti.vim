@@ -123,7 +123,7 @@ syn region yetiFieldDef matchgroup=yetiOperator start="=" matchgroup=yetiClassDe
 
 " Yeti type definition syntax
 syn keyword yetiTypeMod shared opaque contained
-syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=" skipempty skipwhite nextgroup=@yetiTypeDecls contains=yetiTypeMod
+syn region yetiTypeBind matchgroup=yetiTypeDef start="\<typedef\>" end="=\|\<unshare\>" skipempty skipwhite nextgroup=@yetiTypeDecls contains=yetiTypeMod
 syn keyword yetiType is skipempty skipwhite nextgroup=@yetiTypeDecls
 syn keyword yetiCast as unsafely_as skipempty skipwhite nextgroup=@yetiTypeDecls
 "syn match yetiTypeDecl contained /\(\l\|_\)\(\w\|'\)*/

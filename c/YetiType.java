@@ -1179,12 +1179,18 @@ public class YetiType implements YetiParser {
         }
     }
 
-    private static void stripFlexTypes(YType t) {
+    // strip == false -> it instead introduces flex types
+    static void stripFlexTypes(YType t, boolean strip) {
         if (t.type != VAR && !t.seen) {
-            t.flags &= ~FL_FLEX_TYPEDEF;
+            if (strip) {
+                t.flags &= ~FL_FLEX_TYPEDEF;
+            } else if ((t.type == STRUCT || t.type == VARIANT) &&
+                       t.requiredMembers == null ^ t.allowedMembers == null) {
+                t.flags |= FL_FLEX_TYPEDEF;
+            }
             t.seen = true;
             for (int i = 0; i < t.param.length; ++i)
-                stripFlexTypes(t.param[i].deref());
+                stripFlexTypes(t.param[i].deref(), strip);
             t.seen = false;
         }
     }
@@ -1206,7 +1212,7 @@ public class YetiType implements YetiParser {
     }
 
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
-                                int depth, TypeNode src) {
+                                int depth, TypeNode src, int def) {
         for (; scope != null; scope = scope.outer) {
             if (scope.typeDef != null && scope.name == name) {
                 if (scope.typeDef.length - 1 != param.length) {
@@ -1216,15 +1222,20 @@ public class YetiType implements YetiParser {
                             : (scope.typeDef.length - 1) + " parameters")
                         + ", not " + param.length);
                 }
-                if (scope.free == null) // shared typedef
+                if (scope.free == null) { // shared typedef
+                    if (def >= 0 && def != TypeDef.UNSHARE)
+                        break; // normal typedef may not use shared ones
                     return scope.typeDef[0];
+                }
+                if (def == TypeDef.UNSHARE)
+                    break;
                 Map vars = createFreeVars(scope.free, depth);
                 for (int i = param.length; --i >= 0;)
                     vars.put(scope.typeDef[i], param[i]);
                 YType res = copyType(scope.typeDef[param.length], vars,
                                      new IdentityHashMap());
                 if (src.exact)
-                    stripFlexTypes(res);
+                    stripFlexTypes(res, true);
                 return res;
             }
         }
