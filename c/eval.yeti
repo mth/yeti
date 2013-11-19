@@ -223,10 +223,10 @@ moduleDoc m is ~ModuleType -> module_description = {
             defined = new java.util.HashMap(m#typeDefs);
             count = m#typeDefs#size();
             not nullptr? scope and length typedefs < count loop
-               (if not nullptr? scope#typeDef
+               (typeDef = scope#typedef(false);
+                if not nullptr? typeDef 
                         and not nullptr? defined#remove(scope#name) then
-                    addDef scope#name scope#typeDef
-                           TypePattern#toPattern(scope#outer)
+                    addDef scope#name typeDef TypePattern#toPattern(scope#outer)
                 fi;
                 scope := scope#outer);
             reverse typedefs

@@ -688,12 +688,14 @@ class TypePattern {
 
     static TypePattern toPattern(Scope scope) {
         Map typedefs = new HashMap();
-        for (; scope != null; scope = scope.outer)
-            if (scope.typeDef != null) {
-                Object old = typedefs.put(scope.name, scope.typeDef);
+        for (; scope != null; scope = scope.outer) {
+            YType[] def = scope.typedef(false);
+            if (def != null) {
+                Object old = typedefs.put(scope.name, def);
                 if (old != null)
                     typedefs.put(scope.name, old);
             }
+        }
         return toPattern(typedefs);
     }
 /*

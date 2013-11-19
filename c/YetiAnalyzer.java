@@ -860,9 +860,12 @@ public final class YetiAnalyzer extends YetiType {
             Map.Entry e = (Map.Entry) j.next();
             YType[] typeDef = (YType[]) e.getValue();
             String name = (String) e.getKey();
-            scope = bind(prefix == null ? name : prefix.concat(name).intern(),
-                 typeDef[typeDef.length - 1], null, RESTRICT_POLY, -1, scope);
-            scope.typeDef = typeDef;
+            if (prefix != null)
+                name = prefix.concat(name).intern();
+            ArrayList vars = new ArrayList();
+            getAllTypeVar(vars, null, typeDef[typeDef.length - 1], false);
+            scope = new TypeScope(scope, name, typeDef);
+            scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
         }
         return scope;
     }
@@ -945,20 +948,16 @@ public final class YetiAnalyzer extends YetiType {
     static Scope bindTypeDef(TypeDef typeDef, Object seqKind, Scope scope) {
         YType self = new YType(0);
         Scope defScope = scope;
-        if (typeDef.kind != TypeDef.UNSHARE) {
-            defScope = new Scope(scope, typeDef.name, null);
-            defScope.free = NO_PARAM;
-            defScope.typeDef = new YType[] { self };
-        }
+        if (typeDef.kind != TypeDef.UNSHARE)
+            defScope = new TypeScope(scope, typeDef.name, new YType[] { self });
         YType[] def = new YType[typeDef.param.length + 1];
         // binding typedef arguments
         for (int i = typeDef.param.length; --i >= 0;) {
             YType arg = new YType(0);
+            arg.doc = defScope.name;
             def[i] = arg;
-            defScope = new Scope(defScope, typeDef.param[i], null);
-            defScope.typeDef = new YType[] { arg };
-            defScope.free = NO_PARAM;
-            //arg.doc = defScope.name; // to provide name to pretty-printer
+            defScope =
+                new TypeScope(defScope, typeDef.param[i], new YType[] { arg });
         }
         boolean opaque = typeDef.kind == TypeDef.OPAQUE;
         YType type = nodeToType(typeDef.type, new HashMap(),
@@ -967,7 +966,7 @@ public final class YetiAnalyzer extends YetiType {
         unify(self, type, typeDef, scope, type, self,
               "Type #~ (type self-binding)\n    #0");
 
-        scope = new Scope(scope, typeDef.name, null);
+        scope = new TypeScope(scope, typeDef.name, def);
         List structs = opaque ? new ArrayList() : null;
         if (typeDef.kind != TypeDef.SHARED) {
             ArrayList vars = new ArrayList();
@@ -1017,7 +1016,6 @@ public final class YetiAnalyzer extends YetiType {
         }
 
         def[def.length - 1] = type;
-        scope.typeDef = def;
 
         if (typeDef.name.charAt(0) != '_' && typeDef.kind != TypeDef.SHARED &&
             seqKind instanceof TopLevel) {

@@ -163,8 +163,6 @@ class Scope {
     YType[] free;
     Closure closure; // non-null means outer scopes must be proxied
     YetiType.ClassBinding importClass;
-    YType[] typeDef;
-
     YetiType.ScopeCtx ctx;
 
     Scope(Scope outer, String name, Binder binder) {
@@ -172,6 +170,24 @@ class Scope {
         this.name = name;
         this.binder = binder;
         ctx = outer == null ? null : outer.ctx;
+    }
+
+    YType[] typedef(boolean use) {
+        return null;
+    }
+}
+
+final class TypeScope extends Scope {
+    private final YType[] def;
+
+    TypeScope(Scope outer, String name, YType[] typedef) {
+        super(outer, name, null);
+        def = typedef;
+        free = YetiType.NO_PARAM;
+    }
+
+    YType[] typedef(boolean use) {
+        return def;
     }
 }
 
@@ -1214,25 +1230,25 @@ public class YetiType implements YetiParser {
     static YType resolveTypeDef(Scope scope, String name, YType[] param,
                                 int depth, TypeNode src, int def) {
         for (; scope != null; scope = scope.outer) {
-            if (scope.typeDef != null && scope.name == name) {
-                if (scope.typeDef.length - 1 != param.length) {
-                    throw new CompileException(src,
-                        "Type " + name + " expects "
-                        + (scope.typeDef.length == 2 ?  "1 parameter"
-                            : (scope.typeDef.length - 1) + " parameters")
+            if (scope instanceof TypeScope && scope.name == name) {
+                YType[] typeDef = scope.typedef(true);
+                if (typeDef.length - 1 != param.length) {
+                    throw new CompileException(src, "Type " + name + " expects "
+                        + (typeDef.length == 2 ? "1 parameter"
+                            : (typeDef.length - 1) + " parameters")
                         + ", not " + param.length);
                 }
                 if (scope.free == null) { // shared typedef
                     if (def >= 0 && def != TypeDef.UNSHARE)
                         break; // normal typedef may not use shared ones
-                    return scope.typeDef[0];
+                    return typeDef[0];
                 }
                 if (def == TypeDef.UNSHARE)
                     break;
                 Map vars = createFreeVars(scope.free, depth);
                 for (int i = param.length; --i >= 0;)
-                    vars.put(scope.typeDef[i], param[i]);
-                YType res = copyType(scope.typeDef[param.length], vars,
+                    vars.put(typeDef[i], param[i]);
+                YType res = copyType(typeDef[param.length], vars,
                                      new IdentityHashMap());
                 if (src.exact)
                     stripFlexTypes(res, true);
@@ -1341,12 +1357,14 @@ public class YetiType implements YetiParser {
         }
         YType t;
         boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size() + 1];
-        for (; scope != null; scope = scope.outer)
-            if (scope.typeDef != null) {
-                t = scope.typeDef[scope.typeDef.length - 1];
+        for (; scope != null; scope = scope.outer) {
+            YType[] typeDef = scope.typedef(false);
+            if (typeDef != null) {
+                t = typeDef[typeDef.length - 1];
                 if (t.type >= OPAQUE_TYPES && t.allowedMembers != null)
                     allow_opaque[t.type - OPAQUE_TYPES] = true;
             }
+        }
         to = to.deref();
         t = copyType(to, null, new IdentityHashMap());
         prepareOpaqueCast(t, allow_opaque);
