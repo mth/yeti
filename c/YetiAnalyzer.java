@@ -1357,7 +1357,7 @@ public final class YetiAnalyzer extends YetiType {
             if (i.value == null)
                 throw new CompileException(st,
                     "Property " + i.name + " has no getter");
-        structParam(result.type, fields, new YType(depth));
+        structParam(result.type, fields, new YType(depth + 1));
         result.type.allowedMembers = fields;
         result.close();
         return result;
