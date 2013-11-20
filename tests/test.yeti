@@ -384,6 +384,10 @@ done,
         v ([true] |>) \();
         v \() (println . (+3));"""
 done,
+'struct field polymorphism': do:
+    x = { f a = a };
+    x.f 5 == 5 and x.f true
+done,
 'non-polymorphic type vars in module': do:
     src = 'module nonpoly;
         var x = [];
