@@ -335,7 +335,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
     }
 
     String genStruct(Ctx ctx) {
-        String cn, structKey = null;
+        String cn, structKey = null, i_str;
         StructField field;
         Label next, dflt = null, jumps[];
         int i;
@@ -380,7 +380,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         m.visitInit("yeti/lang/AStruct", "([Ljava/lang/String;[Z)V");
         if (withParent != null) {
             // generates code for joining super fields
-            m.intConst(1);
+            m.intConst(2);
             m.visitIntInsn(NEWARRAY, T_INT);
             m.varInsn(ASTORE, 4); // index - int[]
             m.intConst(withFields.length - 2);
@@ -414,6 +414,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 jumps[i] = new Label();
             m.load(0).load(4).intConst(0);
             m.insn(IALOAD); // index[0]
+            m.load(0).load(4).intConst(1);
+            m.insn(IALOAD); // index[1]
             if (jumps.length > 1) {
                 dflt = new Label();
                 m.varInsn(ILOAD, 3); // switch (j)
@@ -423,14 +425,16 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             for (int j = 0; j < jumps.length; ++i)
                 if (fields[i].inherited) {
                     m.visitLabel(jumps[j++]);
-                    m.fieldInsn(PUTFIELD, cn, "i" + i, "I");
+                    i_str = Integer.toString(i);
+                    m.fieldInsn(PUTFIELD, cn, "h".concat(i_str), "Z");
+                    m.fieldInsn(PUTFIELD, cn, "i".concat(i_str), "I");
                     m.fieldInsn(PUTFIELD, cn, fields[i].javaName,
                                 "Ljava/lang/Object;");
                     m.jumpInsn(GOTO, next);
                 }
             if (jumps.length > 1) {
                 m.visitLabel(dflt);
-                m.popn(4); // this ref this index
+                m.popn(6); // this ref this index this hidden
             }
             m.visitLabel(next);
             m.visitIntInsn(IINC, 3); // --j
@@ -453,9 +457,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                                                  : ACC_SYNTHETIC,
                                  field.javaName, "Ljava/lang/Object;",
                                  null, null).visitEnd();
-            if (field.inherited)
-                st.cw.visitField(ACC_PRIVATE | ACC_FINAL, "i" + i,
+            if (field.inherited) {
+                i_str = Integer.toString(i);
+                st.cw.visitField(ACC_PRIVATE | ACC_FINAL, "i".concat(i_str),
                                  "I", null, null).visitEnd();
+                st.cw.visitField(ACC_PRIVATE | ACC_FINAL, "h".concat(i_str),
+                                 "Z", null, null).visitEnd();
+            }
         }
 
         // get(String)
