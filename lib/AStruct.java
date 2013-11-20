@@ -54,6 +54,7 @@ public abstract class AStruct implements Struct, Serializable {
     }
 
     public Object ref(int field, int[] index, int at) {
+        index[at + 1] = 0;
         if (vars != null && vars[field]) {
             index[at] = field;
             return this;

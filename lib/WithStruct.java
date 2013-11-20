@@ -51,8 +51,6 @@ public class WithStruct extends AStruct {
             if (c >= 0) { // src >= override - take override
                 values[n] = bn;
                 values[n + 1] = override.ref(j, index, n);
-                if (override.eqName(j) == "")
-                    index[n + 1] = 1;
                 if (++k >= names.length) {
                     bn = null;
                 } else {
@@ -61,8 +59,6 @@ public class WithStruct extends AStruct {
             } else { // src < override - take super
                 values[n] = an;
                 values[n + 1] = src.ref(i, index, n);
-                if (src.eqName(i) == "")
-                    index[n + 1] = 1;
             }
             if (c <= 0) {
                 an = ++i >= ac ? null : src.name(i);
@@ -104,6 +100,7 @@ public class WithStruct extends AStruct {
 
     public Object ref(int field, int[] index, int at) {
         index[at] = this.index[field <<= 1];
-        return values[field + 1];
+        index[at + 1] = this.index[++field];
+        return values[field];
     }
 }
