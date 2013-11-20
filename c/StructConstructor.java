@@ -52,6 +52,21 @@ final class StructField implements Opcodes {
     int line;
 }
 
+/* TODO
+ * FIXING with and eqName.
+ * 1. The ref method protocol changes:
+ *    at + 1 in result array will be assigned 1 if the field is hidden.
+ * 2. WithStruct class changes to use the new ref behaviour
+ *    instead of eqName call.
+ * 3. Generated with structures gain new boolean fields for each inherited
+ *    field.
+ * 4. Those boolean fields are set from the second value in ref.
+ * 5. The generated with structures override eqName to check the boolean
+ *    fields.
+ * 6. The generated with structures ref also assigns the boolean field
+ *    to at + 1 in the result array.
+ */
+
 /*
  * Being a closure allows inlining property getters/setters.
  */
