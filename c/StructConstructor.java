@@ -54,17 +54,17 @@ final class StructField implements Opcodes {
 
 /* TODO
  * FIXING with and eqName.
- * 1. The ref method protocol changes:
- *    at + 1 in result array will be assigned 1 if the field is hidden.
- * 2. WithStruct class changes to use the new ref behaviour
- *    instead of eqName call.
- * 3. Generated with structures gain new boolean fields for each inherited
- *    field.
- * 4. Those boolean fields are set from the second value in ref.
+ * //1. The ref method protocol changes:
+ * //   at + 1 in result array will be assigned 1 if the field is hidden.
+ * //2. WithStruct class changes to use the new ref behaviour
+ * //   instead of eqName call.
+ * //3. Generated with structures gain new boolean fields for each inherited
+ * //   field.
+ * //4. Those boolean fields are set from the second value in ref.
  * 5. The generated with structures override eqName to check the boolean
  *    fields.
- * 6. The generated with structures ref also assigns the boolean field
- *    to at + 1 in the result array.
+ * //6. The generated with structures ref also assigns the boolean field
+ * //   to at + 1 in the result array.
  */
 
 /*
@@ -573,23 +573,33 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 }
             }
             dflt = new Label();
-            m.load(2).varInsn(ILOAD, 3);
-            m.varInsn(ILOAD, 1);
+            next = new Label();
+            m.load(0).load(2).varInsn(ILOAD, 3);
+            m.varInsn(ILOAD, 1); // this idx at switch(field) { jumps }
             m.switchInsn(0, fieldCount - 1, dflt, null, jumps);
             if (isConst != null) {
                 m.visitLabel(isConst);
                 m.intConst(-1);
                 m.insn(IASTORE);
-                m.load(0).varInsn(ILOAD, 1);
+                m.varInsn(ILOAD, 1);
                 m.methodInsn(INVOKEVIRTUAL, cn, "get",
                              "(I)Ljava/lang/Object;");
-                m.insn(ARETURN);
+                m.intConst(0);  // not hidden
             }
+            m.visitLabel(next); // ret idx[1]
+            m.varInsn(ISTORE, 1);
+            m.load(2).varInsn(ILOAD, 3);
+            m.intConst(1);
+            m.insn(IADD);
+            m.varInsn(ILOAD, 1);
+            m.insn(IASTORE);    // ret idx[1]
+            m.insn(ARETURN);
             if (isVar != null) {
                 m.visitLabel(isVar);
                 m.varInsn(ILOAD, 1);
                 m.insn(IASTORE);
-                m.load(0).insn(ARETURN);
+                m.intConst(0);
+                m.jumpInsn(GOTO, next);
             }
             for (i = 0; i < fieldCount; ++i) {
                 if (!fields[i].inherited)
@@ -597,12 +607,12 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                 m.visitLabel(jumps[i]);
                 m.load(0).fieldInsn(GETFIELD, cn, "i" + i, "I");
                 m.insn(IASTORE);
-                m.load(0).fieldInsn(GETFIELD, cn, fields[i].javaName,
-                                    "Ljava/lang/Object;");
-                m.insn(ARETURN);
+                m.fieldInsn(GETFIELD, cn, fields[i].javaName,
+                            "Ljava/lang/Object;");
+                m.load(0).fieldInsn(GETFIELD, cn, "h" + i, "Z");
+                m.jumpInsn(GOTO, next);
             }
             m.visitLabel(dflt);
-            m.insn(POP2);
             m.insn(ACONST_NULL);
             m.insn(ARETURN);
             m.closeMethod();
