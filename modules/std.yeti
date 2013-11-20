@@ -1004,6 +1004,28 @@ plus a b = a + b;
             new ConcatList(a, b) unsafely_as list<'a>
         fi,
 
+    /**
+     * Generic structure-object reference operator. It gets a `(->)` field from
+     * the object, applies the field argument to it and returns the result.
+     *
+     * Arguments:
+     * object - a structure with `(->)` field
+     * field  - name or id of the referenced field
+     *
+     * Description:
+     * The implementation is simply the following:
+     * : (->) object field =
+     * :     object.``->`` field;
+     *
+     * This means that the `->` operator works with any structure that defines
+     * the `(->)` member function. The compiler gives the `->` operator highest
+     * priority (same as structure field reference `(.)`, and object field
+     * reference `(#)`), therefore the `->` with custom-defined meaning can
+     * be easily used in row with those other field reference operators.
+     */
+    (->) object field =
+        object.``->`` field,
+
     // damn struct polymorphism restriction. is it really needed?
     array, concat, fold, find, id, index, keys, hash, map, map',
     forHash, peekObject,
