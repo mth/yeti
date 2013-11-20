@@ -1007,16 +1007,16 @@ plus a b = a + b;
     /**
      * Group: zmisc (Miscellaneous functions)
      * Generic structure-object reference operator. It gets a `(->)` field from
-     * the object, applies it to the field argument and returns the result.
+     * the object, applies it to the key argument and returns the result.
      *
      * Arguments:
      * object - a structure with `(->)` field
-     * field  - name or id of the referenced field
+     * key    - name or id of the referenced value
      *
      * Description:
      * The implementation is simply the following:
-     * : (->) object field =
-     * :     object.``->`` field;
+     * : (->) object key =
+     * :     object.``->`` key;
      *
      * This means that the `->` operator works with any structure that defines
      * the `(->)` member function. The compiler gives the `->` operator highest
