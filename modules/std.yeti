@@ -1007,7 +1007,7 @@ plus a b = a + b;
     /**
      * Group: zmisc (Miscellaneous functions)
      * Generic structure-object reference operator. It gets a `(->)` field from
-     * the object, applies the field argument to it and returns the result.
+     * the object, applies it to the field argument and returns the result.
      *
      * Arguments:
      * object - a structure with `(->)` field
