@@ -999,7 +999,6 @@ public final class YetiAnalyzer extends YetiType {
         }
 
         def[def.length - 1] = type;
-
         if (typeDef.name.charAt(0) != '_' && typeDef.kind != TypeDef.SHARED &&
             seqKind instanceof TopLevel) {
             if (((TopLevel) seqKind).typeDefs.put(typeDef.name, def) != null &&

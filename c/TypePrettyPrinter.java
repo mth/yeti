@@ -686,11 +686,12 @@ class TypePattern {
         return presult;
     }
 
-    static TypePattern toPattern(Scope scope) {
+    static TypePattern toPattern(Scope scope, boolean ignoreLocal) {
         Map typedefs = new HashMap();
         for (; scope != null; scope = scope.outer) {
             YType[] def = scope.typedef(false);
-            if (def != null) {
+            if (def != null && (!ignoreLocal ||
+                                scope.name.charAt(0) != '_')) {
                 Object old = typedefs.put(scope.name, def);
                 if (old != null)
                     typedefs.put(scope.name, old);

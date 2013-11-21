@@ -89,10 +89,10 @@ public class GenericStruct extends AStruct {
     }
     
     public Object ref(int field, int[] index, int at) {
-        if (!allMutable) {
+        if (!allMutable)
             return super.ref(field, index, at);
-        }
         index[at] = field;
+        index[at + 1] = 0;
         return this;
     }
 }

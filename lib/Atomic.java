@@ -94,6 +94,7 @@ class Atomic extends java.util.concurrent.atomic.AtomicReference
     }
 
     public Object ref(int field, int[] index, int at) {
+        index[at + 1] = 0;
         if (field == 2) { // value
             index[at] = field;
             return this;

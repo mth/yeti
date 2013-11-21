@@ -76,7 +76,7 @@ class YType {
  
     public String toString(Scope scope, TypeException ex) {
         return (String) new ShowTypeFun().apply("",
-                TypeDescr.yetiType(this, TypePattern.toPattern(scope), ex));
+            TypeDescr.yetiType(this, TypePattern.toPattern(scope, false), ex));
     }
 
     YType deref() {
