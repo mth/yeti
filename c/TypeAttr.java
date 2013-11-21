@@ -421,7 +421,7 @@ class ModuleType extends YetiParser.Node {
 
     Tag yetiType() {
         return TypeDescr.yetiType(type, typeScope != null
-                ? TypePattern.toPattern(typeScope)
+                ? TypePattern.toPattern(typeScope, true)
                 : TypePattern.toPattern(typeDefs), null);
     }
 }

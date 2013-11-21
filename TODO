@@ -11,8 +11,6 @@
 * Foreign structs (java dto -> struct?)
 * Operator to copy mutable structure fields between two different structures
 * Support as in type definitions for recursive types
-* Support module qualification on type, like x is foo.sometype
-* Module-local typedefs
 * Dependency analyses on struct field self-bindings?
   (could be done by binding only free typevars first and
    unifing those with actual function field types later)

@@ -226,7 +226,8 @@ moduleDoc m is ~ModuleType -> module_description = {
                (typeDef = scope#typedef(false);
                 if not nullptr? typeDef 
                         and not nullptr? defined#remove(scope#name) then
-                    addDef scope#name typeDef TypePattern#toPattern(scope#outer)
+                    addDef scope#name typeDef TypePattern#toPattern(scope#outer,
+                                                                    true)
                 fi;
                 scope := scope#outer);
             reverse typedefs
