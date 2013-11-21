@@ -263,11 +263,10 @@ public final class YetiAnalyzer extends YetiType {
                                     + name + " in structure type");
         }
         YType result = new YType(type, tp);
-        if (members.isEmpty()) {
+        if (members.isEmpty())
             members = null;
-        } else if (members_.isEmpty()) {
+        else if (members_.isEmpty())
             members_ = null;
-        }
         if (members != null && members_ != null)
             for (Iterator i = members_.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
@@ -283,10 +282,9 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     static void expectsParam(TypeNode t, int count) {
-        if (t.param == null ? count != 0 : t.param.length != count) {
+        if (t.param == null ? count != 0 : t.param.length != count)
             throw new CompileException(t, "type " + t.name + " expects "
                                           + count + " parameters");
-        }
     }
 
     static final Object[][] PRIMITIVE_TYPE_MAPPING = {
@@ -353,10 +351,9 @@ public final class YetiAnalyzer extends YetiType {
                            new YType(depth) };
             return new YType(MAP, tp);
         }
-        if (Character.isUpperCase(name.charAt(0))) {
+        if (Character.isUpperCase(name.charAt(0)))
             return nodeToMembers(VARIANT, new TypeNode[] { node },
                                  free, scope, depth, def);
-        }
         YType t;
         char c = name.charAt(0);
         if (c == '~') {
@@ -512,20 +509,18 @@ public final class YetiAnalyzer extends YetiType {
         try {
             unify(fun.type, new YType(FUN, applyFun));
         } catch (TypeException ex) {
-            if (funt.type == UNIT) {
+            if (funt.type == UNIT)
                 throw new CompileException(where,
                             "Missing ; (Cannot apply ())");
-            }
             if (funt.type != FUN && funt.type != VAR) {
                 if (fun instanceof Apply ||
-                        fun.getClass().getName().indexOf('$') > 0) {
+                        fun.getClass().getName().indexOf('$') > 0)
                     throw new CompileException(where,
                                 "Too many arguments applied " +
                                 "to a function, maybe a missing `;'?" +
                                 "\n    (cannot apply " +
                                 funt.toString(scope, null) +
                                 " to an argument)");
-                }
                 throw new CompileException(where, scope, fun.type, null,
                                            "Cannot use #1 as a function", ex);
             }
@@ -541,13 +536,12 @@ public final class YetiAnalyzer extends YetiType {
             }
             s += " to #2 argument\n    #0";
             if (funarg != null && funarg.type != FUN && argt.type == FUN) {
-                if (argCode instanceof Apply) {
+                if (argCode instanceof Apply)
                     s += "\n    Maybe you should apply the function given" +
                               " as an argument to more arguments.";
-                } else {
+                else
                     s += "\n    Maybe you should apply the function given" +
                               " as an argument to some arguments?";
-                }
             }
             throw new CompileException(where, scope, fun.type, argCode.type, s, ex);
         }
@@ -562,10 +556,9 @@ public final class YetiAnalyzer extends YetiType {
             Node x = section.expr[1];
             for (BinOp op; x instanceof BinOp; x = op.left) {
                 op = (BinOp) x;
-                if (op.op != FIELD_OP) {
+                if (op.op != FIELD_OP)
                     throw new CompileException(op,
                         "Unexpected " + op.op + " in field selector");
-                }
                 parts.addFirst(getSelectorSym(op, op.right).sym);
             }
             
@@ -624,20 +617,18 @@ public final class YetiAnalyzer extends YetiType {
             unify(arg, src.type);
         } catch (TypeException ex) {
             int t = src.type.deref().type;
-            if (t == JAVA) {
+            if (t == JAVA)
                 throw new CompileException(member, scope, src.type, null,
                     "Cannot use class #1 as a structure with ." +
                     field + " field\n    " +
                     "(use # instead of . to reference object fields/methods)",
                     ex);
-            }
-            if (src instanceof VariantConstructor) {
+            if (src instanceof VariantConstructor)
                 throw new CompileException(member,
                     "Cannot use variant constructor " +
                     ((VariantConstructor) src).name +
                     " as a structure with ." + field + " field\n    " +
                     "(use # instead of . to reference class fields/methods)");
-            }
             if (t != STRUCT && t != VAR)
                 throw new CompileException(member, "Cannot use " +
                                 src.type.toString(scope, null) +
@@ -658,10 +649,9 @@ public final class YetiAnalyzer extends YetiType {
                     return false;
                 }
                 YType self = (YType) t.requiredMembers.get(field);
-                if (self.field != FIELD_MUTABLE) {
+                if (self.field != FIELD_MUTABLE)
                     // XXX couldn't we get along with res.field = FIELD_MUTABLE?
                     t.requiredMembers.put(field, mutableFieldRef(res));
-                }
                 return true;
             }
         };
@@ -694,19 +684,17 @@ public final class YetiAnalyzer extends YetiType {
         Code right = analyze(op.right, scope, depth);
         unify(left.type, right.type, op, scope, "#0");
         Code assign = left.assign(right);
-        if (assign == null) {
+        if (assign == null)
             throw new CompileException(op,
                 "Non-mutable expression on the left of the assign operator :=");
-        }
         assign.type = UNIT_TYPE;
         return assign;
     }
 
     static Code concatStr(XNode concat, Scope scope, int depth) {
         Code[] parts = new Code[concat.expr.length];
-        for (int i = 0; i < parts.length; ++i) {
+        for (int i = 0; i < parts.length; ++i)
             parts[i] = analyze(concat.expr[i], scope, depth);
-        }
         return new ConcatStrings(parts);
     }
 
@@ -730,12 +718,11 @@ public final class YetiAnalyzer extends YetiType {
             Code val = analyze(condition.expr[1], scope, depth);
             conds.add(new Code[] { val, cond });
             poly &= val.polymorph;
-            if (result == null) {
+            if (result == null)
                 result = val.type;
-            } else {
+            else
                 result =
                     mergeIfType(condition.expr[1], scope, result, val.type);
-            }
             if (condition.expr[2].kind != "if")
                 break;
             condition = (XNode) condition.expr[2];
@@ -892,22 +879,19 @@ public final class YetiAnalyzer extends YetiType {
         default:
             scope = new Scope(scope, bind.name, binder);
         }
-        if (bind.var) {
+        if (bind.var)
             registerVar(binder, scope.outer);
-        }
-        if (evalSeq) {
+        if (evalSeq)
             binder.evalId = YetiEval.registerBind(bind.name,
                         binder.st.type, bind.var, binder.st.polymorph);
-        }
         return scope;
     }
 
     static void addSeq(SeqExpr[] last, SeqExpr expr) {
-        if (last[0] == null) {
+        if (last[0] == null)
             last[1] = expr;
-        } else {
+        else
             last[0].result = expr;
-        }
         last[0] = expr;
     }
 
@@ -918,15 +902,13 @@ public final class YetiAnalyzer extends YetiType {
             throw new CompileException(st, NONSENSE_STRUCT);
         for (int j = 0; j < fields.length; ++j) {
             Bind bind = new Bind();
-            if (!(fields[j] instanceof Bind)) {
+            if (!(fields[j] instanceof Bind))
                 throw new CompileException(fields[j],
                     "Expected field pattern, not a " + fields[j]);
-            }
             Bind field = (Bind) fields[j];
-            if (field.var || field.property) {
+            if (field.var || field.property)
                 throw new CompileException(field, "Structure " +
                     "field pattern may not have modifiers");
-            }
             bind.expr = new Sym(field.name);
             bind.expr.pos(field.line, field.col);
             Node nameNode = field.expr;
@@ -1092,11 +1074,11 @@ public final class YetiAnalyzer extends YetiType {
                 scope = explodeStruct(nodes[i], m, scope, null,
                                       depth - 1, false);
                 addSeq(last, new SeqExpr(m));
-                if (seq.seqKind instanceof TopLevel) {
+                if (seq.seqKind instanceof TopLevel)
                     ((TopLevel) seq.seqKind).typeScope = scope;
-                }
             } else if (nodes[i].kind == "import") {
-                if ((scope.ctx.compiler.globalFlags & Compiler.GF_NO_IMPORT) != 0)
+                if ((scope.ctx.compiler.globalFlags & Compiler.GF_NO_IMPORT)
+                        != 0)
                     throw new CompileException(nodes[i], "import is disabled");
                 Node[] imports = ((XNode) nodes[i]).expr;
                 for (int j = 0; j < imports.length; ++j) {
@@ -1221,11 +1203,10 @@ public final class YetiAnalyzer extends YetiType {
     }
 
     private static Bind getField(Node node) {
-        if (!(node instanceof Bind)) {
+        if (!(node instanceof Bind))
             throw new CompileException(node,
                     "Unexpected beast in the structure (" + node +
                     "), please give me some field binding.");
-        }
         return (Bind) node;
     }
 
@@ -1376,7 +1357,7 @@ public final class YetiAnalyzer extends YetiType {
             if (i.value == null)
                 throw new CompileException(st,
                     "Property " + i.name + " has no getter");
-        structParam(result.type, fields, new YType(depth));
+        structParam(result.type, fields, new YType(depth + 1));
         result.type.allowedMembers = fields;
         result.close();
         return result;
@@ -1549,11 +1530,10 @@ public final class YetiAnalyzer extends YetiType {
                 if (tm != null)
                     for (Iterator j = tm.values().iterator(); j.hasNext(); ) {
                         YType ft = ((YType) j.next()).deref();
-                        if (allAny == 0) { // may not much, don't give any
+                        if (allAny == 0) // may not much, don't give any
                             ft.flags &= ~FL_ANY_PATTERN;
-                        } else { // all are any, force it
+                        else // all are any, force it
                             ft.flags |= FL_ANY_PATTERN;
-                        }
                     }
                 return new StructPattern(names, patterns);
             }
@@ -1575,16 +1555,15 @@ public final class YetiAnalyzer extends YetiType {
         void mergeChoice(CasePattern pat, Node node, Scope scope) {
             Code opt = analyze(node, scope, depth);
             exp.polymorph &= opt.polymorph;
-            if (exp.type == null) {
+            if (exp.type == null)
                 exp.type = opt.type;
-            } else {
+            else
                 try {
                     exp.type = mergeOrUnify(exp.type, opt.type);
                 } catch (TypeException e) {
                     throw new CompileException(node, scope, opt.type, exp.type,
                         "This choice has a #1 type, while another was a #2", e);
                 }
-            }
             exp.addChoice(pat, opt);
         }
     }
@@ -1688,10 +1667,9 @@ public final class YetiAnalyzer extends YetiType {
                 codeItems[n] = analyze(items[i], scope, depth);
                 keyNode = null;
             } else {
-                if (kind == MAP_TYPE) {
+                if (kind == MAP_TYPE)
                     throw new CompileException(items[i],
                                 "Map item is missing a key");
-                }
                 kind = LIST_TYPE;
                 if (items[i] instanceof BinOp &&
                     (bin = (BinOp) items[i]).op == "..") {
@@ -1706,9 +1684,9 @@ public final class YetiAnalyzer extends YetiType {
                     codeItems[n] = analyze(items[i], scope, depth);
                 }
             }
-            if (type == null) {
+            if (type == null)
                 type = codeItems[n].type;
-            } else {
+            else
                 try {
                     type = mergeOrUnify(type, codeItems[n].type);
                 } catch (TypeException ex) {
@@ -1718,7 +1696,6 @@ public final class YetiAnalyzer extends YetiType {
                                            : "This map element is ") +
                          "#1, but others have been #2", ex);
                 }
-            }
         }
         if (type == null)
             type = new YType(depth);
@@ -1746,13 +1723,12 @@ public final class YetiAnalyzer extends YetiType {
             n = seq.st[seq.st.length - 1];
         }
         Node[] nodes = n.kind == "struct" ? ((XNode) n).expr : null;
-        if (nodes == null || t.type != STRUCT) {
+        if (nodes == null || t.type != STRUCT)
             fields = Collections.singletonMap(null, t);
-        } else if (t.requiredMembers != null) {
+        else if (t.requiredMembers != null)
             fields = t.requiredMembers;
-        } else {
+        else
             fields = t.allowedMembers;
-        }
         Node errorLocation = null;
         boolean bad = false;
         for (Iterator f = fields.entrySet().iterator(); f.hasNext(); ) {
@@ -1915,12 +1891,11 @@ public final class YetiAnalyzer extends YetiType {
             if (mt.lastModified < depsModifiedTime)
                 mt.lastModified = depsModifiedTime;
             root.isModule = parser.isModule;
-            if (parser.isModule) {
+            if (parser.isModule)
                 checkModuleFree(n, root);
-            } else if ((flags & Compiler.CF_EVAL) == 0) {
+            else if ((flags & Compiler.CF_EVAL) == 0)
                 expectUnit(root, n, topLevel.typeScope,
                            "Program body must have a unit type", null);
-            }
             return root;
         } finally {
             currentSrc.set(oldSrc);

@@ -237,11 +237,10 @@ final class Ctx implements Opcodes {
             insn(n + 3);
         } else {
             insn(-1);
-            if (n >= -32768 && n <= 32767) {
+            if (n >= -32768 && n <= 32767)
                 m.visitIntInsn(n >= -128 && n <= 127 ? BIPUSH : SIPUSH, n);
-            } else {
+            else
                 m.visitLdcInsn(new Integer(n));
-            }
         }
     }
 
@@ -377,11 +376,10 @@ final class Ctx implements Opcodes {
     void switchInsn(int min, int max, Label dflt,
                          int[] keys, Label[] labels) {
         insn(-1);
-        if (keys == null) {
+        if (keys == null)
             m.visitTableSwitchInsn(min, max, dflt, labels);
-        } else {
+        else
             m.visitLookupSwitchInsn(dflt, keys, labels);
-        }
     }
 
     void constant(Object key, Code code) {
@@ -389,12 +387,10 @@ final class Ctx implements Opcodes {
     }
 
     void popn(int n) {
-        if ((n & 1) != 0) {
+        if ((n & 1) != 0)
             insn(POP);
-        }
-        for (; n >= 2; n -= 2) {
+        for (; n >= 2; n -= 2)
             insn(POP2);
-        }
     }
 }
 
@@ -715,9 +711,8 @@ final class NumericConstant extends Code implements CodeGen {
             ctx.typeInsn(NEW, jtype);
             ctx.insn(DUP);
             ctx.ldcInsn(val);
-            if (val instanceof String) {
+            if (val instanceof String)
                 ctx.intConst(10);
-            }
             ctx.visitInit(jtype, sig);
         }
     }
@@ -831,9 +826,8 @@ final class BooleanConstant extends BindRef {
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
-        if (val == ifTrue) {
+        if (val == ifTrue)
             ctx.jumpInsn(GOTO, to);
-        }
     }
 
     Object valueKey() {
@@ -871,13 +865,12 @@ final class ConcatStrings extends Code {
             else if (!valueOf)
                 ctx.typeInsn(CHECKCAST, "java/lang/String");
         }
-        if (arr) {
+        if (arr)
             ctx.methodInsn(INVOKESTATIC, "yeti/lang/Core",
                            "concat", "([Ljava/lang/String;)Ljava/lang/String;");
-        } else if (param.length == 2) {
+        else if (param.length == 2)
             ctx.methodInsn(INVOKEVIRTUAL, "java/lang/String",
                            "concat", "(Ljava/lang/String;)Ljava/lang/String;");
-        }
         ctx.forceType("java/lang/String");
     }
 }
@@ -976,11 +969,10 @@ final class MethodCall extends JavaExpr {
             // XXX: not checking for package access. shouldn't matter.
             useAccessor = (invokeSuper || (method.access & ACC_PROTECTED) != 0)
                 && !object.flagop(DIRECT_THIS);
-            if (useAccessor) {
+            if (useAccessor)
                 classType = ct;
-            } else if (ins == INVOKEVIRTUAL && invokeSuper) {
+            else if (ins == INVOKEVIRTUAL && invokeSuper)
                 ins = INVOKESPECIAL;
-            }
         }
         if (object != null &&
                 (ins != INVOKEINTERFACE || ctx.compilation.isGCJ)) {
@@ -991,11 +983,10 @@ final class MethodCall extends JavaExpr {
 
     void gen(Ctx ctx) {
         _gen(ctx);
-        if (method.returnType.type == YetiType.UNIT) {
+        if (method.returnType.type == YetiType.UNIT)
             ctx.insn(ACONST_NULL);
-        } else {
+        else
             convertValue(ctx, method.returnType);
-        }
     }
 
     void genIf(Ctx ctx, Label to, boolean ifTrue) {
@@ -1075,11 +1066,10 @@ final class ClassField extends JavaExpr implements CodeGen {
         }
         genValue(ctx, setValue, field.type, line);
         String descr = JavaType.descriptionOf(field.type);
-        if (descr.length() > 1) {
+        if (descr.length() > 1)
             ctx.typeInsn(CHECKCAST,
                 field.type.type == YetiType.JAVA
                     ? field.type.javaType.className() : descr);
-        }
         
         if ((field.access & ACC_PROTECTED) != 0
                 && classType.implementation != null
@@ -1245,9 +1235,8 @@ abstract class SelectMember extends BindRef implements CodeGen {
     }
 
     Code assign(final Code setValue) {
-        if (!assigned && !mayAssign()) {
+        if (!assigned && !mayAssign())
             return null;
-        }
         assigned = true;
         return new SimpleCode(this, setValue, null, 0);
     }
@@ -1324,9 +1313,8 @@ final class KeyRefExpr extends Code implements CodeGen {
 
     public void gen2(Ctx ctx, Code setValue, int _) {
         val.gen(ctx);
-        if (ctx.compilation.isGCJ) {
+        if (ctx.compilation.isGCJ)
             ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");
-        }
         key.gen(ctx);
         setValue.gen(ctx);
         ctx.visitLine(line);
@@ -1447,9 +1435,8 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
         }
 
         Code assign(final Code value) {
-            if (!var) {
+            if (!var)
                 return null;
-            }
             assigned = true;
             return new Code() {
                 void gen(Ctx ctx) {
@@ -1568,11 +1555,10 @@ final class BindExpr extends SeqExpr implements Binder, CaptureWrapper {
             value.gen(ctx);
             if (!javaType.equals("java/lang/Object"))
                 ctx.typeInsn(CHECKCAST, javaType);
-            if (directField == null) {
+            if (directField == null)
                 ctx.varInsn(ASTORE, id);
-            } else {
+            else
                 ctx.fieldInsn(PUTSTATIC, myClass, directField, javaDescr);
-            }
         } else {
             ctx.load(mvar).intConst(id);
             value.gen(ctx);
@@ -1723,16 +1709,14 @@ final class ListConstructor extends Code implements CodeGen {
             items[i].gen(ctx);
         }
         ctx.insn(ACONST_NULL);
-        for (int i = items.length; --i >= 0;) {
-            if (items[i] instanceof Range) {
+        for (int i = items.length; --i >= 0;)
+            if (items[i] instanceof Range)
                 ctx.methodInsn(INVOKESTATIC, "yeti/lang/ListRange",
                         "range", "(Ljava/lang/Object;Ljava/lang/Object;"
                                 + "Lyeti/lang/AList;)Lyeti/lang/AList;");
-            } else {
+            else
                 ctx.visitInit("yeti/lang/LList",
                               "(Ljava/lang/Object;Lyeti/lang/AList;)V");
-            }
-        }
     }
 
     void gen(Ctx ctx) {
@@ -1740,11 +1724,10 @@ final class ListConstructor extends Code implements CodeGen {
             ctx.insn(ACONST_NULL);
             return;
         }
-        if (key == null) {
+        if (key == null)
             gen2(ctx, null, 0);
-        } else {
+        else
             ctx.constant(key, new SimpleCode(this, null, type, 0));
-        }
         ctx.forceType("yeti/lang/AList");
     }
 

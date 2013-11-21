@@ -485,9 +485,8 @@ public class YetiType implements YetiParser {
                 limitDepth(type.param[i], maxDepth, setFlag);
             type.seen = false;
         } else {
-            if (type.depth > maxDepth) {
+            if (type.depth > maxDepth)
                 type.depth = maxDepth;
-            }
             type.flags |= setFlag;
         }
     }
@@ -515,10 +514,10 @@ public class YetiType implements YetiParser {
                            partial, " (member missing: " + name + ")");
                 }
                 YType partField = (YType) entry.getValue();
-                if (partField.field == FIELD_MUTABLE && ff.field != FIELD_MUTABLE) {
+                if (partField.field == FIELD_MUTABLE &&
+                        ff.field != FIELD_MUTABLE)
                     throw new TypeException("Field '" + name
                         + "' constness mismatch: " + src + " => " + partial);
-                }
                 current = name;
                 unify(partField, ff);
                 current = null;
@@ -557,11 +556,10 @@ public class YetiType implements YetiParser {
             if (((a.flags ^ b.flags) & FL_ORDERED_REQUIRED) != 0) {
                 // VARIANT types are sometimes ordered.
                 // when all their variant parameters are ordered types.
-                if ((a.flags & FL_ORDERED_REQUIRED) != 0) {
+                if ((a.flags & FL_ORDERED_REQUIRED) != 0)
                     requireOrdered(b);
-                } else {
+                else
                     requireOrdered(a);
-                }
             }
             if (a.allowedMembers == null) {
                 ff = b.allowedMembers;
@@ -579,9 +577,8 @@ public class YetiType implements YetiParser {
                         unify(f, t);
                         // constness spreads
                         if (t.field != f.field) {
-                            if (t.field == 0) {
+                            if (t.field == 0)
                                 entry.setValue(t = f);
-                            }
                             t.field = FIELD_NON_POLYMORPHIC;
                         }
                     } else {
@@ -589,9 +586,8 @@ public class YetiType implements YetiParser {
                     }
                 }
                 currentField = null;
-                if (ff.isEmpty()) {
+                if (ff.isEmpty())
                     mismatch(a, b);
-                }
             }
             finalizeStruct(a, b);
             finalizeStruct(b, a);
@@ -612,9 +608,8 @@ public class YetiType implements YetiParser {
                     if (f != null) {
                         unify((YType) entry.getValue(), f);
                         // mutability spreads
-                        if (f.field >= FIELD_NON_POLYMORPHIC) {
+                        if (f.field >= FIELD_NON_POLYMORPHIC)
                             entry.setValue(f);
-                        }
                     }
                 }
                 currentField = null;
@@ -651,9 +646,8 @@ public class YetiType implements YetiParser {
         YType[] a = new YType[values.size() + 1];
         a[0] = depth;
         Iterator i = values.values().iterator();
-        for (int j = 1; i.hasNext(); ++j) {
+        for (int j = 1; i.hasNext(); ++j)
             a[j] = (YType) i.next();
-        }
         st.param = a;
     }
 
@@ -664,9 +658,8 @@ public class YetiType implements YetiParser {
                 return;
             mismatch(jt, t);
         }
-        if (descr == t.javaType.description) {
+        if (descr == t.javaType.description)
             return;
-        }
         mismatch(jt, t);
     }
 
@@ -676,15 +669,13 @@ public class YetiType implements YetiParser {
                 if ((type.flags & FL_ORDERED_REQUIRED) == 0) {
                     if (type.requiredMembers != null) {
                         Iterator i = type.requiredMembers.values().iterator();
-                        while (i.hasNext()) {
+                        while (i.hasNext())
                             requireOrdered((YType) i.next());
-                        }
                     }
                     if (type.allowedMembers != null) {
                         Iterator i = type.allowedMembers.values().iterator();
-                        while (i.hasNext()) {
+                        while (i.hasNext())
                             requireOrdered((YType) i.next());
-                        }
                         type.flags |= FL_ORDERED_REQUIRED;
                     }
                 }
@@ -694,11 +685,10 @@ public class YetiType implements YetiParser {
                 requireOrdered(type.param[0]);
                 return;
             case VAR:
-                if (type.ref != null) {
+                if (type.ref != null)
                     requireOrdered(type.ref);
-                } else {
+                else
                     type.flags |= FL_ORDERED_REQUIRED;
-                }
             case NUM:
             case STR:
             case LIST_MARKER:
@@ -725,11 +715,9 @@ public class YetiType implements YetiParser {
             ex.special = true;
             throw ex;
         }
-        if (type.param != null && type.type != VARIANT && type.type != STRUCT) {
-            for (int i = type.param.length; --i >= 0;) {
+        if (type.param != null && type.type != VARIANT && type.type != STRUCT)
+            for (int i = type.param.length; --i >= 0;)
                 occursCheck(type.param[i], var);
-            }
-        }
     }
 
     static void unifyToVar(YType var, YType from) throws TypeException {
@@ -1202,12 +1190,11 @@ public class YetiType implements YetiParser {
     // strip == false -> it instead introduces flex types
     static void stripFlexTypes(YType t, boolean strip) {
         if (t.type != VAR && !t.seen) {
-            if (strip) {
+            if (strip)
                 t.flags &= ~FL_FLEX_TYPEDEF;
-            } else if ((t.type == STRUCT || t.type == VARIANT) &&
-                       t.requiredMembers == null ^ t.allowedMembers == null) {
+            else if ((t.type == STRUCT || t.type == VARIANT) &&
+                     t.requiredMembers == null ^ t.allowedMembers == null)
                 t.flags |= FL_FLEX_TYPEDEF;
-            }
             t.seen = true;
             for (int i = 0; i < t.param.length; ++i)
                 stripFlexTypes(t.param[i].deref(), strip);
@@ -1236,12 +1223,11 @@ public class YetiType implements YetiParser {
         for (; scope != null; scope = scope.outer) {
             YType[] typeDef;
             if (scope.name == name && (typeDef = scope.typedef(true)) != null) {
-                if (typeDef.length - 1 != param.length) {
+                if (typeDef.length - 1 != param.length)
                     throw new CompileException(src, "Type " + name + " expects "
                         + (typeDef.length == 2 ? "1 parameter"
                             : (typeDef.length - 1) + " parameters")
                         + ", not " + param.length);
-                }
                 if (scope.free == null) { // shared typedef
                     if (def >= 0 && def != TypeDef.UNSHARE)
                         break; // normal typedef may not use shared ones
@@ -1356,9 +1342,8 @@ public class YetiType implements YetiParser {
 
     static YType opaqueCast(YType from, YType to, Scope scope)
             throws TypeException {
-        if (from.deref().type == VAR) {
+        if (from.deref().type == VAR)
             throw new TypeException("Illegal as cast from 'a to non-Java type");
-        }
         YType t;
         boolean[] allow_opaque = new boolean[scope.ctx.opaqueTypes.size() + 1];
         for (; scope != null; scope = scope.outer) {

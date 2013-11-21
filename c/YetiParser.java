@@ -745,6 +745,8 @@ interface YetiParser {
                             return new BinOp(s, i + FIRST_OP_LEVEL,
                                              i != LIST_OP_LEVEL - FIRST_OP_LEVEL)
                                          .pos(line, col);
+                if (s == "->")
+                    return new BinOp("->", 0, true).pos(line, col);
                 return new BinOp(s, FIRST_OP_LEVEL + 2, true).pos(line, col);
             }
             if ((c = src[i]) >= '0' && c <= '9') {
