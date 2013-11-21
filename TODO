@@ -1,7 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Fix generated with's eqName handling.
 * v1.0
 * Allow optional ~ before classname in instanceof and friends.
 * Look why threadLocal has 'a instead of '_a in REPL,

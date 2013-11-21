@@ -51,18 +51,16 @@ public class WithStruct extends AStruct {
             if (c >= 0) { // src >= override - take override
                 values[n] = bn;
                 values[n + 1] = override.ref(j, index, n);
-                if (++k >= names.length) {
+                if (++k >= names.length)
                     bn = null;
-                } else {
+                else
                     while ((bn = override.name(++j)) != names[k]);
-                }
             } else { // src < override - take super
                 values[n] = an;
                 values[n + 1] = src.ref(i, index, n);
             }
-            if (c <= 0) {
+            if (c <= 0)
                 an = ++i >= ac ? null : src.name(i);
-            }
             n += 2;
         }
         size = n >>> 1;

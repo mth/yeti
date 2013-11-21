@@ -52,21 +52,6 @@ final class StructField implements Opcodes {
     int line;
 }
 
-/* TODO
- * FIXING with and eqName.
- * //1. The ref method protocol changes:
- * //   at + 1 in result array will be assigned 1 if the field is hidden.
- * //2. WithStruct class changes to use the new ref behaviour
- * //   instead of eqName call.
- * //3. Generated with structures gain new boolean fields for each inherited
- * //   field.
- * //4. Those boolean fields are set from the second value in ref.
- * 5. The generated with structures override eqName to check the boolean
- *    fields.
- * //6. The generated with structures ref also assigns the boolean field
- * //   to at + 1 in the result array.
- */
-
 /*
  * Being a closure allows inlining property getters/setters.
  */
@@ -553,13 +538,13 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
         m.closeMethod();
 
+        // Object ref(int field, int[] idx, int at)
         if (withParent != null) {
-            m = st.newMethod(ACC_PUBLIC, "ref",
-                             "(I[II)Ljava/lang/Object;");
+            m = st.newMethod(ACC_PUBLIC, "ref", "(I[II)Ljava/lang/Object;");
             Label isConst = null;
             Label isVar = null;
             jumps = new Label[fieldCount];
-            for (i = 0; i < fieldCount; ++i) {
+            for (i = 0; i < fieldCount; ++i)
                 if (fields[i].inherited) {
                     jumps[i] = new Label();
                 } else if (fields[i].mutable || fields[i].property > 0) {
@@ -571,19 +556,38 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                         isConst = new Label();
                     jumps[i] = isConst;
                 }
-            }
             dflt = new Label();
             next = new Label();
             m.load(0).load(2).varInsn(ILOAD, 3);
             m.varInsn(ILOAD, 1); // this idx at switch(field) { jumps }
             m.switchInsn(0, fieldCount - 1, dflt, null, jumps);
+            int inheritedCount = 0;
+            for (i = 0; i < fieldCount; ++i) {
+                if (!fields[i].inherited)
+                    continue;
+                ++inheritedCount;
+                m.visitLabel(jumps[i]);
+                i_str = Integer.toString(i);
+                m.load(0).fieldInsn(GETFIELD, cn, "i".concat(i_str), "I");
+                m.insn(IASTORE);
+                m.fieldInsn(GETFIELD, cn, fields[i].javaName,
+                            "Ljava/lang/Object;");
+                m.load(0).fieldInsn(GETFIELD, cn, "h".concat(i_str), "Z");
+                m.jumpInsn(GOTO, next);
+            }
+            if (isVar != null) {
+                m.visitLabel(isVar);
+                m.varInsn(ILOAD, 1);
+                m.insn(IASTORE);
+                m.intConst(0);  // not hidden
+                m.jumpInsn(GOTO, next);
+            }
             if (isConst != null) {
                 m.visitLabel(isConst);
                 m.intConst(-1);
                 m.insn(IASTORE);
                 m.varInsn(ILOAD, 1);
-                m.methodInsn(INVOKEVIRTUAL, cn, "get",
-                             "(I)Ljava/lang/Object;");
+                m.methodInsn(INVOKEVIRTUAL, cn, "get", "(I)Ljava/lang/Object;");
                 m.intConst(0);  // not hidden
             }
             m.visitLabel(next); // ret idx[1]
@@ -594,28 +598,42 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.varInsn(ILOAD, 1);
             m.insn(IASTORE);    // ret idx[1]
             m.insn(ARETURN);
-            if (isVar != null) {
-                m.visitLabel(isVar);
-                m.varInsn(ILOAD, 1);
-                m.insn(IASTORE);
-                m.intConst(0);
-                m.jumpInsn(GOTO, next);
-            }
-            for (i = 0; i < fieldCount; ++i) {
-                if (!fields[i].inherited)
-                    continue;
-                m.visitLabel(jumps[i]);
-                m.load(0).fieldInsn(GETFIELD, cn, "i" + i, "I");
-                m.insn(IASTORE);
-                m.fieldInsn(GETFIELD, cn, fields[i].javaName,
-                            "Ljava/lang/Object;");
-                m.load(0).fieldInsn(GETFIELD, cn, "h" + i, "Z");
-                m.jumpInsn(GOTO, next);
-            }
             m.visitLabel(dflt);
             m.insn(ACONST_NULL);
             m.insn(ARETURN);
             m.closeMethod();
+
+            // String eqName(int field)
+            if (inheritedCount > 0) {
+                m = st.newMethod(ACC_PUBLIC, "eqName", "(I)Ljava/lang/String;");
+                dflt  = new Label();
+                jumps = new Label[fieldCount];
+                for (i = 0; i < fieldCount; ++i)
+                    jumps[i] = fields[i].inherited ? new Label() : dflt;
+                m.load(0).varInsn(ILOAD, 1); // this switch(field) { jumps }
+                m.switchInsn(0, fieldCount - 1, dflt, null, jumps);
+                Label check = new Label();
+                for (i = 0; i < fieldCount; ++i)
+                    if (fields[i].inherited) {
+                        m.visitLabel(jumps[i]);
+                        m.fieldInsn(GETFIELD, cn,
+                                    "h".concat(Integer.toString(i)), "Z");
+                        if (--inheritedCount <= 0)
+                            break;
+                        m.jumpInsn(GOTO, check);
+                    }
+                m.visitLabel(check);
+                m.jumpInsn(IFEQ, next = new Label());
+                m.ldcInsn("");
+                m.insn(ARETURN);
+                m.visitLabel(next);
+                m.load(0).visitLabel(dflt);
+                m.varInsn(ILOAD, 1);
+                m.methodInsn(INVOKEVIRTUAL, cn,
+                             "name", "(I)Ljava/lang/String;");
+                m.insn(ARETURN);
+                m.closeMethod();
+            }
         }
 
         if (mutableCount == 0)
