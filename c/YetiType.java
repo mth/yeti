@@ -808,8 +808,11 @@ public class YetiType implements YetiParser {
             // looks like a hack, but fixing here avoids unnecessery refs
             if (t.field != nt.field) {
                 // don't accidently create new free var (nt.ref == null)
-                if (t.field != 0 && nt.ref != null)
-                    nt = mutableFieldRef(nt);
+                if (t.field != 0) {
+                    YType tmp = new YType(0);
+                    tmp.ref = nt;
+                    nt = tmp;
+                }
                 nt.field = t.field;
                 nt.flags = t.flags;
             }
