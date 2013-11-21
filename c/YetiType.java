@@ -807,7 +807,6 @@ public class YetiType implements YetiParser {
             YType nt = copyType(t, free, known);
             // looks like a hack, but fixing here avoids unnecessery refs
             if (t.field != nt.field) {
-                // don't accidently create new free var (nt.ref == null)
                 if (t.field != 0) {
                     YType tmp = new YType(0);
                     tmp.ref = nt;
