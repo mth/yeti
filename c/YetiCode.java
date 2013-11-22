@@ -295,12 +295,15 @@ final class Ctx implements Opcodes {
     }
 
     void typeInsn(int opcode, String type) {
-        if (opcode == CHECKCAST &&
-            (lastInsn == -2 && type.equals(lastType) ||
-             lastInsn == ACONST_NULL)) {
-            return; // no cast necessary
+        if (opcode == CHECKCAST) {
+            if (lastInsn == -2 && type.equals(lastType) ||
+                lastInsn == ACONST_NULL)
+                return; // no cast necessary
+            insn(-2);
+            lastType = type;
+        } else {
+            insn(-1);
         }
-        insn(-1);
         m.visitTypeInsn(opcode, type);
     }
 
