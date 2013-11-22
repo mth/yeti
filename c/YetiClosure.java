@@ -938,12 +938,10 @@ final class Function extends CapturingClosure implements Binder {
         publish &= shared;
         String funClass =
             argVar == 2 ? "yeti/lang/Fun2" : "yeti/lang/Fun";
-        Ctx fun = ctx.newClass(publish ? ACC_PUBLIC | ACC_SUPER | ACC_FINAL
-                                       : ACC_SUPER | ACC_FINAL,
-                               name, funClass, null, 0);
+        Ctx fun = ctx.newClass(ACC_SUPER | ACC_FINAL, name, funClass, null, 0);
 
         if (publish)
-            fun.markInnerClass(ctx, ACC_PUBLIC | ACC_STATIC | ACC_FINAL);
+            fun.markInnerClass(ctx, ACC_STATIC | ACC_FINAL);
         mergeCaptures(fun, false);
         if (!notStruct)
             fun.createInit(shared ? ACC_PRIVATE : 0, funClass);
@@ -1005,7 +1003,7 @@ final class Function extends CapturingClosure implements Binder {
             valueCtx.visitInit(name, "()V");
         }
         if (shared) {
-            fun.cw.visitField(ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
+            fun.cw.visitField(ACC_STATIC | ACC_FINAL,
                               "_", "Lyeti/lang/Fun;", null, null).visitEnd();
             valueCtx.fieldInsn(PUTSTATIC, name, "_", "Lyeti/lang/Fun;");
             valueCtx.insn(RETURN);

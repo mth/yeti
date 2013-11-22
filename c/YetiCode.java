@@ -661,13 +661,17 @@ class StaticRef extends BindRef {
         this.polymorph = polymorph;
         this.line = line;
     }
+
+    StaticRef(String fun, YType type, boolean polymorph, int line) {
+        this("yeti/lang/std", fun, type, null, polymorph, line);
+        method = true;
+    }
     
     void gen(Ctx ctx) {
         ctx.visitLine(line);
         String t = javaType(type);
         if (method) {
-            ctx.methodInsn(INVOKESTATIC, className, fieldName,
-                           "()L" + t + ';');
+            ctx.methodInsn(INVOKESTATIC, className, fieldName, "()L" + t + ';');
             ctx.forceType(t);
         } else {
             ctx.fieldInsn(GETSTATIC, className, fieldName, 'L' + t + ';');

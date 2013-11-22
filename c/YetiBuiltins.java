@@ -167,7 +167,7 @@ class IsNullPtr extends StaticRef {
     boolean normalIf;
 
     IsNullPtr(YType type, String fun, int line) {
-        super("yeti/lang/std$" + fun, "_", type, null, true, line);
+        super(fun, type, true, line);
     }
 
     Code apply(final Code arg, final YType res, final int line) {
@@ -297,8 +297,7 @@ final class Escape extends IsNullPtr {
 
 final class Negate extends StaticRef implements CodeGen {
     Negate() {
-        super("yeti/lang/std$negate", "_", YetiType.NUM_TO_NUM,
-              null, false, 0);
+        super("negate", YetiType.NUM_TO_NUM, false, 0);
     }
 
     public void gen2(Ctx ctx, Code arg, int line) {
@@ -322,8 +321,7 @@ final class Negate extends StaticRef implements CodeGen {
 
 final class Length extends StaticRef {
     Length() {
-        super("yeti/lang/std$length", "_", YetiType.MAP_TO_NUM,
-              null, true, 0);
+        super("length", YetiType.MAP_TO_NUM, true, 0);
     }
 
     void genLong(Ctx ctx, Code arg, int line, boolean toint) {
@@ -390,7 +388,7 @@ abstract class Core2 extends StaticRef {
     boolean derivePolymorph;
 
     Core2(String coreFun, YType type, int line) {
-        super("yeti/lang/std$" + coreFun, "_", type, null, true, line);
+        super(coreFun, type, true, line);
     }
 
     Code apply(final Code arg1, YType res, int line1) {
@@ -600,8 +598,9 @@ abstract class BinOpRef extends BindRef {
     }
 
     void gen(Ctx ctx) {
-        ctx.fieldInsn(GETSTATIC, "yeti/lang/std$" + coreFun,
-                           "_", "Lyeti/lang/Fun;");
+        ctx.methodInsn(INVOKESTATIC, "yeti/lang/std",
+                       coreFun, "()Lyeti/lang/Fun;");
+        ctx.forceType("yeti/lang/Fun");
     }
 
     abstract void binGen(Ctx ctx, Code arg1, Code arg2);
@@ -681,7 +680,7 @@ final class ArithOp implements Binder {
     private YType type;
 
     ArithOp(String op, String method, YType type) {
-        fun = op == "+" ? "plus" : Code.mangle(op);
+        fun = Code.mangle(op);
         this.method = method;
         this.type = type;
     }
@@ -853,8 +852,7 @@ final class InOpFun extends BoolBinOp {
 
 final class NotOp extends StaticRef {
     NotOp(int line) {
-        super("yeti/lang/std$not", "_",
-              YetiType.BOOL_TO_BOOL, null, false, line);
+        super("not", YetiType.BOOL_TO_BOOL, false, line);
     }
 
     Code apply(final Code arg, YType res, int line) {
@@ -1038,7 +1036,7 @@ final class RegexFun extends StaticRef implements CodeGen {
 
     RegexFun(String fun, String impl, YType type,
              Binder binder, int line) {
-        super("yeti/lang/std$" + fun, "_", type, null, false, line);
+        super(fun, type, false, line);
         this.funName = fun;
         this.binder = binder;
         this.impl = impl;
@@ -1282,7 +1280,7 @@ final class StrOp extends StaticRef implements Binder {
     }
 
     StrOp(String fun, String method, String sig, YType type) {
-        super("yeti/lang/std$" + mangle(fun), "_", type, null, false, 0);
+        super(mangle(fun), type, false, 0);
         this.method = method;
         this.sig = sig;
         binder = this;
