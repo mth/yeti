@@ -215,8 +215,7 @@ public final class YetiAnalyzer extends YetiType {
                 throw new CompileException(op,
                     "Internal error (incomplete operator " + op.op + ")");
             Code opfun = resolve(opop, op, scope, depth);
-            if (opop == "^" && opfun instanceof StaticRef &&
-                    "yeti/lang/std$$v".equals(((StaticRef) opfun).className)) {
+            if (opop == "^" && StaticRef.std(opfun, "$v")) {
                 Code left = analyze(op.left, scope, depth);
                 unify(left.type, STR_TYPE, op.left, scope, "#0");
                 Code right = analyze(op.right, scope, depth);
@@ -228,8 +227,7 @@ public final class YetiAnalyzer extends YetiType {
                 }
                 return new ConcatStrings(new Code[] { left, right });
             }
-            if (opop == "|>" && opfun instanceof StaticRef &&
-                    "yeti/lang/std$$I$g".equals(((StaticRef) opfun).className))
+            if (opop == "|>" && StaticRef.std(opfun, "$I$g"))
                 return apply(op, analyze(op.right, scope, depth),
                              op.left, scope, depth);
             return apply(op.right, apply(op, opfun, op.left, scope, depth),

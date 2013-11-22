@@ -647,7 +647,7 @@ final class BindWrapper extends BindRef {
 }
 
 class StaticRef extends BindRef {
-    String className;
+    private String className;
     private String fieldName;
     private int line;
     boolean method;
@@ -684,6 +684,14 @@ class StaticRef extends BindRef {
 
     boolean flagop(int fl) {
         return (fl & (DIRECT_BIND | CONST)) != 0;
+    }
+
+    static boolean std(Code ref, String fun) {
+        if (!(ref instanceof StaticRef))
+            return false;
+        StaticRef r = (StaticRef) ref;
+        return r.method && "yeti/lang/std".equals(r.className)
+                        && fun.equals(r.fieldName);
     }
 }
 
