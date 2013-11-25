@@ -956,6 +956,8 @@ public final class YetiAnalyzer extends YetiType {
             // nothing mutable in typedef
             getAllTypeVar(vars, structs, type, opaque);
             scope.free = (YType[]) vars.toArray(new YType[vars.size()]);
+        } else {
+            scope.free = null;
         }
 
         boolean override = false;

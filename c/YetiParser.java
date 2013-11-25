@@ -1581,7 +1581,8 @@ interface YetiParser {
                 def.name = getTypename(node);
                 if (def.kind == TypeDef.UNSHARE) {
                     def.param = new String[0];
-                    def.type = new TypeNode(def.name, new TypeNode[0]);
+                    (def.type = new TypeNode(def.name, new TypeNode[0]))
+                        .pos(node.line, node.col);
                     return def;
                 }
                 node = fetch();
