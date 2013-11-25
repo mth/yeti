@@ -278,6 +278,7 @@ public class YetiType implements YetiParser {
     static final YType CLASS_TYPE = new YType("Ljava/lang/Class;");
     static final YType OBJECT_TYPE = new YType("Ljava/lang/Object;");
     static final YType WITH_EXIT_TYPE = fun(fun(fun(A, B), A), A);
+    static final YType THROW_TYPE = fun(new YType("Ljava/lang/Throwable;"), A);
 
     static final YType[] PRIMITIVES =
         { null, UNIT_TYPE, STR_TYPE, NUM_TYPE, BOOL_TYPE, CHAR_TYPE,
@@ -311,6 +312,7 @@ public class YetiType implements YetiParser {
         bindPoly("synchronized", SYNCHRONIZED_TYPE, new BuiltIn(7),
         bindPoly("withExit", WITH_EXIT_TYPE, new BuiltIn(24),
         bindPoly("length", MAP_TO_NUM, new BuiltIn(25),
+        bindPoly("throw", WITH_EXIT_TYPE, new BuiltIn(26),
         bindArith("+", "add", bindArith("-", "sub",
         bindArith("*", "mul", bindArith("/", "div",
         bindArith("%", "rem", bindArith("div", "intDiv",
@@ -377,7 +379,7 @@ public class YetiType implements YetiParser {
         bindImport("Long", "java/lang/Long",
         bindImport("Double", "java/lang/Double",
         bindImport("String", "java/lang/String",
-  null)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+ null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System",

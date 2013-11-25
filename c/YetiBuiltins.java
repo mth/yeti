@@ -128,6 +128,9 @@ final class BuiltIn implements Binder {
         case 25:
             r = new Length();
             break;
+        case 26:
+            r = new Throw(line);
+            break;
         }
         r.binder = this;
         return r;
@@ -278,6 +281,21 @@ final class Tail extends IsNullPtr {
                             "rest", "()Lyeti/lang/AList;");
         ctx.visitLabel(end);
         ctx.forceType("yeti/lang/AList");
+    }
+}
+
+final class Throw extends IsNullPtr {
+    Throw(int line) {
+        super(YetiType.THROW_TYPE, "throw", line);
+    }
+
+    void gen(Ctx ctx, Code arg, int line) {
+        arg.gen(ctx);
+        ctx.visitLine(line);
+        JavaType t = arg.type.deref().javaType;
+        ctx.typeInsn(CHECKCAST,
+                     t != null ? t.className() : "java/lang/Throwable");
+        ctx.insn(ATHROW);
     }
 }
 

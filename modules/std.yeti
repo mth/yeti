@@ -936,6 +936,23 @@ plus a b = a + b;
     norec synchronized monitor block = synchronized monitor block,
 
     /**
+     * Group: zmisc
+     * Throws the given exception. Equivalent to the Java throw operator.
+     * As the exception is thrown, the function never returns normally.
+     *
+     * Arguments:
+     * exception - exception instance to be thrown
+     *
+     * Examples:
+     * : throw new IllegalArgumentException("Bad example");
+     *
+     * Exceptions:
+     * NullPointerException - This is thrown if the given exception is
+     *                        Java null pointer.
+     */
+    norec throw exception = throw exception,
+
+    /**
      * Group: str (String functions)
      * Returns the result of concatenating strings a and b.
      *

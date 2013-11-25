@@ -1015,25 +1015,6 @@ final class MethodCall extends JavaExpr {
     }
 }
 
-final class Throw extends Code {
-    Code throwable;
-
-    Throw(Code throwable, YType type) {
-        this.type = type;
-        this.throwable = throwable;
-    }
-
-    void gen(Ctx ctx) {
-        throwable.gen(ctx);
-        JavaType t = throwable.type.deref().javaType;
-        if (t == null)
-            throw new CompileException(null,
-                    "Internal error - throw argument type is unknown");
-        ctx.typeInsn(CHECKCAST, t.className());
-        ctx.insn(ATHROW);
-    }
-}
-
 final class ClassField extends JavaExpr implements CodeGen {
     private JavaType.Field field;
 

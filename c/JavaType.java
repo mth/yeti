@@ -465,20 +465,6 @@ class JavaType implements Cloneable {
         }
     }
 
-    static void checkThrowable(YetiParser.Node node, YType t) {
-        t = t.deref();
-        try {
-            if (t.type != YetiType.JAVA ||
-                JavaType.fromDescription("Ljava/lang/Throwable;")
-                    .isAssignable(t.javaType) == -1) {
-                throw new CompileException(node,
-                                "Not a Throwable instance (" + t + ")");
-            }
-        } catch (JavaClassNotFoundException ex) {
-            throw new CompileException(node, ex);
-        }
-    }
-
     private JavaType(String description) {
         this.description = description.intern();
     }

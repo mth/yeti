@@ -501,8 +501,7 @@ interface YetiParser {
 
         private void addOp(BinOp op) {
             BinOp to = cur;
-            if (op.op == "-" && lastOp || op.op == "\\"
-                    || op.op == "throw" || op.op == "not") {
+            if (op.op == "-" && lastOp || op.op == "\\" || op.op == "not") {
                 if (!lastOp) {
                     apply(op);
                     to = cur;
@@ -802,8 +801,6 @@ interface YetiParser {
                 res = readNew();
             } else if (s == "var" || s == "norec") {
                 res = new XNode(s);
-            } else if (s == "throw") {
-                res = new BinOp("throw", 1, false);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL + 2, false);
             } else if (s == "import") {
@@ -873,8 +870,7 @@ interface YetiParser {
                 if (o instanceof BinOp
                     && (partial = (BinOp) o).parent == null
                     && partial.op != "\\" && partial.op != "-"
-                    && partial.op != "throw" && partial.op != "not"
-                    && partial.op != "#") {
+                    && partial.op != "not" && partial.op != "#") {
                     s = partial.op;
                     i = 1;
                 } else if ((o = expr.get(cnt - 1)) instanceof BinOp &&
@@ -894,8 +890,7 @@ interface YetiParser {
                 }
             }
             if (s != null && i >= cnt) {
-                if (s == "loop" || s == "with" || s == "throw" ||
-                        partial instanceof IsOp)
+                if (s == "loop" || s == "with" || partial instanceof IsOp)
                     throw new CompileException(partial, "Special operator `" +
                                     s + "` cannot be used as a function");
                 if (partial instanceof TypeOp) {

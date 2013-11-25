@@ -199,11 +199,6 @@ public final class YetiAnalyzer extends YetiType {
             if (opop == "not")
                 return apply(op, resolve(opop, op, scope, depth),
                                  op.right, scope, depth);
-            if (opop == "throw") {
-                Code throwable = analyze(op.right, scope, depth);
-                JavaType.checkThrowable(op, throwable.type);
-                return new Throw(throwable, new YType(depth + 1));
-            }
             if (opop == "with")
                 return withStruct(op, scope, depth);
             if (opop == "instanceof") {
