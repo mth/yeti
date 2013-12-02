@@ -799,7 +799,7 @@ interface YetiParser {
                             .pos(line, col);
             } else if (s == "new") {
                 res = readNew();
-            } else if (s == "var" || s == "norec") {
+            } else if (s == "var" || s == "norec" || s == "fall") {
                 res = new XNode(s);
             } else if (s == "loop") {
                 res = new BinOp(s, IS_OP_LEVEL + 2, false);
