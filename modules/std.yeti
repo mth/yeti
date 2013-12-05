@@ -151,14 +151,14 @@ find f l is ('a -> boolean) -> list?<'a> -> list<'a> =
 /**
  * Group: list
  * Returns 0-based index of the first sequence element, which equals
- * to the given value (using == for equality).
+ * to the given value (using == for equality), or -1 when no element is found.
  *
  * Arguments:
  *  value    - value to search for
  *  sequence - list or array to be searched
  *
  * Examples:
- *  : index (== 'apple') ['oranges', 'apples', 'rats'] // returns 1
+ *  : index 'apples' ['oranges', 'apples', 'rats'] // returns 1
  */
 index v l is 'a -> list?<'a> -> number =
     if nullptr? l then
