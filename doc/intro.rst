@@ -7,8 +7,8 @@ Short introduction to Yeti
 :Author: Madis Janson
 
 .. contents:: Contents
-.. _yeti.jar: http://linux.ee/~mzz/yeti/yeti.jar
-.. _home page: http://linux.ee/~mzz/yeti/
+.. _yeti.jar: http://dot.planet.ee/yeti/yeti.jar
+.. _home page: http://mth.github.io/yeti/
 
 What is Yeti?
 ~~~~~~~~~~~~~~~~~~

@@ -548,9 +548,11 @@ interface YetiParser {
     final class Parser {
         private static final char[] CHS =
             ("                                " + // 0x
+            // !"#$%&'()*+,-./0123456789:;<=>?
              " .'.x..x  .. ../xxxxxxxxxx. ...x" + // 2x
              ".xxxxxxxxxxxxxxxxxxxxxxxxxx[ ].x" + // 4x
              "`xxxxxxxxxxxxxxxxxxxxxxxxxx . . ").toCharArray();
+            //`abcdefghijklmnopqrstuvwxyz{|}~
 
         private static final String[][] OPS = {
             { "*", "/", "%" },

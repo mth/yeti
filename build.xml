@@ -13,7 +13,7 @@
 <target name="fetch" depends="prepare-build" unless="has.asm">
     <property name="asmt" value="${build}/asm-3.1-p1.jar"/>
     <mkdir dir="${build}/util"/>
-    <get src="http://linux.ee/~mzz/yeti/asm-3.1-p1.jar"
+    <get src="http://dot.planet.ee/yeti/asm-3.1-p1.jar"
          dest="${asmt}" verbose="true"/>
     <javac destdir="${build}/util" srcdir="${basedir}/util"
            includes="Rename.java" encoding="UTF-8"
@@ -23,6 +23,16 @@
         <arg value="${asmt}"/>
         <arg value="${asm}"/>
     </java>
+</target>
+
+<target name="check-mouse" depends="prepare-build">
+    <property name="mouse" value="${basedir}/Mouse-1.6.jar"/>
+    <available property="has.mouse" file="${mouse}"/>
+</target>
+
+<target name="fetch-mouse" depends="check-mouse" unless="has.mouse">
+    <get src="http://dot.planet.ee/yeti/Mouse-1.6.jar"
+         dest="${mouse}" verbose="true"/>
 </target>
 
 <target name="lib" depends="fetch" unless="no.lib.build">
@@ -122,6 +132,32 @@
         <src dir="${basedir}/modules"/>
         <src dir="${basedir}/c" includes="*.yeti" excludes="yeti.yeti"/>
     </yeti>
+</target>
+
+<target name="grammar" depends="fetch-mouse">
+    <mkdir dir="${build}/grammar/classes"/>
+    <java classname="mouse.Generate" classpath="${mouse}" failonerror="true">
+        <arg value="-G"/>
+        <arg value="${basedir}/util/grammar/yeti.peg"/>
+        <arg value="-p"/>
+        <arg value="yeti.lang.grammar"/>
+        <arg value="-D"/>
+        <arg value="${build}/grammar"/>
+        <arg value="-P"/>
+        <arg value="YetiPEG"/>
+    </java>
+    <javac destdir="${build}/grammar/classes" classpath="${mouse}"
+           encoding="UTF-8" includeantruntime="false">
+        <src path="${basedir}/util/grammar"/>
+        <src path="${build}/grammar"/>
+    </javac>
+    <jar jarfile="${jardir}/yeti-peg.jar" keepcompression="true">
+        <manifest>
+            <attribute name="Main-Class" value="yeti.lang.grammar.Parser"/>
+        </manifest>
+        <fileset dir="${build}/grammar/classes"/>
+        <zipfileset src="${mouse}" includes="mouse/runtime/*"/>
+    </jar>
 </target>
 
 <target name="noant" depends="prepare-build">
