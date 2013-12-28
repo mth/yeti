@@ -236,12 +236,11 @@ class JavaExpr extends Code {
             ctx.typeInsn(NEW, newInstr);
             ctx.insn(DUP_X1);
             ctx.insn(SWAP);
-            descr = descr.substring(11, 12);
+            descr = descr == "Ljava/lang/Long;" ? "J" : descr.substring(11, 12);
         }
         convertNum(ctx, descr);
-        if (newInstr != null) {
+        if (newInstr != null)
             ctx.visitInit(newInstr, "(" + descr + ")V");
-        }
     }
 
     private static void convertNum(Ctx ctx, String descr) {
@@ -251,8 +250,7 @@ class JavaExpr extends Code {
             case 'D': method = "doubleValue"; break;
             case 'F': method = "floatValue"; break;
             case 'I': method = "intValue"; break;
-            case 'L': if (descr == "Lyeti/lang/Num;")
-                          return;
+            case 'L': return;
             case 'J': method = "longValue"; break;
             case 'S': method = "shortValue"; break;
         }
