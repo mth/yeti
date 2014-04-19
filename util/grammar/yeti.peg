@@ -1,67 +1,110 @@
-// TODO: class, types (typedefs, declarations, casts)
-
-Source    = SP Header? AnyExpression !_;
-Header    = "program" !IdChar Space+ ClassName Semicolon /
-            "module" !IdChar Space+ ClassName
-            (Colon SP "deprecated")? Semicolon;
+Source      = SP TopLevel !_;
+TopLevel    = Module / Program? AnyExpression;
+Program     = "program" !IdChar Space+ ClassName Semicolon;
+Module      = "module" !IdChar Space+ ClassName
+              (Colon SP "deprecated")? Semicolon+ ModuleMain? SP;
+ModuleMain  = MStatement (Semicolon MStatement?)*;
 
 AnyExpression = Semicolon* Sequence? SP;
-Sequence  = Statement (Semicolon Statement?)*; 
-Statement = Declaration* (SelfBind / Expression);
+Sequence    = Statement (Semicolon Statement?)*; 
+Statement   = SP ClassDecl* (CSelfBind / BindDecl* CSelfBind?) Expression;
+CStatement  = SP ClassDecl* (SelfBind / CBindDecl* SelfBind?) CExpression;
+MStatement  = SP Declaration* (SelfBind Expression /
+	                       MBindDecl* (Class / SelfBind? Expression));
 
-Declaration = SP ((Import / Binding) Semicolon+ / Typedef Semicolon*);
-Import    = "import" !IdChar Space+ ClassName
-            (Colon JavaId SP ("," JavaId SP)*)?;
-Typedef   = "typedef" !IdChar SP TypedefOf;
-TypedefOf = "unshare" !IdChar SP Id /
-            (("opaque" / "shared") !IdChar SP)?
-	    Id SP TypedefParam? "=" !OpChar Type;
+BindDecl    = ClassDecl / Binding;
+CBindDecl   = ClassDecl / CBinding;
+MBindDecl   = Declaration / Binding;
+ClassDecl   = Class Semicolon+ SP / Declaration; 
+Declaration = Import Semicolon+ SP / Typedef Semicolon* SP;
+
+Import      = "import" !IdChar Space+ ClassName
+              (Colon JavaId SP ("," JavaId SP)*)?;
+Typedef     = "typedef" !IdChar SP TypedefOf Semicolon*;
+TypedefOf   = "unshare" !IdChar SP Id /
+              (("opaque" / "shared") !IdChar SP)?
+	      Id SP TypedefParam? "=" !OpChar Type;
 TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
 
-BindId    = SP (Modifier Space)? Id;
-Binding   = (StructArg / SP !Any BindId BindArg* IsType)
-            SP "=" !OpChar Expression;
-SelfBind  = SP (BindId BindArg+ / Any) IsType "=" !OpChar Expression;
-Modifier  = "var" / "norec";
-BindArg   = SP (Id / "()" / StructArg);
-StructArg = "{" BindField ("," BindField)* "}";
-BindField = SP Id IsType ("=" !OpChar SP Id)? SP;
-Semicolon = SP ";";
-Any       = "\_" !IdChar;
+Binding     = (StructArg / Modifier? !Any Id BindArg* IsType)
+              SP "=" !OpChar Expression Semicolon+ SP;
+CBinding    = (StructArg / Modifier? !(Any / End) Id (!End BindArg)* IsType)
+              SP "=" !OpChar CExpression Semicolon+ SP;
+SelfBind    = (Modifier? Id BindArg+ / Any) IsType "=" !OpChar;
+CSelfBind   = (Modifier? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
+Modifier    = ("var" / "norec") Space+;
+BindArg     = SP (Id / "()" / StructArg);
+StructArg   = "{" BindField ("," BindField)* "}";
+BindField   = SP Id IsType ("=" !OpChar SP Id)? SP;
+Semicolon   = SP ";";
+Any         = "\_" !IdChar;
 
-Expression = Assign SP ("loop" (!IdChar Assign)?)?;
-Assign    = ApplyPipe SP (":=" !OpChar ApplyPipe)?;
-ApplyPipe = Cons SP ("|>" !OpChar Cons)* AsIsType*;
-AsIsType  = ("is" / "as" / "unsafely\_as") !IdChar Type;
-Cons      = StrConcat SP (ConsOp !OpChar StrConcat)*;
-ConsOp    = "::" / ":." / "++";
-StrConcat = Logical SP ("^" !OpChar Logical)*;
-Logical   = Compare SP (("and" / "or") !IdChar Compare)*;
-Compare   = SkipSP Not* Compose SP (CompareOp Compose)* SP InstanceOf*;
-InstanceOf = "instanceof" !IdChar ClassId SP;
-Not       = "not" !IdChar SkipSP;
-CompareOp = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
-	    "in" !IdChar;
-Compose   = CustomOps (ComposeOp CustomOps)*;
-ComposeOp = "\." Space+ / Space+ "\." SP;
-CustomOps = Sum SkipSP (CustomOp Sum)*;
-CustomOp  = !(CompareOp / [*/%+-<=>^:] !OpChar) OpChar+ / IdOp;
-Sum       = Multiple SkipSP (SumOp Multiple)*;
-SumOp     = ("+" / "-") !OpChar / ("b\_or" / "xor") !IdChar;
-Multiple  = Reference+ SkipSP (FactorOp Reference+ SkipSP)*;
-FactorOp  = ("*" / "/" / "%") !OpChar /
-            ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
-Reference = SP ("\\" SP / "-" SP !OpChar)* Primitive RefOp*;
-RefOp     = FieldRef / MapRef / (SP (ObjectRef / "->" SP Primitive));
-FieldRef  = Dot SP (Sym / "``" ^[`]+ "``");
-MapRef    = "[" Sequence SP "]";
-ObjectRef = "#" JavaId SP ArgList?;
+Class       = "class" !IdChar JavaId SP MethodArgs? Extends?
+              (End / Member ("," Member)* ","? SP End);
+Extends     = "extends" !IdChar ClassName SP ArgList? SP ("," ClassName SP)*;
+Member      = SP (Method / ClassField) SP;
+ClassField  = ("var" Space+)? !End Id SP (!End BindArg SP)*
+              "=" !OpChar CExpression;
+Method      = (("abstract" / "static") Space)? MethodType JavaId
+              MethodArgs Semicolon* MethodBody?;
+MethodArgs  = "(" SP (")" / MethodArg ("," MethodArg)* ")") SP;
+MethodType  = SP ClassName SP "[]"* SP;
+MethodArg   = MethodType Id SP;
+MethodBody  = CStatement (Semicolon CStatement?)*;
 
-Primitive = Number / String / "(" SP InBrackets ")" / List / Struct /
+Expression  = Assign SP ("loop" (!IdChar Assign)?)?;
+CExpression = CAssign SP ("loop" (!IdChar CAssign)?)?;
+Assign      = ApplyPipe SP (":=" !OpChar ApplyPipe)?;
+CAssign     = CApplyPipe SP (":=" !OpChar CApplyPipe)?;
+ApplyPipe   = Cons SP ("|>" !OpChar Cons)* AsIsType*;
+CApplyPipe  = CCons SP ("|>" !OpChar CCons)* AsIsType*;
+AsIsType    = ("is" / "as" / "unsafely\_as") !IdChar Type;
+Cons        = StrConcat SP (AsIsType* ConsOp !OpChar StrConcat)*;
+CCons       = CStrConcat SP (AsIsType* ConsOp !OpChar CStrConcat)*;
+ConsOp      = "::" / ":." / "++";
+StrConcat   = Logical SP (AsIsType* "^" !OpChar Logical)*;
+CStrConcat  = CLogical SP (AsIsType* "^" !OpChar CLogical)*;
+Logical     = Compare SP (AsIsType* ("and" / "or") !IdChar Compare)*;
+CLogical    = CCompare SP (AsIsType* ("and" / "or") !IdChar CCompare)*;
+Compare     = SkipSP Not* Compose SP (AsIsType* CompareOp Compose)*
+              SP InstanceOf*;
+CCompare    = SkipSP Not* CCompose SP (AsIsType* CompareOp CCompose)*
+              SP InstanceOf*;
+InstanceOf  = "instanceof" !IdChar ClassId SP;
+Not         = "not" !IdChar SkipSP;
+CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
+              "in" !IdChar;
+Compose     = CustomOps (AsIsType* ComposeOp CustomOps)*;
+CCompose    = CCustomOps (AsIsType* ComposeOp CCustomOps)*;
+ComposeOp   = "\." Space+ / Space+ "\." SP;
+CustomOps   = Sum SkipSP (AsIsType* CustomOp Sum)*;
+CCustomOps  = CSum SkipSP (AsIsType* CustomOp CSum)*;
+CustomOp    = !(CompareOp / [*/%+-<=>^:] !OpChar) OpChar+ / IdOp;
+Sum         = Multiple SkipSP (SumOp Multiple)*;
+CSum        = CMultiple SkipSP (SumOp CMultiple)*;
+SumOp       = AsIsType* ("+" / "-") !OpChar / ("b\_or" / "xor") !IdChar;
+Multiple    = Apply SkipSP (AsIsType* FactorOp Apply SkipSP)*;
+CMultiple   = CApply SkipSP (AsIsType* FactorOp CApply SkipSP)*;
+FactorOp    = ("*" / "/" / "%") !OpChar /
+              ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
+Apply       = Reference (SP AsIsType* Reference)*;
+CApply      = CReference (SP AsIsType* CReference)*;
+Reference   = SP ("\\" SP / "-" SP !OpChar)* Primitive RefOp*;
+CReference  = SP ("\\" SP / "-" SP !OpChar)* CPrimitive CRefOp*;
+RefOp       = FieldRef / MapRef / (SP (ObjectRef / "->" SP Primitive));
+CRefOp      = FieldRef / MapRef / (SP (ObjectRef / "->" SP CPrimitive));
+FieldRef    = Dot SP FieldId;
+MapRef      = "[" Sequence SP "]";
+ObjectRef   = "#" JavaId SP ArgList?;
+
+CPrimitive  = !End Primitive;
+End         = "end" !IdChar;
+
+Primitive = Number / String / "(" SP InParenthesis SP ")" / List / Struct /
             Lambda / If / CaseOf / Try / New / Load / ClassOf /
             Variant / Id;
-InBrackets = FieldRef+ / SP AsIsType / SP AnyOp Expression /
-             Expression SP AnyOp / AnyExpression;
+InParenthesis = FieldRef+ / SP AsIsType / SP AnyOp Expression /
+                Expression SP AnyOp / AnyExpression;
 
 Lambda   = "do" !IdChar BindArg* Colon AnyExpression "done" !IdChar;
 
@@ -99,13 +142,14 @@ Items    = HashItem ("," HashItem)* / ListItem ("," ListItem)*;
 ListItem = Expression SP ("\.\." !OpChar Expression)? SP;
 HashItem = Expression Colon Expression SP;
 Struct   = "{" Field ("," Field)* ","? SP "}";
-Field    = BindId (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
+Field    = SP Modifier? FieldId
+           (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
 
 IsType   = SP ("is" !IdChar Type)?;
-Type     = SP BareType SP ("->" !OpChar SP BareType SP)*;
+Type     = SP BareType SP (("->" / "\u2192") !OpChar SP BareType SP)*;
 BareType = ['^] IdChar+ / "~" JavaType / "{" StructType / "(" SP ")" /
            "(" Type ")" / VariantType ("|" !OpChar SP VariantType)* /
-	   Sym SP TypeParam?;
+	   Sym "!"? SP TypeParam?;
 VariantType = Variant "\."? !IdChar SP BareType SP;
 JavaType = ClassName "[]"*;
 TypeParam  = "<" SP (Type ("," Type)*)? ">";
@@ -114,33 +158,36 @@ StructType = FieldType ("}" / "," SP "}" / "," StructType);
 
 Colon    = SP ":" !OpChar;
 Dot      = "\." / SP "\." !SpChar;
-JavaId   = SP ([a-z] / [A-Z] / "\_") ([a-z] / [A-Z] / [0-9] / "\_" / "$")+;
+JavaId   = SP ([a-z] / [A-Z] / "\_") ([a-z] / [A-Z] / [0-9] / "\_" / "$")*;
 
-Variant  = [A-Z] IdChar+;
+Variant  = [A-Z] IdChar*;
 IdOp     = "`" Sym "`";
 AnyOp    = !([=:] !OpChar) OpChar+ / IdOp / KeywordOp !IdChar;
-Id	 = Sym / "(" SP AnyOp SP ")";
+FieldId  = Id / "``" ^[`]+ "``";
+Id       = Sym / "(" SP AnyOp SP ")";
 Sym      = !(Keyword !IdChar) ([a-z] / "\_") IdChar*;
 IdChar   = [a-z] / [A-Z] / [0-9] / "\_" / "'" / "?" / "$";
 SpChar   = [ (),;\\{}];
-OpChar   = [!#%&*+-./:<=>@^|~];
+OpChar   = [!#%&*+-.:<=>@^|~] / "/" ![*/];
 Hex      = [0-9] / [a-f] / [A-F];
 Number   = ("0" ([xX] Hex+ / [oO] [0-7]+) /
           [0-9]+ ("\." [0-9]+)? ([eE] ([+-]? [0-9]+)?)?);
-String   = (("'" ^[']* "'")+ / "\"" (^["\\] / "\\" StringEscape)* "\"");
+String   = ("'" ^[']* "'")+ /
+           "\"\"\"" ("\\" StringEscape / !"\"\"\"" _)* "\"\"\"" /
+           "\"" ("\\" StringEscape / ^["])* "\"";
 StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
-               "(" AnyExpression ")" / [ \t\r\n] SP "\"";
+               "(" SP InParenthesis SP ")" / [ \t\r\n] SP "\"";
 
 KeywordOp = "and" / "b\_and" / "b\_or" / "div" / "in" / "not" / "or" /
             "shl" / "shr" / "xor";
 Keyword  = KeywordOp / "as" / "case" / "catch" / "class" / "classOf" /
-           "done" / "do" / "elif" / "else" / "esac" / "fall" / "fi" /
-	   "finally" / "if" / "import" / "instanceof" / "is" / "load" /
+           "done" / "do" / "elif" / "else" / "esac" / "fall" / "finally" /
+	   "fi" / "if" / "import" / "instanceof" / "is" / "load" /
 	   "loop" / "new" / "norec" / "of" / "then" / "try" / "typedef" /
 	   "unsafely\_as" / "var" / "with" / "yrt";
 
 LineComment = "//" ^[\r\n]*;
 CommentBody = ("/*" CommentBody / !"*/" _)* "*/";
-Space    = [ \t\r\n] / LineComment / "/*" CommentBody;
+Space    = [ \t\r\n\u00A0] / LineComment / "/*" CommentBody;
 SP       = Space*;
 SkipSP   = (Space+ !("\." / "["))?;

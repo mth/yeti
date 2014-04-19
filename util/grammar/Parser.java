@@ -4,19 +4,25 @@ import java.util.Scanner;
 import mouse.runtime.*;
 
 public class Parser {
-    public static void main(String[] argv) throws Exception {
-        Source src;
-        if (argv.length == 0) {
-            src = new SourceString(
-                    new Scanner(System.in).useDelimiter("\\A").next());
-        } else {
-            src = new SourceFile(argv[0]);
-        }
+    private static void parse(Source src) {
         YetiPEG peg = new YetiPEG();
         if (peg.parse(src)) {
             System.out.println("OK");
         } else {
-            System.err.println("NOK");
+            System.out.println("NOK");
+        }
+    }
+
+    public static void main(String[] argv) throws Exception {
+        Source src;
+        if (argv.length == 0) {
+            parse(new SourceString(
+                    new Scanner(System.in).useDelimiter("\\A").next()));
+        } else {
+            for (int i = 0; i < argv.length; ++i) {
+                System.out.print(argv[i] + ": ");
+                parse(new SourceFile(argv[i]));
+            }
         }
     }
 }

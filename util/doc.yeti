@@ -324,7 +324,7 @@ to_html = formatType {
         {descr, args} = parseDoc f.description;
         args = map (_ arg = " <var>\(arg)</var>") args;
         type = concat [[if f.mutable then '<em>var </em>' fi,
-                        '<span class=sn>', f.tag, f.nameStr@, '</span>'],
+                        '<span class=sn>', f.tag, (f.nameStr@), '</span>'],
                        args, ['<em> is </em>', f.typeStr, sep]];
         {descr, type, name = f.name,
          group = f.group, groupTitle = f.groupTitle}
@@ -343,7 +343,7 @@ to_html = formatType {
         case s of
         '<': '<tt>&lt;</tt>';
         '>': '<tt>&gt;</tt>';
-        _: s@
+        _: (s@)
         esac,
     options = [FormatDoc formatDoc]
 };
