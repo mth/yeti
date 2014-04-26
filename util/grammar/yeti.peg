@@ -66,12 +66,12 @@ StrConcat   = Logical SP (AsIsType* "^" !OpChar Logical)*;
 CStrConcat  = CLogical SP (AsIsType* "^" !OpChar CLogical)*;
 Logical     = Compare SP (AsIsType* ("and" / "or") !IdChar Compare)*;
 CLogical    = CCompare SP (AsIsType* ("and" / "or") !IdChar CCompare)*;
-Compare     = SkipSP Not* Compose SP (AsIsType* CompareOp Compose)*
+Compare     = SP Not* Compose SP (AsIsType* CompareOp Compose)*
               SP InstanceOf*;
-CCompare    = SkipSP Not* CCompose SP (AsIsType* CompareOp CCompose)*
+CCompare    = SP Not* CCompose SP (AsIsType* CompareOp CCompose)*
               SP InstanceOf*;
 InstanceOf  = "instanceof" !IdChar ClassId SP;
-Not         = "not" !IdChar SkipSP;
+Not         = "not" !IdChar SP;
 CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
               "in" !IdChar;
 Compose     = CustomOps (AsIsType* ComposeOp CustomOps)*;
@@ -146,11 +146,11 @@ Field    = SP Modifier? FieldId
            (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
 
 IsType   = SP ("is" !IdChar Type)?;
-Type     = SP BareType SP (("->" / "\u2192") !OpChar SP BareType SP)*;
+Type     = SP BareType SkipSP (("->" / "\u2192") !OpChar SP BareType SkipSP)*;
 BareType = ['^] IdChar+ / "~" JavaType / "{" StructType / "(" SP ")" /
            "(" Type ")" / VariantType ("|" !OpChar SP VariantType)* /
-	   Sym "!"? SP TypeParam?;
-VariantType = Variant "\."? !IdChar SP BareType SP;
+	   Sym "!"? SkipSP TypeParam?;
+VariantType = Variant "\."? !IdChar SP BareType SkipSP;
 JavaType = ClassName "[]"*;
 TypeParam  = "<" SP (Type ("," Type)*)? ">";
 FieldType  = SP ("var" !IdChar SP)? "\."? Sym SP "is" !IdChar Type;
