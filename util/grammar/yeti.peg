@@ -79,7 +79,7 @@ CCompose    = CCustomOps (AsIsType* ComposeOp CCustomOps)*;
 ComposeOp   = "\." Space+ / Space+ "\." SP;
 CustomOps   = Sum SkipSP (AsIsType* CustomOp Sum)*;
 CCustomOps  = CSum SkipSP (AsIsType* CustomOp CSum)*;
-CustomOp    = !(CompareOp / [*/%+-<=>^:] !OpChar) OpChar+ / IdOp;
+CustomOp    = !(CompareOp / [*/%+-<=>^:\\\.] !OpChar) OpChar+ / IdOp;
 Sum         = Multiple SkipSP (SumOp Multiple)*;
 CSum        = CMultiple SkipSP (SumOp CMultiple)*;
 SumOp       = AsIsType* ("+" / "-") !OpChar / ("b\_or" / "xor") !IdChar;
@@ -133,7 +133,7 @@ Finally  = "finally" !IdChar AnyExpression;
 New      = "new" !IdChar ClassName SP NewParam;
 NewParam = ArgList / "[" AnyExpression "]" "[]"*;
 Load     = "load" !IdChar ClassName;
-ClassOf  = "classOf" !IdChar ClassName SP "[]"*;
+ClassOf  = "classOf" !IdChar ClassId SP "[]"*;
 ClassName = JavaId (Dot JavaId)*;
 ClassId  = SP "~"? ClassName;
 ArgList  = "(" SP (Expression SP ("," Expression SP)*)? ")";
@@ -180,10 +180,10 @@ StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
 
 KeywordOp = "and" / "b\_and" / "b\_or" / "div" / "in" / "not" / "or" /
             "shl" / "shr" / "xor";
-Keyword  = KeywordOp / "as" / "case" / "catch" / "class" / "classOf" /
-           "done" / "do" / "elif" / "else" / "esac" / "fall" / "finally" /
-	   "fi" / "if" / "import" / "instanceof" / "is" / "load" /
-	   "loop" / "new" / "norec" / "of" / "then" / "try" / "typedef" /
+Keyword  = "instanceof" / KeywordOp / "as" / "case" / "catch" / "class" /
+           "classOf" / "done" / "do" / "elif" / "else" / "esac" / "fall" /
+	   "finally" / "fi" / "if" / "import" / "is" / "load" / "loop" /
+	   "new" / "norec" / "of" / "then" / "try" / "typedef" /
 	   "unsafely\_as" / "var" / "with" / "yrt";
 
 LineComment = "//" ^[\r\n]*;
