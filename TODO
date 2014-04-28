@@ -1,7 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Write reference grammar for documentation.
 * v1.0
 * Allow optional ~ before classname in instanceof and friends.
 * Typedefs in REPL

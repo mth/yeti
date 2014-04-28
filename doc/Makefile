@@ -1,13 +1,15 @@
-intro.html: intro.rst
+all: intro.html intro.rst
+
+%.html: %.rst
 	rst2html --stylesheet-path=voidspace.css $< $@
 
-intro.odt: intro.rst
+%.odt: %.rst
 	rst2odt $< $@
 
-intro.pdf: _intro.latex
-	pdflatex -halt-on-error -draftmode _intro.latex
-	pdflatex -halt-on-error _intro.latex
-	mv _intro.pdf intro.pdf
+%.pdf: _%.latex
+	pdflatex -halt-on-error -draftmode $<
+	pdflatex -halt-on-error $<
+	mv _$@ $@
 
 _intro.latex: intro.rst
 	#rst2latex $< $@

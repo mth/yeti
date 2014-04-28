@@ -27,7 +27,9 @@
 
 <target name="check-mouse" depends="prepare-build">
     <property name="mouse" value="${basedir}/Mouse-1.6.jar"/>
+    <property name="yeti.jar" value="${jardir}/yeti.jar"/>
     <available property="has.mouse" file="${mouse}"/>
+    <available property="yeti.jar.exists" file="${yeti.jar}"/>
 </target>
 
 <target name="fetch-mouse" depends="check-mouse" unless="has.mouse">
@@ -99,14 +101,12 @@
 </target>
 
 <target name="jar" depends="compiler,modules,yeti">
-    <condition property="jar-name" value="${jardir}/yeti.jar">
-        <not><isset property="jar-name"/></not>
-    </condition>
+    <property name="yeti.jar" value="${jardir}/yeti.jar"/>
     <jar jarfile="${jardir}/yeti-lib.jar" roundup="false">
         <fileset dir="${build}/lib"/>
         <fileset dir="${build}/modules"/>
     </jar>
-    <jar jarfile="${jar-name}" keepcompression="true">
+    <jar jarfile="${yeti.jar}" keepcompression="true">
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
@@ -120,7 +120,7 @@
 <target name="yeti-lib" depends="jar"/>
 
 <target name="test" depends="jar,doc">
-    <java classname="yeti.lang.compiler.yeti" classpath="${jar-name}">
+    <java classname="yeti.lang.compiler.yeti" classpath="${yeti.jar}">
         <arg value="${basedir}/tests/test.yeti"/>
     </java>
 </target>
@@ -134,11 +134,21 @@
     </yeti>
 </target>
 
-<target name="grammar" depends="fetch-mouse">
+<target name="pre-peg" depends="fetch-mouse" unless="yeti.jar.exists">
+    <antcall target="jar" inheritrefs="true"/>
+</target>
+
+<target name="grammar" depends="pre-peg">
     <mkdir dir="${build}/grammar/classes"/>
+    <java classname="yeti.lang.compiler.yeti" classpath="${yeti.jar}"
+        failonerror="true">
+        <arg value="${basedir}/util/doclit.yeti"/>
+        <arg value="${basedir}/doc/reference.rst"/>
+        <arg value="${build}/grammar/yeti.peg"/>
+    </java>
     <java classname="mouse.Generate" classpath="${mouse}" failonerror="true">
         <arg value="-G"/>
-        <arg value="${basedir}/util/grammar/yeti.peg"/>
+        <arg value="${build}/grammar/yeti.peg"/>
         <arg value="-p"/>
         <arg value="yeti.lang.grammar"/>
         <arg value="-D"/>
@@ -148,12 +158,12 @@
     </java>
     <javac destdir="${build}/grammar/classes" classpath="${mouse}"
            encoding="UTF-8" includeantruntime="false">
-        <src path="${basedir}/util/grammar"/>
+        <src path="${basedir}/doc"/>
         <src path="${build}/grammar"/>
     </javac>
     <jar jarfile="${jardir}/yeti-peg.jar" keepcompression="true">
         <manifest>
-            <attribute name="Main-Class" value="yeti.lang.grammar.Parser"/>
+            <attribute name="Main-Class" value="yeti.lang.grammar.PEGParser"/>
         </manifest>
         <fileset dir="${build}/grammar/classes"/>
         <zipfileset src="${mouse}" includes="mouse/runtime/*"/>
@@ -161,7 +171,7 @@
 </target>
 
 <target name="noant" depends="prepare-build">
-    <property name="jar-name" value="${jardir}/yeti-noant.jar"/>
+    <property name="yeti.jar" value="${jardir}/yeti-noant.jar"/>
     <property name="jar-excludes" value="yeti/lang/compiler/YetiTask.class"/>
 </target>
 

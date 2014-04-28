@@ -3,7 +3,7 @@ package yeti.lang.grammar;
 import java.util.Scanner;
 import mouse.runtime.*;
 
-public class Parser {
+public class PEGParser {
     private static void parse(Source src) {
         YetiPEG peg = new YetiPEG();
         if (peg.parse(src)) {
@@ -20,8 +20,11 @@ public class Parser {
                     new Scanner(System.in).useDelimiter("\\A").next()));
         } else {
             for (int i = 0; i < argv.length; ++i) {
-                System.out.print(argv[i] + ": ");
-                parse(new SourceFile(argv[i]));
+                SourceFile f = new SourceFile(argv[i]);
+                if (f.created()) {
+                    System.out.print(argv[i] + ": ");
+                    parse(f);
+                }
             }
         }
     }

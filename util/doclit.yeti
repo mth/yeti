@@ -1,0 +1,28 @@
+output = array [];
+
+{extract} = {
+    extract lines =
+        case lines of
+        '.. peg' :: '' :: '::' :: '' :: rest:
+            peg_block rest;
+        _ :: rest:
+            extract rest;
+        _: ();
+        esac,
+
+    peg_block lines =
+        case lines of
+        line :: rest:
+            push output line;
+            if line != '' or empty? rest or head rest =~ '^ {4}' then
+                peg_block rest
+            else
+                extract rest
+            fi;
+        _: ();
+        esac
+};
+
+readFile _argv[0] utf8 getLines |> extract;
+writeFile _argv[1] utf8 (`putLines` output);
+eprintln "Extracted \(_argv[1])";
