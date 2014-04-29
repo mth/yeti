@@ -893,4 +893,14 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
             fi
         done;
         list res),
+
+    /**
+     * Group: zmisc
+     * Program command line arguments. It is thread-local.
+     */
+    get _argv () =
+        Core#ARGV#get() unsafely_as array<string>,
+
+    set _argv a =
+        Core#ARGV#set(a unsafely_as ~Object),
 }

@@ -35,33 +35,12 @@ package yeti.lang;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.Random;
 
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };
-    private static Random rnd = null;
 
     public static final String UNDEF_STR = new String();
-
-    public static final Fun RANDINT = new Fun() {
-        public Object apply(Object x) {
-            if (rnd == null)
-                initRandom();
-            Num n = (Num) x;
-            if (n.rCompare(0x7fffffffL) > 0)
-                return new IntNum(rnd.nextInt(n.intValue()));
-            if (n.rCompare(Long.MAX_VALUE) > 0)
-                return new IntNum((long) (n.doubleValue() * rnd.nextDouble()));
-            // XXX
-            return new FloatNum(Math.floor(n.doubleValue() * rnd.nextDouble()));
-        }
-    };
-
-    private static synchronized void initRandom() {
-        if (rnd == null)
-            rnd = new Random();
-    }
 
     public static String replace(String f, String r, String s) {
         StringBuffer result = new StringBuffer();

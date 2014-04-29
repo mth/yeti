@@ -1827,6 +1827,17 @@ plus a b = a + b;
     round a is number -> number = Math#round(a),
 
     /**
+     * Group: num
+     * Returns a pseudorandom integer value between 0 (inclusive) and
+     * the given limit (exclusive). All possible values are produced
+     * with approximately equal probability.
+     *
+     * Arguments:
+     * limit - the limit on the returned value (must be greater than zero)
+     */
+    randomInt = new RandomInt() unsafely_as number -> number,
+
+    /**
      * Group: str
      * Returns a copy of the string, with all occurences of the needle
      * substring replaced with replacement string in the given haystack string.

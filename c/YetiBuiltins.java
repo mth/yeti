@@ -51,10 +51,7 @@ final class BuiltIn implements Binder {
     public BindRef getRef(int line) {
         BindRef r = null;
         switch (op) {
-        case 1:
-            r = new Argv();
-            r.type = YetiType.STRING_ARRAY;
-            break;
+        //case 1: WAS ARGV
         case 2:
             r = new InOpFun(line);
             break;
@@ -115,10 +112,6 @@ final class BuiltIn implements Binder {
         case 21:
             r = new Same();
             break;
-        case 22:
-            r = new StaticRef("yeti/lang/Core", "RANDINT",
-                              YetiType.NUM_TO_NUM, this, true, line);
-            break;
         case 23:
             r = undef_str(this, line);
             break;
@@ -134,34 +127,6 @@ final class BuiltIn implements Binder {
         }
         r.binder = this;
         return r;
-    }
-}
-
-final class Argv extends BindRef implements CodeGen {
-    void gen(Ctx ctx) {
-        ctx.fieldInsn(GETSTATIC, "yeti/lang/Core",
-                             "ARGV", "Ljava/lang/ThreadLocal;");
-        ctx.methodInsn(INVOKEVIRTUAL,
-            "java/lang/ThreadLocal",
-            "get", "()Ljava/lang/Object;");
-    }
-
-    public void gen2(Ctx ctx, Code value, int line) {
-        ctx.fieldInsn(GETSTATIC, "yeti/lang/Core",
-                     "ARGV", "Ljava/lang/ThreadLocal;");
-        value.gen(ctx);
-        ctx.methodInsn(INVOKEVIRTUAL,
-            "java/lang/ThreadLocal",
-            "get", "(Ljava/lang/Object;)V");
-        ctx.insn(ACONST_NULL);
-    }
-
-    Code assign(final Code value) {
-        return new SimpleCode(this, value, null, 0);
-    }
-
-    boolean flagop(int fl) {
-        return (fl & (ASSIGN | DIRECT_BIND)) != 0;
     }
 }
 

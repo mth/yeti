@@ -296,8 +296,6 @@ public class YetiType implements YetiParser {
         bindCompare("<=", LG_TYPE, CompareFun.COND_LE,
         bindCompare(">" , LG_TYPE, CompareFun.COND_GT,
         bindCompare(">=", LG_TYPE, CompareFun.COND_GE,
-        bindScope("_argv", new BuiltIn(1),
-        bindScope("randomInt", new BuiltIn(22),
         bindPoly(".", COMPOSE_TYPE, new BuiltIn(6),
         bindPoly("in", IN_TYPE, new BuiltIn(2),
         bindPoly("::", CONS_TYPE, new BuiltIn(3),
@@ -379,7 +377,7 @@ public class YetiType implements YetiParser {
         bindImport("Long", "java/lang/Long",
         bindImport("Double", "java/lang/Double",
         bindImport("String", "java/lang/String",
- null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
+   null))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))));
 
     static final Scope ROOT_SCOPE_SYS =
         bindImport("System", "java/lang/System",
