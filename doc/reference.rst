@@ -19,8 +19,11 @@ Grammar
 
     Source      = SP TopLevel !_;
 
+Tokens
++++++++++
+
 Reserved words
-+++++++++++++++++
+-----------------
 .. peg
 
 ::
@@ -35,7 +38,7 @@ Reserved words
     End         = "end" !IdChar;
 
 Comments and whitespace
-++++++++++++++++++++++++++
+--------------------------
 .. peg
 
 ::
@@ -47,7 +50,7 @@ Comments and whitespace
     SkipSP      = (Space+ !("\." / "["))?;
 
 Separators
-+++++++++++++
+-------------
 .. peg
 
 ::
@@ -56,8 +59,8 @@ Separators
     Semicolon   = SP ";";
     Dot         = "\." / SP "\." ![ (),;\\{}];
 
-Numbers
-++++++++++
+Number
+---------
 .. peg
 
 ::
@@ -66,20 +69,16 @@ Numbers
     Number      = ("0" ([xX] Hex+ / [oO] [0-7]+) /
                   [0-9]+ ("\." [0-9]+)? ([eE] ([+-]? [0-9]+)?)?);
 
-Strings
-++++++++++
+Simple string
+-----------------
 .. peg
 
 ::
 
-    String      = ("'" ^[']* "'")+ /
-                  "\"\"\"" ("\\" StringEscape / !"\"\"\"" _)* "\"\"\"" /
-                  "\"" ("\\" StringEscape / ^["])* "\"";
-    StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
-                   "(" SP InParenthesis SP ")" / [ \t\r\n] SP "\"";
+    SimpleString = ("'" ^[']* "'")+;
 
 Identifiers
-++++++++++++++
+--------------
 .. peg
 
 ::
@@ -95,8 +94,8 @@ Identifiers
     ClassId     = SP "~"? ClassName;
     Variant     = [A-Z] IdChar*;
 
-Type descriptions
-++++++++++++++++++++
+Type description
++++++++++++++++++++
 .. peg
 
 ::
@@ -113,8 +112,34 @@ Type descriptions
     VariantType = Variant "\."? !IdChar SP BareType SkipSP;
     JavaType    = ClassName "[]"*;
 
+Composite literals
++++++++++++++++++++++
+
+String
+---------
+.. peg
+
+::
+
+    String      = SimpleString /
+                  "\"\"\"" ("\\" StringEscape / !"\"\"\"" _)* "\"\"\"" /
+                  "\"" ("\\" StringEscape / ^["])* "\"";
+    StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
+                   "(" SP InParenthesis SP ")" / [ \t\r\n] SP "\"";
+
+Lambda expression
+--------------------
+.. peg
+
+::
+
+    Lambda      = "do" !IdChar BindArg* Colon AnyExpression "done" !IdChar;
+    BindField   = SP Id IsType ("=" !OpChar SP Id)? SP;
+    StructArg   = "{" BindField ("," BindField)* "}";
+    BindArg     = SP (Id / "()" / StructArg);
+
 List literals
-++++++++++++++++
+----------------
 .. peg
 
 ::
@@ -125,7 +150,7 @@ List literals
     HashItem    = Expression Colon Expression SP;
 
 Structure literals
-+++++++++++++++++++++
+---------------------
 .. peg
 
 ::
@@ -136,19 +161,11 @@ Structure literals
     FieldId     = Id / "``" ^[`]+ "``";
     Modifier    = ("var" / "norec") Space+;
 
-Lambda expression
-++++++++++++++++++++
-.. peg
-
-::
-
-    Lambda      = "do" !IdChar BindArg* Colon AnyExpression "done" !IdChar;
-    BindField   = SP Id IsType ("=" !OpChar SP Id)? SP;
-    StructArg   = "{" BindField ("," BindField)* "}";
-    BindArg     = SP (Id / "()" / StructArg);
+Block expressions
++++++++++++++++++++++
 
 Conditional expression
-+++++++++++++++++++++++++
+-------------------------
 .. peg
 
 ::
@@ -159,7 +176,7 @@ Conditional expression
     IfCond      = AnyExpression "then" !IdChar AnyExpression;
 
 Case expression
-++++++++++++++++++
+------------------
 .. peg
 
 ::
@@ -178,7 +195,7 @@ Case expression
     FieldPattern = SP Id IsType ("=" !OpChar SP Pattern)? SP;
 
 Try block
-++++++++++++
+------------
 .. peg
 
 ::
@@ -187,32 +204,6 @@ Try block
     Catch       = "catch" !IdChar ClassId (Space Id)? Colon AnyExpression;
     Catches     = Finally / Catch+ Finally?;
     Finally     = "finally" !IdChar AnyExpression;
-
-New operator
-+++++++++++++++
-.. peg
-
-::
-
-    New         = "new" !IdChar ClassName SP NewParam;
-    NewParam    = ArgList / "[" AnyExpression "]" "[]"*;
-    ArgList     = "(" SP (Expression SP ("," Expression SP)*)? ")";
-
-Load operator
-++++++++++++++++
-.. peg
-
-::
-
-    Load        = "load" !IdChar ClassName;
-
-ClassOf operator
-+++++++++++++++++++
-.. peg
-
-::
-
-    ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
 
 Simple expression
 ++++++++++++++++++++
@@ -227,8 +218,37 @@ Simple expression
     InParenthesis = FieldRef+ / SP AsIsType / SP AnyOp Expression /
                     Expression SP AnyOp / AnyExpression;
 
+Load operator
+----------------
+.. peg
+
+::
+
+    Load        = "load" !IdChar ClassName;
+
+New operator
+---------------
+.. peg
+
+::
+
+    New         = "new" !IdChar ClassName SP NewParam;
+    NewParam    = ArgList / "[" AnyExpression "]" "[]"*;
+    ArgList     = "(" SP (Expression SP ("," Expression SP)*)? ")";
+
+ClassOf operator
+-------------------
+.. peg
+
+::
+
+    ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
+
+Expression with operators
+++++++++++++++++++++++++++++
+
 Reference operators
-++++++++++++++++++++++
+----------------------
 .. peg
 
 ::
@@ -240,6 +260,127 @@ Reference operators
     FieldRef    = Dot SP FieldId;
     MapRef      = "[" Sequence SP "]";
     ObjectRef   = "#" JavaId SP ArgList?;
+
+Application
+--------------
+.. peg
+
+::
+
+    Apply       = Reference (SP AsIsType* Reference)*;
+    CApply      = CReference (SP AsIsType* CReference)*;
+
+Arithmetic operators
+-----------------------
+.. peg
+
+::
+
+    Sum         = Multiple SkipSP (SumOp Multiple)*;
+    CSum        = CMultiple SkipSP (SumOp CMultiple)*;
+    SumOp       = AsIsType* ("+" / "-") !OpChar / ("b\_or" / "xor") !IdChar;
+    Multiple    = Apply SkipSP (AsIsType* FactorOp Apply SkipSP)*;
+    CMultiple   = CApply SkipSP (AsIsType* FactorOp CApply SkipSP)*;
+    FactorOp    = ("*" / "/" / "%") !OpChar /
+                  ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
+
+Custom operators
+-------------------
+.. peg
+
+::
+
+    CustomOps   = Sum SkipSP (AsIsType* CustomOp Sum)*;
+    CCustomOps  = CSum SkipSP (AsIsType* CustomOp CSum)*;
+    CustomOp    = !(CompareOp / [*/%+-<=>^:\\\.] !OpChar) OpChar+ / IdOp;
+
+Function composition
+-----------------------
+.. peg
+
+::
+
+    Compose     = CustomOps (AsIsType* ComposeOp CustomOps)*;
+    CCompose    = CCustomOps (AsIsType* ComposeOp CCustomOps)*;
+    ComposeOp   = "\." Space+ / Space+ "\." SP;
+
+Comparison operators
+-----------------------
+.. peg
+
+::
+
+    Compare     = SP Not* Compose SP (AsIsType* CompareOp Compose)*
+                  SP InstanceOf*;
+    CCompare    = SP Not* CCompose SP (AsIsType* CompareOp CCompose)*
+                  SP InstanceOf*;
+    InstanceOf  = "instanceof" !IdChar ClassId SP;
+    Not         = "not" !IdChar SP;
+    CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
+                  "in" !IdChar;
+
+Logical operators
+--------------------
+.. peg
+
+::
+
+    Logical     = Compare SP (AsIsType* ("and" / "or") !IdChar Compare)*;
+    CLogical    = CCompare SP (AsIsType* ("and" / "or") !IdChar CCompare)*;
+
+String concatenation
+-----------------------
+.. peg
+
+::
+
+    StrConcat   = Logical SP (AsIsType* "^" !OpChar Logical)*;
+    CStrConcat  = CLogical SP (AsIsType* "^" !OpChar CLogical)*;
+
+List construction and concatenation
+--------------------------------------
+.. peg
+
+::
+
+    Cons        = StrConcat SP (AsIsType* ConsOp !OpChar StrConcat)*;
+    CCons       = CStrConcat SP (AsIsType* ConsOp !OpChar CStrConcat)*;
+    ConsOp      = "::" / ":." / "++";
+
+Casts
+--------
+.. peg
+
+::
+
+    AsIsType    = ("is" / "as" / "unsafely\_as") !IdChar Type;
+
+Forward application
+----------------------
+.. peg
+
+::
+
+    ApplyPipe   = Cons SP ("|>" !OpChar Cons)* AsIsType*;
+    CApplyPipe  = CCons SP ("|>" !OpChar CCons)* AsIsType*;
+
+Assigning values
+-------------------
+.. peg
+
+::
+
+    Assign      = ApplyPipe SP (":=" !OpChar ApplyPipe)?;
+    CAssign     = CApplyPipe SP (":=" !OpChar CApplyPipe)?;
+
+Loop
+-------
+.. peg
+
+::
+
+    Expression  = Assign SP ("loop" (!IdChar Assign)?)?;
+    CExpression = CAssign SP ("loop" (!IdChar CAssign)?)?;
 
 TODO
 +++++++
@@ -268,12 +409,6 @@ TODO
 
     Import      = "import" !IdChar Space+ ClassName
                   (Colon JavaId SP ("," JavaId SP)*)?;
-    Typedef     = "typedef" !IdChar SP TypedefOf Semicolon*;
-    TypedefOf   = "unshare" !IdChar SP Id /
-                  (("opaque" / "shared") !IdChar SP)?
-                  Id SP TypedefParam? "=" !OpChar Type;
-    TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
-
     Binding     = (StructArg / Modifier? !Any Id BindArg* IsType)
                   SP "=" !OpChar Expression Semicolon+ SP;
     CBinding    = (StructArg / Modifier? !(Any / End) Id (!End BindArg)* IsType)
@@ -282,12 +417,44 @@ TODO
     CSelfBind   = (Modifier? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
     Any         = "\_" !IdChar;
 
+Type definition
+++++++++++++++++++
+.. peg
+
+::
+
+    Typedef     = "typedef" !IdChar SP TypedefOf Semicolon*;
+    TypedefOf   = "unshare" !IdChar SP Id /
+                  (("opaque" / "shared") !IdChar SP)?
+                  Id SP TypedefParam? "=" !OpChar Type;
+    TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
+
+Class definition
++++++++++++++++++++
+.. peg
+
+::
+
     Class       = "class" !IdChar JavaId SP MethodArgs? Extends?
                   (End / Member ("," Member)* ","? SP End);
     Extends     = "extends" !IdChar ClassName SP ArgList? SP ("," ClassName SP)*;
     Member      = SP (Method / ClassField) SP;
+
+Class field
+--------------
+.. peg
+
+::
+
     ClassField  = ("var" Space+)? !End Id SP (!End BindArg SP)*
                   "=" !OpChar CExpression;
+
+Class method
+---------------
+.. peg
+
+::
+
     Method      = (("abstract" / "static") Space)? MethodType JavaId
                   MethodArgs Semicolon* MethodBody?;
     MethodArgs  = "(" SP (")" / MethodArg ("," MethodArg)* ")") SP;
@@ -295,40 +462,3 @@ TODO
     MethodArg   = MethodType Id SP;
     MethodBody  = CStatement (Semicolon CStatement?)*;
 
-    Expression  = Assign SP ("loop" (!IdChar Assign)?)?;
-    CExpression = CAssign SP ("loop" (!IdChar CAssign)?)?;
-    Assign      = ApplyPipe SP (":=" !OpChar ApplyPipe)?;
-    CAssign     = CApplyPipe SP (":=" !OpChar CApplyPipe)?;
-    ApplyPipe   = Cons SP ("|>" !OpChar Cons)* AsIsType*;
-    CApplyPipe  = CCons SP ("|>" !OpChar CCons)* AsIsType*;
-    AsIsType    = ("is" / "as" / "unsafely\_as") !IdChar Type;
-    Cons        = StrConcat SP (AsIsType* ConsOp !OpChar StrConcat)*;
-    CCons       = CStrConcat SP (AsIsType* ConsOp !OpChar CStrConcat)*;
-    ConsOp      = "::" / ":." / "++";
-    StrConcat   = Logical SP (AsIsType* "^" !OpChar Logical)*;
-    CStrConcat  = CLogical SP (AsIsType* "^" !OpChar CLogical)*;
-    Logical     = Compare SP (AsIsType* ("and" / "or") !IdChar Compare)*;
-    CLogical    = CCompare SP (AsIsType* ("and" / "or") !IdChar CCompare)*;
-    Compare     = SP Not* Compose SP (AsIsType* CompareOp Compose)*
-                  SP InstanceOf*;
-    CCompare    = SP Not* CCompose SP (AsIsType* CompareOp CCompose)*
-                  SP InstanceOf*;
-    InstanceOf  = "instanceof" !IdChar ClassId SP;
-    Not         = "not" !IdChar SP;
-    CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
-                  "in" !IdChar;
-    Compose     = CustomOps (AsIsType* ComposeOp CustomOps)*;
-    CCompose    = CCustomOps (AsIsType* ComposeOp CCustomOps)*;
-    ComposeOp   = "\." Space+ / Space+ "\." SP;
-    CustomOps   = Sum SkipSP (AsIsType* CustomOp Sum)*;
-    CCustomOps  = CSum SkipSP (AsIsType* CustomOp CSum)*;
-    CustomOp    = !(CompareOp / [*/%+-<=>^:\\\.] !OpChar) OpChar+ / IdOp;
-    Sum         = Multiple SkipSP (SumOp Multiple)*;
-    CSum        = CMultiple SkipSP (SumOp CMultiple)*;
-    SumOp       = AsIsType* ("+" / "-") !OpChar / ("b\_or" / "xor") !IdChar;
-    Multiple    = Apply SkipSP (AsIsType* FactorOp Apply SkipSP)*;
-    CMultiple   = CApply SkipSP (AsIsType* FactorOp CApply SkipSP)*;
-    FactorOp    = ("*" / "/" / "%") !OpChar /
-                  ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
-    Apply       = Reference (SP AsIsType* Reference)*;
-    CApply      = CReference (SP AsIsType* CReference)*;

@@ -1,4 +1,6 @@
-all: intro.html intro.rst
+RES = intro.html intro.pdf reference.html reference.pdf
+
+all: $(RES)
 
 %.html: %.rst
 	rst2html --stylesheet-path=voidspace.css $< $@
@@ -11,10 +13,12 @@ all: intro.html intro.rst
 	pdflatex -halt-on-error $<
 	mv _$@ $@
 
-_intro.latex: intro.rst
-	#rst2latex $< $@
+_%.latex: %.rst preamble.tex
 	#rst2newlatex --no-toc-backlinks $< $@
-	rst2latex $< $@
+	rst2latex --stylesheet=preamble.tex $< $@
+
+#reference.pdf: reference.rst
+#	rst2pdf $< -o $@
 
 clean:
-	rm -f _intro.toc _intro.latex _intro.aux _intro.out _intro.log intro.html intro.pdf
+	rm -f _*.toc _*.latex _*.aux _*.out _*.log $(RES)

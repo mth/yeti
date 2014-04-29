@@ -1675,7 +1675,7 @@ Their counterparts are mutators. They are also function fields but prefixed
 with **set**, and are invoked with the assignment operator like the
 assigment to a **var** field::
 
-    > st = (var private = 2; {get value () = private, set value v = private := v})
+    > st = (var priv = 2; {get value () = priv, set value v = priv := v})
     st is {var value is number} = {value=2}
     > st.value
     2 is number
@@ -1828,11 +1828,13 @@ However if the field is not provided with the right type it does not compile::
     f is {.a is number} -> {.a is number} = <code$f>
     
     > f {b = 12}
-    1:3: Cannot apply {.a is number} -> {.a is number} function (f) to {b is number} argument
+    1:3: Cannot apply {.a is number} -> {.a is number} function (f)
+    to {b is number} argument
         Type mismatch: {b is number} => {.a is number} (member missing: a)
     
     > f {a="foo"}
-    1:3: Cannot apply {.a is number} -> {.a is number} function (f) to {a is string} argument
+    1:3: Cannot apply {.a is number} -> {.a is number} function (f)
+    to {a is string} argument
         Type mismatch: number is not string
 
 Adding members or changing type won't work in this case, as the function 
@@ -1902,7 +1904,8 @@ be one of the tags in the variant set.
 
     > describe (Weight 33)
     1:18: Cannot apply Weight number to Color string | Length number -> string
-        Type mismatch: Color string | Length number => Weight number (member missing: Weight)
+        Type mismatch: Color string | Length number => Weight number
+        (member missing: Weight)
 
 Compiler gives an error, because Weight is not one of the tags in the variant
 type of the ``describe`` functions argument.
@@ -2042,7 +2045,7 @@ Although this joining can be done more efficiently using ``strJoin``::
 
 Structures can be matched as well::
 
-    > pointStr p = case p of {x = 0, y = 0}: "point zero!"; {x, y}: "\(x), \(y)" esac
+    > pointStr = \case of {x = 0, y = 0}: "point zero!"; {x, y}: "\(x), \(y)" esac
     pointStr is {.x is number, .y is number} -> string = <code$pointStr>
     > pointStr {x = 11, y = 2}
     "11, 2" is string
