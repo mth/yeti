@@ -748,14 +748,15 @@ class JavaType implements Cloneable {
             ((mapKind = to.param[2].deref()).type == YetiType.LIST_MARKER ||
              mapKind.type == YetiType.VAR)) {
             YType fp = from.param[0].deref();
-            String fromDesc = fp.javaType.description;
             YType tp = to.param[0].deref();
             try {
-                if (fromDesc.length() == 1) {
+                if (fp.javaType != null &&
+                    fp.javaType.description.length() == 1) {
+                    char fromPrimitive = fp.javaType.description.charAt(0);
                     YetiType.unify(to.param[1], YetiType.NO_TYPE);
                     YetiType.unify(to.param[0],
-                        fromDesc == "Z" ? YetiType.BOOL_TYPE :
-                        fromDesc == "C" ? YetiType.STR_TYPE :
+                        fromPrimitive == 'Z' ? YetiType.BOOL_TYPE :
+                        fromPrimitive == 'C' ? YetiType.STR_TYPE :
                         YetiType.NUM_TYPE);
                 } else if (tp.type == YetiType.VAR) {
                     if (fp != tp)
