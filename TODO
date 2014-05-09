@@ -28,6 +28,8 @@
   being exhaustive.
 * import foo.Bar; Bar$Baz could resolve
   to foo.Bar$Baz instead of current.package.Bar$Baz
+* yeti.lang.BigNum should probably use BigDecimal instead of BigInteger
+  (BigDecimal contains BigInteger anyway)
 * Support A x | B y | variantTypeDef?
 * Review the Java<->Yeti type autoconversions?
 * Immutable tree map support - this seems to be popular feature. ;)
