@@ -84,18 +84,20 @@ public final class Core {
                 s = s.substring(0, dot);
                 dot = -1;
             }
-            int n;
             if (dot > 0) do {
                 while (s.charAt(--l) == '0');
                 if (s.charAt(l) == '.') {
                     s = s.substring(0, l);
                     break;
                 }
-                if ((n = l - st) > 10 || n == 10 && s.charAt(st) > '2')
-                    return new FloatNum(Double.parseDouble(s));
-                int shift = DEC_SHIFT[l - dot];
-                s = s.substring(0, dot) + s.substring(dot + 1, l + 1);
-                return new RatNum(Integer.parseInt(s), shift);
+                if (l <= 11) {
+                    long n = Long.parseLong(s.substring(0, dot).concat(
+                                            s.substring(dot + 1, l + 1)));
+                    if (n >= Integer.MIN_VALUE && n <= Integer.MAX_VALUE)
+                        return new RatNum((int) n, DEC_SHIFT[l - dot]);
+                }
+                return new FloatNum(Double.parseDouble(s));
+
             } while (false);
         }
         if ((l - st) < 96 / radix + 10) // 22, 19, 16
