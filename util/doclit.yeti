@@ -1,16 +1,7 @@
 output = array [];
 
-{extract} = {
-    extract lines =
-        case lines of
-        '.. peg' :: '' :: '::' :: '' :: rest:
-            peg_block rest;
-        _ :: rest:
-            extract rest;
-        _: ();
-        esac,
-
-    peg_block lines =
+extract lines =
+   (peg_block lines =
         case lines of
         line :: rest:
             push output line;
@@ -20,8 +11,14 @@ output = array [];
                 extract rest
             fi;
         _: ();
-        esac
-};
+        esac;
+    case lines of
+    '.. peg' :: '' :: '::' :: '' :: rest:
+        peg_block rest;
+    _ :: rest:
+        extract rest;
+    _: ();
+    esac);
 
 readFile _argv[0] utf8 getLines |> extract;
 writeFile _argv[1] utf8 (`putLines` output);
