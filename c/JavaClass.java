@@ -49,6 +49,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
     private int captureCount;
     private Map accessors;
     private Ctx classCtx;
+    private Capture merged;
     private final int cline; // for duplicate class error
     YType classType;
     final Meth constr = new Meth();
@@ -402,6 +403,11 @@ final class JavaClass extends CapturingClosure implements Runnable {
         c.localVar = n + constr.args.size() + 1;
     }
 
+    void onMerge(Capture removed) {
+        removed.next = merged;
+        merged = removed;
+    }
+
     String getAccessor(JavaType.Method method, String descr,
                        boolean invokeSuper) {
         if (accessors == null)
@@ -433,6 +439,8 @@ final class JavaClass extends CapturingClosure implements Runnable {
 
     void gen(Ctx ctx) {
         int i, cnt;
+        Capture c;
+
         constr.captures = captures;
         ctx.insn(ACONST_NULL);
         Ctx clc = ctx.newClass(classType.javaType.access | ACC_SUPER,
@@ -453,13 +461,15 @@ final class JavaClass extends CapturingClosure implements Runnable {
                           INVOKESPECIAL);
         // extra arguments are used for smuggling in captured bindings
         int n = constr.arguments.length;
-        for (Capture c = captures; c != null; c = c.next) {
+        for (c = captures; c != null; c = c.next) {
             c.localVar = -1; // reset to using this
             clc.cw.visitField(ACC_FINAL | ACC_PRIVATE, c.id, c.captureType(),
                               null, null).visitEnd();
             init.load(0).load(++n)
                 .fieldInsn(PUTFIELD, className, c.id, c.captureType());
         }
+        for (c = merged; c != null; c = c.next)
+            c.localVar = -1; // reset all merged captures also
         for (i = 0, cnt = fields.size(); i < cnt; ++i)
             ((Code) fields.get(i)).gen(init);
         init.insn(RETURN);

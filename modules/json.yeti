@@ -88,7 +88,7 @@ jsonParse str is string -> json =
    (invalid = failWith . ("Invalid JSON: " ^);
     var tokens = matchAll ('\s++|([{:,}\[\]]|"(?:[^\\"]|\\["\\/bfnrtu])*+"|' ^
                          '-?\d++(?:\.\d++)?(?:[eE][+-]?\d++)?|null|true|false)')
-                          (`at` 0) invalid str;
+                          (`at` 1) invalid str;
     fetch () =
         case tokens of
         s :: rest:
@@ -153,6 +153,7 @@ jsonParse str is string -> json =
         _: failWith "Unexpected end of JSON data"
         esac;
     res = fetch ();
+    tokens := filter defined? tokens;
     if not empty? tokens then
         failWith "Garbage after JSON data (\(head tokens))"
     fi;

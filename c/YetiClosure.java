@@ -612,6 +612,7 @@ abstract class CapturingClosure extends AClosure {
                     c.id = i.id; // copy old one's id
                     c.localVar = i.localVar;
                     prev.next = c.next;
+                    onMerge(c);
                     continue next_capture;
                 }
             }
@@ -619,6 +620,9 @@ abstract class CapturingClosure extends AClosure {
             prev = c;
         }
         return counter;
+    }
+
+    void onMerge(Capture removed) {
     }
 }
 
