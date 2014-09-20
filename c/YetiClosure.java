@@ -593,16 +593,17 @@ abstract class CapturingClosure extends AClosure {
     // this seems to cause extra check only in Function.finishGen).
     int mergeCaptures(Ctx ctx, boolean cleanup) {
         int counter = 0;
-        Capture prev = null;
+        Capture prev = null, next;
     next_capture:
-        for (Capture c = captures; c != null; c = c.next) {
+        for (Capture c = captures; c != null; c = next) {
+            next = c.next;
             Object identity = c.identity = c.captureIdentity();
             if (cleanup && (c.uncaptured || c.ref.flagop(DIRECT_BIND))) {
                 c.uncaptured = true;
                 if (prev == null)
-                    captures = c.next;
+                    captures = next;
                 else
-                    prev.next = c.next;
+                    prev.next = next;
             }
             if (c.uncaptured)
                 continue;
@@ -611,7 +612,7 @@ abstract class CapturingClosure extends AClosure {
                 if (i.identity == identity) {
                     c.id = i.id; // copy old one's id
                     c.localVar = i.localVar;
-                    prev.next = c.next;
+                    prev.next = next;
                     onMerge(c);
                     continue next_capture;
                 }
