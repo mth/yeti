@@ -272,7 +272,67 @@ interface YetiParser {
             res.append(')');
             return res.toString();
         }
+
+        void checkBindSugar() {
+            if(seqKind != null || st == null || st.length < 2)
+               return;
+            for(int i= 0;i < (st.length - 1);i++) {
+                BinOp bo;
+                BinOp ref;
+                if( this.st[i] instanceof BinOp 
+                    && (bo = (BinOp) st[i]).op == "<-"
+                    && bo.right != null) {
+
+                    Node bindFn;
+                    Sym argName; 
+                    if(bo.left instanceof BinOp
+                        && (ref = (BinOp)bo.left).op == FIELD_OP
+                        && ref.right instanceof Sym){
+
+                        //argName and bindFunction
+                        argName = (Sym) ref.right;
+                        
+                        bindFn = ref;
+                        ref.right= new Sym("bind".intern());
+                        ref.right.pos(bindFn.line,bindFn.col);
+                    }else if(bo.left instanceof Sym) {
+                        argName = (Sym) bo.left;
+                        bindFn = new Sym("bind".intern());
+                        bindFn.pos(argName.line, argName.col);
+                    }else{
+                        continue;
+                    }
+                    
+                    //the lambda for bind
+                    Node[] body = new Node[this.st.length - i - 1];
+                    System.arraycopy(this.st,i+1,body,0,body.length);
+                    Seq bodySeq = new Seq(body,null);
+                    bodySeq.checkBindSugar();
+                    XNode lam = 
+                        XNode.lambda(argName,bodySeq,null);
+                    lam.pos(bo.line,bo.col);
+                    
+                    //the new nodes of this sequence
+                    Node[] nst = new Node[i+1];
+                    System.arraycopy(this.st,0,nst,0,i);
+                    
+                    BinOp bindOp = new BinOp("",2,true);
+                    bindOp.left = bindFn;
+                    bindOp.right = lam;
+                    bindOp.pos(bo.line,bo.col);
+                    
+                    BinOp apl = new BinOp("",2,true);
+                    apl.pos(bo.line,bo.col);
+                    apl.left = bindOp;
+                    apl.right = bo.right;
+                    nst[i] = apl; 
+                    this.st = nst;
+                }
+                
+            }
+        }
     }
+
 
     final class Sym extends Node {
         String sym;
@@ -1410,7 +1470,10 @@ interface YetiParser {
                            (bo = (BinOp) w).left != null;) {
                 w = bo.left;
             }
-            return new Seq(list, kind).pos(w.line, w.col);
+            Seq rs = new Seq(list, kind);
+            rs.checkBindSugar();
+            rs.pos(w.line, w.col);
+            return rs;
         }
 
         private Node readSeqTo(String endKind) {
@@ -1822,6 +1885,7 @@ interface YetiParser {
                         tmp[tmp.length - 1] =
                             new XNode("()").pos(seq.line, seq.col);
                         seq.st = tmp;
+                        seq.checkBindSugar();
                     } else if (seq.st.length == 1) {
                         res = seq.st[0];
                     }

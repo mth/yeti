@@ -1,0 +1,13 @@
+module maybemonad;
+
+typedef maybe<a> = None () | Some a;
+
+bind fn x is ('a -> maybe<'b>) -> maybe<'a> -> maybe<'b> =
+	case x of
+	Some y: fn y;
+	None (): none;
+	esac;
+
+return x = Some x;
+
+{bind, return}

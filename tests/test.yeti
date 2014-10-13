@@ -1,5 +1,7 @@
 program test;
 
+maybemn = load maybemonad;
+
 expectCompileError testCode =
    (load yeti.lang.compiler.eval;
     case evaluateYetiCode [] [] testCode of
@@ -478,7 +480,24 @@ done,
 'Case.': do:
     f x is Case. 'b -> 'b = case x of Case a: a esac;
     f (Case 42) == 42
+done,
+'bind sugar' : do:
+    bind fn v = fn v;
+    x <- 1;
+    x = x + 1;
+    y <- 3 + 4;
+    z = x + y;
+    z == 9
+done,
+'bind sugar maybe' : do:
+    
+    r = (maybemn.r1 <- (Some (Some (Some 1)));
+    maybemn.r2 <- r1;
+    maybemn.r3 <- r2;
+    maybemn.return (r3 == 1));
+    r == (Some true);
 done
+
 ];
 
 var bad = 0;
