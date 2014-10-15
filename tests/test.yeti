@@ -205,6 +205,10 @@ done,
     b = {x = 12};
     a with b == b
 done,
+'with section': do:
+    default = {a = 10, b = true};
+    (with {a = 3}) default == {a = 3, b = true};
+done,
 'escaped symbols': do:
     import yeti.lang.Struct;
     
