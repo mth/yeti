@@ -2,6 +2,7 @@
 ~~~~~~~~~~~~~~~~~
 
 * v1.0
+* Allow any identificators in dotted class names (like fi.etc)
 * Allow optional ~ before classname in instanceof and friends.
 * Typedefs in REPL
 * Compiling simple module a; in REPL results in ClassNotFoundException
