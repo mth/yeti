@@ -1307,15 +1307,47 @@ interface YetiParser {
             return sym;
         }
 
+        private String readJavaIdentifier(boolean dotted,
+                                          char termin,
+                                          String error) {
+            p=skipSpace();
+            int cp = p;
+            char c;
+            for(;p < src.length 
+                 && (Character.isJavaIdentifierPart(c = src[p])
+                    || (dotted && c == '.'));) {p++;}
+            String s = new String(src,cp,p-cp);
+            if(p == cp
+               || ((p = skipSpace()) < src.length
+                   && (c = src[p]) != ';'
+                   && c != termin))
+                throw new CompileException(this.line,cp - lineStart,
+                        error + "["+
+                        new String(src,cp,
+                                   Math.min(src.length, p+1)-cp)
+                        +"]");
+            
+            if(dotted)
+                return s.replace('.','/');
+            else
+                return s;
+        }
+
         private XNode readImport() {
-            Sym s = readDotted("Expected class path after 'import', not a ");
+            Sym s = new Sym(readJavaIdentifier(true,':', 
+                    "Expected class path after 'import', not a "));
+            
             ArrayList imports = null;
             for (char c = ':'; ((p = skipSpace()) < src.length &&
                                 src[p] == c); c = ',') {
                 ++p;
                 if (imports == null)
                     imports = new ArrayList();
-                imports.add(new Sym(s.sym + '/' + fetch().sym()));
+
+                String id = readJavaIdentifier(false,',', 
+                    "Expected class path after 'import', not a ");
+
+                imports.add(new Sym(s.sym + '/' + id ));
             }
             return imports == null ? new XNode("import", s) :
                         new XNode("import", (Node[])

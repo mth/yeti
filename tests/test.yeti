@@ -456,6 +456,12 @@ done,
     };
     foo.check 'O' 'X' == 1
 done,
+'import' : do:
+    import java.util : Map, List ,
+                       ArrayList;
+    import java.sql.ResultSet;
+    true
+done,
 'method-tailrec4': do:
     tr a b c d =
         if c == 'wtf' then
