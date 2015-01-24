@@ -59,7 +59,7 @@ public class Rename {
         JarFile in = new JarFile(args[0]);
         JarOutputStream out =
             new JarOutputStream(new FileOutputStream(args[1]));
-        byte[] buf = new byte[65536];
+        byte[] buf = new byte[0x20000];
         for (Enumeration e = in.entries(); e.hasMoreElements();) {
             ZipEntry z = (ZipEntry) e.nextElement();
             if (z.isDirectory())

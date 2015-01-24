@@ -206,6 +206,9 @@ class ClassFinder {
                     ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES);
         } catch (IOException ex) {
             return null;
+        } catch (Exception ex) {
+            throw new RuntimeException("Internal error reading class " +
+                        className + ": " + ex.getMessage(), ex);
         }
         return t;
     }

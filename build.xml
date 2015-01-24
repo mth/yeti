@@ -3,7 +3,7 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-3.1-p1r.jar"/>
+    <property name="asm" value="${basedir}/asm-5.0.3rr.jar"/>
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
@@ -11,9 +11,9 @@
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${build}/asm-3.1-p1.jar"/>
+    <property name="asmt" value="${build}/asm-5.0.3.jar"/>
     <mkdir dir="${build}/util"/>
-    <get src="http://dot.planet.ee/yeti/asm-3.1-p1.jar"
+    <get src="http://dot.planet.ee/yeti/asm-5.0.3.jar"
          dest="${asmt}" verbose="true"/>
     <javac destdir="${build}/util" srcdir="${basedir}/util"
            includes="Rename.java" encoding="UTF-8"

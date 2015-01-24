@@ -226,7 +226,7 @@ final class Ctx implements Opcodes {
         MethodVisitor m = cw.visitMethod(mod, "<init>", "()V", null, null);
         // super()
         m.visitVarInsn(ALOAD, 0);
-        m.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V");
+        m.visitMethodInsn(INVOKESPECIAL, parent, "<init>", "()V", false);
         m.visitInsn(RETURN);
         m.visitMaxs(0, 0);
         m.visitEnd();
@@ -316,7 +316,7 @@ final class Ctx implements Opcodes {
 
     void visitInit(String type, String descr) {
         insn(-2);
-        m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr);
+        m.visitMethodInsn(INVOKESPECIAL, type, "<init>", descr, false);
         lastType = type;
     }
 
@@ -340,7 +340,7 @@ final class Ctx implements Opcodes {
 
     void methodInsn(int opcode, String owner, String name, String desc) {
         insn(-1);
-        m.visitMethodInsn(opcode, owner, name, desc);
+        m.visitMethodInsn(opcode, owner, name, desc, opcode == INVOKEINTERFACE);
     }
 
     void visitApply(Code arg, int line) {
@@ -348,7 +348,7 @@ final class Ctx implements Opcodes {
         insn(-1);
         visitLine(line);
         m.visitMethodInsn(INVOKEVIRTUAL, "yeti/lang/Fun",
-                "apply", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                "apply", "(Ljava/lang/Object;)Ljava/lang/Object;", false);
     }
 
     void jumpInsn(int opcode, Label label) {

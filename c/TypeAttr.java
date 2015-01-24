@@ -426,9 +426,13 @@ class ModuleType extends YetiParser.Node {
     }
 }
 
-class YetiTypeVisitor implements ClassVisitor {
+class YetiTypeVisitor extends ClassVisitor {
     TypeAttr typeAttr;
     private boolean deprecated;
+
+    YetiTypeVisitor() {
+        super(Opcodes.ASM5);
+    }
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {

@@ -42,7 +42,7 @@ class JavaClassNotFoundException extends Exception {
     }
 }
 
-class JavaTypeReader implements ClassVisitor, Opcodes {
+class JavaTypeReader extends ClassVisitor implements Opcodes {
     Map vars = new HashMap();
     Map fields = new HashMap();
     Map staticFields = new HashMap();
@@ -53,6 +53,10 @@ class JavaTypeReader implements ClassVisitor, Opcodes {
     String className;
     String[] interfaces;
     int access;
+
+    JavaTypeReader() {
+        super(ASM5);
+    }
 
     public void visit(int version, int access, String name, String signature,
                       String superName, String[] interfaces) {
