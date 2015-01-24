@@ -3,8 +3,7 @@ properties
 tags
 yeti.jar
 yeti-lib.jar
-asm-3.1r.jar
-asm-3.1-plr.jar
+asm-5.0.3r.jar
 doc/intro.html
 doc/_intro.aux
 doc/_intro.latex
