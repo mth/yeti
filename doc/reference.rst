@@ -19,6 +19,7 @@ Grammar
 
     Source      = SP TopLevel !_;
 
+
 Tokens
 +++++++++
 
@@ -94,6 +95,7 @@ Identifiers
     ClassId     = SP "~"? ClassName;
     Variant     = [A-Z] IdChar*;
 
+
 Type description
 +++++++++++++++++++
 .. peg
@@ -111,6 +113,7 @@ Type description
     FieldType   = SP ("var" !IdChar SP)? "\."? Sym SP "is" !IdChar Type;
     VariantType = Variant "\."? !IdChar SP BareType SkipSP;
     JavaType    = ClassName "[]"*;
+
 
 Composite literals
 +++++++++++++++++++++
@@ -161,6 +164,7 @@ Structure literals
     FieldId     = Id / "``" ^[`]+ "``";
     Modifier    = ("var" / "norec") Space+;
 
+
 Block expressions
 +++++++++++++++++++++
 
@@ -205,6 +209,7 @@ Try block
     Catches     = Finally / Catch+ Finally?;
     Finally     = "finally" !IdChar AnyExpression;
 
+
 Simple expression
 ++++++++++++++++++++
 .. peg
@@ -243,6 +248,7 @@ ClassOf operator
 ::
 
     ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
+
 
 Expression with operators
 ++++++++++++++++++++++++++++
@@ -382,52 +388,28 @@ Loop
     Expression  = Assign SP ("loop" (!IdChar Assign)?)?;
     CExpression = CAssign SP ("loop" (!IdChar CAssign)?)?;
 
-TODO
-+++++++
+
+Value and function bindings
+++++++++++++++++++++++++++++++
 .. peg
 
 ::
 
-    TopLevel    = Module / Program? AnyExpression;
-    Program     = "program" !IdChar Space+ ClassName Semicolon;
-    Module      = "module" !IdChar Space+ ClassName
-                  (Colon SP "deprecated")? Semicolon+ ModuleMain? SP;
-    ModuleMain  = MStatement (Semicolon MStatement?)*;
-
-    AnyExpression = Semicolon* Sequence? SP;
-    Sequence    = Statement (Semicolon Statement?)*; 
-    Statement   = SP ClassDecl* (CSelfBind / BindDecl* CSelfBind?) Expression;
-    CStatement  = SP ClassDecl* (SelfBind / CBindDecl* SelfBind?) CExpression;
-    MStatement  = SP Declaration* (SelfBind Expression /
-                                   MBindDecl* (Class / SelfBind? Expression));
-
-    BindDecl    = ClassDecl / Binding;
-    CBindDecl   = ClassDecl / CBinding;
-    MBindDecl   = Declaration / Binding;
-    ClassDecl   = Class Semicolon+ SP / Declaration; 
-    Declaration = Import Semicolon+ SP / Typedef Semicolon* SP;
-
-    Import      = "import" !IdChar Space+ ClassName
-                  (Colon JavaId SP ("," JavaId SP)*)?;
     Binding     = (StructArg / Modifier? !Any Id BindArg* IsType)
                   SP "=" !OpChar Expression Semicolon+ SP;
     CBinding    = (StructArg / Modifier? !(Any / End) Id (!End BindArg)* IsType)
                   SP "=" !OpChar CExpression Semicolon+ SP;
-    SelfBind    = (Modifier? Id BindArg+ / Any) IsType "=" !OpChar;
-    CSelfBind   = (Modifier? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
     Any         = "\_" !IdChar;
 
-Type definition
-++++++++++++++++++
+Self-binding lambda expression
+---------------------------------
 .. peg
 
 ::
 
-    Typedef     = "typedef" !IdChar SP TypedefOf Semicolon*;
-    TypedefOf   = "unshare" !IdChar SP Id /
-                  (("opaque" / "shared") !IdChar SP)?
-                  Id SP TypedefParam? "=" !OpChar Type;
-    TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
+    SelfBind    = (Modifier? Id BindArg+ / Any) IsType "=" !OpChar;
+    CSelfBind   = (Modifier? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
+
 
 Class definition
 +++++++++++++++++++
@@ -461,4 +443,65 @@ Class method
     MethodType  = SP ClassName SP "[]"* SP;
     MethodArg   = MethodType Id SP;
     MethodBody  = CStatement (Semicolon CStatement?)*;
+
+
+Declarations
++++++++++++++++
+.. peg
+
+::
+
+    Declaration  = ClassDecl / Binding;
+    CDeclaration = ClassDecl / CBinding;
+    MDeclaration = TypeOrImport / Binding;
+    ClassDecl    = Class Semicolon+ SP / TypeOrImport; 
+    TypeOrImport = Import Semicolon+ SP / Typedef Semicolon* SP;
+
+Java class imports
+--------------------
+.. peg
+
+::
+
+    Import      = "import" !IdChar Space+ ClassName
+                  (Colon JavaId SP ("," JavaId SP)*)?;
+
+Type definition
+------------------
+.. peg
+
+::
+
+    Typedef     = "typedef" !IdChar SP TypedefOf Semicolon*;
+    TypedefOf   = "unshare" !IdChar SP Id /
+                  (("opaque" / "shared") !IdChar SP)?
+                  Id SP TypedefParam? "=" !OpChar Type;
+    TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
+
+
+Sequence expression
++++++++++++++++++++++++
+.. peg
+
+::
+
+    AnyExpression = Semicolon* Sequence? SP;
+    Sequence   = Statement (Semicolon Statement?)*; 
+    Statement  = SP ClassDecl* (CSelfBind / Declaration* CSelfBind?) Expression;
+    CStatement = SP ClassDecl* (SelfBind / CDeclaration* SelfBind?) CExpression;
+    MStatement = SP TypeOrImport* (SelfBind Expression /
+                                  MDeclaration* (Class / SelfBind? Expression));
+
+
+Top level of the source file
++++++++++++++++++++++++++++++++
+.. peg
+
+::
+
+    TopLevel    = Module / Program? AnyExpression;
+    Program     = "program" !IdChar Space+ ClassName Semicolon;
+    Module      = "module" !IdChar Space+ ClassName
+                  (Colon SP "deprecated")? Semicolon+ ModuleMain? SP;
+    ModuleMain  = MStatement (Semicolon MStatement?)*;
 
