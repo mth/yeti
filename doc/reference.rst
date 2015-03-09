@@ -109,8 +109,8 @@ by type). Integer literals can be written as hexadecimal or octal
 numbers, by using the ``0x`` or ``0o`` prefix respectively.
 
 Floating-point runtime reprentation can be enforced by using exponent
-(scientific) notation. As a special case of it, only the letter ``e``
-can be added to the end (the exponent is considered to be zero in this
+(scientific) notation. As a special case of it, a single letter ``e``
+may be added to the end (the exponent is considered to be zero in this
 case).
 
 Simple string
