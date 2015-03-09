@@ -9,10 +9,28 @@ Yeti language reference manual
 .. contents:: Contents
 .. _yeti.jar: http://dot.planet.ee/yeti/yeti.jar
 .. _home page: http://mth.github.io/yeti/
-
+.. _Mouse parser generator: http://mousepeg.sourceforge.net/Manual.pdf
 
 Grammar
 ~~~~~~~~~~
+The Yeti grammar represented here is written as a parsing expression
+grammar.
+
+The choice of PEG representation may seem odd, but the nature of Yeti syntax
+meant that it was easiest to use PEG for writing a full grammar that can
+be compiled into actual parser without any hacks (might be because the Yeti
+compiler uses a hand-written recursive-descent parser, which has quite similar
+logic to PEG grammars).
+
+The grammar can be extracted from manual and compiled into runnable parser
+by invoking following ant target in the Yeti source tree root::
+
+    ant grammar
+
+Mouse parser generator is used and the resulting ``yeti-peg.jar`` can be
+invoked using ``java -jar`` at command line. The PEG grammar given here
+therefore follows the exact syntax used by the `Mouse parser generator`_.
+
 .. peg
 
 ::
@@ -38,6 +56,11 @@ Reserved words
                   "typedef" / "unsafely\_as" / "var" / "with" / "yrt";
     End         = "end" !IdChar;
 
+The keywords cannot be used as identifiers, with the exception of the "``end``"
+keyword. The ``"end"`` can be used inside blocks that doesn't use "``end``" as
+terminator (currently only block terminated using "``end``" is
+`class definition`_).
+
 Comments and whitespace
 --------------------------
 .. peg
@@ -50,6 +73,14 @@ Comments and whitespace
     SP          = Space*;
     SkipSP      = (Space+ !("\." / "["))?;
 
+Whitespace can appear between most other tokens without changing the
+meaning of code, although some operators are whitespace sensitive
+(for example field `reference operator`_ is distinguished from
+`function composition`_ by not having whitespace on both sides).
+
+Multiline comments can be nested, and all comments are considered
+to be equivalent to other whitespace.
+
 Separators
 -------------
 .. peg
@@ -59,6 +90,8 @@ Separators
     Colon       = SP ":" !OpChar;
     Semicolon   = SP ";";
     Dot         = "\." / SP "\." ![ (),;\\{}];
+
+The separator symbols have different meaning depending on the context.
 
 Number
 ---------
@@ -70,6 +103,16 @@ Number
     Number      = ("0" ([xX] Hex+ / [oO] [0-7]+) /
                   [0-9]+ ("\." [0-9]+)? ([eE] ([+-]? [0-9]+)?)?);
 
+Numbers represent numeric literals in expressions, and have always
+the *number* type (rational and integer values are not distinguished
+by type). Integer literals can be written as hexadecimal or octal
+numbers, by using the ``0x`` or ``0o`` prefix respectively.
+
+Floating-point runtime reprentation can be enforced by using exponent
+(scientific) notation. As a special case of it, only the letter ``e``
+can be added to the end (the exponent is considered to be zero in this
+case).
+
 Simple string
 -----------------
 .. peg
@@ -77,6 +120,12 @@ Simple string
 ::
 
     SimpleString = ("'" ^[']* "'")+;
+
+Simple string literals have *string* type in expressions.
+Single quote character (``'``) can be escaped by writing it twice,
+but other escaping mechanisms are not available in simple string literals.
+This makes it suitable for writing strings that contain many backslash
+symbols (for example Perl compatible regular expressions).
 
 Identifiers
 --------------
@@ -95,6 +144,9 @@ Identifiers
     ClassId     = SP "~"? ClassName;
     Variant     = [A-Z] IdChar*;
 
+Identifiers are used for naming definitions/bindings and their references,
+the exact syntax and meaning depends on the context (most common are the
+value bindings used within expressions).
 
 Type description
 +++++++++++++++++++
@@ -252,6 +304,8 @@ ClassOf operator
 
 Expression with operators
 ++++++++++++++++++++++++++++
+
+.. _reference operator:
 
 Reference operators
 ----------------------
