@@ -156,16 +156,54 @@ Type description
 
     Type        = SP BareType SkipSP FuncType*;
     IsType      = SP ("is" !IdChar Type)?;
-    FuncType    = ("->" / "\u2192") !OpChar SP BareType SkipSP;
     BareType    = ['^] IdChar+ / "~" JavaType / "{" StructType / "(" SP ")" /
                   "(" Type ")" / VariantType ("|" !OpChar SP VariantType)* /
                   Sym "!"? SkipSP TypeParam?;
     TypeParam   = "<" SP (Type ("," Type)*)? ">";
-    StructType  = FieldType ("}" / "," SP "}" / "," StructType);
-    FieldType   = SP ("var" !IdChar SP)? "\."? Sym SP "is" !IdChar Type;
-    VariantType = Variant "\."? !IdChar SP BareType SkipSP;
+    FuncType    = ("->" / "\u2192") !OpChar SP BareType SkipSP;
     JavaType    = ClassName "[]"*;
 
+Type description is one of the following: function, type paramater (starts
+with ``'``), Java class name (prefixed with ``~``), structure, variant or
+type name. Type name may be followed by optional parameter list that is
+embedded between ``<`` and ``>``. Java class name may be followed by one
+or more ``[]`` pairs, indicating that it is JVM array type (in this case
+the ClassName might be also Java primitive type name like *char*).
+
+Function type is in the form *argument-type* ``->`` *return-type* (the
+above grammar defines it like type list separated by arrows, because the
+*return-type* itself can be a function type without any surrounding
+parenthesis).
+
+Structure type
+----------------
+.. peg
+
+::
+
+    StructType  = FieldType ("}" / "," SP "}" / "," StructType);
+    FieldType   = SP ("var" !IdChar SP)? "\."? Sym SP "is" !IdChar Type;
+
+Structure type denotes field list surrounded by ``{`` and ``}``.
+The field names can be prefixed with dot, denoting required fields
+(if any of the fields is without dot, then **all** listed fields
+form the allowed fields set in the structure type).
+
+Variant type
+--------------
+.. peg
+
+::
+
+    VariantType = Variant "\."? !IdChar SP BareType SkipSP;
+
+Single variant type consists of the capitalized variant tag followed
+by variants value type. The variant tag can be suffixed with dot,
+denoting that it isn't a required variant.
+
+The full variant type consists of single variants separated by ``|``
+symbols. If any of the tags in full variant type has the dot prefix,
+then **all** listed fields form the allowed variants set).
 
 Composite literals
 +++++++++++++++++++++
