@@ -56,10 +56,10 @@ Reserved words
                   "typedef" / "unsafely\_as" / "var" / "with" / "yrt";
     End         = "end" !IdChar;
 
-The keywords cannot be used as identifiers, with the exception of the "``end``"
-keyword. The ``"end"`` can be used inside blocks that doesn't use "``end``" as
-terminator (currently only block terminated using "``end``" is
-`class definition`_).
+The keywords cannot be used as identifiers, with the exception of the ``"end"``
+keyword. The ``"end"`` can be used as an identifier inside blocks that doesn't
+use ``"end"`` as terminator (currently only block terminated using ``"end"``
+is `class definition`_).
 
 Comments and whitespace
 --------------------------
