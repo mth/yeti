@@ -91,7 +91,7 @@ Separators
     Semicolon   = SP ";";
     Dot         = "\." / SP "\." ![ (),;\\{}];
 
-The separator symbols have different meaning depending on the context.
+The separator symbols have a different meaning depending on the context.
 
 Number
 ---------
