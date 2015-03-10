@@ -22,8 +22,8 @@ be compiled into actual parser without any hacks (might be because the Yeti
 compiler uses a hand-written recursive-descent parser, which has quite similar
 logic to PEG grammars).
 
-The grammar can be extracted from manual and compiled into runnable parser
-by invoking following ant target in the Yeti source tree root::
+The grammar can be extracted from this manual and compiled into runnable
+parser by invoking following ant target in the Yeti source tree root::
 
     ant grammar
 
