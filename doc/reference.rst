@@ -343,10 +343,10 @@ ClassOf operator
 Expression with operators
 ++++++++++++++++++++++++++++
 
-.. _reference operator:
-
 Reference operators
 ----------------------
+.. _reference operator:
+
 .. peg
 
 ::
