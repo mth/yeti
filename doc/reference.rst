@@ -31,6 +31,9 @@ Mouse parser generator is used and the resulting ``yeti-peg.jar`` can be
 invoked using ``java -jar`` at command line. The PEG grammar given here
 therefore follows the exact syntax used by the `Mouse parser generator`_.
 
+The Yeti source code is always read assuming UTF-8 encoding, regardless
+of the locale settings.
+
 .. peg
 
 ::
@@ -122,7 +125,7 @@ Simple string
     SimpleString = ("'" ^[']* "'")+;
 
 Simple string literals have *string* type in expressions.
-Single quote character (``'``) can be escaped by writing it twice,
+Single apostrophe character (``'``) can be escaped by writing it twice,
 but other escaping mechanisms are not available in simple string literals.
 This makes it suitable for writing strings that contain many backslash
 symbols (for example Perl compatible regular expressions).
@@ -208,6 +211,9 @@ then **all** listed fields form the allowed variants set).
 Composite literals
 +++++++++++++++++++++
 
+Composite literals are literal expressions that can contain other
+expressions.
+
 String
 ---------
 .. peg
@@ -219,6 +225,53 @@ String
                   "\"" ("\\" StringEscape / ^["])* "\"";
     StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
                    "(" SP InParenthesis SP ")" / [ \t\r\n] SP "\"";
+
+Strings can contain following escape sequences:
+
++-------------------+--------------------------------------------------------+
+| Escape sequence   | Meaning in the string                                  |
++===================+========================================================+
+| \\"               | Quotation mark ``"`` (ASCII code 34)                   |
++-------------------+--------------------------------------------------------+
+| \\\ \\            | Backslash ``\`` (ASCII code 92)                        |
++-------------------+--------------------------------------------------------+
+| \\(*expression*)  | Embedded expression. The value of the expression       |
+|                   | is converted into string in the same way as standard   |
+|                   | libraries string function would do.                    |
++-------------------+--------------------------------------------------------+
+| \\\ *whitespace*" | This escape is simply omitted. The whitespace can      |
+|                   | contain line breaks and comments, so this is useful    |
+|                   | for breaking long strings into multiple lines.         |
++-------------------+--------------------------------------------------------+
+| \\0               | NUL (ASCII code 0, null character)                     |
++-------------------+--------------------------------------------------------+
+| \\a               | BEL (ASCII code 7, bell)                               |
++-------------------+--------------------------------------------------------+
+| \\b               | BS  (ASCII code 8, backspace)                          |
++-------------------+--------------------------------------------------------+
+| \\t               | HT  (ASCII code 9, horizontal tab)                     |
++-------------------+--------------------------------------------------------+
+| \\n               | LF  (ASCII code 10, new line)                          |
++-------------------+--------------------------------------------------------+
+| \\f               | FF  (ASCII code 12, form feed)                         |
++-------------------+--------------------------------------------------------+
+| \\r               | CR  (ASCII code 13, carriage return)                   |
++-------------------+--------------------------------------------------------+
+| \\e               | ESC (ASCII code 27, escape)                            |
++-------------------+--------------------------------------------------------+
+| \\u\ *####*       | Unicode UTF-16 code point with the given hexadecimal   |
+|                   | code *####*.                                           |
++-------------------+--------------------------------------------------------+
+
+Strings are considered a composite literal, because the embedded expression
+escape allows embedding arbitrary expressions in the string. The value of
+the whole string literal is the result of concatenation of literal and
+embedded expression part values as strings.
+
+Strings can be triple-quoted (in the start and end), the meaning is exactly
+same as with strings between single ``"`` symbols. Triple quoted strings
+can be useful for larger string literals that contain ``"`` symbols by
+themselves.
 
 Lambda expression
 --------------------
