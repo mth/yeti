@@ -266,7 +266,7 @@ Strings can contain following escape sequences:
 Strings are considered a composite literal, because the embedded expression
 escape allows embedding arbitrary expressions in the string. The value of
 the whole string literal is the result of concatenation of literal and
-embedded expression part values as strings.
+embedded expression value parts as strings.
 
 Strings can be triple-quoted (in the start and end), the meaning is exactly
 same as with strings between single ``"`` symbols. Triple quoted strings
