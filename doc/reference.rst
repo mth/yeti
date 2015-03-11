@@ -226,6 +226,7 @@ String
     StringEscape = ["\\abfnrte0] / "u" Hex Hex Hex Hex /
                    "(" SP InParenthesis SP ")" / [ \t\r\n] SP "\"";
 
+String literals have *string* type in expressions.
 Strings can contain following escape sequences:
 
 +-------------------+--------------------------------------------------------+
@@ -264,7 +265,7 @@ Strings can contain following escape sequences:
 +-------------------+--------------------------------------------------------+
 
 Strings are considered a composite literal, because the embedded expression
-escape allows embedding arbitrary expressions in the string. The value of
+escape allows embedding arbitrary expressions_ in the string. The value of
 the whole string literal is the result of concatenation of literal and
 embedded expression value parts as strings.
 
@@ -284,8 +285,8 @@ Lambda expression
     StructArg   = "{" BindField ("," BindField)* "}";
     BindArg     = SP (Id / "()" / StructArg);
 
-List literals
-----------------
+List literal
+---------------
 .. peg
 
 ::
@@ -295,8 +296,8 @@ List literals
     ListItem    = Expression SP ("\.\." !OpChar Expression)? SP;
     HashItem    = Expression Colon Expression SP;
 
-Structure literals
----------------------
+Structure literal
+--------------------
 .. peg
 
 ::
@@ -355,6 +356,8 @@ Try block
 
 Simple expression
 ++++++++++++++++++++
+.. _expressions:
+
 .. peg
 
 ::
