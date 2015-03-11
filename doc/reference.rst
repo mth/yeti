@@ -270,7 +270,7 @@ the whole string literal is the result of concatenation of literal and
 embedded expression value parts as strings.
 
 Strings can be triple-quoted (in the start and end), the meaning is exactly
-same as with strings between single ``"`` symbols. Triple quoted strings
+same as with strings between single ``"`` symbols. Triple-quoted strings
 can be useful for larger string literals that contain ``"`` symbols by
 themselves.
 
