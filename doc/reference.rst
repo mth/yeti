@@ -260,7 +260,7 @@ Strings can contain following escape sequences:
 +-------------------+--------------------------------------------------------+
 | \\e               | ESC (ASCII code 27, escape)                            |
 +-------------------+--------------------------------------------------------+
-| \\u\ *####*       | Unicode UTF-16 code point with the given hexadecimal   |
+| \\u\ *####*       | UTF-16 code point with the given hexadecimal           |
 |                   | code *####*.                                           |
 +-------------------+--------------------------------------------------------+
 
