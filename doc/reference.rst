@@ -167,11 +167,13 @@ Type description
     JavaType    = ClassName "[]"*;
 
 Type description is one of the following: function, type paramater (starts
-with ``'``), Java class name (prefixed with ``~``), structure, variant or
-type name. Type name may be followed by optional parameter list that is
-embedded between ``<`` and ``>``. Java class name may be followed by one
-or more ``[]`` pairs, indicating that it is JVM array type (in this case
-the ClassName might be also Java primitive type name like *char*).
+with ``'`` or ``^``), Java class name (prefixed with ``~``), structure,
+variant or type name. Type name may be followed by optional parameter list
+that is embedded between ``<`` and ``>``. Java class name may be followed
+by one or more ``[]`` pairs, indicating that it is JVM array type (in this
+case the ClassName might be also Java primitive type name like *char*).
+
+Type parameters starting with ``^`` are considered to have an ordered type.
 
 Function type is in the form *argument-type* ``->`` *return-type* (the
 above grammar defines it like type list separated by arrows, because the
