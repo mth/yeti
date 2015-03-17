@@ -306,8 +306,8 @@ unit value literal ``()``
     The argument type is unit type and no actual argument binding is done.
 
 single underscore ``_``
-    The argument type is free type variable and no actual argument binding
-    is done (essentially a wildcard pattern match).
+    The argument type is a free type variable and no actual argument
+    binding is done (essentially a wildcard pattern match).
 
 structure literal (StructArg)
     A destructuring binding of the argument is done. This means that the
@@ -659,7 +659,7 @@ Type definition
 
 Sequence expression
 +++++++++++++++++++++++
-.. _AnyExpression
+.. _AnyExpression:
 .. peg
 
 ::
