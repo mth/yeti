@@ -302,14 +302,14 @@ are therefore strictly equivalent::
 
 Some special argument forms are accepted:
 
-unit value literal ``()``
+Unit value literal: ``()``
     The argument type is unit type and no actual argument binding is done.
 
-single underscore ``_``
+Single underscore: ``_``
     The argument type is a free type variable and no actual argument
     binding is done (essentially a wildcard pattern match).
 
-structure literal (StructArg)
+Structure literal: StructArg
     A destructuring binding of the argument is done. This means that the
     identifiers (Id) used as values for structure fields (FieldId) are bound
     inside the function body to the actual field values (taken from
