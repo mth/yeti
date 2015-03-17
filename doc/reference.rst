@@ -283,9 +283,37 @@ Lambda expression
 ::
 
     Lambda      = "do" !IdChar BindArg* Colon AnyExpression "done" !IdChar;
-    BindField   = SP Id IsType ("=" !OpChar SP Id)? SP;
+    BindField   = SP (FieldId IsType "=" !OpChar SP Id SP / Id IsType);
     StructArg   = "{" BindField ("," BindField)* "}";
     BindArg     = SP (Id / "()" / StructArg);
+
+Lambda expression (aka function literal) constructs a function value containing
+the given block of code (AnyExpression_) as body. The type of lambda expression
+is therefore *argument-type* ``->`` *return-type*. The argument type is
+inferred from the function body and the return type is the type of the body
+expression.
+
+Multiple arguments (BindArg) can be declared, this creates implicit nested
+lambda expression for each of the arguments. The following lambda definitions
+are therefore strictly equivalent::
+
+    implicit_inner_lambda = do a b: a + b done;
+    explicit_inner_lambda = do a: do b: a + b done;
+
+Some special argument forms are accepted:
+
+unit value literal ``()``
+    The argument type is unit type and no actual argument binding is done.
+
+single underscore ``_``
+    The argument type is free type variable and no actual argument binding
+    is done (essentially a wildcard pattern match).
+
+structure literal (StructArg)
+    A destructuring binding of the argument is done. This means that the
+    identifiers (Id) used as values for structure fields (FieldId) are bound
+    inside the function body to the actual field values (taken from
+    the structure value given as argument).
 
 List literal
 ---------------
@@ -631,6 +659,7 @@ Type definition
 
 Sequence expression
 +++++++++++++++++++++++
+.. _AnyExpression
 .. peg
 
 ::
