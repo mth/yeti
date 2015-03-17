@@ -289,9 +289,9 @@ Lambda expression
 
 Lambda expression (aka function literal) constructs a function value containing
 the given block of code (AnyExpression_) as body. The type of lambda expression
-is therefore *argument-type* ``->`` *return-type*. The argument type is
-inferred from the function body and the return type is the type of the body
-expression.
+is therefore *argument-type* ``->`` *return-type* (a function type).
+The argument type is inferred from the function body and the return type is
+the type of the body expression.
 
 Multiple arguments (BindArg) can be declared, this creates implicit nested
 lambda expression for each of the arguments. The following lambda definitions
