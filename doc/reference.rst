@@ -283,8 +283,8 @@ Lambda expression
 ::
 
     Lambda      = "do" !IdChar BindArg* Colon AnyExpression "done" !IdChar;
-    BindField   = SP (FieldId IsType "=" !OpChar SP Id SP / Id IsType);
-    StructArg   = "{" BindField ("," BindField)* "}";
+    BindField   = FieldId IsType "=" !OpChar SP Id SP / Id IsType;
+    StructArg   = "{" SP BindField ("," SP BindField)* "}";
     BindArg     = SP (Id / "()" / StructArg);
 
 Lambda expression (aka function literal) constructs a function value containing
