@@ -350,9 +350,9 @@ The list literal constructs a immutable single-linked list of its item
 values (elements). The hash map literal constructs a mutable hash table
 containing the given key-value associations.
 
-Value expression types of all items are unified, resulting in single
+Value expression types of all items are unified, resulting in a single
 *value-type*. Hash map literals also unify all items key expression
-types, resulting in single *key-type*. The type of the list literal
+types, resulting in a single *key-type*. The type of the list literal
 itself is *list<value-type>*, and the type of the hash map literal is
 *hash<key-type, value-type>*. Empty list and hash map constructors
 assign free type variables to the *value-type* and *key-type*.
