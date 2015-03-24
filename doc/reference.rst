@@ -333,9 +333,9 @@ List and hash map literals
 
 List and and hash map literals are both enclosed in square brackets.
 The difference is that hash map items have the key expression and colon
-prepended to the value expression, while list items have only value
-expressions. Empty hash map constructor is written as ``[:]`` to
-differentiate it from the empty list literal (``[]``).
+prepended to the value expression, while list items have only the value
+expression. Empty hash map constructor is written as ``[:]`` to
+differentiate it from the empty list literal ``[]``.
 
 Value expression types of all items are unified, resulting in single
 *value-type*. Hash map literals also unify all items key expression
@@ -343,12 +343,13 @@ types, resulting in single *key-type*. The type of the list literal
 itself is *list<value-type>*, and the type of the hash map literal is
 *hash<key-type, value-type>*.
 
-List literals can contain value ranges, where minimal and maximum
-value in the range are separated by two consecutive dots (`..`). The items
-corresponding to the range are created lazily when the list is traversed
-by incrementing the minimum value as long as it doesn't exceed the maximum
-value. The bounds and item types for a list containing range are always
-*number* (which means that the *value-type* is also a *number*).
+List literals can contain value ranges, where the lower and higher bound
+of the range are separated by two consecutive dots (*lower-bound* ``..``
+*higher-bound*). The items corresponding to the range are created lazily
+when the list is traversed by incrementing the lower bound by one as long
+as it doesn't exceed the higher bound. The bounds and item types for a list
+containing range are always *number* (which means that the *value-type*
+is also a *number*).
 
 Structure literal
 --------------------
