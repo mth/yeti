@@ -189,7 +189,7 @@ Structure type
     StructType  = FieldType ("}" / "," SP "}" / "," StructType);
     FieldType   = SP ("var" !IdChar SP)? "\."? Sym SP "is" !IdChar Type;
 
-Structure type denotes field list surrounded by ``{`` and ``}``.
+Structure type is denoted by field list surrounded by ``{`` and ``}``.
 The field names can be prefixed with dot, denoting required fields
 (if any of the fields is without dot, then **all** listed fields
 form the allowed fields set in the structure type).
