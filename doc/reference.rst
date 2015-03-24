@@ -181,7 +181,7 @@ above grammar defines it like type list separated by arrows, because the
 parenthesis).
 
 Structure type
-----------------
+-----------------
 .. peg
 
 ::
@@ -194,8 +194,13 @@ The field names can be prefixed with dot, denoting required fields
 (if any of the fields is without dot, then **all** listed fields
 form the allowed fields set in the structure type).
 
+Structure type in Yeti is more commonly called an extensible record
+type in the ML family languages (the name structure is chosen in Yeti
+because it is more familiar to programmers knowning the C family
+languages).
+
 Variant type
---------------
+---------------
 .. peg
 
 ::
@@ -298,6 +303,10 @@ is therefore *argument-type* ``->`` *return-type* (a function type).
 The argument type is inferred from the function body and the return type is
 the type of the body expression.
 
+The bindings from outer scopes are accessible for the function literals
+body expression, and when used create a closure. Mutable bindings will
+be stored in the closure as implicit references to the bindings.
+
 Multiple arguments (BindArg) can be declared, this creates implicit nested
 lambda expression for each of the arguments. The following lambda definitions
 are therefore strictly equivalent::
@@ -331,11 +340,15 @@ List and hash map literals
     ListItem    = Expression SP ("\.\." !OpChar Expression)? SP;
     HashItem    = Expression Colon Expression SP;
 
-List and and hash map literals are both enclosed in square brackets.
-The difference is that hash map items have the key expression and colon
-prepended to the value expression, while list items have only the value
-expression. Empty hash map constructor is written as ``[:]`` to
+List and and hash map literals are syntactically both enclosed in square
+brackets. The difference is that hash map items have the key expression
+and colon prepended to the value expression, while list items have only
+the value expression. Empty hash map constructor is written as ``[:]`` to
 differentiate it from the empty list literal ``[]``.
+
+The list literal constructs a immutable single-linked list of its item
+values (elements). The hash map literal constructs a mutable hash table
+containing the given key-value associations.
 
 Value expression types of all items are unified, resulting in single
 *value-type*. Hash map literals also unify all items key expression
@@ -363,6 +376,9 @@ Structure literal
                   (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
     FieldId     = Id / "``" ^[`]+ "``";
     Modifier    = ("var" / "norec") Space+;
+
+Structure literal creates a structure (aka record) value, which contains a
+collection of named fields.
 
 
 Block expressions
