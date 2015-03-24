@@ -341,13 +341,14 @@ Value expression types of all items are unified, resulting in single
 *value-type*. Hash map literals also unify all items key expression
 types, resulting in single *key-type*. The type of the list literal
 itself is *list<value-type>*, and the type of the hash map literal is
-*hash<key-type, value-type>*.
+*hash<key-type, value-type>*. Empty list and hash map constructors
+assign free type variables to the *value-type* and *key-type*.
 
 List literals can contain value ranges, where the lower and higher bound
 of the range are separated by two consecutive dots (*lower-bound* ``..``
 *higher-bound*). The items corresponding to the range are created lazily
 when the list is traversed by incrementing the lower bound by one as long
-as it doesn't exceed the higher bound. The bounds and item types for a list
+as it doesn't exceed the higher bound. The bound and item types for a list
 containing range are always *number* (which means that the *value-type*
 is also a *number*).
 
