@@ -210,11 +210,13 @@ The full variant type consists of single variants separated by ``|``
 symbols. If any of the tags in full variant type has the dot prefix,
 then **all** listed fields form the allowed variants set).
 
-Composite literals
-+++++++++++++++++++++
+Composite literal constructors
++++++++++++++++++++++++++++++++++
 
-Composite literals are literal expressions that can contain other
-expressions.
+Composite literals are literal expressions that can contain other expressions.
+These expressions generally construct a new instance of the value on each
+evaluation, with the exception of constant list literals, and string literals
+that doesn't have any embedded expressions.
 
 String
 ---------
@@ -266,6 +268,9 @@ Strings can contain following escape sequences:
 |                   | code *####*.                                           |
 +-------------------+--------------------------------------------------------+
 
+Stray backslash characters are not allowed, and all other sequences of symbols
+represent themselves inside the string literal.
+
 Strings are composite literals, because it is possible to embed arbitrary
 expressions_ in the string using \\(...). The value of the whole
 string literal is the result of concatenation of literal and embedded
@@ -315,8 +320,8 @@ Structure literal: StructArg
     inside the function body to the actual field values (taken from
     the structure value given as argument).
 
-List literal
----------------
+List and hash map literals
+-----------------------------
 .. peg
 
 ::
@@ -325,6 +330,25 @@ List literal
     Items       = HashItem ("," HashItem)* / ListItem ("," ListItem)*;
     ListItem    = Expression SP ("\.\." !OpChar Expression)? SP;
     HashItem    = Expression Colon Expression SP;
+
+List and and hash map literals are both enclosed in square brackets.
+The difference is that hash map items have the key expression and colon
+prepended to the value expression, while list items have only value
+expressions. Empty hash map constructor is written as ``[:]`` to
+differentiate it from the empty list literal (``[]``).
+
+Value expression types of all items are unified, resulting in single
+*value-type*. Hash map literals also unify all items key expression
+types, resulting in single *key-type*. The type of the list literal
+itself is *list<value-type>*, and the type of the hash map literal is
+*hash<key-type, value-type>*.
+
+List literals can contain value ranges, where minimal and maximum
+value in the range are separated by two consecutive dots (`..`). The items
+corresponding to the range are created lazily when the list is traversed
+by incrementing the minimum value as long as it doesn't exceed the maximum
+value. The bounds and item types for a list containing range are always
+*number* (which means that the *value-type* is also a *number*).
 
 Structure literal
 --------------------
