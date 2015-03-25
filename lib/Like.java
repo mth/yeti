@@ -40,7 +40,7 @@ final class LikeMatcher extends Fun {
         this.m = m;
     }
 
-    public Object apply(Object _) {
+    public Object apply(Object __) {
         if (!m.find()) {
             return new MList();
         }

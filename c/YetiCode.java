@@ -1052,7 +1052,7 @@ final class ClassField extends JavaExpr implements CodeGen {
         convertValue(ctx, field.type);
     }
 
-    public void gen2(Ctx ctx, Code setValue, int _) {
+    public void gen2(Ctx ctx, Code setValue, int __) {
         JavaType classType = field.classType.javaType;
         String className = classType.className();
         if (object != null) {
@@ -1217,7 +1217,7 @@ abstract class SelectMember extends BindRef implements CodeGen {
                 "get", "(Ljava/lang/String;)Ljava/lang/Object;");
     }
 
-    public void gen2(Ctx ctx, Code setValue, int _) {
+    public void gen2(Ctx ctx, Code setValue, int __) {
         st.gen(ctx);
         ctx.visitLine(line);
         if (ctx.compilation.isGCJ)
@@ -1307,7 +1307,7 @@ final class KeyRefExpr extends Code implements CodeGen {
                        "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
 
-    public void gen2(Ctx ctx, Code setValue, int _) {
+    public void gen2(Ctx ctx, Code setValue, int __) {
         val.gen(ctx);
         if (ctx.compilation.isGCJ)
             ctx.typeInsn(CHECKCAST, "yeti/lang/ByKey");

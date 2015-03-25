@@ -8,7 +8,7 @@ class Lazy extends Fun {
         this.f = f;
     }
 
-    public Object apply(Object _) {
+    public Object apply(Object __) {
         if (f != null) {
             value = ((Fun) f).apply(null);
             f = null;

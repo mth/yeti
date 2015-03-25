@@ -209,7 +209,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
             return classType.javaType.description;
         }
 
-        public void gen2(Ctx ctx, Code value, int _) {
+        public void gen2(Ctx ctx, Code value, int __) {
             genPreGet(ctx);
             genSet(ctx, value);
             ctx.insn(ACONST_NULL);
