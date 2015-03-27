@@ -105,6 +105,10 @@ public abstract class Num extends Number implements Comparable {
         return x instanceof Num && compareTo(x) == 0;
     }
 
+    public String toString(int radix, int format) {
+        return Long.toString(longValue(), radix);
+    }
+
     public BigInteger toBigInteger() {
         return BigInteger.valueOf(longValue());
     }

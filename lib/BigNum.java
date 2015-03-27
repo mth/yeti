@@ -228,6 +228,10 @@ public final class BigNum extends Num {
         return v.toString();
     }
 
+    public String toString(int radix, int format) {
+        return v.toString(radix);
+    }
+
     public int hashCode() {
         if (v.bitLength() > 63) {
             return v.hashCode();

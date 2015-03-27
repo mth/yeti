@@ -2377,6 +2377,37 @@ plus a b = a + b;
         Core#uncapitalize(str unsafely_as ~String),
 
     /**
+     * Group: str
+     * Returns a hexadecimal string representation of
+     * the integer part of the number.
+     *
+     * Arguments:
+     * number - the number to format
+     *
+     * Notes:
+     * The following characters are used as digits:
+     * : 0123456789abcdef
+     */
+    hex number is number -> string =
+        (number unsafely_as ~Num)#toString(16, 0),
+
+    /**
+     * Group: str
+     * Returns a string representation of the integer part of
+     * the number in the given base.
+     *
+     * Arguments:
+     * base - the base to use (must be in the range 2 to 36)
+     * number - the number to format
+     *
+     * Notes:
+     * The following characters are used as digits:
+     * : 0123456789abcdefghijklmnopqrstuvwxyz
+     */
+    strOfInt base number is number -> number -> string =
+        (number unsafely_as ~Num)#toString(base, 0),
+
+    /**
      * Group: hash
      * Applies the function to each key-value pair in the given hash map,
      * and returns a list of the values returned by these applications.

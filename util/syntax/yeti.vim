@@ -83,6 +83,7 @@ syn keyword yetiFunction listDirectory clearArray mapJavaList createPath
 syn keyword yetiFunction threadExit runnable concurrentHash weakHash customHash
 syn keyword yetiFunction atomic round mapIntoHash base64Encode base64Decode
 syn keyword yetiFunction fetchURL print println eprintln readln stdin sleep
+syn keyword yetiFunction strOfInt hex
 syn keyword yetiExternal load deprecated
 syn keyword yetiExternal import skipwhite skipempty nextgroup=yetiImport
 syn match yetiFunction "\<contains?\>"
