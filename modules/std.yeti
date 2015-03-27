@@ -2377,7 +2377,7 @@ plus a b = a + b;
         Core#uncapitalize(str unsafely_as ~String),
 
     /**
-     * Group: str
+     * Group: num
      * Returns a hexadecimal string representation of
      * the integer part of the number.
      *
@@ -2392,7 +2392,7 @@ plus a b = a + b;
         (number unsafely_as ~Num)#toString(16, 0),
 
     /**
-     * Group: str
+     * Group: num
      * Returns a string representation of the integer part of
      * the number in the given base.
      *
