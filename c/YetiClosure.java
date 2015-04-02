@@ -31,7 +31,7 @@
  */
 package yeti.lang.compiler;
 
-import yeti.renamed.asm3.Label;
+import yeti.renamed.asmx.Label;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;

@@ -31,7 +31,7 @@
 
 package yeti.lang.compiler;
 
-import yeti.renamed.asm3.*;
+import yeti.renamed.asmx.*;
 
 class JavaExpr extends Code {
     Code object;

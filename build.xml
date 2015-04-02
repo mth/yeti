@@ -3,7 +3,7 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-5.0.3r.jar"/>
+    <property name="asm" value="${basedir}/asm-5.0.3y.jar"/>
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
@@ -113,7 +113,7 @@
         <zipfileset src="${jardir}/yeti-lib.jar"/>
         <fileset dir="${build}/compiler"
             excludes="yeti/lang/compiler/YetiBoot*.class,${jar-excludes}"/>
-        <zipfileset src="${asm}" excludes="yeti/renamed/asm3/signature/*"/>
+        <zipfileset src="${asm}" excludes="yeti/renamed/asmx/signature/*"/>
     </jar>
 </target>
 

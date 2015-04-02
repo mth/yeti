@@ -51,7 +51,7 @@ public class Rename {
 
     public static void main(String[] args) throws Exception {
         String find1S = "org/objectweb/asm/";
-        String repl1S = "yeti/renamed/asm3/";
+        String repl1S = "yeti/renamed/asmx/";
         byte[] find1 = find1S.getBytes("UTF-8");
         byte[] repl1 = repl1S.getBytes("UTF-8");
         byte[] find2 = find1S.replace('/', '.').getBytes("UTF-8");

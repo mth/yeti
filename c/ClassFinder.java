@@ -41,7 +41,7 @@ import java.util.HashMap;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-import yeti.renamed.asm3.ClassReader;
+import yeti.renamed.asmx.ClassReader;
 
 abstract class ClassPathItem {
     abstract InputStream getStream(String name, long[] time) throws IOException;

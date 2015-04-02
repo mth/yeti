@@ -32,7 +32,7 @@ package yeti.lang.compiler;
 
 import java.util.List;
 import java.util.ArrayList;
-import yeti.renamed.asm3.Opcodes;
+import yeti.renamed.asmx.Opcodes;
 
 final class MethodDesc extends YetiType {
     Binder[] arguments;

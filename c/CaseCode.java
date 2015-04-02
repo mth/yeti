@@ -31,7 +31,7 @@
 
 package yeti.lang.compiler;
 
-import yeti.renamed.asm3.*;
+import yeti.renamed.asmx.*;
 import java.util.*;
 
 abstract class CasePattern implements Opcodes {

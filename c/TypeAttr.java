@@ -31,7 +31,7 @@
 package yeti.lang.compiler;
 
 import java.util.*;
-import yeti.renamed.asm3.*;
+import yeti.renamed.asmx.*;
 import yeti.lang.Tag;
 import java.io.IOException;
 import java.io.InputStream;

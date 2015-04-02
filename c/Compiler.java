@@ -30,7 +30,7 @@
  */
 package yeti.lang.compiler;
 
-import yeti.renamed.asm3.*;
+import yeti.renamed.asmx.*;
 import java.io.*;
 import java.util.*;
 import java.net.URL;

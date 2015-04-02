@@ -32,7 +32,7 @@
  */
 package yeti.lang.compiler;
 
-import yeti.renamed.asm3.Opcodes;
+import yeti.renamed.asmx.Opcodes;
 import java.util.*;
 
 // Java source tree node, can be class or method or field.
