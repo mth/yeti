@@ -153,6 +153,7 @@ value bindings used within expressions).
 
 Type description
 +++++++++++++++++++
+.. _IsType:
 .. peg
 
 ::
@@ -179,6 +180,9 @@ Function type is in the form *argument-type* ``->`` *return-type* (the
 above grammar defines it like type list separated by arrows, because the
 *return-type* itself can be a function type without any surrounding
 parenthesis).
+
+The IsType clause using ``"is"`` keyword is used after binding or expression
+to narrow it's type by unifying it with the given type.
 
 Structure type
 -----------------
@@ -288,6 +292,7 @@ themselves.
 
 Lambda expression
 --------------------
+.. _Lambda:
 .. peg
 
 ::
@@ -378,8 +383,35 @@ Structure literal
     Modifier    = ("var" / "norec") Space+;
 
 Structure literal creates a structure (aka record) value, which contains a
-collection of named fields.
+collection of named fields inside curled braces. Each field is represented as
+a binding, where the FieldId is optionally followed by IsType_ clause narrowing
+the fields type and/or equals (``=``) symbol and an expression containing
+the fields value.
 
+Multiple fields are separated by commas. If the field value is not specified
+by explicit expression, then current scope must contain a binding with same
+name as the field, and the value of that binding is assigned to the
+corresponding structure field.
+
+If field value expression is a function literal (either implicit one created
+by having arguments in the field binding or explicit Lambda_ block), then a
+new scope is created inside the structure literal, and used by all field
+value expressions as a containing scope. All fields having function literal
+values will create a local binding inside that structure scope (unless prefixed
+with ``norec`` keyword), and the bindings will be recursively available
+for all expressions residing in the structure literal definition. This is
+the only form of mutually recursive bindings avaible in the Yeti language.
+The local bindings inside the structure scope are always non-polymorphic.
+
+The field names can be prefixed with ``var`` and/or ``norec`` keywords.
+The ``var`` keyword means that the field is mutable within structure (by
+default a field is immutable). The ``norec`` keyword means that the field
+won't create a local binding inside the structure scope, even when it's
+value is a function literal.
+
+The type of structure literal is a structure type. The types of fields are
+inferred from the values assigned to the fields and produce an allowed fields
+set for the literals type. The required fields set in the type will be empty.
 
 Block expressions
 +++++++++++++++++++++
