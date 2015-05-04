@@ -511,8 +511,9 @@ Reference operators
 
 ::
 
-    Reference   = SP ("\\" SP / "-" SP !OpChar)* Primitive RefOp*;
-    CReference  = SP ("\\" SP / "-" SP !OpChar)* CPrimitive CRefOp*;
+    Reference   = SP PrefixOp* Primitive RefOp*;
+    CReference  = SP PrefixOp* CPrimitive CRefOp*;
+    PrefixOp    = "\\" SP / "-" SP !OpChar;
     RefOp       = FieldRef / MapRef / (SP (ObjectRef / "->" SP Primitive));
     CRefOp      = FieldRef / MapRef / (SP (ObjectRef / "->" SP CPrimitive));
     FieldRef    = Dot SP FieldId;
