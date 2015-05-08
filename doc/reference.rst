@@ -427,6 +427,25 @@ Conditional expression
                   "else:" !OpChar Expression;
     IfCond      = AnyExpression "then" !IdChar AnyExpression;
 
+Conditional expression provides branched evaluation. When the condition
+before ``"then"`` keyword evaluates as true value, then the AnyExpression_
+after the ``"then"`` keyword will be evaluated, and resulting value will
+be the value for the conditional expression. Otherwise the following
+``elif`` condition will be examined in the same way. If there are no
+(more) ``elif`` branches, then evaluation of the expression after the
+``"else"`` keyword will give the value of the conditional expression.
+
+The type of conditions (which precede the ``"then"`` keywords) is *boolean*.
+The types of branch expressions are unified, and the unified type is used as
+the type of the whole conditional expression. The unification uses implicit
+casting rules for ``elif`` and ``else`` branches.
+
+The final ``else`` branch might be omitted, in this case an implicit
+``else`` branch is created by the compiler. If the unified type of the
+explicit branches were *string*, then the value of the implicit ``else``
+branch will be **undef_str**, otherwise the implicit ``else`` branch will
+give the unit value ``()`` (that has the unit type *()*).
+
 Case expression
 ------------------
 .. peg
