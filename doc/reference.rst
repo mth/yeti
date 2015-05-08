@@ -428,12 +428,13 @@ Conditional expression
     IfCond      = AnyExpression "then" !IdChar AnyExpression;
 
 Conditional expression provides branched evaluation. When the condition
-before ``"then"`` keyword evaluates as **true** value, then the AnyExpression_
-after the ``"then"`` keyword will be evaluated, and resulting value will
-be the value for the conditional expression. Otherwise the following
-``elif`` condition will be examined in the same way. If there are no
-(more) ``elif`` branches, then evaluation of the expression after the
-``"else"`` keyword will give the value of the conditional expression.
+expression before ``"then"`` keyword evaluates as **true** value, then
+the AnyExpression_ after the ``"then"`` keyword will be evaluated, and
+resulting value will be the value for the conditional expression.
+
+Otherwise the following ``elif`` condition will be examined in the same way.
+If there are no (more) ``elif`` branches, then evaluation of the expression
+after the ``"else"`` keyword will give the value of the conditional expression.
 
 The type of conditions (which precede the ``"then"`` keywords) is *boolean*.
 The types of branch expressions are unified, and the unified type is used as
