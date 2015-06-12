@@ -132,6 +132,7 @@ symbols (for example Perl compatible regular expressions).
 
 Identifiers
 --------------
+.. _Id:
 .. peg
 
 ::
@@ -465,6 +466,57 @@ Case expression
                   "{" FieldPattern ("," FieldPattern)* ("," SP)? "}" /
                   "(" SP Pattern? ")";
     FieldPattern = SP Id IsType ("=" !OpChar SP Pattern)? SP;
+
+Case expression contains one or more case options separated by semicolons.
+Each case option has a value pattern followed by colon and expression to be
+evaluated in case the pattern matches the given argument value (resulting
+from the evaluation of the AnyExpression_ between initial ``"case"`` and
+``"of"`` keywords). Only the expression from first matching case option will
+be evaluated, and the resulting value will be the value of the whole case
+expression.
+
+The patterns are basically treated as literal values that are compared to
+the given case argument value, but identifiers in the pattern (Id_) act
+like wildcards that match any value. Each case option has its own scope,
+and the identifiers from its pattern will have the matching values bound
+to them during the expression evaluation.
+
+The pattern can contain wildcard identifiers, number and string literals,
+variant constructor applications, list cell constructor applications (``::``),
+list literals, structure literals and static final field references from
+Java classes (in the ``Class#field`` form).
+
+The ``_`` identifier is special in that it wouldn't be bound to real variable
+(similarly as it's used in function arguments).
+
+The compiler should verify that the case options patterns together provide
+exhaustive match for the matched value, so at least one case option is
+guaranteed to match at runtime, regardless of the matched value. Compilation
+error should be given for non-exhaustive patterns.
+
+The last case option can be ``...`` (but it can't be the only option).
+This is shorthand for the following case option code::
+
+   value: throw new IllegalArgumentException("bad match (\(value))"); 
+
+It can be useful for marking the case patterns as non-exhaustive (and since
+it will match any value, it will make the exhaustiveness check to pass).
+
+The matching value type is inferred from each case option pattern, and
+the resulting types are unified into single type. The pattern type
+unification works mostly like regular expression type unification,
+with few exceptions:
+
+    * Variant tags from the pattern form *allowed* member set in the
+      corresponding variant type, unless the type is also matched with
+      wildcard (in this case *required* member set is formed in the type).
+    * Structure fields from the pattern form *required* member set in the
+      corresponding structure type.
+    * List literal pattern gives *list?* type instead of *list*, meaning
+      that values of *array* type can be also matched to it.
+
+The case option expression types are also inferred and unified into single
+type, which will be the type of the whole case expression.
 
 Try block
 ------------
