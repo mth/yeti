@@ -537,8 +537,8 @@ of it will be used as the value of the ``try``...\ ``yrt`` block.
 The exceptions correspond to the JVM exceptions, and therefore the exception
 types are directly Java class types.
 
-The types of the ``try`` section and ``catch`` section expressions are
-unified, and the resulting type is used as the type of the ``try`` block.
+The types of the ``try`` and ``catch`` section expressions are unified, and
+the resulting type is used as the type of the ``try`` block.
 
 The ``finally`` sections expression must have the unit type ``()``, as the
 value from the evaluation of the ``finally`` section is always ignored.
