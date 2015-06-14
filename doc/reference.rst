@@ -133,6 +133,7 @@ symbols (for example Perl compatible regular expressions).
 Identifiers
 --------------
 .. _Id:
+.. _ClassId:
 .. peg
 
 ::
@@ -529,6 +530,34 @@ Try block
     Catches     = Finally / Catch+ Finally?;
     Finally     = "finally" !IdChar AnyExpression;
 
+Try block provides exception handling. The expression following the ``"try"``
+block is evaluated first, and if it doesn't throw an exception, the value of
+it will be used as the value of the ``try``...\ ``yrt`` block.
+
+The exception correspond to the JVM exceptions, and therefore the exception
+types are directly Java class types.
+
+The types of the ``try`` section and catch section expressions will be unified,
+and the resulting type is used as the type of the ``try`` block.
+
+The finally sections expression must be the unit type ``()``, as the
+value from the evaluation of the ``finally`` section is always ignored.
+
+If exception is thrown that matches some ``catch`` section (by being same or
+subclass of its ClassId_), then first matching ``catch`` section is evaluated,
+and the resulting value is used as the value of the try block.
+
+If catch section has an exception binding Id_, then catched exceptions value
+will be bound to the given identifier in that sections scope.
+
+The expression following the ``"finally"`` keyword will be evaluated regardless
+of whether any exception was thrown during the evaluation of ``try`` and
+``catch`` sections. If an exception was throw, then it will be suspended
+during the evaluation of the ``finally`` section. If exception was suspended
+and the ``finally`` section itself throws an exception, then the suspended
+exception will be dropped (as only one exception per thread is allowed
+simultaneously), otherwise the suspended exception will be rethrown after
+the ``finally`` block finishes.
 
 Simple expression
 ++++++++++++++++++++
