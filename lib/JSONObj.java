@@ -1,11 +1,16 @@
-package yeti.lang;
+package yeti;
 
+import yeti.lang.Core;
 import yeti.lang.Hash;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 class JSONObj {
     Hash map;
+
+    JSONObj(Hash map) {
+        this.map = map;
+    }
 
     public String toString() {
         int n;

@@ -1,9 +1,7 @@
-/// Yeti JSON library.
-///
-/// EXPERIMENTAL - if this module stays, then it will change name.
-
 /*
- * Copyright (c) 2013 Madis Janson
+ * Simple JSON library for Yeti.
+ *
+ * Copyright (c) 2013-2015 Madis Janson
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,68 +26,189 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-module yeti.experimental.json;
 
-import yeti.lang.Core;
+/**
+ * Simple library for parsing and constructing JSON.
+ *
+ * Examples:
+ * Parsing can be done using `jsonParse` function:
+ * : load yeti.json;
+ * : js = jsonParse '{"foo":[1,2,3],"bar":{"nope":true},"baz":null,}';
+ * 
+ * The parsed value can be accessed with various `js`-prefixed functions
+ * in the module, for example:
+ * : for (js |> jsGet 'foo' |> jsList) println;
+ *
+ * Which would print the numbers 1, 2, 3 on separate lines.
+ *
+ * The JSON string can be formatted using `string` function, or any
+ * library function that does this implicitly, for example the following
+ * println statements are equivalent:
+ * : println (string js);
+ * : println js;
+ */
+module yeti.json;
 
-typedef json_value'<json> = 
-    Null () | Boolean boolean | Number number |
-    String string | List list<json_value'> | Object hash<string, json>
+import yeti.lang: Core, Hash;
 
-typedef json = {
-    str is string,
-    list is list<json>,
-    obj is hash<string, json>,
-    num  is number,
-    bool is boolean,
-    value is json_value'<json>
-}
+typedef opaque json = ~Object;
+typedef json_variant =
+    String string |
+    Number number |
+    Boolean boolean |
+    Object hash<string, json> |
+    List list<json> |
+    Null ()
 
-typedef json_value = json_value'<json>
+/**
+ * Retrieves string from JSON value. If the value is not a string,
+ * then the result of applying the default function to the value is returned.
+ *
+ * Arguments:
+ * default - function to apply, if the value is not a string.
+ * value - JSON value (expected to be string)
+ */
+jsStr default value is (~Object -> string) -> ~Object -> string =
+    if value instanceof String then
+        value unsafely_as string
+    else
+        default value
+    fi;
 
-json value is json_value -> json = {
-    get value () = value,
-    get str () =
-        case value of
-        String s: s;
-        _: failWith "str of \(value)";
-        esac,
-    get obj () =
-        case value of
-        Object m: m;
-        _: failWith "obj of \(value)";
-        esac,
-    get list () =
-        case value of
-        List l: map json l; // lazy mapping
-        _: failWith "list of \(value)";
-        esac,
-    get num () =
-        case value of
-        Number n: n;
-        _: failWith "num of \(value)";
-        esac,
-    get bool () =
-        case value of
-        Boolean v: v;
-        _: failWith "bool of \(value)";
-        esac,
-};
+/**
+ * Retrieves number from JSON value. If the value is not a number,
+ * then the result of applying the default function to the value is returned.
+ *
+ * Arguments:
+ * default - function to apply, if the value is not a number.
+ * value - JSON value (expected to be number)
+ */
+jsNum default value is (~Object -> number) -> ~Object -> number =
+    if value instanceof yeti.lang.Num then
+        value unsafely_as number
+    else
+        default value
+    fi;
 
-jsonStr  = json . String;
-jsonNum  = json . Number;
-jsonBool = json . Boolean;
-jsonList' = json . List;
-jsonList = jsonList' . map (.value);
-jsonObj  = json . Object;
-jsonNull = json (Null ());
+/**
+ * Retrieves boolean from JSON value. If the value is not a boolean,
+ * then `undef_bool` is returned (which acts as false, when used in condition,
+ * but can be detected using `defined?` function).
+ *
+ * Arguments:
+ * default - function to apply, if the value is not a number.
+ * value - JSON value (expected to be boolean)
+ */
+jsTrue? value is ~Object -> boolean =
+    if value instanceof Boolean then
+        value unsafely_as boolean
+    else
+        undef_bool
+    fi;
 
-jsonParse str is string -> json =
+/**
+ * Retrieves list from JSON value. If the value is not a list, then
+ * empty list `[]` is returned. Application of `defined?` function
+ * to the returned list returns false, if the JSON value wasn't a list.
+ *
+ * Arguments:
+ * value - JSON value (expected to be a string)
+ */
+jsList value is ~Object -> list<json> =
+    if value instanceof yeti.lang.AList then
+        /* jsList gives list, because with arrays this would be possible:
+         * push (jsGet "not-a-field" value) (jsOfStr 'foo');
+         * Typo in the field name would result in silent failure.
+         * Therefore immutable list type is returned.
+         */
+        value unsafely_as list<json>
+    else
+        []
+    fi;
+
+/**
+ * Retrieves a field value from the JSON value. The `jsNull` value is returned,
+ * if the value isn't a JSON object, or the field doesn't exists in the object.
+ *
+ * Arguments:
+ * field - field name
+ * value - JSON value (expected to be an object)
+ */
+jsGet field value is string -> ~Object -> ~Object =
+    if value instanceof JSONObj then
+        (value unsafely_as ~JSONObj)#map#get(field)
+    fi;
+
+/**
+ * Retrieves list of field names from JSON value. Empty list is returned,
+ * if the value isn't a JSON object.
+ *
+ * Arguments:
+ * value - JSON value (expected to be an object)
+ */
+jsKeys value is ~Object -> list<string> =
+    if value instanceof JSONObj then
+        keys = (value unsafely_as ~JSONObj)#map#keySet();
+        if keys#isEmpty() then
+            []
+        else
+            new yeti.lang.MList(keys#toArray()) unsafely_as list<string>
+        fi
+    else
+        []
+    fi;
+
+/**
+ * Retrieves variant representation of the JSON value.
+ *
+ * Arguments:
+ * value - JSON value
+ */
+jsValue value is ~Object -> 'a =
+    if value instanceof String then
+        String (value unsafely_as string)
+    elif value instanceof yeti.lang.Num then
+        Number (value unsafely_as number)
+    elif value instanceof Boolean then
+        Boolean (value unsafely_as boolean)
+    elif value instanceof JSONObj then
+        Object ((value unsafely_as ~JSONObj)#map
+                       unsafely_as hash<string, ~Object>)
+    elif value instanceof yeti.lang.MList then
+        List (value unsafely_as list<~Object>)
+    else
+        Null ()
+    fi;
+
+jsOf = (as ~Object);
+
+jsOfList v is list?<json> -> ~Object =
+    if nullptr? v then
+        array [] as ~Object
+    else
+        v as ~Object
+    fi;
+
+jsOfObj v is hash<string, json> -> ~Object =
+    new JSONObj(v unsafely_as ~Hash);
+
+/**
+ * Parses a string into JSON value.
+ *
+ * Arguments:
+ * string - a string to parse
+ * 
+ * Notes:
+ * The reverse operation of formatting JSON value into string can be
+ * achieved simply by appling the `string` function from standard
+ * library to a JSON value.
+ */
+jsonParse str is string -> ~Object =
    (invalid = failWith . ("Invalid JSON: " ^);
     var tokens = matchAll ('\s++|([{:,}\[\]]|"(?:[^\\"]|\\["\\/bfnrtu])*+"|' ^
                          '-?\d++(?:\.\d++)?(?:[eE][+-]?\d++)?|null|true|false)')
                           (`at` 1) invalid str;
-    fetch () =
+    fetch () is () -> ~Object =
         case tokens of
         s :: rest:
             tokens := rest;
@@ -98,22 +217,22 @@ jsonParse str is string -> json =
             '{':
                 m = [:];
                 empty? tokens or head tokens != '}' loop
-                   (key = case fetch () of
-                          String key: key;
-                          v: failWith "Invalid JSON field name (\(v))";
-                          esac;
+                   (key = fetch ();
+                    if not key instanceof String then 
+                        failWith "Invalid JSON field name (\(key))"
+                    fi;
                     case tokens of
                     ':' :: r: tokens := r;
                     _: failWith "JSON expecting : after object field name";
                     esac;
-                    m[key] := json (fetch ());
+                    m[key] := fetch ();
                     case head tokens of
                     ',': tokens := tail tokens;
                     '}': ();
                     x: invalid x;
                     esac);
                 tokens := tail tokens;
-                Object m;
+                new JSONObj(m unsafely_as ~Hash);
             '[':
                 a = array [];
                 empty? tokens or head tokens != ']' loop
@@ -124,10 +243,10 @@ jsonParse str is string -> json =
                      x: invalid x;
                      esac);
                 tokens := tail tokens;
-                List (list a);
-            'true' : Boolean true;
-            'false': Boolean false;
-            'null' : Null ();
+                a as ~Object;
+            'true' : true as ~Object;
+            'false': false as ~Object;
+            'null' : ();
             _:  if strStarts? s '"' then
                     escape m =
                         case m[1] of
@@ -144,10 +263,11 @@ jsonParse str is string -> json =
                                 new String(x, 0, 1) unsafely_as string
                             fi
                         esac;
-                    matchAll '\\(["\\/bfnrt]|u[0-9a-fA-F]{4})' escape id
-                        (strSlice s 1 (strLength s - 1)) |> strJoin '' |> String
+                    (matchAll '\\(["\\/bfnrt]|u[0-9a-fA-F]{4})' escape id
+                        (strSlice s 1 (strLength s - 1)) |> strJoin '')
+                        as ~Object
                 else
-                    Number (number s)
+                    number s as ~Object
                 fi
             esac;
         _: failWith "Unexpected end of JSON data"
@@ -157,20 +277,74 @@ jsonParse str is string -> json =
     if not empty? tokens then
         failWith "Garbage after JSON data (\(head tokens))"
     fi;
-    json res);
+    res);
 
-jsonEncode is json_value -> string =
-   \case of
-    String s: Core#show(s);
-    Number n: "\(n)";
-    Object m: "{\(mapHash (_ k v = "\(Core#show(k)):\(jsonEncode v.value)") m
-                    |> strJoin ',')}";
-    List l: "[\(map jsonEncode l |> strJoin ',')]";
-    Boolean b: "\(b)";
-    Null (): "null";
-    esac;
+{
+    jsStr, jsNum, jsTrue?, jsList, jsGet, jsKeys, jsValue,
+    jsOfList, jsOfObj, jsonParse,
+    jsNull?  = nullptr?,
+    jsOfStr  = jsOf,
+    jsOfNum  = jsOf,
+    jsOfBool = jsOf,
+    jsNull = () as json
+} as {
+    jsStr    is (json -> string) -> json -> string,
+    jsNum    is (json -> number) -> json -> number,
+    jsTrue?  is json -> boolean,
 
-jsonEncode is json -> string = jsonEncode . (.value);
+    /**
+     * Returns true if the value is JSON null.
+     * value - JSON value
+     */
+    jsNull?  is json -> boolean,
 
-{ json, jsonStr, jsonNum, jsonBool, jsonList', jsonList, jsonObj,
-  jsonNull, jsonParse, jsonEncode }
+    jsList   is json -> list<json>,
+    jsGet    is string -> json -> json,
+    jsKeys   is json -> list<string>,
+    jsValue  is json -> json_variant,
+
+    /**
+     * Create a JSON value from string.
+     *
+     * Arguments:
+     * string - a string to use
+     */
+    jsOfStr  is string -> json,
+
+    /**
+     * Create a JSON value from number.
+     *
+     * Arguments:
+     * number - a number to use
+     */
+    jsOfNum  is number -> json,
+
+    /**
+     * Create a JSON value from boolean.
+     *
+     * Arguments:
+     * boolean - a boolean to use
+     */
+    jsOfBool is boolean -> json,
+
+    /**
+     * Create a JSON object from fields in a hash table representation.
+     *
+     * Arguments:
+     * fields - Fields for the JSON object
+     */
+    jsOfObj  is hash<string, json> -> json,
+
+    /**
+     * Create a JSON value from list.
+     *
+     * Arguments:
+     * list - list of JSON values
+     */
+    jsOfList is list?<json> -> json,
+
+    /// JSON null value.
+    jsNull   is json,
+
+    jsonParse is string -> json
+}
