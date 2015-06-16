@@ -33,7 +33,7 @@
  * Examples:
  * Parsing can be done using `jsonParse` function:
  * : load yeti.json;
- * : js = jsonParse '{"foo":[1,2,3],"bar":{"nope":true},"baz":null,}';
+ * : js = jsonParse '{"foo":[1,2,3],"bar":{"nope":true},"baz":null}';
  * 
  * The parsed value can be accessed with various `js`-prefixed functions
  * in the module, for example:
