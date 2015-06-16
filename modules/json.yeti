@@ -149,11 +149,7 @@ jsGet field value is string -> ~Object -> ~Object =
 jsKeys value is ~Object -> list<string> =
     if value instanceof JSONObj then
         keys = (value unsafely_as ~JSONObj)#map#keySet();
-        if keys#isEmpty() then
-            []
-        else
-            new yeti.lang.MList(keys#toArray()) unsafely_as list<string>
-        fi
+        new yeti.lang.MList(keys#toArray()) unsafely_as list<string>
     else
         []
     fi;
