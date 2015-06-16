@@ -1316,6 +1316,8 @@ public class YetiType implements YetiParser {
                 structParam(res, res.requiredMembers != null
                         ? res.requiredMembers : res.allowedMembers,
                         src.param[0].deref());
+                if ((res.doc = opaque.doc()) == null)
+                    res.doc = src.doc();
                 return res;
             }
         } else if (opaque.type > PRIMITIVE_END && opaque.param.length != 0 &&
@@ -1328,8 +1330,11 @@ public class YetiType implements YetiParser {
                 res.param[i] = t;
                 hasOpaque |= s != t;
             }
-            if (hasOpaque)
+            if (hasOpaque) {
+                if ((res.doc = opaque.doc()) == null)
+                    res.doc = src.doc();
                 return res;
+            }
         } else {
             res = null;
         }
