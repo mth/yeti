@@ -12,6 +12,14 @@ class JSONObj {
         this.map = map;
     }
 
+    public int hashCode() {
+        return map.hashCode();
+    }
+
+    public boolean equals(Object o) {
+        return o instanceof JSONObj && map.equals(((JSONObj) o).map);
+    }
+
     public String toString() {
         int n;
         String[] s = new String[map.size() * 4 + 1];
