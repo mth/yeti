@@ -134,6 +134,7 @@ Identifiers
 --------------
 .. _Id:
 .. _ClassId:
+.. _Variant:
 .. peg
 
 ::
@@ -508,7 +509,7 @@ the resulting types are unified into single type. The pattern type
 unification works mostly like regular expression type unification,
 with few exceptions:
 
-    * Variant tags from the pattern form *allowed* member set in the
+    * Variant_ tags from the pattern form *allowed* member set in the
       corresponding variant type, unless the type is also matched with
       wildcard (in this case *required* member set is formed in the type).
     * Structure fields from the pattern form *required* member set in the
@@ -573,6 +574,12 @@ Simple expression
     CPrimitive  = !End Primitive;
     InParenthesis = FieldRef+ / SP AsIsType / SP AnyOp Expression /
                     Expression SP AnyOp / AnyExpression;
+
+Variant constructor
+----------------------
+
+Variant constructor is written simply as a Variant_ tag. The type of variant
+constuctor is ``'a ->`` *Variant* ``'a``.
 
 Load operator
 ----------------
