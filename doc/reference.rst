@@ -573,8 +573,18 @@ Simple expression
                   Struct / Lambda / If / CaseOf / Try / New / Load / ClassOf /
                   Variant / Id;
     CPrimitive  = !End Primitive;
-    InParenthesis = FieldRef+ / SP AsIsType / SP AnyOp Expression /
-                    Expression SP AnyOp / AnyExpression;
+
+Operator sections
+--------------------
+
+.. peg
+
+::
+
+    InParenthesis = FieldRef+ / SP AsIsType / RightSection /
+                    LeftSection / AnyExpression;
+    RightSection = SP AnyOp Expression;
+    LeftSection  = Expression SP AnyOp;
 
 Variant constructor
 ----------------------
