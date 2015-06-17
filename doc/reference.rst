@@ -134,6 +134,7 @@ Identifiers
 --------------
 .. _Id:
 .. _ClassId:
+.. _ClassName:
 .. _Variant:
 .. peg
 
@@ -589,6 +590,15 @@ Load operator
 
     Load        = "load" !IdChar ClassName;
 
+Load operator gives value of module determined by the ClassName_,
+and the expressions type is the type of the module.
+
+Alternatively ``load`` of module with structure type can be used as
+a statement on the left side of the sequence operator. In this use
+all fields of the module value will be brought into scope of right-hand
+side of the sequence operator as local bindings, and additionally all
+top-level typedefs_ from the module will be imported into that scope.
+
 New operator
 ---------------
 .. peg
@@ -598,6 +608,15 @@ New operator
     New         = "new" !IdChar ClassName SP NewParam;
     NewParam    = ArgList / "[" AnyExpression "]" "[]"*;
     ArgList     = "(" SP (Expression SP ("," Expression SP)*)? ")";
+
+New operator constructs an instance of Java class specified by ClassName_,
+and the expressions type is the class type ~\ *ClassName*.
+
+Similarly to Java language, the constructor that has nearest match to
+the given argument types is selected. Compilation fails, if there is no
+suitable constructor.
+The exact semantics of class construction come from the underlying JVM used,
+and can be looked up from the JVM specification.
 
 ClassOf operator
 -------------------
@@ -829,6 +848,7 @@ Java class imports
 
 Type definition
 ------------------
+.. _typedefs:
 .. peg
 
 ::
