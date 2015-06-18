@@ -564,27 +564,11 @@ exception will be dropped (as only one exception per thread is allowed
 simultaneously), otherwise the suspended exception will be rethrown after
 the ``finally`` block finishes.
 
-Simple expression
-++++++++++++++++++++
-.. _expressions:
-
-.. peg
-
-::
-
-    Primitive   = Number / String / "(" SP InParenthesis SP ")" / List /
-                  Struct / Lambda / If / CaseOf / Try / New / Load / ClassOf /
-                  Variant / Id;
-    CPrimitive  = !End Primitive;
-
-Variant constructor
-----------------------
-
-Variant constructor is written simply as a Variant_ tag. The type of variant
-constuctor is ``'a ->`` *Variant* ``'a``.
-
 Operator sections
---------------------
+++++++++++++++++++++
+
+The operator sections can be only in parenthesis.
+
 .. peg
 
 ::
@@ -623,6 +607,25 @@ lambda expressions::
     foo_bar_reference_equivalent = do v: v.foo.bar done;
 
 Any other expression in parenthesis is the expression itself.
+
+Simple expression
+++++++++++++++++++++
+.. _expressions:
+
+.. peg
+
+::
+
+    Primitive   = Number / String / "(" SP InParenthesis SP ")" / List /
+                  Struct / Lambda / If / CaseOf / Try / New / Load / ClassOf /
+                  Variant / Id;
+    CPrimitive  = !End Primitive;
+
+Variant constructor
+----------------------
+
+Variant constructor is written simply as a Variant_ tag. The type of variant
+constuctor is ``'a ->`` *Variant* ``'a``.
 
 Load operator
 ----------------
@@ -667,7 +670,6 @@ ClassOf operator
 ::
 
     ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
-
 
 Expression with operators
 ++++++++++++++++++++++++++++
