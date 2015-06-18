@@ -155,6 +155,9 @@ Identifiers are used for naming definitions/bindings and their references,
 the exact syntax and meaning depends on the context (most common are the
 value bindings used within expressions).
 
+Most operators can be used as normal identifiers by placing them in
+parenthesis.
+
 Type description
 +++++++++++++++++++
 .. _IsType:
@@ -574,9 +577,14 @@ Simple expression
                   Variant / Id;
     CPrimitive  = !End Primitive;
 
+Variant constructor
+----------------------
+
+Variant constructor is written simply as a Variant_ tag. The type of variant
+constuctor is ``'a ->`` *Variant* ``'a``.
+
 Operator sections
 --------------------
-
 .. peg
 
 ::
@@ -586,11 +594,35 @@ Operator sections
     RightSection = SP AnyOp Expression;
     LeftSection  = Expression SP AnyOp;
 
-Variant constructor
-----------------------
+Right section results in a function that applies the operator with argument
+value as the implicit left-side value, and the expressions value as
+right-side value. Left section results in a function that applies the operator
+with expressions value as the left-side value, and the argument value as the
+implicit right-side value. The expression is evaluated during the evaluation
+of the section. The sections can be viewed as a syntactic sugar for following
+partial applications::
 
-Variant constructor is written simply as a Variant_ tag. The type of variant
-constuctor is ``'a ->`` *Variant* ``'a``.
+    right_section = (`operator` expression);
+    right_section_equivalent = flip operator expression;
+    left_section = (expression `operator`);
+    left_section_equivalent = operator expression;
+
+The ``as`` and ``unsafely_as`` casts can also be used as sections, that result
+in a function value that casts its argument value into the given type.
+The argument type is inferred from the context where the cast section is used,
+defaulting to free type variable ('a).
+
+Field references can also be put into parenthesis, giving a function that
+retrieves the field value from the argument value. The type of single
+field reference is ``{.``\ *field-name* ``is 'a} -> 'a``.
+
+Field reference functions can be seen as syntactic sugar for following
+lambda expressions::
+
+    foo_bar_reference_function = (.foo.bar);
+    foo_bar_reference_equivalent = do v: v.foo.bar done;
+
+Any other expression in parenthesis is the expression itself.
 
 Load operator
 ----------------
