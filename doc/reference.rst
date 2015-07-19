@@ -671,6 +671,20 @@ ClassOf operator
 
     ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
 
+The ``classOf`` operator gives Java **Class** instance corresponding to
+the JVM class specified by the ClassId_.
+The specified class must exists in the compilation class path.
+If the class name is followed by ``[]`` pairs, then an array class is given.
+The type of ``classOf`` expression is (obviously) ~java.lang.Class.
+
+Rough equivalent to ``classOf`` would be using ``Class#forName`` method::
+
+    stringClass = Class#forName("java.lang.String");
+    // gives same result as
+    stringClass = classOf java.lang.String;
+    // or simply
+    stringClass = classOf String;
+
 Expression with operators
 ++++++++++++++++++++++++++++
 
