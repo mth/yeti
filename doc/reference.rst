@@ -158,8 +158,7 @@ value bindings used within expressions).
 
 Most operators can be used as normal identifiers by placing them in
 parenthesis. The type of usable operator binding should be a function
-(for binary operators it would be *left-side* ``->`` *right-side* ``->``
-*result*).
+(for binary operators it would be *left-side* → *right-side* → *result*).
 
 Type description
 +++++++++++++++++++
@@ -186,10 +185,11 @@ case the ClassName might be also Java primitive type name like *char*).
 
 Type parameters starting with ``^`` are considered to have an ordered type.
 
-Function type is in the form *argument-type* ``->`` *return-type* (the
+Function type is in the form *argument-type* → *return-type* (the
 above grammar defines it like type list separated by arrows, because the
 *return-type* itself can be a function type without any surrounding
-parenthesis).
+parenthesis). Either ``->`` or the unicode symbol \\u2192 (→) can be used
+for the function arrow.
 
 The IsType clause using ``"is"`` keyword is used after binding or expression
 to narrow it's type by unifying it with the given type.
@@ -314,7 +314,7 @@ Lambda expression
 
 Lambda expression (aka function literal) constructs a function value containing
 the given block of code (AnyExpression_) as body. The type of lambda expression
-is therefore *argument-type* ``->`` *return-type* (a function type).
+is therefore *argument-type* → *return-type* (a function type).
 The argument type is inferred from the function body and the return type is
 the type of the body expression.
 
@@ -601,7 +601,7 @@ defaulting to free type variable ('a).
 
 Field references can also be put into parenthesis, giving a function that
 retrieves the field value from the argument value. The type of single
-field reference is ``{.``\ *field-name* ``is 'a} -> 'a``.
+field reference is ``{.``\ *field-name* ``is 'a} → 'a``.
 
 Field reference functions can be seen as syntactic sugar for following
 lambda expressions::
@@ -645,7 +645,7 @@ Variant constructor
 ----------------------
 
 Variant constructor is written simply as a Variant_ tag. The type of variant
-constuctor is ``'a ->`` *Variant* ``'a``.
+constuctor is ``'a`` → *Variant* ``'a``.
 
 Load operator
 ----------------
@@ -737,7 +737,7 @@ The argument value is ignored. If the *value* is a constant expression, then
 the result is a constant function.
 
 The ``-`` prefix operator is arithmetic negatiation. Its type is
-*number -> number*, so the negated expression must be number, and the
+*number* → *number*, so the negated expression must be number, and the
 resulting value is also number. Since ``-`` can be also used as binary
 operator, the prefix operator cannot be used directly as function,
 but the function value is bound in standard library module ``yeti.lang.std``
@@ -748,7 +748,7 @@ to ``negate`` identifier.
     FieldRef    = Dot SP FieldId;
 
 Field reference is a postfix operator that gives value of the given structure
-*field*. Its type is ``{``\ *.field* ``is 'a} -> 'a``.
+*field*. Its type is ``{``\ *.field* ``is 'a} → 'a``.
 
 ::
 
@@ -757,7 +757,7 @@ Field reference is a postfix operator that gives value of the given structure
 Mapping reference takes two arguments - the mapping value preceding it and
 the key value expression. The resulting value is the element corresponding
 to the given key (or index). The standard library has this operator as ``at``
-function with type *map*\ ``<'key, 'element> -> 'key -> 'element``.
+function with type *map*\ ``<'key, 'element> → 'key → 'element``.
 The mapping can be either *hash* map or *array*.
 
 ::
