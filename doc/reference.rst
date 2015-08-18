@@ -621,6 +621,23 @@ Simple expression
                   Variant / Id;
     CPrimitive  = !End Primitive;
 
+Simple expressions are those that don't have subexpressions separated by
+operators.
+
+* Identifiers_
+* Parenthesis (that can contain `any expression`_)
+* Literal constructor (number_, string_, `lambda expression`_,
+  `list and hash map literals`_, `structure literal`_ or
+  `variant constructor`_)
+* Block expression (`conditional expression`_, `case expression`_ or
+  `try block`_)
+* Special value constructor (`load operator`_, `new operator`_ or
+  `classOf operator`_)
+
+The CPrimitive is simple expression that isn't the ``end`` keyword.
+This is used inside `class definition`_ block, which is terminated by
+``end`` (in other places ``end`` is normal identifier).
+
 Variant constructor
 ----------------------
 
@@ -698,11 +715,50 @@ Reference operators
 
     Reference   = SP PrefixOp* Primitive RefOp*;
     CReference  = SP PrefixOp* CPrimitive CRefOp*;
-    PrefixOp    = "\\" SP / "-" SP !OpChar;
     RefOp       = FieldRef / MapRef / (SP (ObjectRef / "->" SP Primitive));
     CRefOp      = FieldRef / MapRef / (SP (ObjectRef / "->" SP CPrimitive));
+
+Reference operators are with highest precedence and thereby work
+on simple `expressions`_.
+
+The ``->`` operator is a function from standard library that is used
+to provide custom reference operator for structure objects.
+
+::
+
+    PrefixOp    = "\\" SP / "-" SP !OpChar;
+
+The ``\`` prefix operator operator is special form of `lambda expression`_.
+A expression in form ``\``\ *value* is equivalent to ``do:`` *value* ``done``.
+The argument value is ignored. If the *value* is a constant expression, then
+the result is a constant function.
+
+The ``-`` prefix operator is mathematical negotiation. Its type is
+*number -> number*, so the negated expression must be number, and the
+resulting value is also number. Since ``-`` can be also used as binary
+operator, the prefix operator cannot be used directly as function,
+but the function value is bound in standard library module ``yeti.lang.std``
+to ``negate`` identifier.
+
+::
+
     FieldRef    = Dot SP FieldId;
+
+Field reference is a postfix operator that gives value of the given structure
+*field*. Its type is ``{``\ *.field* ``is 'a} -> 'a``.
+
+::
+
     MapRef      = "[" Sequence SP "]";
+
+Mapping reference takes two arguments - the mapping value preceding it and
+the key value expression. The resulting value is the element mapping to
+the corresponding key. The standard library names this operator ``at``
+with type *map<'key, 'element> -> 'key -> 'element*. The mapping
+can be either *hash* map or *array*.
+
+::
+
     ObjectRef   = "#" JavaId SP ArgList?;
 
 Application
@@ -921,6 +977,7 @@ Type definition
 Sequence expression
 +++++++++++++++++++++++
 .. _AnyExpression:
+.. _`any expression`:
 .. peg
 
 ::
