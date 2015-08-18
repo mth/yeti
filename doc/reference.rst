@@ -548,7 +548,7 @@ types are directly Java class types.
 The types of the ``try`` and ``catch`` section expressions are unified, and
 the resulting type is used as the type of the ``try`` block.
 
-The ``finally`` sections expression must have the unit type ``()``, as the
+The ``finally`` sections expression must have the unit type *()*, as the
 value from the evaluation of the ``finally`` section is always ignored.
 
 If exception is thrown that matches some ``catch`` section (by being same or
