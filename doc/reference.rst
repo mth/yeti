@@ -159,7 +159,7 @@ value bindings used within expressions).
 Most operators can be used as normal identifiers by placing them in
 parenthesis. The type of usable operator binding should be a function
 (for binary operators it would be *left-side* ``->`` *right-side* ``->``
-*result*)..
+*result*).
 
 Type description
 +++++++++++++++++++
