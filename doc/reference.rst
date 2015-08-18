@@ -133,6 +133,7 @@ symbols (for example Perl compatible regular expressions).
 Identifiers
 --------------
 .. _Id:
+.. _identifier:
 .. _ClassId:
 .. _ClassName:
 .. _Variant:
@@ -621,10 +622,10 @@ Simple expression
                   Variant / Id;
     CPrimitive  = !End Primitive;
 
-Simple expressions are those that don't have subexpressions separated by
-operators.
+Simple expression is an expression that is not composed of subexpressions
+separated by operators.
 
-* Identifiers_
+* Identifier_
 * Parenthesis (that can contain `any expression`_)
 * Literal constructor (number_, string_, `lambda expression`_,
   `list and hash map literals`_, `structure literal`_ or
