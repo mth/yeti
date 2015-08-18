@@ -597,11 +597,11 @@ partial applications::
 The ``as`` and ``unsafely_as`` casts can also be used as sections, that result
 in a function value that casts its argument value into the given type.
 The argument type is inferred from the context where the cast section is used,
-defaulting to free type variable ('a).
+defaulting to free type variable (*'a*).
 
 Field references can also be put into parenthesis, giving a function that
 retrieves the field value from the argument value. The type of single
-field reference is ``{.``\ *field-name* ``is 'a} → 'a``.
+field reference is ``{``\ *.field-name* ``is`` *'a*\ ``}`` → *'a*.
 
 Field reference functions can be seen as syntactic sugar for following
 lambda expressions::
@@ -645,7 +645,7 @@ Variant constructor
 ----------------------
 
 Variant constructor is written simply as a Variant_ tag. The type of variant
-constuctor is ``'a`` → *Variant* ``'a``.
+constuctor is *'a* → *Variant 'a*.
 
 Load operator
 ----------------
@@ -675,7 +675,7 @@ New operator
     ArgList     = "(" SP (Expression SP ("," Expression SP)*)? ")";
 
 New operator constructs an instance of Java class specified by ClassName_,
-and the expressions type is the class type ~\ *ClassName*.
+and the expressions type is the class type *~ClassName*.
 
 Similarly to Java language, the constructor that has nearest match to
 the given argument types is selected. Compilation fails, if there is no
@@ -748,7 +748,7 @@ to ``negate`` identifier.
     FieldRef    = Dot SP FieldId;
 
 Field reference is a postfix operator that gives value of the given structure
-*field*. Its type is ``{``\ *.field* ``is 'a} → 'a``.
+*field*. Its type is ``{``\ *.field* ``is`` *'a*\ ``}`` → *'a*.
 
 ::
 
@@ -757,7 +757,7 @@ Field reference is a postfix operator that gives value of the given structure
 Mapping reference takes two arguments - the mapping value preceding it and
 the key value expression. The resulting value is the element corresponding
 to the given key (or index). The standard library has this operator as ``at``
-function with type *map*\ ``<'key, 'element> → 'key → 'element``.
+function with type *map<'key, 'element>* → *'key* → *'element*.
 The mapping can be either *hash* map or *array*.
 
 ::
