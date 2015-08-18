@@ -773,8 +773,8 @@ Application
     Apply       = Reference (SP AsIsType* Reference)*;
     CApply      = CReference (SP AsIsType* CReference)*;
 
-Arithmetic and logic operators
----------------------------------
+Arithmetic operators
+-----------------------
 .. peg
 
 ::
