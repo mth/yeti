@@ -753,8 +753,8 @@ Field reference is a postfix operator that gives value of the given structure
 
 Mapping reference takes two arguments - the mapping value preceding it and
 the key value expression. The resulting value is the element mapping to
-the corresponding key. The standard library names this operator ``at``
-with type *map<'key, 'element> -> 'key -> 'element*. The mapping
+the corresponding key. The standard library has this operator as ``at``
+function with type *map<'key, 'element> -> 'key -> 'element*. The mapping
 can be either *hash* map or *array*.
 
 ::
