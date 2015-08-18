@@ -719,7 +719,7 @@ Reference operators
     RefOp       = FieldRef / MapRef / (SP (ObjectRef / "->" SP Primitive));
     CRefOp      = FieldRef / MapRef / (SP (ObjectRef / "->" SP CPrimitive));
 
-Reference operators are with highest precedence and thereby work
+Reference operators have highest precedence and thereby work
 on simple `expressions`_.
 
 The ``->`` operator is a function from standard library that is used
