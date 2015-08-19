@@ -731,7 +731,7 @@ to provide custom reference operator for structure objects.
 
     PrefixOp    = "\\" SP / "-" SP !OpChar;
 
-The ``\`` prefix operator operator is special form of `lambda expression`_.
+The ``\`` prefix operator is shorthand form of `lambda expression`_.
 A expression in form ``\``\ *value* is equivalent to ``do:`` *value* ``done``.
 The argument value is ignored. If the *value* is a constant expression, then
 the result is a constant function.
