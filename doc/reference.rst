@@ -503,8 +503,8 @@ variant constructor applications, list cell constructor applications (``::``),
 list literals, structure literals and static final field references from
 Java classes (in the ``Class#field`` form).
 
-The ``_`` identifier is special in that it wouldn't be bound to real variable
-(similarly as it's used in function arguments).
+The underscore identifier ``_`` is special in that it wouldn't be bound
+to real variable (similarly as it's used in function arguments).
 
 The compiler should verify that the case options patterns together provide
 exhaustive match for the matched value, so at least one case option is
