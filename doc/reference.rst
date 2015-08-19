@@ -142,6 +142,7 @@ Identifiers
 .. _Id:
 .. _identifier:
 .. _ClassId:
+.. _JavaId:
 .. _ClassName:
 .. _Variant:
 .. peg
@@ -672,6 +673,7 @@ top-level typedefs_ from the module will be imported into that scope.
 
 New operator
 ---------------
+.. _ArgList:
 .. peg
 
 ::
@@ -776,6 +778,20 @@ The mapping can be either *hash* map or *array*.
 ::
 
     ObjectRef   = "#" JavaId SP ArgList?;
+
+When ArgList_ is present, the ``#`` operator means method call, otherwise
+it will be a Java class field reference.
+
+The left side expression of the ``#`` operator is expected to have a Java
+object type (*~Something*), that must have a field or method named by the
+JavaId_. No type inference is done for the left-side object type.
+
+Since Java classes can have multiple methods with same name, the exact
+method is resolved by finding one that has the correct number of arguments
+and best match for the actual argument types. Implicit casting is done
+for the arguments, if necessary. The resulting expression type is derived
+from the used methods return type for method calls and field type for object
+field references.
 
 Application
 --------------
