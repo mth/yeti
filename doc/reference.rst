@@ -59,10 +59,10 @@ Reserved words
                   "typedef" / "unsafely\_as" / "var" / "with" / "yrt";
     End         = "end" !IdChar;
 
-The keywords cannot be used as identifiers, with the exception of the ``"end"``
-keyword. The ``"end"`` can be used as an identifier inside blocks that doesn't
-use ``"end"`` as terminator (currently only block terminated using ``"end"``
-is `class definition`_).
+The keywords cannot be used as identifiers, with the exception of the
+``"end"`` keyword. The ``"end"`` can be used as an identifier inside blocks
+that doesn't use ``"end"`` as terminator (currently only block terminated
+using ``"end"`` is `class definition`_).
 
 Comments and whitespace
 --------------------------
@@ -111,7 +111,7 @@ the *number* type (rational and integer values are not distinguished
 by type). Integer literals can be written as hexadecimal or octal
 numbers, by using the ``0x`` or ``0o`` prefix respectively.
 
-Floating-point runtime reprentation can be enforced by using exponent
+Floating-point runtime representation can be enforced by using exponent
 (scientific) notation. As a special case of it, a single letter ``e``
 may be added to the end (the exponent is considered to be zero in this
 case).
