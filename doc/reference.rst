@@ -64,6 +64,13 @@ The keywords cannot be used as identifiers, with the exception of the
 that doesn't use ``"end"`` as terminator (currently only block terminated
 using ``"end"`` is `class definition`_).
 
+.. Note::
+
+    The Mouse PEG grammar uses underscore to mean any character,
+    and literal underscores must be escaped with backslash.
+    For example the above ``"unsafely\_as"`` means literal
+    keyword ``unsafely_as``.
+
 Comments and whitespace
 --------------------------
 .. peg
