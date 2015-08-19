@@ -793,6 +793,8 @@ for the arguments, if necessary. The resulting expression type is derived
 from the used methods return type for method calls and field type for object
 field references.
 
+The ``#`` operator cannot be used as a function.
+
 Application
 --------------
 .. peg
