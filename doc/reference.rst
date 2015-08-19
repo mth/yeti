@@ -614,7 +614,6 @@ Any other expression in parenthesis is the expression itself.
 Simple expression
 ++++++++++++++++++++
 .. _expressions:
-
 .. peg
 
 ::
@@ -711,7 +710,6 @@ Expression with operators
 Reference operators
 ----------------------
 .. _reference operator:
-
 .. peg
 
 ::
@@ -726,6 +724,8 @@ on simple `expressions`_.
 
 The ``->`` operator is a function from standard library that is used
 to provide custom reference operator for structure objects.
+
+.. peg
 
 ::
 
@@ -743,12 +743,16 @@ operator, the prefix operator cannot be used directly as function,
 but the function value is bound in standard library module ``yeti.lang.std``
 to ``negate`` identifier.
 
+.. peg
+
 ::
 
     FieldRef    = Dot SP FieldId;
 
 Field reference is a postfix operator that gives value of the given structure
 *field*. Its type is ``{``\ *.field* ``is`` *'a*\ ``}`` → *'a*.
+
+.. peg
 
 ::
 
@@ -759,6 +763,8 @@ the key value expression. The resulting value is the element corresponding
 to the given key (or index). The standard library has this operator as ``at``
 function with type *map<'key, 'element>* → *'key* → *'element*.
 The mapping can be either *hash* map or *array*.
+
+.. peg
 
 ::
 
