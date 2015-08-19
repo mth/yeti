@@ -737,7 +737,7 @@ The argument value is ignored. If the *value* is a constant expression, then
 the result is a constant function.
 
 The ``-`` prefix operator is arithmetic negatiation. Its type is
-*number* → *number*, so the negated expression must be number, and the
+*number* → *number*, so the negated expression must be a number, and the
 resulting value is also number. Since ``-`` can be also used as binary
 operator, the prefix operator cannot be used directly as function,
 but the function value is bound in standard library module ``yeti.lang.std``
