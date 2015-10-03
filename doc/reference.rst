@@ -804,6 +804,23 @@ Application
     Apply       = Reference (SP AsIsType* Reference)*;
     CApply      = CReference (SP AsIsType* CReference)*;
 
+Function application is done simply by having two value expressions
+(simple values or references) consecutively. First value is the
+function value and the second one is the argument given to the function.
+Yeti uses strict call-by-sharing evaluation semantics (call-by-sharing
+is a type of call-by-value evaluation, where references are passed).
+
+The type of application is the functions return type. If the function
+value type is *'a'* → *'b*, then the given value must have the same *'a*
+type and the applications resulting value type is the same *'b* type.
+
+The application of multiple expressions is done in left-to-right order,
+for example ``a b c`` is identical to ``(a b) c``. 
+
+The function expression is evaluated before argument expression. This means
+also that when multiple arguments are given by curring, then these argument
+expressions are evaluated in the application order.
+
 Arithmetic operators
 -----------------------
 .. peg
