@@ -837,40 +837,31 @@ Arithmetic operators
 
 Yeti language has following arithmetic and bitwise logic operators:
 
-\+
-    Arithmetic addition
-
-\-
-    Arithmetic subtraction
-
-b_or
-    Bitwise logical or
-
-b_xor
-    Bitwise logical exclusive or
-
-\*
-    Arithmetic multiplication
-
-/
-    Arithmetic division
-
-%
-    Remainder of integer division
-
-div
-    Integer division
-
-b_and
-    Bitwise logical and
-
-shr
-    Bit shift to right
-
-shl
-    Bit shift to left
-
-X.
++-----------+-------------------------------+
+| Operator  | Description                   |
++===========+===============================+
+| **\+**    | Arithmetic addition           |
++-----------+-------------------------------+
+| **\-**    | Arithmetic subtraction        |
++-----------+-------------------------------+
+| **b_or**  | Bitwise logical or            |
++-----------+-------------------------------+
+| **b_xor** | Bitwise logical exclusive or  |
++-----------+-------------------------------+
+| **\***    | Arithmetic multiplication     |
++-----------+-------------------------------+
+| **/**     | Arithmetic division           |
++-----------+-------------------------------+
+| **%**     | Remainder of integer division |
++-----------+-------------------------------+
+| **div**   | Integer division              |
++-----------+-------------------------------+
+| **b_and** | Bitwise logical and           |
++-----------+-------------------------------+
+| **shr**   | Bit shift to right            |
++-----------+-------------------------------+
+| **shl**   |  Bit shift to left            |
++-----------+-------------------------------+
 
 Structure merge operator with
 ''''''''''''''''''''''''''''''''
