@@ -835,6 +835,36 @@ Arithmetic operators
     FactorOp    = ("*" / "/" / "%") !OpChar /
                   ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
 
+Yeti language has following arithmetic and bitwise logic operators:
+
++
+    Arithmetic addition
+-
+    Arithmetic subtraction
+b_or
+    Bitwise logical or
+b_xor
+    Bitwise logical exclusive or
+*
+    Arithmetic multiplication
+/
+    Arithmetic division
+%
+    Remainder of integer division
+div
+    Integer division
+shr
+    Bit shift to right
+shl
+    Bit shift to left
+b_and
+    Bitwise logical and
+
+X.
+
+Structure merge operator with
+++++++++++++++++++++++++++++++++
+
 Custom operators
 -------------------
 .. peg
