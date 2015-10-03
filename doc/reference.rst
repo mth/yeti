@@ -714,7 +714,7 @@ Rough equivalent to ``classOf`` would be using ``Class#forName`` method::
     stringClass = classOf String;
 
 Expression with operators
-''''''''''''''''''''''''''''
+++++++++++++++++++++++++++++
 
 Reference operators
 ----------------------
@@ -863,7 +863,7 @@ b_and
 X.
 
 Structure merge operator with
-++++++++++++++++++++++++++++++++
+''''''''''''''''''''''''''''''''
 
 Custom operators
 -------------------
