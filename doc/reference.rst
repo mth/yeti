@@ -858,9 +858,9 @@ Yeti language has following arithmetic and bitwise logic operators:
 +-----------+-------------------------------+
 | **b_and** | Bitwise logical and           |
 +-----------+-------------------------------+
-| **shr**   | Bit shift to right            |
+| **shr**   | Bit shift to right (signed)   |
 +-----------+-------------------------------+
-| **shl**   |  Bit shift to left            |
+| **shl**   | Bit shift to left             |
 +-----------+-------------------------------+
 
 All arithmetic and bitwise operators have the type *number* → *number*
@@ -898,16 +898,17 @@ Function composition
     ComposeOp   = "\." Space+ / Space+ "\." SP;
 
 Function composition operator composes two functions given as it's arguments.
-Canonical implementation of the function composition is the following definition::
+Canonical implementation of the function composition is the following
+definition::
 
     (.) f g a = f (g a);
 
 The type of the composition operator is
 *('a* → *'b)* → *('c* → *'a)* → *'c* → *'b*.
 
-Dot is considered to be composition operator only when it doesn't have identifier
-neither directly before or after it (without whitespace). Otherwise the dot denotes
-reference operator.
+Dot is considered to be composition operator only when it doesn't have
+identifier neither directly before or after it (without whitespace).
+Otherwise the dot denotes reference operator.
 
 Comparison operators
 -----------------------
@@ -921,8 +922,36 @@ Comparison operators
                   SP InstanceOf*;
     InstanceOf  = "instanceof" !IdChar ClassId SP;
     Not         = "not" !IdChar SP;
-    CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=") !OpChar /
-                  "in" !IdChar;
+    CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=")
+                  !OpChar / "in" !IdChar;
+
+Comparision operators compare two values of same type and give boolean
+result.
+
+Yeti language has following comparision operators:
+
++----------+-------------------------+-----------------------------------------+
+| Operator | Type                    | Proposition                             |
++==========+=========================+=========================================+
+| **==**   | *'a* → *'a* → *boolean* | Left side value is equal to right side  |
++----------+-------------------------+-----------------------------------------+
+| **!=**   | *'a* → *'a* → *boolean* | Left side value is not equal            |
+|          |                         | to right side                           |
++----------+-------------------------+-----------------------------------------+
+| **<**    | *^a* → *^a* → *boolean* | Left side value is less than right side |
++----------+-------------------------+-----------------------------------------+
+| **<=**   | *^a* → *^a* → *boolean* | Left side value is less than or equal   |
+|          |                         | to right side                           |
++----------+-------------------------+-----------------------------------------+
+| **>**    | *^a* → *^a* → *boolean* | Left side value is greater than         |
+|          |                         | right side                              |
++----------+-------------------------+-----------------------------------------+
+| **>=**   | *^a* → *^a* → *boolean* | Left side value is greater than         |
+|          |                         | or equal to right side                  |
++----------+-------------------------+-----------------------------------------+
+| **=~**   | *string* → *string*     | Left side string matches regex          |
+|          | → *boolean*             | pattern on the right side               |
++----------+-------------------------+-----------------------------------------+
 
 Logical operators
 --------------------
