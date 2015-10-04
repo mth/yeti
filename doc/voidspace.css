@@ -44,8 +44,8 @@ a:hover {
 
 div.attention, div.caution, div.danger, div.error, div.hint,
 div.important, div.note, div.tip, div.warning {
-  background-color: #cccccc;
-  padding: 3px;
+  background-color: #ccffc0;
+  padding: 0.5em;
   width: 80%;
 }
 
@@ -53,8 +53,9 @@ div.admonition p.admonition-title, div.hint p.admonition-title,
 div.important p.admonition-title, div.note p.admonition-title,
 div.tip p.admonition-title  {
   text-align: center;
-  background-color: #999999;
   display: block;
+  border-width: 0px 0px 1px;
+  border-style: solid;
   margin: 0;
 }
 
@@ -69,46 +70,24 @@ div.warning p.admonition-title {
   margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, h3, h4, h5 {
   font-family: Helvetica, Arial, sans-serif;
-  border: thin solid black;
-  /* This makes the borders rounded on Mozilla, which pleases me */
-  -moz-border-radius: 8px;
-  padding: 4px;
+  border-style: solid;
+  padding: 1px;
+  margin: 1em 5mm 0.8em 0px;
 }
 
 h1 {
-  background-color: #444499;
-  color: #ffffff;
-  border: medium solid black;
-}
-
-h1 a.toc-backref, h2 a.toc-backref { 
-  color: #ffffff;
+  border-width: 0px 0px 3px;
+  text-align: center;
 }
 
 h2 {
-  background-color: #666666;
-  color: #ffffff;
-  border: medium solid black;
+  border-width: 0px 0px 2px;
 }
 
-h3, h4, h5, h6 {
-  background-color: #cccccc;
-  color: #000000;
-}
-
-h3 a.toc-backref, h4 a.toc-backref, h5 a.toc-backref, 
-h6 a.toc-backref { 
-  color: #000000;
-}
-
-h1.title {
-  text-align: center;
-  background-color: #444499;
-  color: #eeeeee;
-  border: thick solid black;
-  -moz-border-radius: 20px;
+h3, h4, h5 {
+  border-width: 0px 0px 1px;
 }
 
 table.footnote {
@@ -119,9 +98,15 @@ table.citation {
   padding-left: 0.5ex
 }
 
+table { border-collapse: collapse; border-width: 0px }
+th { border-width: 0px 0px 3px }
+td { padding: 0.33em }
+
 pre.literal-block, pre.doctest-block {
-  border: thin black solid;
-  padding: 5px;
+  border: 1px black dashed;
+  padding: 0.3em;
+  margin: 0.3em 1.5em 0.3em 0.1em;
+  background-color: #ffffc8;
 }
 
 .image img { border-style : solid;

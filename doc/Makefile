@@ -2,7 +2,7 @@ RES = intro.html intro.pdf reference.html reference.pdf
 
 all: $(RES)
 
-%.html: %.rst
+%.html: %.rst voidspace.css
 	rst2html --stylesheet-path=voidspace.css $< $@
 
 %.odt: %.rst

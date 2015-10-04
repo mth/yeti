@@ -863,6 +863,11 @@ Yeti language has following arithmetic and bitwise logic operators:
 | **shl**   |  Bit shift to left            |
 +-----------+-------------------------------+
 
+All arithmetic and bitwise operators have the type *number* → *number*
+→ *number*. The bitwise, integer division and remainder operators
+truncate fractional part from their arguments, doing the given operation
+using only the integer part of the argument.
+
 Structure merge operator with
 ''''''''''''''''''''''''''''''''
 
@@ -875,6 +880,12 @@ Custom operators
     CustomOps   = Sum SkipSP (AsIsType* CustomOp Sum)*;
     CCustomOps  = CSum SkipSP (AsIsType* CustomOp CSum)*;
     CustomOp    = !(CompareOp / [*/%+-<=>^:\\\.] !OpChar) OpChar+ / IdOp;
+
+Custom operators are any operators that are not built into the language.
+The operators are defined by simply having a function value bound with name
+consisting of operator characters, or by using regular identifier between
+backticks. The operator type is the binding type, and resulting value/type
+is the result of appling the function value to the given arguments. 
 
 Function composition
 -----------------------
