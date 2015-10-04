@@ -1050,7 +1050,8 @@ into a value with given result type. The compiler verifies that the conversion
 is guaranteed to be possible, and if needed, generates code to convert the
 value into representation required by the given type. It's typically used
 for conversions between Yeti native types and Java object types, and for
-upcasting the Java types.
+upcasting the Java types. A special case of **as** cast is casting
+into opaque types.
 
 The **unsafely_as** cast operator does a unsafe type coercion into a value
 with the given result type. Unlike **as** cast, no value conversion will be
