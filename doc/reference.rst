@@ -837,7 +837,7 @@ Arithmetic operators
     FactorOp    = ("*" / "/" / "%") !OpChar /
                   ("div" / "shr" / "shl" / "b\_and" / "with") !IdChar;
 
-Yeti language has following arithmetic and bitwise logic operators:
+Yeti language has the following arithmetic and bitwise logic operators:
 
 +-----------+-------------------------------+
 | Operator  | Description                   |
