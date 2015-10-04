@@ -731,6 +731,8 @@ Reference operators
 Reference operators have highest precedence and thereby work
 on simple `expressions`_.
 
+Reference operators have left associativity.
+
 The ``->`` operator is a function from standard library that is used
 to provide custom reference operator for structure objects.
 
@@ -805,8 +807,8 @@ Application
     CApply      = CReference (SP AsIsType* CReference)*;
 
 Function application is done simply by having two value expressions
-(simple values or references) consecutively. First value is the
-function value and the second one is the argument given to the function.
+(simple values or references) consecutively. Left side value is the
+function value and the right side is the argument given to the function.
 Yeti uses strict call-by-sharing evaluation semantics (call-by-sharing
 is a type of call-by-value evaluation, where references are passed).
 
@@ -814,8 +816,8 @@ The type of application is the functions return type. If the function
 value type is *'a'* → *'b*, then the given value must have the same *'a*
 type and the applications resulting value type is the same *'b* type.
 
-The application of multiple expressions is done in left-to-right order,
-for example ``a b c`` is identical to ``(a b) c``. 
+The application operator has left associativity, for example ``a b c`` is
+identical to ``(a b) c``. 
 
 The function expression is evaluated before argument expression. This means
 also that when multiple arguments are given by curring, then these argument
@@ -864,9 +866,9 @@ Yeti language has following arithmetic and bitwise logic operators:
 +-----------+-------------------------------+
 
 All arithmetic and bitwise operators have the type *number* → *number*
-→ *number*. The bitwise, integer division and remainder operators
-truncate fractional part from their arguments, doing the given operation
-using only the integer part of the argument.
+→ *number* and left associativity. The bitwise, integer division and
+remainder operators truncate fractional part from their arguments,
+doing the given operation using only the integer part of the argument.
 
 Structure merge operator with
 ''''''''''''''''''''''''''''''''
@@ -886,6 +888,8 @@ These operators are defined by simply having a function value bound with name
 consisting of operator characters, or by using regular identifier between
 backticks. The operator type is the binding type, and resulting value/type
 is the result of appling the function value to the given arguments. 
+
+Custom operators have left associativity.
 
 Function composition
 -----------------------
@@ -910,6 +914,9 @@ Dot is considered to be composition operator only when it doesn't have
 identifier neither directly before or after it (without whitespace).
 Otherwise the dot denotes reference operator.
 
+Function composition is associative, therefore the operators associativity
+is undefined.
+
 Comparison operators
 -----------------------
 .. peg
@@ -926,7 +933,7 @@ Comparison operators
                   !OpChar / "in" !IdChar;
 
 Comparision operators compare two values of same type and give boolean
-result.
+result. Comparision operators have left associativity.
 
 Yeti language has following comparision operators:
 
@@ -962,6 +969,21 @@ Logical operators
     Logical     = Compare SP (AsIsType* ("and" / "or") !IdChar Compare)*;
     CLogical    = CCompare SP (AsIsType* ("and" / "or") !IdChar CCompare)*;
 
+Logical **and** expression results in **true** only, if both arguments are
+**true** (otherwise the result is **false**). The right side argument
+expression is not evaluated, if the left side had a **false** value.
+
+Logical **or** expression results in **true**, if either of arguments 
+**true** (otherwise the result is **false**). The right side argument
+expression is not evaluated, if the left side had a **true** value.
+
+The type of logical operators is *boolean* → *boolean* → *boolean* (the
+expression results in *boolean* value and the arguments are *boolean* as well).
+
+Logical operators have left associativity. Yeti is different from many other
+programming languages by having same precedence for **and** and **or** -
+this is to encourage using parenthesis to make the grouping explicit.
+
 String concatenation
 -----------------------
 .. peg
@@ -970,6 +992,14 @@ String concatenation
 
     StrConcat   = Logical SP (AsIsType* "^" !OpChar Logical)*;
     CStrConcat  = CLogical SP (AsIsType* "^" !OpChar CLogical)*;
+
+String concatenation operator takes two *string* values and results in
+a *string* value that represents character sequence, that is concatenation
+of the character sequences from the left side and right side arguments.
+
+The type of the **^** operator is *string* → *string* → *string*.
+
+String concatenation is associative.
 
 List construction and concatenation
 --------------------------------------
@@ -980,6 +1010,22 @@ List construction and concatenation
     Cons        = StrConcat SP (AsIsType* ConsOp !OpChar StrConcat)*;
     CCons       = CStrConcat SP (AsIsType* ConsOp !OpChar CStrConcat)*;
     ConsOp      = "::" / ":." / "++";
+
+List construction operator **::** takes head value from left side and
+tail list from right side, and constructs a new list starting with the
+head value. The type of **::** operator is *'a* → *list<'a>* → *list<'a>*.
+
+Lazy list construction operator **:.** is similar, but takes on the right
+side a function that returns the tail list when applied to unit value **()**.
+The type of **:.** operator is *'a* → *(()* → *list<'a>)* → *list<'a>*.
+
+List concatenation operator **++** takes two lists and results in 
+a list that has elements from the left side list followed by the elements
+from right side list, preserving the order of elements. The resulting
+list is constructed lazily.
+The type of **++** operator is *list<'a>* → *list<'a>* → *list<'a>*.
+
+List construction and concatenation operators have right associativity.
 
 Casts
 --------
