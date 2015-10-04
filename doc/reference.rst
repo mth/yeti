@@ -935,7 +935,7 @@ Comparison operators
 Comparision operators compare two values of same type and give boolean
 result. Comparision operators have left associativity.
 
-Yeti language has following comparision operators:
+Yeti language has the following comparision operators:
 
 +----------+-------------------------+-----------------------------------------+
 | Operator | Type                    | Proposition                             |
