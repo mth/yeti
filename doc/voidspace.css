@@ -1,41 +1,20 @@
 /*
-:Authors: Ian Bicking, Michael Foord
-:Contact: fuzzyman@voidspace.org.uk
-:Date: 2005/08/26 
-:Version: 0.1.0
+:Authors: Madis Janson, Ian Bicking, Michael Foord
 :Copyright: This stylesheet has been placed in the public domain.
-
 Stylesheet for Docutils.
+Based on ``voidspace.css`` by Ian Bicking, Michael Foord
 Based on ``blue_box.css`` by Ian Bicking
 and ``html4css1.css`` revision 1.46.
 */
 
-body {
-  font-family: sans-serif;
-  font-size: 12pt;
-}
 
-em, i {
-  /* Typically serif fonts have much nicer italics */
-  font-family: serif;
-}
-
-a {
-  color: #00B
-}
-
-a.internal {
-  text-decoration: none
-}
-
-a.toc-backref {
-  text-decoration: none;
-  color: black;
-}
-
-a:hover {
-  background-color: #DDD;
-}
+/* Typically serif fonts have much nicer italics */
+em, i {font-family: serif}
+body {font-family: sans-serif; font-size: 12pt}
+a {color: #00B}
+a.internal {text-decoration: none}
+a.toc-backref {text-decoration: none; color: black}
+a:hover {background-color: #DDD}
 
 div.attention, div.caution, div.danger, div.error, div.hint,
 div.important, div.note, div.tip, div.warning {
@@ -71,30 +50,15 @@ h1, h2, h3, h4, h5 {
   margin: 1em 5mm 0.8em 0px;
 }
 
-h1 {
-  border-width: 0px 0px 3px;
-  text-align: center;
-}
+h1 {border-width: 0px 0px 3px; text-align: center}
+h2 {border-width: 0px 0px 2px}
+h3, h4, h5 {border-width: 0px 0px 1px}
+table.footnote {padding-left: 0.5ex}
+table.citation {padding-left: 0.5ex}
 
-h2 {
-  border-width: 0px 0px 2px;
-}
-
-h3, h4, h5 {
-  border-width: 0px 0px 1px;
-}
-
-table.footnote {
-  padding-left: 0.5ex;
-}
-
-table.citation {
-  padding-left: 0.5ex
-}
-
-table { border-collapse: collapse; border-width: 0px }
-th { border-width: 0px 0px 3px }
-table.docutils tbody td { padding: 0.33em }
+table {border-collapse: collapse; border-width: 0px}
+th {border-width: 0px 0px 3px}
+table.docutils tbody td {padding: 0.33em}
 
 pre.literal-block, pre.doctest-block {
   border: 1px black dashed;
@@ -104,14 +68,5 @@ pre.literal-block, pre.doctest-block {
   font-size: 11pt;
 }
 
-.image img { border-style : solid;
-            border-width : 2px;
-}
-
-h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {
-  font-size: 100%;
-}
-
-code, tt {
-  color: #000066;
-}
+h1 tt, h2 tt, h3 tt, h4 tt, h5 tt, h6 tt {font-size: 100%}
+code, tt {background-color: #ffffc8}
