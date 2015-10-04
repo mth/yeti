@@ -882,7 +882,7 @@ Custom operators
     CustomOp    = !(CompareOp / [*/%+-<=>^:\\\.] !OpChar) OpChar+ / IdOp;
 
 Custom operators are any operators that are not built into the language.
-The operators are defined by simply having a function value bound with name
+These operators are defined by simply having a function value bound with name
 consisting of operator characters, or by using regular identifier between
 backticks. The operator type is the binding type, and resulting value/type
 is the result of appling the function value to the given arguments. 
@@ -896,6 +896,18 @@ Function composition
     Compose     = CustomOps (AsIsType* ComposeOp CustomOps)*;
     CCompose    = CCustomOps (AsIsType* ComposeOp CCustomOps)*;
     ComposeOp   = "\." Space+ / Space+ "\." SP;
+
+Function composition operator composes two functions given as it's arguments.
+Canonical implementation of the function composition is the following definition::
+
+    (.) f g a = f (g a);
+
+The type of the composition operator is
+*('a* → *'b)* → *('c* → *'a)* → *'c* → *'b*.
+
+Dot is considered to be composition operator only when it doesn't have identifier
+neither directly before or after it (without whitespace). Otherwise the dot denotes
+reference operator.
 
 Comparison operators
 -----------------------
