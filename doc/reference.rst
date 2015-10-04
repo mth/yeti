@@ -1035,6 +1035,38 @@ Casts
 
     AsIsType    = ("is" / "as" / "unsafely\_as") !IdChar Type;
 
+Cast operators are in reality suffix operators, as the type description
+on their right side that can be considered to be part of the operator.
+
+The **is** operator unifies the left side expressions type with the type
+on the right side. The resulting value type is the unified type. It passes
+the value unmodified, and due to the unification process the argument
+expressions type is same as the resulting type. Its only effect is
+compile-time narrowing of expression type and unification error on unexpected
+type.
+
+The **as** cast operator does a safe conversion of the argument value
+into a value with given result type. The compiler verifies that the conversion
+is guaranteed to be possible, and if needed, generates code to convert the
+value into representation required by the given type. It's typically used
+for conversions between Yeti native types and Java object types, and for
+upcasting the Java types.
+
+The **unsafely_as** cast operator does a unsafe type coercion into a value
+with the given result type. Unlike **as** cast, no value conversion will be
+done, only JVM primitive checkcast opcode is used to change the underlying JVM
+object type.
+The compiler allows any coercion between Java object types that have subclass
+relation (both downcasts and upcasts are possible, although it is more
+reasonable to use **as** for upcasting). One of argument or result types
+can also be a Yeti native type that is represented by JVM type having a
+subclass relation to the other type. Using **unsafely_as** with native
+Yeti type makes the typesystem unsound, as the compiler cannot be sure anymore
+that the runtime value matches the expected static type.
+
+Both **as** and **unsafely_as** casts decouple the argument and result types,
+limiting type inference.
+
 Forward application
 ----------------------
 .. peg
