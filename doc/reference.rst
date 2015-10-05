@@ -802,6 +802,8 @@ Operator precedence
 |                | **=~**          | Pattern match         | *string*        |
 |                |                 |                       | → *string*      |
 |                |                 |                       | → *boolean*     |
+|                +-----------------+-----------------------+-----------------+
+|                | **instanceof**  | Instance of class     | *'a* → *boolean*|
 +----------------+-----------------+-----------------------+-----------------+
 | 9.             | **not**         | Logical negation      | *boolean*       |
 | prefix         |                 |                       | → *boolean*     |
@@ -1085,6 +1087,9 @@ Yeti language has the following comparision operators:
 | **=~**   | Left side string matches regex             | *string* → *string*  |
 |          | pattern on the right side                  | → *boolean*          |
 +----------+--------------------------------------------+----------------------+
+
+instanceof operator
+''''''''''''''''''''''
 
 Logical operators
 --------------------
