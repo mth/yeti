@@ -941,7 +941,7 @@ Yeti uses strict call-by-sharing evaluation semantics (call-by-sharing
 is a type of call-by-value evaluation, where references are passed).
 
 The type of application is the functions return type. If the function
-value type is *'a'* → *'b*, then the given value must have the same *'a*
+value type is *'a* → *'b*, then the given value must have the same *'a*
 type and the applications resulting value type is the same *'b* type.
 
 The application operator has left associativity, for example ``a b c`` is
@@ -1202,6 +1202,15 @@ Forward application
 
     ApplyPipe   = Cons SP ("|>" !OpChar Cons)* AsIsType*;
     CApplyPipe  = CCons SP ("|>" !OpChar CCons)* AsIsType*;
+
+Forward application applies the right side function value to the left side
+value. Its essentially equivalent to normal application (function value
+followed by value given as argument), providing just better readability
+in some cases.
+
+The type of forward application operator is *'a* → *('a* → *'b)* → *'b*
+and it has a left associativity (``x |> f |> g`` is same as ``(x |> f) |> g``
+or ``g (f x)``).
 
 Assigning values
 -------------------
