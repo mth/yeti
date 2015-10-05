@@ -10,6 +10,18 @@ Yeti language reference manual
 .. _yeti.jar: http://dot.planet.ee/yeti/yeti.jar
 .. _home page: http://mth.github.io/yeti/
 .. _Mouse parser generator: http://mousepeg.sourceforge.net/Manual.pdf
+.. _short introduction: http://dot.planet.ee/yeti/intro.html
+
+About this document
+~~~~~~~~~~~~~~~~~~~~~~
+This reference manual tries to describe the full Yeti language grammar and
+semantics as exactly as possible. It is written in terse form and with
+expectation, that the reader has already learned the Yeti language basics
+(for example by reading the `short introduction`_). It should be useful
+for learning the exact syntax and semantics of some language construct, for
+learning advanced language parts not described in the introduction, and
+for people wanting to modify the compiler (or to write their own Yeti
+language compatible parser or compiler).
 
 Grammar
 ~~~~~~~~~~
@@ -1173,7 +1185,7 @@ done, only JVM primitive checkcast opcode is used to change the underlying JVM
 object type.
 The compiler allows any coercion between Java object types that have subclass
 relation (both downcasts and upcasts are possible, although it is more
-reasonable to use **as** for upcasting). One of argument or result types
+reasonable to use **as** for upcasting). One of the argument or result types
 can also be a Yeti native type that is represented by JVM type having a
 subclass relation to the other type. Using **unsafely_as** with native
 Yeti type makes the typesystem unsound, as the compiler cannot be sure anymore
