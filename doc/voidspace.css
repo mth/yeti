@@ -23,9 +23,8 @@ div.important, div.note, div.tip, div.warning {
   width: 80%;
 }
 
-div.admonition p.admonition-title, div.hint p.admonition-title,
-div.important p.admonition-title, div.note p.admonition-title,
-div.tip p.admonition-title  {
+p.admonition-title {
+  font-weight: bold; 
   text-align: center;
   display: block;
   border-width: 0px 0px 1px;
@@ -36,11 +35,7 @@ div.tip p.admonition-title  {
 div.attention p.admonition-title, div.caution p.admonition-title,
 div.danger p.admonition-title, div.error p.admonition-title,
 div.warning p.admonition-title {
-  color: #cc0000;
-  text-align: center;
-  background-color: #999999;
-  display: block;
-  margin: 0;
+  border-color: red; border-width: 0px 0px 2px
 }
 
 h1, h2, h3, h4, h5 {
