@@ -487,7 +487,8 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      * status - exit status code to be returned from the JVM process
      */
     sysExit exitCode =
-        System#exit(exitCode),
+        System#exit(exitCode);
+        throw (() as ~Exception),
 
     /**
      * Group: zmisc
