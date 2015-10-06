@@ -462,8 +462,8 @@ xmlWrite to root =
  * Finds all child elements by the given path.
  *
  * Arguments:
- * element - element where to start
  * path    - list of element names forming the path
+ * element - element where to start
  *
  * Description:
  * First finds all child elements with the name matching the first
