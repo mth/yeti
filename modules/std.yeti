@@ -2339,8 +2339,8 @@ plus a b = a + b;
      *
      * Arguments:
      * padding - a padding string to append
-     * string  - a string to be padded
      * length  - desired result length
+     * string  - a string to be padded
      *
      * Examples:
      * : strPad '.' 10 'test' == 'test......'
