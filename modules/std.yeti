@@ -2413,6 +2413,28 @@ plus a b = a + b;
         fi;
         (number unsafely_as ~Num)#toString(base, 0),
 
+   /**
+    * Group: string
+    * Parses properties string given in Java properties file format.
+    *
+    * Arguments:
+    * string - properties string to parse
+    *
+    * Notes:
+    * This requires JDK 1.6 or newer to work.
+    *
+    * Examples:
+    * : config = readFile "configuration" utf8 parseProperties;
+    * : forHash config do key value:
+    * :    println "\(key) = \(value)"
+    * : done
+    */
+   parseProperties string =
+        p = new java.util.Properties();
+        p#load(new java.io.StringReader(string));
+        new Hash(p) unsafely_as hash<string, string>,
+
+
     /**
      * Group: hash
      * Applies the function to each key-value pair in the given hash map,
