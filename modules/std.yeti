@@ -2417,9 +2417,6 @@ plus a b = a + b;
     * Group: string
     * Parses properties string given in Java properties file format.
     *
-    * Arguments:
-    * string - properties string to parse
-    *
     * Notes:
     * This requires JDK 1.6 or newer to work.
     *
@@ -2429,9 +2426,12 @@ plus a b = a + b;
     * :    println "\(key) = \(value)"
     * : done
     */
-   parseProperties string =
+   parseProperties {contents} is {
+            /// Properties string to parse
+            .contents is string
+        } -> hash<string, string> =
         p = new java.util.Properties();
-        p#load(new java.io.StringReader(string));
+        p#load(new java.io.StringReader(contents));
         new Hash(p) unsafely_as hash<string, string>,
 
 
