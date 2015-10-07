@@ -188,6 +188,7 @@ xmlParse source is 'a -> xml_element =
     var r = () as ~XMLStreamReader;
     var keepWS = false;
     var keepNS = false;
+    var nsAware = true;
     f = XMLInputFactory#newInstance();
     for source
        \case of
@@ -220,6 +221,7 @@ xmlParse source is 'a -> xml_element =
         /// Turns on/off namespace processing for XML 1.0 support.
         /// Default is true (for conforming XML Streaming API implementations).
         NSAware flag:
+            nsAware := flag;
             f#setProperty(XMLInputFactory#IS_NAMESPACE_AWARE, flag is boolean);
 
         /// Turns on implementation specific DTD validation.
@@ -266,8 +268,14 @@ xmlParse source is 'a -> xml_element =
             attr = new yeti.lang.Hash(i) unsafely_as hash<string, string>;
             (i := i - 1; i >= 0) loop
                (qn = r#getAttributeName(i);
-                attr[if keepNS and qn#getNamespaceURI() != '' then
-                        "{\(qn#getNamespaceURI())}\(qn#getLocalPart())"
+                attr[if nsAware then
+                        if keepNS and qn#getNamespaceURI() != '' then
+                            "{\(qn#getNamespaceURI())}\(qn#getLocalPart())"
+                        else
+                            qn#getLocalPart()
+                        fi
+                     elif keepNS and qn#getPrefix() != '' then
+                        "\(qn#getPrefix()):\(qn#getLocalPart())"
                      else
                         qn#getLocalPart()
                      fi] := r#getAttributeValue(i));
