@@ -2417,21 +2417,15 @@ plus a b = a + b;
     * Group: string
     * Parses properties string given in Java properties file format.
     *
+    * Arguments:
+    * string - properties string to parse
+    *
     * Notes:
     * This requires JDK 1.6 or newer to work.
-    *
-    * Examples:
-    * : config = readFile "configuration" utf8 parseProperties;
-    * : forHash config do key value:
-    * :    println "\(key) = \(value)"
-    * : done
     */
-   parseProperties {contents} is {
-            /// Properties string to parse
-            .contents is string
-        } -> hash<string, string> =
+   parseProperties string =
         p = new java.util.Properties();
-        p#load(new java.io.StringReader(contents));
+        p#load(new java.io.StringReader(string));
         new Hash(p) unsafely_as hash<string, string>,
 
 
