@@ -184,39 +184,33 @@ add_value e v =
  * options - XML source and parsing options
  */
 xmlParse source is 'a -> xml_element =
-   (var r_was = () as ~XMLStreamReader;
-    var r = () as ~XMLStreamReader;
+   (
     var keepWS = false;
     var keepNS = false;
     var nsAware = true;
+    src = array [];
     f = XMLInputFactory#newInstance();
-    for source
-       \case of
+    for source do opt:
+        case opt of
         /// Read XML from this InputStream instance (expects UTF-8 encoding).
-        InputStream s:
-            r_was := r;
-            r := f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
+        InputStream _:
+            push src opt;
 
         /// Read XML from this Reader instance.
-        Reader ir:
-            r_was := r;
-            r := f#createXMLStreamReader(ir is ~java.io.Reader);
+        Reader _:
+            push src opt;
 
         /// Read XML from  this Source instance.
-        Source s:
-            r_was := r;
-            r := f#createXMLStreamReader(s is ~javax.xml.transform.Source);
+        Source _:
+            push src opt;
 
         /// Parse this string as XML.
-        Str s:
-            r_was := r;
-            r := f#createXMLStreamReader(new java.io.StringReader(s));
+        Str _:
+            push src opt;
 
         /// Read XML from a file with this name.
-        File fn:
-            r_was := r;
-            r := f#createXMLStreamReader(new java.io.FileInputStream(
-                    fn is string unsafely_as ~String), 'UTF-8');
+        File _:
+            push src opt;
 
         /// Turns on/off namespace processing for XML 1.0 support.
         /// Default is true (for conforming XML Streaming API implementations).
@@ -237,6 +231,8 @@ xmlParse source is 'a -> xml_element =
         /// Element attribute names (in .attributes hash) will be in the form
         /// '{namespace-URI}attribute-name' for attributes that had
         /// a namespace prefix in XML.
+        /// When combined with `NSAware false` option, the prefix part in
+        /// attribute names will be preserved.
         KeepNS ():
             keepNS := true;
 
@@ -250,13 +246,28 @@ xmlParse source is 'a -> xml_element =
         KeepAll ():
             keepNS := true;
             keepWS := true;
-        esac;
-    if nullptr? r then
+        esac
+    done;
+    if empty? src then
         failWith "No input source given to xmlParse"
     fi;
-    if not nullptr? r_was then
+    if length src != 1 then
         failWith "Multiple input sources are not allowed for xmlParse"
     fi;
+    r = case src[0] of
+        InputStream s:
+            f#createXMLStreamReader(s is ~java.io.InputStream, 'UTF-8');
+        Reader ir:
+            f#createXMLStreamReader(ir is ~java.io.Reader);
+        Source s:
+            f#createXMLStreamReader(s is ~javax.xml.transform.Source);
+        Str s:
+            f#createXMLStreamReader(new java.io.StringReader(s));
+        File fn:
+            f#createXMLStreamReader(new java.io.FileInputStream(
+                    fn is string unsafely_as ~String), 'UTF-8');
+        ...
+        esac;
     root = xmlElement 'UTF-8';
     var current = root;
     stack = array [];
