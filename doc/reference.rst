@@ -1237,10 +1237,9 @@ which means that actual copy of the value is never done by assignment
 themselves, exactly as it is with the call-by-sharing function application
 arguments).
 
-The types of left-side and right-side expressions are unified.
+The types of left-side and right-side expressions are unified. The result of
+assignment expression is a normal ``()`` value, not a mutable box.
 
-Assign operator has left a associativity and results in normal ``()`` value,
-not a mutable box - effectively forbidding the form ``a := b := c``.
 The evaluation order between left and right side of assignment is unspecified.
 
 Loop
