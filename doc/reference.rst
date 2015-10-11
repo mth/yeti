@@ -1226,6 +1226,23 @@ Assigning values
     Assign      = ApplyPipe SP (":=" !OpChar ApplyPipe)?;
     CAssign     = CApplyPipe SP (":=" !OpChar CApplyPipe)?;
 
+The left-side expression must provide a mutable box - either mutable
+variable, mutable structure field or a mapping reference (having the form
+``expression[key]``).
+
+Assign operator stores into the mutable box a value from evaluation of the
+right-side expression. The mutable boxes always store only a value reference,
+which means that actual copy of the value is never done by assignment
+(giving a sharing semantics for values that contain mutable boxes by
+themselves, exactly as it is with the call-by-sharing function application
+arguments).
+
+The types of left-side and right-side expressions are unified.
+
+Assign operator has left a associativity and results in normal ``()`` value,
+not a mutable box - effectively forbidding the form ``a := b := c``.
+The evaluation order between left and right side of assignment is unspecified.
+
 Loop
 -------
 .. peg
