@@ -1248,8 +1248,21 @@ Loop
 
 ::
 
-    Expression  = Assign SP ("loop" !IdChar Assign)* "loop"?;
-    CExpression = CAssign SP ("loop" !IdChar CAssign)* "loop"?;
+    Expression  = Assign SP ("loop" !IdChar Assign)* ("loop" !IdChar)?;
+    CExpression = CAssign SP ("loop" !IdChar CAssign)* ("loop" !IdChar)?;
+
+The expression left of ``loop`` operator must have a *boolean* type and
+the right-side expression must have a *()* type. The whole ``loop`` expression
+has *()* type.
+
+First the left-side expression is evaluated. The evaluation of ``loop``
+expression terminates only when the left-side evaluation results in ``false``
+value or exception is thrown. Otherwise the right-side expression is evaluated,
+and if no exception was thrown, the ``loop`` expression evaluation is restarted
+(repeating the loop while left-side is ``true``).
+
+The ``loop`` operator has right associativity and cannot be used as a section or
+function.
 
 Value and function bindings
 ++++++++++++++++++++++++++++++
