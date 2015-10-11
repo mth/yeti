@@ -1248,9 +1248,8 @@ Loop
 
 ::
 
-    Expression  = Assign SP ("loop" (!IdChar Assign)?)?;
-    CExpression = CAssign SP ("loop" (!IdChar CAssign)?)?;
-
+    Expression  = Assign SP ("loop" !IdChar Assign)* "loop"?;
+    CExpression = CAssign SP ("loop" !IdChar CAssign)* "loop"?;
 
 Value and function bindings
 ++++++++++++++++++++++++++++++
