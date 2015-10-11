@@ -1252,8 +1252,9 @@ Loop
     CExpression = CAssign SP ("loop" !IdChar CAssign)* ("loop" !IdChar)?;
 
 The expression left of ``loop`` operator must have a *boolean* type and
-the right-side expression must have a *()* type. The whole ``loop`` expression
-has *()* type.
+the right-side expression must have a *()* type. The right-side expression
+may be omitted, in this case implicit ``()`` value is used in its place.
+The whole ``loop`` expression has *()* type.
 
 First the left-side expression is evaluated. The evaluation of ``loop``
 expression terminates only when the left-side evaluation results in ``false``
