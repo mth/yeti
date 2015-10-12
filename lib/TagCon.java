@@ -40,4 +40,16 @@ public final class TagCon extends Fun {
     public final Object apply(Object value) {
         return new Tag(value, name);
     }
+
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    public boolean equals(Object other) {
+        return other instanceof TagCon && name.equals(((TagCon) other).name);
+    }
+
+    public String toString() {
+        return name;
+    }
 }
