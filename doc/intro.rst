@@ -1970,10 +1970,11 @@ The previous value tagging examples, like ``Color "green"``, did look
 quite like an application. In fact this tagging is application - any
 uppercase-starting identifier is a tag constructor and any tag constructor
 is a function, when used in an expression.
+
 ::
 
     > Color
-    <yeti.lang.TagCon> is 'a -> Color 'a
+    Color is 'a -> Color 'a
     > Color "green"
     Color "green" is Color string
     > Color 42
