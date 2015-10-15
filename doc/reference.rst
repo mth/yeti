@@ -614,10 +614,12 @@ partial applications::
     left_section = (expression `operator`);
     left_section_equivalent = operator expression;
 
-The ``as`` and ``unsafely_as`` casts can also be used as sections, that result
-in a function value that casts its argument value into the given type.
+The ``as`` and ``unsafely_as`` casts can also be used as right sections, that
+result in a function value that casts its argument value into the given type.
 The argument type is inferred from the context where the cast section is used,
-defaulting to free type variable (*'a*).
+defaulting to free type variable (*'a*). Similarly the ``instanceof`` operator
+can be used as a right section, resulting in a function that checks whether
+its argument value would pass as instance of the given Java class.
 
 Field references can also be put into parenthesis, giving a function that
 retrieves the field value from the argument value. The type of single
@@ -1090,6 +1092,17 @@ Yeti language has the following comparision operators:
 
 instanceof operator
 ''''''''''''''''''''''
+
+The ``instanceof`` operator gives ``true`` value when the left-side value
+would pass as an instance of the Java class named on the right of the operator,
+by being instance of it or its subclass. Otherwise the application of the
+``instanceof`` operator results in ``false`` value. Only the left-side values
+runtime (JVM) type is considered, the compile-time static type doesn't matter
+at all, and therefore can be any type, including native Yeti types.
+
+Since the type name is de facto part of the operator, it can be considered
+to be suffix operator similarly to the cast operators, and has the type
+*`a* → *boolean*.
 
 Logical operators
 --------------------
