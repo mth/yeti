@@ -407,10 +407,10 @@ Structure literal
 ::
 
     Struct      = "{" Field ("," Field)* ","? SP "}";
-    Field       = SP Modifier? FieldId
+    Field       = SP Modifier* FieldId
                   (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
     FieldId     = Id / "``" ^[`]+ "``";
-    Modifier    = ("var" / "norec") Space+;
+    Modifier    = ("get" / "set" / "var" / "norec") Space+;
 
 Structure literal creates a structure (aka record) value, which contains a
 collection of named fields inside curled braces. Each field is represented as
@@ -438,6 +438,8 @@ The ``var`` keyword means that the field is mutable within structure (by
 default a field is immutable). The ``norec`` keyword means that the field
 won't create a local binding inside the structure scope, even when it's
 value is a function literal.
+
+TODO: get/set accessors.
 
 The type of structure literal is a structure type. The types of fields are
 inferred from the values assigned to the fields and produce an allowed fields
@@ -1284,10 +1286,11 @@ Value and function bindings
 
 ::
 
-    Binding     = (StructArg / Modifier? !Any Id BindArg* IsType)
+    Binding     = (StructArg / Var? !Any Id BindArg* IsType)
                   SP "=" !OpChar Expression Semicolon+ SP;
-    CBinding    = (StructArg / Modifier? !(Any / End) Id (!End BindArg)* IsType)
+    CBinding    = (StructArg / Var? !(Any / End) Id (!End BindArg)* IsType)
                   SP "=" !OpChar CExpression Semicolon+ SP;
+    Var         = "var" Space+;
     Any         = "\_" !IdChar;
 
 Self-binding lambda expression
@@ -1296,8 +1299,8 @@ Self-binding lambda expression
 
 ::
 
-    SelfBind    = (Modifier? Id BindArg+ / Any) IsType "=" !OpChar;
-    CSelfBind   = (Modifier? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
+    SelfBind    = (Var? Id BindArg+ / Any) IsType "=" !OpChar;
+    CSelfBind   = (Var? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
 
 
 Class definition
