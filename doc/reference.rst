@@ -1004,8 +1004,46 @@ All arithmetic and bitwise operators have the type *number* → *number*
 remainder operators truncate fractional part from their arguments,
 doing the given operation using only the integer part of the argument.
 
-Structure merge operator with
-''''''''''''''''''''''''''''''''
+Structure override and merge operator with
+'''''''''''''''''''''''''''''''''''''''''''''
+The expression on the right of the ``with`` operator must have a structure
+type that has an allowed fields set (a non-extensible structure type).
+The left-side expression must have either structure type or undefined
+type  *'a* (a free type variable). The ``with`` operator has nothing else
+in common with arithmetic operators, than having the same precedence and
+left associativity.
+
+The resulting value of the ``with`` expression is a structure consisting of
+all fields from the right-side value, that were in its types allowed field
+set, and those fields from the left-side structure value, that were not in
+the right-side expression types allowed field set.
+
+Mutable fields are shared with their originating structure. This means that
+the structure that gave a mutable field to the resulting structure gets
+its field updated whenever the field is assigned a new value in the ``with``
+operators result structure. The ``get`` and ``set`` field accessor functions
+are also passed to the resulting structure, so accessing the result structure
+field still goes through the accessor functions.
+
+The ``with`` operator has two distinct use cases, overriding and merging.
+If the left-side expression also has a structure type with allowed fields set,
+then a merge operation is done, otherwise only a simple override is done.
+
+For overriding operation the left-side expressions type is unified with
+structure type that has as a required fields set the right-side types
+allowed fields set. The result of unification is used as the type of the
+``with`` expression. Due to the type unification the right-side allowed
+field set is either same or subset of the left-side values field set, with
+matching types, and all the corresponding fields are overrided.
+
+For merging operation, the type of the ``with`` expression is a new structure
+type. The result types allowed field set contains all of the right-side types
+allowed field set, and those fields from the left-side types allowed field
+set that were not present in the right-side type. A required fields set is
+not present in the result type, and no unification is done with either left
+nor right side expression types. Since no unification is done, for a field
+present on both sides of the ``with`` operator the types can be different
+(only the type from right side is used in this case).
 
 Custom operators
 -------------------
