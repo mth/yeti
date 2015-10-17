@@ -92,7 +92,7 @@ public abstract class Num extends Number implements Comparable {
 
     public Num shl(int by) {
         if (by < 0) {
-            return new IntNum(longValue() >> -by);
+            return new IntNum(longValue() >>> -by);
         }
         long l, v;
         if (by < 32 && (v = longValue()) < (l = SHL_LIMIT[by]) && v > -l) {

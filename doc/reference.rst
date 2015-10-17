@@ -994,7 +994,7 @@ Yeti language has the following arithmetic and bitwise logic operators:
 +-----------+-------------------------------+
 | **b_and** | Bitwise logical and           |
 +-----------+-------------------------------+
-| **shr**   | Bit shift to right (signed)   |
+| **shr**   | Bit shift to right (unsigned) |
 +-----------+-------------------------------+
 | **shl**   | Bit shift to left             |
 +-----------+-------------------------------+
