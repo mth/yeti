@@ -126,7 +126,7 @@ createCtx genericOpt cl =
                 push java '-d';
                 push java dir;
             fi;
-            ctx#writer := new ToFile(dir) as ~CodeWriter;
+            ctx#writer := new FileWriter(dir) as ~yeti.lang.Fun;
             ctx#depDestDir := dir;
 
         /// Set custom source reader function
@@ -143,9 +143,9 @@ createCtx genericOpt cl =
                     .parent is string
                 } -> string as ~yeti.lang.Fun;
 
-        /// Set custom CodeWriter
-        CodeWriter writer:
-            ctx#writer := writer;
+        /// Set custom ClassWriter
+        ClassWriter writer:
+            ctx#writer := writer is string -> ~byte[] -> () as ~yeti.lang.Fun;
 
         /// Set warning handler (~CompileException -> ()).
         /// Called once for each warning.
@@ -188,7 +188,7 @@ createCtx genericOpt cl =
                 cl := new java.net.URLClassLoader(urls, cl) as ~ClassLoader
             fi
         fi;
-        ctx#writer := new Loader(cl) as ~CodeWriter;
+        ctx#writer := new Loader(cl) as ~yeti.lang.Fun;
     fi;
     {warn, ctx, flags, java});
 
@@ -258,7 +258,7 @@ moduleDoc m is ~ModuleType -> module_description = {
  * Yeti sources and finally compiling Java sources using javac.
  *
  * The source and class files don't have to be necessarily on
- * the filesystem, if `SourceReader` or `CodeWriter` options are used
+ * the filesystem, if `SourceReader` or `ClassWriter` options are used
  * and only Yeti code is compiled (the javac compiler used for
  * the Java code works only with filesystem).
  *
@@ -321,7 +321,7 @@ compileYetiFiles genericOpt options files =
     ctx#setSourcePath(sourcePath);
     if not same? typeAction nullTypeAction and not exec
             and ctx#writer instanceof Loader then
-        ctx#writer := () as ~CodeWriter;
+        ctx#writer := () as ~yeti.lang.Fun;
         Compiler#currentCompiler#set(ctx);
         for (list files) do src:
             typeAction (moduleDoc YetiTypeVisitor#getType(ctx, (), src, true))
@@ -347,7 +347,7 @@ compileYetiFiles genericOpt options files =
     fi;
     if exec then
         if mainClass != '' then
-            classLoader = ctx#writer unsafely_as ~ClassLoader;
+            classLoader = (ctx#writer unsafely_as ~Loader)#mem;
             // The Java reflection API used by execClass to invoke main() will
             // wrap exceptions from user code into InvocationTargetException,
             // so we don't need to do anything here with those exceptions.
@@ -410,7 +410,7 @@ evaluateYetiCode genericOpt =
         var flags = param.flags b_or Compiler#CF_EVAL
                                 b_or Compiler#CF_EVAL_RESOLVE;
         if ctx#writer instanceof Loader then
-            cl := (ctx#writer unsafely_as ~Loader)#getParent()
+            cl := (ctx#writer unsafely_as ~Loader)#mem#getParent()
         fi;
 
         for options
@@ -481,7 +481,7 @@ evaluateYetiCode genericOpt =
                     CompileException compileErr
                 elif exec and ctx#writer instanceof Loader then
                     val = Result (execClass argv sandbox true
-                                            (ctx#writer unsafely_as ~Loader)
+                                            (ctx#writer unsafely_as ~Loader)#mem
                                             mainClass);
                     bindBarrier < bindings#size() loop
                        (push bindingVars (bindings#get(bindBarrier)
@@ -583,7 +583,7 @@ generateYetiDoc {directory, modules, error} is {
         } -> () =
    (cl = classOf YetiEval#getClassLoader();
     ctx = evaluateYetiCode [ICast (),
-            CodeWriter (new Loader(cl) as ~CodeWriter)];
+            ClassWriter (new Loader(cl) unsafely_as string -> ~byte[] -> ())];
     case ctx [Bind (), Source 'doc.yeti', Exec (array [directory])]
              ((inputHandle cl#getResourceAsStream('doc.yeti')
                            'UTF-8').contents ()) of

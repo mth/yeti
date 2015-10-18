@@ -63,7 +63,7 @@ final class Compiler implements Opcodes {
     static final ThreadLocal currentCompiler = new ThreadLocal();
     private static ClassLoader JAVAC;
 
-    CodeWriter writer;
+    Fun writer;
     String depDestDir; // used to read already compiled classes
     private Map compiled = new HashMap();
     private List warnings = new ArrayList();
@@ -628,7 +628,7 @@ final class Compiler implements Opcodes {
             definedClasses.put(c.className.toLowerCase(), "");
             String name = c.className + ".class";
             byte[] content = c.cw.toByteArray();
-            writer.writeClass(name, content);
+            writer.apply(name, content);
             classPath.define(name, content);
         }
     }

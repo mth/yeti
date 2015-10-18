@@ -55,7 +55,7 @@ public class YetiEval {
         return (YetiEval) instance.get();
     }
 
-    public static YetiEval set(YetiEval eval) {
+    static YetiEval set(YetiEval eval) {
         YetiEval old = (YetiEval) instance.get();
         instance.set(eval);
         return old;

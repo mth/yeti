@@ -30,43 +30,33 @@
  */
 package yeti.lang.compiler;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import yeti.lang.Fun2;
 import java.util.HashMap;
 
-public interface CodeWriter {
-    void writeClass(String name, byte[] code) throws Exception;
-}
-
-class ToFile implements CodeWriter {
-    private String target;
-
-    ToFile(String target) {
-        this.target = target;
-    }
-
-    public void writeClass(String name, byte[] code) throws Exception {
-        name = target + name;
-        int sl = name.lastIndexOf('/');
-        if (sl > 0) {
-            new File(name.substring(0, sl)).mkdirs();
-        }
-        FileOutputStream out = new FileOutputStream(name);
-        out.write(code);
-        out.close();
-    }
-}
-
-class Loader extends ClassLoader implements CodeWriter {
-    private HashMap classes = new HashMap();
+class Loader extends Fun2 {
+    MemLoader mem;
 
     Loader(ClassLoader cl) {
-        super(cl != null ? cl : Thread.currentThread().getContextClassLoader());
+        mem = new MemLoader(cl);
     }
 
-    public void writeClass(String name, byte[] code) {
+    public Object apply(Object className, Object codeBytes) {
+        String name = (String) className;
+
         // to a dotted classname used by loadClass
-        classes.put(name.substring(0, name.length() - 6).replace('/', '.'),
-                    code);
+        mem.classes.put(name.substring(0, name.length() - 6).replace('/', '.'),
+                        codeBytes);
+        return null;
+    }
+}
+
+class MemLoader extends ClassLoader {
+    HashMap classes = new HashMap();
+
+    MemLoader(ClassLoader cl) {
+        super(cl != null ? cl : Thread.currentThread().getContextClassLoader());
     }
 
     // override loadClass to ensure loading our own class

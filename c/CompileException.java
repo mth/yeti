@@ -79,12 +79,12 @@ public class CompileException extends RuntimeException {
         this.what = what;
     }
 
-    public CompileException(YetiParser.Node pos,
-                            JavaClassNotFoundException ex) {
+    CompileException(YetiParser.Node pos,
+                     JavaClassNotFoundException ex) {
         this(ex, pos, "Unknown class: " + ex.getMessage());
     }
 
-    public CompileException(YetiParser.Node pos, String what) {
+    CompileException(YetiParser.Node pos, String what) {
         this(null, pos, what);
     }
 
@@ -98,7 +98,7 @@ public class CompileException extends RuntimeException {
         this.cause = pos;
     }
 
-    public CompileException(YetiParser.Node pos, Scope scope,
+    CompileException(YetiParser.Node pos, Scope scope,
                             YType param1, YType param2, String what,
                             TypeException ex) {
         this(ex, pos, format(param1, param2, what, ex, scope));

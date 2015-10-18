@@ -195,7 +195,7 @@ final class TypeScope extends Scope {
     }
 }
 
-public class YetiType implements YetiParser {
+class YetiType implements YetiParser {
     static final int VAR  = 0;
     static final int UNIT = 1;
     static final int STR  = 2;
