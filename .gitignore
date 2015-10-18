@@ -3,7 +3,8 @@ properties
 tags
 yeti.jar
 yeti-lib.jar
-asm-5.0.3r.jar
+yeti-peg.jar
+asm-5.0.3y.jar
 Mouse-1.6.jar
 doc/*.html
 doc/_*.aux
