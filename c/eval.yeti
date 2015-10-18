@@ -129,7 +129,7 @@ createCtx genericOpt cl =
             ctx#writer := new FileWriter(dir) as ~yeti.lang.Fun;
             ctx#depDestDir := dir;
 
-        /// Set custom source reader function
+        /// Set custom source reader function.
         SourceReader f:
             ctx#customReader := 
                 f is {
@@ -143,7 +143,7 @@ createCtx genericOpt cl =
                     .parent is string
                 } -> string as ~yeti.lang.Fun;
 
-        /// Set custom ClassWriter
+        /// Set custom class writing function.
         ClassWriter writer:
             ctx#writer := writer is string -> ~byte[] -> () as ~yeti.lang.Fun;
 
