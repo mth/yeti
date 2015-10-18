@@ -97,8 +97,9 @@ Comments and whitespace
 
 Whitespace can appear between most other tokens without changing the
 meaning of code, although some operators are whitespace sensitive
-(for example field `reference operator`_ is distinguished from
-`function composition`_ by not having whitespace on both sides).
+(for example field `reference operator <Reference operators_>`_ is
+distinguished from `function composition`_ by not having whitespace
+on both sides).
 
 Multi-line comments can be nested, and all comments are considered
 to be equivalent to other whitespace.
@@ -152,11 +153,6 @@ symbols (for example Perl compatible regular expressions).
 Identifiers
 --------------
 .. _Id:
-.. _identifier:
-.. _ClassId:
-.. _JavaId:
-.. _ClassName:
-.. _Variant:
 .. peg
 
 ::
@@ -407,10 +403,11 @@ Structure literal
 ::
 
     Struct      = "{" Field ("," Field)* ","? SP "}";
-    Field       = SP Modifier* FieldId
+    Field       = SP NoRec? Modifier? FieldId
                   (&(SP [,}]) / BindArg* IsType "=" !OpChar AnyExpression) SP;
     FieldId     = Id / "``" ^[`]+ "``";
-    Modifier    = ("get" / "set" / "var" / "norec") Space+;
+    NoRec       = "norec" Space+;
+    Modifier    = ("get" / "set" / "var") Space+;
 
 Structure literal creates a structure (aka record) value, which contains a
 collection of named fields inside curled braces. Each field is represented as
@@ -426,21 +423,36 @@ corresponding structure field.
 
 If field value expression is a function literal (either implicit one created
 by having arguments in the field binding or explicit Lambda_ block), then a
-new scope is created inside the structure literal, and used by all field
-value expressions as a containing scope. All fields having function literal
-values will create a local binding inside that structure scope (unless prefixed
+new scope is created inside the structure literal, and used by all field value
+expressions as a containing scope. All fields having function literal values
+will create a local binding inside that structure scope (unless prefixed
 with ``norec`` keyword), and the bindings will be recursively available
 for all expressions residing in the structure literal definition. This is
 the only form of mutually recursive bindings available in the Yeti language.
 The local bindings inside the structure scope are always non-polymorphic.
 
-The field names can be prefixed with ``var`` and/or ``norec`` keywords.
-The ``var`` keyword means that the field is mutable within structure (by
-default a field is immutable). The ``norec`` keyword means that the field
-won't create a local binding inside the structure scope, even when it's
-value is a function literal.
+The field names can be prefixed with ``norec``, ``var``, ``get`` or ``set``
+keywords:
 
-TODO: get/set accessors.
+``var``
+    The field is mutable within structure (by default a field is immutable).
+
+``norec``
+    The field won't create a local binding inside the structure scope,
+    even when it's value is a function literal.
+
+``get``
+    The given value is used as an accessor function that is applied to unit
+    value ``()`` to get the actual field value whenever the
+    `field is referenced <FieldRef_>`_. The type of the accessor
+    function is *()* → *field-type*.
+
+``set``
+    The given value is used as an accessor function that is applied to
+    the value to be assigned whenever a new value is
+    `assigned <assigning values_>`_ to the `field reference <FieldRef_>`_.
+    The ``set`` accessor is allowed only together with the ``get`` accessor.
+    The type of the accessor function is *field-type* → *()*.
 
 The type of structure literal is a structure type. The types of fields are
 inferred from the values assigned to the fields and produce an allowed fields
@@ -539,8 +551,8 @@ the resulting types are unified into single type. The pattern type
 unification works mostly like regular expression type unification,
 with few exceptions:
 
-    * Variant_ tags from the pattern form *allowed* member set in the
-      corresponding variant type, unless the type is also matched with
+    * `Variant <Id_>`_ tags from the pattern form *allowed* member set in
+      the corresponding variant type, unless the type is also matched with
       wildcard (in this case *required* member set is formed in the type).
     * Structure fields from the pattern form *required* member set in the
       corresponding structure type.
@@ -575,8 +587,8 @@ The ``finally`` sections expression must have the unit type *()*, as the
 value from the evaluation of the ``finally`` section is always ignored.
 
 If exception is thrown that matches some ``catch`` section (by being same or
-subclass of its ClassId_), then first matching ``catch`` section is evaluated,
-and the resulting value is used as the value of the ``try`` block.
+subclass of its `ClassId <Id_>`_), then first matching ``catch`` section is
+evaluated, and the resulting value is used as the value of the ``try`` block.
 
 If ``catch`` section has an exception binding Id_, then caught exceptions
 value will be bound to the given identifier in that sections scope.
@@ -651,8 +663,8 @@ Simple expression
 Simple expression is an expression that is not composed of subexpressions
 separated by operators.
 
-* Identifier_
-* Parenthesis (that can contain `any expression`_)
+* `Identifier <Id_>`_
+* Parenthesis (that can contain `any expression <AnyExpression_>`_)
 * Literal constructor (number_, string_, `lambda expression`_,
   `list and hash map literals`_, `structure literal`_ or
   `variant constructor`_)
@@ -668,8 +680,8 @@ This is used inside `class definition`_ block, which is terminated by
 Variant constructor
 ----------------------
 
-Variant constructor is written simply as a Variant_ tag. The type of variant
-constructor is *'a* → *Variant 'a*.
+Variant constructor is written simply as a `Variant <Id_>`_ tag.
+The type of variant constructor is *'a* → *Variant 'a*.
 
 Load operator
 ----------------
@@ -679,14 +691,15 @@ Load operator
 
     Load        = "load" !IdChar ClassName;
 
-Load operator gives value of module determined by the ClassName_,
+Load operator gives value of module determined by the `ClassName <Id_>`_,
 and the expressions type is the type of the module.
 
 Alternatively ``load`` of module with structure type can be used as
 a statement on the left side of the sequence operator. In this use
 all fields of the module value will be brought into scope of right-hand
 side of the sequence operator as local bindings, and additionally all
-top-level typedefs_ from the module will be imported into that scope.
+top-level `typedefs <Type definition_>`_ from the module will be imported
+into that scope.
 
 New operator
 ---------------
@@ -699,8 +712,8 @@ New operator
     NewParam    = ArgList / "[" AnyExpression "]" "[]"*;
     ArgList     = "(" SP (Expression SP ("," Expression SP)*)? ")";
 
-New operator constructs an instance of Java class specified by ClassName_,
-and the expressions type is the class type *~ClassName*.
+New operator constructs an instance of Java class specified by
+`ClassName <Id_>`_, and the expressions type is the class type *~ClassName*.
 
 Similarly to Java language, the constructor that has nearest match to
 the given argument types is selected. Compilation fails, if there is no
@@ -717,7 +730,7 @@ ClassOf operator
     ClassOf     = "classOf" !IdChar ClassId SP "[]"*;
 
 The ``classOf`` operator gives Java **Class** instance corresponding to
-the JVM class specified by the ClassId_.
+the JVM class specified by the `ClassId <Id_>`_.
 The specified class must exists in the compilation class path.
 If the class name is followed by ``[]`` pairs, then an array class is given.
 The type of ``classOf`` expression is (obviously) ``~java.lang.Class``.
@@ -851,7 +864,6 @@ Operator precedence
 
 Reference operators
 ----------------------
-.. _reference operator:
 .. peg
 
 ::
@@ -887,6 +899,7 @@ operator, the prefix operator cannot be used directly as function,
 but the function value is bound in standard library module ``yeti.lang.std``
 to ``negate`` identifier.
 
+.. _FieldRef:
 .. peg
 
 ::
@@ -896,6 +909,7 @@ to ``negate`` identifier.
 Field reference is a postfix operator that gives value of the given structure
 *field*. Its type is ``{``\ *.field* ``is`` *'a*\ ``}`` → *'a*.
 
+.. _mapping reference:
 .. peg
 
 ::
@@ -921,7 +935,7 @@ it will be a Java class field reference.
 
 The left side expression of the ``#`` operator is expected to have a Java
 object type (*~Something*), that must have a field or method named by the
-JavaId_. No type inference is done for the left-side object type.
+`JavaId <Id_>`_. No type inference is done for the left-side object type.
 
 Since Java classes can have multiple methods with same name, the exact
 method is resolved by finding one that has the correct number of arguments
@@ -1281,8 +1295,8 @@ Assigning values
     CAssign     = CApplyPipe SP (":=" !OpChar CApplyPipe)?;
 
 The left-side expression must provide a mutable box - either mutable
-variable, mutable structure field or a mapping reference (having the form
-``expression[key]``).
+variable, mutable `structure field <FieldRef_>`_ or a `mapping reference`_
+(having the form ``expression[key]``).
 
 Assign operator stores into the mutable box a value from evaluation of the
 right-side expression. The mutable boxes always store only a value reference,
@@ -1399,7 +1413,6 @@ Java class imports
 
 Type definition
 ------------------
-.. _typedefs:
 .. peg
 
 ::
@@ -1414,7 +1427,6 @@ Type definition
 Sequence expression
 +++++++++++++++++++++++
 .. _AnyExpression:
-.. _`any expression`:
 .. peg
 
 ::
