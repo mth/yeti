@@ -444,7 +444,7 @@ keywords:
 ``get``
     The given value is used as an accessor function that is applied to unit
     value ``()`` to get the actual field value whenever the
-    `field is referenced <FieldRef_>`_. The type of the accessor
+    `field value is referenced <FieldRef_>`_. The type of the accessor
     function is *()* → *field-type*.
 
 ``set``
