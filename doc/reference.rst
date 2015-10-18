@@ -416,7 +416,8 @@ Structure literal creates a structure (aka record) value, which contains a
 collection of named fields inside curled braces. Each field is represented as
 a binding, where the FieldId is optionally followed by IsType_ clause narrowing
 the fields type and/or equals (``=``) symbol and an expression containing
-the fields value.
+the fields value. The FieldId is either normal identifier or a string enclosed
+between ``````.
 
 Multiple fields are separated by commas. If the field value is not specified
 by explicit expression, then current scope must contain a binding with same
