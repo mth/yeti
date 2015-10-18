@@ -42,7 +42,7 @@ REPL means Read-Eval-Print-Loop - a short description of the interactive
 environment, which reads expressions from user, evaluates them and prints
 the resulting values. Yeti REPL can be terminated by sending End-Of-File
 mark (Ctrl-D on Unix systems or Ctrl-Z on Windows systems).
-It is useful to use some readline wrapper for more confortable editing,
+It is useful to use some readline wrapper for more comfortable editing,
 when some is available (rlwrap can be installed on Debian or Ubuntu linux
 systems using ``aptitude install rlwrap`` or ``sudo aptitude install rlwrap``).
 ::
@@ -273,7 +273,7 @@ a function from number to a function from number to number.
 
 This may sound complicated, but you don't have to think how it really works,
 as long as you just need a multiple-argument function - declaring
-multiple arguments and appling them in the same order is enough.
+multiple arguments and applying them in the same order is enough.
 Knowing how curring works allows you to use partial application (like
 subFrom10 and subFrom2 in the above example).
 
@@ -384,7 +384,7 @@ results in a type error.
 Ignoring the argument
 ++++++++++++++++++++++++
 
-There is an another way of definining function that do not want to use it's
+There is an another way of defining function that do not want to use it's
 argument value.
 ::
 
@@ -767,7 +767,7 @@ and a jump instruction to the start of the function - resulting in a
 code very similar to that of the first factorial example using explicit
 loop. Yeti does tail-call optimisation only with self-reference from
 single or directly nested function literals (full tail call support is
-somewhat difficult to implement effectivily in the JVM).
+somewhat difficult to implement effectively in the JVM).
 
 The function bindings can be used directly as expressions::
 
@@ -788,7 +788,7 @@ how the partial application works.
 
 Iteration using **loop**\s and optimised tail-recursion are semantically
 equivalent. So it can be said, that iteration is just a special case of
-recursion. It is usually preferrable in Yeti to use recursive functions
+recursion. It is usually preferable in Yeti to use recursive functions
 for iteration - as it is often more declarative and uniform approach.
 Still, the **loop** should be used, when it shows more clearly the intent
 of the code. It should be noted, that direct iteration is needed relatively
@@ -1193,14 +1193,14 @@ argument type::
     > head
     <yeti.lang.std$head> is list?<'a> -> 'a
 
-The type ``list?`` is actually parametric about the existance of the
+The type ``list?`` is actually parametric about the existence of the
 numeric index and can unify both with ``array`` and ``list`` type.
 
 The ``tail`` of an array shares the original array - meaning that modification
 of the original array will be visible in the returned tail.
 It is best to avoid modifying an array after it is used as ``list?``
 (unless you don't use the resulting lists after that) - the results may be
-suprising sometimes, although defined for most list functions.
+surprising sometimes, although defined for most list functions.
 
 A simple example of using arrays - an implementation of the selection
 sort algorithm::
@@ -1324,7 +1324,7 @@ Maps can be iterated using ``forHash`` and ``mapHash`` functions::
 
 The main difference between ``forHash`` and ``mapHash`` is that ``mapHash``
 creates a list from the values returned by the given function.
-They are also similar to the correspondending ``for`` and ``map`` functions -
+They are also similar to the corresponding ``for`` and ``map`` functions -
 the hash-map variants just take two-argument function, so they can give both
 the key and value as arguments to it.
 
@@ -1391,7 +1391,7 @@ if the function updates the map by itself.
     354224848179261915075 is number
 
 Here the ``calcFib`` function will cause calculation of previous values
-and then stores the result. Because the result is stored, futher
+and then stores the result. Because the result is stored, further
 requests for the same value will be not calculated again, avoiding
 the exponential time complexity of the naive recursive algorithm.
 The algorithm remains non-tail-recursive, though.
@@ -1429,7 +1429,7 @@ to an array expecting function::
 
 Important part is the second line of the error message which states that
 the error is in *list* not being an *hash*. Type parameters are missing
-there because the error occured on unifying the map kind parameter in
+there because the error occurred on unifying the map kind parameter in
 hash<> and array<>, not in unifying themselves (they are both maps!) -
 meaning the mismatching types were really the *list marker* and
 *hash marker*.
@@ -1477,8 +1477,8 @@ operator - a field name prefixed with dot. You may put whitespace before
 or after the dot, but if there is whitespace on both sides of the dot, it
 will be parsed as a function composition operator. It is not recommended
 to put any whitespace around the field reference dot unless there is line
-break (in which case the linebreak is best put before the dot).
-Attempt to use non-existent fields unsuprisingly results in a compile error.
+break (in which case the line break is best put before the dot).
+Attempt to use non-existent fields unsurprisingly results in a compile error.
 
 Structure types are polymorphic - for example a function taking structure
 as an argument can be given any structure that happens to contain the
@@ -1650,7 +1650,7 @@ mutable fields by prefixing the field bindings with the **var** keyword.
     > ev.what := "fubar"
     1:9: Non-mutable expression on the left of the assign operator :=
 
-The mutable fields can be assigned with ordinary assignement operator
+The mutable fields can be assigned with ordinary assignment operator
 similarly to ordinary variables and array or hash references. Attempt
 to modify immutable field results in an error.
 
@@ -1673,7 +1673,7 @@ the unit argument { get time () = ... } .
 
 Their counterparts are mutators. They are also function fields but prefixed
 with **set**, and are invoked with the assignment operator like the
-assigment to a **var** field::
+assignment to a **var** field::
 
     > st = (var priv = 2; {get value () = priv, set value v = priv := v})
     st is {var value is number} = {value=2}
@@ -1848,7 +1848,7 @@ the following does not compile::
     1:20: Right-hand side of with must be a structure with known member set
 
 Note that the ``known-memeber-set`` does not have to be a structure 
-literal it can also be ie a function with a known result-type::
+literal it can also be a function with a known result-type::
 
     > rightHand a b = {a, b}
     rightHand is 'a -> 'b -> {a is 'a, b is 'b} = <code$rightHand>
@@ -1935,7 +1935,7 @@ Yeti don't really support it, but it can be emulated with variants::
 
 This has the advantage, that the values that might be missing have a
 variant type and therefore the typesystem can ensure that they won't
-be used without checking their existance. Which should remove a common
+be used without checking their existence. Which should remove a common
 source of the ``NullPointerException`` errors.
 
 The ``maybePrint`` function can be written in somewhat simpler manner, because
@@ -2437,8 +2437,8 @@ runtime)::
     } 
 
 In the above example a new type ``magic<a>`` together with conversion 
-functions is defined, which implentation-wise is just a ``list<a>``. However 
-it is completly different type from ``list<a>``, as you can see
+functions is defined, which implementation-wise is just a ``list<a>``. However 
+it is completely different type from ``list<a>``, as you can see
 in the following example::
 
        load opaquelist; 
@@ -2471,7 +2471,7 @@ of simple ``yeti.jar`` in the above command. The ``hello.yeti`` file is also
 expected to be in the current directory (although path to it could be given).
 After that a text ``Hello world!`` should be printed on the console.
 
-Yeti actually never interpretates the source code. It just compiles the
+Yeti actually never interprets the source code. It just compiles the
 code into Java bytecode and classes in the memory, uses classloader to load
 these generated classes and then just invokes the code in them. So the
 only possible interpretation of the code is bytecode interpretation done
@@ -2479,7 +2479,7 @@ by the JVM (which is also able to JIT-compile it to native machine code).
 
 This compilation to bytecode happens even in the interactive REPL environment -
 any expression evaluated there will be compiled into JVM classes.
-Yeti has only compiler and no interpretator (this is so to simplify the
+Yeti has only compiler and no interpreter (this is so to simplify the
 implementation).
 
 It is possible to only compile the Yeti code into Java ``.class`` files
@@ -2512,7 +2512,7 @@ The message ``Hello World Again!`` should be printed to the console.
 
 The content of the source file containing a program is considered to be one
 expression (ignoring the ``program`` header), which is evaluated when
-the program is runned. The type of the expression must be the unit type.
+the program is ran. The type of the expression must be the unit type.
 
 Modules
 ~~~~~~~~~~
@@ -2656,7 +2656,7 @@ Now make an empty directory, go there and try to compile the
     java -classpath ../yeti.jar:../bt-test:. bttest
 
 It should again give the ``[true,false]`` test output. To verify, that
-the compiled module was realy used, you could try to omit the ``-cp`` option
+the compiled module was really used, you could try to omit the ``-cp`` option
 from compiler command line::
 
     java -jar ../yeti.jar -d . ../bttest.yeti
@@ -3135,7 +3135,7 @@ When to use Java class definitions
 ++++++++++++++++++++++++++++++++++++++
 
 The ability to define Java classes in Yeti code is mostly useful for
-interfaceing with a Java code and declaring custom exception classes.
+interfacing with a Java code and declaring custom exception classes.
 
 Yeti don't have any other exception handling mechanism than try-catch
 blocks that work with Java exception classes - so to define any
@@ -3209,7 +3209,7 @@ systems and editors.
 
 Identifiers should be written in camelCaseStyle.
 
-Operators should be surrounded with whitespace (with expection of
+Operators should be surrounded with whitespace (with expectation of
 the dereferencing dot, which should have no whitespace around it).
 Line breaks should be generally put before operators.
 
@@ -3328,5 +3328,5 @@ should be written with each field on the separate line::
             fi,
     }
 
-The empty line is used to visually separate the multiline function definiton.
+The empty line is used to visually separate the multi-line function definition.
 

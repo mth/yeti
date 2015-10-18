@@ -100,7 +100,7 @@ meaning of code, although some operators are whitespace sensitive
 (for example field `reference operator`_ is distinguished from
 `function composition`_ by not having whitespace on both sides).
 
-Multiline comments can be nested, and all comments are considered
+Multi-line comments can be nested, and all comments are considered
 to be equivalent to other whitespace.
 
 Separators
@@ -196,7 +196,7 @@ Type description
     FuncType    = ("->" / "\u2192") !OpChar SP BareType SkipSP;
     JavaType    = ClassName "[]"*;
 
-Type description is one of the following: function, type paramater (starts
+Type description is one of the following: function, type parameter (starts
 with ``'`` or ``^``), Java class name (prefixed with ``~``), structure,
 variant or type name. Type name may be followed by optional parameter list
 that is embedded between ``<`` and ``>``. Java class name may be followed
@@ -230,7 +230,7 @@ form the allowed fields set in the structure type).
 
 Structure type in Yeti is more commonly called an extensible record
 type in the ML family languages (the name structure is chosen in Yeti
-because it is more familiar to programmers knowning the C family
+because it is more familiar to programmers knowing the C family
 languages).
 
 Variant type
@@ -375,7 +375,7 @@ List and hash map literals
     ListItem    = Expression SP ("\.\." !OpChar Expression)? SP;
     HashItem    = Expression Colon Expression SP;
 
-List and and hash map literals are syntactically both enclosed in square
+List and hash map literals are syntactically both enclosed in square
 brackets. The difference is that hash map items have the key expression
 and colon prepended to the value expression, while list items have only
 the value expression. Empty hash map constructor is written as ``[:]`` to
@@ -431,7 +431,7 @@ value expressions as a containing scope. All fields having function literal
 values will create a local binding inside that structure scope (unless prefixed
 with ``norec`` keyword), and the bindings will be recursively available
 for all expressions residing in the structure literal definition. This is
-the only form of mutually recursive bindings avaible in the Yeti language.
+the only form of mutually recursive bindings available in the Yeti language.
 The local bindings inside the structure scope are always non-polymorphic.
 
 The field names can be prefixed with ``var`` and/or ``norec`` keywords.
@@ -578,7 +578,7 @@ If exception is thrown that matches some ``catch`` section (by being same or
 subclass of its ClassId_), then first matching ``catch`` section is evaluated,
 and the resulting value is used as the value of the ``try`` block.
 
-If ``catch`` section has an exception binding Id_, then catched exceptions
+If ``catch`` section has an exception binding Id_, then caught exceptions
 value will be bound to the given identifier in that sections scope.
 
 The expression following the ``"finally"`` keyword will be evaluated regardless
@@ -587,7 +587,7 @@ of whether any exception was thrown during the evaluation of ``try`` and
 during the evaluation of the ``finally`` section. If exception was suspended
 and the ``finally`` section itself throws an exception, then the suspended
 exception will be dropped (as only one exception per thread is allowed
-simultaneously), otherwise the suspended exception will be rethrown after
+simultaneously), otherwise the suspended exception will be re-thrown after
 the ``finally`` block finishes.
 
 Operator sections
@@ -669,7 +669,7 @@ Variant constructor
 ----------------------
 
 Variant constructor is written simply as a Variant_ tag. The type of variant
-constuctor is *'a* → *Variant 'a*.
+constructor is *'a* → *Variant 'a*.
 
 Load operator
 ----------------
@@ -779,7 +779,7 @@ Operator precedence
 +----------------+-----------------+-----------------------+-----------------+
 | 5.             | **+**           | Addition              | *number* →      |
 | left           +-----------------+-----------------------+ *number* →      |
-|                | **-**           | Substraction          | *number*        |
+|                | **-**           | Subtraction           | *number*        |
 |                +-----------------+-----------------------+                 |
 |                | **b_or**        | Bitwise or            |                 |
 |                +-----------------+-----------------------+                 |
@@ -1035,7 +1035,7 @@ structure type that has as a required fields set the right-side types
 allowed fields set. The result of unification is used as the type of the
 ``with`` expression. Due to the type unification the right-side allowed
 field set is either same or subset of the left-side values field set, with
-matching types, and all the corresponding fields are overrided.
+matching types, and all the corresponding fields are overridden.
 
 For merging operation, the type of the ``with`` expression is a new structure
 type. The result types allowed field set contains all of the right-side types
@@ -1060,7 +1060,7 @@ Custom operators are any operators that are not built into the language.
 These operators are defined by simply having a function value bound with name
 consisting of operator characters, or by using regular identifier between
 backticks. The operator type is the binding type, and resulting value/type
-is the result of appling the function value to the given arguments. 
+is the result of applying the function value to the given arguments. 
 
 Custom operators have left associativity.
 
@@ -1105,10 +1105,10 @@ Comparison operators
     CompareOp   = ("<" / ">" / "<=" / ">=" / "==" / "!=" / "=~" / "!=")
                   !OpChar / "in" !IdChar;
 
-Comparision operators compare two values of same type and give boolean
-result. Comparision operators have left associativity.
+Comparison operators compare two values of same type and give boolean
+result. Comparison operators have left associativity.
 
-Yeti language has the following comparision operators:
+Yeti language has the following comparison operators:
 
 +----------+--------------------------------------------+----------------------+
 | Operator | Proposition                                | Type                 |
@@ -1141,7 +1141,7 @@ by being instance of it or its subclass. Otherwise the application of the
 runtime (JVM) type is considered, the compile-time static type doesn't matter
 at all, and therefore can be any type, including native Yeti types.
 
-Since the type name is de facto part of the operator, it can be considered
+Since the type name is de-facto part of the operator, it can be considered
 to be suffix operator similarly to the cast operators, and has the type
 *`a* → *boolean*.
 
