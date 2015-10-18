@@ -1,8 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Replace CodeWriter interface with Fun,
-  make yeti.lang.compiler.* classes non-public.
 * v1.0
 * Lisp style macros.
 * Allow any identificators in dotted class names (like fi.etc)
