@@ -9,6 +9,7 @@ doc/_*.aux
 doc/_*.latex
 doc/_*.log
 doc/_*.out
+doc/_*.toc
 doc/*.pdf
 examples/war/demo.war
 examples/war/j2ee.jar
