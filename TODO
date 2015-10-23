@@ -22,6 +22,8 @@
   and help GC with bindings that are not explicitly nulled (type != MAP).
 * foo = load bar; foo.x should be optimised into same as load bar; x
 * Implicit function to class/interface casts?
+* programs should generate static int Main(String[]) method,
+  that wouldn't call System.exit() upon receiving Yeti ThreadExit error.
 * Context-specific int optimizations for builtins
   (and java method invocation return values)
 * Ability to override struct class toString would be probably useful,
@@ -39,6 +41,10 @@
 * Support A x | B y | variantTypeDef?
 * Review the Java<->Yeti type autoconversions?
 * Immutable tree map support - this seems to be popular feature. ;)
-* Support module field deprecation
+* Support module field deprecation. One way to do it would be to support only
+  function deprecation, a nice syntax would be allowing 'is deprecated type'
+  on function literal bindings, that would mark the function _implementation_
+  (not type) deprecated. This information can be propagated to module type
+  attribute and later to mark bindings created on loading module.
 * Optional Java generics support?
 * Direct struct-ref optimisation, when only known structs are accessed
