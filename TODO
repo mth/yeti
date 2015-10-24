@@ -44,7 +44,8 @@
 * Support module field deprecation. One way to do it would be to support only
   function deprecation, a nice syntax would be allowing 'is deprecated type'
   on function literal bindings, that would mark the function _implementation_
-  (not type) deprecated. This information can be propagated to module type
-  attribute and later to mark bindings created on loading module.
+  (not type) deprecated. This could then be used to mark the field access
+  methods on module class as deprecated (just flipping a access flag) and
+  later to mark bindings created on loading the module.
 * Optional Java generics support?
 * Direct struct-ref optimisation, when only known structs are accessed
