@@ -1382,7 +1382,9 @@ instead of binding name (no function arguments may follow it). In this case
 the evaluation of the Expression must result in a structure value, and for
 each structure field in the StructArg the identifier used as a value is bound
 to the actual corresponding field value in the evaluation result.
-
+The bound expression type is unified with a structure type where required
+member set contains each field from the StructArg, with the field types
+used for the corresponding created bindings.
 
 Self-binding lambda expression
 ---------------------------------
