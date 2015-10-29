@@ -354,6 +354,8 @@ Single underscore: ``_``
     The argument type is a free type variable and no actual argument
     binding is done (essentially a wildcard pattern match).
 
+.. _StructArg:
+
 Structure literal: StructArg
     A destructuring binding of the argument is done. This means that the
     identifiers (Id) used as values for structure fields (FieldId) are bound
@@ -1312,6 +1314,7 @@ The evaluation order between left and right side of assignment is unspecified.
 
 Loop
 -------
+.. _Expression:
 .. peg
 
 ::
@@ -1345,6 +1348,41 @@ Value and function bindings
                   SP "=" !OpChar CExpression Semicolon+ SP;
     Var         = "var" Space+;
     Any         = "\_" !IdChar;
+
+Binding expression creates a new scope with a value from evaluation of the
+Expression_ bound to the given identifier (Id). The binding is part of
+`sequence expression`_, and the new scope is used for the following
+expressions in the sequence (the part of sequence expression following
+the binding can be considered to be part of the binding expression).
+The type of the expression is used as the binding type.
+
+A mutable variable binding is created, if the ``var`` keyword precedes
+the binding name. The mutable variable acts as a mutable box where new
+values can be `assigned <Assigning values_>`_. When a closure is created
+over a mutable variable, a reference to the mutable box is stored in the
+closure, without making a copy of the variable.
+
+When underscore ``_`` is used as binding name, no binding or new scope is
+created - the expression is still evaluated, but its value is discarded after
+the evaluation. This can be useful when the evaluation is performed only for
+its side effects.
+
+Function arguments (`BindArg <Lambda_>`_) may be present after the binding
+name (Id). This is treated as a syntactic sugar for binding a lambda_
+expression - the compiler replaces the Expression with a ``do`` .. ``done``
+block containing the Expression, and the function arguments are used as
+the lambda expressions arguments.
+
+If a binding type is given (IsType_ before the ``=`` symbol), it will be
+unified with the bound expression type. This is equivalent to using ``is``
+operator unless the binding type is flexible.
+
+Destructuring binding is done, if a structure literal StructArg_ is used
+instead of binding name (no function arguments may follow it). In this case
+the evaluation of the Expression must result in a structure value, and for
+each structure field in the StructArg the identifier used as a value is bound
+to the actual corresponding field value in the evaluation result.
+
 
 Self-binding lambda expression
 ---------------------------------
