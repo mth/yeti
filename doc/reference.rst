@@ -1374,12 +1374,12 @@ expression - the compiler replaces the Expression with a ``do`` .. ``done``
 block containing the Expression, and the function arguments are used as
 the lambda expressions arguments.
 
-If the bound value is `function literal <Lambda_>`_ (either explicitly
+If the bound value is a `function literal <Lambda_>`_ (either explicitly
 written or implicit as described in the previous paragraph), then the
 binding is available in the lambda expressions body scope, where it is
 not polymorphic. Otherwise the bound expressions scope does not include
-the binding itself (therefore a outer scopes binding with same name can
-be accessed, if one exists).
+the binding itself (therefore an outer scopes binding with the same name
+can be accessed, if one exists).
 
 If a binding type is given (IsType_ before the ``=`` symbol), it will be
 unified with the bound expression type. This is equivalent to using ``is``
