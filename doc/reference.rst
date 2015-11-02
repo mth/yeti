@@ -1338,6 +1338,7 @@ function.
 
 Value and function bindings
 ++++++++++++++++++++++++++++++
+.. _binding:
 .. peg
 
 ::
@@ -1357,7 +1358,7 @@ the binding can be considered to be part of the binding expression).
 The type of the expression is used as the binding type.
 
 A mutable variable binding is created, if the ``var`` keyword precedes
-the binding name. The mutable variable acts as a mutable box where new
+the binding name (Id_). The mutable variable acts as a mutable box where new
 values can be `assigned <Assigning values_>`_. When a closure is created
 over a mutable variable, a reference to the mutable box is stored in the
 closure, without making a copy of the variable.
@@ -1372,6 +1373,13 @@ name (Id). This is treated as a syntactic sugar for binding a lambda_
 expression - the compiler replaces the Expression with a ``do`` .. ``done``
 block containing the Expression, and the function arguments are used as
 the lambda expressions arguments.
+
+If the bound value is `function literal <Lambda_>`_ (either explicitly
+written or implicit as described in the previous paragraph), then the
+binding is available in the lambda expressions body scope, where it is
+not polymorphic. Otherwise the bound expressions scope does not include
+the binding itself (therefore a outer scopes binding with same name can
+be accessed, if one exists).
 
 If a binding type is given (IsType_ before the ``=`` symbol), it will be
 unified with the bound expression type. This is equivalent to using ``is``
@@ -1392,9 +1400,18 @@ Self-binding lambda expression
 
 ::
 
-    SelfBind    = (Var? Id BindArg+ / Any) IsType "=" !OpChar;
-    CSelfBind   = (Var? !End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
+    SelfBind    = (Id BindArg+ / Any) IsType "=" !OpChar;
+    CSelfBind   = (!End Id (!End BindArg)+ / Any) IsType "=" !OpChar;
 
+This is another syntax for writing function literals, that comes from
+generalizing the function binding_. If the binding has arguments and is
+either last statement in the `sequence expression`_, or not part of sequence,
+then it is considered to be a standalone lambda expression. For example,
+an expression ``(_ x = x)`` is equivalent to ``do x: x done``.
+
+Just like with normal function bindings, if the binding name (Id_) is not
+an underscore ``_``, then a recursive non-polymorphic binding is created,
+that is available in the lambda expressions scope.
 
 Class definition
 +++++++++++++++++++
