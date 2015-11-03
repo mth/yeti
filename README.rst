@@ -1,5 +1,5 @@
 ===================================================
-  ML like functional language on the JVM
+  ML like functional language for the JVM
 ===================================================
 
 * `Yeti home page <http://mth.github.io/yeti/>`_
@@ -7,9 +7,9 @@
 * You need `ant <http://ant.apache.org/>`_ to compile the compiler
   and standard library.
 
-Compiling the compiler and standard library::
+Compile the compiler and standard library, and run tests::
 
-    ant
+    ant test
 
 Directory structure.
 
