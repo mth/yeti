@@ -22,7 +22,6 @@ c
     The compiler source code.
 
 examples
-
     Examples of Yeti code.
 
 lib
