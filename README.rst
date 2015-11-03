@@ -13,13 +13,13 @@ Compile the compiler and standard library, and run tests::
 
 Directory structure.
 
+c
+    The compiler source code.
+
 doc
     Various documentation and documentation drafts. Only ``intro.rst`` and
     ``reference.rst`` are currently worth reading, other text there probably
     only confuses the reader.
-
-c
-    The compiler source code.
 
 examples
     Examples of Yeti code.
