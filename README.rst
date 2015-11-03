@@ -1,5 +1,5 @@
 ===================================================
-  Yeti - a ML like functional language on the JVM
+  ML like functional language on the JVM
 ===================================================
 
 * `Yeti home page <http://mth.github.io/yeti/>`_
