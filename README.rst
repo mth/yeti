@@ -21,6 +21,10 @@ doc
 c
     The compiler source code.
 
+examples
+
+    Examples of Yeti code.
+
 lib
     Runtime library written in Java.
 
