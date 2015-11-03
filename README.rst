@@ -5,7 +5,7 @@
 * `Yeti home page <http://mth.github.io/yeti/>`_
 * `Learn the language <http://dot.planet.ee/yeti/intro.html>`_
 * You need `ant <http://ant.apache.org/>`_ to compile the compiler
-  and standard library.
+  and standard library
 
 Compile the compiler and standard library, and run tests::
 
