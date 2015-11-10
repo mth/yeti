@@ -1445,7 +1445,9 @@ if superclass is not given in the extends list.
 The class will be automatically marked as **abstract**, if it contains
 abstract methods, either defined by the class itself, or derived from
 superclass or any of the implemented interfaces without being overridden
-with concrete implementation by the class itself.
+with concrete implementation by the class itself. The words **abstract**,
+**public** and **package** are used here with the meaning these words
+have in the Java language.
 
 The class name may be followed by constructor argument list in parenthesis.
 The constructor arguments will be bound in the classes scope and stored
