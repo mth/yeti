@@ -12,9 +12,16 @@
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
     <property name="asmt" value="${build}/asm-5.0.3.jar"/>
+    <property name="asm.sha"
+      value="71c4f78e437b8fdcd9cc0dfd2abea8c089eb677005a6a5cff320206cc52b46cc"/>
     <mkdir dir="${build}/util"/>
     <get src="http://dot.planet.ee/yeti/asm-5.0.3.jar"
          dest="${asmt}" verbose="true"/>
+    <checksum algorithm="SHA-256" file="${asmt}"
+              property="${asm.sha}" verifyproperty="is.asm.ok"/> 
+    <fail message="ASM library checksum is not ${asm.sha}">
+        <condition><not><istrue value="${is.asm.ok}"/></not></condition>
+    </fail>
     <javac destdir="${build}/util" srcdir="${basedir}/util"
            includes="Rename.java" encoding="UTF-8"
            includeantruntime="false"/>
