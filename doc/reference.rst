@@ -1467,6 +1467,12 @@ Class field
     ClassField  = ("var" Space+)? !End Id SP (!End BindArg SP)*
                   "=" !OpChar CExpression;
 
+Class fields are semantically local bindings in the class closure, that
+follow fully Yeti typing and semantic rules. The scoping is also similar to
+`binding`_\ s in the `sequence expression`_ - subsequent fields reside in
+the scope defined by previous fields. The syntax also closely mirrors
+local bindings - for ex... mm XXX
+
 Class method
 ---------------
 .. peg
