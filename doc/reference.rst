@@ -1449,6 +1449,15 @@ with concrete implementation by the class itself. The words **abstract**,
 **public** and **package** are used here with the meaning these words
 have in the Java language.
 
+The *class scope* is the scope inside the class definition, that initially
+contains constructor arguments and special bindings **this** and **super**.
+The **this** binding denotes instance of the class. The **super** binding
+also denotes instance of the class, but be used only for calling method on
+it and any overridden method called on super binding will invoke the parent
+classes corresponding method. The JVM *invokespecial* instruction is used
+for that effect. Any other use of **super** binding (like passing the
+instance value) is forbidden.
+
 The class name may be followed by constructor argument list in parenthesis.
 The constructor arguments will be bound in the classes scope and stored
 in implicit private fields. The constructor argument type declaration
@@ -1467,11 +1476,22 @@ Class field
     ClassField  = ("var" Space+)? !End Id SP (!End BindArg SP)*
                   "=" !OpChar CExpression;
 
-Class fields are semantically local bindings in the class closure, that
-follow fully Yeti typing and semantic rules. The scoping is also similar to
-`binding`_\ s in the `sequence expression`_ - subsequent fields reside in
-the scope defined by previous fields. The syntax also closely mirrors
-local bindings - for ex... mm XXX
+A class field is a binding inside the class scope that redefines the class
+scope for all class methods and subsequent fields. A value from evaluation
+of the `CExpression <Expression_>`_ is bound to the given identifier (Id),
+and a new scope containing the field binding will be the new class scope.
+Consequently, the scope of class field expression contains previous
+(but not following) class field bindings, and all method expression scopes
+contain all field bindings.
+
+The class field is similar to binding_\ s in the `sequence expression`_:
+
+* The **var** keyword can be used to define mutable field binding.
+* Using underscore (``_``) as field name omits the actual binding and
+  new scope, but still forces the evaluation of expression at class instance
+  construction time.
+* Lambda_ expression can be created by including arguments
+  (`BindArg <Lambda_>`_) after the field name.
 
 Class method
 ---------------
