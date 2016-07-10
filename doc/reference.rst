@@ -1476,7 +1476,7 @@ Class field
     ClassField  = ("var" Space+)? !End Id SP (!End BindArg SP)*
                   "=" !OpChar CExpression;
 
-A class field is a binding inside the class scope that redefines the class
+A class field is a binding inside the class scope, that redefines the class
 scope for all class methods and subsequent fields. A value from evaluation
 of the `CExpression <Expression_>`_ is bound to the given identifier (Id),
 and a new scope containing the field binding will be the new class scope.
@@ -1506,6 +1506,25 @@ Class method
     MethodArg   = MethodType Id SP;
     MethodBody  = CStatement (Semicolon CStatement?)*;
 
+The method definition creates a new method into the containing Java class.
+
+The **abstract** modifier marks method to be declared without actual
+implementation in the same way as in the Java language.
+
+The **static** modifier marks method to be independent of concrete instance
+in the same way as in the Java language, and is allowed only in public classes
+(those are defined in the modules top-level `sequence expression`_).
+
+The method signature after the optional modifier starts with return
+type and method name, followed by argument list in parenthesis.
+The return value and argument types in the signature are Java types
+(not Yeti types), and can denote either primitive Java types (byte, short,
+char, int, long, float, double, boolean) or a Java classname.
+
+Non-abstract methods have a method body expression after the method signature,
+which is evaluated when the method is invoked.
+
+TODO
 
 Declarations
 +++++++++++++++
