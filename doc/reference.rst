@@ -1511,9 +1511,9 @@ The method definition creates a new method into the containing Java class.
 The **abstract** modifier marks method to be declared without actual
 implementation in the same way as in the Java language.
 
-The **static** modifier marks method to be independent of concrete instance
-in the same way as in the Java language, and is allowed only in public classes
-(those are defined in the modules top-level `sequence expression`_).
+The **static** modifier marks the generated JVM method as **static**
+and is allowed only in public classes (those are defined in the modules
+top-level `sequence expression`_).
 
 The method signature after the optional modifier starts with return
 type and method name, followed by argument list in parenthesis.
@@ -1524,7 +1524,17 @@ char, int, long, float, double, boolean) or a Java classname.
 Non-abstract methods have a method body expression after the method signature,
 which is evaluated when the method is invoked.
 
-TODO
+The body expression for non-static methods is in the final class scope, thus
+all field bindings are visible to the method body, along with constructor
+arguments, and **this** and **super** instance bindings.
+The static methods use for body expression the scope containing the class,
+so no class-specific value bindings are visible there.
+
+No exception declarations are supported for the Java class methods defined
+in the Yeti code, and any method can throw any exception (it violates the
+Java language semantics, but is valid for the underlaying JVM).
+
+TODO argument ja return value implicit casting rules.
 
 Declarations
 +++++++++++++++
