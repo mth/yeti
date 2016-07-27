@@ -1534,7 +1534,12 @@ No exception declarations are supported for the Java class methods defined
 in the Yeti code, and any method can throw any exception (it violates the
 Java language semantics, but is valid for the underlaying JVM).
 
-TODO argument ja return value implicit casting rules.
+While the method argument types are declared as Java types, the argument
+bindings have Yeti types and implicit argument casting rules are used to
+convert the values having Java primitive types (as there are no Yeti
+primitive types). The body expression type is inferred in the same way from
+the declared Java return type. A reverse conversion is done for the returned
+value, when the return type is a Java primitive type.
 
 Declarations
 +++++++++++++++
