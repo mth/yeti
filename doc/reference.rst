@@ -1452,10 +1452,10 @@ have in the Java language.
 The *class scope* is the scope inside the class definition, that initially
 contains constructor arguments and special bindings **this** and **super**.
 The **this** binding denotes instance of the class. The **super** binding
-also denotes instance of the class, but be used only for calling method on
-it and any overridden method called on super binding will invoke the parent
-classes corresponding method. The JVM *invokespecial* instruction is used
-for that effect. Any other use of **super** binding (like passing the
+also denotes instance of the class, but can be used only for calling method
+on it, and any overridden method called on super binding will invoke the
+parent classes corresponding method. The JVM *invokespecial* instruction is
+used for that effect. Any other use of **super** binding (like passing the
 instance value) is forbidden.
 
 The class name may be followed by constructor argument list in parenthesis.
@@ -1492,6 +1492,11 @@ The class field is similar to binding_\ s in the `sequence expression`_:
   construction time.
 * Lambda_ expression can be created by including arguments
   (`BindArg <Lambda_>`_) after the field name.
+
+If a field named **serialVersionUID** is defined with value being numeric
+constant, then the compiler must generate a **private static final long
+serialVersionUID** field with the given initialization value into generated
+JVM class.
 
 Class method
 ---------------
@@ -1552,6 +1557,9 @@ Declarations
     MDeclaration = TypeOrImport / Binding;
     ClassDecl    = Class Semicolon+ SP / TypeOrImport; 
     TypeOrImport = Import Semicolon+ SP / Typedef Semicolon* SP;
+
+Declarations are parts of `sequence expression`_ used to define new bindings
+that can be by the following expression parts.
 
 Java class imports
 --------------------
