@@ -1433,9 +1433,10 @@ for example by normal Java code, without any explicit initialization of
 the containing Yeti module.
 
 Class definition in sequence expression also introduces a new scope with
-new class name binding. Non-public classes can be constructed or extended
-only using that binding in Yeti code. Attempts to instantiate them outside
-of their scope will result in undefined behavior.
+new class name binding (the class name bindings have separate namespace).
+Non-public classes can be constructed or extended only using that binding
+in Yeti code. Attempts to instantiate them outside of their scope will
+result in undefined behavior.
 
 The extends list can contain a single class name (that will be the
 superclass) and any number of interface names (that will be implemented).
@@ -1569,6 +1570,25 @@ Java class imports
 
     Import      = "import" !IdChar Space+ ClassName
                   (Colon JavaId SP ("," JavaId SP)*)?;
+
+Class import creates a new scope for the following parts of the
+`sequence expression`_, that contains imported class name bindings (in
+separate namespace from other bindings). Class name bindings associate
+the short class name in the local scope with full name containing the
+package path (as given in the import).
+
+The actual existence of the class is not verified by the compiler
+(errors are given only when the binding is actually used and
+for example class method or field signature cannot be be resolved). 
+
+The **import** declaration has two possible forms. The simple form has
+single full class name (dot-separated package path and class name) after
+the **import** keyword. The package import has package path without
+class after the **import** keyword, followed be colon and comma separated
+list of class names to be imported from that package.
+
+Unlike Java, the Yeti language doesn't support importing entire package
+with asterisk.
 
 Type definition
 ------------------
