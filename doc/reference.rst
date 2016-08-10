@@ -1451,12 +1451,12 @@ with concrete implementation by the class itself. The words **abstract**,
 have in the Java language.
 
 The *class scope* is the scope inside the class definition, that initially
-contains constructor arguments and special bindings **this** and **super**.
-The **this** binding denotes instance of the class. The **super** binding
+contains constructor arguments and special bindings ``this`` and ``super``.
+The ``this`` binding denotes instance of the class. The ``super`` binding
 also denotes instance of the class, but can be used only for calling method
 on it, and any overridden method called on super binding will invoke the
 parent classes corresponding method. The JVM *invokespecial* instruction is
-used for that effect. Any other use of **super** binding (like passing the
+used for that effect. Any other use of ``super`` binding (like passing the
 instance value) is forbidden.
 
 The class name may be followed by constructor argument list in parenthesis.
@@ -1514,10 +1514,10 @@ Class method
 
 The method definition creates a new method into the containing Java class.
 
-The **abstract** modifier marks method to be declared without actual
+The ``abstract`` modifier marks method to be declared without actual
 implementation in the same way as in the Java language.
 
-The **static** modifier marks the generated JVM method as **static**
+The ``static`` modifier marks the generated JVM method as **static**
 and is allowed only in public classes (those are defined in the modules
 top-level `sequence expression`_).
 
@@ -1532,7 +1532,7 @@ which is evaluated when the method is invoked.
 
 The body expression for non-static methods is in the final class scope, thus
 all field bindings are visible to the method body, along with constructor
-arguments, and **this** and **super** instance bindings.
+arguments, and ``this`` and ``super`` instance bindings.
 The static methods use for body expression the scope containing the class,
 so no class-specific value bindings are visible there.
 
@@ -1583,8 +1583,8 @@ for example class method or field signature cannot be be resolved).
 
 The **import** declaration has two possible forms. The simple form has
 single full class name (dot-separated package path and class name) after
-the **import** keyword. The package import has package path without
-class after the **import** keyword, followed be colon and comma separated
+the ``import`` keyword. The package import has package path without
+class after the ``import`` keyword, followed be colon and comma separated
 list of class names to be imported from that package.
 
 Unlike Java, the Yeti language doesn't support importing entire package
