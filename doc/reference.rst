@@ -1602,6 +1602,11 @@ Type definition
                   Id SP TypedefParam? "=" !OpChar Type;
     TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
 
+Type definition creates a new scope for the following parts of the
+`sequence expression`_, that contains the Type_ bound to the given
+identifier (Id).
+
+TODO
 
 Sequence expression
 +++++++++++++++++++++++
