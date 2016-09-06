@@ -178,6 +178,7 @@ parenthesis. The type of usable operator binding should be a function
 
 Type description
 +++++++++++++++++++
+.. _Type:
 .. _IsType:
 .. peg
 
@@ -1603,10 +1604,28 @@ Type definition
     TypedefParam = "<" !OpChar SP Id SP ("," SP Id SP)* ">" !OpChar SP;
 
 Type definition creates a new scope for the following parts of the
-`sequence expression`_, that contains the Type_ bound to the given
+`sequence expression`_, that contains the given Type_ bound to the given
 identifier (Id).
 
-TODO
+A copy is made of the bound type on every reference to preserve polymorphism,
+if it contains any free type variables. The ``shared`` modifier disables this
+behaviour, so the bound type itself will get unified with every reference of
+the shared binding (this can be used to infer typedefs from code).
+
+The ``unshare`` declaration can be later used to transform the former shared
+typedef into normal polymorphic typedef (that will bind a copy of the shared
+type).
+
+Type definitions can have argument list between ``<>`` symbols (when not
+provided, it is same as having empty list). These will create free type
+variables bound in the scope of definition of the Type itself.
+The arguments must also be provided when the bound definition is used.
+The given arguments will be unified to the ones in the copy of the bound type.
+
+The type binding to Id is also available in the scope of the Type itself,
+so recursive types can be defined, but has no arguments there.
+
+TODO opaque types and module exports
 
 Sequence expression
 +++++++++++++++++++++++
