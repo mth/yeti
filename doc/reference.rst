@@ -1616,15 +1616,15 @@ The ``unshare`` declaration can be later used to transform the former shared
 typedef into normal polymorphic typedef (that will bind a copy of the shared
 type).
 
-Type definitions can have argument list between ``<>`` symbols (when not
+Type definitions can have parameter list between ``<>`` symbols (when not
 provided, it is same as having empty list). These will create free type
 variables bound in the scope of definition of the Type itself.
 The parameters must also be provided when the bound definition is used.
-The given parameters will be unified to the corresponding arguments in
+The given parameters will be unified to the corresponding ones in
 the copy of the bound type.
 
 The binding of type to Id is also available for the definition of the Type
-itself, so recursive types can be defined, but the binding has no arguments
+itself, so recursive types can be defined, but the binding has no parameters
 there. It is created by first creating a type variable bound to the Id in the
 type definition scope, which is thereafter unified with the defined type.
 
