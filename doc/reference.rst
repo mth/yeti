@@ -1622,8 +1622,10 @@ variables bound in the scope of definition of the Type itself.
 The arguments must also be provided when the bound definition is used.
 The given arguments will be unified to the ones in the copy of the bound type.
 
-The type binding to Id is also available in the scope of the Type itself,
-so recursive types can be defined, but has no arguments there.
+The binding of type to Id is also available for the definition of the Type
+itself, so recursive types can be defined, but the binding has no arguments
+there. It is created by first creating a type variable bound to the Id in the
+type definition scope, which is thereafter unified with the defined type.
 
 TODO opaque types and module exports
 
