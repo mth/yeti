@@ -1619,8 +1619,9 @@ type).
 Type definitions can have argument list between ``<>`` symbols (when not
 provided, it is same as having empty list). These will create free type
 variables bound in the scope of definition of the Type itself.
-The arguments must also be provided when the bound definition is used.
-The given arguments will be unified to the ones in the copy of the bound type.
+The parameters must also be provided when the bound definition is used.
+The given parameters will be unified to the corresponding arguments in
+the copy of the bound type.
 
 The binding of type to Id is also available for the definition of the Type
 itself, so recursive types can be defined, but the binding has no arguments
