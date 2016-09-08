@@ -1605,7 +1605,7 @@ Type definition
 
 Type definition creates a new scope for the following parts of the
 `sequence expression`_, that contains the given Type_ bound to the given
-identifier (Id).
+identifier (Id). Such binding can be considered to be a type alias.
 
 A copy is made of the bound type on every reference to preserve polymorphism,
 if it contains any free type variables. The ``shared`` modifier disables this
@@ -1628,7 +1628,17 @@ itself, so recursive types can be defined, but the binding has no parameters
 there. It is created by first creating a type variable bound to the Id in the
 type definition scope, which is thereafter unified with the defined type.
 
-TODO opaque types and module exports
+The ``opaque`` modifier causes a new unique type to be created and bound to
+the given identifier (Id). The new type will be incompatible with the given
+Type (no unification is allowed), but an **as** `cast <Casts_>`_ can be used
+to convert between the new type and type given in the typedef declaration.
+The casting is allowed only in the same module where the opaque type was
+created. The ``opaque`` typedef can also have parameters, that act both as
+type parameters for the new opaque type, and can also be referenced in the
+Type associated with it (parameters will be unified when casting). No free
+type variables other than these parameters are allowed in the opaque typedef.
+
+TODO module exports
 
 Sequence expression
 +++++++++++++++++++++++
