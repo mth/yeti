@@ -1648,8 +1648,8 @@ Sequence expression
 
     AnyExpression = Semicolon* Sequence? SP;
     Sequence   = Statement (Semicolon Statement?)*; 
-    Statement  = SP ClassDecl* (CSelfBind / Declaration* CSelfBind?) Expression;
-    CStatement = SP ClassDecl* (SelfBind / CDeclaration* SelfBind?) CExpression;
+    Statement  = SP ClassDecl* (SelfBind / Declaration* SelfBind?) Expression;
+    CStatement = SP ClassDecl* (CSelfBind / CDeclaration* CSelfBind?) CExpression;
     MStatement = SP TypeOrImport* (SelfBind Expression /
                                   MDeclaration* (Class / SelfBind? Expression));
 
