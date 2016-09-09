@@ -702,7 +702,7 @@ a statement on the left side of the sequence operator. In this use
 all fields of the module value will be brought into scope of right-hand
 side of the sequence operator as local bindings, and additionally all
 top-level `typedefs <Type definition_>`_ from the module will be imported
-into that scope.
+into that scope (excluding the ``shared`` typedefs).
 
 New operator
 ---------------
@@ -1611,6 +1611,7 @@ A copy is made of the bound type on every reference to preserve polymorphism,
 if it contains any free type variables. The ``shared`` modifier disables this
 behaviour, so the bound type itself will get unified with every reference of
 the shared binding (this can be used to infer typedefs from code).
+The ``shared`` typedefs are available only locally in the declaring module.
 
 The ``unshare`` declaration can be later used to transform the former shared
 typedef into normal polymorphic typedef (that will bind a copy of the shared
@@ -1630,15 +1631,13 @@ type definition scope, which is thereafter unified with the defined type.
 
 The ``opaque`` modifier causes a new unique type to be created and bound to
 the given identifier (Id). The new type will be incompatible with the given
-Type (no unification is allowed), but an **as** `cast <Casts_>`_ can be used
+Type (no unification is allowed), but an ``as`` `cast <Casts_>`_ can be used
 to convert between the new type and type given in the typedef declaration.
 The casting is allowed only in the same module where the opaque type was
 created. The ``opaque`` typedef can also have parameters, that act both as
 type parameters for the new opaque type, and can also be referenced in the
 Type associated with it (parameters will be unified when casting). No free
 type variables other than these parameters are allowed in the opaque typedef.
-
-TODO module exports
 
 Sequence expression
 +++++++++++++++++++++++
