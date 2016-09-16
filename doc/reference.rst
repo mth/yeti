@@ -1656,8 +1656,8 @@ Sequence expression
 Sequence expression is the general form of Yeti expressions, consisting of
 declarations that create new scopes with bindings, and expressions to be
 evaluated in those scopes. The sequence expression is evaluated from left
-to right, and each new binding will create a scope containing the rest
-of sequence expression (subsequent bindings with name and kind will shadow
+to right, and each new binding will create a scope containing the rest of
+sequence expression (subsequent bindings with same name and kind will shadow
 the previous bindings from outer scopes). The value and type of sequence
 expression is the value and type of the last part of it, which must be
 an expression therefore (not declaration). Empty sequence expressions are
