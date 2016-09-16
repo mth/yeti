@@ -1539,7 +1539,7 @@ so no class-specific value bindings are visible there.
 
 No exception declarations are supported for the Java class methods defined
 in the Yeti code, and any method can throw any exception (it violates the
-Java language semantics, but is valid for the underlaying JVM).
+Java language semantics, but is valid for the underlying JVM).
 
 While the method argument types are declared as Java types, the argument
 bindings have Yeti types and implicit argument casting rules are used to
@@ -1653,6 +1653,17 @@ Sequence expression
     MStatement = SP TypeOrImport* (SelfBind Expression /
                                   MDeclaration* (Class / SelfBind? Expression));
 
+Sequence expression is the general form of Yeti expressions, consisting of
+declarations that create new scopes with bindings, and expressions to be
+evaluated in those scopes. The sequence expression is evaluated from left
+to right, and each new binding will create a scope containing the rest
+of sequence expression (subsequent bindings with name and kind will shadow
+the previous bindings from outer scopes). The value and type of sequence
+expression is the value and type of the last part of it, which must be
+an expression therefore (not declaration). Empty sequence expressions are
+also allowed and have unit type (the unit value literal ``()`` can be
+considered to be an empty sequence expression). Intermediate expressions
+are required to have an unit type and are evaluated only for side effects.
 
 Top level of the source file
 +++++++++++++++++++++++++++++++
