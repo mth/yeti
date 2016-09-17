@@ -5,8 +5,8 @@ package yeti.lang;
  */
 public class BadMatch extends IllegalArgumentException {
     public final Object value;
-    private final int line;
     private final String source;
+    private final int line;
     private final int column;
 
     /**
