@@ -220,7 +220,7 @@ public final class Core {
     }
 
     public static Object badMatch(Object match) {
-        throw new IllegalArgumentException("bad match (" + match + ')');
+        throw new BadMatch(match, null, 0, 0);
     }
 
     public static String capitalize(String s) {
