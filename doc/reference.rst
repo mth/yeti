@@ -1682,14 +1682,14 @@ The Yeti language source file can contain either program or module.
 Both program and module are basically an expression that can be evaluated.
 Program must have an unit type and is evaluated for side effects each time
 when it is run. Module can have any type and is considered to be an constant
-expression, that will be evaluate once when it is referenced first time
-using ``load`` expression. Modules also export top-level bindings of type
-and Java class definitions that can be used by other modules and programs
-(as an exception from other Yeti expressions, the modules top-level expression
+expression, that is evaluated once when it is referenced first time using
+``load`` expression. Modules also export top-level bindings of type and
+Java class definitions that can be used by other modules and programs (as
+an exception from other Yeti expressions, the modules top-level expression
 can end with class definition that is considered to have an unit type).
 
 Modules are distinguished from programs by starting with ``module`` keyword,
-that is followed module name. The ``deprecated`` option can be used to
+that is followed by module name. The ``deprecated`` option can be used to
 mark the module deprecated. Programs can optionally start with ``program``
 keyword and program name, but if this is omitted, the source file name
 will be used as program name (without the ``.yeti`` suffix).
@@ -1698,5 +1698,5 @@ Yeti compiler compiles both programs and modules into public JVM classes.
 Program classes have **public static** ``main`` method that has to be
 invoked to run the program. Module classes have **public static** ``eval``
 method that returns the modules value as JVM *Object*. Non-public helper
-classes may be generated as needed for representing expression parts
+classes may be generated as needed for representing the expression parts
 in the JVM.
