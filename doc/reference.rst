@@ -1700,3 +1700,20 @@ invoked to run the program. Module classes have **public static** ``eval``
 method that returns the modules value as JVM *Object*. Non-public helper
 classes may be generated as needed for representing the expression parts
 in the JVM.
+
+Type system
+~~~~~~~~~~~
+
+Yeti uses Hindley-Milner type system with some extensions. Type inference
+is used (a variant of algorithm W), which allows the compiler to deduce
+static types for most code without any type declarations.
+In essence, the most general possible type is assigned to expression parts,
+as the AST is walked. When expression parts with different types are
+connected, an unification is performed to determine the most general subset
+of the given types, which is then assigned to the connected type node.
+Some operations like ``as``, ``unsafely_as`` and implicit casts done for
+Java interfacing break the connection between type nodes, and therefore
+may require additional type declarations. 
+
+Primitive types
++++++++++++++++
