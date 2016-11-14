@@ -1753,23 +1753,15 @@ It is available in the type definitions only using inbuilt aliases.
 The internal *map* type has three type parameters:
 
 key
-  Marker type none is on non-indexable *list* type.
-  The *number* type is used for array indexes. Any value type
-  can be used for *hash* table keys.
+  Marker type none on the non-indexable *list* type, and
+  the *number* type for array indexes.
+  Any value type can be used for *hash* table keys.
 value
-  This should be real type for all collections.
+  Type of the values stored in the collections
+  (should be an actual value type).
 kind
   List marker type is used for lists and arrays
   and hash marker type is used for hash tables.
-
-Following inbuilt marker types can be used as map parameters:
-
-none
-  This is used as placeholder key type for immutable lists.
-list
-  This is used as kind type for arrays and immutable lists.
-hash
-  This is used as kind type for hash tables.
 
 The *map* type is visible via following inbuilt aliases:
 
@@ -1798,6 +1790,19 @@ The *map* type is visible via following inbuilt aliases:
   This gives mutable table mapping of keys to values. The default
   implementation is hash table (at JVM level instances of ``yeti.lang.Hash``,
   which extends the ``java.util.HashMap``).
+
+The compiler messages use the most specific alias matching the internal
+*map* type.
+
+Internal marker types used as map parameters
+-----------------------------------------------
+
+none
+  This is used as placeholder key type for immutable lists.
+list
+  This is used as kind type for arrays and immutable lists.
+hash
+  This is used as kind type for hash tables.
 
 Structure and variant types
 ++++++++++++++++++++++++++++++
