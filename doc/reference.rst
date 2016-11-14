@@ -1757,7 +1757,7 @@ key
   The *number* type is used for array indexes. Any value type
   can be used for *hash* table keys.
 value
-. This should be real type for all collections.
+  This should be real type for all collections.
 kind
   List marker type is used for lists and arrays
   and hash marker type is used for hash tables.
