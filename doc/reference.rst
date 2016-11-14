@@ -1752,11 +1752,14 @@ Map type is an internal composite type used for inbuilt collection types.
 It is available in the type definitions only using inbuilt aliases.
 The internal *map* type has three type parameters:
 
-* Key type. Marker type none is on non-indexable *list* type.
+key
+  Marker type none is on non-indexable *list* type.
   The *number* type is used for array indexes. Any value type
   can be used for *hash* table keys.
-* Value type. This should be real type for all collections.
-* Kind type. List marker type is used for lists and arrays
+value
+. This should be real type for all collections.
+kind
+  List marker type is used for lists and arrays
   and hash marker type is used for hash tables.
 
 Following inbuilt marker types can be used as map parameters:
