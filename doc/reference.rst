@@ -1749,7 +1749,7 @@ Inbuilt map type
 +++++++++++++++++++
 
 Map type is an internal composite type used for inbuilt collection types.
-It is available in type expressions only using inbuilt aliases.
+It is available in the type definitions only using inbuilt aliases.
 The internal *map* type has three type parameters:
 
 * Key type. Marker type none is on non-indexable *list* type.
