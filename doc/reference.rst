@@ -1771,13 +1771,13 @@ The *map* type is visible via following inbuilt aliases:
   the internal *map* type and is usually used in places where both
   *array* and *hash* would work.
 *list<value>* 
-  List is provides immutable interface for singly linked list operations
+  List provides immutable interface for singly linked list operations
   and corresponds to *map<none, value>* with list as kind type. The
   reference implementation uses  **null** for empty list and instances
   extending the ``yeti.lang.AList`` abstract class. Lists implementations
   are used for simple linked lists, iterators and JVM primitive array views.
 *array<value>*
-  Array is provides mutable ordered collection with O(1) index access
+  Array provides mutable ordered collection with O(1) index access
   and amortized O(1) appending. It corresponds to *map<number, value>*
   with list as kind type. The reference implementation uses
   ``yeti.lang.MList`` class (mutable list), which contains simple reference
