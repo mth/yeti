@@ -1702,7 +1702,7 @@ classes may be generated as needed for representing the expression parts
 in the JVM.
 
 Type system
-~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 Yeti uses Hindley-Milner type system with some extensions. Type inference
 is used (a variant of algorithm W), which allows the compiler to deduce
@@ -1716,4 +1716,89 @@ Java interfacing break the connection between type nodes, and therefore
 may require additional type declarations. 
 
 Primitive types
+++++++++++++++++++
+
+Primitive types are inbuilt types that don't have any type parameters.
+
++-----------+-------------------+----------------------------------------------+
+| Type      | JVM               | Description                                  |
+|           | representation    |                                              |
++===========+===================+==============================================+
+| *()*      | **null**          | Type with single possible value, used when   |
+|           |                   | no information needs to represented.         |
++-----------+-------------------+----------------------------------------------+
+| *boolean* | java.lang.Boolean | Boolean value, either **true** or **false**. |
+|           |                   | JVM null is considered to be **false**.      |
++-----------+-------------------+----------------------------------------------+
+| *number*  | yeti.lang.Num     | Any kind of numeric value (integer, decimal, |
+|           |                   | rational or 64-bit IEEE754 floating point).  |
++-----------+-------------------+----------------------------------------------+
+| *string*  | java.lang.String  | UTF-16 code unit sequence.                   |
++-----------+-------------------+----------------------------------------------+
+
+Free type variables
+++++++++++++++++++++++
+
+Function type
+++++++++++++++++
+
+Java types
++++++++++++++
+
+Inbuilt map type
++++++++++++++++++++
+
+Map type is an internal composite type used for inbuilt collection types.
+It is available in type expressions only using inbuilt aliases.
+The internal *map* type has three type parameters:
+
+* Key type. Marker type none is on non-indexable *list* type.
+  The *number* type is used for array indexes. Any value type
+  can be used for *hash* table keys.
+* Value type. This should be real type for all collections.
+* Kind type. List marker type is used for lists and arrays
+  and hash marker type is used for hash tables.
+
+Following inbuilt marker types can be used as map parameters:
+
+none
+  This is used as placeholder key type for immutable lists.
+list
+  This is used as kind type for arrays and immutable lists.
+hash
+  This is used as kind type for hash tables.
+
+The *map* type is visible via following inbuilt aliases:
+
+*map<key, value>*
+  This corresponds to the internal *map* type with free type variable
+  as the kind parameter. It is therefore the most general alias of
+  the internal *map* type and is usually used in places where both
+  *array* and *hash* would work.
+*list<value>* 
+  List is provides immutable interface for singly linked list operations
+  and corresponds to *map<none, value>* with list as kind type. The
+  reference implementation uses  **null** for empty list and instances
+  extending the ``yeti.lang.AList`` abstract class. Lists implementations
+  are used for simple linked lists, iterators and JVM primitive array views.
+*array<value>*
+  Array is provides mutable ordered collection with O(1) index access
+  and amortized O(1) appending. It corresponds to *map<number, value>*
+  with list as kind type. The reference implementation uses
+  ``yeti.lang.MList`` class (mutable list), which contains simple reference
+  array together with length and offset values as the back-end.
+*list?<value>*
+  This is list-like collection corresponding to *map<'a, value>* with
+  list as the kind type. It is used in places where both list and array
+  are suitable (for example ``head`` and ``tail`` library functions).
+*hash<key, value>*
+  This gives mutable table mapping of keys to values. The default
+  implementation is hash table (at JVM level instances of ``yeti.lang.Hash``,
+  which extends the ``java.util.HashMap``).
+
+Structure and variant types
+++++++++++++++++++++++++++++++
+
+Opaque types
 +++++++++++++++
+
