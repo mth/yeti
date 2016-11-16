@@ -548,8 +548,12 @@ evaluateYetiCode genericOpt =
                     if typeOf? then
                         push res (showType [] '' type)
                     elif type != Simple "()" then
-                        push res
-                             "\(Core#show(val)) is \(showType [] '' type)"
+                        s = try
+                                Core#show(val)
+                            catch Exception ex:
+                                stackTraceString ex
+                            yrt;
+                        push res "\(s) is \(showType [] '' type)"
                     fi
                 esac;
                 strJoin '' (map (^ "\n") res),
