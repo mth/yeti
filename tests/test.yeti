@@ -145,6 +145,7 @@ trueTests = [
 'take2b': \(take 2 new String('123')#getBytes() == [49,50]),
 'take3b': \(take 3 new String('123')#getBytes() == [49,50,51]),
 'take4b': \(take 4 new String('123')#getBytes() == [49,50,51]),
+'constant field ref': \({a=1,get b () = a}.b == 1),
 'named lambda': do:
     fib = (f p n c = if c <= 0 then n else f n (p + n) (c - 1) fi) 0 1;
     fib 10 == 89

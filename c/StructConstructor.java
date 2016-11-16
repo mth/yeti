@@ -258,20 +258,26 @@ final class StructConstructor extends CapturingClosure implements Comparator {
                          null, null).visitEnd();
     }
 
+    private void initBinders(Ctx ctx) {
+        for (int i = 0; i < fieldCount; ++i)
+            if (fields[i].binder != null)
+                ((Bind) fields[i].binder).initGen(ctx);
+    }
+
     void gen(Ctx ctx) {
         boolean generated = false;
         // default: null - GenericStruct
         if (mustGen || fieldCount > 6 && fieldCount <= 15) {
             impl = genStruct(ctx);
             generated = true;
-        } else if (fieldCount <= 3) {
-            impl = "yeti/lang/Struct3";
-        } else if (fieldCount <= 6) {
-            impl = "yeti/lang/Struct6";
+        } else {
+            if (fieldCount <= 3) {
+                impl = "yeti/lang/Struct3";
+            } else if (fieldCount <= 6) {
+                impl = "yeti/lang/Struct6";
+            }
+            initBinders(ctx);
         }
-        for (int i = 0; i < fieldCount; ++i)
-            if (fields[i].binder != null)
-                ((Bind) fields[i].binder).initGen(ctx);
         String implClass = impl != null ? impl : "yeti/lang/GenericStruct";
         ctx.typeInsn(NEW, implClass);
         ctx.insn(DUP);
@@ -319,7 +325,7 @@ final class StructConstructor extends CapturingClosure implements Comparator {
         }
     }
 
-    String genStruct(Ctx ctx) {
+    private String genStruct(final Ctx ctx) {
         String cn, structKey = null, i_str;
         StructField field;
         Label next, dflt = null, jumps[];
@@ -345,8 +351,10 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             }
             structKey = buf.toString();
             cn = (String) ctx.constants.structClasses.get(structKey);
-            if (cn != null)
+            if (cn != null) {
+                initBinders(ctx);
                 return cn;
+            }
         }
 
         cn = ctx.compilation.createClassName(ctx, ctx.className, "");
@@ -491,6 +499,8 @@ final class StructConstructor extends CapturingClosure implements Comparator {
             m.insn(ARETURN);
         }
         m.closeMethod();
+
+        initBinders(ctx); // get/set accessors depend on it
 
         // get(int)
         m = st.newMethod(ACC_PUBLIC, "get", "(I)Ljava/lang/Object;");
