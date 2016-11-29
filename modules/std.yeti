@@ -2804,7 +2804,7 @@ plus a b = a + b;
      * sequence - list or array of Some or None variants
      *
      * Examples:
-     * : catSome [Just 3, None (), Just 1, Just 4, None ()] // gives [3, 1, 4]
+     * : catSome [Some 3, None (), Some 1, Some 4, None ()] // gives [3, 1, 4]
      *
      * Notes:
      * The resulting list is created lazily, when consumed, and the sequence
