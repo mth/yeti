@@ -917,8 +917,17 @@ interface YetiParser {
                     e.col = partial.col;
                     e = r;
                 } else {
-                    e = new XNode("rsection",
+                    if(s == "with"){
+                        partial.right = new Sym(partial.hashCode() + s);
+                        partial.right.pos(partial.line,partial.col);
+                        BinOp bp = new BinOp("with",FIRST_OP_LEVEL,true);
+                        bp.left = partial.right;
+                        bp.right = parseExpr.result();
+                        e= XNode.lambda(partial.right,bp,null);
+                    }else{
+                        e = new XNode("rsection",
                                 new Node[] { new Sym(s), parseExpr.result() });
+                    }
                 }
                 e.line = partial.line;
                 e.col = partial.col;
