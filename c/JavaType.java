@@ -319,6 +319,24 @@ class JavaType implements Cloneable {
             }
             return descr = result.toString();
         }
+
+        private static final Set BUILTINS = new HashSet(Arrays.asList(
+            new Object[] {
+                "int hashCode()",
+                "void notify()",
+                "void notifyAll()",
+                "~java.lang.Class getClass()",
+                "~java.lang.Object clone()",
+                "~java.lang.String toString()",
+                "void wait(long)",
+                "void wait(long, int)",
+                "boolean equals(~java.lang.Object)",
+                "void wait()",
+                "void finalize()" }));
+
+        boolean isBuiltin() {
+            return BUILTINS.contains(this.toString());
+        }
     }
 
     private static final JavaType[] EMPTY_JTARR = {};
@@ -581,6 +599,30 @@ class JavaType implements Cloneable {
         }
     }
 
+    static final int SAM_MASK = Opcodes.ACC_ABSTRACT | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
+    static final int SAM_BITS = Opcodes.ACC_ABSTRACT | Opcodes.ACC_PUBLIC;
+
+    // single abstract method, if available
+    Method getSAM() {
+        //TODO: test that we fail for 1 constructor with nonempty args
+        //TODO: test that we succeed for 1 constructor with empty args list
+        if (constructors.length > 1)
+            return null;
+        if (constructors.length == 1 && !"<init>()".equals(constructors[0]))
+            return null;
+        Method sam = null;
+        //FIXME: verify we're handling "final" classes correctly
+        for (int i = 0; i < methods.length; ++i) {
+            if (methods[i].isBuiltin() ||
+                (methods[i].access & SAM_MASK) != SAM_BITS)
+                continue;
+            if (sam != null)
+                return null; // must be exactly 1 such method to be SAM
+            sam = methods[i];
+        }
+        return sam;
+    }
+
     static final String[] NUMBER_TYPES = {
         "Ljava/lang/Byte;",
         "Ljava/lang/Short;",
@@ -645,7 +687,31 @@ class JavaType implements Cloneable {
             return description == "Z" || description == "Ljava/lang/Boolean;"
                     ? 0 : -1;
         case YetiType.FUN:
-            return description == "Lyeti/lang/Fun;" ? 0 : -1;
+            if (description == "Lyeti/lang/Fun;")
+                return 0;
+            resolve();
+            Method sam = getSAM();
+            if (sam != null) {
+                //TODO: add unit tests to verify that retval assignability checking Yeti->Java is correct
+                //TODO: when testing retval assignability, also check num. of arguments too big/small
+                //FIXME: add some protection to be sure we won't get into infinite recursion
+                YType margs[] = sam.arguments;
+                YType yarg = from;
+                for (int i = 0; i < margs.length; ++i) {
+                    if (yarg.type != YetiType.FUN)
+                        return -1;
+                    YType funarg[] = from.param;
+                    if (funarg == null || funarg == YetiType.NO_PARAM ||
+                        funarg.length != 2)
+                        return -1;
+                    if (isAssignable(funarg[0], margs[i], true) < 0) //FIXME: true here, or false?
+                        return -1;
+                    yarg = funarg[1];
+                }
+                if (isAssignable(sam.returnType, yarg, true) < 0) //FIXME: true here, or false?
+                    return 9; //FIXME: what value here? would be nice to add args assignability
+            }
+            return -1;
         case YetiType.MAP: {
             switch (from.param[2].deref().type) {
             case YetiType.MAP_MARKER:
