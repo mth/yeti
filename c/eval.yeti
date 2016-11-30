@@ -689,6 +689,230 @@ class YetiTask extends MatchingTask
         yrt
 end;
 
+import yeti.lang:Fun;
+import java.util:List;
+
+class BaseEvalUtil
+    var toDir = undef_str,
+    var sourceReader = () as ~yeti.lang.Fun,
+    var codeWriter = () as ~CodeWriter,
+    var warn = () as ~yeti.lang.Fun,
+    var classPath = () as ~List,
+    var iCast = false,
+    var frames = true,
+    var _import = true,
+    var parseTree = false,
+    var preload = () as ~List,
+
+    void setICast(boolean bo) iCast := bo,
+    boolean getICast() iCast,
+
+    void setFrames(boolean bo) frames := bo,
+    boolean getFrames() frames,
+
+    void setImport(boolean bo) _import := bo,
+    boolean getImport() _import,
+
+    void setParseTree(boolean bo) parseTree := bo,
+    boolean getParseTree() parseTree,
+
+    void setPrelaod(List pl) preload := pl,
+    List getPreload() preload,
+
+    void setTo(String dir) toDir := dir,
+    String getTo() toDir,
+
+    void setSourceReader(Fun reader)
+        sourceReader := reader,
+    Fun getSourceReader() sourceReader,
+
+    void setCodeWriter(CodeWriter wr) codeWriter := wr,
+    CodeWriter getCodeWriter() codeWriter,
+
+    void setWarn(Fun w) warn := w,
+    Fun getWarn() warn,
+
+    void setClassPath(List cp) classPath := cp,
+    List getClassPath() classPath,
+
+
+
+end;
+_getGenericOptions eu =
+    (opts = array [];
+    if (eu is ~BaseEvalUtil)#getICast() then
+        push opts (ICast ());
+    fi;
+
+    if not eu#getFrames() then
+        push opts (NoFrames ());
+    fi;
+
+    if not eu#getImport() then
+        push opts (NoImport ());
+    fi;
+
+    if eu#getParseTree() then
+        push opts (ParseTree ());
+    fi;
+
+    if not nullptr? eu#getPreload() then
+        mapJavaList string eu#getPreload()
+        |> Preload
+        |> push opts;
+    fi;
+
+    if defined? eu#getTo() then
+        push opts (To (eu#getTo() as string));
+    fi;
+    if not nullptr? eu#getSourceReader() then
+        push opts (SourceReader
+            (eu#getSourceReader() unsafely_as 
+                { var .name is string, 
+                  .parent is string} 
+                  -> string));
+    fi;
+    if not nullptr? eu#getCodeWriter() then
+        push opts (CodeWriter eu#getCodeWriter());
+    fi;
+    if not nullptr? eu#getClassPath() then
+        mapJavaList string eu#getClassPath()
+        |> ClassPath
+        |> push opts;
+    fi;
+    if not nullptr? eu#getWarn() then
+        push opts (Warn
+            (eu#getWarn() unsafely_as ~CompileException -> ()))
+    fi;
+    list opts);
+
+class CompileUtil extends BaseEvalUtil 
+    var typeAction = () as ~Fun,
+    var execArgs = () as ~List,
+    var sourceDirs = () as ~List,
+    var javaOptions = () as ~List,
+
+    void setType(Fun fn) typeAction := fn,
+    Fun getType() typeAction,
+
+    void setExec(List args) execArgs := args,
+    List getExec() execArgs,
+
+    void setSourceDirs(List dirs) sourceDirs := dirs,
+    List getSourceDirs() sourceDirs,
+
+    void setJavaOptions(List opts) javaOptions := opts,
+    List getJavaOptions() javaOptions,
+
+    void compile(List files) 
+        opts = array [];
+
+        if not nullptr? typeAction then
+            push opts 
+                (Type (typeAction unsafely_as 
+                        module_description -> ()))
+        fi;
+        if not nullptr? execArgs then
+            mapJavaList string execArgs 
+            |> push opts . Exec . array
+        fi;
+        if not nullptr? sourceDirs then
+            for (mapJavaList string sourceDirs) 
+                (push opts . SourceDir);
+        fi;
+        if not nullptr? javaOptions then
+            for (mapJavaList string javaOptions) 
+                (push opts . JavaOption);
+        fi;
+        
+        compileYetiFiles
+            (_getGenericOptions this)
+            opts
+            (mapJavaList string files),
+    
+    void yetiDoc(String toDir, List files)
+
+        modules = array [];
+        this#setType( (push modules) unsafely_as ~Fun);
+        this#compile(files);
+        
+        generateYetiDoc {directory = toDir, modules, error = failWith},
+
+end;
+
+class EvalResult(String[] bindings, Object result, 
+                String resultString)
+    String[] getBindings() bindings,
+    Object getResult() result,
+    String getResultString() resultString
+end;
+
+    
+class EvalUtil extends BaseEvalUtil
+    var bind = false,
+    var args = () as ~List,
+    var exec = true,
+    var sandbox = false,
+    var source = undef_str,
+
+    var ctxt = none,
+    void setBind(boolean bd) bind := bd,
+    boolean getBind() bind,
+
+    void setArgs(List ar) args := ar,
+    List getArgs() args,
+
+    void setExec(boolean bo) exec := bo,
+    boolean getExec() exec,
+
+    void setSandbox(boolean bo) sandbox := bo,
+    boolean getSandbox() sandbox,
+
+    void setSource(String src) source := src,
+    String getSource() source,
+
+    EvalResult eval(String code) 
+        opts = array[];
+        if bind then
+            push opts (Bind ())
+        fi;
+        if not nullptr? args then
+            mapJavaList string args
+            |> array
+            |> Exec 
+            |> push opts
+        fi;
+        if not exec then
+            push opts (NoExec ())
+        fi;
+        if sandbox then
+            push opts (GlobalSandbox ())
+        fi;
+        if defined? source then
+            push opts (Source (string source));
+        fi;
+
+        fn = case ctxt of
+            None (): 
+                ct = evaluateYetiCode (_getGenericOptions this);
+                ctxt := Some ct;
+                ct;
+            Some c: c;
+        esac;
+
+        {bindings, result, str} = fn opts (string code);
+        res = case result of
+            CompileException e : throw (e is ~CompileException);
+            Exception e: throw (e is ~Throwable);
+            Result o: o;
+        esac;
+        new EvalResult(array bindings, res, str), 
+
+end;
+
+
+
+
 {
     compileYetiFiles, evaluateYetiCode, generateYetiDoc
 }
