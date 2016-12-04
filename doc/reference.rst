@@ -352,7 +352,7 @@ Unit value literal: ``()``
     The argument type is unit type and no actual argument binding is done.
 
 Single underscore: ``_``
-    The argument type is a free type variable and no actual argument
+    The argument type is a type variable and no actual argument
     binding is done (essentially a wildcard pattern match).
 
 .. _StructArg:
@@ -389,7 +389,7 @@ Value expression types of all items are unified, resulting in a single
 types, resulting in a single *key-type*. The type of the list literal
 itself is *list<value-type>*, and the type of the hash map literal is
 *hash<key-type, value-type>*. Empty list and hash map constructors
-assign free type variables to the *value-type* and *key-type*.
+assign type variables to the *value-type* and *key-type*.
 
 List literals can contain value ranges, where the lower and higher bound
 of the range are separated by two consecutive dots (*lower-bound* ``..``
@@ -635,7 +635,7 @@ partial applications::
 The ``as`` and ``unsafely_as`` casts can also be used as right sections, that
 result in a function value that casts its argument value into the given type.
 The argument type is inferred from the context where the cast section is used,
-defaulting to free type variable (*'a*). Similarly the ``instanceof`` operator
+defaulting to type variable (*'a*). Similarly the ``instanceof`` operator
 can be used as a right section, resulting in a function that checks whether
 its argument value would pass as instance of the given Java class.
 
@@ -1027,7 +1027,7 @@ Structure override and merge operator with
 The expression on the right of the ``with`` operator must have a structure
 type that has an allowed fields set (a non-extensible structure type).
 The left-side expression must have either structure type or undefined
-type  *'a* (a free type variable). The ``with`` operator has nothing else
+type  *'a* (a type variable). The ``with`` operator has nothing else
 in common with arithmetic operators, than having the same precedence and
 left associativity.
 
@@ -1608,7 +1608,7 @@ Type definition creates a new scope for the following parts of the
 identifier (Id). Such binding can be considered to be a type alias.
 
 A copy is made of the bound type on every reference to preserve polymorphism,
-if it contains any free type variables. The ``shared`` modifier disables this
+if it contains any type variables. The ``shared`` modifier disables this
 behaviour, so the bound type itself will get unified with every reference of
 the shared binding (this can be used to infer typedefs from code).
 The ``shared`` typedefs are available only locally in the declaring module.
@@ -1618,7 +1618,7 @@ typedef into normal polymorphic typedef (that will bind a copy of the shared
 type).
 
 Type definitions can have parameter list between ``<>`` symbols (when not
-provided, it is same as having empty list). These will create free type
+provided, it is same as having empty list). These will create type
 variables bound in the scope of definition of the Type itself.
 The parameters must also be provided when the bound definition is used.
 The given parameters will be unified to the corresponding ones in
@@ -1636,7 +1636,7 @@ to convert between the new type and type given in the typedef declaration.
 The casting is allowed only in the same module where the opaque type was
 created. The ``opaque`` typedef can also have parameters, that act both as
 type parameters for the new opaque type, and can also be referenced in the
-Type associated with it (parameters will be unified when casting). No free
+Type associated with it (parameters will be unified when casting). No
 type variables other than these parameters are allowed in the opaque typedef.
 
 Sequence expression
@@ -1736,8 +1736,8 @@ Primitive types are inbuilt types that don't have any type parameters.
 | *string*  | java.lang.String  | UTF-16 code unit sequence.                   |
 +-----------+-------------------+----------------------------------------------+
 
-Free type variables
-++++++++++++++++++++++
+Type variables
++++++++++++++++++
 
 Function type
 ++++++++++++++++
@@ -1766,7 +1766,7 @@ kind
 The *map* type is visible via following inbuilt aliases:
 
 *map<key, value>*
-  This corresponds to the internal *map* type with free type variable
+  This corresponds to the internal *map* type with type variable
   as the kind parameter. It is therefore the most general alias of
   the internal *map* type and is usually used in places where both
   *array* and *hash* would work.
