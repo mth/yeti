@@ -1739,6 +1739,23 @@ Primitive types are inbuilt types that don't have any type parameters.
 Type variables
 +++++++++++++++++
 
+Type variables represent an undetermined type, that can be replaced with any
+other type (some restrictions are possible). As such, Yeti type variables
+are universally quantified and provide a way to define parametric types.
+Same type variable can be used multiple times in same type expression,
+denoting that each occurrence refers to same type instance.
+
+Type variables can be restricted to be ordered and/or tainted (the restrictions
+can be considered to be builtin type classes). Ordered type variable can be
+replaced only with ordered types. Tainting marks polymorphism restriction and
+is used for types associated with mutable stores. All restrictions are
+retained when type variables are unified.
+
+Syntactically an apostrophe followed by identifier unique for each variable
+is used to represent variables within type expressions. Caret followed by
+identifier represents ordered type variable (^a) and identifier starting with
+underscore denotes a tainted variable ('_a).
+
 Function type
 ++++++++++++++++
 
