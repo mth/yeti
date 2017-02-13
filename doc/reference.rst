@@ -1759,8 +1759,19 @@ underscore denotes a tainted variable ('_a).
 Function type
 ++++++++++++++++
 
+Function type consists of argument type and application result type (*'argument*
+→ *'result*). Unification of function types is done by unifying the corresponding
+contained argument and result types.
+
 Java types
 +++++++++++++
+
+Java types correspond to JVM class names and array types, similarly to
+non-primitive types in the Java language (for example value having type
+*~java.util.Date[]* should be a JVM array of java.util.Date class instances).
+Primitive Java types like *int* can be used only as part of JVM array types
+(for example *~int[]*). Java types unify only when the class name and dimension
+are same in both types.
 
 Inbuilt map type
 +++++++++++++++++++
@@ -1809,7 +1820,8 @@ The *map* type is visible via following inbuilt aliases:
   which extends the ``java.util.HashMap``).
 
 The compiler messages use the most specific alias matching the internal
-*map* type.
+*map* type. The map types (and it's manifestations) unification is done
+via unification of all three corresponding type parameters.
 
 Internal marker types used as map parameters
 -----------------------------------------------
