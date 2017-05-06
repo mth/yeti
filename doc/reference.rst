@@ -1836,6 +1836,22 @@ hash
 Structure and variant types
 ++++++++++++++++++++++++++++++
 
+Yeti type system has extensible record (aka structure) and polymorphic
+variant types. The type system representation and behaviour for these
+types is almost exactly identical, and therefore they will be described
+here together as member set types.
+
+Both record and variant types are a set of tagged member types.
+The record type members are usually known as structure fields, and the
+tag is the field name. The variant type members are usually known as variants,
+and the tag is the variant label. Each members type 
+
+Any members can be marked as required (otherwise they are known as allowed).
+The members marked as required make the required member set.
+All members (required or not) make the allowed member set for unification.
+
+
+
 Opaque types
 +++++++++++++++
 
