@@ -1751,10 +1751,46 @@ replaced only with ordered types. Tainting marks polymorphism restriction and
 is used for types associated with mutable stores. All restrictions are
 retained when type variables are unified.
 
+The type variables also carry scope depth information from their source
+expression. Unification of two type variables sets the scope to outer-most
+one. This is used to restrict the bindings polymorphism.
+
 Syntactically an apostrophe followed by identifier unique for each variable
 is used to represent variables within type expressions. Caret followed by
 identifier represents ordered type variable (^a) and identifier starting with
 underscore denotes a tainted variable ('_a).
+
+Unification
++++++++++++
+
+Unification process is at the core of Yeti type system (and other type systems
+that are similar to Hindley-Milner and use Algorithm W). Unification is used,
+when two types in different expression parts are determined to be same,
+for example functions argument type and the type of value applied to the
+function. The unification operation either assigns the most general
+intersection of the two types to both types, or fails if there is no common
+type possible. Unification failure usually causes compilation error (there
+are some exceptions, where the compiler uses implicit casts).
+
+Types can have parameters, for example function type has argument and result
+types as parameters. The unification procedure is applied recursively to the
+corresponding type parameters - for example the unification of function types
+A and B causes the unification of argument types, and also the unification
+of the result types.
+
+The unification of types A and B can have following outcomes:
+
+1. Either type A or B is a type variable. It will be replaced with alias
+   linking to the other type (which may be also type variable, in which
+   case the type variables have been merged).
+2. The types A and B are determined to be identical, and the corresponding
+   parameters are recursively unified.
+3. The types A and B were set types (record or variant types).
+   In this case the unification determines the most general type,
+   that satisfies the constraints given by both A and B,
+   and links A and B to the new type.
+4. The types A and B don't have a common subset, and therefore
+   the unification must fail.
 
 Function type
 ++++++++++++++++
@@ -1847,8 +1883,8 @@ tag is the field name. The variant type members are usually known as variants,
 and the tag is the variant label. Each members type 
 
 Any members can be marked as required (otherwise they are known as allowed).
-The members marked as required make the required member set.
-All members (required or not) make the allowed member set for unification.
+The members marked as required is the required member set. Set of all members
+(required or not) is known as the allowed member set for unification.
 
 
 
