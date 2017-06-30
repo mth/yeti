@@ -29,7 +29,8 @@ combSort less a =
 
 shellSort less a is (^a -> ^a -> boolean) -> array<^a> -> () =
    (var inc = length a;
-    (inc := if inc == 2 then 1 else: inc * 10 div 23; inc > 0) loop
+    //inc > 1 and (inc := if inc <= 7 then 1 else: inc * 10 div 23; true) loop
+    inc > 1 and (inc := if inc <= 7 then 1 else: inc * 7 shr 4 + 1; true) loop
        (var i = inc;
         i < length a loop
            (tmp = a[i];
@@ -123,6 +124,30 @@ mergeSort less l =
     _: l
     esac;
 
+introSort less a =
+   (len = length a;
+    half = length a div 2;
+    if len < 10 then
+        shellSort less a
+    else
+        a1 = slice a 0 half;
+        a2 = slice a half len;
+        introSort less a1;
+        introSort less a2;
+        var i = 0;
+        var j = 0;
+        half2 = length a2;
+        for [0 .. len - 1] do k:
+            if j >= half2 or (i < half and less a1[i] a2[j]) then
+                a[k] := a1[i];
+                i := i + 1;
+            else
+                a[k] := a2[j];
+                j := j + 1;
+            fi
+        done
+    fi);
+
 insertionSort less l =
     fold do l e:
         {fst, snd} = splitBy ((not) . (`less` e)) l;
@@ -169,6 +194,7 @@ test n slow =
     testASort "comb" combSort;
     testASort "shell" shellSort;
     testASort "qsort" qsort;
+    testASort "intro" introSort;
     testSort "merge" mergeSort;
     testSort "sortBy" sortBy);
 
