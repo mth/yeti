@@ -1,0 +1,30 @@
+Idea for getting Yeti to work without (full) JVM.
+
+1. Implement in Java simple class files to C compiler (ASM library helps here).
+2. Implement bare minimum of Java classpath used by Yeti, using C libraries
+   for real work whenever possible (like pcre for regex etc).
+3. Use Boehm library for GC (using precise mode would be nice).
+4. Embed tinycc for runtime compilation (needed for REPL/eval).
+
+The fact that Java 1.4 used by Yeti is mostly C with classes and VM
+should make it relatively easy. It wouldn't be as fast as running on JVM,
+but that isn't the idea - independence from JVM is.
+
+The support for OO single inheritance is easy by having VMT pointer at the start
+of structure representing the class value. Supporting interfaces is more tricky,
+but nothing impossible.
+
+Static compilation could use external C compiler for efficiency.
+It would be reasonable to compile ahead-of-time whole Yeti compiler and library
+into shared library.
+
+Such "mini-JVM" don't have to do much optimisations, but some might be useful.
+For example, classes where all fields are final could be embedded into other
+class fields by value (less indirection, less allocation and GC work) and copied
+when independent reference is needed.
+
+Context-specific int optimisations in the Yeti compiler would be also useful
+to rely less on the not-so-efficient yeti.lang.Num type.
+
+The glibc backtrace() function might be useful for getting stack traces,
+and setjmp/longjmp should provide mechanism for implementing exceptions.

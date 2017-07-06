@@ -86,7 +86,8 @@ final class Compiler implements Opcodes {
 
     Compiler() {
         // GCJ bytecode verifier is overly strict about INVOKEINTERFACE
-        isGCJ = System.getProperty("java.vm.name").indexOf("gcj") >= 0;
+        String vm = System.getProperty("java.vm.name");
+        isGCJ = vm != null && vm.indexOf("gcj") >= 0;
 //            isGCJ = true;
     }
 
