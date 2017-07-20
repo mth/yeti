@@ -1896,7 +1896,12 @@ Any members can be marked as required (otherwise they are known as allowed).
 The members marked as required is the required member set. Set of all members
 (required or not) is known as the allowed member set for unification.
 
-TODO mutable and non-polymorphic fields
+The structure fields can be additionally marked to be either polymorphic
+(default), non-polymorphic (used for fields with getters) or mutable
+(which implies non-polymorphism). This is used to determine whether the
+field dereference results in a value type with polymorphic or monomorphic
+type variables.
+
 TODO unification rules
 
 Opaque types
