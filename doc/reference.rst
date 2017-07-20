@@ -1792,6 +1792,11 @@ The unification of types A and B can have following outcomes:
 4. The types A and B don't have a common subset, and therefore
    the unification must fail.
 
+Let-bound polymorphism
+----------------------
+
+TODO scoping etc
+
 Function type
 ++++++++++++++++
 
@@ -1880,13 +1885,16 @@ here together as member set types.
 Both record and variant types are a set of tagged member types.
 The record type members are usually known as structure fields, and the
 tag is the field name. The variant type members are usually known as variants,
-and the tag is the variant label. Each members type 
+and the tag is the variant label. Type parameters for record and variant
+types consist of each members type and a marker type variable used to carry
+the scope depth for restricting let-bound polymorphism.
 
 Any members can be marked as required (otherwise they are known as allowed).
 The members marked as required is the required member set. Set of all members
 (required or not) is known as the allowed member set for unification.
 
-
+TODO mutable and non-polymorphic fields
+TODO unification rules
 
 Opaque types
 +++++++++++++++
