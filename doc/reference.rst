@@ -1797,6 +1797,9 @@ Let-bound polymorphism
 
 TODO scoping etc
 
+Occurs check
+------------
+
 Function type
 ++++++++++++++++
 
