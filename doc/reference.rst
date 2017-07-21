@@ -1908,9 +1908,9 @@ unification (meaning that its allowed member set is effectively wildcard).
 Types having any non-required members are always closed.
 
 The structure fields can be additionally marked to be either polymorphic
-(default), non-polymorphic (used for fields with getters) or mutable
-(which implies non-polymorphism). This is used to determine whether the
-field dereference results in a value type with polymorphic or monomorphic
+(default), monomorphic (used for fields with getters) or mutable (which
+implies monomorphism). This is used to determine whether the field
+dereference results in a value type with polymorphic or monomorphic
 type variables.
 
 Record/variant type unification
@@ -1939,15 +1939,15 @@ unification result is closed.
 The polymorphism marker for fields with matching tags is carried
 to the unification result in the following way:
 
-+-----------------+---------------------+---------------------+-------------+
-| Marker          | polymorphic         | non-polymorphic     | mutable     |
-+-----------------+---------------------+---------------------+-------------+
-| polymorphic     | **polymorphic**     | **non-polymorphic** | **mutable** |
-+-----------------+---------------------+---------------------+-------------+
-| non-polymorphic | **non-polymorphic** | **non-polymorphic** | **mutable** |
-+-----------------+---------------------+---------------------+-------------+
-| mutable         | **mutable**         | **mutable**         | **mutable** |
-+-----------------+---------------------+---------------------+-------------+
++-------------+-----------------+-----------------+-------------+
+| Marker      | polymorphic     | monomorphic     | mutable     |
++-------------+-----------------+-----------------+-------------+
+| polymorphic | **polymorphic** | **monomorphic** | **mutable** |
++-------------+-----------------+-----------------+-------------+
+| monomorphic | **monomorphic** | **monomorphic** | **mutable** |
++-------------+-----------------+-----------------+-------------+
+| mutable     | **mutable**     | **mutable**     | **mutable** |
++-------------+-----------------+-----------------+-------------+
 
 Opaque types
 +++++++++++++++
