@@ -1888,6 +1888,7 @@ types is almost exactly identical, and therefore they will be described
 here together as member set types.
 
 Both record and variant types are a set of tagged member types.
+The tagged member consists of the tag name and value type.
 The record type members are usually known as structure fields, and the
 tag is the field name. The variant type members are usually known as variants,
 and the tag is the variant label. Type parameters for record and variant
@@ -1915,7 +1916,38 @@ type variables.
 Record/variant type unification
 -------------------------------------
 
+The unification causes unification of value types between members
+with matching tags. Additionally the scope depth marker variables
+of both types are unified.
 
+Non-required members are dropped unless their tags are in both
+types member sets.
+
+The unification fails in the following instances:
+
+* One type is variant and another a record.
+* A type has a required member that doesn't exist in the another type,
+  which is closed.
+* There are no matching tags in the member sets, and at least one
+  of the types is closed.
+* Matching members value type unification fails.
+
+If both types are open then the unification result is also open,
+and will have a superset of both types member sets. Otherwise the
+unification result is closed.
+
+The polymorphism marker for fields with matching tags is carried
+to the unification result in the following way:
+
++-----------------+---------------------+---------------------+-------------+
+| Marker          | polymorphic         | non-polymorphic     | mutable     |
++-----------------+---------------------+---------------------+-------------+
+| polymorphic     | **polymorphic**     | **non-polymorphic** | **mutable** |
++-----------------+---------------------+---------------------+-------------+
+| non-polymorphic | **non-polymorphic** | **non-polymorphic** | **mutable** |
++-----------------+---------------------+---------------------+-------------+
+| mutable         | **mutable**         | **mutable**         | **mutable** |
++-----------------+---------------------+---------------------+-------------+
 
 Opaque types
 +++++++++++++++
