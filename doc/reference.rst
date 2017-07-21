@@ -1896,13 +1896,24 @@ Any members can be marked as required (otherwise they are known as allowed).
 The members marked as required is the required member set. Set of all members
 (required or not) is known as the allowed member set for unification.
 
+The required members come from field references and variant value constructors.
+The allowed members come from structure constructors and pattern matching
+variant tags.
+
+A record/variant type is open when it can acquire new members during
+unification (meaning that its allowed member set is effectively wildcard).
+Types having any non-required members are always closed.
+
 The structure fields can be additionally marked to be either polymorphic
 (default), non-polymorphic (used for fields with getters) or mutable
 (which implies non-polymorphism). This is used to determine whether the
 field dereference results in a value type with polymorphic or monomorphic
 type variables.
 
-TODO unification rules
+Record/variant type unification
+-------------------------------------
+
+
 
 Opaque types
 +++++++++++++++
