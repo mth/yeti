@@ -223,7 +223,8 @@ Structure type
 Structure type is denoted by field list surrounded by ``{`` and ``}``.
 The field names can be prefixed with dot, denoting required fields
 (if any of the fields is without dot, then **all** listed fields
-form the allowed fields set in the structure type).
+form the allowed fields set in the structure type). Defined structure
+type is open, if all field names are prefixed with dot.
 
 Structure type in Yeti is more commonly called an extensible record
 type in the ML family languages (the name structure is chosen in Yeti
@@ -240,7 +241,8 @@ Variant type
 
 Single variant type consists of the capitalized variant tag followed
 by variants value type. The variant tag can be suffixed with dot,
-denoting that it isn't a required variant.
+denoting that it isn't a required variant. Defined variant type is open,
+if there is no variant suffixed with dot.
 
 The full variant type consists of single variants separated by ``|``
 symbols. If any of the tags in full variant type has the dot prefix,
@@ -556,8 +558,8 @@ with few exceptions:
 
     * `Variant <Id_>`_ tags from the pattern form *allowed* member set in
       the corresponding variant type, unless the type is also matched with
-      wildcard (in this case *required* member set is formed in the type).
-    * Structure fields from the pattern form *required* member set in the
+      wildcard (in this case open *required* member set is formed in the type).
+    * Structure fields from the pattern form open *required* member set in the
       corresponding structure type.
     * List literal pattern gives *list?* type instead of *list*, meaning
       that values of *array* type can be also matched to it.
@@ -1048,7 +1050,7 @@ If the left-side expression also has a structure type with allowed fields set,
 then a merge operation is done, otherwise only a simple override is done.
 
 For overriding operation the left-side expressions type is unified with
-structure type that has as a required fields set the right-side types
+open structure type that has as a required fields set the right-side types
 allowed fields set. The result of unification is used as the type of the
 ``with`` expression. Due to the type unification the right-side allowed
 field set is either same or subset of the left-side values field set, with
@@ -1391,9 +1393,9 @@ instead of binding name (no function arguments may follow it). In this case
 the evaluation of the Expression must result in a structure value, and for
 each structure field in the StructArg the identifier used as a value is bound
 to the actual corresponding field value in the evaluation result.
-The bound expression type is unified with a structure type where required
-member set contains each field from the StructArg, with the field types
-used for the corresponding created bindings.
+The bound expression type is unified with an open structure type where
+required member set contains each field from the StructArg, with the field
+types used for the corresponding created bindings.
 
 Self-binding lambda expression
 ---------------------------------
