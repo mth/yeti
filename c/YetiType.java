@@ -1279,6 +1279,9 @@ class YetiType implements YetiParser {
         return src;
     }
 
+    // Creates a type from opaque where non-opaque parts are replaced with
+    // matching ones from the src. The idea is to hide parts of the src
+    // that are opaque types in the opaque argument.
     private static YType deriveOpaque(YType src, YType opaque,
                                       Map cache, boolean[] mask) {
         opaque = opaque.deref();
