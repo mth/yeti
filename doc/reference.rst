@@ -1975,7 +1975,7 @@ in the ML module system without the ability to have independent signatures.
 
 Differently from regular type aliases the opaque types implementation
 type may not contain any type variables that are not the opaque types
-parameters (these would break soundness of opaque casts).
+parameters (these would break the soundness of opaque casts).
 
 Opaque casts
 ---------------
