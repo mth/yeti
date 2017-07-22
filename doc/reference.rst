@@ -1819,6 +1819,11 @@ Primitive Java types like *int* can be used only as part of JVM array types
 (for example *~int[]*). Java types unify only when the class name and dimension
 are same in both types.
 
+Implicit casts
+-----------------
+
+TODO
+
 Inbuilt map type
 +++++++++++++++++++
 
@@ -1952,3 +1957,51 @@ to the unification result in the following way:
 Opaque types
 +++++++++++++++
 
+Opaque types are a way to define new nominal types in Yeti code
+using ``typedef opaque foo<...> = ...`` declarations (in contrast,
+the normal non-opaque type definitions in Yeti are purely aliases).
+
+The opaque type definition creates a new type identity, which can have
+parameters and is associated with a implementation type inside the module.
+The opaque types lose the associated implementation types outside of the
+defining module. This provides a way to hide the data structures used in
+the module implementation from the modules interface. It resembles types
+in the ML module system without the ability to have independent signatures.
+
+Differently from regular type aliases the opaque types implementation
+type may not contain any type variables that are not the opaque types
+parameters (these would break soundness of opaque casts).
+
+Opaque casts
+---------------
+
+Since the opaque types have distinct identities from the implementation
+types and cannot be unified with them, it is not possible to directly
+use them in the implementation code operating with values having the
+implementation types. Exporting the implementation to opaque types is
+done using ``as`` cast, which in this case is also called opaque cast.
+
+The opaque cast operation works on the initial expressions type (source
+type) and given destination type. The cast can be implemented using
+following operations:
+
+1. A copy is made of the destination type. All opaque types in the
+   copy originating from current module have to be marked as ambiguous.
+2. The copy is unified with the source type, using following rules
+   for the ambiguous types:
+
+   * If ambiguous type is unified with same non-ambiguous opaque type,
+     it loses its ambiguity
+   * If ambiguous type is unified with any other type, it also loses
+     its ambiguity and becomes its implementation type
+
+   This step ensures the compatibility of source and destination types.
+3. Result type is derived from the (unified) source type and destination
+   type. If destination type is opaque type, then the result type is
+   also opaque type. Otherwise the source type is used, but any type
+   parameters or member types in it are replaced with recursive application
+   of the same derivation operation.
+
+In this way the implementation types in source type get replaced with
+opaque types in the destination types. A typical use of the cast would be
+casting the modules export value into desired signature type.
