@@ -1954,6 +1954,11 @@ to the unification result in the following way:
 | mutable     | **mutable**     | **mutable**     | **mutable** |
 +-------------+-----------------+-----------------+-------------+
 
+Type definitions
++++++++++++++++++++
+
+TODO: Describe how the flexible typedefs work
+
 Opaque types
 +++++++++++++++
 
