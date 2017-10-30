@@ -223,7 +223,7 @@ final class ByteArray extends PArray {
     public AList find(Fun pred) {
         for (int i = start, e = length; i < e; ++i)
             if (pred.apply(new IntNum(a[i])) == Boolean.TRUE)
-                return new ByteArray(i, e - i, a);
+                return new ByteArray(i, e, a);
         return null;
     }
 
