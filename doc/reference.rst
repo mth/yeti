@@ -1976,7 +1976,7 @@ flexible record/variant types when the type binding is used:
    *A is foo | B is bar*). The contra/covariance flips on each nested function
    types argument. The original required/allowed from typedef is ignored,
    unless it was mixed there.
-2. When flexible type occurs in value (non-bind) is declaration like
+2. When flexible type occurs in value (non-binding) ``is`` declaration like
    (expression ``is`` *foo*), then it remains flexible. When unified with other
    structure/variant type, the flexible member set will take over the other
    types kind - when unified with required member set, it acts like having
