@@ -1963,7 +1963,7 @@ Flexible member set types
 ----------------------------
 
 Flexible flag is set on any record or variant type inside type definition
-(unless it is ``shared typedef``). Following rules apply to flexible
+(unless it is a ``shared typedef``). Following rules apply to flexible
 record/variant types when the type binding is used:
 
 1. Flexible types occurring in value bindings type declaration are flipped
@@ -1982,7 +1982,7 @@ record/variant types when the type binding is used:
    types kind - when unified with required member set, it acts like having
    a required member set, and when unified with allowed member set, like it had
    been an allowed member set by itself. Again, the original required/allowed
-   kind from type definition is ignored.
+   kind from the type definition is ignored.
 3. The *flexible* flags can be removed from the type declaration, by suffixing
    the type definitions name with ``!``. In this case the structure/variant
    types will have the allowed/required member sets directly copied from the
