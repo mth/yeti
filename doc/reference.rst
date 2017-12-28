@@ -1962,9 +1962,9 @@ TODO.
 Flexible member set types
 ----------------------------
 
-Flexible flag is set on any record or variant type inside typedef
-definition (unless it is ``shared typedef``). Following rules apply to
-flexible record/variant types when the type binding is used:
+Flexible flag is set on any record or variant type inside type definition
+(unless it is ``shared typedef``). Following rules apply to flexible
+record/variant types when the type binding is used:
 
 1. Flexible types occurring in value bindings type declaration are flipped
    accordingly to function argument/result types.
@@ -1974,19 +1974,19 @@ flexible record/variant types when the type binding is used:
    outside of functions) get allowed member set for structures (like
    *{a is foo, b is bar}*), and required member set for variants (like
    *A is foo | B is bar*). The contra/covariance flips on each nested function
-   types argument. The original required/allowed from typedef is ignored,
-   unless it was mixed there.
+   types argument. The original required/allowed from type definition is
+   ignored, unless it was mixed there.
 2. When flexible type occurs in value (non-binding) ``is`` declaration like
    (expression ``is`` *foo*), then it remains flexible. When unified with other
    structure/variant type, the flexible member set will take over the other
    types kind - when unified with required member set, it acts like having
    a required member set, and when unified with allowed member set, like it had
    been an allowed member set by itself. Again, the original required/allowed
-   kind from typedef is ignored.
+   kind from type definition is ignored.
 3. The *flexible* flags can be removed from the type declaration, by suffixing
-   the typedefs name with ``!``. In this case the structure/variant types will
-   have the allowed/required member sets directly copied from the typedef
-   declaration (omitting the flexible flags).
+   the type definitions name with ``!``. In this case the structure/variant
+   types will have the allowed/required member sets directly copied from the
+   ``typedef`` declaration (omitting the flexible flags).
 
 Flexible member sets avoid the need to use separate (duplicate) data structure
 declarations for consuming and producing values of said type (for example
