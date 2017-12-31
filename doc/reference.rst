@@ -1797,7 +1797,37 @@ The unification of types A and B can have following outcomes:
 Let-bound polymorphism
 ----------------------
 
-TODO scoping etc
+TODO scoping etc. That's a lot of to explain.
+
+Yeti has a variant of let-bound polymorphism similarly to ML-family languages.
+The let-bound polymorphism is applies when a created value binding has a type
+with variables (either a type variable by itself or a polymorphic composite
+type), and such binding is used. Polymorphic composite types include all open
+variant and record types (even if the only type variable in the type is the
+hidden scope depth marker variable).
+
+The implementation in Yeti is pretty complicated, as it attempts to preserve
+polymorphism almost always when it is safe. Particularly, it combines the
+relaxed value restriction rules known from OCaml language with tracking
+mutable store annotations added to the type variables.
+
+The first part of let-bound polymorphism happens when a value binding is
+created, and consists of creating a free type variable set that is included
+in the binding. The free type variable set determines the type variables
+that a polymorphic in the binding and should be copied when the binding is
+used. If the binding has no free type variables, then it is a non-polymorphic
+binding.
+
+TODO describe the algorithm for creating free type variable set.
+     Associated code is YetiType.getFreeVar/scanFreeVar etc.
+
+The second part of let-bound polymorphism happens when a polymorphic value
+binding is used. Then a binding reference expression is created with a
+type, where copy is made of those parts of the original binding type that
+contain free type variables (those existing in the bindings free type
+variable set).
+
+TODO describe the algorithm for creating the copy.
 
 Occurs check
 ------------
