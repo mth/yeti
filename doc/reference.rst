@@ -1814,12 +1814,13 @@ mutable store annotations added to the type variables.
 The first part of let-bound polymorphism happens when a value binding is
 created, and consists of creating a free type variable set that is included
 in the binding. The free type variable set determines the type variables
-that a polymorphic in the binding and should be copied when the binding is
+that are polymorphic in the binding and should be copied when the binding is
 used. If the binding has no free type variables, then it is a non-polymorphic
 binding.
 
 TODO describe the algorithm for creating free type variable set.
-     Associated code is YetiType.getFreeVar/scanFreeVar etc.
+TODO scanFreeVar algorithm
+TODO getFreeVar/purgeNonFree algorithm
 
 The second part of let-bound polymorphism happens when a polymorphic value
 binding is used. Then a binding reference expression is created with a
