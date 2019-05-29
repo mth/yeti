@@ -1857,11 +1857,11 @@ ignored to avoid recursion loop. Given flags are passed to the recursive
 scan, and new context flags are applied depending on the type and parameter.
 
 Free variable is collected only if the variables scope depth is greater than
-given scope depth.
+the given scope depth.
 
-If the type variables scope is greater or equal to given scope and
-MONOMORPHIC flag is given, then the type variable is marked as tainted
-and isn't considered to be a free type variable.
+If the type variables scope depth is greater or equal to the given scope
+depth and MONOMORPHIC flag is given, then the type variable is marked as
+tainted and isn't considered to be a free type variable.
 
 TODO describe the StructVar magic
 TODO describe the algorithm for creating the copy.
