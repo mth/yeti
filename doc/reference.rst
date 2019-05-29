@@ -1860,7 +1860,7 @@ Free variable is collected only if the variables scope depth is greater than
 the given scope depth.
 
 If the type variables scope depth is greater or equal to the given scope
-depth and MONOMORPHIC flag is given, then the type variable is marked as
+depth and the context is MONOMORPHIC, then the type variable is marked as
 tainted and isn't considered to be a free type variable.
 
 TODO describe the StructVar magic
