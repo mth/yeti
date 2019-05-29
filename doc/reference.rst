@@ -1840,12 +1840,12 @@ flags as parameters. Following context flags are used:
 * MONOMORPHIC - all type variables in the current context are monomorphic.
   Applies in the following contexts unless PROTECTED is given:
 
-  - Monomorphic record field
+  - Monomorphic member type
   - Map type that isn't known to be list (key type isn't none)
 * RESTRICT_CONTRA - tainted type variables cannot be free variables (ignored
   when POLYMORPHIC is also given). Applies in the following contexts:
 
-  - Monomorphic record field when PROTECTED is given
+  - Monomorphic member type when PROTECTED is given
   - Function argument
   - Key and value in map type that isn't known to be a list (key type
     isn't none), if PROTECTED is given
