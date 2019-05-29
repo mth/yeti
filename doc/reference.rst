@@ -1819,7 +1819,6 @@ used. If the binding has no free type variables, then it is a non-polymorphic
 binding.
 
 TODO describe the algorithm for creating free type variable set.
-TODO scanFreeVar algorithm
 TODO getFreeVar/purgeNonFree algorithm
 
 The second part of let-bound polymorphism happens when a polymorphic value
@@ -1828,6 +1827,46 @@ type, where copy is made of those parts of the original binding type that
 contain free type variables (those existing in the bindings free type
 variable set).
 
+Finding free type variables
+---------------------------
+
+The algorithm for finding free type variables uses scope depth and context
+flags as parameters. Following context flags are used:
+
+* POLYMORPHIC - enables unrestricted polymorphism in the context, any
+  type variable will be considered to be free type variable
+* PROTECTED - the current context shouldn't be MONOMORPHIC,
+  applies to function argument and return types
+* MONOMORPHIC - all type variables in the current context are monomorphic.
+  Applies in the following contexts unless PROTECTED is given:
+
+  - Non-polymorphic record field
+  - Map type that isn't known to be list (key type isn't none)
+* RESTRICT_CONTRA - tainted type variables cannot be free variables (ignored
+  when POLYMORPHIC is also given). Applies in the following contexts:
+
+  - Non-polymorphic record field when PROTECTED is given
+  - Function argument
+  - Key and value in map type that isn't known to be a list (key type
+    isn't none), if PROTECTED is given
+* MEMBER_SET_MARKER - when checking record or variant types marker variable
+
+Scanning non-polymorphic record field implies RESTRICT_CONTRA if
+PROTECTED is given, and MONOMORPHIC otherwise.
+
+Non-primitive types get all their type parameters recursively scanned for
+free type variables. Any type already visited during the recursion will be
+ignored to avoid recursion loop. Given flags are passed to the recursive
+scan, and new context flags are applied depending on the type and parameter.
+
+Free variable is collected only if the variables scope depth is greater than
+given scope depth.
+
+If the type variables scope is greater or equal to given scope and
+MONOMORPHIC flag is given, then the type variable is marked as tainted
+and isn't considered to be a free type variable.
+
+TODO describe the StructVar magic
 TODO describe the algorithm for creating the copy.
 
 Occurs check
