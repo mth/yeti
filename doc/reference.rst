@@ -1851,9 +1851,6 @@ flags as parameters. Following context flags are used:
     isn't none), if PROTECTED is given
 * MEMBER_SET_MARKER - when checking record or variant types marker variable
 
-Scanning non-polymorphic record field implies RESTRICT_CONTRA if
-PROTECTED is given, and MONOMORPHIC otherwise.
-
 Non-primitive types get all their type parameters recursively scanned for
 free type variables. Any type already visited during the recursion will be
 ignored to avoid recursion loop. Given flags are passed to the recursive
