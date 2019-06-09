@@ -1863,6 +1863,19 @@ If the type variables scope depth is greater or equal to the given scope
 depth and the context is MONOMORPHIC, then the type variable is marked as
 tainted and isn't considered to be a free type variable.
 
+Restricting the free type variables
+-----------------------------------
+
+This is done after the candidate free type variables are collected using
+the previously described algorithm. If monomorphic context flag is given,
+then no free type variables will be returned. In this case the initial
+scan is used only for setting the tainted flags on type variables.
+
+Otherwise denied type variables are recursively pruned from the initial
+set and only non-denied ones are considered polymorphic.
+
+TODO more details about purgeNonFree after the StructVar is described.
+
 TODO describe the StructVar magic
 TODO describe the algorithm for creating the copy.
 
