@@ -3,7 +3,7 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-5.0.3y.jar"/>
+    <property name="asm" value="${basedir}/asm-7.1r.jar"/>
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
@@ -11,11 +11,11 @@
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${build}/asm-5.0.3.jar"/>
+    <property name="asmt" value="${build}/asm-7.1.jar"/>
     <property name="asm.sha"
-      value="71c4f78e437b8fdcd9cc0dfd2abea8c089eb677005a6a5cff320206cc52b46cc"/>
+      value="4ab2fa2b6d2cc9ccb1eaa05ea329c407b47b13ed2915f62f8c4b8cc96258d4de"/>
     <mkdir dir="${build}/util"/>
-    <get src="http://dot.planet.ee/yeti/asm-5.0.3.jar"
+    <get src="https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/asm/7.1/asm-7.1.jar"
          dest="${asmt}" verbose="true"/>
     <checksum algorithm="SHA-256" file="${asmt}"
               property="${asm.sha}" verifyproperty="is.asm.ok"/> 
@@ -55,7 +55,7 @@
         <arg value="${build}/lib"/>
     </java>
     <javac destdir="${build}/lib" srcdir="${basedir}/lib" debug="on"
-        encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
+        encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
         includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${build}/util">
@@ -75,7 +75,7 @@
 <target name="compiler" depends="checklib,lib">
     <mkdir dir="${build}/compiler"/>
     <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
-           encoding="UTF-8" source="1.4" target="1.4" debuglevel="source,lines"
+           encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
            includeantruntime="true">
         <classpath>
             <path location="${asm}"/>

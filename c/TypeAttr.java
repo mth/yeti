@@ -431,7 +431,7 @@ class YetiTypeVisitor extends ClassVisitor {
     private boolean deprecated;
 
     YetiTypeVisitor() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
     }
 
     public void visit(int version, int access, String name, String signature,

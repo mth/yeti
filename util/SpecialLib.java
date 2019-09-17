@@ -223,7 +223,7 @@ public class SpecialLib implements Opcodes {
 
     void fun2_() throws Exception {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_4, ACC_SUPER,
+        cw.visit(V1_6, ACC_SUPER,
                  "yeti/lang/Fun2_", null, "yeti/lang/Fun", null);
         cw.visitField(ACC_PRIVATE | ACC_FINAL,
                 "fun", "Lyeti/lang/Fun2;", null, null).visitEnd();
@@ -270,7 +270,7 @@ public class SpecialLib implements Opcodes {
 
     void compose() throws Exception {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_4, ACC_PUBLIC | ACC_FINAL | ACC_SUPER,
+        cw.visit(V1_6, ACC_PUBLIC | ACC_FINAL | ACC_SUPER,
                  "yeti/lang/Compose", null, "yeti/lang/Fun", null);
         cw.visitField(ACC_FINAL | ACC_PRIVATE,
                       "f", "Lyeti/lang/Fun;", null, null).visitEnd();
@@ -320,7 +320,7 @@ public class SpecialLib implements Opcodes {
 
     void unsafe() throws Exception {
         cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_4, ACC_SUPER, "yeti/lang/Unsafe",
+        cw.visit(V1_6, ACC_SUPER, "yeti/lang/Unsafe",
                  null, "java/lang/Object", null);
         MethodVisitor mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC,
                 "unsafeThrow", "(Ljava/lang/Throwable;)V", null, null);
