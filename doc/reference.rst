@@ -1799,8 +1799,8 @@ Let-bound polymorphism
 
 TODO scoping etc. That's a lot of to explain.
 
-Yeti has a variant of let-bound polymorphism similarly to ML-family languages.
-The let-bound polymorphism is applies when a created value binding has a type
+Yeti has a variant of let-bound polymorphism similar to ML-family languages.
+The let-bound polymorphism applies when a created value binding has a type
 with variables (either a type variable by itself or a polymorphic composite
 type), and such binding is used. Polymorphic composite types include all open
 variant and record types (even if the only type variable in the type is the
