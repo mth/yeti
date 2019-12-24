@@ -992,8 +992,8 @@ class YetiType implements YetiParser {
 
     private static final int RESTRICT_PROTECT = 1;
     private static final int RESTRICT_CONTRA  = 2;
-    static final int RESTRICT_ALL  = 4;
-    static final int RESTRICT_POLY = 8;
+    static final int RESTRICT_ALL  = 4; // known MONOMORPHIC
+    static final int RESTRICT_POLY = 8; // known POLYMORPHIC
     static final int STRUCT_VAR    = 16;
 
     /*

@@ -1842,8 +1842,8 @@ flags as parameters. Following context flags are used:
 
   - Monomorphic (or mutable) member type
   - Map type that isn't known to be list (key type isn't none)
-* RESTRICT_CONTRA - tainted type variables cannot be free variables (ignored
-  when POLYMORPHIC is also given). Applies in the following contexts:
+* RESTRICT_CONTRA - tainted type variables are non-free in this context
+  (ignored when POLYMORPHIC is also given). Applies in the following contexts:
 
   - Monomorphic (or mutable) member type when PROTECTED is given
   - Function argument
@@ -1857,11 +1857,12 @@ ignored to avoid recursion loop. Given flags are passed to the recursive
 scan, and new context flags are applied depending on the type and parameter.
 
 Free variable is collected only if the variables scope depth is greater than
-the given scope depth.
+the given scope depth (and the variable isn't marked MONOMORPHIC).
 
 If the type variables scope depth is greater or equal to the given scope
 depth and the context is MONOMORPHIC, then the type variable is marked as
-tainted and isn't considered to be a free type variable.
+tainted and is considered to be a non-free type variable. Tainting is part
+of inference process and is therefore persistent property of the variable.
 
 Restricting the free type variables
 -----------------------------------
@@ -1871,12 +1872,18 @@ the previously described algorithm. If monomorphic context flag is given,
 then no free type variables will be returned. In this case the initial
 scan is used only for setting the tainted flags on type variables.
 
-Otherwise denied type variables are recursively pruned from the initial
-set and only non-denied ones are considered polymorphic.
+Any type variables reachable through member set with non-free marker
+variable is also non-free (suppressed). This is n:m relationship - many
+type variables might be reachable through a member set type, and a type
+variable can be reachable through many different member sets. Circular
+dependencies can arise, because any suppressed type variable can be
+another member sets marker variable. Therefore the algorithm for finding
+free type variables must collect the relevant type variable graph before
+actual suppression of type variables.
 
-TODO more details about purgeNonFree after the StructVar is described.
+The pruning of non-free type variables leaves a set of free type variables
+for a type in the given scope.
 
-TODO describe the StructVar magic
 TODO describe the algorithm for creating the copy.
 
 Occurs check
