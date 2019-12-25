@@ -1794,8 +1794,11 @@ The unification of types A and B can have following outcomes:
 4. The types A and B don't have a common subset, and therefore
    the unification must fail.
 
+Occurs check
+------------
+
 Let-bound polymorphism
-----------------------
+++++++++++++++++++++++
 
 TODO scoping etc. That's a lot of to explain.
 
@@ -1817,9 +1820,6 @@ in the binding. The free type variable set determines the type variables
 that are polymorphic in the binding and should be copied when the binding is
 used. If the binding has no free type variables, then it is a non-polymorphic
 binding.
-
-TODO describe the algorithm for creating free type variable set.
-TODO getFreeVar/purgeNonFree algorithm
 
 The second part of let-bound polymorphism happens when a polymorphic value
 binding is used. Then a binding reference expression is created with a
@@ -1872,7 +1872,7 @@ the previously described algorithm. If monomorphic context flag is given,
 then no free type variables will be returned. In this case the initial
 scan is used only for setting the tainted flags on type variables.
 
-Any type variables reachable through member set with non-free marker
+Any type variable reachable through member set with non-free marker
 variable is also non-free (suppressed). This is n:m relationship - many
 type variables might be reachable through a member set type, and a type
 variable can be reachable through many different member sets. Circular
@@ -1884,10 +1884,35 @@ actual suppression of type variables.
 The pruning of non-free type variables leaves a set of free type variables
 for a type in the given scope.
 
-TODO describe the algorithm for creating the copy.
+Making copy of binding type
+---------------------------
 
-Occurs check
-------------
+Coping a binding type in its usage site (for example, application of
+a function binding to argument) is what allows let-bound polymorphism
+in Yeti type system.
+
+First step is to derive a set of type variables that are free in the scope
+where the binding is used and can be reached through the type to be copied.
+A corresponding new type variable is then created for each of these free
+type variables. Pairing of the original free type variables with the created
+variables produces a dictionary mapping from original type variables to the
+new ones. The bindings usage site scope depth is assigned to the created
+type variables.
+
+Any part of the binding types graph are copied, if it provides path from
+the root of binding type to any free type variable in the usage sites scope.
+New type variables are used in the copy in the place of the original free
+type variables (found in the dictonary created at the start of the copy).
+
+It follows, that a bindings type with empty free type variable set is
+monomorphic and should be used without creating a copy.
+
+A practical algorithm for this is to make a recursive copy with memoization
+of already visited nodes. A type node is copied only when free type variables
+are found during descent into its parameters, otherwise the original node
+can be used without copy. This also means that any primitive types are not
+copied. Member set types are copied, if either any member type or its marker
+variable has to be copied (as these together are member set type parameters).
 
 Function type
 ++++++++++++++++
