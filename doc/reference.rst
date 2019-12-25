@@ -1889,7 +1889,7 @@ Making copy of binding type
 
 Coping a binding type in its usage site (for example, application of
 a function binding to argument) is what allows let-bound polymorphism
-in Yeti type system.
+in the Yeti type system.
 
 First step is to derive a set of type variables that are free in the scope
 where the binding is used and can be reached through the type to be copied.
