@@ -1887,6 +1887,15 @@ for a type in the given scope.
 Making copy of binding type
 ---------------------------
 
+FIXME This is wrong - actually the free var set is created together with
+      binding, and use site does only the copy part.
+      The bind calls in YetiAnalyzer should be looked.
+      Also, polymorphic member set bindings must be copied even when
+      no free type variables (comment in .resolve() method).
+      Also, YetiAnalyzer contains some interesting getFreeVar calls.
+      In essence, some actions described here shouldn't be about copy,
+      but instead happen when a binding is created.
+
 Coping a binding type in its usage site (for example, application of
 a function binding to argument) is what allows let-bound polymorphism
 in the Yeti type system.
