@@ -1816,16 +1816,19 @@ mutable store annotations added to the type variables.
 
 The first part of let-bound polymorphism happens when a value binding is
 created, and consists of creating a free type variable set that is included
-in the binding. The free type variable set determines the type variables
-that are polymorphic in the binding and should be copied when the binding is
-used. If the binding has no free type variables, then it is a non-polymorphic
-binding.
+in the binding (as described below). The free type variable set determines
+the type variables that are polymorphic in the binding and should be copied
+when the binding is used. If the binding has no free type variables and is
+not a member set, then it is a non-polymorphic binding.
 
 The second part of let-bound polymorphism happens when a polymorphic value
 binding is used. Then a binding reference expression is created with a
 type, where copy is made of those parts of the original binding type that
 contain free type variables (those existing in the bindings free type
 variable set).
+
+TODO The bind calls in YetiAnalyzer should be looked.
+     YetiAnalyzer contains some interesting getFreeVar calls.
 
 Finding free type variables
 ---------------------------
@@ -1865,51 +1868,40 @@ tainted and is considered to be a non-free type variable. Tainting is part
 of inference process and is therefore persistent property of the variable.
 
 Restricting the free type variables
------------------------------------
+'''''''''''''''''''''''''''''''''''
 
-This is done after the candidate free type variables are collected using
-the previously described algorithm. If monomorphic context flag is given,
-then no free type variables will be returned. In this case the initial
-scan is used only for setting the tainted flags on type variables.
+The described algorithm collects a set of candidate free type variables.
+If monomorphic context flag is given, then no free type variables will
+result. In this case the initial scan is used only for setting the
+tainted flags on type variables.
 
 Any type variable reachable through member set with non-free marker
 variable is also non-free (suppressed). This is n:m relationship - many
 type variables might be reachable through a member set type, and a type
-variable can be reachable through many different member sets. Circular
-dependencies can arise, because any suppressed type variable can be
-another member sets marker variable. Therefore the algorithm for finding
-free type variables must collect the relevant type variable graph before
-actual suppression of type variables.
+variable can be reachable through many different member sets.
+Purging all non-free type variables leaves a set of free type variables
+for a binding in the given scope.
 
-The pruning of non-free type variables leaves a set of free type variables
-for a type in the given scope.
+Circular dependencies can arise, because any suppressed type variable can
+be another member sets marker variable. Therefore the algorithm for finding
+free type variables must collect the relevant type variable relationships
+graph before actual suppression of type variables.
 
 Making copy of binding type
 ---------------------------
-
-FIXME This is wrong - actually the free var set is created together with
-      binding, and use site does only the copy part.
-      The bind calls in YetiAnalyzer should be looked.
-      Also, polymorphic member set bindings must be copied even when
-      no free type variables (comment in .resolve() method).
-      Also, YetiAnalyzer contains some interesting getFreeVar calls.
-      In essence, some actions described here shouldn't be about copy,
-      but instead happen when a binding is created.
 
 Coping a binding type in its usage site (for example, application of
 a function binding to argument) is what allows let-bound polymorphism
 in the Yeti type system.
 
-First step is to derive a set of type variables that are free in the scope
-where the binding is used and can be reached through the type to be copied.
-A corresponding new type variable is then created for each of these free
-type variables. Pairing of the original free type variables with the created
-variables produces a dictionary mapping from original type variables to the
-new ones. The bindings usage site scope depth is assigned to the created
-type variables.
+The bindings free type variables (collected when the binding was created)
+need to be replaced with new ones during the copy. New type variable is
+created and paired with each free type variable of the binding, creating
+a dictionary mapping from original type variables to the new ones. The
+bindings usage site scope depth is assigned to the created type variables.
 
 Any part of the binding types graph are copied, if it provides path from
-the root of binding type to any free type variable in the usage sites scope.
+the root of binding type to any of the given free type variables.
 New type variables are used in the copy in the place of the original free
 type variables (found in the dictonary created at the start of the copy).
 
