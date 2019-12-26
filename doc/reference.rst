@@ -1901,7 +1901,7 @@ a dictionary mapping from original type variables to the new ones. The
 bindings usage site scope depth is assigned to the created type variables.
 
 Any part of the binding types graph are copied, if it provides path from
-the root of binding type to any of the given free type variables.
+the root of binding type to any of its free type variables.
 New type variables are used in the copy in the place of the original free
 type variables (found in the dictonary created at the start of the copy).
 
