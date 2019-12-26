@@ -34,7 +34,7 @@ by simply running ``java -jar yeti.jar``::
 
     >
 
-At least J2SE 1.4 compatible JVM is required. The `yeti.jar`_ file can be
+At least J2SE 1.6 compatible JVM is required. The `yeti.jar`_ file can be
 downloaded from Yeti `home page`_ or built from sources (the sources can be
 fetched using ``git clone git://github.com/mth/yeti.git``).
 
