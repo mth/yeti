@@ -1895,10 +1895,10 @@ a function binding to argument) is what allows let-bound polymorphism
 in the Yeti type system.
 
 The bindings free type variables (collected when the binding was created)
-need to be replaced with new ones during the copy. New type variable is
-created and paired with each free type variable of the binding, creating
-a dictionary mapping from original type variables to the new ones. The
-bindings usage site scope depth is assigned to the created type variables.
+are replaced with new ones during the copy. New type variable is created and
+paired with each free type variable of the binding, creating a dictionary
+mapping from original type variables to the new ones. The bindings usage
+site scope depth is assigned to the created type variables.
 
 Any part of the binding types graph are copied, if it provides path from
 the root of binding type to any of its free type variables.
@@ -1906,7 +1906,8 @@ New type variables are used in the copy in the place of the original free
 type variables (found in the dictonary created at the start of the copy).
 
 It follows, that a bindings type with empty free type variable set is
-monomorphic and should be used without creating a copy.
+monomorphic and should be used without creating a copy. An exception to this
+are polymorphic member set bindings, which need to be copied nevertheless.
 
 A practical algorithm for this is to make a recursive copy with memoization
 of already visited nodes. A type node is copied only when free type variables
