@@ -1907,7 +1907,8 @@ type variables (found in the dictonary created at the start of the copy).
 
 It follows, that a bindings type with empty free type variable set is
 monomorphic and should be used without creating a copy. An exception to this
-are polymorphic member set bindings, which need to be copied nevertheless.
+are polymorphic member set bindings, which need to be copied nevertheless
+(as unification can change member set).
 
 A practical algorithm for this is to make a recursive copy with memoization
 of already visited nodes. A type node is copied only when free type variables
