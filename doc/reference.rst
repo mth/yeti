@@ -1887,8 +1887,8 @@ be another member sets marker variable. Therefore the algorithm for finding
 free type variables must collect the relevant type variable relationships
 graph before actual suppression of type variables.
 
-Making copy of binding type
----------------------------
+Making copy of the binding type
+-------------------------------
 
 Coping a binding type in its usage site (for example, application of
 a function binding to an argument) is what allows let-bound polymorphism
