@@ -1891,7 +1891,7 @@ Making copy of binding type
 ---------------------------
 
 Coping a binding type in its usage site (for example, application of
-a function binding to argument) is what allows let-bound polymorphism
+a function binding to an argument) is what allows let-bound polymorphism
 in the Yeti type system.
 
 The bindings free type variables (collected when the binding was created)
