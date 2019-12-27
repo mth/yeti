@@ -1797,6 +1797,13 @@ The unification of types A and B can have following outcomes:
 Occurs check
 ------------
 
+Type parameters are not allowed to contain (or be) references to types
+containing them, unless member set type exists in the cycle.
+
+Therefore unification with type variable should fail, if this
+variable is reachable through any of the types parameters without
+encountering a member set.
+
 Let-bound polymorphism
 ++++++++++++++++++++++
 
