@@ -1802,7 +1802,7 @@ containing them, unless member set type exists in the cycle.
 
 Therefore unification with type variable should fail, if this
 variable is reachable through any of the types parameters without
-encountering a member set.
+encountering a member set (implementation can defer it).
 
 Let-bound polymorphism
 ++++++++++++++++++++++
