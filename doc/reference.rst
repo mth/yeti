@@ -1934,6 +1934,17 @@ can be used without copy. This also means that any primitive types are not
 copied. Member set types are copied, if either any member type or its marker
 variable has to be copied (as these together are member set type parameters).
 
+Module type check
++++++++++++++++++
+
+Module type (of the top-level value) is not allowed to contain
+non-free type variables, excluding member set type marker variables.
+
+`Finding free type variables`_ algorithm should be used to find
+all free type variables. Any other type variable in the module
+is non-free, and error must be raised, if it isn't a member set
+marker variable.
+
 Function type
 ++++++++++++++++
 
@@ -2085,17 +2096,6 @@ to the unification result in the following way:
 +-------------+-----------------+-----------------+-------------+
 | mutable     | **mutable**     | **mutable**     | **mutable** |
 +-------------+-----------------+-----------------+-------------+
-
-Module type check
-+++++++++++++++++
-
-Module type (of the top-level value) is not allowed to contain
-non-free type variables, excluding member set type marker variables.
-
-`Finding free type variables`_ algorithm should be used to find
-all free type variables. Any other type variable in the module
-is non-free, and error must be raised, if it isn't a member set
-marker variable.
 
 Type definitions
 +++++++++++++++++++
