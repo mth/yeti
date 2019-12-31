@@ -1835,8 +1835,17 @@ type, where copy is made of those parts of the original binding type that
 contain free type variables (those existing in the bindings free type
 variable set).
 
-TODO The bind calls in YetiAnalyzer should be looked.
-     YetiAnalyzer contains some interesting getFreeVar calls.
+Variable (mutable) bindings give MONOMORPHIC context.
+Immutable bindings give POLYMORPHIC context only for polymorphic values.
+Conditional expressions, lists and variant constructors and are polymorphic,
+when all (possible) values are polymorphic. Lambda, record and ``load``
+expressions are always polymorphic. 
+
+Record field is polymorphic, if all of the following holds:
+
+* field isn't mutable and doesn't have an accessor function
+* field isn't marked monomorphic through record type unification
+* field value is polymorphic and contains no non-free type variables
 
 Finding free type variables
 ---------------------------
@@ -2076,6 +2085,17 @@ to the unification result in the following way:
 +-------------+-----------------+-----------------+-------------+
 | mutable     | **mutable**     | **mutable**     | **mutable** |
 +-------------+-----------------+-----------------+-------------+
+
+Module type check
++++++++++++++++++
+
+Module type (of the top-level value) is not allowed to contain
+non-free type variables, excluding member set type marker variables.
+
+`Finding free type variables`_ algorithm should be used to find
+all free type variables. Any other type variable in the module
+is non-free, and error must be raised, if it isn't a member set
+marker variable.
 
 Type definitions
 +++++++++++++++++++
