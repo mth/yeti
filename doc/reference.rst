@@ -1952,21 +1952,6 @@ Function type consists of argument type and application result type (*'argument*
 → *'result*). Unification of function types is done by unifying the corresponding
 contained argument and result types.
 
-Java types
-+++++++++++++
-
-Java types correspond to JVM class names and array types, similarly to
-non-primitive types in the Java language (for example value having type
-*~java.util.Date[]* should be a JVM array of java.util.Date class instances).
-Primitive Java types like *int* can be used only as part of JVM array types
-(for example *~int[]*). Java types unify only when the class name and dimension
-are same in both types.
-
-Implicit casts
------------------
-
-TODO
-
 Inbuilt map type
 +++++++++++++++++++
 
@@ -2096,6 +2081,21 @@ to the unification result in the following way:
 +-------------+-----------------+-----------------+-------------+
 | mutable     | **mutable**     | **mutable**     | **mutable** |
 +-------------+-----------------+-----------------+-------------+
+
+Java types
++++++++++++++
+
+Java types correspond to JVM class names and array types, similarly to
+non-primitive types in the Java language (for example value having type
+*~java.util.Date[]* should be a JVM array of java.util.Date class instances).
+Primitive Java types like *int* can be used only as part of JVM array types
+(for example *~int[]*). Java types unify only when the class name and dimension
+are same in both types.
+
+Implicit casts
+-----------------
+
+TODO
 
 Type definitions
 +++++++++++++++++++
