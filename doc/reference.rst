@@ -1808,8 +1808,6 @@ better performance.
 Let-bound polymorphism
 ++++++++++++++++++++++
 
-TODO scoping etc. That's a lot of to explain.
-
 Yeti has a variant of let-bound polymorphism similar to ML-family languages.
 The let-bound polymorphism applies when a created value binding has a type
 with variables (either a type variable by itself or a polymorphic composite
@@ -1846,6 +1844,11 @@ Record field is polymorphic, if all of the following holds:
 * field isn't mutable and doesn't have an accessor function
 * field isn't marked monomorphic through record type unification
 * field value is polymorphic and contains no non-free type variables
+
+Binding scopes
+--------------
+
+TODO
 
 Finding free type variables
 ---------------------------
