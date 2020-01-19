@@ -1805,6 +1805,159 @@ variable is reachable through any of the types parameters without
 encountering a member set. Implementation can defer the check for
 better performance.
 
+Function type
+++++++++++++++++
+
+Function type consists of argument type and application result type (*'argument*
+→ *'result*). Unification of function types is done by unifying the corresponding
+contained argument and result types.
+
+Inbuilt map type
++++++++++++++++++++
+
+Map type is an internal composite type used for inbuilt collection types.
+It is available in the type definitions only using inbuilt aliases.
+The internal *map* type has three type parameters:
+
+key
+  Marker type none on the non-indexable *list* type, and
+  the *number* type for array indexes.
+  Any value type can be used for *hash* table keys.
+value
+  Type of the values stored in the collections
+  (should be an actual value type).
+kind
+  List marker type is used for lists and arrays
+  and hash marker type is used for hash tables.
+
+The *map* type is visible via following inbuilt aliases:
+
+*map<key, value>*
+  This corresponds to the internal *map* type with type variable
+  as the kind parameter. It is therefore the most general alias of
+  the internal *map* type and is usually used in places where both
+  *array* and *hash* would work.
+*list<value>* 
+  List provides immutable interface for singly linked list operations
+  and corresponds to *map<none, value>* with list as kind type. The
+  reference implementation uses  **null** for empty list and instances
+  extending the ``yeti.lang.AList`` abstract class. Lists implementations
+  are used for simple linked lists, iterators and JVM primitive array views.
+*array<value>*
+  Array provides mutable ordered collection with O(1) index access
+  and amortized O(1) appending. It corresponds to *map<number, value>*
+  with list as kind type. The reference implementation uses
+  ``yeti.lang.MList`` class (mutable list), which contains simple reference
+  array together with length and offset values as the back-end.
+*list?<value>*
+  This is list-like collection corresponding to *map<'a, value>* with
+  list as the kind type. It is used in places where both list and array
+  are suitable (for example ``head`` and ``tail`` library functions).
+*hash<key, value>*
+  This gives mutable table mapping of keys to values. The default
+  implementation is hash table (at JVM level instances of ``yeti.lang.Hash``,
+  which extends the ``java.util.HashMap``).
+
+The compiler messages use the most specific alias matching the internal
+*map* type. The map types (and it's manifestations) unification is done
+via unification of all three corresponding type parameters.
+
+Internal marker types used as map parameters
+-----------------------------------------------
+
+none
+  This is used as placeholder key type for immutable lists.
+list
+  This is used as kind type for arrays and immutable lists.
+hash
+  This is used as kind type for hash tables.
+
+Structure and variant types
+++++++++++++++++++++++++++++++
+
+Yeti type system has extensible record (aka structure) and polymorphic
+variant types. The type system representation and behaviour for these
+types is almost exactly identical, and therefore they will be described
+here together as member set types. In literature these are also known
+as row types with a row polymorphism.
+
+Both record and variant types are a set of tagged member types.
+The tagged member consists of the tag name and value type.
+The record type members are usually known as structure fields, and the
+tag is the field name. The variant type members are usually known as variants,
+and the tag is the variant label. Type parameters for record and variant
+types consist of each members type and a marker type variable used to carry
+the scope depth for restricting let-bound polymorphism.
+
+Any members can be marked as required (otherwise they are known as allowed).
+The members marked as required is the required member set. Set of all members
+(required or not) is known as the allowed member set for unification.
+
+The required members come from field references and variant value constructors.
+The allowed members come from structure constructors and pattern matching
+variant tags.
+
+A record/variant type is open when it can acquire new members during
+unification (meaning that its allowed member set is effectively wildcard).
+Types having any non-required members are always closed.
+
+The structure fields can be additionally marked to be either polymorphic
+(default), monomorphic (used for fields with getters) or mutable (which
+implies monomorphism). This is used to determine whether the field
+dereference results in a value type with polymorphic or monomorphic
+type variables.
+
+Record/variant type unification
+----------------------------------
+
+The unification causes unification of value types between members
+with matching tags. Additionally the scope depth marker variables
+of both types are unified.
+
+Non-required members are dropped unless their tags are in both
+types member sets.
+
+The unification fails in the following instances:
+
+* One type is variant and another a record.
+* A type has a required member that doesn't exist in the another type,
+  which is closed.
+* There are no matching tags in the member sets, and at least one
+  of the types is closed.
+* Matching members value type unification fails.
+
+If both types are open then the unification result is also open,
+and will have a superset of both types member sets. Otherwise the
+unification result is closed.
+
+The polymorphism marker for fields with matching tags is carried
+to the unification result in the following way:
+
++-------------+-----------------+-----------------+-------------+
+| Marker      | polymorphic     | monomorphic     | mutable     |
++-------------+-----------------+-----------------+-------------+
+| polymorphic | **polymorphic** | **monomorphic** | **mutable** |
++-------------+-----------------+-----------------+-------------+
+| monomorphic | **monomorphic** | **monomorphic** | **mutable** |
++-------------+-----------------+-----------------+-------------+
+| mutable     | **mutable**     | **mutable**     | **mutable** |
++-------------+-----------------+-----------------+-------------+
+
+Java types
++++++++++++++
+
+Java types correspond to JVM class names and array types, similarly to
+non-primitive types in the Java language (for example value having type
+*~java.util.Date[]* should be a JVM array of java.util.Date class instances).
+Primitive Java types like *int* can be used only as part of JVM array types
+(for example *~int[]*). Java types unify only when the class name and dimension
+are same in both types.
+
+Implicit casts
+-----------------
+
+TODO
+
 Let-bound polymorphism
 ++++++++++++++++++++++
 
@@ -1964,159 +2117,6 @@ non-free type variables, excluding member set type marker variables.
 all free type variables. Any other type variable in the module
 is non-free, and error must be raised, if it isn't a member set
 marker variable.
-
-Function type
-++++++++++++++++
-
-Function type consists of argument type and application result type (*'argument*
-→ *'result*). Unification of function types is done by unifying the corresponding
-contained argument and result types.
-
-Inbuilt map type
-+++++++++++++++++++
-
-Map type is an internal composite type used for inbuilt collection types.
-It is available in the type definitions only using inbuilt aliases.
-The internal *map* type has three type parameters:
-
-key
-  Marker type none on the non-indexable *list* type, and
-  the *number* type for array indexes.
-  Any value type can be used for *hash* table keys.
-value
-  Type of the values stored in the collections
-  (should be an actual value type).
-kind
-  List marker type is used for lists and arrays
-  and hash marker type is used for hash tables.
-
-The *map* type is visible via following inbuilt aliases:
-
-*map<key, value>*
-  This corresponds to the internal *map* type with type variable
-  as the kind parameter. It is therefore the most general alias of
-  the internal *map* type and is usually used in places where both
-  *array* and *hash* would work.
-*list<value>* 
-  List provides immutable interface for singly linked list operations
-  and corresponds to *map<none, value>* with list as kind type. The
-  reference implementation uses  **null** for empty list and instances
-  extending the ``yeti.lang.AList`` abstract class. Lists implementations
-  are used for simple linked lists, iterators and JVM primitive array views.
-*array<value>*
-  Array provides mutable ordered collection with O(1) index access
-  and amortized O(1) appending. It corresponds to *map<number, value>*
-  with list as kind type. The reference implementation uses
-  ``yeti.lang.MList`` class (mutable list), which contains simple reference
-  array together with length and offset values as the back-end.
-*list?<value>*
-  This is list-like collection corresponding to *map<'a, value>* with
-  list as the kind type. It is used in places where both list and array
-  are suitable (for example ``head`` and ``tail`` library functions).
-*hash<key, value>*
-  This gives mutable table mapping of keys to values. The default
-  implementation is hash table (at JVM level instances of ``yeti.lang.Hash``,
-  which extends the ``java.util.HashMap``).
-
-The compiler messages use the most specific alias matching the internal
-*map* type. The map types (and it's manifestations) unification is done
-via unification of all three corresponding type parameters.
-
-Internal marker types used as map parameters
------------------------------------------------
-
-none
-  This is used as placeholder key type for immutable lists.
-list
-  This is used as kind type for arrays and immutable lists.
-hash
-  This is used as kind type for hash tables.
-
-Structure and variant types
-++++++++++++++++++++++++++++++
-
-Yeti type system has extensible record (aka structure) and polymorphic
-variant types. The type system representation and behaviour for these
-types is almost exactly identical, and therefore they will be described
-here together as member set types. In literature these are also known
-as row types with a row polymorphism.
-
-Both record and variant types are a set of tagged member types.
-The tagged member consists of the tag name and value type.
-The record type members are usually known as structure fields, and the
-tag is the field name. The variant type members are usually known as variants,
-and the tag is the variant label. Type parameters for record and variant
-types consist of each members type and a marker type variable used to carry
-the scope depth for restricting let-bound polymorphism.
-
-Any members can be marked as required (otherwise they are known as allowed).
-The members marked as required is the required member set. Set of all members
-(required or not) is known as the allowed member set for unification.
-
-The required members come from field references and variant value constructors.
-The allowed members come from structure constructors and pattern matching
-variant tags.
-
-A record/variant type is open when it can acquire new members during
-unification (meaning that its allowed member set is effectively wildcard).
-Types having any non-required members are always closed.
-
-The structure fields can be additionally marked to be either polymorphic
-(default), monomorphic (used for fields with getters) or mutable (which
-implies monomorphism). This is used to determine whether the field
-dereference results in a value type with polymorphic or monomorphic
-type variables.
-
-Record/variant type unification
-----------------------------------
-
-The unification causes unification of value types between members
-with matching tags. Additionally the scope depth marker variables
-of both types are unified.
-
-Non-required members are dropped unless their tags are in both
-types member sets.
-
-The unification fails in the following instances:
-
-* One type is variant and another a record.
-* A type has a required member that doesn't exist in the another type,
-  which is closed.
-* There are no matching tags in the member sets, and at least one
-  of the types is closed.
-* Matching members value type unification fails.
-
-If both types are open then the unification result is also open,
-and will have a superset of both types member sets. Otherwise the
-unification result is closed.
-
-The polymorphism marker for fields with matching tags is carried
-to the unification result in the following way:
-
-+-------------+-----------------+-----------------+-------------+
-| Marker      | polymorphic     | monomorphic     | mutable     |
-+-------------+-----------------+-----------------+-------------+
-| polymorphic | **polymorphic** | **monomorphic** | **mutable** |
-+-------------+-----------------+-----------------+-------------+
-| monomorphic | **monomorphic** | **monomorphic** | **mutable** |
-+-------------+-----------------+-----------------+-------------+
-| mutable     | **mutable**     | **mutable**     | **mutable** |
-+-------------+-----------------+-----------------+-------------+
-
-Java types
-+++++++++++++
-
-Java types correspond to JVM class names and array types, similarly to
-non-primitive types in the Java language (for example value having type
-*~java.util.Date[]* should be a JVM array of java.util.Date class instances).
-Primitive Java types like *int* can be used only as part of JVM array types
-(for example *~int[]*). Java types unify only when the class name and dimension
-are same in both types.
-
-Implicit casts
------------------
-
-TODO
 
 Type definitions
 +++++++++++++++++++
