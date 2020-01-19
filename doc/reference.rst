@@ -1845,10 +1845,27 @@ Record field is polymorphic, if all of the following holds:
 * field isn't marked monomorphic through record type unification
 * field value is polymorphic and contains no non-free type variables
 
-Binding scopes
---------------
+Type scopes
+-----------
 
-TODO
+Type scopes are used to determine polymorphic (free) type variables in binding
+type. This is so, because accessing types of values created in the containing
+scope should usually be monomorphic. New type scope is created by lambda
+expressions - the code inside lambda expression has scope depth increased by
+one relative to the containing code. Increased scope depth is also used for any
+type variable that should be polymorphic relative to the current scope depth,
+including the following:
+
+* Type declarations
+* Type variables corresponding to function result type in application
+* Record type inferred from field access
+* Record marker variable on record construction
+
+A bind expression limits the scope depth of type variables in bound value
+to one level above current depth for polymorphic values, and to the current
+depth for monomorphic values. That means the binding type may contain
+type variables with lower (containing depth), but cannot contain type
+variables with higher depth that the bindings limit is.
 
 Finding free type variables
 ---------------------------
