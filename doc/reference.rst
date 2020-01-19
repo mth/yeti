@@ -2039,7 +2039,7 @@ Yeti type system has extensible record (aka structure) and polymorphic
 variant types. The type system representation and behaviour for these
 types is almost exactly identical, and therefore they will be described
 here together as member set types. In literature these are also known
-as row types having a row polymorphism.
+as row types with a row polymorphism.
 
 Both record and variant types are a set of tagged member types.
 The tagged member consists of the tag name and value type.
