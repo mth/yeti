@@ -2127,10 +2127,10 @@ type matching the description can be `cast <Casts_>`_ into opaque type using
 ``as``). Normal (non-opaque) type definitions create a mere alias, that can be
 used instead of the given description in type declarations and definitions.
 
-The compiler also tries to use available type definitions to simplify types
-printed in error messages. Type definition can have parameters that act as
-placeholders for types that must be provided as arguments when the definition
-is used.
+Type definition can have parameters that act as placeholders for types that
+must be provided as arguments when the definition is used.
+The compiler tries to use available type definitions to simplify types printed
+in error messages.
 
 Flexible member set types
 ----------------------------
