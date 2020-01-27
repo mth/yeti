@@ -2126,9 +2126,10 @@ New nominal type is created only by ``typedef opaque`` definition (values with
 type matching the description can be `cast <Casts_>`_ into opaque type using
 ``as``). Normal (non-opaque) type definitions create a mere alias, that can be
 used instead of the given description in type declarations and definitions.
-
 Type definition can have parameters that act as placeholders for types that
 must be provided as arguments when the definition is used.
+
+Modules top-level definitions are imported by `load <Load operator_>`_ statement.
 The compiler tries to use available type definitions to simplify types printed
 in error messages.
 
