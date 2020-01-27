@@ -1633,7 +1633,7 @@ type definition scope, which is thereafter unified with the defined type.
 
 The ``opaque`` modifier causes a new unique type to be created and bound to
 the given identifier (Id). The new type will be incompatible with the given
-Type (no unification is allowed), but an ``as`` `cast <Casts_>`_ can be used
+Type (no unification is allowed), but an ``as`` `cast <Casts>`_ can be used
 to convert between the new type and type given in the typedef declaration.
 The casting is allowed only in the same module where the opaque type was
 created. The ``opaque`` typedef can also have parameters, that act both as
@@ -2121,7 +2121,16 @@ marker variable.
 Type definitions
 +++++++++++++++++++
 
-TODO.
+`Type definition`_ gives a new name to type description used in the definition.
+New nominal type is created only by ``typedef opaque`` definition (values with
+type matching the description can be `cast <Casts_>`_ into opaque type using
+``as``). Normal (non-opaque) type definitions create a mere alias, that can be
+used instead of the given description in type declarations and definitions.
+
+The compiler also tries to use available type definitions to simplify types
+printed in error messages. Type definition can have parameters that act as
+placeholders for types that must be provided as arguments when the definition
+is used.
 
 Flexible member set types
 ----------------------------
