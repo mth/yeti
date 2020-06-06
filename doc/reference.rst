@@ -1953,10 +1953,77 @@ Primitive Java types like *int* can be used only as part of JVM array types
 (for example *~int[]*). Java types unify only when the class name and dimension
 are same in both types.
 
-Implicit casts
------------------
+Type conversions
+----------------
 
-TODO
+Type conversions can be done using the ``as`` operator. It allows:
+
+* Conversion between Yeti and Java types
+* Java class upcasting (from child class into parent class or interface)
+* `Opaque casts`_
+
+Type conversions done using ``as`` between Yeti and Java types preserve
+the semantic meaning, but may change the data representation.
+
+Implicit conversions happen in following cases, if unification is not possible:
+
+* Calling Java method (for arguments and returned value)
+* Method bodies in Java classes defined in Yeti code (for arguments and
+  returned value)
+* Argument to function application, if upcasting or the converting into *list*.
+
++--------------------+--------------------------------------------------------+
+| Source type        | Possible target types                                  |
++====================+========================================================+
+| *()*               | Any Java type (gives null value)                       |
++--------------------+--------------------------------------------------------+
+| *boolean*          | *~java.lang.Boolean*                                   |
++--------------------+--------------------------------------------------------+
+| *number*           | *~java.lang.Byte, ~java.lang.Short, ~java.lang.Float,* |
+|                    | *~java.lang.Double, ~java.lang.Integer,*               |
+|                    | *~java.lang.Number, ~java.lang.BigInteger,*            |
+|                    | *~java.lang.BigDecimal, ~yeti.lang.Num*                |
++--------------------+--------------------------------------------------------+
+| *string*           | *~char[], ~java.lang.String, ~java.lang.StringBuffer,* |
+|                    | *~java.lang.StringBuilder*, primitive char             |
++--------------------+--------------------------------------------------------+
+| *array<'a>*        | *~'a[]*                                                |
++--------------------+--------------------------------------------------------+
+| *'a[]*             | *array<'a>* (only non-primitive arrays, wraps array)   |
++--------------------+--------------------------------------------------------+
+| primitive[]        | *list<'a>* (if primitive type can be converted into    |
+|                    | *'a*, wraps array)                                     |
++--------------------+--------------------------------------------------------+
+| *list<'a>*         | *~java.util.Collection, ~java.util.List,*              |
+|                    | *~java.util.Set, ~t[]* (if 'a can be converted into t) |
++--------------------+--------------------------------------------------------+
+| *'a -> 'b*         | *~yeti.lang.Fun*                                       |
++--------------------+--------------------------------------------------------+
+| *hash<'a, 'b>*     | *~yeti.lang.Hash*                                      |
++--------------------+--------------------------------------------------------+
+| *{ .\.\. }*        | *~yeti.lang.Struct*                                    |
++--------------------+--------------------------------------------------------+
+| *Variant 'a*       | *~yeti.lang.Tag* (for any Variant)                     |
++--------------------+--------------------------------------------------------+
+|*~java.lang.Boolean*| *boolean* (also from primitive boolean)                |
++--------------------+--------------------------------------------------------+
+| *~yeti.lang.Num*   | *number*                                               |
++--------------------+--------------------------------------------------------+
+|*~java.lang.String* | *string*                                               |
++--------------------+--------------------------------------------------------+
+| primitive number   | *number* as implicit cast                              |
++--------------------+--------------------------------------------------------+
+| primitive char     | *string*                                               |
++--------------------+--------------------------------------------------------+
+| void               | *()* as implicit cast                                  |
++--------------------+--------------------------------------------------------+
+
+Yeti doesn't have a concept of primitive types outside of Java method
+signatures, but if conversion with primitive type is possible if it would be
+with corresponding ~java.lang type.
+
+Conversion from Yeti *list* into Java array is always possible, when the
+element type can be converted (applies recursively).
 
 Let-bound polymorphism
 ++++++++++++++++++++++
