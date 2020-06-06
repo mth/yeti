@@ -1970,7 +1970,7 @@ Implicit conversions happen in following cases, if unification is not possible:
 * Calling Java method (for arguments and returned value)
 * Method bodies in Java classes defined in Yeti code (for arguments and
   returned value)
-* Argument to function application, if upcasting or the converting into *list*.
+* Argument to function application, if upcasting or converting into *list*.
 
 +--------------------+--------------------------------------------------------+
 | Source type        | Possible target types                                  |
@@ -2011,9 +2011,9 @@ Implicit conversions happen in following cases, if unification is not possible:
 +--------------------+--------------------------------------------------------+
 |*~java.lang.String* | *string*                                               |
 +--------------------+--------------------------------------------------------+
-| primitive number   | *number* as implicit cast                              |
+| primitive char     | *string* as implicit cast                              |
 +--------------------+--------------------------------------------------------+
-| primitive char     | *string*                                               |
+| primitive number   | *number* as implicit cast                              |
 +--------------------+--------------------------------------------------------+
 | void               | *()* as implicit cast                                  |
 +--------------------+--------------------------------------------------------+
