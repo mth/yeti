@@ -32,6 +32,9 @@ class JSONObj {
             Object v = e.getValue();
             s[n + 3] = v == null ? "null" : Core.show(v);
         }
+        if (n == 0) {
+            return "{}";
+        }
         s[n] = "}";
         return Core.concat(s);
     }
