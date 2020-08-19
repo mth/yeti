@@ -49,7 +49,7 @@ final class Iterate extends LList {
     }
 
     public String toString() {
-        StringBuffer buf = new StringBuffer("[");
+        StringBuilder buf = new StringBuilder("[");
         buf.append(Core.show(first()));
         AIter i = rest();
         for (int n = 0; i != null && ++n <= 100; i = i.next()) {

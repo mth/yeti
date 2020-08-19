@@ -39,7 +39,7 @@ public class BadMatch extends IllegalArgumentException {
     }
 
     private static String msg(Object match, String source, int line, int col) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if (source != null) {
             buf.append(source).append(':');
         }

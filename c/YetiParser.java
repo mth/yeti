@@ -116,7 +116,7 @@ interface YetiParser {
         String str() {
             if (expr == null)
                 return "`".concat(kind);
-            StringBuffer buf = new StringBuffer("(`");
+            StringBuilder buf = new StringBuilder("(`");
             buf.append(kind);
             for (int i = 0; i < expr.length; ++i) {
                 buf.append(' ');
@@ -231,7 +231,7 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer s = new StringBuffer("(`let ");
+            StringBuilder s = new StringBuilder("(`let ");
             if (doc != null) {
                 s.append("/**");
                 s.append(doc);
@@ -263,7 +263,7 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer res = new StringBuffer("(`begin");
+            StringBuilder res = new StringBuilder("(`begin");
             if (seqKind != null)
                 res.append(':').append(seqKind);
             for (int i = 0; st != null && i < st.length; ++i) {
@@ -344,7 +344,7 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer s = new StringBuffer().append('(');
+            StringBuilder s = new StringBuilder().append('(');
             if (left == null)
                 s.append("`flip ");
             if (op != "")
@@ -368,8 +368,8 @@ interface YetiParser {
         int kind;
 
         String str() {
-            StringBuffer buf =
-                new StringBuffer("(`typedef ").append(name).append(" (");
+            StringBuilder buf =
+                new StringBuilder("(`typedef ").append(name).append(" (");
             for (int i = 0; i < param.length; ++i) {
                 if (i != 0)
                     buf.append(' ');
@@ -412,8 +412,8 @@ interface YetiParser {
         }
 
         String str() {
-            StringBuffer buf =
-                new StringBuffer(right == null ? "<>" : right.str());
+            StringBuilder buf =
+                new StringBuilder(right == null ? "<>" : right.str());
             buf.append('#').append(name);
             if (arguments != null) {
                 buf.append('(');
@@ -453,7 +453,7 @@ interface YetiParser {
         String str() {
             if (name == "->")
                 return "(" + param[0].str() + " -> " + param[1].str() + ")";
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             if (name == "|") {
                 for (int i = 0; i < param.length; ++i)
                     buf.append(" | ").append(param[i].str());
@@ -1424,7 +1424,7 @@ interface YetiParser {
         private Node readStr() {
             int st = p;
             List parts = null;
-            StringBuffer res = new StringBuffer();
+            StringBuilder res = new StringBuilder();
             int sline = line, scol = p - lineStart;
             boolean tripleQuote;
             if (p + 1 < src.length && src[p] == '"' && src[p + 1] == '"') {

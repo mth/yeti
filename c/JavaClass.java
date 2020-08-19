@@ -125,7 +125,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         String descr(String extra) {
             if (descr != null)
                 return descr;
-            StringBuffer additionalArgs = new StringBuffer();
+            StringBuilder additionalArgs = new StringBuilder();
             for (Capture c = captures; c != null; c = c.next)
                 additionalArgs.append(c.captureType());
             return super.descr(additionalArgs.toString());

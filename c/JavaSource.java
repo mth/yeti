@@ -160,7 +160,7 @@ class JavaSource implements Opcodes {
     // mode 2 - parametric classname (dotted identifier, <>)
     // mode 3 - full type (dotted identifier <> [])
     private String type(int mode) {
-        StringBuffer result = null;
+        StringBuilder result = null;
         String id = get(0), sep = null;
         if (id == "{")
             return id;
@@ -177,7 +177,7 @@ class JavaSource implements Opcodes {
             if (sep != "." || mode == 1)
                 break;
             if (result == null)
-                result = new StringBuffer(id);
+                result = new StringBuilder(id);
             result.append('/');
             if ((id = get(0)) != null)
                 result.append(id);

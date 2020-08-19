@@ -74,7 +74,7 @@ public abstract class AList extends AIter implements Comparable, Coll {
     }
 
     public String toString() {
-        StringBuffer buf = new StringBuffer("[");
+        StringBuilder buf = new StringBuilder("[");
         buf.append(Core.show(first()));
         for (AIter i = rest(); i != null; i = i.next()) {
             buf.append(',');

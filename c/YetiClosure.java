@@ -76,7 +76,7 @@ class Apply extends Code {
                && arity == (argc = f.methodImpl.argVar)) {
             //System.err.println("A" + arity + " F" + argc);
             // first argument is function value (captures array really)
-            StringBuffer sig = new StringBuffer(f.capture1 ? "(" : "([");
+            StringBuilder sig = new StringBuilder(f.capture1 ? "(" : "([");
             sig.append("Ljava/lang/Object;");
             Apply a = this; // "this" is the last argument applied, so reverse
             Code[] args = new Code[argc];
@@ -179,7 +179,7 @@ final class TryCatch extends CapturingClosure {
 
     void gen(Ctx ctx) {
         int argc = mergeCaptures(ctx, true);
-        StringBuffer sigb = new StringBuffer("(");
+        StringBuilder sigb = new StringBuilder("(");
         for (Capture c = captures; c != null; c = c.next) {
             sigb.append(c.captureType());
         }
@@ -869,7 +869,7 @@ final class Function extends CapturingClosure implements Binder {
         if (bindName != null)
             bindName = mangle(bindName);
         bindName = ctx.methodName(bindName);
-        StringBuffer sig = new StringBuffer(capture1 ? "(" : "([");
+        StringBuilder sig = new StringBuilder(capture1 ? "(" : "([");
         for (int i = methodImpl.argVar + 2; --i >= 0;) {
             if (i == 0)
                 sig.append(')');
@@ -986,7 +986,7 @@ final class Function extends CapturingClosure implements Binder {
         valueCtx.typeInsn(NEW, name);
         valueCtx.insn(DUP);
         if (notStruct) { // final fields must be initialized in constructor
-            StringBuffer sigb = new StringBuffer("(");
+            StringBuilder sigb = new StringBuilder("(");
             for (Capture c = captures; c != null; c = c.next)
                 if (!c.uncaptured)
                     sigb.append(c.captureType());

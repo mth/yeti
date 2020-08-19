@@ -116,7 +116,7 @@ class ClassFinder {
 
     ClassFinder(String[] cp, String depDestDir) {
         classPath = new ClassPathItem[cp.length];
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < cp.length; ++i) {
             classPath[i] = cp[i].endsWith(".jar")
                 ? (ClassPathItem) new ClassJar(cp[i]) : new ClassDir(cp[i]);

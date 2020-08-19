@@ -278,8 +278,8 @@ class JavaType implements Cloneable {
         }
 
         public String toString() {
-            StringBuffer s =
-                new StringBuffer(returnType.type == YetiType.UNIT
+            StringBuilder s =
+                new StringBuilder(returnType.type == YetiType.UNIT
                                     ? "void" : returnType.toString());
             s.append(' ');
             s.append(name);
@@ -305,7 +305,7 @@ class JavaType implements Cloneable {
             if (descr != null) {
                 return descr;
             }
-            StringBuffer result = new StringBuffer("(");
+            StringBuilder result = new StringBuilder("(");
             for (int i = 0; i < arguments.length; ++i) {
                 result.append(argDescr(i));
             }
@@ -869,7 +869,7 @@ class JavaType implements Cloneable {
         if (res != -1) {
             return ma[res].dup(ma, res, objType);
         }
-        StringBuffer err = new StringBuffer("No suitable method ")
+        StringBuilder err = new StringBuilder("No suitable method ")
                                 .append(name).append('(');
         for (int i = 0; i < args.length; ++i) {
             if (i != 0)
@@ -916,8 +916,8 @@ class JavaType implements Cloneable {
             throw new CompileException(call, "Cannot instantiate interface "
                                              + jt.dottedName());
         if (noAbstract && (jt.access & Opcodes.ACC_ABSTRACT) != 0) {
-            StringBuffer msg =
-                new StringBuffer("Cannot construct abstract class ");
+            StringBuilder msg =
+                new StringBuilder("Cannot construct abstract class ");
             msg.append(jt.dottedName());
             int n = 0;
             for (int i = 0; i < jt.methods.length; ++i)

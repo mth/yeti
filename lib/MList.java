@@ -98,7 +98,7 @@ abstract class AMList extends AList implements Serializable {
 
     public String toString() {
         Object[] array = array();
-        StringBuffer buf = new StringBuffer("[");
+        StringBuilder buf = new StringBuilder("[");
         for (int cnt = _size(), i = start; i < cnt; ++i) {
             if (i > start)
                 buf.append(',');

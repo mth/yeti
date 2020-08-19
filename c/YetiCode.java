@@ -1267,7 +1267,7 @@ final class SelectMemberFun extends Code implements CodeGen {
     }
 
     void gen(Ctx ctx) {
-        StringBuffer buf = new StringBuffer("SELECTMEMBER");
+        StringBuilder buf = new StringBuilder("SELECTMEMBER");
         for (int i = 0; i < names.length; ++i) {
             buf.append(':');
             buf.append(names[i]);

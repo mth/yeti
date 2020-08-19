@@ -43,7 +43,7 @@ class ShowTypeFun extends Fun2 {
         showType = this;
     }
 
-    private void hstr(StringBuffer to, boolean variant,
+    private void hstr(StringBuilder to, boolean variant,
                       AList fields, String indent) {
         boolean useNL = false;
         AIter i = fields;
@@ -132,7 +132,7 @@ class ShowTypeFun extends Fun2 {
         if (typeList != null && typeList.isEmpty())
             typeList = null;
         AIter i = typeList;
-        StringBuffer to = new StringBuffer();
+        StringBuilder to = new StringBuilder();
 
         if (typeName != null) {
             to.append(typeName).append('<');
@@ -701,7 +701,7 @@ class TypePattern {
     }
 /*
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (var < 0)
             sb.append(var).append(':');
         if (field != null)
@@ -744,7 +744,7 @@ class TypePattern {
             Map.Entry e = (Map.Entry) i.next();
             rvars.put(e.getValue(), e.getKey());
         }
-        StringBuffer r = new StringBuffer(res.end.typename).append('<');
+        StringBuilder r = new StringBuilder(res.end.typename).append('<');
         for (int i = 0; i < res.end.defvars.length; ++i) {
             if (i != 0)
                 r.append(", ");

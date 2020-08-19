@@ -101,7 +101,7 @@ public abstract class AStruct implements Struct, Serializable {
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer().append('{');
+        StringBuilder sb = new StringBuilder().append('{');
         for (int cnt = count(), i = 0; i < cnt; ++i) {
             String name = eqName(i);
             if (name != "") {

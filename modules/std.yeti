@@ -2313,7 +2313,7 @@ plus a b = a + b;
                 "\(head list)"
             else
                 // use unsafely_as to not give null's for undef_str's
-                buf = new java.lang.StringBuffer(
+                buf = new java.lang.StringBuilder(
                             "\(head list)" unsafely_as ~String);
                 if sep == '' then
                     not nullptr? l loop
@@ -2349,7 +2349,7 @@ plus a b = a + b;
         if strLength str >= n or pad == '' then
             str
         else
-            buf = new java.lang.StringBuffer(str unsafely_as ~String);
+            buf = new java.lang.StringBuilder(str unsafely_as ~String);
             buf#length() < n loop buf#append(pad unsafely_as ~String);
             buf#toString()
         fi,

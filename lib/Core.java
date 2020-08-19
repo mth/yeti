@@ -43,7 +43,7 @@ public final class Core {
     public static final String UNDEF_STR = new String();
 
     public static String replace(String f, String r, String s) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int p = 0, i, l = f.length();
         while ((i = s.indexOf(f, p)) >= 0) {
             result.append(s.substring(p, i));
@@ -122,13 +122,13 @@ public final class Core {
     }
 
     public static String show(Object o) {
-        StringBuffer r;
+        StringBuilder r;
         if (o == null)
             return "[]";
         if (o instanceof String) {
             // TODO escaping
             char[] s = ((String) o).toCharArray();
-            r = new StringBuffer().append('"');
+            r = new StringBuilder().append('"');
             int p = 0, i = 0, cnt = s.length;
             for (String c; i < cnt; ++i) {
                 if (s[i] == '\\') {
@@ -153,7 +153,7 @@ public final class Core {
             return r.append(s, p, i - p).append('"').toString();
         }
         if (o.getClass().isArray()) {
-            r = new StringBuffer().append('[');
+            r = new StringBuilder().append('[');
             for (int i = 0, len = Array.getLength(o); i < len; ++i) {
                 if (i != 0)
                     r.append(',');
@@ -175,7 +175,7 @@ public final class Core {
     }
 
     static String readAll(java.io.Reader r) throws IOException {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         char[] buf = new char[8192];
         int n;
         while ((n = r.read(buf, 0, buf.length)) > 0)

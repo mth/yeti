@@ -41,7 +41,7 @@ public class CompileException extends RuntimeException {
 
     static String format(YType param1, YType param2,
                          String s, TypeException ex, Scope scope) {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int p = 0, i;
         boolean msg = false;
         while ((i = s.indexOf('#', p)) >= 0 && i < s.length() - 1) {
