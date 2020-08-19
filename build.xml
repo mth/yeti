@@ -3,7 +3,7 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-7.1r.jar"/>
+    <property name="asm" value="${basedir}/asm-8.0.1r.jar"/>
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
@@ -11,11 +11,11 @@
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${build}/asm-7.1.jar"/>
+    <property name="asmt" value="${build}/asm-8.0.1.jar"/>
     <property name="asm.sha"
-      value="4ab2fa2b6d2cc9ccb1eaa05ea329c407b47b13ed2915f62f8c4b8cc96258d4de"/>
+      value="ca5b8d11569e53921b0e3486469e7c674361c79845dad3d514f38ab6e0c8c10a"/>
     <mkdir dir="${build}/util"/>
-    <get src="https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/asm/7.1/asm-7.1.jar"
+    <get src="https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/asm/8.0.1/asm-8.0.1.jar"
          dest="${asmt}" verbose="true"/>
     <checksum algorithm="SHA-256" file="${asmt}"
               property="${asm.sha}" verifyproperty="is.asm.ok"/> 

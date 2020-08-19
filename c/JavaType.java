@@ -55,7 +55,7 @@ class JavaTypeReader extends ClassVisitor implements Opcodes {
     int access;
 
     JavaTypeReader() {
-        super(ASM7);
+        super(ASM8);
     }
 
     public void visit(int version, int access, String name, String signature,
