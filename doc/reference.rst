@@ -2019,7 +2019,7 @@ Implicit conversions happen in following cases, if unification is not possible:
 +--------------------+--------------------------------------------------------+
 
 Yeti doesn't have a concept of primitive types outside of Java method
-signatures, but if conversion with primitive type is possible if it would be
+signatures, but conversion with primitive type is possible if it would be
 with corresponding ~java.lang type.
 
 Conversion from Yeti *list* into Java array is always possible, when the
