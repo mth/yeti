@@ -39,7 +39,7 @@ import yeti.lang.Tag;
  * Java-friendly wrapper for evaluateYetiCode function.
  *
  * <pre>
- * Evaluater context = new Evaluator();
+ * Evaluator context = new Evaluator();
  * Fun add2 = (Fun) context.evaluate("(+) 2");
  * System.out.println(add.apply(new IntNum(3)));
  * </pre>
