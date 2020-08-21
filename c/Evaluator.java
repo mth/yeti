@@ -36,7 +36,7 @@ import yeti.lang.MList;
 import yeti.lang.Tag;
 
 /**
- * Java-friendly wrapper to evaluateYetiCode function.
+ * Java-friendly wrapper for evaluateYetiCode function.
  *
  * <pre>
  * Evaluater context = new Evaluator();
