@@ -76,7 +76,7 @@
     <mkdir dir="${build}/compiler"/>
     <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
            encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
-           includeantruntime="true">
+           includeantruntime="true" excludes="Evaluator.java">
         <classpath>
             <path location="${asm}"/>
             <path location="${build}/lib"/>
@@ -104,6 +104,10 @@
             <path location="${build}/modules"/>
         </classpath>
     </yetic>
+    <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
+           encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
+           includeantruntime="false" includes="Evaluator.java"
+           classpath="${build}/lib"/>
     <copy file="${basedir}/util/doc.yeti" todir="${build}/compiler"/>
 </target>
 
