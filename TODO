@@ -6,6 +6,7 @@
   It should take preload as constructor argument, allow overriding methods
   implementing SourceReader and Warn, have Object eval(code, name, bind, argv)
   for evaluation and check(code) for typechecking.
+* Better error handling and support more methods in fetchURL.
 * Lisp style macros.
 * Allow any identificators in dotted class names (like fi.etc)
 * Allow optional ~ before classname in instanceof and friends.
