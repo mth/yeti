@@ -1,7 +1,6 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* Error when duplicate key in hash literal.
 * Investigate why Evaluator seems to capture var bindings as immutables.
 * More Javadoc for exporting to maven repository.
 * Better error handling and support more methods in fetchURL.

@@ -27,7 +27,7 @@ trueTests = [
 '<=': \(1 <= 2 and 1 <= 1 and not (1 < 0)),
 '>' : \(1 > 0 and not (0 > 0) and not (-2 > -1)),
 '>=': \(22 >= 21.9 and 22 >= 22 and not (22 >= 22.1)),
-'*' : \(2 + 3 == 5),
+'+' : \(2 + 3 == 5),
 '-' : \(2 - 3 == -1),
 '*' : \(7 * 5 == 35),
 '/' : \(42 / 2 == 21),
@@ -59,7 +59,7 @@ trueTests = [
 'fun2_2': \(f a b = b; f 1 2 == 2),
 'fun3_1': \(f a b c = a; f 1 2 3 == 1),
 'fun3_2': \(f a b c = b; f 1 2 3 == 2),
-'fun3_2': \(f a b c = c; f 1 2 3 == 3),
+'fun3_3': \(f a b c = c; f 1 2 3 == 3),
 'fun4_1': \(f a b c d = a; f 1 2 3 4 == 1),
 'fun4_2': \(f a b c d = b; f 1 2 3 4 == 2),
 'fun4_3': \(f a b c d = c; f 1 2 3 4 == 3),
@@ -73,7 +73,7 @@ trueTests = [
 'funp2_2': \(f = (_ a b = b) 1; f 2 == 2),
 'funp3_1': \(f = (_ a b c = a) 1; f 2 3 == 1),
 'funp3_2': \(f = (_ a b c = b) 1; f 2 3 == 2),
-'funp3_2': \(f = (_ a b c = c) 1; f 2 3 == 3),
+'funp3_3': \(f = (_ a b c = c) 1; f 2 3 == 3),
 'funp4_1': \(f = (_ a b c d = a) 1; f 2 3 4 == 1),
 'funp4_2': \(f = (_ a b c d = b) 1; f 2 3 4 == 2),
 'funp4_3': \(f = (_ a b c d = c) 1; f 2 3 4 == 3),
@@ -485,7 +485,9 @@ done,
 'Case.': do:
     f x is Case. 'b -> 'b = case x of Case a: a esac;
     f (Case 42) == 42
-done
+done,
+'duplicate key': \(expectCompileError '[0:1,0:2]'),
+'duplicate key 2': \(expectCompileError '[true:1,true:2]'),
 ];
 
 var bad = 0;

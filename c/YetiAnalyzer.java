@@ -1366,6 +1366,7 @@ public final class YetiAnalyzer extends YetiType {
         YType type = null;
         YType keyType = NO_TYPE;
         YType kind = null;
+        Map uniqueKeys = null;
         BinOp bin;
         XNode keyNode = null;
         int n = 0;
@@ -1383,17 +1384,23 @@ public final class YetiAnalyzer extends YetiType {
                 continue;
             }
             if (keyNode != null) {
-                Code key = analyze(keyNode.expr[0], scope, depth);
+                Node keyExpr = keyNode.expr[0];
+                Code key = analyze(keyExpr, scope, depth);
                 if (kind != MAP_TYPE) {
                     keyType = key.type;
                     kind = MAP_TYPE;
                     keyItems = new Code[items.length / 2];
+                    uniqueKeys = new HashMap();
                 } else {
                     unify(keyType, key.type, items[i], scope,
                         "This map element has #2 key, but others have had #1");
                 }
                 keyItems[n] = key;
                 codeItems[n] = analyze(items[i], scope, depth);
+                if (uniqueKeys.put(keyExpr instanceof Sym
+                                    ? keyExpr : key.valueKey(), "") != null)
+                    throw new CompileException(keyNode,
+                                               "Duplicate map key " + keyExpr);
                 keyNode = null;
             } else {
                 if (kind == MAP_TYPE)

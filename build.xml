@@ -131,7 +131,7 @@
 <target name="yeti-lib" depends="jar"/>
 
 <target name="test" depends="jar,doc">
-    <java classname="yeti.lang.compiler.yeti" classpath="${yeti.jar}">
+    <java classname="yeti.lang.compiler.yeti" classpath="${yeti.jar}" failonerror="true">
         <arg value="${basedir}/tests/test.yeti"/>
     </java>
 </target>

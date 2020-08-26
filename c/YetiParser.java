@@ -289,6 +289,14 @@ interface YetiParser {
             return sym;
         }
 
+        public int hashCode() {
+            return sym.hashCode();
+        }
+
+        public boolean equals(Object o) {
+            return o instanceof Sym && sym == ((Sym) o).sym;
+        }
+
         public String toString() {
             return sym;
         }
