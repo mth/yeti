@@ -37,15 +37,18 @@ public class LList extends AList implements Serializable {
     private final Object first;
     private final AList rest;
 
+    /** Constructs linked list from head node value and tail list. */
     public LList(Object first, AList rest) {
         this.first = first;
         this.rest = rest;
     }
 
+    @Override
     public Object first() {
         return first;
     }
 
+    @Override
     public AList rest() {
         return rest;
     }
@@ -58,6 +61,7 @@ public class LList extends AList implements Serializable {
         return rest();
     }
 
+    @Override
     public int hashCode() {
         int hashCode = 1;
         AIter i = this;
@@ -68,6 +72,7 @@ public class LList extends AList implements Serializable {
         return hashCode;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof AList)) {
             return false;
@@ -83,6 +88,7 @@ public class LList extends AList implements Serializable {
         return i == null && j == null;
     }
 
+    @Override
     public int compareTo(Object obj) {
         AIter i = this, j = (AIter) obj;
         while (i != null && j != null) {
@@ -99,6 +105,7 @@ public class LList extends AList implements Serializable {
         return i != null ? 1 : j != null ? -1 : 0;
     }
 
+    @Override
     public AList reverse() {
         AIter i;
         if ((i = next()) == null)
@@ -110,6 +117,7 @@ public class LList extends AList implements Serializable {
         return l;
     }
 
+    @Override
     public Num index(Object v) {
         int n = 0;
         if (v == null) {
@@ -130,29 +138,36 @@ public class LList extends AList implements Serializable {
         return null;
     }
 
+    @Override
     public AList sort() {
         return new MList(this).asort();
     }
 
+    @Override
     public long length() {
         return 0;
     }
 
+    @Override
     public void forEach(Object f) {
     }
 
+    @Override
     public Object fold(Fun f, Object value) {
         return null;
     }
 
+    @Override
     public AList smap(Fun f) {
         return null;
     }
     
+    @Override
     public Object copy() {
         return null;
     }
 
+    @Override
     public AList take(int from, int count) {
         return null;
     }
