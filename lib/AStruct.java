@@ -41,18 +41,22 @@ public abstract class AStruct implements Struct, Serializable {
         vars = vars_;
     }
 
+    @Override
     public int count() {
         return names.length;
     }
 
+    @Override
     public String name(int field) {
         return names[field];
     }
 
+    @Override
     public String eqName(int field) {
         return names[field];
     }
 
+    @Override
     public Object ref(int field, int[] index, int at) {
         index[at + 1] = 0;
         if (vars != null && vars[field]) {
@@ -63,10 +67,12 @@ public abstract class AStruct implements Struct, Serializable {
         return get(field);
     }
 
+    @Override
     public void set(String name, Object value) {
         Unsafe.unsafeThrow(new NoSuchFieldException(name));
     }
 
+    @Override
     public int hashCode() {
         int h = 0;
         for (int i = 0, cnt = count(); i < cnt; ++i) {
@@ -79,6 +85,7 @@ public abstract class AStruct implements Struct, Serializable {
         return h;
     }
 
+    @Override
     public boolean equals(Object o) {
         Struct st = (Struct) o;
         int acnt = count(), bcnt = st.count(), i = 0, j = 0;
@@ -100,6 +107,7 @@ public abstract class AStruct implements Struct, Serializable {
         return true;
     }
 
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder().append('{');
         for (int cnt = count(), i = 0; i < cnt; ++i) {

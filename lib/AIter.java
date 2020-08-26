@@ -32,11 +32,9 @@ package yeti.lang;
 
 import java.io.OutputStream;
 
-/** Yeti core library - List. */
+/** Yeti core library - iterable list. */
 public abstract class AIter {
-    /**
-     * Return iterators current first.
-     */
+    /** Return iterators current first. */
     public abstract Object first();
 
     /**
@@ -45,10 +43,22 @@ public abstract class AIter {
      */
     public abstract AIter next();
 
+    /**
+     * Gives iterator instance that can be used independently.
+     * Default implementaion returns this, which is fine for immutable iterators,
+     * where next doesn't modify the instance state.
+     *
+     * @return iterator that doesn't share state with this iterator
+     */
     public AIter dup() {
         return this;
     }
 
+    /**
+     * Returns true if this is empty iterator (no first() value).
+     * Empty {@link MList} is an example of empty iterator.
+     * NB! The {@link #next()} method should always return null at the end.
+     */
     public boolean isEmpty() {
         return false;
     }

@@ -32,47 +32,59 @@ package yeti.lang;
 
 /** Yeti core library - List. */
 public abstract class AList extends AIter implements Comparable, Coll {
-    /**
-     * Return rest of the list. Must not modify the current list.
-     */
+    /** Return rest of the list. Must not modify the current list. */
     public abstract AList rest();
 
+    /** Calls {@link Fun} f for each list value. */
     public abstract void forEach(Object f);
 
+    /** Calculates left fold over f. */
     public abstract Object fold(Fun f, Object v);
 
+    /** Gives reversed copy of list. */
     public abstract AList reverse();
 
+    /** Gives numeric index of v in list or null if no element is equal to v. */
     public abstract Num index(Object v);
 
+    /** Gives sorted copy of list. */
     public abstract AList sort();
-    
+
+    /** Creates strict mapping by f of the list. */
     public abstract AList smap(Fun f);
 
+    /** Gives sublist of count elements starting at from index. */
     public abstract AList take(int from, int count);
 
+    /** Creates mapping by of the list (lazy, if reasonable). */
     public AList map(Fun f) {
         return new MapList(this, f);
     }
 
-    public AList find(Fun pred) {
+    /** Gives sublist starting from first element,
+     *  where predicate application returns true. */
+    public AList find(Fun predicate) {
         AList l = this;
-        while (l != null && pred.apply(l.first()) != Boolean.TRUE)
+        while (l != null && predicate.apply(l.first()) != Boolean.TRUE)
             l = l.rest();
         return l;
     }
 
+    /** Gives copy of list sorted by given isLess function. */
     public AList sort(Fun isLess) {
         return new MList(this).asort(isLess);
     }
 
+    @Override
     public AList asList() {
         return this;
     }
 
+    @Override
     public void removeAll(AList keys) {
     }
 
+    @Override
     public String toString() {
         StringBuilder buf = new StringBuilder("[");
         buf.append(Core.show(first()));
