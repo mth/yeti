@@ -1,5 +1,5 @@
 ===================================================
-  ML like functional language for the JVM
+  ML-like functional language for the JVM
 ===================================================
 
 * `Yeti home page <http://mth.github.io/yeti/>`_
@@ -7,7 +7,7 @@
 * You need `ant <http://ant.apache.org/>`_ to compile the compiler
   and standard library
 
-Compile the compiler and standard library, and run tests::
+Compile the compiler and standard library and run tests::
 
     ant test
 
@@ -37,7 +37,7 @@ util
     Various utility code used for building the compiler.
 
 util/syntax
-    Syntax hilighting files for ViM and Emacs.
+    Syntax highlighting files for ViM and Emacs.
 
 util/jedit
-    Syntax hilighting for JEdit.
+    Syntax highlighting for JEdit.
