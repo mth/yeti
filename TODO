@@ -3,7 +3,6 @@
 
 * Investigate why Evaluator seems to capture var bindings as immutables.
 * More Javadoc for exporting to maven repository.
-* Better error handling and support more methods in fetchURL.
 * Lisp style macros.
 * Allow any identificators in dotted class names (like fi.etc)
 * Allow optional ~ before classname in instanceof and friends.

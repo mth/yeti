@@ -2054,6 +2054,12 @@ plus a b = a + b;
     norec strLastIndexOf' haystack needle = strLastIndexOf haystack needle,
 
     /**
+     * Group: str
+     * Compares two strings ignoring case.
+     */
+    strEqIgnoreCase a b = (a is string as ~String)#equalsIgnoreCase(b),
+
+    /**
      * Group: regex
      * Splits the string into substrings separated by matches of the regex,
      * and returns array of the resulting substrings.

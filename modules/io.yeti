@@ -36,7 +36,7 @@
  */
 module yeti.lang.io;
 
-import java.io: File, FileInputStream, FileOutputStream,
+import java.io: ByteArrayInputStream, File, FileInputStream, FileOutputStream,
                 Reader, InputStream, InputStreamReader, BufferedReader,
                 OutputStream, OutputStreamWriter, BufferedWriter;
 import java.net.HttpURLConnection;
@@ -697,16 +697,19 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
      */
     fetchURL options result url =
         var csf = id;
-        nohf = const \();
+        noef = \();
+        nohf = const noef;
         var hf = nohf;
         var sf = nohf;
+        var ef = noef;
         var body = '';
         var ocs = '';
+        var disconnect = \true;
         conn = new java.net.URL(url is string
                     unsafely_as ~String)#openConnection();
-        http = if conn instanceof HttpURLConnection then
-                    conn unsafely_as ~HttpURLConnection
-               fi;
+        var http = if conn instanceof HttpURLConnection then
+                       conn unsafely_as ~HttpURLConnection
+                   fi;
         try
             for options \case of
                 /// Callback to determine response body charset.
@@ -719,18 +722,44 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                     fi;
                     conn#setRequestProperty(name, value);
                 /// Set timeout in seconds.
-                Timeout t: conn#setReadTimeout(t * 1000);
+                Timeout t:
+                    conn#setConnectTimeout(t * 1000);
+                    conn#setReadTimeout(t * 1000);
                 /// Callback to be called on each response header
                 /// (with header name and value as arguments).
                 Header f: hf := f;
+                /// Callback to be called for expiration time
+                /// in milliseconds from epoch.
+                Expires f: ef := f;
                 /// Set using caches.
                 UseCaches use: conn#setUseCaches(use);
                 /// Callback to be called for the status code and message.
+                /// If not set, then HTTP error response causes IOException.
                 Status f: sf := f;
-                /// Send post request with the given body.
+                /// Send POST request with the given body.
                 Post body':
                     body := body';
                     conn#setDoOutput(true);
+                /// Send PUT request with the given body.
+                Put body':
+                    body := body';
+                    http#setRequestMethod('PUT');
+                    conn#setDoOutput(true);
+                /// Send DELETE request with the given body.
+                Delete ():
+                    http#setRequestMethod('DELETE');
+                /// Send HEAD request with the given body.
+                Head ():
+                    http#setRequestMethod('HEAD');
+                /// Disconnect on HTTP 408 and 5xx errors.
+                DisconnectOnError ():
+                    disconnect := (_ status = status == 408 or status >= 500);
+                /// Disconnect sets predicate function that determines whether
+                /// to disconnect for given status code.
+                /// Default is to always disconnect, but this disables
+                /// connection reuse via keep-alive for JDK.
+                Disconnect onStatus:
+                    disconnect := onStatus;
                 esac;
             if conn#getDoOutput() then
                 bytes = (body as ~String)#getBytes(if ocs == '' then 'UTF-8'
@@ -743,10 +772,18 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                     os#close()
                 yrt;
             fi;
-            stream = conn#getInputStream();
+            responseCode =
+                if same? sf nohf or nullptr? http then 0
+                else http#getResponseCode() fi;
+            var stream = if responseCode >= 300 and not nullptr? http then
+                             http#getErrorStream()
+                         fi;
+            if nullptr? stream then
+                stream := conn#getInputStream()
+            fi;
             try
                 if not same? sf nohf and not nullptr? http then
-                    sf http#getResponseCode() http#getResponseMessage()
+                    sf responseCode http#getResponseMessage()
                 fi;
                 if not same? hf nohf then
                     var nth = 1;
@@ -755,24 +792,37 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                        (hf name conn#getHeaderField(nth);
                         nth := nth + 1; true)) loop
                 fi;
-                case result of
-                /// Apply given function to input_handle
-                /// reading from the response body.
-                Handle f:
-                    cs = strUpper conn#getContentType() |>
-                         strRightOf 'CHARSET=' |> strTrim |> csf;
-                    withHandle (inputHandle stream
-                                 if cs != '' then cs else: 'ISO-8859-1') f;
-                /// Apply given function to InputStream
-                /// reading from the response body.
-                Stream f: f stream;
-                /// Apply given function to bin_input_handle
-                /// reading from the response body.
-                Binary f: f (binInputHandle stream);
-                esac
+                if not same? ef noef then
+                    ef conn#getExpiration()
+                fi;
+                input =
+                    if nullptr? stream or
+                        responseCode == 204 or responseCode == 304 then
+                            new ByteArrayInputStream(new byte[0])
+                    else stream fi;
+                csOfCT = strTrim . strRightOf 'CHARSET=' . strUpper;
+                ret = case result of
+                    /// Apply given function to input_handle
+                    /// reading from the response body.
+                    Handle f:
+                        cs = if same? stream input then
+                                csOfCT conn#getContentType() |> csf fi;
+                        withHandle (inputHandle stream
+                                     if cs != '' then cs else: 'ISO-8859-1') f;
+                    /// Apply given function to InputStream
+                    /// reading from the response body.
+                    Stream f: f stream;
+                    /// Apply given function to bin_input_handle
+                    /// reading from the response body.
+                    Binary f: f (binInputHandle stream);
+                    esac;
+                if not disconnect responseCode then
+                    http := () as ~HttpURLConnection
+                fi;
+                ret
             finally
-                stream#close()
-            yrt
+                stream#close();
+            yrt;
         finally
             if not nullptr? http then
                 http#disconnect()
