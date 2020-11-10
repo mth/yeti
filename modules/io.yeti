@@ -745,10 +745,10 @@ binOutputHandle ostream is ~OutputStream -> 'a = {
                     body := body';
                     http#setRequestMethod('PUT');
                     conn#setDoOutput(true);
-                /// Send DELETE request with the given body.
+                /// Send DELETE request.
                 Delete ():
                     http#setRequestMethod('DELETE');
-                /// Send HEAD request with the given body.
+                /// Send HEAD request.
                 Head ():
                     http#setRequestMethod('HEAD');
                 /// Disconnect on HTTP 408 and 5xx errors.
