@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - function interface.
  *
  * Copyright (c) 2008 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - function interface. */
 public final class Bind2nd extends Fun {
     private final Fun fun;
     private final Object arg2;

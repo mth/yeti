@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - Variant tag constructor function.
  *
  * Copyright (c) 2007 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - Variant tag constructor function. */
 public final class TagCon extends Fun {
     private final String name;
 

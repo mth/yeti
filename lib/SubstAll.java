@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - strSplit.
  *
  * Copyright (c) 2008 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.util.regex.Pattern;
 
+/** Yeti core library - strSplit. */
 public final class SubstAll extends Fun2 {
     private final Pattern p;
 

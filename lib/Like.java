@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - function interface.
  *
  * Copyright (c) 2008 Madis Janson
@@ -55,6 +55,7 @@ final class LikeMatcher extends Fun {
     }
 }
 
+/** Like function. */
 public final class Like extends Fun {
     private Pattern p;
 

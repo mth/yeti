@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti random number generator.
  *
  * Copyright (c) 2007-2014 Madis Janson

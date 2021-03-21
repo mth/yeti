@@ -215,7 +215,7 @@ abstract class AMList extends AList implements Serializable {
     }
 }
 
-/** Yeti core library - List. */
+/** Yeti core library - mutable list (array). */
 public class MList extends AMList implements ByKey {
     private static final Object[] EMPTY = {}; 
     private Object[] array;

@@ -1,8 +1,6 @@
 package yeti.lang;
 
-/**
- * Exception thrown when case of cannot match the given value.
- */
+/** Exception thrown when case of cannot match the given value. */
 public class BadMatch extends IllegalArgumentException {
     public final Object value;
     private final String source;

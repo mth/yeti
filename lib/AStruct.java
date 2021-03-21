@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - structure default implementation.
  *
  * Copyright (c) 2010 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.io.Serializable;
 
+/** Yeti core library - structure default implementation. */
 public abstract class AStruct implements Struct, Serializable {
     final String[] names;
     private final boolean[] vars;

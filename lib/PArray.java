@@ -35,6 +35,7 @@ import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 
+/** Wrapping Java arrays into immutable Yeti list. */
 public class PArray extends LList {
     int start;
     final int length;

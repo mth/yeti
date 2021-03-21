@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - function interface.
  *
  * Copyright (c) 2007,2008,2009 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.io.Serializable;
 
+/** Yeti function class. */
 public abstract class Fun implements Serializable {
     public abstract Object apply(Object arg);
 

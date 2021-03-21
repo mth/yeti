@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library, Fun2 interface.
  *
  * Copyright (c) 2008 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Function with at least two arguments. */
 public abstract class Fun2 extends Fun {
     public abstract Object apply(Object a, Object b);
 

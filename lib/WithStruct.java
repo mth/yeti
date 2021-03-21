@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - with structure implementation.
  *
  * Copyright (c) 2010 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.io.Serializable;
 
+/** Yeti core library - with structure implementation. */
 public class WithStruct extends AStruct {
     private final Object[] values;
     private final int[] index;

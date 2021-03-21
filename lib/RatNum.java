@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - rational numbers.
  *
  * Copyright (c) 2007,2008 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.math.BigInteger;
 
+/** Yeti core library - rational numbers. */
 public final class RatNum extends Num {
     private final long numerator;
     private final long denominator;

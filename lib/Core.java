@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library.
  *
  * Copyright (c) 2007-2013 Madis Janson
@@ -36,6 +36,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
 
+/** Yeti core library runtime helper methods. */
 public final class Core {
     private static final int DEC_SHIFT[] = { 1, 10, 100, 1000, 10000,
         100000, 1000000, 10000000, 100000000, 1000000000 };

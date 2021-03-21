@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - Number interface.
  *
  * Copyright (c) 2007,2008 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.math.BigInteger;
 
+/** Floating point number (wraps double). */
 public final class FloatNum extends Num {
     private final double v;
 

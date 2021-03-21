@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - structure default implementation.
  *
  * Copyright (c) 2010 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.io.Serializable;
 
+/** Yeti core library - structure with up to 3 fields. */
 public class Struct3 extends AStruct {
     public Object _0;
     public Object _1;

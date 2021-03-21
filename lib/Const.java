@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - function interface.
  *
  * Copyright (c) 2008 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - constant function. */
 public class Const extends Fun {
     private final Object v;
 

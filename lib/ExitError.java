@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - exit exception.
  *
  * Copyright (c) 2008 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - exit exception. */
 public class ExitError extends ThreadDeath {
     private final int exitCode;
 

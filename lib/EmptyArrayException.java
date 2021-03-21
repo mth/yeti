@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Exception thrown when using shift/pop/head on empty array. */
 public class EmptyArrayException extends IllegalStateException {
     public EmptyArrayException(String s) {
         super(s);

@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - function interface.
  *
  * Copyright (c) 2008 Madis Janson
@@ -32,6 +32,7 @@ package yeti.lang;
 
 import java.util.regex.Pattern;
 
+/** Match function. */
 public final class Match extends Fun {
     private final Pattern p;
     private final boolean yes;

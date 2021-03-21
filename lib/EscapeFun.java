@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - escape function.
  *
  * Copyright (c) 2008 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - escape function. */
 public final class EscapeFun extends Fun {
     private EscapeError escape;
     private boolean used;

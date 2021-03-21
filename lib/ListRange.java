@@ -58,7 +58,7 @@ final class RangeIter extends AIter implements Serializable {
     }
 }
 
-/** Yeti core library - List. */
+/** Yeti core library - List from range. */
 public final class ListRange extends AList implements Serializable {
     final Num first;
     final Num last;

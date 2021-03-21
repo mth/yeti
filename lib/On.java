@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - on function.
  *
  * Copyright (c) 2008 Madis Janson

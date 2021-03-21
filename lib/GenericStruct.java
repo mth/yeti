@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - generic structure implementation.
  *
  * Copyright (c) 2010 Madis Janson
@@ -34,8 +34,10 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.IdentityHashMap;
 
-// GenericStruct can be useful in Java code and for very large Yeti
-// structures, where pointer scan by field names becomes slow.
+/**
+ * GenericStruct can be useful in Java code and for very large Yeti
+ * structures, where pointer scan by field names becomes slow.
+ */
 public class GenericStruct extends AStruct {
     private final Map impl;
     private final boolean allMutable;

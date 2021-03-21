@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - Number interface.
  *
  * Copyright (c) 2007,2008 Madis Janson
@@ -33,6 +33,7 @@ package yeti.lang;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 
+/** Yeti core library - Number interface. */
 public final class BigNum extends Num {
     private final BigInteger v;
 

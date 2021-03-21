@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - Number interface.
  *
  * Copyright (c) 2007,2008 Madis Janson
@@ -33,6 +33,7 @@ package yeti.lang;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 
+/** Integer of 64-bit size (wraps long). */
 public final class IntNum extends Num {
     public static final IntNum __2 = new IntNum(-2);
     public static final IntNum __1 = new IntNum(-1);

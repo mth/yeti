@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - matchAll.
  *
  * Copyright (c) 2008 Madis Janson
@@ -91,7 +91,8 @@ final class MatchAllFun extends Fun {
     }
 }
 
-final public class MatchAll extends Fun2 {
+/** Implementation for matchAll function. */
+public final class MatchAll extends Fun2 {
     private final Pattern p;
 
     public MatchAll(Object pattern) {

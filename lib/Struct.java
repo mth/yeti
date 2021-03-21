@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - structure interface.
  *
  * Copyright (c) 2010 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - structure interface. */
 public interface Struct {
     /**
      * Get field by interned name.

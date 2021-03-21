@@ -1,6 +1,6 @@
 // ex: se sts=4 sw=4 expandtab:
 
-/**
+/*
  * Yeti core library - atomic reference.
  *
  * Copyright (c) 2012 Madis Janson
@@ -30,6 +30,7 @@
  */
 package yeti.lang;
 
+/** Yeti core library - atomic reference. */
 class AtomSet extends Fun2 {
     private final Atomic a;
     private final boolean cmp;
