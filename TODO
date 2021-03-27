@@ -1,7 +1,7 @@
   Yeti TODO.
 ~~~~~~~~~~~~~~~~~
 
-* More Javadoc for exporting to maven repository.
+* Gradle script for publishing to Maven repository
 * Allow any identificators in dotted class names (like fi.etc)
 * Allow optional ~ before classname in instanceof and friends.
 * Typedefs in REPL
