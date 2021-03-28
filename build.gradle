@@ -2,7 +2,8 @@ configurations { antjar }
 repositories { mavenCentral() }
 dependencies { antjar 'org.apache.ant:ant:1.10.9' }
 
-ant.properties.build = new File(buildDir, 'ant')
+def antBuildDir = new File(buildDir, 'ant')
+ant.properties.build = antBuildDir
 ant.properties.jardir = buildDir
 ant.importBuild 'build.xml'
 
@@ -39,6 +40,13 @@ allprojects {
                     include '*.yeti'
                 }
             }
+        }
+        task packageJavadoc(type: Jar, dependsOn: rootProject.javadoc) {
+            destinationDirectory = buildDir
+            archiveBaseName = project.name
+            archiveVersion = project.version
+            archiveClassifier = 'javadoc'
+            from new File(new File(antBuildDir, 'javadoc'), projectDir.name)
         }
     }
 
