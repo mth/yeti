@@ -2,7 +2,7 @@ configurations { antjar }
 repositories { mavenCentral() }
 dependencies { antjar 'org.apache.ant:ant:1.10.9' }
 
-ant.properties.build = buildDir
+ant.properties.build = new File(buildDir, 'ant')
 ant.properties.jardir = buildDir
 ant.importBuild 'build.xml'
 
@@ -23,12 +23,29 @@ allprojects {
 
     if (project != rootProject) {
         buildDir = new File(rootProject.buildDir, name)
+        task sourcesJar(type: Jar) {
+            destinationDirectory = buildDir
+            archiveBaseName = project.name
+            archiveVersion = project.version
+            archiveClassifier = 'sources'
+            from(projectDir) {
+                include '*.java'
+                include '*.yeti'
+                into (project.name == 'yeti-lib' ? 'yeti/lang' :
+                        'yeti/lang/compiler')
+            }
+            if (project.name == 'yeti-lib') {
+                from(rootProject.file('modules')) {
+                    include '*.yeti'
+                }
+            }
+        }
     }
 
     if (name == 'yeti-compiler') {
         task jar(type: Jar, dependsOn: rootProject.jar) {
             destinationDirectory = buildDir
-            archiveBaseName = "yeti-compiler"
+            archiveBaseName = name
             archiveVersion = project.version
             from(zipTree(new File(rootProject.buildDir, "yeti-${version}.jar"))) {
                 exclude 'yeti/*.class'
@@ -41,3 +58,7 @@ allprojects {
 }
 
 ant.properties['yeti.jar'] = new File(buildDir, "yeti-${version}.jar")
+
+clean {
+    delete buildDir
+}
