@@ -1,4 +1,6 @@
 .build
+.gradle
+build
 properties
 tags
 yeti.jar
