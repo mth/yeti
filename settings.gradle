@@ -1,0 +1,4 @@
+rootProject.name = 'yeti'
+include 'lib', 'c'
+project(':c').name = 'yeti-compiler'
+project(':lib').name = 'yeti-lib'
