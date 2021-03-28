@@ -21,11 +21,16 @@ tasks['prepare-build'].dependsOn findAntJar
 allprojects {
     version = '1.0'
 
+    if (project != rootProject) {
+        buildDir = new File(rootProject.buildDir, name)
+    }
+
     if (name == 'yeti-compiler') {
         task jar(type: Jar, dependsOn: rootProject.jar) {
-            archiveBaseName = 'yeti-compiler'
             destinationDirectory = buildDir
-            from(zipTree(new File(rootProject.buildDir, 'yeti.jar'))) {
+            archiveBaseName = "yeti-compiler"
+            archiveVersion = project.version
+            from(zipTree(new File(rootProject.buildDir, "yeti-${version}.jar"))) {
                 exclude 'yeti/*.class'
                 exclude 'yeti/lang/*.class'
             }
@@ -34,3 +39,5 @@ allprojects {
         }
     }
 }
+
+ant.properties['yeti.jar'] = new File(buildDir, "yeti-${version}.jar")
