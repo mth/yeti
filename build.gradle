@@ -18,13 +18,19 @@ task findAntJar(dependsOn: configurations.antjar) {
 
 tasks['prepare-build'].dependsOn findAntJar
 
-task compilerJar(type: Jar, dependsOn: jar) {
-    archiveBaseName = 'yeti-compiler'
-    destinationDirectory = buildDir
-    from(zipTree(new File(buildDir, 'yeti.jar'))) {
-        exclude 'yeti/*.class'
-        exclude 'yeti/lang/*.class'
+allprojects {
+    version = '1.0'
+
+    if (name == 'yeti-compiler') {
+        task jar(type: Jar, dependsOn: rootProject.jar) {
+            archiveBaseName = 'yeti-compiler'
+            destinationDirectory = buildDir
+            from(zipTree(new File(rootProject.buildDir, 'yeti.jar'))) {
+                exclude 'yeti/*.class'
+                exclude 'yeti/lang/*.class'
+            }
+            manifest.attributes("Class-Path": "yeti-lib.jar",
+                                "Main-Class": "yeti.lang.compiler.yeti")
+        }
     }
-    manifest.attributes("Class-Path": "yeti-lib.jar",
-                        "Main-Class": "yeti.lang.compiler.yeti")
 }
