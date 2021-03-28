@@ -1,0 +1,30 @@
+configurations { antjar }
+repositories { mavenCentral() }
+dependencies { antjar 'org.apache.ant:ant:1.10.9' }
+
+ant.properties.build = buildDir
+ant.properties.jardir = buildDir
+ant.importBuild 'build.xml'
+
+task findAntJar(dependsOn: configurations.antjar) {
+    doFirst {
+        for (jar in configurations.antjar.resolve()) {
+            if (jar.name =~ '^ant-\\d') { // need main jar, not launcher
+                ant.properties.antjar = jar
+            }
+        }
+    }
+}
+
+tasks['prepare-build'].dependsOn findAntJar
+
+task compilerJar(type: Jar, dependsOn: jar) {
+    archiveBaseName = 'yeti-compiler'
+    destinationDirectory = buildDir
+    from(zipTree(new File(buildDir, 'yeti.jar'))) {
+        exclude 'yeti/*.class'
+        exclude 'yeti/lang/*.class'
+    }
+    manifest.attributes("Class-Path": "yeti-lib.jar",
+                        "Main-Class": "yeti.lang.compiler.yeti")
+}

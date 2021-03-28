@@ -7,6 +7,7 @@
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
+    <property name="antjar" value="${ant.home}/lib/ant.jar"/>
     <available property="has.asm" file="${asm}"/>
 </target>
 
@@ -80,7 +81,7 @@
         <classpath>
             <path location="${asm}"/>
             <path location="${build}/lib"/>
-            <path location="${ant.home}/lib/ant.jar"/>
+            <path location="${antjar}"/>
         </classpath>
     </javac>
 </target>
@@ -162,7 +163,7 @@
         <classpath>
             <path location="${asm}"/>
             <path location="${build}/lib"/>
-            <path location="${ant.home}/lib/ant.jar"/>
+            <path location="${antjar}"/>
         </classpath>
     </javadoc>
 </target>
