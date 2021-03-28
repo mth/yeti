@@ -53,7 +53,7 @@ allprojects {
     if (name == 'yeti-compiler') {
         task jar(type: Jar, dependsOn: rootProject.jar) {
             destinationDirectory = buildDir
-            archiveBaseName = name
+            archiveBaseName = project.name
             archiveVersion = project.version
             from(zipTree(new File(rootProject.buildDir, "yeti-${version}.jar"))) {
                 exclude 'yeti/*.class'
