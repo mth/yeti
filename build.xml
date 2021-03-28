@@ -145,6 +145,28 @@
     </yeti>
 </target>
 
+<target name="javadoc" depends="compiler">
+    <mkdir dir="${build}/javadoc/lib"/>
+    <javadoc destdir="${build}/javadoc/lib" packagenames="yeti.lang.*"
+             defaultexcludes="yes" failonerror="true"
+             encoding="UTF-8" docencoding="UTF-8">
+        <fileset dir="${basedir}/lib" includes="*.java"/>
+        <link href="https://docs.oracle.com/javase/8/docs/api/"/>
+    </javadoc>
+    <mkdir dir="${build}/javadoc/c"/>
+    <javadoc destdir="${build}/javadoc/c" packagenames="yeti.lang.compiler.*"
+             defaultexcludes="yes" failonerror="true"
+             encoding="UTF-8" docencoding="UTF-8">
+        <fileset dir="${basedir}/c" includes="*.java" excludes="YetiBoot.java"/>
+        <link href="https://docs.oracle.com/javase/8/docs/api/"/>
+        <classpath>
+            <path location="${asm}"/>
+            <path location="${build}/lib"/>
+            <path location="${ant.home}/lib/ant.jar"/>
+        </classpath>
+    </javadoc>
+</target>
+
 <target name="pre-peg" depends="fetch-mouse" unless="yeti.jar.exists">
     <antcall target="jar" inheritrefs="true"/>
 </target>

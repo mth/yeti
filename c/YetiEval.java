@@ -32,6 +32,7 @@ package yeti.lang.compiler;
 
 import java.util.*;
 
+/** Used internally by Yeti compiler. */
 public class YetiEval {
     private static ThreadLocal instance = new ThreadLocal();
     List bindings = new ArrayList();

@@ -43,7 +43,7 @@ import yeti.lang.Num;
 import yeti.lang.FloatNum;
 import yeti.lang.IntNum;
 
-public final class YetiAnalyzer extends YetiType {
+final class YetiAnalyzer extends YetiType {
     static final class TopLevel {
         Map typeDefs = new HashMap();
         Scope typeScope;
