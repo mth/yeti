@@ -20,6 +20,8 @@ task findAntJar(dependsOn: configurations.antjar) {
 tasks['prepare-build'].dependsOn findAntJar
 
 allprojects {
+    apply plugin: 'maven-publish'
+
     version = '1.0'
 
     if (project != rootProject) {
@@ -28,7 +30,7 @@ allprojects {
             destinationDirectory = buildDir
             archiveBaseName = project.name
             archiveVersion = project.version
-            archiveClassifier = 'sources'
+            classifier = 'sources'
             from(projectDir) {
                 include '*.java'
                 include '*.yeti'
@@ -41,32 +43,64 @@ allprojects {
                 }
             }
         }
-        task packageJavadoc(type: Jar, dependsOn: rootProject.javadoc) {
+        task javadocJar(type: Jar, dependsOn: rootProject.javadoc) {
             destinationDirectory = buildDir
             archiveBaseName = project.name
             archiveVersion = project.version
-            archiveClassifier = 'javadoc'
+            classifier = 'javadoc'
             from new File(new File(antBuildDir, 'javadoc'), projectDir.name)
         }
     }
 
+    rootProject.ant.properties["${name}.jar"] =
+        new File(buildDir, "$name-${version}.jar")
+    def buildJar = rootProject.jar
     if (name == 'yeti-compiler') {
         task jar(type: Jar, dependsOn: rootProject.jar) {
             destinationDirectory = buildDir
             archiveBaseName = project.name
             archiveVersion = project.version
-            from(zipTree(new File(rootProject.buildDir, "yeti-${version}.jar"))) {
+            from(zipTree(new File(rootProject.buildDir,
+                                  "yeti-${project.version}.jar"))) {
                 exclude 'yeti/*.class'
                 exclude 'yeti/lang/*.class'
             }
             manifest.attributes("Class-Path": "yeti-lib.jar",
                                 "Main-Class": "yeti.lang.compiler.yeti")
         }
+        buildJar = jar
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId = 'io.github.mth.yeti'
+                artifactId = project.name
+                version = project.version
+                artifact(new File(buildDir, "$project.name-${version}.jar")) {
+                    builtBy buildJar
+                }
+                if (project != rootProject) {
+                    artifact sourcesJar
+                    artifact javadocJar
+                }
+                pom {
+                    url = 'https://mth.github.io/yeti/'
+                    licenses {
+                        license {
+                            name = 'Simplified BSD License'
+                            url = 'https://mth.github.io/yeti/LICENSE.txt'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/mth/yeti.git'
+                        developerConnection = 'scm:git:ssh:git@github.com:mth/yeti.git'
+                        url = 'https://github.com/mth/yeti/'
+                    }
+                }
+            }
+        }
     }
 }
 
-ant.properties['yeti.jar'] = new File(buildDir, "yeti-${version}.jar")
-
-clean {
-    delete buildDir
-}
+clean { delete buildDir }

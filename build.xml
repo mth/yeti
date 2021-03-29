@@ -114,7 +114,8 @@
 
 <target name="jar" depends="compiler,modules,yeti">
     <property name="yeti.jar" value="${jardir}/yeti.jar"/>
-    <jar jarfile="${jardir}/yeti-lib.jar" roundup="false">
+    <property name="yeti-lib.jar" value="${jardir}/yeti-lib.jar"/>
+    <jar jarfile="${yeti-lib.jar}" roundup="false">
         <fileset dir="${build}/lib"/>
         <fileset dir="${build}/modules"/>
     </jar>
@@ -122,7 +123,7 @@
         <manifest>
             <attribute name="Main-Class" value="yeti.lang.compiler.yeti"/>
         </manifest>
-        <zipfileset src="${jardir}/yeti-lib.jar"/>
+        <zipfileset src="${yeti-lib.jar}"/>
         <fileset dir="${build}/compiler"
             excludes="yeti/lang/compiler/YetiBoot*.class,${jar-excludes}"/>
         <zipfileset src="${asm}" excludes="yeti/renamed/asmx/signature/*"/>
