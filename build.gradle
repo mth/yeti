@@ -54,12 +54,11 @@ allprojects {
 
     rootProject.ant.properties["${name}.jar"] =
         new File(buildDir, "$name-${version}.jar")
-    def buildJar = rootProject.jar
     if (name == 'yeti-compiler') {
-        task jar(type: Jar, dependsOn: rootProject.jar) {
-            destinationDirectory = buildDir
-            archiveBaseName = project.name
-            archiveVersion = project.version
+        apply plugin: 'java'
+        dependencies { implementation "io.github.mth.yeti:yeti:$version" }
+        jar.dependsOn rootProject.jar
+        jar {
             from(zipTree(new File(rootProject.buildDir,
                                   "yeti-${project.version}.jar"))) {
                 exclude 'yeti/*.class'
@@ -68,7 +67,6 @@ allprojects {
             manifest.attributes("Class-Path": "yeti-lib.jar",
                                 "Main-Class": "yeti.lang.compiler.yeti")
         }
-        buildJar = jar
     }
 
     publishing {
@@ -77,8 +75,12 @@ allprojects {
                 groupId = 'io.github.mth.yeti'
                 artifactId = project.name
                 version = project.version
-                artifact(new File(buildDir, "$project.name-${version}.jar")) {
-                    builtBy buildJar
+                if (project.name == 'yeti-compiler') {
+                    from components.java
+                } else {
+                    artifact(new File(buildDir, "$project.name-${version}.jar")) {
+                        builtBy rootProject.jar
+                    }
                 }
                 if (project != rootProject) {
                     artifact sourcesJar
