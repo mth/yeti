@@ -25,11 +25,9 @@ allprojects {
     version = '1.0'
 
     if (project != rootProject) {
+        apply plugin: 'java'
         buildDir = new File(rootProject.buildDir, name)
         task sourcesJar(type: Jar) {
-            destinationDirectory = buildDir
-            archiveBaseName = project.name
-            archiveVersion = project.version
             classifier = 'sources'
             from(projectDir) {
                 include '*.java'
@@ -44,18 +42,14 @@ allprojects {
             }
         }
         task javadocJar(type: Jar, dependsOn: rootProject.javadoc) {
-            destinationDirectory = buildDir
-            archiveBaseName = project.name
-            archiveVersion = project.version
             classifier = 'javadoc'
             from new File(new File(antBuildDir, 'javadoc'), projectDir.name)
         }
     }
 
-    rootProject.ant.properties["${name}.jar"] =
-        new File(buildDir, "$name-${version}.jar")
+    def jarPath = new File(buildDir, "$name-${version}.jar")
+    rootProject.ant.properties["${name}.jar"] = jarPath
     if (name == 'yeti-compiler') {
-        apply plugin: 'java'
         dependencies { implementation "io.github.mth.yeti:yeti:$version" }
         jar.dependsOn rootProject.jar
         jar {
@@ -78,9 +72,7 @@ allprojects {
                 if (project.name == 'yeti-compiler') {
                     from components.java
                 } else {
-                    artifact(new File(buildDir, "$project.name-${version}.jar")) {
-                        builtBy rootProject.jar
-                    }
+                    artifact(jarPath) { builtBy rootProject.jar }
                 }
                 if (project != rootProject) {
                     artifact sourcesJar
