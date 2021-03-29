@@ -1,3 +1,4 @@
+// Gradle is only for publishing to maven repositories (build uses ANT)
 configurations { antjar }
 repositories { mavenCentral() }
 dependencies { antjar 'org.apache.ant:ant:1.10.9' }
