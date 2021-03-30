@@ -1129,26 +1129,29 @@ result. Comparison operators have left associativity.
 
 Yeti language has the following comparison operators:
 
-+----------+--------------------------------------------+----------------------+
-| Operator | Proposition                                | Type                 |
-+==========+============================================+======================+
-| **==**   | Left side value is equal to right side     | *'a* → *'a*          |
-+----------+--------------------------------------------+ → *boolean*          |
-| **!=**   | Left side value is not equal to right side |                      |
-+----------+--------------------------------------------+----------------------+
-| **<**    | Left side value is less than right side    | *^a* → *^a*          |
-+----------+--------------------------------------------+ → *boolean*          |
-| **<=**   | Left side value is less than or equal      |                      |
-|          | to right side                              |                      |
-+----------+--------------------------------------------+                      |
-| **>**    | Left side value is greater than right side |                      |
-+----------+--------------------------------------------+                      |
-| **>=**   | Left side value is greater than            |                      |
-|          | or equal to right side                     |                      |
-+----------+--------------------------------------------+----------------------+
-| **=~**   | Left side string matches regex             | *string* → *string*  |
-|          | pattern on the right side                  | → *boolean*          |
-+----------+--------------------------------------------+----------------------+
++----------+-------------------------------------------+-----------------------+
+| Operator | Proposition                               | Type                  |
++==========+===========================================+=======================+
+| **==**   | Left side value is equal to right side    | *'a* → *'a*           |
++----------+-------------------------------------------+ → *boolean*           |
+| **!=**   | Left side value is not equal to right side|                       |
++----------+-------------------------------------------+-----------------------+
+| **<**    | Left side value is less than right side   | *^a* → *^a*           |
++----------+-------------------------------------------+ → *boolean*           |
+| **<=**   | Left side value is less than or equal     |                       |
+|          | to right side                             |                       |
++----------+-------------------------------------------+                       |
+| **>**    | Left side value is greater than right side|                       |
++----------+-------------------------------------------+                       |
+| **>=**   | Left side value is greater than           |                       |
+|          | or equal to right side                    |                       |
++----------+-------------------------------------------+-----------------------+
+| **=~**   | Left side string matches regex            | *string* → *string*   |
+|          | pattern on the right side                 | → *boolean*           |
++----------+-------------------------------------------+-----------------------+
+| **in**   | Left side value is key in the map.        | *'a* →  *map<'a, 'b>* |
+|          |                                           | → *boolean*           |
++----------+-------------------------------------------+-----------------------+
 
 instanceof operator
 ''''''''''''''''''''''
