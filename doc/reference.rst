@@ -1149,8 +1149,8 @@ Yeti language has the following comparison operators:
 | **=~**   | Left side string matches regex            | *string* → *string*   |
 |          | pattern on the right side                 | → *boolean*           |
 +----------+-------------------------------------------+-----------------------+
-| **in**   | Left side value is key in the map.        | *'a* →  *map<'a, 'b>* |
-|          |                                           | → *boolean*           |
+| **in**   | Left side value is key in the right side  | *'a* →  *map<'a, 'b>* |
+|          | map (or array)                            | → *boolean*           |
 +----------+-------------------------------------------+-----------------------+
 
 instanceof operator
