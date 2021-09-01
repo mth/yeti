@@ -6,7 +6,7 @@ dependencies { antjar 'org.apache.ant:ant:1.10.9' }
 def antBuildDir = new File(buildDir, 'ant')
 ant.properties.build = antBuildDir
 ant.properties.jardir = buildDir
-ant.importBuild 'build.xml'
+ant.importBuild('build.xml') { it == "clean" ? "ant-clean" : it }
 
 task findAntJar(dependsOn: configurations.antjar) {
     doFirst {
@@ -22,12 +22,12 @@ tasks['prepare-build'].dependsOn findAntJar
 
 allprojects {
     apply plugin: 'maven-publish'
+    apply plugin: 'signing'
 
     version = '1.0'
 
     if (project != rootProject) {
         apply plugin: 'java'
-        apply plugin: 'signing'
         buildDir = new File(rootProject.buildDir, name)
         task sourcesJar(type: Jar) {
             classifier = 'sources'
@@ -98,10 +98,8 @@ allprojects {
         }
     }
 
-    if (project != rootProject) {
-        signing {
-            sign publishing.publications.maven
-        }
+    signing {
+        sign publishing.publications.maven
     }
 }
 
