@@ -27,6 +27,7 @@ allprojects {
 
     if (project != rootProject) {
         apply plugin: 'java'
+        apply plugin: 'signing'
         buildDir = new File(rootProject.buildDir, name)
         task sourcesJar(type: Jar) {
             classifier = 'sources'
@@ -94,6 +95,12 @@ allprojects {
                     }
                 }
             }
+        }
+    }
+
+    if (project != rootProject) {
+        signing {
+            sign publishing.publications.maven
         }
     }
 }
