@@ -34,14 +34,14 @@
 </target>
 
 <target name="check-mouse" depends="prepare-build">
-    <property name="mouse" value="${basedir}/Mouse-1.7.jar"/>
+    <property name="mouse" value="${basedir}/Mouse-1.6.jar"/>
     <property name="yeti.jar" value="${jardir}/yeti.jar"/>
     <available property="has.mouse" file="${mouse}"/>
     <available property="yeti.jar.exists" file="${yeti.jar}"/>
 </target>
 
 <target name="fetch-mouse" depends="check-mouse" unless="has.mouse">
-    <get src="http://dot.planet.ee/yeti/Mouse-1.7.jar"
+    <get src="http://dot.planet.ee/yeti/Mouse-1.6.jar"
          dest="${mouse}" verbose="true"/>
 </target>
 
