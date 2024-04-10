@@ -3082,5 +3082,5 @@ plus a b = a + b;
      * At least convert it to number list with something like:
      * : map number (strSplit '\D+' yetiRuntimeVersion) >= [0,9]
      */
-    yetiRuntimeVersion = "1.1"
+    yetiRuntimeVersion = "1.1+"
 }
