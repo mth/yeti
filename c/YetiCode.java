@@ -185,7 +185,7 @@ final class Ctx implements Opcodes {
         Ctx ctx = new Ctx(compilation, constants,
                           new YClassWriter(compilation.classWriterFlags), name);
         ctx.usedMethodNames = new HashMap();
-        ctx.cw.visit(V1_6, flags, name, null,
+        ctx.cw.visit(V1_8, flags, name, null,
                 extend == null ? "java/lang/Object" : extend, interfaces);
         ctx.cw.visitSource(constants.sourceName, null);
         compilation.addClass(name, ctx, line);
@@ -240,7 +240,7 @@ final class Ctx implements Opcodes {
             if (n >= -32768 && n <= 32767)
                 m.visitIntInsn(n >= -128 && n <= 127 ? BIPUSH : SIPUSH, n);
             else
-                m.visitLdcInsn(new Integer(n));
+                m.visitLdcInsn(Integer.valueOf(n));
         }
     }
 
@@ -713,7 +713,7 @@ final class NumericConstant extends Code implements CodeGen {
 
     void genInt(Ctx ctx, int lineno, boolean longValue) {
         if (longValue)
-            ctx.ldcInsn(new Long(num.longValue()));
+            ctx.ldcInsn(Long.valueOf(num.longValue()));
         else
             ctx.intConst(num.intValue());
     }
@@ -762,7 +762,7 @@ final class NumericConstant extends Code implements CodeGen {
                 ctx.forceType("yeti/lang/Num");
                 return;
             }
-            v.val = new Long(num.longValue());
+            v.val = Long.valueOf(num.longValue());
             v.sig = "(J)V";
         } else if (num instanceof BigNum) {
             v.jtype = "yeti/lang/BigNum";
@@ -770,7 +770,7 @@ final class NumericConstant extends Code implements CodeGen {
             v.sig = "(Ljava/lang/String;I)V";
         } else {
             v.jtype = "yeti/lang/FloatNum";
-            v.val = new Double(num.doubleValue());
+            v.val = Double.valueOf(num.doubleValue());
             v.sig = "(D)V";
         }
         v.type = YetiType.NUM_TYPE;

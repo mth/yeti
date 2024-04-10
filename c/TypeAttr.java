@@ -119,7 +119,7 @@ class TypeAttr extends Attribute {
             if (type.type == YetiType.VAR) {
                 Integer id = (Integer) vars.get(type);
                 if (id == null) {
-                    vars.put(type, id = new Integer(vars.size()));
+                    vars.put(type, id = Integer.valueOf(vars.size()));
                     if (id.intValue() > 0x7fff)
                         throw new RuntimeException("Too many type parameters");
                     if ((type.flags & YetiType.FL_ORDERED_REQUIRED) != 0)
@@ -144,9 +144,9 @@ class TypeAttr extends Attribute {
                 buf.putShort(id.intValue());
                 return;
             }
-            refs.put(type, new Integer(refs.size()));
+            refs.put(type, Integer.valueOf(refs.size()));
             if (type.type >= YetiType.OPAQUE_TYPES) {
-                Object idstr = opaque.get(new Integer(type.type));
+                Object idstr = opaque.get(Integer.valueOf(type.type));
                 if (idstr == null)
                     idstr = type.requiredMembers.keySet().toArray()[0];
                 buf.putByte(OPAQUE);
@@ -248,7 +248,7 @@ class TypeAttr extends Attribute {
             switch (tv = in[p++]) {
             case YetiType.VAR:
             case TAINTED: {
-                Integer var = new Integer(cr.readUnsignedShort(p));
+                Integer var = Integer.valueOf(cr.readUnsignedShort(p));
                 p += 2;
                 if ((t = (YType) vars.get(var)) == null)
                     vars.put(var, t = new YType(VAR_DEPTH));
@@ -374,7 +374,7 @@ class TypeAttr extends Attribute {
             YType[] def = (YType[]) e.getValue();
             YType t = def[def.length - 1];
             if (t.type >= YetiType.OPAQUE_TYPES && t.requiredMembers == null)
-                enc.opaque.put(new Integer(t.type),
+                enc.opaque.put(Integer.valueOf(t.type),
                                moduleType.name + ':' + e.getKey());
         }
         enc.cw = cw;
@@ -431,7 +431,7 @@ class YetiTypeVisitor extends ClassVisitor {
     private boolean deprecated;
 
     YetiTypeVisitor() {
-        super(Opcodes.ASM8);
+        super(Opcodes.ASM9);
     }
 
     public void visit(int version, int access, String name, String signature,

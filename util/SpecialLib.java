@@ -204,7 +204,7 @@ public class SpecialLib implements Opcodes {
 
     void transformLList() throws Exception {
         InputStream in = new FileInputStream(prefix + "yeti/lang/LList.class");
-        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
+        cw = new YClassWriter();
         LListAdapter la = new LListAdapter(cw);
         new ClassReader(in).accept(la, 0);
         in.close();
@@ -222,8 +222,8 @@ public class SpecialLib implements Opcodes {
     }
 
     void fun2_() throws Exception {
-        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_6, ACC_SUPER,
+        cw = new YClassWriter();
+        cw.visit(V1_8, ACC_SUPER,
                  "yeti/lang/Fun2_", null, "yeti/lang/Fun", null);
         cw.visitField(ACC_PRIVATE | ACC_FINAL,
                 "fun", "Lyeti/lang/Fun2;", null, null).visitEnd();
@@ -269,8 +269,8 @@ public class SpecialLib implements Opcodes {
     }
 
     void compose() throws Exception {
-        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_6, ACC_PUBLIC | ACC_FINAL | ACC_SUPER,
+        cw = new YClassWriter();
+        cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL | ACC_SUPER,
                  "yeti/lang/Compose", null, "yeti/lang/Fun", null);
         cw.visitField(ACC_FINAL | ACC_PRIVATE,
                       "f", "Lyeti/lang/Fun;", null, null).visitEnd();
@@ -319,8 +319,8 @@ public class SpecialLib implements Opcodes {
     }
 
     void unsafe() throws Exception {
-        cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        cw.visit(V1_6, ACC_SUPER, "yeti/lang/Unsafe",
+        cw = new YClassWriter();
+        cw.visit(V1_8, ACC_SUPER, "yeti/lang/Unsafe",
                  null, "java/lang/Object", null);
         MethodVisitor mv = cw.visitMethod(ACC_PUBLIC | ACC_STATIC,
                 "unsafeThrow", "(Ljava/lang/Throwable;)V", null, null);
@@ -343,6 +343,32 @@ public class SpecialLib implements Opcodes {
             l.unsafe();
         } else {
             System.err.println(args[0] + ": WTF?");
+        }
+    }
+
+    static final class YClassWriter extends ClassWriter {
+        YClassWriter() {
+            super(COMPUTE_MAXS | COMPUTE_FRAMES);
+        }
+
+        protected String getCommonSuperClass(String type1, String type2) {
+            if (type1.equals(type2))
+                return type1;
+            if (type1.equals("yeti/lang/AIter") && type2.endsWith("List")) {
+                return "yeti/lang/AIter";
+            }
+            if (type1.equals("yeti/lang/AList") &&  type2.endsWith("List")) {
+                return "yeti/lang/AList";
+            }
+            if (type1.startsWith("java/lang/") && type2.startsWith("java/lang/") ||
+                type1.startsWith("yeti/lang/") && type2.startsWith("yeti/lang/")) {
+                try {
+                    return super.getCommonSuperClass(type1, type2);
+                } catch (Exception ex) {
+                    System.err.println("ERR " + type1 + " <=> " + type2);
+                }
+            }
+            return "java/lang/Object";
         }
     }
 }

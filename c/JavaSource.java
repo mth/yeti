@@ -454,7 +454,7 @@ class JavaSource implements Opcodes {
     }
 
     private static void mod(String name, int value) {
-        MODS.put(name, new Integer(value));
+        MODS.put(name, Integer.valueOf(value));
     }
 
     static {

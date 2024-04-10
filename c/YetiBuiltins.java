@@ -287,7 +287,7 @@ final class Negate extends StaticRef implements CodeGen {
         arg.gen(ctx);
         ctx.visitLine(line);
         ctx.typeInsn(CHECKCAST, "yeti/lang/Num");
-        ctx.ldcInsn(new Long(0));
+        ctx.ldcInsn(Long.valueOf(0));
         ctx.methodInsn(INVOKEVIRTUAL, "yeti/lang/Num",
                             "subFrom", "(J)Lyeti/lang/Num;");
         ctx.forceType("yeti/lang/Num");
@@ -332,7 +332,7 @@ final class Length extends StaticRef {
             if (toint)
                 ctx.intConst(0);
             else
-                ctx.ldcInsn(new Long(0));
+                ctx.ldcInsn(Long.valueOf(0));
             ctx.jumpInsn(GOTO, end);
             ctx.visitLabel(nonnull);
         }

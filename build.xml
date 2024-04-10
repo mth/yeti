@@ -3,7 +3,7 @@
 
 <target name="prepare-build">
     <property file="properties"/>
-    <property name="asm" value="${basedir}/asm-8.0.1r.jar"/>
+    <property name="asm" value="${basedir}/asm-9.7r.jar"/>
     <property name="build"  value="${basedir}/.build"/>
     <property name="jardir" value="${basedir}"/>
     <property name="docdir" value="${build}/doc"/>
@@ -12,11 +12,11 @@
 </target>
 
 <target name="fetch" depends="prepare-build" unless="has.asm">
-    <property name="asmt" value="${build}/asm-8.0.1.jar"/>
+    <property name="asmt" value="${build}/asm-9.7.jar"/>
     <property name="asm.sha"
-      value="ca5b8d11569e53921b0e3486469e7c674361c79845dad3d514f38ab6e0c8c10a"/>
+      value="adf46d5e34940bdf148ecdd26a9ee8eea94496a72034ff7141066b3eea5c4e9d"/>
     <mkdir dir="${build}/util"/>
-    <get src="https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/asm/8.0.1/asm-8.0.1.jar"
+    <get src="https://repository.ow2.org/nexus/content/repositories/releases/org/ow2/asm/asm/9.7/asm-9.7.jar"
          dest="${asmt}" verbose="true"/>
     <checksum algorithm="SHA-256" file="${asmt}"
               property="${asm.sha}" verifyproperty="is.asm.ok"/> 
@@ -34,14 +34,14 @@
 </target>
 
 <target name="check-mouse" depends="prepare-build">
-    <property name="mouse" value="${basedir}/Mouse-1.6.jar"/>
+    <property name="mouse" value="${basedir}/Mouse-1.7.jar"/>
     <property name="yeti.jar" value="${jardir}/yeti.jar"/>
     <available property="has.mouse" file="${mouse}"/>
     <available property="yeti.jar.exists" file="${yeti.jar}"/>
 </target>
 
 <target name="fetch-mouse" depends="check-mouse" unless="has.mouse">
-    <get src="http://dot.planet.ee/yeti/Mouse-1.6.jar"
+    <get src="http://dot.planet.ee/yeti/Mouse-1.7.jar"
          dest="${mouse}" verbose="true"/>
 </target>
 
@@ -56,7 +56,7 @@
         <arg value="${build}/lib"/>
     </java>
     <javac destdir="${build}/lib" srcdir="${basedir}/lib" debug="on"
-        encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
+        encoding="UTF-8" source="1.8" target="1.8" debuglevel="source,lines"
         includeantruntime="false"/>
     <java classname="yeti.lang.SpecialLib" failonerror="true"
           classpath="${asm}:${build}/util">
@@ -76,7 +76,7 @@
 <target name="compiler" depends="checklib,lib">
     <mkdir dir="${build}/compiler"/>
     <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
-           encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
+           encoding="UTF-8" source="1.8" target="1.8" debuglevel="source,lines"
            includeantruntime="true" excludes="Evaluator.java">
         <classpath>
             <path location="${asm}"/>
@@ -106,7 +106,7 @@
         </classpath>
     </yetic>
     <javac destdir="${build}/compiler" srcdir="${basedir}/c" debug="on"
-           encoding="UTF-8" source="1.6" target="1.6" debuglevel="source,lines"
+           encoding="UTF-8" source="1.8" target="1.8" debuglevel="source,lines"
            includeantruntime="false" includes="Evaluator.java"
            classpath="${build}/lib"/>
     <copy file="${basedir}/util/doc.yeti" todir="${build}/compiler"/>

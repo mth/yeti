@@ -254,7 +254,7 @@ final class JavaClass extends CapturingClosure implements Runnable {
         void gen(Ctx ctx) {
             if (this == serialVersion) {
                 // hack to allow defining serialVersionUID
-                Long v = new Long((((NumericConstant) value).num).longValue());
+                Long v = Long.valueOf((((NumericConstant) value).num).longValue());
                 ctx.cw.visitField(ACC_PRIVATE | ACC_STATIC | ACC_FINAL,
                                   name, "J", null, v);
                 directConst = true;
