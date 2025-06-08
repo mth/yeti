@@ -1,2 +1,2 @@
 #!/bin/sh
-rlwrap $JAVA_HOME/bin/java -classpath .build/lib:.build/compiler:asm-8.0.1r.jar:.build/std:.build/modules:. yeti.lang.compiler.yeti "$@"
+rlwrap $JAVA_HOME/bin/java -classpath .build/lib:.build/compiler:asm-9.8r.jar:.build/std:.build/modules:. yeti.lang.compiler.yeti "$@"
