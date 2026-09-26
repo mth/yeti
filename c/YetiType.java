@@ -566,10 +566,11 @@ class YetiType implements YetiParser {
             } else if (b.allowedMembers == null) {
                 ff = a.allowedMembers;
             } else {
+                ff = a.allowedMembers;
+                Object[] members = ff.entrySet().toArray();
                 // unify final members
-                ff = new IdentityHashMap(a.allowedMembers);
-                for (Iterator i = ff.entrySet().iterator(); i.hasNext();) {
-                    Map.Entry entry = (Map.Entry) i.next();
+                for (int i = 0; i < members.length; ++i) {
+                    Map.Entry entry = (Map.Entry) members[i];
                     currentField = entry.getKey();
                     YType f = (YType) b.allowedMembers.get(currentField);
                     if (f != null) {
@@ -582,16 +583,17 @@ class YetiType implements YetiParser {
                             t.field = FIELD_NON_POLYMORPHIC;
                         }
                     } else {
-                        i.remove();
+                        ff.remove(currentField);
                     }
                 }
                 currentField = null;
                 if (ff.isEmpty())
                     mismatch(a, b);
             }
-            finalizeStruct(a, b);
-            finalizeStruct(b, a);
 
+            // Merge required members before finalizeStruct checking that allowed covers required.
+            // This can mess with error reporting, but is necessary to catch errors with self-referential
+            // structs where nested unification inside finalizeStruct tries to reduce allowed set.
             if (ff != null && (b.flags & FL_ANY_CASE) != 0) {
                 if ((a.flags & FL_ANY_CASE) != 0)
                     a.requiredMembers = null;
@@ -615,6 +617,10 @@ class YetiType implements YetiParser {
                 currentField = null;
                 a.requiredMembers.putAll(b.requiredMembers);
             }
+
+            finalizeStruct(a, b);
+            finalizeStruct(b, a);
+
             a.allowedMembers = ff;
             a.flags &= b.flags | ~(FL_ANY_CASE | FL_FLEX_TYPEDEF);
             if (ff == null) {

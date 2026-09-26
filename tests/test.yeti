@@ -177,11 +177,11 @@ done,
     foo = new Foo();
     foo#test(23) == 42
 done,
-'try-catch class closure': do: 
+'try-catch class closure': do:
     kill _ = ();
     class Flush
         void run()
-            try 
+            try
             catch Exception ex:
                 kill ()
             yrt;
@@ -210,9 +210,9 @@ done,
 done,
 'escaped symbols': do:
     import yeti.lang.Struct;
-    
+
     stru = {``one-var test`` = 'foo-text'};
-    
+
     'foo-text' == stru.``one-var test``
     and ((stru as ~Object) unsafely_as ~Struct)#get('one-var test')#equals("foo-text");
 done,
@@ -488,6 +488,37 @@ done,
 done,
 'duplicate key': \(expectCompileError '[0:1,0:2]'),
 'duplicate key 2': \(expectCompileError '[true:1,true:2]'),
+'typedef recursive struct typo': do:
+    expectCompileError
+     """typedef tree<a> = Leaf a | Node {left is tree, right is tree};
+       t1 is tree<number> = Node { left=Leaf 1, right=Node { left=Leaf 10, right=Leaf 2 } };
+       t2 is tree<number> = Node { left=Leaf 1, right=Node { left=Leaf 2, rigt=Leaf 3 } };
+       walk t is tree<'a> -> list<'a> =
+       ( case t of
+         Leaf v : [v];
+         Node {left,right} : (walk left) ++ (walk right);
+         esac;
+         );
+       walk t1;
+       walk t2"""
+done,
+'typedef recursive struct ok': do:
+    load yeti.lang.compiler.eval;
+    res = evaluateYetiCode [] []
+     """typedef tree<a> = Leaf a | Node {left is tree, right is tree};
+       t1 is tree<number> = Node { left=Leaf 1, right=Node { left=Leaf 10, right=Leaf 2 } };
+       t2 is tree<number> = Node { left=Leaf 1, right=Node { left=Leaf 2, right=Leaf 3 } };
+       walk t is tree<'a> -> list<'a> =
+       ( case t of
+         Leaf v : [v];
+         Node {left,right} : (walk left) ++ (walk right);
+         esac;
+         );
+       walk t1 ++ walk t2""" ;
+    tag = (res.result as ~Object) unsafely_as ~yeti.lang.Tag;
+    (tag#name == "Result")
+        and ((tag#value as ~Object) unsafely_as list<number> == [1,10,2,1,2,3])
+done,
 ];
 
 var bad = 0;
